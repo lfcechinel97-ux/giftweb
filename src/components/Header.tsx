@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Menu, X, Search, MessageCircle, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Menu, X, Search, MessageCircle } from "lucide-react";
 
 const categoryLinks = [
   "Garrafas",
@@ -11,11 +11,18 @@ const categoryLinks = [
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <header className="sticky top-0 z-50">
       {/* Top bar */}
-      <div className="bg-navy text-primary-foreground" style={{ fontSize: 13 }}>
+      <div className="bg-navy-dark text-muted-foreground" style={{ fontSize: 13 }}>
         <div className="container flex items-center justify-center py-2 gap-1">
           <span>Suporte de segunda a sexta-feira das 08h às 18h</span>
           <span className="mx-1">|</span>
@@ -31,12 +38,18 @@ const Header = () => {
       </div>
 
       {/* Main bar */}
-      <div className="bg-card" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+      <div
+        className="border-b border-border transition-all duration-300"
+        style={{
+          backgroundColor: scrolled ? "rgba(11,15,26,0.85)" : "hsl(222,47%,7%)",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+        }}
+      >
         {/* Line 1: Logo + Search + WhatsApp */}
         <div className="container flex items-center justify-between gap-4 py-3">
           {/* Logo */}
           <a href="/" className="flex items-baseline gap-0.5 shrink-0">
-            <span className="text-2xl font-bold text-navy">Gift Web</span>
+            <span className="text-2xl font-extrabold text-foreground">Gift Web</span>
             <span className="text-sm font-medium text-green-cta ml-1">brindes</span>
           </a>
 
@@ -45,7 +58,7 @@ const Header = () => {
             <input
               type="text"
               placeholder="Estou procurando por..."
-              className="w-full rounded-[10px] border border-border bg-background py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/40"
+              className="w-full rounded-[10px] border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-text-meta focus:outline-none focus:ring-2 focus:ring-green-cta/40"
             />
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-meta" />
           </div>
@@ -55,7 +68,8 @@ const Header = () => {
             href="https://wa.me/5548996525312"
             target="_blank"
             rel="noreferrer"
-            className="hidden sm:flex items-center gap-2 rounded-[10px] bg-green-cta px-5 py-2.5 text-sm font-semibold text-accent-foreground hover:brightness-110 transition-all duration-200 shrink-0"
+            className="hidden sm:flex items-center gap-2 rounded-[10px] bg-green-cta px-5 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 transition-all duration-200 shrink-0"
+            style={{ boxShadow: "0 0 20px rgba(34,197,94,0.3)" }}
           >
             <MessageCircle size={16} />
             (48) 99652-5312
@@ -68,12 +82,11 @@ const Header = () => {
         </div>
 
         {/* Line 2: Category nav */}
-        <div className="hidden lg:block border-t border-border">
+        <div className="hidden lg:block border-t border-border bg-surface-alt">
           <div className="container flex items-center gap-0 py-0">
-            {/* All products button */}
             <a
               href="#produtos"
-              className="flex items-center gap-2 bg-navy text-primary-foreground px-5 py-3 rounded-[8px] my-1 text-sm font-bold uppercase hover:bg-navy-hover transition-colors duration-200 shrink-0"
+              className="flex items-center gap-2 bg-secondary text-foreground px-5 py-3 rounded-[8px] my-1 text-[13px] font-bold uppercase hover:bg-navy-hover transition-colors duration-200 shrink-0"
             >
               <Menu size={16} />
               TODOS BRINDES
@@ -83,7 +96,7 @@ const Header = () => {
               <a
                 key={cat}
                 href={`#${cat.toLowerCase().replace(/\s/g, "-")}`}
-                className="px-4 py-3 text-sm font-bold uppercase text-foreground hover:text-green-cta transition-colors duration-200"
+                className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200"
               >
                 {cat}
               </a>
@@ -91,7 +104,7 @@ const Header = () => {
 
             <a
               href="#ofertas"
-              className="px-4 py-3 text-sm font-bold uppercase text-danger hover:opacity-80 transition-colors duration-200"
+              className="px-4 py-3 text-[13px] font-bold uppercase text-danger hover:opacity-80 transition-colors duration-200"
             >
               OFERTAS
             </a>
@@ -106,14 +119,14 @@ const Header = () => {
                 <input
                   type="text"
                   placeholder="Estou procurando por..."
-                  className="w-full rounded-[10px] border border-border bg-background py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/40"
+                  className="w-full rounded-[10px] border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-text-meta focus:outline-none focus:ring-2 focus:ring-green-cta/40"
                 />
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-meta" />
               </div>
 
               <a
                 href="#produtos"
-                className="flex items-center gap-2 bg-navy text-primary-foreground px-4 py-2.5 rounded-[8px] text-sm font-bold uppercase"
+                className="flex items-center gap-2 bg-secondary text-foreground px-4 py-2.5 rounded-[8px] text-sm font-bold uppercase"
               >
                 <Menu size={16} />
                 TODOS BRINDES
@@ -123,7 +136,7 @@ const Header = () => {
                 <a
                   key={cat}
                   href={`#${cat.toLowerCase().replace(/\s/g, "-")}`}
-                  className="text-sm font-bold uppercase text-foreground hover:text-green-cta py-1"
+                  className="text-sm font-bold uppercase text-muted-foreground hover:text-green-cta py-1"
                 >
                   {cat}
                 </a>
@@ -137,7 +150,8 @@ const Header = () => {
                 href="https://wa.me/5548996525312"
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-center gap-2 rounded-[10px] bg-green-cta px-4 py-2.5 text-sm font-semibold text-accent-foreground"
+                className="flex items-center justify-center gap-2 rounded-[10px] bg-green-cta px-4 py-2.5 text-sm font-bold text-primary-foreground"
+                style={{ boxShadow: "0 0 20px rgba(34,197,94,0.3)" }}
               >
                 <MessageCircle size={16} />
                 (48) 99652-5312
