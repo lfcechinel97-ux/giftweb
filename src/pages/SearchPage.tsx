@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
+import { SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
@@ -20,6 +21,8 @@ const CATEGORIES = [
   { slug: "bolsas", label: "Bolsas" },
   { slug: "escritorio", label: "Escritório" },
   { slug: "kits", label: "Kits" },
+  { slug: "squeezes", label: "Squeezes" },
+  { slug: "brindes-baratos", label: "Brindes Baratos" },
 ];
 
 const SearchPage = () => {
@@ -42,6 +45,7 @@ const SearchPage = () => {
       .from("products_cache")
       .select("*", { count: "exact" })
       .eq("ativo", true)
+      .eq("has_image", true)
       .ilike("busca", `%${q}%`)
       .order("nome")
       .range(from, to);
@@ -62,7 +66,7 @@ const SearchPage = () => {
       <Helmet>
         <title>Resultados para "{q}" | Gift Web Brindes</title>
         <meta name="description" content={`Brindes personalizados: resultados para "${q}".`} />
-        <link rel="canonical" href={`https://giftweb.com.br/busca?q=${encodeURIComponent(q)}`} />
+        <link rel="canonical" href={`${SITE_URL}/busca?q=${encodeURIComponent(q)}`} />
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />

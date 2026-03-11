@@ -1,8 +1,9 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup } from "@/utils/price";
+import { PRAZO_PRODUCAO, WHATSAPP_NUMBER, SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
@@ -24,7 +25,11 @@ const ProductDetail = () => {
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(20);
+  const [selectedRow, setSelectedRow] = useState(0); // index in QUANTITIES, default 20
   const [lightbox, setLightbox] = useState(false);
+  const [activeImg, setActiveImg] = useState(0);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const qtySelectorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!slug) return;
@@ -43,12 +48,27 @@ const ProductDetail = () => {
         }
         setProduct(data);
 
+        // Parse image_urls from the data
+        const imgs: string[] = [];
+        // image_urls is text[] in DB
+        if ((data as any).image_urls && Array.isArray((data as any).image_urls)) {
+          for (const u of (data as any).image_urls) {
+            if (u && u.trim()) imgs.push(u);
+          }
+        }
+        if (imgs.length === 0 && data.image_url) {
+          imgs.push(data.image_url);
+        }
+        setImageUrls(imgs);
+        setActiveImg(0);
+
         // Fetch related
         supabase
           .from("products_cache")
           .select("*")
           .eq("categoria", data.categoria!)
           .eq("ativo", true)
+          .eq("has_image", true)
           .gt("estoque", 0)
           .neq("slug", slug)
           .limit(4)
@@ -68,9 +88,15 @@ const ProductDetail = () => {
       const unit = calcularPreco(product.preco_custo!, q);
       const base = precoBase;
       const desc = getDesconto(q);
-      return { qty: q, unit, base, desc, total: unit * q };
+      return { qty: q, unit, base, desc };
     });
   }, [product?.preco_custo, precoBase]);
+
+  const handleSelectRow = (index: number) => {
+    setSelectedRow(index);
+    setQty(QUANTITIES[index]);
+    qtySelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
 
   if (loading) {
     return (
@@ -93,7 +119,7 @@ const ProductDetail = () => {
 
   if (!product) return null;
 
-  const canonicalUrl = `https://giftweb.com.br/produto/${product.slug}`;
+  const canonicalUrl = `${SITE_URL}/produto/${product.slug}`;
   const categorySlug = product.categoria || "outros";
   const whatsappMsg = encodeURIComponent(
     `Olá! Tenho interesse no produto: ${product.nome} (Cód: ${product.codigo_amigavel}). Quantidade: ${qty} unidades. Podem me enviar um orçamento?`
@@ -146,12 +172,17 @@ const ProductDetail = () => {
               {/* Gallery */}
               <div className="relative">
                 <div className="aspect-square rounded-2xl border border-border overflow-hidden bg-secondary relative group">
-                  {product.image_url ? (
-                    <img src={product.image_url} alt={product.nome} className="w-full h-full object-cover" />
+                  {imageUrls.length > 0 ? (
+                    <img
+                      src={imageUrls[activeImg]}
+                      alt={product.nome}
+                      className="w-full h-full object-cover transition-opacity duration-200"
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">Sem imagem</div>
                   )}
-                  {product.image_url && (
+                  {imageUrls.length > 0 && (
                     <button
                       onClick={() => setLightbox(true)}
                       className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-card/80 border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -160,6 +191,21 @@ const ProductDetail = () => {
                     </button>
                   )}
                 </div>
+                {/* Thumbnails */}
+                {imageUrls.length > 1 && (
+                  <div className="flex gap-2 mt-3">
+                    {imageUrls.map((url, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setActiveImg(i)}
+                        className="w-[60px] h-[60px] rounded-lg border-2 overflow-hidden transition-colors"
+                        style={{ borderColor: activeImg === i ? "hsl(142,71%,45%)" : "hsl(210,25%,17%)" }}
+                      >
+                        <img src={url} alt={`${product.nome} ${i + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }} />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Info */}
@@ -169,7 +215,7 @@ const ProductDetail = () => {
 
                 <div className="flex items-center gap-2 text-muted-foreground text-[13px]">
                   <Clock className="w-4 h-4" />
-                  <span>Prazo de produção: 20 dias úteis</span>
+                  <span>Prazo de produção: {PRAZO_PRODUCAO}</span>
                 </div>
 
                 {product.cor && (
@@ -253,12 +299,20 @@ const ProductDetail = () => {
                             <th className="text-left p-3 text-muted-foreground font-medium">Qtd</th>
                             <th className="text-left p-3 text-muted-foreground font-medium">Preço/un</th>
                             <th className="text-left p-3 text-muted-foreground font-medium">Economia</th>
-                            <th className="text-right p-3 text-muted-foreground font-medium">Total</th>
+                            <th className="p-3 text-muted-foreground font-medium text-center">Ação</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {tableRows.map((row) => (
-                            <tr key={row.qty} className="border-t border-border hover:bg-secondary/50 transition-colors">
+                          {tableRows.map((row, i) => (
+                            <tr
+                              key={row.qty}
+                              className="border-t border-border transition-colors cursor-pointer"
+                              style={{
+                                backgroundColor: selectedRow === i ? "hsl(210,25%,12%)" : undefined,
+                                borderLeft: selectedRow === i ? "3px solid hsl(142,71%,45%)" : "3px solid transparent",
+                              }}
+                              onClick={() => handleSelectRow(i)}
+                            >
                               <td className="p-3 text-foreground font-medium">
                                 {row.qty}
                                 {row.qty === 20 && (
@@ -283,7 +337,18 @@ const ProductDetail = () => {
                                   <span className="text-muted-foreground">—</span>
                                 )}
                               </td>
-                              <td className="p-3 text-right text-foreground font-semibold">{formatarBRL(row.total)}</td>
+                              <td className="p-3 text-center">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleSelectRow(i); }}
+                                  className="px-3 py-1 rounded-lg text-[13px] font-semibold border transition-colors"
+                                  style={{
+                                    borderColor: selectedRow === i ? "hsl(142,71%,45%)" : "hsl(210,25%,17%)",
+                                    color: selectedRow === i ? "hsl(142,71%,45%)" : "hsl(var(--muted-foreground))",
+                                  }}
+                                >
+                                  {selectedRow === i ? "Selecionado" : "Selecionar"}
+                                </button>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -293,7 +358,7 @@ const ProductDetail = () => {
                 )}
 
                 {/* Quantity selector */}
-                <div className="mt-4 p-4 rounded-xl bg-card border border-border">
+                <div ref={qtySelectorRef} className="mt-4 p-4 rounded-xl bg-card border border-border">
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => setQty(Math.max(20, qty - 10))}
@@ -329,7 +394,7 @@ const ProductDetail = () => {
 
                 {/* WhatsApp button */}
                 <a
-                  href={`https://wa.me/5548996525312?text=${whatsappMsg}`}
+                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMsg}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-2 w-full h-14 rounded-xl bg-green-cta text-primary-foreground font-bold text-base flex items-center justify-center gap-2 hover:brightness-110 transition-all"
@@ -378,7 +443,7 @@ const ProductDetail = () => {
         <FloatingWhatsApp />
 
         {/* Lightbox */}
-        {lightbox && product.image_url && (
+        {lightbox && imageUrls.length > 0 && (
           <div
             className="fixed inset-0 z-50 bg-background/90 flex items-center justify-center p-4"
             onClick={() => setLightbox(false)}
@@ -386,7 +451,7 @@ const ProductDetail = () => {
             <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center">
               <X className="w-5 h-5 text-foreground" />
             </button>
-            <img src={product.image_url} alt={product.nome} className="max-w-full max-h-[90vh] object-contain rounded-xl" />
+            <img src={imageUrls[activeImg]} alt={product.nome} className="max-w-full max-h-[90vh] object-contain rounded-xl" />
           </div>
         )}
       </div>

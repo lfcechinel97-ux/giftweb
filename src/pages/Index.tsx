@@ -3,7 +3,6 @@ import HeroSection from "@/components/HeroSection";
 import BenefitsBar from "@/components/BenefitsBar";
 import CategoriesSection from "@/components/CategoriesSection";
 import BestSellersSection from "@/components/BestSellersSection";
-import LaunchSection from "@/components/LaunchSection";
 import BannerSeparator from "@/components/BannerSeparator";
 import CatalogSection from "@/components/CatalogSection";
 import ClientsSection from "@/components/ClientsSection";
@@ -13,8 +12,7 @@ import TrustSection from "@/components/TrustSection";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import CorporateQuotation from "@/components/CorporateQuotation";
-import LeadCapture from "@/components/LeadCapture";
-import SeoTextSection from "@/components/SeoTextSection";
+import SeoLinksSection from "@/components/SeoLinksSection";
 import { useHomepageData } from "@/hooks/useHomepageData";
 
 const Index = () => {
@@ -28,16 +26,14 @@ const Index = () => {
         <BenefitsBar />
         <CorporateQuotation />
         <CategoriesSection categoryCounts={data?.categorias || {}} />
-        <LaunchSection products={data?.lancamentos || []} loading={isLoading} />
         <BestSellersSection products={data?.maisVendidos || []} loading={isLoading} />
         <BannerSeparator />
         <CatalogSection />
         <ClientsSection />
         <TestimonialsSection />
         <HowItWorks />
-        <LeadCapture />
         <TrustSection />
-        <SeoTextSection />
+        <SeoLinksSection />
       </main>
       <Footer />
       <FloatingWhatsApp />

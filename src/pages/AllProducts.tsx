@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
+import { SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
@@ -17,25 +18,31 @@ const PAGE_SIZE = 20;
 const AllProducts = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
+  const urlCor = searchParams.get("cor") || "";
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [cores, setCores] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCor, setSelectedCor] = useState<string | null>(null);
+  const [selectedCor, setSelectedCor] = useState<string | null>(urlCor || null);
   const [apenasEstoque, setApenasEstoque] = useState(false);
   const [sortBy, setSortBy] = useState("relevancia");
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  // Sync URL cor param
+  useEffect(() => {
+    if (urlCor) setSelectedCor(urlCor);
+  }, [urlCor]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
-    let query = supabase.from("products_cache").select("*", { count: "exact" }).eq("ativo", true);
+    let query = supabase.from("products_cache").select("*", { count: "exact" }).eq("ativo", true).eq("has_image", true);
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
-    if (selectedCor) query = query.eq("cor", selectedCor);
+    if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
     if (apenasEstoque) query = query.gt("estoque", 0);
 
     if (sortBy === "menor_preco") query = query.order("preco_custo", { ascending: true });
@@ -53,6 +60,7 @@ const AllProducts = () => {
       .from("products_cache")
       .select("cor")
       .eq("ativo", true)
+      .eq("has_image", true)
       .not("cor", "is", null)
       .then(({ data }) => {
         const unique = [...new Set((data || []).map((d) => d.cor).filter(Boolean))] as string[];
@@ -62,7 +70,11 @@ const AllProducts = () => {
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
-  const handlePageChange = (p: number) => setSearchParams({ page: p.toString() });
+  const handlePageChange = (p: number) => {
+    const params: Record<string, string> = { page: p.toString() };
+    if (selectedCor) params.cor = selectedCor;
+    setSearchParams(params);
+  };
   const clearFilters = () => { setSearchTerm(""); setSelectedCor(null); setApenasEstoque(false); setSortBy("relevancia"); };
 
   return (
@@ -70,7 +82,7 @@ const AllProducts = () => {
       <Helmet>
         <title>Todos os Produtos | Gift Web Brindes Personalizados</title>
         <meta name="description" content="Catálogo completo de brindes personalizados para empresas. Preços para atacado." />
-        <link rel="canonical" href={`https://giftweb.com.br/produtos${page > 1 ? `?page=${page}` : ""}`} />
+        <link rel="canonical" href={`${SITE_URL}/produtos${page > 1 ? `?page=${page}` : ""}`} />
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />

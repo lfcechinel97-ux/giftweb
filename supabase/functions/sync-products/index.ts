@@ -37,6 +37,17 @@ function getBusca(p: any): string {
     .join(' ').toLowerCase()
 }
 
+function getImageUrls(p: any): string[] {
+  const urls = [
+    p.ImageLink, p.ImageLink2, p.ImageLink3, p.ImageLink4,
+    p.imageLink, p.imageLink2, p.imageLink3, p.imageLink4
+  ]
+    .filter((url: any) => url && typeof url === 'string' && url.trim() !== '')
+    .filter((url: string, index: number, self: string[]) => self.indexOf(url) === index)
+    .slice(0, 4)
+  return urls
+}
+
 const CHUNK_SIZE = 500
 
 serve(async (req) => {
@@ -82,12 +93,16 @@ serve(async (req) => {
       .map((p: any) => {
         const codigo = p.CodigoAmigavel ?? p.codigoAmigavel ?? ''
         const nome   = p.Nome ?? p.nome ?? codigo
+        const imageLink = p.ImageLink ?? p.imageLink ?? ''
+        const imageUrls = getImageUrls(p)
         return {
           codigo_amigavel: codigo,
           slug:        getSlug(nome, codigo),
           nome,
           descricao:   p.Descricao ?? p.descricao ?? '',
-          image_url:   p.ImageLink ?? p.imageLink ?? '',
+          image_url:   imageLink,
+          image_urls:  imageUrls,
+          has_image:   !!(imageLink && imageLink.trim() !== ''),
           site_link:   p.SiteLink ?? p.siteLink ?? '',
           cor:         p.CorWebPrincipal ?? p.corWebPrincipal ?? '',
           categoria:   getCategoria(nome),

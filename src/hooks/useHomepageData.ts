@@ -17,19 +17,12 @@ export interface ProductCache {
 async function fetchHomepageData() {
   const randomOffset = Math.floor(Math.random() * 100);
 
-  const [lancamentos, maisVendidos, destaques, categorias] = await Promise.all([
+  const [maisVendidos, destaques, categorias, squeezesCount, baratosCount] = await Promise.all([
     supabase
       .from("products_cache")
       .select("id,nome,slug,image_url,cor,preco_custo,categoria,estoque,codigo_amigavel,descricao")
       .eq("ativo", true)
-      .gt("estoque", 0)
-      .order("updated_at", { ascending: false })
-      .limit(8),
-
-    supabase
-      .from("products_cache")
-      .select("id,nome,slug,image_url,cor,preco_custo,categoria,estoque,codigo_amigavel,descricao")
-      .eq("ativo", true)
+      .eq("has_image", true)
       .gt("estoque", 0)
       .order("estoque", { ascending: false })
       .limit(8),
@@ -38,6 +31,7 @@ async function fetchHomepageData() {
       .from("products_cache")
       .select("id,nome,slug,image_url,cor,preco_custo,categoria,estoque,codigo_amigavel,descricao")
       .eq("ativo", true)
+      .eq("has_image", true)
       .gt("estoque", 0)
       .order("updated_at", { ascending: false })
       .range(randomOffset, randomOffset + 7),
@@ -46,7 +40,26 @@ async function fetchHomepageData() {
       .from("products_cache")
       .select("categoria")
       .eq("ativo", true)
+      .eq("has_image", true)
       .gt("estoque", 0),
+
+    // Count squeezes
+    supabase
+      .from("products_cache")
+      .select("id", { count: "exact", head: true })
+      .eq("ativo", true)
+      .eq("has_image", true)
+      .gt("estoque", 0)
+      .or("nome.ilike.%SQUEEZE%,descricao.ilike.%SQUEEZE%"),
+
+    // Count baratos
+    supabase
+      .from("products_cache")
+      .select("id", { count: "exact", head: true })
+      .eq("ativo", true)
+      .eq("has_image", true)
+      .gt("estoque", 0)
+      .lte("preco_custo", 8),
   ]);
 
   // Count by category
@@ -57,9 +70,10 @@ async function fetchHomepageData() {
       catCounts[cat] = (catCounts[cat] || 0) + 1;
     }
   }
+  catCounts["squeezes"] = squeezesCount.count || 0;
+  catCounts["brindes-baratos"] = baratosCount.count || 0;
 
   return {
-    lancamentos: (lancamentos.data || []) as ProductCache[],
     maisVendidos: (maisVendidos.data || []) as ProductCache[],
     destaques: (destaques.data || []) as ProductCache[],
     categorias: catCounts,
@@ -70,7 +84,7 @@ export function useHomepageData() {
   return useQuery({
     queryKey: ["homepage-data"],
     queryFn: fetchHomepageData,
-    staleTime: 300_000, // 5 min
+    staleTime: 300_000,
     gcTime: 600_000,
   });
 }

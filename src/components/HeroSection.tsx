@@ -10,6 +10,8 @@ const categories = [
   { label: "Bolsas", route: "bolsas" },
   { label: "Escritório", route: "escritorio" },
   { label: "Kit Corporativo", route: "kits" },
+  { label: "Squeezes", route: "squeezes" },
+  { label: "Brindes Baratos", route: "brindes-baratos" },
 ];
 
 const swatchColors = [
@@ -60,12 +62,16 @@ const HeroSection = () => {
 
   const handleSearch = () => {
     const q = searchText.trim();
+    const colorName = selectedColor !== null ? swatchColors[selectedColor].name : null;
+
     if (selectedCategory && q) {
-      navigate(`/${selectedCategory}?q=${encodeURIComponent(q)}`);
+      navigate(`/${selectedCategory}?q=${encodeURIComponent(q)}${colorName ? `&cor=${encodeURIComponent(colorName)}` : ""}`);
     } else if (selectedCategory) {
-      navigate(`/${selectedCategory}`);
+      navigate(`/${selectedCategory}${colorName ? `?cor=${encodeURIComponent(colorName)}` : ""}`);
     } else if (q) {
       navigate(`/busca?q=${encodeURIComponent(q)}`);
+    } else if (colorName) {
+      navigate(`/produtos?cor=${encodeURIComponent(colorName)}`);
     } else {
       navigate("/produtos");
     }
