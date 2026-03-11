@@ -53,11 +53,13 @@ export type Database = {
           id: string
           image_url: string | null
           image_urls: string[] | null
+          is_variante: boolean | null
           largura: number | null
           marca: string | null
           nome: string
           peso: number | null
           preco_custo: number | null
+          produto_pai: string | null
           profundidade: number | null
           site_link: string | null
           slug: string | null
@@ -78,11 +80,13 @@ export type Database = {
           id?: string
           image_url?: string | null
           image_urls?: string[] | null
+          is_variante?: boolean | null
           largura?: number | null
           marca?: string | null
           nome: string
           peso?: number | null
           preco_custo?: number | null
+          produto_pai?: string | null
           profundidade?: number | null
           site_link?: string | null
           slug?: string | null
@@ -103,11 +107,13 @@ export type Database = {
           id?: string
           image_url?: string | null
           image_urls?: string[] | null
+          is_variante?: boolean | null
           largura?: number | null
           marca?: string | null
           nome?: string
           peso?: number | null
           preco_custo?: number | null
+          produto_pai?: string | null
           profundidade?: number | null
           site_link?: string | null
           slug?: string | null
