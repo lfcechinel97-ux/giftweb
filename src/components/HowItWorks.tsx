@@ -1,35 +1,29 @@
-const steps = [
-  { num: "01", title: "Escolha", desc: "Selecione os brindes do catálogo" },
-  { num: "02", title: "Envie a logo", desc: "Envie sua marca em alta resolução" },
-  { num: "03", title: "Receba layout", desc: "Aprovamos a arte juntos" },
-  { num: "04", title: "Produção", desc: "Fabricação com qualidade" },
-  { num: "05", title: "Entrega", desc: "Receba no prazo combinado" },
-];
+import { useInView } from "@/hooks/useInView";
+import howItWorksImg from "@/assets/how-it-works.png";
 
-const HowItWorks = () => (
-  <section className="py-12 bg-surface-alt">
-    <div className="container">
-      <h2 className="text-center text-foreground mb-10">
-        Como funciona seu <span className="text-highlight">pedido</span>
-      </h2>
+const HowItWorks = () => {
+  const { ref, inView } = useInView();
 
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-0 relative">
-        <div className="hidden md:block absolute top-8 left-[10%] right-[10%] border-t-2 border-dashed border-border" />
+  return (
+    <section className="py-10 md:py-12 bg-background">
+      <div
+        ref={ref}
+        className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
+      >
+        <h2 className="text-center text-foreground font-extrabold text-[32px] mb-6">
+          Como fazer seu <span className="text-highlight">pedido</span>
+        </h2>
 
-        {steps.map((s, i) => (
-          <div key={i} className="flex flex-col items-center text-center flex-1 relative z-10 group">
-            <div className="w-16 h-16 rounded-full bg-green-cta flex items-center justify-center text-primary-foreground font-bold text-lg mb-3 group-hover:shadow-lg transition-all duration-200"
-              style={{ boxShadow: "0 0 20px rgba(34,197,94,0.2)" }}
-            >
-              {s.num}
-            </div>
-            <h4 className="font-semibold text-foreground mb-1">{s.title}</h4>
-            <p className="text-xs text-muted-foreground max-w-[140px]">{s.desc}</p>
-          </div>
-        ))}
+        <div className="flex justify-center">
+          <img
+            src={howItWorksImg}
+            alt="Passo a passo para fazer seu pedido de brindes personalizados"
+            className="w-full max-w-4xl rounded-2xl"
+          />
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 export default HowItWorks;
