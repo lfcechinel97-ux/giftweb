@@ -49,9 +49,12 @@ function getImageUrls(p: any): string[] {
 }
 
 function getCodigoPrefixo(codigo: string): string {
-  const partes = codigo.split('-')
-  if (partes.length > 1) return partes[0]
-  return codigo
+  if (codigo.includes('-')) return codigo // ex: 00033-4GB → não agrupa
+  const match = codigo.match(/^(.+?)([A-Z])$/)
+  if (match && match[2].length === 1) {
+    return match[1] // ex: "$@07045B" → "$@07045"
+  }
+  return codigo // sem variação
 }
 
 const CHUNK_SIZE = 500
