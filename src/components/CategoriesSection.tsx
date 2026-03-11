@@ -1,39 +1,64 @@
-import { GlassWater, Wine, Backpack, Briefcase, PenLine, Gift } from "lucide-react";
+import { GlassWater, Thermometer, Backpack, Briefcase, Tag } from "lucide-react";
+import { useInView } from "@/hooks/useInView";
 
 const cats = [
-  { icon: GlassWater, name: "Copos", count: 42 },
-  { icon: Wine, name: "Garrafas", count: 38 },
-  { icon: Backpack, name: "Mochilas", count: 24 },
-  { icon: Briefcase, name: "Bolsas", count: 31 },
-  { icon: PenLine, name: "Escritório", count: 56 },
-  { icon: Gift, name: "Kit Corporativo", count: 18 },
+  { icon: GlassWater, name: "Garrafas e Copos" },
+  { icon: Thermometer, name: "Bolsas Térmicas" },
+  { icon: Backpack, name: "Mochilas" },
+  { icon: Briefcase, name: "Kit Corporativo" },
+  { icon: Tag, name: "Brindes Baratos" },
 ];
 
-const CategoriesSection = () => (
-  <section id="categorias" className="py-12 bg-surface-alt">
-    <div className="container">
-      <h2 className="text-center text-foreground mb-8">
-        Nossas <span className="text-highlight">Categorias</span>
-      </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        {cats.map(({ icon: Icon, name, count }) => (
-          <button
-            key={name}
-            className="flex flex-col items-center gap-3 rounded-[16px] bg-card border border-border p-6 transition-all duration-250 group hover:-translate-y-1 hover:border-green-cta"
-            style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 8px 40px rgba(0,212,170,0.15)")}
-            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.4)")}
-          >
-            <div className="w-16 h-16 rounded-full bg-green-cta/10 flex items-center justify-center group-hover:bg-green-cta/20 transition-colors duration-200">
-              <Icon size={28} className="text-green-teal" strokeWidth={1.5} />
-            </div>
-            <span className="font-semibold text-foreground text-sm">{name}</span>
-            <span className="text-xs text-muted-foreground">{count} produtos</span>
-          </button>
-        ))}
+// duplicate for seamless loop
+const looped = [...cats, ...cats, ...cats];
+
+const CategoriesSection = () => {
+  const { ref, inView } = useInView();
+
+  return (
+    <section className="py-20 md:py-20 bg-background">
+      <div
+        ref={ref}
+        className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
+      >
+        <h2 className="text-center text-foreground font-extrabold text-[32px] mb-10">
+          Nossas <span className="text-highlight">categorias</span>
+        </h2>
+
+        {/* Desktop: auto-scroll */}
+        <div className="hidden md:block overflow-hidden">
+          <div className="flex gap-10 animate-[scroll-categories_25s_linear_infinite] hover:[animation-play-state:paused] w-max">
+            {looped.map(({ icon: Icon, name }, i) => (
+              <button
+                key={i}
+                className="flex flex-col items-center gap-3 group flex-shrink-0"
+              >
+                <div className="w-[90px] h-[90px] rounded-full bg-card border-2 border-border flex items-center justify-center transition-all duration-300 group-hover:border-green-cta group-hover:shadow-[0_0_20px_rgba(34,197,94,0.2)]">
+                  <Icon size={32} className="text-green-teal" strokeWidth={1.5} />
+                </div>
+                <span className="font-bold text-sm text-foreground whitespace-nowrap">{name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile: manual snap scroll */}
+        <div className="flex md:hidden gap-6 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide">
+          {cats.map(({ icon: Icon, name }) => (
+            <button
+              key={name}
+              className="flex flex-col items-center gap-3 group flex-shrink-0 snap-center"
+            >
+              <div className="w-[90px] h-[90px] rounded-full bg-card border-2 border-border flex items-center justify-center transition-all duration-300 group-hover:border-green-cta group-hover:shadow-[0_0_20px_rgba(34,197,94,0.2)]">
+                <Icon size={32} className="text-green-teal" strokeWidth={1.5} />
+              </div>
+              <span className="font-bold text-sm text-foreground whitespace-nowrap">{name}</span>
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 export default CategoriesSection;
