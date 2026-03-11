@@ -23,6 +23,7 @@ async function fetchHomepageData() {
       .select("id,nome,slug,image_url,cor,preco_custo,categoria,estoque,codigo_amigavel,descricao")
       .eq("ativo", true)
       .eq("has_image", true)
+      .eq("is_variante", false)
       .gt("estoque", 0)
       .order("estoque", { ascending: false })
       .limit(8),
@@ -32,6 +33,7 @@ async function fetchHomepageData() {
       .select("id,nome,slug,image_url,cor,preco_custo,categoria,estoque,codigo_amigavel,descricao")
       .eq("ativo", true)
       .eq("has_image", true)
+      .eq("is_variante", false)
       .gt("estoque", 0)
       .order("updated_at", { ascending: false })
       .range(randomOffset, randomOffset + 7),
@@ -41,6 +43,7 @@ async function fetchHomepageData() {
       .select("categoria")
       .eq("ativo", true)
       .eq("has_image", true)
+      .eq("is_variante", false)
       .gt("estoque", 0),
 
     // Count squeezes
@@ -49,6 +52,7 @@ async function fetchHomepageData() {
       .select("id", { count: "exact", head: true })
       .eq("ativo", true)
       .eq("has_image", true)
+      .eq("is_variante", false)
       .gt("estoque", 0)
       .or("nome.ilike.%SQUEEZE%,descricao.ilike.%SQUEEZE%"),
 
@@ -58,6 +62,7 @@ async function fetchHomepageData() {
       .select("id", { count: "exact", head: true })
       .eq("ativo", true)
       .eq("has_image", true)
+      .eq("is_variante", false)
       .gt("estoque", 0)
       .lte("preco_custo", 8),
   ]);
