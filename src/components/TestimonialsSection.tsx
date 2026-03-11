@@ -5,7 +5,7 @@ const testimonials = [
   {
     text: "A Gift Web superou nossas expectativas. Os brindes personalizados chegaram impecáveis e no prazo!",
     name: "Mariana Costa",
-    company: "Empresa ABC",
+    company: "Embraer",
     role: "Marketing",
     photo: "https://i.pravatar.cc/80?img=32",
   },
@@ -19,7 +19,7 @@ const testimonials = [
   {
     text: "Nosso evento corporativo foi um sucesso graças aos kits personalizados. Recomendo demais!",
     name: "Fernanda Oliveira",
-    company: "Tech Corp",
+    company: "Tech Corp Coach",
     role: "Eventos",
     photo: "https://i.pravatar.cc/80?img=25",
   },

@@ -72,7 +72,7 @@ const Header = () => {
             style={{ boxShadow: "0 0 20px rgba(34,197,94,0.3)" }} href="https://wa.me/5548996652844">
             
             <MessageCircle size={16} />
-            (48) 99652-5312
+            (48) 99665-2844
           </a>
 
           {/* Mobile toggle */}

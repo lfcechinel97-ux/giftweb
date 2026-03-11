@@ -88,7 +88,7 @@ const CategoriesSection = () => {
         className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
       >
         <h2 className="text-center text-foreground font-extrabold text-[32px] mb-8">
-          Nossas <span className="text-highlight">categorias</span>
+          Nossas <span className="text-highlight">Categorias</span>
         </h2>
 
         <div className="relative group">

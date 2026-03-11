@@ -77,8 +77,8 @@ const HeroSection = () => {
           style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }}
         >
           <h2 className="font-black text-[38px] leading-tight text-foreground" style={{ maxWidth: "100%" }}>
-            Sua marca em cada<br />
-            <span className="text-highlight">brinde</span>
+            Explore nosso catálogo de<br />
+            <span className="text-highlight">brindes:</span>
           </h2>
 
           <div className="relative">
