@@ -150,6 +150,7 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
                 {products.map((p) => (
                   <ProductCard
                     key={p.id}
+                    id={p.id}
                     nome={p.nome}
                     slug={p.slug}
                     image_url={p.image_url}
