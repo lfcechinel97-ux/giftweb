@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Archivo Black"', 'sans-serif'],
-        body: ['"Roboto Flex"', 'sans-serif'],
+        display: ['"Inter"', 'sans-serif'],
+        body: ['"Inter"', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -26,11 +26,13 @@ export default {
         navy: {
           DEFAULT: "hsl(var(--navy))",
           dark: "hsl(var(--navy-dark))",
+          hover: "hsl(var(--navy-hover))",
         },
         "green-cta": "hsl(var(--green-cta))",
         surface: "hsl(var(--surface))",
         "text-main": "hsl(var(--text-main))",
         "text-meta": "hsl(var(--text-meta))",
+        danger: "hsl(var(--danger))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",

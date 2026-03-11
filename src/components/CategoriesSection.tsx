@@ -12,14 +12,16 @@ const cats = [
 const CategoriesSection = () => (
   <section id="categorias" className="py-12">
     <div className="container">
-      <h2 className="text-2xl md:text-3xl text-center text-navy mb-8">Categorias</h2>
+      <h2 className="text-center text-navy mb-8">
+        Nossas <span className="text-highlight">Categorias</span>
+      </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {cats.map(({ icon: Icon, name, count }) => (
           <button
             key={name}
-            className="flex flex-col items-center gap-3 rounded-xl bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group"
+            className="flex flex-col items-center gap-3 rounded-xl bg-card p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 group"
           >
-            <div className="w-16 h-16 rounded-full bg-green-cta/10 flex items-center justify-center group-hover:bg-green-cta/20 transition-colors">
+            <div className="w-16 h-16 rounded-full bg-green-cta/10 flex items-center justify-center group-hover:bg-green-cta/20 transition-colors duration-200">
               <Icon size={28} className="text-green-cta" strokeWidth={1.5} />
             </div>
             <span className="font-semibold text-foreground text-sm">{name}</span>

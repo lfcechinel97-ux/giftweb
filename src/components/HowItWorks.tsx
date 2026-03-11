@@ -9,16 +9,16 @@ const steps = [
 const HowItWorks = () => (
   <section className="py-12 bg-card">
     <div className="container">
-      <h2 className="text-2xl md:text-3xl text-center text-navy mb-10">Como funciona seu pedido</h2>
+      <h2 className="text-center text-navy mb-10">
+        Como funciona seu <span className="text-highlight">pedido</span>
+      </h2>
 
-      {/* Horizontal flow */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-0 relative">
-        {/* Connector line (desktop) */}
         <div className="hidden md:block absolute top-8 left-[10%] right-[10%] border-t-2 border-dashed border-text-meta/30" />
 
         {steps.map((s, i) => (
-          <div key={i} className="flex flex-col items-center text-center flex-1 relative z-10">
-            <div className="w-16 h-16 rounded-full bg-navy flex items-center justify-center text-primary-foreground font-display text-lg mb-3">
+          <div key={i} className="flex flex-col items-center text-center flex-1 relative z-10 group">
+            <div className="w-16 h-16 rounded-full bg-navy flex items-center justify-center text-primary-foreground font-bold text-lg mb-3 group-hover:bg-navy-hover transition-colors duration-200">
               {s.num}
             </div>
             <h4 className="font-semibold text-foreground mb-1">{s.title}</h4>
