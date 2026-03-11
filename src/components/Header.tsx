@@ -24,7 +24,7 @@ const Header = () => {
       {/* Top bar */}
       <div className="bg-navy-dark text-muted-foreground" style={{ fontSize: 13 }}>
         <div className="container flex items-center justify-center py-2 gap-1">
-          <span>Suporte de segunda a sexta-feira das 08h às 18h</span>
+          <span>⚡ Atendimento rápido via WhatsApp    💳 Pagamento facilitado </span>
           <span className="mx-1">|</span>
           <a
             href="https://wa.me/5548996525312"
@@ -32,7 +32,7 @@ const Header = () => {
             rel="noreferrer"
             className="font-bold text-green-cta hover:underline">
             
-            ABRIR WHATSAPP
+            Atendimento Comercial 
           </a>
         </div>
       </div>
@@ -49,8 +49,8 @@ const Header = () => {
         <div className="container flex items-center justify-between gap-4 py-3">
           {/* Logo */}
           <a href="/" className="flex items-baseline gap-0.5 shrink-0">
-            <span className="text-2xl font-extrabold text-foreground">Gift Web</span>
-            <span className="text-sm font-medium text-green-cta ml-1">brindes</span>
+            <span className="font-extrabold text-foreground font-serif text-left text-5xl">Gift Web</span>
+            <span className="text-sm font-medium text-green-cta ml-1">B R I N D E S        </span>
           </a>
 
           {/* Search */}
@@ -58,7 +58,7 @@ const Header = () => {
             <input
               type="text"
               placeholder="Estou procurando por..."
-              className="w-full rounded-[10px] border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-text-meta focus:outline-none focus:ring-2 focus:ring-green-cta/40" />
+              className="w-full rounded-[10px] border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-text-meta focus:outline-none focus:ring-2 focus:ring-green-cta/40 px-[30px]" />
             
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-meta" />
           </div>
@@ -104,9 +104,9 @@ const Header = () => {
 
             <a
               href="#ofertas"
-              className="px-4 py-3 text-[13px] font-bold uppercase text-danger hover:opacity-80 transition-colors duration-200">
+              className="px-4 py-3 text-[13px] font-bold uppercase hover:opacity-80 transition-colors duration-200 text-secondary-foreground">
               
-              OFERTAS
+              ​BRINDES BARATOS  
             </a>
           </div>
         </div>
