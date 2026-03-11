@@ -59,7 +59,8 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
       .select("*", { count: "exact" })
       .eq("categoria", category)
       .eq("ativo", true)
-      .eq("has_image", true);
+      .eq("has_image", true)
+      .eq("is_variante", false);
 
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
     if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
