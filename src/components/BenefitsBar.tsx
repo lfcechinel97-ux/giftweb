@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { CreditCard, QrCode, ShieldCheck, Truck, Award } from "lucide-react";
+import { CreditCard, Truck, ShieldCheck, Award } from "lucide-react";
 
 const items = [
-  { icon: CreditCard, title: "Pague em até 10x", subtitle: "no cartão" },
-  { icon: QrCode, title: "Descontos especiais", subtitle: "pagando no Pix" },
-  { icon: ShieldCheck, title: "Compra 100% segura", subtitle: "e confiável" },
-  { icon: Truck, title: "Entrega para todo Brasil", subtitle: "rápida e rastreável" },
-  { icon: Award, title: "+15 anos de mercado", subtitle: "experiência garantida" },
+  { icon: CreditCard, title: "Pague em até 10x", subtitle: "Pagamento Seguro 🔐" },
+  { icon: Truck, title: "Logística FULL", subtitle: "Entrega em até 24h⚡ " },
+  { icon: ShieldCheck, title: "Nota Fiscal e Garantia", subtitle: "Compra Segura✅ " },
+  { icon: Truck, title: "Entrega para todo Brasil", subtitle: "Rápida e Rastreável📡 " },
+  { icon: Award, title: "+5 anos de mercado", subtitle: "Expertise no assunto🌟 " },
 ];
 
 const BenefitsBar = () => {
