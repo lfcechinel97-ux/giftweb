@@ -39,9 +39,7 @@ export default function AdminSync() {
     setLoading(true);
     setResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke("sync-products", {
-        method: "POST",
-      });
+      const { data, error } = await supabase.functions.invoke("sync-products");
       if (error) {
         setResult({ success: false, error: error.message });
       } else {
