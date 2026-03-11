@@ -10,6 +10,8 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import HowItWorks from "@/components/HowItWorks";
 import TrustSection from "@/components/TrustSection";
 import Footer from "@/components/Footer";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import CorporateQuotation from "@/components/CorporateQuotation";
 
 const Index = () => (
   <div className="min-h-screen flex flex-col bg-background">
@@ -17,6 +19,7 @@ const Index = () => (
     <main className="flex-1">
       <HeroSection />
       <BenefitsBar />
+      <CorporateQuotation />
       <CategoriesSection />
       <BestSellersSection />
       <BannerSeparator />
@@ -27,6 +30,7 @@ const Index = () => (
       <TrustSection />
     </main>
     <Footer />
+    <FloatingWhatsApp />
   </div>
 );
 
