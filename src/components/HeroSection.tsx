@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, TouchEvent } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 
@@ -31,6 +31,7 @@ const HeroSection = () => {
   const [selectedColor, setSelectedColor] = useState<number | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [hoveredColor, setHoveredColor] = useState<number | null>(null);
+  const touchStart = useRef(0);
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -41,21 +42,28 @@ const HeroSection = () => {
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(nextSlide, 4000);
+    const interval = setInterval(nextSlide, 7000);
     return () => clearInterval(interval);
   }, [nextSlide]);
+
+  const onTouchStart = (e: TouchEvent) => { touchStart.current = e.touches[0].clientX; };
+  const onTouchEnd = (e: TouchEvent) => {
+    const dx = e.changedTouches[0].clientX - touchStart.current;
+    if (Math.abs(dx) > 50) {
+      if (dx > 0) prevSlide();
+      else nextSlide();
+    }
+  };
 
   return (
     <section
       className="py-8 relative overflow-hidden"
       style={{ background: "linear-gradient(135deg, hsl(222,47%,7%) 0%, hsl(210,50%,13%) 100%)" }}
     >
-      {/* Decorative glow */}
       <div
         className="absolute pointer-events-none"
         style={{
-          width: 600, height: 600,
-          top: "50%", right: "-10%",
+          width: 600, height: 600, top: "50%", right: "-10%",
           transform: "translateY(-50%)",
           background: "radial-gradient(circle, rgba(34,197,94,0.06) 0%, transparent 70%)",
           filter: "blur(120px)",
@@ -63,82 +71,39 @@ const HeroSection = () => {
       />
 
       <div className="container flex flex-col lg:flex-row relative z-10" style={{ minHeight: 270 }}>
-        {/* Filter panel — 36% */}
+        {/* Filter panel */}
         <div
           className="lg:w-[36%] bg-card rounded-[20px] border border-border p-10 flex flex-col gap-5 shrink-0"
           style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }}
         >
           <h2 className="font-black text-[38px] leading-tight text-foreground" style={{ maxWidth: "100%" }}>
-            Sua marca em cada{" "}
-            <br />
+            Sua marca em cada<br />
             <span className="text-highlight">brinde</span>
           </h2>
 
-          {/* Category dropdown */}
           <div className="relative">
             <select className="w-full appearance-none rounded-[10px] border border-border bg-background py-3 pl-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40">
               <option>Escolha a categoria de brinde</option>
-              {categories.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
+              {categories.map((c) => <option key={c}>{c}</option>)}
             </select>
             <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-cta pointer-events-none" />
           </div>
 
-          {/* Price range */}
           <div>
             <div className="flex justify-between text-sm mb-2">
-              <span className="text-muted-foreground">
-                A partir de: <strong className="text-green-cta">R$ {priceMin},00</strong>
-              </span>
-              <span className="text-muted-foreground">
-                Valor máximo: <strong className="text-green-cta">R$ {priceMax},00</strong>
-              </span>
+              <span className="text-muted-foreground">A partir de: <strong className="text-green-cta">R$ {priceMin},00</strong></span>
+              <span className="text-muted-foreground">Valor máximo: <strong className="text-green-cta">R$ {priceMax},00</strong></span>
             </div>
             <div className="flex gap-3">
-              <input
-                type="range"
-                min={0}
-                max={500}
-                value={priceMin}
-                onChange={(e) => setPriceMin(Math.min(Number(e.target.value), priceMax))}
-                className="w-full"
-              />
-              <input
-                type="range"
-                min={0}
-                max={500}
-                value={priceMax}
-                onChange={(e) => setPriceMax(Math.max(Number(e.target.value), priceMin))}
-                className="w-full"
-              />
+              <input type="range" min={0} max={500} value={priceMin} onChange={(e) => setPriceMin(Math.min(Number(e.target.value), priceMax))} className="w-full" />
+              <input type="range" min={0} max={500} value={priceMax} onChange={(e) => setPriceMax(Math.max(Number(e.target.value), priceMin))} className="w-full" />
             </div>
-            {/* Editable price inputs */}
             <div className="flex gap-3 mt-2">
-              <input
-                type="text"
-                inputMode="numeric"
-                value={priceMin}
-                onChange={(e) => {
-                  const v = Number(e.target.value.replace(/\D/g, ""));
-                  if (!isNaN(v)) setPriceMin(Math.min(v, priceMax));
-                }}
-                className="w-full rounded-[10px] border border-border bg-background py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40"
-              />
-              <input
-                type="text"
-                inputMode="numeric"
-                value={priceMax}
-                onChange={(e) => {
-                  const v = Number(e.target.value.replace(/\D/g, ""));
-                  if (!isNaN(v)) setPriceMax(Math.max(v, priceMin));
-                }}
-                className="w-full rounded-[10px] border border-border bg-background py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40"
-              />
+              <input type="text" inputMode="numeric" value={priceMin} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMin(Math.min(v, priceMax)); }} className="w-full rounded-[10px] border border-border bg-background py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40" />
+              <input type="text" inputMode="numeric" value={priceMax} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMax(Math.max(v, priceMin)); }} className="w-full rounded-[10px] border border-border bg-background py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40" />
             </div>
           </div>
 
-          {/* Color swatches */}
           <div>
             <label className="text-sm font-medium text-muted-foreground mb-2 block">Cor</label>
             <div className="flex flex-wrap gap-2">
@@ -168,11 +133,7 @@ const HeroSection = () => {
 
           <button
             className="mt-auto flex items-center justify-center gap-2 rounded-[10px] bg-green-cta px-4 font-bold uppercase text-primary-foreground transition-all duration-200 hover:brightness-110"
-            style={{
-              height: 52,
-              fontSize: 15,
-              boxShadow: "0 0 24px rgba(34,197,94,0.2)",
-            }}
+            style={{ height: 52, fontSize: 15, boxShadow: "0 0 24px rgba(34,197,94,0.2)" }}
             onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 24px rgba(34,197,94,0.4)")}
             onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 0 24px rgba(34,197,94,0.2)")}
           >
@@ -180,62 +141,51 @@ const HeroSection = () => {
           </button>
         </div>
 
-        {/* Carousel — 64% */}
+        {/* Carousel */}
         <div
           className="lg:w-[64%] relative rounded-[16px] overflow-hidden flex items-center mt-6 lg:mt-0 border border-border"
           style={{ minHeight: 260 }}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
           {slides.map((slide, i) => (
             <div
               key={i}
-              className={`absolute inset-0 transition-opacity duration-600 ${
-                i === currentSlide ? "opacity-100 hero-slide-active" : "opacity-0 pointer-events-none"
-              }`}
+              className="absolute inset-0"
+              style={{
+                opacity: i === currentSlide ? 1 : 0,
+                transform: i === currentSlide ? "scale(1)" : "scale(1.03)",
+                transition: "opacity 1.2s ease-in-out, transform 1.4s ease-in-out",
+                pointerEvents: i === currentSlide ? "auto" : "none",
+              }}
             >
-              <img
-                src={heroBanner}
-                alt="Brindes corporativos personalizados"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-              <div
-                className="absolute inset-0"
-                style={{ background: "linear-gradient(135deg, rgba(11,15,26,0.85) 0%, rgba(11,15,26,0.3) 100%)" }}
-              />
+              <img src={heroBanner} alt="Brindes corporativos personalizados" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(11,15,26,0.85) 0%, rgba(11,15,26,0.3) 100%)" }} />
               <div className="relative z-10 flex items-center h-full p-8 md:p-14">
-                <h2 className="text-foreground font-black text-[36px] md:text-[52px] leading-tight max-w-xl">
-                  {slide.text}{" "}
-                  <span className="text-highlight">{slide.highlight}</span>
+                <h2
+                  className="text-foreground font-black text-[36px] md:text-[52px] leading-tight max-w-xl"
+                  style={{
+                    opacity: i === currentSlide ? 1 : 0,
+                    transform: i === currentSlide ? "translateY(0)" : "translateY(20px)",
+                    transition: "opacity 0.8s ease-out 0.4s, transform 0.8s ease-out 0.4s",
+                  }}
+                >
+                  {slide.text} <span className="text-highlight">{slide.highlight}</span>
                 </h2>
               </div>
             </div>
           ))}
 
-          {/* Arrows */}
-          <button
-            onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-border flex items-center justify-center text-foreground transition-all duration-200 hover:bg-green-cta hover:border-green-cta"
-            style={{ background: "rgba(255,255,255,0.08)" }}
-          >
+          <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-border flex items-center justify-center text-foreground transition-all duration-200 hover:bg-green-cta hover:border-green-cta" style={{ background: "rgba(255,255,255,0.08)" }}>
             <ChevronLeft size={22} />
           </button>
-          <button
-            onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-border flex items-center justify-center text-foreground transition-all duration-200 hover:bg-green-cta hover:border-green-cta"
-            style={{ background: "rgba(255,255,255,0.08)" }}
-          >
+          <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-border flex items-center justify-center text-foreground transition-all duration-200 hover:bg-green-cta hover:border-green-cta" style={{ background: "rgba(255,255,255,0.08)" }}>
             <ChevronRight size={22} />
           </button>
 
-          {/* Dots */}
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
             {slides.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentSlide(i)}
-                className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                  i === currentSlide ? "bg-green-cta w-6" : "bg-border hover:bg-muted-foreground"
-                }`}
-              />
+              <button key={i} onClick={() => setCurrentSlide(i)} className={`w-3 h-3 rounded-full transition-all duration-300 ${i === currentSlide ? "bg-green-cta w-6" : "bg-border hover:bg-muted-foreground"}`} />
             ))}
           </div>
         </div>

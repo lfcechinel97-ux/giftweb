@@ -5,26 +5,30 @@ const testimonials = [
   {
     text: "A Gift Web superou nossas expectativas. Os brindes personalizados chegaram impecáveis e no prazo!",
     name: "Mariana Costa",
-    role: "Marketing · Empresa ABC",
-    avatar: "MC",
+    company: "Empresa ABC",
+    role: "Marketing",
+    photo: "https://i.pravatar.cc/80?img=32",
   },
   {
     text: "Qualidade excelente e atendimento diferenciado. Já fizemos mais de 10 pedidos e todos foram perfeitos.",
     name: "Ricardo Almeida",
-    role: "Compras · Grupo XYZ",
-    avatar: "RA",
+    company: "Grupo XYZ",
+    role: "Compras",
+    photo: "https://i.pravatar.cc/80?img=12",
   },
   {
     text: "Nosso evento corporativo foi um sucesso graças aos kits personalizados. Recomendo demais!",
     name: "Fernanda Oliveira",
-    role: "Eventos · Tech Corp",
-    avatar: "FO",
+    company: "Tech Corp",
+    role: "Eventos",
+    photo: "https://i.pravatar.cc/80?img=25",
   },
   {
     text: "Parceiros de confiança. Sempre entregam com qualidade e pontualidade, mesmo em grandes volumes.",
     name: "Lucas Santos",
-    role: "Diretoria · StartUp Inc",
-    avatar: "LS",
+    company: "StartUp Inc",
+    role: "Diretoria",
+    photo: "https://i.pravatar.cc/80?img=53",
   },
 ];
 
@@ -33,7 +37,7 @@ const TestimonialsSection = () => {
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrent((c) => (c + 1) % testimonials.length), 7000);
+    const timer = setInterval(() => setCurrent((c) => (c + 1) % testimonials.length), 9000);
     return () => clearInterval(timer);
   }, []);
 
@@ -54,13 +58,13 @@ const TestimonialsSection = () => {
         {/* Desktop */}
         <div className="hidden md:grid grid-cols-3 gap-6">
           {getVisible().map((t, i) => (
-            <TestimonialCard key={`${t.name}-${i}`} {...t} />
+            <TestimonialCard key={`${t.name}-${current}-${i}`} {...t} delay={i * 100} />
           ))}
         </div>
 
         {/* Mobile */}
         <div className="md:hidden">
-          <TestimonialCard {...testimonials[current]} />
+          <TestimonialCard key={`mobile-${current}`} {...testimonials[current]} delay={0} />
         </div>
 
         {/* Dots */}
@@ -69,7 +73,7 @@ const TestimonialsSection = () => {
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              className={`w-2.5 h-2.5 rounded-full transition-colors duration-200 ${
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
                 i === current ? "bg-green-cta" : "bg-border"
               }`}
             />
@@ -80,19 +84,26 @@ const TestimonialsSection = () => {
   );
 };
 
-const TestimonialCard = ({ text, name, role, avatar }: { text: string; name: string; role: string; avatar: string }) => (
-  <div className="rounded-[20px] bg-card border border-border p-6 transition-all duration-250 hover:border-green-cta hover:shadow-[0_8px_40px_rgba(34,197,94,0.08)]">
+const TestimonialCard = ({ text, name, company, role, photo, delay }: { text: string; name: string; company: string; role: string; photo: string; delay: number }) => (
+  <div
+    className="rounded-[20px] bg-card border border-border p-6 transition-all duration-500 hover:border-green-cta hover:shadow-[0_8px_40px_rgba(34,197,94,0.08)]"
+    style={{
+      animation: `fadeSlideIn 0.6s ease-out ${delay}ms both`,
+    }}
+  >
     <span className="text-green-cta/30 font-black text-6xl leading-none select-none">"</span>
     <p className="text-muted-foreground text-[15px] leading-relaxed line-clamp-3 -mt-3 mb-4">
       {text}
     </p>
     <div className="border-t border-border pt-4 flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground font-bold text-sm">
-        {avatar}
-      </div>
+      <img
+        src={photo}
+        alt={name}
+        className="w-12 h-12 rounded-full object-cover border-2 border-border"
+      />
       <div>
         <p className="font-bold text-foreground text-sm">{name}</p>
-        <p className="text-green-cta text-[12px]">{role}</p>
+        <p className="text-green-cta text-[12px]">{role} · {company}</p>
       </div>
     </div>
   </div>

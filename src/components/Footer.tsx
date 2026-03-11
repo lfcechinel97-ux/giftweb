@@ -1,4 +1,4 @@
-import { Instagram, Facebook, MessageCircle, Phone } from "lucide-react";
+import { Instagram, Facebook, MessageCircle, Phone, MapPin, ShieldCheck, Lock, CreditCard } from "lucide-react";
 
 const paymentLogos = [
   { name: "Visa", src: "/logos/visa.svg" },
@@ -14,9 +14,10 @@ const paymentLogos = [
 ];
 
 const securityBadges = [
-  { name: "Google Safe Browsing", src: "/logos/google-safe-browsing.png" },
-  { name: "GoDaddy Verified & Secured", src: "/logos/godaddy-verified.png" },
-  { name: "Google Reviews", src: "/logos/google-reviews.png" },
+  { name: "SSL Secure", icon: Lock, color: "text-green-cta" },
+  { name: "Compra Segura", icon: ShieldCheck, color: "text-green-cta" },
+  { name: "Mercado Pago", icon: CreditCard, color: "text-[#009ee3]" },
+  { name: "Stone Pagamentos", icon: ShieldCheck, color: "text-[#00a868]" },
 ];
 
 const Footer = () => (
@@ -29,7 +30,6 @@ const Footer = () => (
             <span className="text-lg font-extrabold text-foreground">Gift Web</span>
             <span className="text-xs font-semibold text-primary ml-1">brindes</span>
           </div>
-
           <div className="space-y-2 text-sm">
             <p className="flex items-center gap-2">
               <Phone size={14} className="text-primary" />
@@ -41,7 +41,6 @@ const Footer = () => (
             </p>
             <p className="mt-3 text-xs">suporte@giftwebbrindes.com.br</p>
           </div>
-
           <div className="flex gap-2 mt-4">
             <a href="#" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors text-foreground">
               <Instagram size={16} strokeWidth={1.5} />
@@ -70,15 +69,8 @@ const Footer = () => (
           <h4 className="font-semibold mb-4 text-xs uppercase tracking-wider text-foreground">Formas de pagamento</h4>
           <div className="flex flex-wrap gap-3 items-center">
             {paymentLogos.map((logo) => (
-              <div
-                key={logo.name}
-                className="h-8 w-12 bg-white rounded flex items-center justify-center p-1"
-              >
-                <img
-                  src={logo.src}
-                  alt={logo.name}
-                  className="max-h-full max-w-full object-contain"
-                />
+              <div key={logo.name} className="h-8 w-12 bg-white rounded flex items-center justify-center p-1">
+                <img src={logo.src} alt={logo.name} className="max-h-full max-w-full object-contain" />
               </div>
             ))}
           </div>
@@ -87,17 +79,14 @@ const Footer = () => (
         {/* Col 4 – Segurança */}
         <div>
           <h4 className="font-semibold mb-4 text-xs uppercase tracking-wider text-foreground">Segurança</h4>
-          <div className="flex flex-wrap gap-3 items-center">
+          <div className="grid grid-cols-2 gap-3">
             {securityBadges.map((badge) => (
               <div
                 key={badge.name}
-                className="h-14 w-auto"
+                className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border"
               >
-                <img
-                  src={badge.src}
-                  alt={badge.name}
-                  className="h-full w-auto object-contain"
-                />
+                <badge.icon size={28} className={badge.color} strokeWidth={1.5} />
+                <span className="text-[10px] text-center text-muted-foreground font-semibold leading-tight">{badge.name}</span>
               </div>
             ))}
           </div>
@@ -105,20 +94,26 @@ const Footer = () => (
       </div>
     </div>
 
-    {/* Company info */}
+    {/* Company info with location icons */}
     <div className="border-t border-border">
-      <div className="container py-6 text-xs text-muted-foreground">
-        <p className="font-semibold text-foreground/80 mb-3 text-[11px]">
+      <div className="container py-6">
+        <p className="font-semibold text-foreground/80 mb-4 text-[11px] text-center uppercase tracking-wider">
           COMÉRCIO DE UTILIDADES LUKATI LTDA – GIFT WEB BRINDES
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="font-medium text-foreground/60 mb-1">Matriz Santa Catarina</p>
+        <div className="flex flex-col sm:flex-row justify-center gap-8 text-xs text-muted-foreground">
+          <div className="text-center">
+            <p className="flex items-center justify-center gap-1.5 font-medium text-foreground/70 mb-1">
+              <MapPin size={14} className="text-primary" />
+              Matriz – Santa Catarina
+            </p>
             <p>Rua Cel Marcos Rovaris, 274 – Centro</p>
             <p>Içara – SC</p>
           </div>
-          <div>
-            <p className="font-medium text-foreground/60 mb-1">Filial São Paulo</p>
+          <div className="text-center">
+            <p className="flex items-center justify-center gap-1.5 font-medium text-foreground/70 mb-1">
+              <MapPin size={14} className="text-primary" />
+              Filial – São Paulo
+            </p>
             <p>Avenida Monteiro Lobato, 4550</p>
             <p>Galpão 6 – Setor 7 – Cidade Jardim Cumbica</p>
             <p>Guarulhos – SP</p>
@@ -127,7 +122,7 @@ const Footer = () => (
       </div>
     </div>
 
-    {/* Copyright + brand message */}
+    {/* Copyright */}
     <div className="border-t border-border">
       <div className="container py-5 flex flex-col items-center gap-3 text-center">
         <p className="text-xs text-muted-foreground">
