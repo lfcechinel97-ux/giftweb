@@ -8,7 +8,7 @@ import CatalogSection from "@/components/CatalogSection";
 import ClientsSection from "@/components/ClientsSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import HowItWorks from "@/components/HowItWorks";
-import LeadCapture from "@/components/LeadCapture";
+import TrustSection from "@/components/TrustSection";
 import Footer from "@/components/Footer";
 
 const Index = () => (
