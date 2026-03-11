@@ -14,7 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      leads: {
+        Row: {
+          created_at: string | null
+          email: string
+          empresa: string | null
+          id: string
+          nome: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          empresa?: string | null
+          id?: string
+          nome?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          empresa?: string | null
+          id?: string
+          nome?: string | null
+        }
+        Relationships: []
+      }
+      products_cache: {
+        Row: {
+          altura: number | null
+          ativo: boolean | null
+          busca: string | null
+          categoria: string | null
+          codigo_amigavel: string
+          cor: string | null
+          created_at: string | null
+          descricao: string | null
+          estoque: number | null
+          id: string
+          image_url: string | null
+          largura: number | null
+          marca: string | null
+          nome: string
+          peso: number | null
+          preco_custo: number | null
+          profundidade: number | null
+          site_link: string | null
+          slug: string | null
+          ultima_sync: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          altura?: number | null
+          ativo?: boolean | null
+          busca?: string | null
+          categoria?: string | null
+          codigo_amigavel: string
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          estoque?: number | null
+          id?: string
+          image_url?: string | null
+          largura?: number | null
+          marca?: string | null
+          nome: string
+          peso?: number | null
+          preco_custo?: number | null
+          profundidade?: number | null
+          site_link?: string | null
+          slug?: string | null
+          ultima_sync?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          altura?: number | null
+          ativo?: boolean | null
+          busca?: string | null
+          categoria?: string | null
+          codigo_amigavel?: string
+          cor?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          estoque?: number | null
+          id?: string
+          image_url?: string | null
+          largura?: number | null
+          marca?: string | null
+          nome?: string
+          peso?: number | null
+          preco_custo?: number | null
+          profundidade?: number | null
+          site_link?: string | null
+          slug?: string | null
+          ultima_sync?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      sync_log: {
+        Row: {
+          erro: string | null
+          id: string
+          status: string | null
+          synced_at: string | null
+          total_products: number | null
+        }
+        Insert: {
+          erro?: string | null
+          id?: string
+          status?: string | null
+          synced_at?: string | null
+          total_products?: number | null
+        }
+        Update: {
+          erro?: string | null
+          id?: string
+          status?: string | null
+          synced_at?: string | null
+          total_products?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

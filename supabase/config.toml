@@ -1,1 +1,4 @@
 project_id = "ozkbfxvouxgsdthnweyr"
+
+[functions.sync-products]
+verify_jwt = false
