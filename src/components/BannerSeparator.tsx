@@ -5,7 +5,7 @@ const BannerSeparator = () => (
     <img
       src={bannerB2B}
       alt="Brindes que fortalecem sua marca — Gift Web"
-      className="w-full h-auto block"
+      className="w-full h-auto block max-h-[140px] object-cover"
     />
   </section>
 );
