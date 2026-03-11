@@ -54,6 +54,7 @@ const BestSellersSection = () => {
               <h4 className="font-bold text-foreground text-sm leading-tight line-clamp-2 mb-1">
                 {p.name}
               </h4>
+              <p className="text-muted-foreground text-xs mb-0.5">A partir de</p>
               <p className="text-green-cta font-extrabold text-lg">
                 {p.pix} <span className="text-xs font-medium text-muted-foreground">no PIX</span>
               </p>
