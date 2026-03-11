@@ -110,8 +110,15 @@ serve(async (req) => {
       })
       .filter((p: any) => p.codigo_amigavel !== '')
 
-    for (let i = 0; i < registros.length; i += CHUNK_SIZE) {
-      const chunk = registros.slice(i, i + CHUNK_SIZE)
+    // Deduplicate by codigo_amigavel (keep last occurrence)
+    const deduped = new Map<string, any>()
+    for (const r of registros) {
+      deduped.set(r.codigo_amigavel, r)
+    }
+    const registrosUnicos = Array.from(deduped.values())
+
+    for (let i = 0; i < registrosUnicos.length; i += CHUNK_SIZE) {
+      const chunk = registrosUnicos.slice(i, i + CHUNK_SIZE)
       const { error } = await supabase
         .from('products_cache')
         .upsert(chunk, { onConflict: 'codigo_amigavel' })
@@ -127,12 +134,12 @@ serve(async (req) => {
       .lt('ultima_sync', limite)
 
     await supabase.from('sync_log').insert({
-      total_products: registros.length,
+      total_products: registrosUnicos.length,
       status: 'success',
     })
 
     return new Response(
-      JSON.stringify({ success: true, total: registros.length }),
+      JSON.stringify({ success: true, total: registrosUnicos.length }),
       { headers: { ...corsHeaders,
           'Content-Type': 'application/json' } }
     )
