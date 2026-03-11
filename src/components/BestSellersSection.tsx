@@ -1,45 +1,50 @@
 import { useInView } from "@/hooks/useInView";
+import prodSqueeze from "@/assets/prod-squeeze.png";
+import prodEcobag from "@/assets/prod-ecobag.png";
+import prodCaderno from "@/assets/prod-caderno.png";
+import prodCaneca from "@/assets/prod-caneca.png";
+import prodMochila from "@/assets/prod-mochila.png";
+import prodKit from "@/assets/prod-kit.png";
 
 const products = [
-  { name: "Squeeze Plástico 900ml Personalizado", img: "" },
-  { name: "Ecobag Algodão Estampada", img: "" },
-  { name: "Caderno Capa Dura 100 Folhas", img: "" },
-  { name: "Caneca Cerâmica 350ml", img: "" },
-  { name: "Mochila Executiva Personalizada", img: "" },
-  { name: "Kit Escritório Premium", img: "" },
+  { name: "Squeeze Plástico 900ml Personalizado", img: prodSqueeze, pix: "R$ 12,90" },
+  { name: "Ecobag Algodão Estampada", img: prodEcobag, pix: "R$ 8,50" },
+  { name: "Caderno Capa Dura 100 Folhas", img: prodCaderno, pix: "R$ 18,90" },
+  { name: "Caneca Cerâmica 350ml", img: prodCaneca, pix: "R$ 14,90" },
+  { name: "Mochila Executiva Personalizada", img: prodMochila, pix: "R$ 45,90" },
+  { name: "Kit Escritório Premium", img: prodKit, pix: "R$ 62,00" },
 ];
 
 const BestSellersSection = () => {
   const { ref, inView } = useInView();
 
   return (
-    <section className="py-20 md:py-20 bg-surface-alt">
+    <section className="py-10 md:py-12 bg-surface-alt">
       <div
         ref={ref}
         className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
       >
-        <h2 className="text-foreground font-extrabold text-[32px] mb-8">
+        <h2 className="text-foreground font-extrabold text-[32px] mb-6">
           Mais <span className="text-highlight">vendidos</span>
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {products.map((p, i) => (
-            <div
+            <a
               key={i}
-              className="flex gap-4 rounded-[16px] bg-card border border-border p-4 transition-all duration-250 group hover:-translate-y-1 hover:border-green-cta hover:shadow-[0_8px_40px_rgba(34,197,94,0.12)]"
+              href={`/produto/${i + 1}`}
+              className="rounded-[16px] bg-card border border-border p-3 transition-all duration-250 group hover:-translate-y-1 hover:border-green-cta hover:shadow-[0_8px_40px_rgba(34,197,94,0.12)] cursor-pointer block"
             >
-              <div className="w-24 h-24 flex-shrink-0 rounded-xl bg-secondary flex items-center justify-center">
-                <span className="text-muted-foreground text-xs text-center">Imagem</span>
+              <div className="aspect-square rounded-xl bg-secondary overflow-hidden mb-3">
+                <img src={p.img} alt={p.name} className="w-full h-full object-contain p-2" />
               </div>
-              <div className="flex flex-col justify-between flex-1 min-w-0">
-                <h4 className="font-bold text-foreground text-base leading-tight line-clamp-2">
-                  {p.name}
-                </h4>
-                <button className="mt-2 w-full rounded-[10px] bg-green-cta text-primary-foreground py-2.5 text-sm font-bold hover:brightness-110 transition-all duration-200 hover:shadow-[0_0_24px_rgba(34,197,94,0.4)]">
-                  Solicitar orçamento
-                </button>
-              </div>
-            </div>
+              <h4 className="font-bold text-foreground text-sm leading-tight line-clamp-2 mb-1">
+                {p.name}
+              </h4>
+              <p className="text-green-cta font-extrabold text-lg">
+                {p.pix} <span className="text-xs font-medium text-muted-foreground">no PIX</span>
+              </p>
+            </a>
           ))}
         </div>
       </div>
