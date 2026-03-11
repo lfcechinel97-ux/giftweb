@@ -5,15 +5,24 @@ import heroBanner from "@/assets/hero-banner.jpg";
 const categories = ["Copos", "Garrafas", "Mochilas", "Bolsas", "Escritório", "Kit Corporativo"];
 
 const swatchColors = [
-  "bg-red-500", "bg-blue-600", "bg-green-500", "bg-yellow-400",
-  "bg-purple-500", "bg-pink-500", "bg-orange-500", "bg-gray-800",
-  "bg-cyan-400", "bg-rose-400", "bg-indigo-500", "bg-teal-500",
+  { bg: "#EF4444", name: "Vermelho" },
+  { bg: "#2563EB", name: "Azul" },
+  { bg: "#22C55E", name: "Verde" },
+  { bg: "#EAB308", name: "Amarelo" },
+  { bg: "#A855F7", name: "Roxo" },
+  { bg: "#EC4899", name: "Rosa" },
+  { bg: "#F97316", name: "Laranja" },
+  { bg: "#1F2937", name: "Preto" },
+  { bg: "#06B6D4", name: "Ciano" },
+  { bg: "#FB7185", name: "Rose" },
+  { bg: "#6366F1", name: "Índigo" },
+  { bg: "#14B8A6", name: "Teal" },
 ];
 
 const slides = [
-  { hashtag: "#SuaMarcaEm", highlight: "Evidência" },
-  { hashtag: "Brindes que as pessoas guardam — e", highlight: "lembram" },
-  { hashtag: "Do conceito à entrega, sua marca em cada", highlight: "detalhe" },
+  { text: "Sua marca presente em cada", highlight: "momento" },
+  { text: "Brindes que criam", highlight: "conexões reais" },
+  { text: "Do conceito à entrega, com", highlight: "excelência" },
 ];
 
 const HeroSection = () => {
@@ -21,6 +30,7 @@ const HeroSection = () => {
   const [priceMax, setPriceMax] = useState(250);
   const [selectedColor, setSelectedColor] = useState<number | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [hoveredColor, setHoveredColor] = useState<number | null>(null);
 
   const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -36,28 +46,43 @@ const HeroSection = () => {
   }, [nextSlide]);
 
   return (
-    <section className="bg-background py-8">
-      <div className="container flex flex-col lg:flex-row" style={{ minHeight: 540 }}>
+    <section
+      className="py-8 relative overflow-hidden"
+      style={{ background: "linear-gradient(135deg, hsl(222,47%,7%) 0%, hsl(210,50%,13%) 100%)" }}
+    >
+      {/* Decorative glow */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          width: 600, height: 600,
+          top: "50%", right: "-10%",
+          transform: "translateY(-50%)",
+          background: "radial-gradient(circle, rgba(34,197,94,0.06) 0%, transparent 70%)",
+          filter: "blur(120px)",
+        }}
+      />
+
+      <div className="container flex flex-col lg:flex-row relative z-10" style={{ minHeight: 540 }}>
         {/* Filter panel — 36% */}
         <div
-          className="lg:w-[36%] bg-card rounded-[16px] p-10 flex flex-col gap-5 shrink-0"
-          style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.12)" }}
+          className="lg:w-[36%] bg-card rounded-[20px] border border-border p-10 flex flex-col gap-5 shrink-0"
+          style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }}
         >
-          <h2 className="font-black text-[38px] leading-tight text-navy">
-            Encontre o brinde certo para a sua{" "}
+          <h2 className="font-black text-[38px] leading-tight text-foreground" style={{ maxWidth: "100%" }}>
+            Sua marca em cada{" "}
             <br />
-            <span className="text-highlight">marca</span>
+            <span className="text-highlight">brinde</span>
           </h2>
 
           {/* Category dropdown */}
           <div className="relative">
-            <select className="w-full appearance-none rounded-[10px] border border-border bg-background py-3 pl-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/40">
+            <select className="w-full appearance-none rounded-[10px] border border-border bg-background py-3 pl-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40">
               <option>Escolha a categoria de brinde</option>
               {categories.map((c) => (
                 <option key={c}>{c}</option>
               ))}
             </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-meta pointer-events-none" />
+            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-cta pointer-events-none" />
           </div>
 
           {/* Price range */}
@@ -77,7 +102,7 @@ const HeroSection = () => {
                 max={500}
                 value={priceMin}
                 onChange={(e) => setPriceMin(Math.min(Number(e.target.value), priceMax))}
-                className="w-full accent-green-cta"
+                className="w-full"
               />
               <input
                 type="range"
@@ -85,40 +110,81 @@ const HeroSection = () => {
                 max={500}
                 value={priceMax}
                 onChange={(e) => setPriceMax(Math.max(Number(e.target.value), priceMin))}
-                className="w-full accent-green-cta"
+                className="w-full"
+              />
+            </div>
+            {/* Editable price inputs */}
+            <div className="flex gap-3 mt-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={priceMin}
+                onChange={(e) => {
+                  const v = Number(e.target.value.replace(/\D/g, ""));
+                  if (!isNaN(v)) setPriceMin(Math.min(v, priceMax));
+                }}
+                className="w-full rounded-[10px] border border-border bg-background py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40"
+              />
+              <input
+                type="text"
+                inputMode="numeric"
+                value={priceMax}
+                onChange={(e) => {
+                  const v = Number(e.target.value.replace(/\D/g, ""));
+                  if (!isNaN(v)) setPriceMax(Math.max(v, priceMin));
+                }}
+                className="w-full rounded-[10px] border border-border bg-background py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40"
               />
             </div>
           </div>
 
-          {/* Color swatches — 12 */}
+          {/* Color swatches */}
           <div>
             <label className="text-sm font-medium text-muted-foreground mb-2 block">Cor</label>
             <div className="flex flex-wrap gap-2">
               {swatchColors.map((c, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedColor(i === selectedColor ? null : i)}
-                  className={`w-10 h-10 rounded-full ${c} border-2 transition-all duration-200 ${
-                    selectedColor === i
-                      ? "border-green-cta scale-110 ring-2 ring-green-cta/40"
-                      : "border-transparent hover:scale-105"
-                  }`}
-                />
+                <div key={i} className="relative">
+                  <button
+                    onClick={() => setSelectedColor(i === selectedColor ? null : i)}
+                    onMouseEnter={() => setHoveredColor(i)}
+                    onMouseLeave={() => setHoveredColor(null)}
+                    className="w-10 h-10 rounded-full border-2 transition-all duration-200"
+                    style={{
+                      backgroundColor: c.bg,
+                      borderColor: selectedColor === i ? "hsl(142,71%,45%)" : "hsl(210,25%,17%)",
+                      boxShadow: selectedColor === i ? "0 0 0 3px rgba(34,197,94,0.25)" : "none",
+                      transform: selectedColor === i ? "scale(1.1)" : "scale(1)",
+                    }}
+                  />
+                  {hoveredColor === i && (
+                    <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground whitespace-nowrap z-30 pointer-events-none">
+                      {c.name}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
 
           <button
-            className="mt-auto flex items-center justify-center gap-2 rounded-[10px] bg-navy px-4 font-bold uppercase text-primary-foreground hover:bg-navy-hover transition-colors duration-200"
-            style={{ height: 52, fontSize: 15 }}
+            className="mt-auto flex items-center justify-center gap-2 rounded-[10px] bg-green-cta px-4 font-bold uppercase text-primary-foreground transition-all duration-200 hover:brightness-110"
+            style={{
+              height: 52,
+              fontSize: 15,
+              boxShadow: "0 0 24px rgba(34,197,94,0.2)",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 24px rgba(34,197,94,0.4)")}
+            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 0 24px rgba(34,197,94,0.2)")}
           >
             BUSCAR BRINDE
           </button>
         </div>
 
         {/* Carousel — 64% */}
-        <div className="lg:w-[64%] relative rounded-[16px] overflow-hidden flex items-center mt-6 lg:mt-0" style={{ minHeight: 540 }}>
-          {/* Slides */}
+        <div
+          className="lg:w-[64%] relative rounded-[16px] overflow-hidden flex items-center mt-6 lg:mt-0 border border-border"
+          style={{ minHeight: 520 }}
+        >
           {slides.map((slide, i) => (
             <div
               key={i}
@@ -133,11 +199,11 @@ const HeroSection = () => {
               />
               <div
                 className="absolute inset-0"
-                style={{ background: "linear-gradient(135deg, hsla(217,75%,15%,0.85) 0%, hsla(217,75%,15%,0.5) 100%)" }}
+                style={{ background: "linear-gradient(135deg, rgba(11,15,26,0.85) 0%, rgba(11,15,26,0.3) 100%)" }}
               />
               <div className="relative z-10 flex items-center h-full p-8 md:p-14">
-                <h2 className="text-primary-foreground font-black text-[36px] md:text-[52px] leading-tight max-w-xl">
-                  {slide.hashtag}{" "}
+                <h2 className="text-foreground font-black text-[36px] md:text-[52px] leading-tight max-w-xl">
+                  {slide.text}{" "}
                   <span className="text-highlight">{slide.highlight}</span>
                 </h2>
               </div>
@@ -147,13 +213,15 @@ const HeroSection = () => {
           {/* Arrows */}
           <button
             onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center text-primary-foreground transition-colors duration-200"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-border flex items-center justify-center text-foreground transition-all duration-200 hover:bg-green-cta hover:border-green-cta"
+            style={{ background: "rgba(255,255,255,0.08)" }}
           >
             <ChevronLeft size={22} />
           </button>
           <button
             onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center text-primary-foreground transition-colors duration-200"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-border flex items-center justify-center text-foreground transition-all duration-200 hover:bg-green-cta hover:border-green-cta"
+            style={{ background: "rgba(255,255,255,0.08)" }}
           >
             <ChevronRight size={22} />
           </button>
@@ -165,7 +233,7 @@ const HeroSection = () => {
                 key={i}
                 onClick={() => setCurrentSlide(i)}
                 className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                  i === currentSlide ? "bg-green-cta w-6" : "bg-white/50 hover:bg-white/70"
+                  i === currentSlide ? "bg-green-cta w-6" : "bg-border hover:bg-muted-foreground"
                 }`}
               />
             ))}
