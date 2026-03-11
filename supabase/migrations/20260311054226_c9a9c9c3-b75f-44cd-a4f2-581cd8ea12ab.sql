@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_categoria_ativo ON products_cache(categoria, ativo);
