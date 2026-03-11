@@ -9,17 +9,17 @@ interface Props {
   loading?: boolean;
 }
 
-const BestSellersSection = ({ products, loading }: Props) => {
+const LaunchSection = ({ products, loading }: Props) => {
   const { ref, inView } = useInView();
 
   return (
-    <section className="py-10 md:py-12 bg-surface-alt">
+    <section className="py-10 md:py-12 bg-background">
       <div
         ref={ref}
         className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
       >
         <h2 className="text-foreground font-extrabold text-[32px] mb-6">
-          Mais <span className="text-highlight">vendidos</span>
+          Novos <span className="text-highlight">lançamentos</span>
         </h2>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -42,8 +42,8 @@ const BestSellersSection = ({ products, loading }: Props) => {
                     className="rounded-[16px] bg-card border border-border p-3 transition-all duration-250 group hover:-translate-y-1 hover:border-green-cta hover:shadow-[0_8px_40px_rgba(34,197,94,0.12)] cursor-pointer block"
                   >
                     <div className="aspect-square rounded-xl bg-secondary overflow-hidden mb-3 relative">
-                      <span className="absolute top-3 left-3 rounded-md bg-orange-500 px-2 py-0.5 text-xs font-bold text-white uppercase z-10">
-                        Mais vendido
+                      <span className="absolute top-3 left-3 rounded-md bg-green-cta px-2 py-0.5 text-xs font-bold text-primary-foreground uppercase z-10">
+                        Lançamento
                       </span>
                       {p.image_url ? (
                         <img
@@ -79,4 +79,4 @@ const BestSellersSection = ({ products, loading }: Props) => {
   );
 };
 
-export default BestSellersSection;
+export default LaunchSection;
