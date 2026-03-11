@@ -62,7 +62,7 @@ const HeroSection = () => {
         }}
       />
 
-      <div className="container flex flex-col lg:flex-row relative z-10" style={{ minHeight: 540 }}>
+      <div className="container flex flex-col lg:flex-row relative z-10" style={{ minHeight: 270 }}>
         {/* Filter panel — 36% */}
         <div
           className="lg:w-[36%] bg-card rounded-[20px] border border-border p-10 flex flex-col gap-5 shrink-0"
@@ -183,7 +183,7 @@ const HeroSection = () => {
         {/* Carousel — 64% */}
         <div
           className="lg:w-[64%] relative rounded-[16px] overflow-hidden flex items-center mt-6 lg:mt-0 border border-border"
-          style={{ minHeight: 520 }}
+          style={{ minHeight: 260 }}
         >
           {slides.map((slide, i) => (
             <div
