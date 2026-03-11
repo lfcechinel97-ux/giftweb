@@ -1,14 +1,22 @@
 import { Instagram, Facebook, MessageCircle, Phone } from "lucide-react";
 
-const paymentMethods = [
-  "Visa", "Mastercard", "Amex", "Elo", "Hipercard", "JCB", "Pix", "Boleto",
+const paymentLogos = [
+  { name: "Visa", src: "/logos/visa.svg" },
+  { name: "Mastercard", src: "/logos/mastercard.svg" },
+  { name: "American Express", src: "/logos/amex.svg" },
+  { name: "Discover", src: "/logos/discover.svg" },
+  { name: "Diners Club", src: "/logos/diners.svg" },
+  { name: "Elo", src: "/logos/elo.svg" },
+  { name: "Aura", src: "/logos/aura.png" },
+  { name: "JCB", src: "/logos/jcb.svg" },
+  { name: "Pix", src: "/logos/pix.png" },
+  { name: "Boleto", src: "/logos/boleto.png" },
 ];
 
-const securitySeals = [
-  "SSL Secure",
-  "Compra Segura",
-  "Mercado Pago",
-  "Stone",
+const securityBadges = [
+  { name: "Google Safe Browsing", src: "/logos/google-safe-browsing.png" },
+  { name: "GoDaddy Verified & Secured", src: "/logos/godaddy-verified.png" },
+  { name: "Google Reviews", src: "/logos/google-reviews.png" },
 ];
 
 const Footer = () => (
@@ -59,14 +67,18 @@ const Footer = () => (
 
         {/* Col 3 – Formas de Pagamento */}
         <div>
-          <h4 className="font-semibold mb-4 text-xs uppercase tracking-wider text-foreground">Formas de Pagamento</h4>
-          <div className="grid grid-cols-4 gap-2">
-            {paymentMethods.map((method) => (
+          <h4 className="font-semibold mb-4 text-xs uppercase tracking-wider text-foreground">Formas de pagamento</h4>
+          <div className="flex flex-wrap gap-3 items-center">
+            {paymentLogos.map((logo) => (
               <div
-                key={method}
-                className="h-9 rounded-md bg-card border border-border flex items-center justify-center"
+                key={logo.name}
+                className="h-8 w-12 bg-white rounded flex items-center justify-center p-1"
               >
-                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">{method}</span>
+                <img
+                  src={logo.src}
+                  alt={logo.name}
+                  className="max-h-full max-w-full object-contain"
+                />
               </div>
             ))}
           </div>
@@ -75,18 +87,17 @@ const Footer = () => (
         {/* Col 4 – Segurança */}
         <div>
           <h4 className="font-semibold mb-4 text-xs uppercase tracking-wider text-foreground">Segurança</h4>
-          <div className="grid grid-cols-2 gap-2">
-            {securitySeals.map((seal) => (
+          <div className="flex flex-wrap gap-3 items-center">
+            {securityBadges.map((badge) => (
               <div
-                key={seal}
-                className="rounded-lg bg-card border border-border p-3 flex flex-col items-center justify-center text-center"
+                key={badge.name}
+                className="h-14 w-auto"
               >
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mb-1">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-primary">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                </div>
-                <span className="text-[9px] font-semibold text-muted-foreground leading-tight">{seal}</span>
+                <img
+                  src={badge.src}
+                  alt={badge.name}
+                  className="h-full w-auto object-contain"
+                />
               </div>
             ))}
           </div>
