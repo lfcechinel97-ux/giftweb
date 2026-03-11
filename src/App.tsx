@@ -1,28 +1,44 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AdminSync from "./pages/AdminSync.tsx";
+import ProductDetail from "./pages/ProductDetail.tsx";
+import CategoryPage from "./pages/CategoryPage.tsx";
+import AllProducts from "./pages/AllProducts.tsx";
+import SearchPage from "./pages/SearchPage.tsx";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/admin/sync" element={<AdminSync />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <HelmetProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/admin/sync" element={<AdminSync />} />
+            <Route path="/produto/:slug" element={<ProductDetail />} />
+            <Route path="/produtos" element={<AllProducts />} />
+            <Route path="/busca" element={<SearchPage />} />
+            <Route path="/copos" element={<CategoryPage category="copos" />} />
+            <Route path="/garrafas" element={<CategoryPage category="garrafas" />} />
+            <Route path="/mochilas" element={<CategoryPage category="mochilas" />} />
+            <Route path="/bolsas" element={<CategoryPage category="bolsas" />} />
+            <Route path="/escritorio" element={<CategoryPage category="escritorio" />} />
+            <Route path="/kits" element={<CategoryPage category="kits" />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </HelmetProvider>
   </QueryClientProvider>
 );
 
