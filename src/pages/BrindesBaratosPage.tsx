@@ -43,6 +43,7 @@ const BrindesBaratosPage = () => {
       .select("*", { count: "exact" })
       .eq("ativo", true)
       .eq("has_image", true)
+      .eq("is_variante", false)
       .lte("preco_custo", 8)
       .gt("estoque", 0);
 
