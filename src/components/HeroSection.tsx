@@ -183,7 +183,7 @@ const HeroSection = () => {
         {/* Carousel — 64% */}
         <div
           className="lg:w-[64%] relative rounded-[16px] overflow-hidden flex items-center mt-6 lg:mt-0 border border-border"
-          style={{ minHeight: 520 }}
+          style={{ minHeight: 260 }}
         >
           {slides.map((slide, i) => (
             <div
