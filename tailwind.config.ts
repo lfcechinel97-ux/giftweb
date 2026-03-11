@@ -101,7 +101,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "scroll-categories": "scroll-categories 25s linear infinite",
-        "scroll-clients": "scroll-clients 20s linear infinite",
+        "scroll-clients": "scroll-clients 40s linear infinite",
       },
     },
   },
