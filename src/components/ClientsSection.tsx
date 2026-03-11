@@ -1,18 +1,18 @@
 import { useInView } from "@/hooks/useInView";
 
 const companies = [
-  { name: "Petrobras", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Petrobras_logo.svg/120px-Petrobras_logo.svg.png" },
-  { name: "Ambev", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Ambev_logo.svg/120px-Ambev_logo.svg.png" },
-  { name: "Natura", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Natura_logo.svg/120px-Natura_logo.svg.png" },
-  { name: "Itaú", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Banco_Ita%C3%BA_logo.svg/120px-Banco_Ita%C3%BA_logo.svg.png" },
-  { name: "Bradesco", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Bradesco_logo_%282018%29.svg/120px-Bradesco_logo_%282018%29.svg.png" },
-  { name: "Vale", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Vale_logo.svg/120px-Vale_logo.svg.png" },
-  { name: "Embraer", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Embraer_logo_%282018%29.svg/120px-Embraer_logo_%282018%29.svg.png" },
-  { name: "Gerdau", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Gerdau_logo_%282011%29.svg/120px-Gerdau_logo_%282011%29.svg.png" },
-  { name: "Vivo", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Vivo_logo_2021.svg/120px-Vivo_logo_2021.svg.png" },
-  { name: "Tim", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Tim_logo_2016.svg/120px-Tim_logo_2016.svg.png" },
-  { name: "Globo", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Globo_logo_%28corporate%29.svg/120px-Globo_logo_%28corporate%29.svg.png" },
-  { name: "WEG", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Weg_logo.svg/120px-Weg_logo.svg.png" },
+  { name: "Petrobras", logo: "/logos/petrobras.svg" },
+  { name: "Ambev", logo: "/logos/ambev.svg" },
+  { name: "Natura", logo: "/logos/natura.svg" },
+  { name: "Itaú", logo: "/logos/itau.svg" },
+  { name: "Bradesco", logo: "/logos/bradesco.svg" },
+  { name: "Vale", logo: "/logos/vale.svg" },
+  { name: "Embraer", logo: "/logos/embraer.svg" },
+  { name: "Gerdau", logo: "/logos/gerdau.svg" },
+  { name: "Vivo", logo: "/logos/vivo.svg" },
+  { name: "Tim", logo: "/logos/tim.svg" },
+  { name: "Globo", logo: "/logos/globo.svg" },
+  { name: "WEG", logo: "/logos/weg.svg" },
 ];
 
 const looped = [...companies, ...companies];
@@ -34,21 +34,21 @@ const ClientsSection = () => {
         </p>
 
         <div className="overflow-hidden">
-          <div className="flex gap-8 animate-scroll-clients hover:[animation-play-state:paused] w-max items-center">
+          <div className="flex gap-10 animate-scroll-clients hover:[animation-play-state:paused] w-max items-center">
             {looped.map((company, i) => (
               <div
                 key={i}
-                className="w-[120px] h-[50px] rounded-lg bg-card border border-border flex items-center justify-center flex-shrink-0 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-500 p-2"
+                className="w-[140px] h-[60px] rounded-lg bg-card border border-border flex items-center justify-center flex-shrink-0 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-500 p-3"
               >
                 <img
                   src={company.logo}
                   alt={company.name}
-                  className="max-h-full max-w-full object-contain"
+                  className="max-h-full max-w-full object-contain brightness-0 invert opacity-80"
                   loading="lazy"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = "none";
-                    target.parentElement!.innerHTML = `<span class="text-muted-foreground text-[10px] font-semibold">${company.name}</span>`;
+                    target.parentElement!.innerHTML = `<span class="text-muted-foreground text-xs font-bold tracking-wide uppercase">${company.name}</span>`;
                   }}
                 />
               </div>

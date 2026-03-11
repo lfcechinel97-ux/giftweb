@@ -6,45 +6,73 @@ interface WhatsAppModalProps {
   onClose: () => void;
 }
 
-const budgetOptions = [
-  "Até R$ 1.000,00",
-  "Até R$ 3.000,00",
-  "Até R$ 5.000,00",
-  "Acima de R$ 5.001,00",
-];
+const formatPhone = (value: string) => {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 2) return `(${digits}`;
+  if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+};
+
+const formatCurrency = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return "";
+  const num = parseInt(digits, 10) / 100;
+  return num.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+};
 
 const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
   const [form, setForm] = useState({
-    greeting: "",
-    cpfCnpj: "",
     name: "",
     phone: "",
-    email: "",
+    company: "",
+    quantity: "",
     budget: "",
+    details: "",
   });
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
 
-  const update = (field: string, value: string) =>
+  const update = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    if (value.trim()) setErrors((prev) => ({ ...prev, [field]: false }));
+  };
+
+  const validate = () => {
+    const phoneDigits = form.phone.replace(/\D/g, "");
+    const newErrors: Record<string, boolean> = {
+      name: !form.name.trim(),
+      phone: phoneDigits.length < 10 || phoneDigits.length > 11,
+      quantity: !form.quantity.trim() || isNaN(Number(form.quantity)),
+    };
+    setErrors(newErrors);
+    return !Object.values(newErrors).some(Boolean);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const message = [
-      `Olá! ${form.greeting}`,
+    if (!validate()) return;
+
+    const lines = [
+      "Olá! Gostaria de solicitar um orçamento.",
+      "",
       `Nome: ${form.name}`,
-      `CPF/CNPJ: ${form.cpfCnpj}`,
       `Telefone: ${form.phone}`,
-      `Email: ${form.email}`,
-      `Orçamento: ${form.budget}`,
-    ].join("\n");
+    ];
+    if (form.company.trim()) lines.push(`Empresa: ${form.company}`);
+    lines.push(`Quantidade aproximada: ${form.quantity}`);
+    if (form.budget.trim()) lines.push(`Orçamento estimado: ${form.budget}`);
+    if (form.details.trim()) lines.push(`Detalhes do pedido: ${form.details}`);
 
     window.open(
-      `https://wa.me/5548996652844?text=${encodeURIComponent(message)}`,
+      `https://wa.me/5548996652844?text=${encodeURIComponent(lines.join("\n"))}`,
       "_blank"
     );
     onClose();
   };
 
   if (!open) return null;
+
+  const inputClass = (field: string) =>
+    `rounded-xl border ${errors[field] ? "border-destructive ring-2 ring-destructive/30" : "border-border"} bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40`;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -64,63 +92,98 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
           <div className="w-10 h-10 rounded-full bg-green-cta flex items-center justify-center">
             <MessageCircle size={20} className="text-primary-foreground" />
           </div>
-          <h3 className="text-foreground font-bold text-lg">Tire suas dúvidas agora!</h3>
+          <h3 className="text-foreground font-bold text-lg">Peça um orçamento rápido!</h3>
         </div>
 
         <p className="text-muted-foreground text-sm mb-5 leading-relaxed">
-          Irei fazer seu atendimento agora. Preencha os dados abaixo e nossa equipe entrará em contato para ajudar com seu orçamento.
+          Preencha os dados abaixo e nossa equipe entrará em contato para ajudar com seu orçamento.
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            type="text"
-            placeholder="Olá, tudo bem?"
-            value={form.greeting}
-            onChange={(e) => update("greeting", e.target.value)}
-            className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40"
-          />
-          <input
-            type="text"
-            placeholder="CPF / CNPJ"
-            value={form.cpfCnpj}
-            onChange={(e) => update("cpfCnpj", e.target.value)}
-            className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40"
-          />
-          <input
-            type="text"
-            placeholder="Nome"
-            value={form.name}
-            onChange={(e) => update("name", e.target.value)}
-            required
-            className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40"
-          />
-          <input
-            type="tel"
-            placeholder="Telefone"
-            value={form.phone}
-            onChange={(e) => update("phone", e.target.value)}
-            required
-            className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40"
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={(e) => update("email", e.target.value)}
-            className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40"
-          />
+          {/* Nome */}
+          <div>
+            <label className="text-xs font-semibold text-foreground mb-1 block">
+              Nome <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Seu nome completo"
+              value={form.name}
+              onChange={(e) => update("name", e.target.value)}
+              className={inputClass("name")}
+              style={{ width: "100%" }}
+            />
+          </div>
 
-          <select
-            value={form.budget}
-            onChange={(e) => update("budget", e.target.value)}
-            required
-            className="rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40 appearance-none"
-          >
-            <option value="" disabled>Orçamento para seus brindes</option>
-            {budgetOptions.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
+          {/* Telefone */}
+          <div>
+            <label className="text-xs font-semibold text-foreground mb-1 block">
+              Telefone / WhatsApp <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="tel"
+              placeholder="(11) 91234-5678"
+              value={form.phone}
+              onChange={(e) => update("phone", formatPhone(e.target.value))}
+              className={inputClass("phone")}
+              style={{ width: "100%" }}
+            />
+          </div>
+
+          {/* Empresa */}
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground mb-1 block">Empresa</label>
+            <input
+              type="text"
+              placeholder="Nome da empresa (opcional)"
+              value={form.company}
+              onChange={(e) => update("company", e.target.value)}
+              className={inputClass("company")}
+              style={{ width: "100%" }}
+            />
+          </div>
+
+          {/* Quantidade */}
+          <div>
+            <label className="text-xs font-semibold text-foreground mb-1 block">
+              Quantidade aproximada <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="Ex: 500"
+              value={form.quantity}
+              onChange={(e) => update("quantity", e.target.value.replace(/\D/g, ""))}
+              className={inputClass("quantity")}
+              style={{ width: "100%" }}
+            />
+          </div>
+
+          {/* Orçamento */}
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground mb-1 block">Orçamento para os brindes</label>
+            <input
+              type="text"
+              placeholder="R$ 0,00"
+              value={form.budget}
+              onChange={(e) => update("budget", formatCurrency(e.target.value))}
+              className={inputClass("budget")}
+              style={{ width: "100%" }}
+            />
+          </div>
+
+          {/* Detalhes */}
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground mb-1 block">Detalhes do pedido</label>
+            <textarea
+              placeholder="Descreva o que precisa (opcional)"
+              value={form.details}
+              onChange={(e) => update("details", e.target.value)}
+              rows={3}
+              className={`${inputClass("details")} resize-none`}
+              style={{ width: "100%" }}
+            />
+          </div>
 
           <button
             type="submit"
@@ -128,7 +191,7 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
             style={{ boxShadow: "0 0 24px rgba(34,197,94,0.3)" }}
           >
             <MessageCircle size={18} />
-            Enviar via WhatsApp
+            Solicitar Orçamento no WhatsApp
           </button>
         </form>
       </div>
