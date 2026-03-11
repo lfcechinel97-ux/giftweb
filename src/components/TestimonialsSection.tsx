@@ -5,7 +5,7 @@ const testimonials = [
   {
     text: "A Gift Web superou nossas expectativas. Os brindes personalizados chegaram impecáveis e no prazo!",
     name: "Mariana Costa",
-    company: "Empresa ABC",
+    company: "Embraer",
     role: "Marketing",
     photo: "https://i.pravatar.cc/80?img=32",
   },
