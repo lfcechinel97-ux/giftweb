@@ -20,12 +20,12 @@ const CatalogSection = () => {
           Baixe nosso <span className="text-highlight">catálogo</span>
         </h2>
 
-        <div className="flex flex-col gap-4 items-center">
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
           {banners.map((b, i) => (
             <a
               key={i}
               href={b.href}
-              className="group block w-full max-w-lg transition-transform duration-200 hover:scale-[1.02]"
+              className="group block w-full max-w-xs transition-transform duration-200 hover:scale-[1.02]"
             >
               <img
                 src={b.img}
