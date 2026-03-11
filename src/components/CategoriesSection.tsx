@@ -22,23 +22,34 @@ const CategoriesSection = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const dragStart = useRef({ x: 0, scrollLeft: 0 });
+  const dragStart = useRef({ x: 0, scrollLeft: 0, time: 0 });
   const animRef = useRef<number>(0);
   const scrollPos = useRef(0);
+  const velocity = useRef(0);
 
-  // Smooth auto-scroll with requestAnimationFrame
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
-    const speed = 0.4; // px per frame – slow
+    const baseSpeed = 0.35;
     const singleSetWidth = el.scrollWidth / 3;
 
     const tick = () => {
-      if (!isPaused && !isDragging) {
-        scrollPos.current += speed;
+      if (!isDragging) {
+        // Apply velocity decay when user just released
+        if (Math.abs(velocity.current) > 0.1) {
+          scrollPos.current += velocity.current;
+          velocity.current *= 0.97; // smooth deceleration
+        } else if (!isPaused) {
+          velocity.current = 0;
+          scrollPos.current += baseSpeed;
+        }
+
+        // Infinite loop reset
         if (scrollPos.current >= singleSetWidth * 2) {
           scrollPos.current -= singleSetWidth;
+        } else if (scrollPos.current < 0) {
+          scrollPos.current += singleSetWidth;
         }
         el.scrollLeft = scrollPos.current;
       }
@@ -52,7 +63,8 @@ const CategoriesSection = () => {
   // Mouse drag
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     setIsDragging(true);
-    dragStart.current = { x: e.clientX, scrollLeft: scrollRef.current?.scrollLeft || 0 };
+    velocity.current = 0;
+    dragStart.current = { x: e.clientX, scrollLeft: scrollRef.current?.scrollLeft || 0, time: Date.now() };
   }, []);
 
   const onMouseMove = useCallback((e: React.MouseEvent) => {
@@ -62,18 +74,39 @@ const CategoriesSection = () => {
     scrollPos.current = scrollRef.current.scrollLeft;
   }, [isDragging]);
 
-  const onMouseUp = useCallback(() => {
+  const onMouseUp = useCallback((e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const dt = Math.max(Date.now() - dragStart.current.time, 1);
+    const dx = e.clientX - dragStart.current.x;
+    velocity.current = (-dx / dt) * 12; // flick velocity
     setIsDragging(false);
+  }, [isDragging]);
+
+  // Touch drag with velocity
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    setIsPaused(true);
+    velocity.current = 0;
+    dragStart.current = {
+      x: e.touches[0].clientX,
+      scrollLeft: scrollRef.current?.scrollLeft || 0,
+      time: Date.now(),
+    };
   }, []);
 
-  // Touch handling for mobile snap
-  const onTouchStart = () => setIsPaused(true);
-  const onTouchEnd = () => {
-    setTimeout(() => {
-      if (scrollRef.current) scrollPos.current = scrollRef.current.scrollLeft;
-      setIsPaused(false);
-    }, 2000);
-  };
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!scrollRef.current) return;
+    const dx = e.touches[0].clientX - dragStart.current.x;
+    scrollRef.current.scrollLeft = dragStart.current.scrollLeft - dx;
+    scrollPos.current = scrollRef.current.scrollLeft;
+  }, []);
+
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    const dt = Math.max(Date.now() - dragStart.current.time, 1);
+    const lastTouch = e.changedTouches[0];
+    const dx = lastTouch.clientX - dragStart.current.x;
+    velocity.current = (-dx / dt) * 14;
+    setIsPaused(false);
+  }, []);
 
   const scroll = (dir: number) => {
     if (!scrollRef.current) return;
@@ -92,11 +125,9 @@ const CategoriesSection = () => {
         </h2>
 
         <div className="relative group">
-          {/* Fade edges */}
           <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
 
-          {/* Arrow nav (desktop) */}
           <button
             onClick={() => scroll(-1)}
             className="hidden md:flex absolute -left-2 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-card border border-border items-center justify-center text-foreground hover:border-green-cta transition-colors"
@@ -112,15 +143,15 @@ const CategoriesSection = () => {
 
           <div
             ref={scrollRef}
-            className="overflow-hidden cursor-grab active:cursor-grabbing scrollbar-hide"
+            className="overflow-hidden cursor-grab active:cursor-grabbing scrollbar-hide touch-pan-x"
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}
             onMouseLeave={() => { setIsPaused(false); setIsDragging(false); }}
             onMouseEnter={() => setIsPaused(true)}
             onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
-            style={{ scrollBehavior: isDragging ? "auto" : "smooth" }}
           >
             <div className="flex gap-10 w-max py-2">
               {looped.map(({ img, name }, i) => (
