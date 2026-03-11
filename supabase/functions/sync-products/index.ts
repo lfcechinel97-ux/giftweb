@@ -139,7 +139,7 @@ serve(async (req) => {
     })
 
     return new Response(
-      JSON.stringify({ success: true, total: registros.length }),
+      JSON.stringify({ success: true, total: registrosUnicos.length }),
       { headers: { ...corsHeaders,
           'Content-Type': 'application/json' } }
     )
