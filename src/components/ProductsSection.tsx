@@ -6,7 +6,7 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ name, color, price, badge }: ProductCardProps) => (
-  <div className="rounded-xl bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
+  <div className="rounded-xl bg-card shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 overflow-hidden group">
     <div className="relative aspect-square bg-muted flex items-center justify-center">
       <span className="text-text-meta text-sm">Imagem do produto</span>
       {badge && (
@@ -19,7 +19,7 @@ const ProductCard = ({ name, color, price, badge }: ProductCardProps) => (
       <h4 className="font-semibold text-foreground text-sm leading-tight line-clamp-2">{name}</h4>
       <span className="text-xs text-text-meta">Cor: {color}</span>
       <span className="text-green-cta font-bold text-sm">{price}</span>
-      <button className="mt-2 w-full rounded-lg border-2 border-green-cta text-green-cta py-2 text-sm font-semibold hover:bg-green-cta hover:text-accent-foreground transition-colors">
+      <button className="mt-2 w-full rounded-[10px] border-2 border-green-cta text-green-cta py-2 text-sm font-semibold hover:bg-green-cta hover:text-accent-foreground transition-all duration-200">
         Ver Produto
       </button>
     </div>
@@ -41,7 +41,7 @@ const products = [
 const ProductsSection = ({ title, badge }: ProductSectionProps) => (
   <section className="py-10">
     <div className="container">
-      <h2 className="text-2xl md:text-3xl text-navy mb-6">{title}</h2>
+      <h2 className="text-navy mb-6">{title}</h2>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {products.map((p, i) => (
           <ProductCard key={i} {...p} badge={badge} />

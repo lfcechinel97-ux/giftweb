@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Roboto+Flex:opsz,wght@8..144,300;8..144,400;8..144,500;8..144,600;8..144,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -38,11 +38,13 @@
 
     --navy: 217 75% 15%;
     --navy-dark: 222 47% 11%;
+    --navy-hover: 220 65% 24%;
     --green-cta: 142 71% 45%;
     --surface: 210 40% 98%;
     --text-main: 215 25% 17%;
     --text-muted: 215 16% 47%;
     --text-meta: 214 20% 63%;
+    --danger: 0 72% 51%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -61,8 +63,31 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
+    font-size: 16px;
+    color: hsl(215 25% 34%);
   }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-display;
+  h1 {
+    @apply font-black text-[48px] leading-tight;
   }
+  h2 {
+    @apply font-extrabold text-[32px] leading-snug;
+  }
+  h3 {
+    @apply font-bold text-[24px];
+  }
+}
+
+@layer utilities {
+  .text-highlight {
+    @apply text-green-cta italic font-black;
+  }
+}
+
+/* Hero carousel fade animation */
+@keyframes heroFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.hero-slide-active {
+  animation: heroFadeIn 0.6s ease-in-out;
 }

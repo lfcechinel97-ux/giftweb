@@ -6,8 +6,8 @@ const LeadCapture = () => {
   return (
     <section className="bg-navy py-12">
       <div className="container max-w-2xl text-center">
-        <h2 className="text-2xl md:text-3xl text-primary-foreground mb-2">
-          Ganhe 5% de desconto na primeira compra
+        <h2 className="text-primary-foreground mb-2">
+          Ganhe 5% de <span className="text-highlight">desconto</span> na primeira compra
         </h2>
         <p className="text-primary-foreground/70 mb-8">Cadastre-se e receba ofertas exclusivas</p>
 
@@ -20,25 +20,25 @@ const LeadCapture = () => {
             placeholder="Seu nome"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="rounded-lg bg-primary-foreground/10 border border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/60"
+            className="rounded-[10px] bg-primary-foreground/10 border border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/60 transition-all duration-200"
           />
           <input
             type="email"
             placeholder="Seu e-mail"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="rounded-lg bg-primary-foreground/10 border border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/60"
+            className="rounded-[10px] bg-primary-foreground/10 border border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/60 transition-all duration-200"
           />
           <input
             type="text"
             placeholder="Empresa (opcional)"
             value={form.company}
             onChange={(e) => setForm({ ...form, company: e.target.value })}
-            className="rounded-lg bg-primary-foreground/10 border border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/60"
+            className="rounded-[10px] bg-primary-foreground/10 border border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/60 transition-all duration-200"
           />
           <button
             type="submit"
-            className="rounded-lg bg-green-cta px-6 py-3 font-semibold text-accent-foreground hover:brightness-110 transition"
+            className="rounded-[10px] bg-green-cta px-6 py-3 font-semibold text-accent-foreground hover:brightness-110 transition-all duration-200"
           >
             Cadastrar
           </button>
