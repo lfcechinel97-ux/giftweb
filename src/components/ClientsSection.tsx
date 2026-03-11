@@ -1,18 +1,18 @@
 import { useInView } from "@/hooks/useInView";
 
 const companies = [
-  { name: "Petrobras", logo: "/logos/petrobras.svg" },
-  { name: "Ambev", logo: "/logos/ambev.svg" },
-  { name: "Natura", logo: "/logos/natura.svg" },
-  { name: "Itaú", logo: "/logos/itau.svg" },
-  { name: "Bradesco", logo: "/logos/bradesco.svg" },
-  { name: "Vale", logo: "/logos/vale.svg" },
-  { name: "Embraer", logo: "/logos/embraer.svg" },
-  { name: "Gerdau", logo: "/logos/gerdau.svg" },
-  { name: "Vivo", logo: "/logos/vivo.svg" },
-  { name: "Tim", logo: "/logos/tim.svg" },
-  { name: "Globo", logo: "/logos/globo.svg" },
-  { name: "WEG", logo: "/logos/weg.svg" },
+  { name: "Petrobras", logo: "/logos/petrobras.png" },
+  { name: "Ambev", logo: "/logos/ambev.png" },
+  { name: "Natura", logo: "/logos/natura.png" },
+  { name: "Itaú", logo: "/logos/itau.png" },
+  { name: "Bradesco", logo: "/logos/bradesco.png" },
+  { name: "Vale", logo: "/logos/vale.png" },
+  { name: "Embraer", logo: "/logos/embraer.png" },
+  { name: "Gerdau", logo: "/logos/gerdau.png" },
+  { name: "Vivo", logo: "/logos/vivo.png" },
+  { name: "Tim", logo: "/logos/tim.png" },
+  { name: "Globo", logo: "/logos/globo.png" },
+  { name: "WEG", logo: "/logos/weg.png" },
 ];
 
 const looped = [...companies, ...companies];
