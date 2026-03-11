@@ -13,23 +13,9 @@ import CatalogPagination from "@/components/CatalogPagination";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products_cache">;
-
 const PAGE_SIZE = 20;
 
-const CATEGORIES: Record<string, string> = {
-  copos: "Copos",
-  garrafas: "Garrafas",
-  mochilas: "Mochilas",
-  bolsas: "Bolsas",
-  escritorio: "Escritório",
-  kits: "Kits",
-};
-
-interface CategoryPageProps {
-  category: string;
-}
-
-const CategoryPage = ({ category }: CategoryPageProps) => {
+const SqueezesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
   const urlCor = searchParams.get("cor") || "";
@@ -37,12 +23,10 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [cores, setCores] = useState<string[]>([]);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCor, setSelectedCor] = useState<string | null>(urlCor || null);
   const [apenasEstoque, setApenasEstoque] = useState(false);
 
-  const categoryLabel = CATEGORIES[category] || category;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   useEffect(() => {
@@ -57,9 +41,9 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
     let query = supabase
       .from("products_cache")
       .select("*", { count: "exact" })
-      .eq("categoria", category)
       .eq("ativo", true)
-      .eq("has_image", true);
+      .eq("has_image", true)
+      .or("nome.ilike.%SQUEEZE%,descricao.ilike.%SQUEEZE%");
 
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
     if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
@@ -69,97 +53,68 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
     setProducts(data || []);
     setTotal(count || 0);
     setLoading(false);
-  }, [category, page, searchTerm, selectedCor, apenasEstoque]);
+  }, [page, searchTerm, selectedCor, apenasEstoque]);
 
   useEffect(() => {
     supabase
       .from("products_cache")
       .select("cor")
-      .eq("categoria", category)
       .eq("ativo", true)
       .eq("has_image", true)
+      .or("nome.ilike.%SQUEEZE%,descricao.ilike.%SQUEEZE%")
       .not("cor", "is", null)
       .then(({ data }) => {
         const unique = [...new Set((data || []).map((d) => d.cor).filter(Boolean))] as string[];
         setCores(unique.sort());
       });
-  }, [category]);
+  }, []);
 
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+  useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
   const handlePageChange = (p: number) => {
     const params: Record<string, string> = { page: p.toString() };
     if (selectedCor) params.cor = selectedCor;
     setSearchParams(params);
   };
-
-  const clearFilters = () => {
-    setSearchTerm("");
-    setSelectedCor(null);
-    setApenasEstoque(false);
-  };
-
-  const canonicalUrl = `${SITE_URL}/${category}${page > 1 ? `?page=${page}` : ""}`;
+  const clearFilters = () => { setSearchTerm(""); setSelectedCor(null); setApenasEstoque(false); };
 
   return (
     <>
       <Helmet>
-        <title>{categoryLabel} Personalizados | Gift Web Brindes</title>
-        <meta name="description" content={`${categoryLabel} personalizados para empresas. Catálogo com preços para atacado.`} />
-        <link rel="canonical" href={canonicalUrl} />
+        <title>Squeezes Personalizados | Gift Web</title>
+        <meta name="description" content="Squeezes personalizados para empresas. Catálogo com preços para atacado." />
+        <link rel="canonical" href={`${SITE_URL}/squeezes${page > 1 ? `?page=${page}` : ""}`} />
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1">
           <div className="container py-6 md:py-8">
-            <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: categoryLabel }]} />
+            <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: "Squeezes" }]} />
             <h1 className="font-black text-[36px] md:text-[48px] leading-tight text-foreground mb-6">
-              <span className="text-highlight">{categoryLabel}</span> Personalizados
+              <span className="text-highlight italic">Squeezes</span> personalizados
             </h1>
 
             <CatalogFilters
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              cores={cores}
-              selectedCor={selectedCor}
-              onCorChange={setSelectedCor}
-              precoRange={[0, 100]}
-              onPrecoRangeChange={() => {}}
-              maxPreco={100}
-              apenasEstoque={apenasEstoque}
-              onApenasEstoqueChange={setApenasEstoque}
-              onClearFilters={clearFilters}
-              totalProducts={total}
+              searchTerm={searchTerm} onSearchChange={setSearchTerm}
+              cores={cores} selectedCor={selectedCor} onCorChange={setSelectedCor}
+              precoRange={[0, 100]} onPrecoRangeChange={() => {}} maxPreco={100}
+              apenasEstoque={apenasEstoque} onApenasEstoqueChange={setApenasEstoque}
+              onClearFilters={clearFilters} totalProducts={total}
             />
 
             {loading ? (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <ProductCardSkeleton key={i} />
-                ))}
+                {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
               </div>
             ) : products.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-muted-foreground text-lg">Nenhum produto encontrado nesta categoria.</p>
-              </div>
+              <div className="text-center py-16"><p className="text-muted-foreground text-lg">Nenhum squeeze encontrado.</p></div>
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {products.map((p) => (
-                  <ProductCard
-                    key={p.id}
-                    nome={p.nome}
-                    slug={p.slug}
-                    image_url={p.image_url}
-                    cor={p.cor}
-                    preco_custo={p.preco_custo}
-                    codigo_amigavel={p.codigo_amigavel}
-                  />
+                  <ProductCard key={p.id} nome={p.nome} slug={p.slug} image_url={p.image_url} cor={p.cor} preco_custo={p.preco_custo} codigo_amigavel={p.codigo_amigavel} />
                 ))}
               </div>
             )}
-
             <CatalogPagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
           </div>
         </main>
@@ -170,4 +125,4 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
   );
 };
 
-export default CategoryPage;
+export default SqueezesPage;

@@ -8,15 +8,16 @@ import catMochilas from "@/assets/cat-mochilas.png";
 import catKit from "@/assets/cat-kit.png";
 import catBrindes from "@/assets/cat-brindes.png";
 
-const categoryMeta: Record<string, { name: string; img: string; route: string }> = {
-  copos: { name: "Copos Personalizados", img: catGarrafas, route: "/copos" },
-  garrafas: { name: "Garrafas Térmicas Personalizadas", img: catGarrafas, route: "/garrafas" },
-  mochilas: { name: "Mochilas Personalizadas", img: catMochilas, route: "/mochilas" },
-  bolsas: { name: "Bolsas Personalizadas", img: catBolsas, route: "/bolsas" },
-  escritorio: { name: "Material de Escritório", img: catBrindes, route: "/escritorio" },
-  kits: { name: "Kits Corporativos", img: catKit, route: "/kits" },
-  outros: { name: "Outros Brindes", img: catBrindes, route: "/produtos" },
-};
+const orderedCategories = [
+  { key: "garrafas", name: "Garrafas Térmicas", img: catGarrafas, route: "/garrafas" },
+  { key: "copos", name: "Copos e Canecas", img: catGarrafas, route: "/copos" },
+  { key: "mochilas", name: "Mochilas", img: catMochilas, route: "/mochilas" },
+  { key: "kits", name: "Kits Corporativos", img: catKit, route: "/kits" },
+  { key: "bolsas", name: "Bolsas e Sacolas", img: catBolsas, route: "/bolsas" },
+  { key: "escritorio", name: "Material de Escritório", img: catBrindes, route: "/escritorio" },
+  { key: "squeezes", name: "Squeezes", img: catGarrafas, route: "/squeezes" },
+  { key: "brindes-baratos", name: "Brindes Baratos", img: catBrindes, route: "/brindes-baratos" },
+];
 
 interface Props {
   categoryCounts: Record<string, number>;
@@ -32,12 +33,9 @@ const CategoriesSection = ({ categoryCounts }: Props) => {
   const scrollPos = useRef(0);
   const velocity = useRef(0);
 
-  const cats = Object.entries(categoryCounts)
-    .filter(([, count]) => count > 0)
-    .map(([key, count]) => {
-      const meta = categoryMeta[key] || { name: key, img: catBrindes, route: "/produtos" };
-      return { ...meta, count, key };
-    });
+  const cats = orderedCategories
+    .map((c) => ({ ...c, count: categoryCounts[c.key] || 0 }))
+    .filter((c) => c.count > 0);
 
   const looped = [...cats, ...cats, ...cats];
 
@@ -155,7 +153,7 @@ const CategoriesSection = ({ categoryCounts }: Props) => {
                     <img src={cat.img} alt={cat.name} className="w-full h-full object-cover pointer-events-none" draggable={false} />
                   </div>
                   <span className="font-bold text-sm text-foreground whitespace-nowrap">{cat.name}</span>
-                  <span className="text-xs text-muted-foreground -mt-2">{cat.count} produtos</span>
+                  <span className="text-xs text-muted-foreground -mt-2">{cat.count} produtos disponíveis</span>
                 </Link>
               ))}
             </div>

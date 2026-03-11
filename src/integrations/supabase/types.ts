@@ -49,8 +49,10 @@ export type Database = {
           created_at: string | null
           descricao: string | null
           estoque: number | null
+          has_image: boolean | null
           id: string
           image_url: string | null
+          image_urls: string[] | null
           largura: number | null
           marca: string | null
           nome: string
@@ -72,8 +74,10 @@ export type Database = {
           created_at?: string | null
           descricao?: string | null
           estoque?: number | null
+          has_image?: boolean | null
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           largura?: number | null
           marca?: string | null
           nome: string
@@ -95,8 +99,10 @@ export type Database = {
           created_at?: string | null
           descricao?: string | null
           estoque?: number | null
+          has_image?: boolean | null
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           largura?: number | null
           marca?: string | null
           nome?: string

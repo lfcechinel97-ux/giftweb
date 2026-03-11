@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X, Search, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { WHATSAPP_NUMBER } from "@/config/site";
 
 const categoryLinks = [
   { name: "Garrafas", route: "/garrafas" },
@@ -8,6 +9,7 @@ const categoryLinks = [
   { name: "Mochilas", route: "/mochilas" },
   { name: "Bolsas", route: "/bolsas" },
   { name: "Escritório", route: "/escritorio" },
+  { name: "Squeezes", route: "/squeezes" },
 ];
 
 const Header = () => {
@@ -32,6 +34,8 @@ const Header = () => {
     }
   };
 
+  const phoneFormatted = "(48) 99652-5312";
+
   return (
     <header className="sticky top-0 z-50">
       {/* Top bar */}
@@ -39,7 +43,7 @@ const Header = () => {
         <div className="container flex items-center justify-center py-2 gap-1">
           <span>⚡ Atendimento rápido via WhatsApp    💳 Pagamento facilitado </span>
           <span className="mx-1">|</span>
-          <a href="https://wa.me/5548996525312" target="_blank" rel="noreferrer" className="font-bold text-green-cta hover:underline">
+          <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="font-bold text-green-cta hover:underline">
             Atendimento Comercial
           </a>
         </div>
@@ -75,14 +79,14 @@ const Header = () => {
           </form>
 
           <a
-            href="https://wa.me/5548996652844"
+            href={`https://wa.me/${WHATSAPP_NUMBER}`}
             target="_blank"
             rel="noreferrer"
             className="hidden sm:flex items-center gap-2 rounded-[10px] bg-green-cta px-5 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 transition-all duration-200 shrink-0"
             style={{ boxShadow: "0 0 20px rgba(34,197,94,0.3)" }}
           >
             <MessageCircle size={16} />
-            (48) 99665-2844
+            {phoneFormatted}
           </a>
 
           <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden text-foreground">
@@ -104,8 +108,8 @@ const Header = () => {
               </a>
             ))}
 
-            <a href="/produtos" className="px-4 py-3 text-[13px] font-bold uppercase hover:opacity-80 transition-colors duration-200 text-secondary-foreground">
-              ​BRINDES BARATOS
+            <a href="/brindes-baratos" className="px-4 py-3 text-[13px] font-bold uppercase hover:opacity-80 transition-colors duration-200 text-green-cta">
+              BRINDES BARATOS
             </a>
           </div>
         </div>
@@ -138,9 +142,13 @@ const Header = () => {
                 </a>
               ))}
 
-              <a href="https://wa.me/5548996525312" target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-[10px] bg-green-cta px-4 py-2.5 text-sm font-bold text-primary-foreground" style={{ boxShadow: "0 0 20px rgba(34,197,94,0.3)" }}>
+              <a href="/brindes-baratos" className="text-sm font-bold uppercase text-green-cta py-1">
+                BRINDES BARATOS
+              </a>
+
+              <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-[10px] bg-green-cta px-4 py-2.5 text-sm font-bold text-primary-foreground" style={{ boxShadow: "0 0 20px rgba(34,197,94,0.3)" }}>
                 <MessageCircle size={16} />
-                (48) 99652-5312
+                {phoneFormatted}
               </a>
             </div>
           </div>
