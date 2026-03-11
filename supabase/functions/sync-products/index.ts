@@ -31,20 +31,27 @@ function getSlug(nome: string, codigo: string): string {
   return base + '-' + codigo.toLowerCase()
 }
 
-function getBusca(p: any): string {
-  return [p.Nome ?? '', p.Descricao ?? '',
-          p.CorWebPrincipal ?? '', p.CodigoAmigavel ?? '']
-    .join(' ').toLowerCase()
+function getBusca(p: Record<string, unknown>): string {
+  return [
+    (p.Nome as string) ?? '',
+    (p.Descricao as string) ?? '',
+    (p.CorWebPrincipal as string) ?? '',
+    (p.CodigoAmigavel as string) ?? '',
+  ].join(' ').toLowerCase()
 }
 
-function getImageUrls(p: any): string[] {
-  const urls = [
+function getImageUrls(p: Record<string, unknown>): string[] {
+  const candidates = [
     p.ImageLink, p.ImageLink2, p.ImageLink3, p.ImageLink4,
-    p.imageLink, p.imageLink2, p.imageLink3, p.imageLink4
+    p.imageLink, p.imageLink2, p.imageLink3, p.imageLink4,
   ]
-    .filter((url: any) => url && typeof url === 'string' && url.trim() !== '')
-    .filter((url: string, index: number, self: string[]) => self.indexOf(url) === index)
-    .slice(0, 4)
+  const urls: string[] = []
+  for (const u of candidates) {
+    if (u && typeof u === 'string' && u.trim() !== '' && !urls.includes(u)) {
+      urls.push(u)
+    }
+    if (urls.length >= 4) break
+  }
   return urls
 }
 
@@ -52,8 +59,7 @@ function getCodigoPrefixo(codigo: string): string {
   const partes = codigo.split('-')
   if (partes.length >= 2) {
     const sufixo = partes[partes.length - 1]
-    const apenasLetras = /^[A-Za-z]+$/.test(sufixo)
-    if (apenasLetras) {
+    if (/^[A-Za-z]+$/.test(sufixo)) {
       return partes.slice(0, -1).join('-')
     }
   }
@@ -62,12 +68,12 @@ function getCodigoPrefixo(codigo: string): string {
 
 const CHUNK_SIZE = 500
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  const supabase = createClient(
+  const supabaseClient = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   )
@@ -81,9 +87,9 @@ serve(async (req) => {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 25000)
 
-    let response: Response
+    let apiResponse: Response
     try {
-      response = await fetch(apiUrl, {
+      apiResponse = await fetch(apiUrl, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
@@ -95,23 +101,25 @@ serve(async (req) => {
       throw new Error('Falha ao chamar API XBZ: ' + (fetchErr as Error).message)
     }
 
-    if (!response.ok) {
-      const body = await response.text()
-      console.error('[SYNC] Stage 1 FAILED - status:', response.status, 'body:', body.slice(0, 500))
-      throw new Error('API retornou status ' + response.status)
+    if (!apiResponse.ok) {
+      const body = await apiResponse.text()
+      console.error('[SYNC] Stage 1 FAILED - status:', apiResponse.status, 'body:', body.slice(0, 500))
+      throw new Error('API retornou status ' + apiResponse.status)
     }
 
-    let data: any
+    let data: unknown
     try {
-      data = await response.json()
+      data = await apiResponse.json()
     } catch (jsonErr) {
       console.error('[SYNC] Stage 1 FAILED - JSON parse error:', jsonErr)
       throw new Error('Resposta da API nao e JSON valido')
     }
 
-    const produtos = Array.isArray(data)
+    const dataObj = data as Record<string, unknown>
+    const produtos: Record<string, unknown>[] = Array.isArray(data)
       ? data
-      : data.produtos ?? data.data ?? []
+      : (Array.isArray(dataObj?.produtos) ? dataObj.produtos as Record<string, unknown>[] : 
+         Array.isArray(dataObj?.data) ? dataObj.data as Record<string, unknown>[] : [])
 
     console.log('[SYNC] Stage 1 OK - produtos recebidos:', produtos.length)
     if (!produtos.length) throw new Error('API retornou lista vazia')
@@ -120,32 +128,32 @@ serve(async (req) => {
     console.log('[SYNC] Stage 2: Mapping records...')
     const agora = new Date().toISOString()
 
-    let registros: any[]
+    let registros: Record<string, unknown>[]
     try {
       registros = produtos
-        .map((p: any) => {
-          const codigo = p.CodigoAmigavel ?? p.codigoAmigavel ?? ''
-          const nome = p.Nome ?? p.nome ?? codigo
-          const imageLink = p.ImageLink ?? p.imageLink ?? ''
+        .map((p) => {
+          const codigo = ((p.CodigoAmigavel ?? p.codigoAmigavel) as string) ?? ''
+          const nome = ((p.Nome ?? p.nome) as string) ?? codigo
+          const imageLink = ((p.ImageLink ?? p.imageLink) as string) ?? ''
           const imageUrls = getImageUrls(p)
           return {
             codigo_amigavel: codigo,
             slug: getSlug(nome, codigo),
             nome,
-            descricao: p.Descricao ?? p.descricao ?? '',
+            descricao: ((p.Descricao ?? p.descricao) as string) ?? '',
             image_url: imageLink,
             image_urls: imageUrls,
             has_image: !!(imageLink && imageLink.trim() !== ''),
-            site_link: p.SiteLink ?? p.siteLink ?? '',
-            cor: p.CorWebPrincipal ?? p.corWebPrincipal ?? '',
+            site_link: ((p.SiteLink ?? p.siteLink) as string) ?? '',
+            cor: ((p.CorWebPrincipal ?? p.corWebPrincipal) as string) ?? '',
             categoria: getCategoria(nome),
             marca: 'XBZ',
-            preco_custo: parseFloat(p.PrecoVenda ?? p.precoVenda ?? 0),
-            estoque: parseInt(p.QuantidadeDisponivel ?? p.quantidadeDisponivel ?? 0),
-            peso: parseFloat(p.Peso ?? p.peso ?? 0) || null,
-            altura: parseFloat(p.Altura ?? p.altura ?? 0) || null,
-            largura: parseFloat(p.Largura ?? p.largura ?? 0) || null,
-            profundidade: parseFloat(p.Profundidade ?? p.profundidade ?? 0) || null,
+            preco_custo: parseFloat(String(p.PrecoVenda ?? p.precoVenda ?? 0)),
+            estoque: parseInt(String(p.QuantidadeDisponivel ?? p.quantidadeDisponivel ?? 0)),
+            peso: parseFloat(String(p.Peso ?? p.peso ?? 0)) || null,
+            altura: parseFloat(String(p.Altura ?? p.altura ?? 0)) || null,
+            largura: parseFloat(String(p.Largura ?? p.largura ?? 0)) || null,
+            profundidade: parseFloat(String(p.Profundidade ?? p.profundidade ?? 0)) || null,
             ativo: true,
             busca: getBusca(p),
             updated_at: agora,
@@ -154,15 +162,15 @@ serve(async (req) => {
             produto_pai: null,
           }
         })
-        .filter((p: any) => p.codigo_amigavel !== '')
+        .filter((p) => p.codigo_amigavel !== '')
     } catch (mapErr) {
       console.error('[SYNC] Stage 2 FAILED - mapping error:', mapErr)
       throw new Error('Erro ao mapear registros: ' + (mapErr as Error).message)
     }
 
-    const deduped = new Map<string, any>()
+    const deduped = new Map<string, Record<string, unknown>>()
     for (const r of registros) {
-      deduped.set(r.codigo_amigavel, r)
+      deduped.set(r.codigo_amigavel as string, r)
     }
     const registrosUnicos = Array.from(deduped.values())
     console.log('[SYNC] Stage 2 OK - registros unicos:', registrosUnicos.length)
@@ -173,7 +181,7 @@ serve(async (req) => {
       for (let i = 0; i < registrosUnicos.length; i += CHUNK_SIZE) {
         const chunk = registrosUnicos.slice(i, i + CHUNK_SIZE)
         console.log('[SYNC] Stage 3: Upserting chunk', Math.floor(i / CHUNK_SIZE) + 1, 'size:', chunk.length)
-        const { error } = await supabase
+        const { error } = await supabaseClient
           .from('products_cache')
           .upsert(chunk, { onConflict: 'codigo_amigavel' })
         if (error) {
@@ -192,22 +200,21 @@ serve(async (req) => {
     try {
       const groups = new Map<string, string[]>()
       for (const r of registrosUnicos) {
-        const prefix = getCodigoPrefixo(r.codigo_amigavel)
+        const cod = r.codigo_amigavel as string
+        const prefix = getCodigoPrefixo(cod)
         if (!groups.has(prefix)) groups.set(prefix, [])
-        groups.get(prefix)!.push(r.codigo_amigavel)
+        groups.get(prefix)!.push(cod)
       }
 
-      const multiGroups = Array.from(groups.entries()).filter(([_, c]) => c.length > 1)
-      const singleGroups = Array.from(groups.entries()).filter(([_, c]) => c.length === 1)
+      const multiGroups = Array.from(groups.entries()).filter(([, c]) => c.length > 1)
+      const singleGroups = Array.from(groups.entries()).filter(([, c]) => c.length === 1)
       console.log('[SYNC] Stage 4: groups total:', groups.size, 'multi:', multiGroups.length, 'single:', singleGroups.length)
 
       // Handle single products in bulk batches
-      const singleCodigos = singleGroups.map(([_, c]) => c[0])
+      const singleCodigos = singleGroups.map(([, c]) => c[0])
       for (let i = 0; i < singleCodigos.length; i += CHUNK_SIZE) {
         const chunk = singleCodigos.slice(i, i + CHUNK_SIZE)
-        // For singles, set produto_pai = id (self-reference) via raw update
-        // We need to fetch ids first
-        const { data: rows, error: fetchErr } = await supabase
+        const { data: rows, error: fetchErr } = await supabaseClient
           .from('products_cache')
           .select('id, codigo_amigavel')
           .in('codigo_amigavel', chunk)
@@ -216,8 +223,8 @@ serve(async (req) => {
           throw fetchErr
         }
         if (rows) {
-          for (const row of rows) {
-            await supabase
+          for (const row of rows as { id: string }[]) {
+            await supabaseClient
               .from('products_cache')
               .update({ produto_pai: row.id, is_variante: false })
               .eq('id', row.id)
@@ -231,7 +238,7 @@ serve(async (req) => {
         codigos.sort()
         const paiCodigo = codigos[0]
 
-        const { data: paiRow, error: paiErr } = await supabase
+        const { data: paiRow, error: paiErr } = await supabaseClient
           .from('products_cache')
           .select('id')
           .eq('codigo_amigavel', paiCodigo)
@@ -242,10 +249,10 @@ serve(async (req) => {
           continue
         }
 
-        const paiId = paiRow.id
+        const paiId = (paiRow as { id: string }).id
 
         // Update parent
-        await supabase
+        await supabaseClient
           .from('products_cache')
           .update({ produto_pai: paiId, is_variante: false })
           .eq('codigo_amigavel', paiCodigo)
@@ -254,7 +261,7 @@ serve(async (req) => {
         const variantCodigos = codigos.slice(1)
         for (let i = 0; i < variantCodigos.length; i += CHUNK_SIZE) {
           const chunk = variantCodigos.slice(i, i + CHUNK_SIZE)
-          await supabase
+          await supabaseClient
             .from('products_cache')
             .update({ produto_pai: paiId, is_variante: true })
             .in('codigo_amigavel', chunk)
@@ -269,13 +276,13 @@ serve(async (req) => {
     // === STAGE 5: Deactivate stale products ===
     console.log('[SYNC] Stage 5: Deactivating stale products...')
     const limite = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-    await supabase
+    await supabaseClient
       .from('products_cache')
       .update({ ativo: false })
       .lt('ultima_sync', limite)
 
     // === STAGE 6: Log success ===
-    await supabase.from('sync_log').insert({
+    await supabaseClient.from('sync_log').insert({
       total_products: registrosUnicos.length,
       status: 'success',
     })
@@ -290,7 +297,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('[SYNC] FATAL ERROR:', error)
     try {
-      await supabase.from('sync_log').insert({
+      await supabaseClient.from('sync_log').insert({
         total_products: 0,
         status: 'error',
         erro: (error as Error).message,
