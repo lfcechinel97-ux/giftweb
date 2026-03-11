@@ -107,10 +107,8 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
           <div className="container py-6 md:py-8">
             <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: categoryLabel }]} />
             <h1 className="font-black text-[36px] md:text-[48px] leading-tight text-foreground mb-6">
-              {categoryLabel.split("").slice(0, -1).join("")}
-              <span className="text-highlight">{categoryLabel.slice(-1) === "s" ? categoryLabel : categoryLabel}</span>
+              <span className="text-highlight">{categoryLabel}</span> Personalizados
             </h1>
-            <h1 className="sr-only">{categoryLabel} Personalizados</h1>
 
             <CatalogFilters
               searchTerm={searchTerm}
