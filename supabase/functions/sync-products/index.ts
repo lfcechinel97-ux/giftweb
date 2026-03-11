@@ -49,10 +49,13 @@ function getImageUrls(p: any): string[] {
 }
 
 function getCodigoPrefixo(codigo: string): string {
-  if (codigo.includes('-')) return codigo
-  const match = codigo.match(/^(.+?)([A-Z])$/)
-  if (match && match[2].length === 1) {
-    return match[1]
+  const partes = codigo.split('-')
+  if (partes.length >= 2) {
+    const sufixo = partes[partes.length - 1]
+    const apenasLetras = /^[A-Za-z]+$/.test(sufixo)
+    if (apenasLetras) {
+      return partes.slice(0, -1).join('-')
+    }
   }
   return codigo
 }
