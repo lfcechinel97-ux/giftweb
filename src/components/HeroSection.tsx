@@ -49,7 +49,10 @@ const HeroSection = () => {
   const onTouchStart = (e: TouchEvent) => { touchStart.current = e.touches[0].clientX; };
   const onTouchEnd = (e: TouchEvent) => {
     const dx = e.changedTouches[0].clientX - touchStart.current;
-    if (Math.abs(dx) > 50) dx > 0 ? prevSlide() : nextSlide();
+    if (Math.abs(dx) > 50) {
+      if (dx > 0) prevSlide();
+      else nextSlide();
+    }
   };
 
   return (

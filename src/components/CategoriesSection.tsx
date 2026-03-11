@@ -116,9 +116,8 @@ const CategoriesSection = () => {
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}
-            onMouseLeave={onMouseUp}
-            onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => { setIsPaused(false); setIsDragging(false); }}
+            onMouseEnter={() => setIsPaused(true)}
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
             style={{ scrollBehavior: isDragging ? "auto" : "smooth" }}
