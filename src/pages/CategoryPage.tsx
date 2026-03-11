@@ -59,7 +59,8 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
       .select("*", { count: "exact" })
       .eq("categoria", category)
       .eq("ativo", true)
-      .eq("has_image", true);
+      .eq("has_image", true)
+      .eq("is_variante", false);
 
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
     if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
@@ -149,6 +150,7 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
                 {products.map((p) => (
                   <ProductCard
                     key={p.id}
+                    id={p.id}
                     nome={p.nome}
                     slug={p.slug}
                     image_url={p.image_url}

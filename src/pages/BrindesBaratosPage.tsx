@@ -43,6 +43,7 @@ const BrindesBaratosPage = () => {
       .select("*", { count: "exact" })
       .eq("ativo", true)
       .eq("has_image", true)
+      .eq("is_variante", false)
       .lte("preco_custo", 8)
       .gt("estoque", 0);
 
@@ -113,7 +114,7 @@ const BrindesBaratosPage = () => {
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {products.map((p) => (
-                  <ProductCard key={p.id} nome={p.nome} slug={p.slug} image_url={p.image_url} cor={p.cor} preco_custo={p.preco_custo} codigo_amigavel={p.codigo_amigavel} />
+                  <ProductCard key={p.id} id={p.id} nome={p.nome} slug={p.slug} image_url={p.image_url} cor={p.cor} preco_custo={p.preco_custo} codigo_amigavel={p.codigo_amigavel} />
                 ))}
               </div>
             )}
