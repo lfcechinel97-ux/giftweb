@@ -43,6 +43,7 @@ const SqueezesPage = () => {
       .select("*", { count: "exact" })
       .eq("ativo", true)
       .eq("has_image", true)
+      .eq("is_variante", false)
       .or("nome.ilike.%SQUEEZE%,descricao.ilike.%SQUEEZE%");
 
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
