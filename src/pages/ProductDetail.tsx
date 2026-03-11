@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup } from "@/utils/price";
+import { getCorHex, isLightColor } from "@/utils/colorHex";
 import { PRAZO_PRODUCAO, WHATSAPP_NUMBER, SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -11,10 +12,20 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard, { ProductCardSkeleton } from "@/components/ProductCard";
 import HowItWorks from "@/components/HowItWorks";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Clock, Minus, Plus, ZoomIn, X, MessageCircle, Ruler, Weight, ArrowUpDown, MoveHorizontal } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products_cache">;
+
+interface VariantInfo {
+  id: string;
+  slug: string | null;
+  cor: string | null;
+  codigo_amigavel: string;
+  image_url: string | null;
+  estoque: number | null;
+}
 
 const QUANTITIES = [20, 50, 100, 200, 300, 500, 1000];
 
@@ -25,10 +36,12 @@ const ProductDetail = () => {
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(20);
-  const [selectedRow, setSelectedRow] = useState(0); // index in QUANTITIES, default 20
+  const [selectedRow, setSelectedRow] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [variants, setVariants] = useState<VariantInfo[]>([]);
+  const [parentSlug, setParentSlug] = useState<string | null>(null);
   const qtySelectorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,19 +54,18 @@ const ProductDetail = () => {
       .eq("slug", slug)
       .eq("ativo", true)
       .single()
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (error || !data) {
           navigate("/404", { replace: true });
           return;
         }
         setProduct(data);
 
-        // Parse image_urls from the data
+        // Parse image_urls
         const imgs: string[] = [];
-        // image_urls is text[] in DB
-        if ((data as any).image_urls && Array.isArray((data as any).image_urls)) {
-          for (const u of (data as any).image_urls) {
-            if (u && u.trim()) imgs.push(u);
+        if (data.image_urls && Array.isArray(data.image_urls)) {
+          for (const u of data.image_urls) {
+            if (u && (u as string).trim()) imgs.push(u as string);
           }
         }
         if (imgs.length === 0 && data.image_url) {
@@ -62,17 +74,47 @@ const ProductDetail = () => {
         setImageUrls(imgs);
         setActiveImg(0);
 
-        // Fetch related
-        supabase
-          .from("products_cache")
-          .select("*")
-          .eq("categoria", data.categoria!)
-          .eq("ativo", true)
-          .eq("has_image", true)
-          .gt("estoque", 0)
-          .neq("slug", slug)
-          .limit(4)
-          .then(({ data: rel }) => setRelated(rel || []));
+        // Determine produto_pai id
+        const isVariante = (data as any).is_variante === true;
+        const produtoPaiId = isVariante ? (data as any).produto_pai : data.id;
+
+        // Fetch variants + related in parallel
+        const [variantsRes, relatedRes] = await Promise.all([
+          produtoPaiId
+            ? supabase
+                .from("products_cache")
+                .select("id,slug,cor,codigo_amigavel,image_url,estoque")
+                .or(`id.eq.${produtoPaiId},produto_pai.eq.${produtoPaiId}`)
+                .eq("ativo", true)
+                .eq("has_image", true)
+                .order("codigo_amigavel")
+            : Promise.resolve({ data: [] }),
+          supabase
+            .from("products_cache")
+            .select("*")
+            .eq("categoria", data.categoria!)
+            .eq("ativo", true)
+            .eq("has_image", true)
+            .eq("is_variante", false)
+            .gt("estoque", 0)
+            .neq("slug", slug)
+            .limit(4),
+        ]);
+
+        setVariants((variantsRes.data || []) as VariantInfo[]);
+        setRelated(relatedRes.data || []);
+
+        // Get parent slug for canonical
+        if (isVariante && produtoPaiId) {
+          const { data: paiData } = await supabase
+            .from("products_cache")
+            .select("slug")
+            .eq("id", produtoPaiId)
+            .single();
+          setParentSlug(paiData?.slug || null);
+        } else {
+          setParentSlug(null);
+        }
 
         setLoading(false);
       });
@@ -119,7 +161,9 @@ const ProductDetail = () => {
 
   if (!product) return null;
 
-  const canonicalUrl = `${SITE_URL}/produto/${product.slug}`;
+  const isVariante = (product as any).is_variante === true;
+  const canonicalSlug = isVariante && parentSlug ? parentSlug : product.slug;
+  const canonicalUrl = `${SITE_URL}/produto/${canonicalSlug}`;
   const categorySlug = product.categoria || "outros";
   const whatsappMsg = encodeURIComponent(
     `Olá! Tenho interesse no produto: ${product.nome} (Cód: ${product.codigo_amigavel}). Quantidade: ${qty} unidades. Podem me enviar um orçamento?`
@@ -218,12 +262,57 @@ const ProductDetail = () => {
                   <span>Prazo de produção: {PRAZO_PRODUCAO}</span>
                 </div>
 
-                {product.cor && (
+                {/* Color variant selector */}
+                {variants.length > 1 ? (
+                  <TooltipProvider delayDuration={200}>
+                    <div className="flex flex-col gap-2">
+                      <span className="text-foreground text-sm font-semibold">Cor:</span>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {variants.map((v) => {
+                          const hex = getCorHex(v.cor);
+                          const isCurrent = v.slug === slug;
+                          const needsBorder = isLightColor(hex);
+                          const outOfStock = v.estoque === 0 || v.estoque === null;
+                          return (
+                            <Tooltip key={v.id}>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => {
+                                    if (v.slug && v.slug !== slug) {
+                                      navigate(`/produto/${v.slug}`);
+                                    }
+                                  }}
+                                  className="rounded-full transition-all"
+                                  style={{
+                                    width: 32,
+                                    height: 32,
+                                    backgroundColor: hex,
+                                    border: needsBorder ? '2px solid hsl(var(--border))' : '2px solid transparent',
+                                    outline: isCurrent ? '2px solid hsl(142,71%,45%)' : 'none',
+                                    outlineOffset: 2,
+                                    opacity: outOfStock ? 0.4 : 1,
+                                    cursor: isCurrent ? 'default' : 'pointer',
+                                  }}
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs">
+                                {v.cor || 'Cor'}{outOfStock ? ' — Indisponível' : ''}
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </TooltipProvider>
+                ) : product.cor ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full bg-muted-foreground border border-border" />
+                    <div
+                      className="w-4 h-4 rounded-full border border-border"
+                      style={{ backgroundColor: getCorHex(product.cor) }}
+                    />
                     <span className="text-foreground text-sm font-medium">{product.cor}</span>
                   </div>
-                )}
+                ) : null}
 
                 {/* Stock badge */}
                 {product.estoque != null && product.estoque > 0 ? (
@@ -424,6 +513,7 @@ const ProductDetail = () => {
                   {related.map((p) => (
                     <ProductCard
                       key={p.id}
+                      id={p.id}
                       nome={p.nome}
                       slug={p.slug}
                       image_url={p.image_url}

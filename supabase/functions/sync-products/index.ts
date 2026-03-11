@@ -48,6 +48,12 @@ function getImageUrls(p: any): string[] {
   return urls
 }
 
+function getCodigoPrefixo(codigo: string): string {
+  const partes = codigo.split('-')
+  if (partes.length > 1) return partes[0]
+  return codigo
+}
+
 const CHUNK_SIZE = 500
 
 serve(async (req) => {
@@ -121,6 +127,9 @@ serve(async (req) => {
           busca:       getBusca(p),
           updated_at:  agora,
           ultima_sync: agora,
+          // Pass 1: no grouping yet
+          is_variante: false,
+          produto_pai: null,
         }
       })
       .filter((p: any) => p.codigo_amigavel !== '')
@@ -132,12 +141,62 @@ serve(async (req) => {
     }
     const registrosUnicos = Array.from(deduped.values())
 
+    // === PASS 1: Upsert all products without produto_pai ===
     for (let i = 0; i < registrosUnicos.length; i += CHUNK_SIZE) {
       const chunk = registrosUnicos.slice(i, i + CHUNK_SIZE)
       const { error } = await supabase
         .from('products_cache')
         .upsert(chunk, { onConflict: 'codigo_amigavel' })
       if (error) throw error
+    }
+
+    // === PASS 2: Group by prefix and set produto_pai ===
+    // Group products by prefix
+    const groups = new Map<string, string[]>()
+    for (const r of registrosUnicos) {
+      const prefix = getCodigoPrefixo(r.codigo_amigavel)
+      if (!groups.has(prefix)) groups.set(prefix, [])
+      groups.get(prefix)!.push(r.codigo_amigavel)
+    }
+
+    for (const [_prefix, codigos] of groups) {
+      codigos.sort() // alphabetical — first one becomes parent
+      const paiCodigo = codigos[0]
+
+      // Get pai id from DB
+      const { data: paiRow } = await supabase
+        .from('products_cache')
+        .select('id')
+        .eq('codigo_amigavel', paiCodigo)
+        .single()
+
+      if (!paiRow) continue
+
+      const paiId = paiRow.id
+
+      if (codigos.length === 1) {
+        // Single product — self-reference
+        await supabase
+          .from('products_cache')
+          .update({ produto_pai: paiId, is_variante: false })
+          .eq('codigo_amigavel', paiCodigo)
+      } else {
+        // Parent
+        await supabase
+          .from('products_cache')
+          .update({ produto_pai: paiId, is_variante: false })
+          .eq('codigo_amigavel', paiCodigo)
+
+        // Variants
+        const variantCodigos = codigos.slice(1)
+        for (let i = 0; i < variantCodigos.length; i += CHUNK_SIZE) {
+          const chunk = variantCodigos.slice(i, i + CHUNK_SIZE)
+          await supabase
+            .from('products_cache')
+            .update({ produto_pai: paiId, is_variante: true })
+            .in('codigo_amigavel', chunk)
+        }
+      }
     }
 
     const limite = new Date(
