@@ -46,6 +46,7 @@ const SearchPage = () => {
       .select("*", { count: "exact" })
       .eq("ativo", true)
       .eq("has_image", true)
+      .eq("is_variante", false)
       .ilike("busca", `%${q}%`)
       .order("nome")
       .range(from, to);
