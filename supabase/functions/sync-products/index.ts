@@ -136,18 +136,36 @@ serve(async (req) => {
     if (!produtos.length) throw new Error('API retornou lista vazia')
 
     console.log('[SYNC] Stage 2: Grouping by prefix...')
+    // Chave única = codigo + cor (para produtos com mesmo código mas cores diferentes)
     const produtosMap = new Map<string, any>()
     for (const p of produtos) {
       const codigo = p.CodigoAmigavel ?? p.codigoAmigavel ?? ''
       if (!codigo) continue
-      produtosMap.set(codigo, p)
+      const cor = p.CorWebPrincipal ?? p.corWebPrincipal ?? ''
+      const chave = codigo + '||' + cor.toUpperCase()
+      produtosMap.set(chave, p)
+    }
+
+    // Gerar codigo_amigavel único para cada produto (codigo + sufixo de cor)
+    const codigosUnicos = new Map<string, string>() // chave -> codigoUnico
+    for (const [chave, p] of produtosMap.entries()) {
+      const codigo = p.CodigoAmigavel ?? p.codigoAmigavel ?? ''
+      const cor = p.CorWebPrincipal ?? p.corWebPrincipal ?? ''
+      const sufixoCor = cor
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z]/g, '')
+        .toUpperCase()
+        .slice(0, 3)
+      const codigoUnico = cor && sufixoCor ? codigo + '-' + sufixoCor : codigo
+      codigosUnicos.set(chave, codigoUnico)
     }
 
     const groups = new Map<string, string[]>()
-    for (const codigo of produtosMap.keys()) {
-      const prefix = getCodigoPrefixo(codigo)
+    for (const codigoUnico of codigosUnicos.values()) {
+      const prefix = getCodigoPrefixo(codigoUnico)
       if (!groups.has(prefix)) groups.set(prefix, [])
-      groups.get(prefix)!.push(codigo)
+      groups.get(prefix)!.push(codigoUnico)
     }
 
     const paiDeCodigo = new Map<string, string>()
@@ -173,12 +191,13 @@ serve(async (req) => {
     console.log('[SYNC] Stage 3: Upserting all products...')
     const agora = new Date().toISOString()
 
-    const registros = Array.from(produtosMap.entries()).map(([codigo, p]) => {
-      const nome = p.Nome ?? p.nome ?? codigo
+    const registros = Array.from(produtosMap.entries()).map(([chave, p]) => {
+      const codigoUnico = codigosUnicos.get(chave)!
+      const nome = p.Nome ?? p.nome ?? codigoUnico
       const imageLink = p.ImageLink ?? p.imageLink ?? ''
       return {
-        codigo_amigavel: codigo,
-        slug: getSlug(nome, codigo),
+        codigo_amigavel: codigoUnico,
+        slug: getSlug(nome, codigoUnico),
         nome,
         descricao: p.Descricao ?? p.descricao ?? '',
         image_url: imageLink,
@@ -198,7 +217,7 @@ serve(async (req) => {
         busca: getBusca(p),
         updated_at: agora,
         ultima_sync: agora,
-        is_variante: isVariante.has(codigo),
+        is_variante: isVariante.has(codigoUnico),
         produto_pai: null,
       }
     })
