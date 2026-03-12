@@ -202,39 +202,106 @@ serve(async (req) => {
       }
     }
 
-    console.log('[SYNC] Stage 2 OK - pais:', isPai.size, 'variantes:', isVariante.size)
+  console.log('[SYNC] Stage 2 OK - pais:', isPai.size, 'variantes:', isVariante.size)
 
-    console.log('[SYNC] Stage 3: Removing old records without suffix...')
-    const prefixosComVariacao = new Set<string>()
-    for (const r of registros) {
-      const prefixo = getCodigoPrefixo(r.codigo_amigavel)
-      if (prefixo !== r.codigo_amigavel) {
-        prefixosComVariacao.add(prefixo)
+  console.log('[SYNC] Stage 3: Preparing records...')
+  // 1. DEFINIR registros primeiro
+  const agora = new Date().toISOString()
+  const codigosUsados = new Set<string>()
+  
+  const registros = Array.from(produtosMap.entries()).map(([chave, p]) => {
+    const codigo = p.CodigoAmigavel ?? p.codigoAmigavel ?? ''
+    const cor = p.CorWebPrincipal ?? p.corWebPrincipal ?? ''
+    const nome = p.Nome ?? p.nome ?? codigo
+    const precoStr = p.PrecoVenda ?? p.precoVenda ?? '0'
+    const preco = parseFloat(precoStr) || 0
+    const estoqueStr = p.QuantidadeDisponivel ?? p.quantidadeDisponivel ?? '0'
+    const estoque = parseInt(estoqueStr) || 0
+    const altura = parseFloat(p.Altura ?? p.altura ?? '0') || null
+    const largura = parseFloat(p.Largura ?? p.largura ?? '0') || null
+    const profundidade = parseFloat(p.Profundidade ?? p.profundidade ?? '0') || null
+    const peso = parseFloat(p.Peso ?? p.peso ?? '0') || null
+    const imageUrls = getImageUrls(p)
+    const hasImage = imageUrls.length > 0 && !imageUrls[0].includes('placehold.co')
+
+    // Gerar codigo_amigavel único garantindo sem colisão
+    let codigoUnico = codigo
+    if (cor) {
+      const sufixoBase = cor
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .toUpperCase()
+        .slice(0, 4)
+      
+      let sufixo = sufixoBase
+      let tentativa = codigo + '-' + sufixo
+      let contador = 2
+      while (codigosUsados.has(tentativa)) {
+        sufixo = sufixoBase.slice(0, 3) + contador
+        tentativa = codigo + '-' + sufixo
+        contador++
       }
+      codigoUnico = tentativa
     }
-    if (prefixosComVariacao.size > 0) {
-      const { error: deleteError } = await supabaseClient
-        .from('products_cache')
-        .delete()
-        .in('codigo_amigavel', Array.from(prefixosComVariacao))
-      if (deleteError) {
-        console.error('[SYNC] Stage 3 DELETE error:', deleteError)
-      } else {
-        console.log('[SYNC] Stage 3 OK - deleted', prefixosComVariacao.size, 'old records')
-      }
-    }
+    codigosUsados.add(codigoUnico)
 
-    console.log('[SYNC] Stage 3b: Upserting all products...')
-    const agora = new Date().toISOString()
-
-    for (let i = 0; i < registros.length; i += CHUNK_SIZE) {
-      const chunk = registros.slice(i, i + CHUNK_SIZE)
-      const { error } = await supabaseClient
-        .from('products_cache')
-        .upsert(chunk, { onConflict: 'codigo_amigavel' })
-      if (error) throw new Error('Upsert Stage 3b falhou: ' + JSON.stringify(error))
+    return {
+      codigo_amigavel: codigoUnico,
+      nome,
+      slug: getSlug(nome, codigoUnico),
+      categoria: getCategoria(nome),
+      cor: cor || null,
+      descricao: p.Descricao ?? p.descricao ?? null,
+      preco_custo: preco,
+      estoque,
+      marca: p.Marca ?? p.marca ?? null,
+      altura,
+      largura,
+      profundidade,
+      peso,
+      image_url: imageUrls[0] ?? null,
+      image_urls: imageUrls.length > 0 ? imageUrls : null,
+      has_image: hasImage,
+      busca: getBusca(p),
+      site_link: p.SiteLink ?? p.siteLink ?? null,
+      ultima_sync: agora,
+      ativo: true,
     }
-    console.log('[SYNC] Stage 3b OK -', registros.length, 'produtos salvos')
+  })
+  console.log('[SYNC] Stage 3 OK -', registros.length, 'registros preparados')
+
+  console.log('[SYNC] Stage 3b: Removing old records without suffix...')
+  // 2. REMOVER registros antigos sem sufixo que agora têm variações
+  const prefixosComVariacao = new Set<string>()
+  for (const r of registros) {
+    const prefixo = getCodigoPrefixo(r.codigo_amigavel)
+    if (prefixo !== r.codigo_amigavel) {
+      prefixosComVariacao.add(prefixo)
+    }
+  }
+  if (prefixosComVariacao.size > 0) {
+    const { error: deleteError } = await supabaseClient
+      .from('products_cache')
+      .delete()
+      .in('codigo_amigavel', Array.from(prefixosComVariacao))
+    if (deleteError) {
+      console.error('[SYNC] Stage 3b DELETE error:', deleteError)
+    } else {
+      console.log('[SYNC] Stage 3b OK - deleted', prefixosComVariacao.size, 'old records')
+    }
+  }
+
+  console.log('[SYNC] Stage 3c: Upserting all products...')
+  // 3. FAZER O UPSERT
+  for (let i = 0; i < registros.length; i += CHUNK_SIZE) {
+    const chunk = registros.slice(i, i + CHUNK_SIZE)
+    const { error } = await supabaseClient
+      .from('products_cache')
+      .upsert(chunk, { onConflict: 'codigo_amigavel' })
+    if (error) throw new Error('Upsert Stage 3c falhou: ' + JSON.stringify(error))
+  }
+  console.log('[SYNC] Stage 3c OK -', registros.length, 'produtos salvos')
 
     console.log('[SYNC] Stage 4: Setting produto_pai in batch...')
     const paiCodigos = Array.from(isPai)
