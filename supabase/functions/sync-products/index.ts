@@ -7,6 +7,14 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
+const MOCK_PRODUCTS = [
+  {"CodigoAmigavel": "9139A-AZU", "Nome": "Squeeze Alumínio 500ml", "CorWebPrincipal": "Azul", "ImageLink": "https://placehold.co/400", "PrecoVenda": "15.00", "QuantidadeDisponivel": "100"},
+  {"CodigoAmigavel": "9139A-VRM", "Nome": "Squeeze Alumínio 500ml", "CorWebPrincipal": "Vermelho", "ImageLink": "https://placehold.co/400", "PrecoVenda": "15.00", "QuantidadeDisponivel": "80"},
+  {"CodigoAmigavel": "9139A-PRE", "Nome": "Squeeze Alumínio 500ml", "CorWebPrincipal": "Preto", "ImageLink": "https://placehold.co/400", "PrecoVenda": "15.00", "QuantidadeDisponivel": "60"},
+  {"CodigoAmigavel": "00033-4GB", "Nome": "Pen Drive 4GB", "CorWebPrincipal": "", "ImageLink": "https://placehold.co/400", "PrecoVenda": "8.00", "QuantidadeDisponivel": "200"},
+  {"CodigoAmigavel": "17011C", "Nome": "Garrafa Inox 750ml", "CorWebPrincipal": "Laranja", "ImageLink": "https://placehold.co/400", "PrecoVenda": "25.00", "QuantidadeDisponivel": "50"}
+]
+
 function getCategoria(nome: string): string {
   const n = nome.toUpperCase()
   if (n.includes('CANECA') || n.includes('COPO') ||
@@ -74,34 +82,53 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   )
 
+  // Check if mock mode
+  let useMock = false
   try {
-    console.log('[SYNC] Stage 1: Fetching from XBZ API...')
-    const apiUrl = Deno.env.get('XBZ_API_URL')
-    if (!apiUrl) throw new Error('XBZ_API_URL nao configurada')
+    const body = await req.json()
+    if (body && body.mock === true) {
+      useMock = true
+    }
+  } catch (_) {
+    // no body or invalid JSON, proceed normally
+  }
 
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 25000)
+  try {
+    let produtos: any[]
 
-    let apiResponse: Response
-    try {
-      apiResponse = await fetch(apiUrl, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-      })
-      clearTimeout(timeout)
-    } catch (fetchErr) {
-      clearTimeout(timeout)
-      throw new Error('Falha ao chamar API XBZ: ' + (fetchErr as Error).message)
+    if (useMock) {
+      console.log('[SYNC] MOCK MODE - using fake data')
+      produtos = MOCK_PRODUCTS
+    } else {
+      console.log('[SYNC] Stage 1: Fetching from XBZ API...')
+      const apiUrl = Deno.env.get('XBZ_API_URL')
+      if (!apiUrl) throw new Error('XBZ_API_URL nao configurada')
+
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 25000)
+
+      let apiResponse: Response
+      try {
+        apiResponse = await fetch(apiUrl, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+        })
+        clearTimeout(timeout)
+      } catch (fetchErr) {
+        clearTimeout(timeout)
+        throw new Error('Falha ao chamar API XBZ: ' + (fetchErr as Error).message)
+      }
+
+      if (!apiResponse.ok) {
+        const body = await apiResponse.text()
+        throw new Error('API retornou status ' + apiResponse.status + ': ' + body.slice(0, 200))
+      }
+
+      const data = await apiResponse.json()
+      produtos = Array.isArray(data) ? data : data.produtos ?? data.data ?? []
     }
 
-    if (!apiResponse.ok) {
-      const body = await apiResponse.text()
-      throw new Error('API retornou status ' + apiResponse.status + ': ' + body.slice(0, 200))
-    }
-
-    const data = await apiResponse.json()
-    const produtos = Array.isArray(data) ? data : data.produtos ?? data.data ?? []
     console.log('[SYNC] Stage 1 OK - produtos:', produtos.length)
     if (!produtos.length) throw new Error('API retornou lista vazia')
 
@@ -232,13 +259,13 @@ serve(async (req) => {
 
     await supabaseClient.from('sync_log').insert({
       total_products: registros.length,
-      status: 'success',
+      status: useMock ? 'success-mock' : 'success',
     })
 
-    console.log('[SYNC] DONE - total:', registros.length)
+    console.log('[SYNC] DONE - total:', registros.length, useMock ? '(MOCK)' : '')
 
     return new Response(
-      JSON.stringify({ success: true, total: registros.length }),
+      JSON.stringify({ success: true, total: registros.length, mock: useMock }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
