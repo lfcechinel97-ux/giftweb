@@ -204,48 +204,37 @@ serve(async (req) => {
 
     console.log('[SYNC] Stage 2 OK - pais:', isPai.size, 'variantes:', isVariante.size)
 
-    console.log('[SYNC] Stage 3: Upserting all products...')
-    const agora = new Date().toISOString()
-
-    const registros = Array.from(produtosMap.entries()).map(([chave, p]) => {
-      const codigoUnico = codigosUnicos.get(chave)!
-      const nome = p.Nome ?? p.nome ?? codigoUnico
-      const imageLink = p.ImageLink ?? p.imageLink ?? ''
-      return {
-        codigo_amigavel: codigoUnico,
-        slug: getSlug(nome, codigoUnico),
-        nome,
-        descricao: p.Descricao ?? p.descricao ?? '',
-        image_url: imageLink,
-        image_urls: getImageUrls(p),
-        has_image: !!(imageLink && imageLink.trim() !== ''),
-        site_link: p.SiteLink ?? p.siteLink ?? '',
-        cor: p.CorWebPrincipal ?? p.corWebPrincipal ?? '',
-        categoria: getCategoria(nome),
-        marca: 'XBZ',
-        preco_custo: parseFloat(p.PrecoVenda ?? p.precoVenda ?? 0),
-        estoque: parseInt(p.QuantidadeDisponivel ?? p.quantidadeDisponivel ?? 0),
-        peso: parseFloat(p.Peso ?? p.peso ?? 0) || null,
-        altura: parseFloat(p.Altura ?? p.altura ?? 0) || null,
-        largura: parseFloat(p.Largura ?? p.largura ?? 0) || null,
-        profundidade: parseFloat(p.Profundidade ?? p.profundidade ?? 0) || null,
-        ativo: true,
-        busca: getBusca(p),
-        updated_at: agora,
-        ultima_sync: agora,
-        is_variante: isVariante.has(codigoUnico),
-        produto_pai: null,
+    console.log('[SYNC] Stage 3: Removing old records without suffix...')
+    const prefixosComVariacao = new Set<string>()
+    for (const r of registros) {
+      const prefixo = getCodigoPrefixo(r.codigo_amigavel)
+      if (prefixo !== r.codigo_amigavel) {
+        prefixosComVariacao.add(prefixo)
       }
-    })
+    }
+    if (prefixosComVariacao.size > 0) {
+      const { error: deleteError } = await supabaseClient
+        .from('products_cache')
+        .delete()
+        .in('codigo_amigavel', Array.from(prefixosComVariacao))
+      if (deleteError) {
+        console.error('[SYNC] Stage 3 DELETE error:', deleteError)
+      } else {
+        console.log('[SYNC] Stage 3 OK - deleted', prefixosComVariacao.size, 'old records')
+      }
+    }
+
+    console.log('[SYNC] Stage 3b: Upserting all products...')
+    const agora = new Date().toISOString()
 
     for (let i = 0; i < registros.length; i += CHUNK_SIZE) {
       const chunk = registros.slice(i, i + CHUNK_SIZE)
       const { error } = await supabaseClient
         .from('products_cache')
         .upsert(chunk, { onConflict: 'codigo_amigavel' })
-      if (error) throw new Error('Upsert Stage 3 falhou: ' + JSON.stringify(error))
+      if (error) throw new Error('Upsert Stage 3b falhou: ' + JSON.stringify(error))
     }
-    console.log('[SYNC] Stage 3 OK -', registros.length, 'produtos salvos')
+    console.log('[SYNC] Stage 3b OK -', registros.length, 'produtos salvos')
 
     console.log('[SYNC] Stage 4: Setting produto_pai in batch...')
     const paiCodigos = Array.from(isPai)
