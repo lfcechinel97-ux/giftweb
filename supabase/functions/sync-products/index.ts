@@ -146,18 +146,34 @@ serve(async (req) => {
       produtosMap.set(chave, p)
     }
 
-    // Gerar codigo_amigavel único para cada produto (codigo + sufixo de cor)
+    // Gerar codigo_amigavel único garantindo sem colisão
+    const codigosUsados = new Set<string>()
     const codigosUnicos = new Map<string, string>() // chave -> codigoUnico
     for (const [chave, p] of produtosMap.entries()) {
       const codigo = p.CodigoAmigavel ?? p.codigoAmigavel ?? ''
       const cor = p.CorWebPrincipal ?? p.corWebPrincipal ?? ''
-      const sufixoCor = cor
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-zA-Z]/g, '')
-        .toUpperCase()
-        .slice(0, 3)
-      const codigoUnico = cor && sufixoCor ? codigo + '-' + sufixoCor : codigo
+
+      let codigoUnico = codigo
+      if (cor) {
+        const sufixoBase = cor
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-zA-Z0-9]/g, '')
+          .toUpperCase()
+          .slice(0, 4)
+
+        let sufixo = sufixoBase
+        let tentativa = codigo + '-' + sufixo
+        let contador = 2
+        while (codigosUsados.has(tentativa)) {
+          sufixo = sufixoBase.slice(0, 3) + contador
+          tentativa = codigo + '-' + sufixo
+          contador++
+        }
+        codigoUnico = tentativa
+      }
+
+      codigosUsados.add(codigoUnico)
       codigosUnicos.set(chave, codigoUnico)
     }
 
