@@ -63,7 +63,10 @@ function getCodigoPrefixo(codigo: string): string {
   const partes = codigo.split('-')
   if (partes.length >= 2) {
     const sufixo = partes[partes.length - 1]
-    if (/^[A-Za-z]+$/.test(sufixo)) {
+    // Agrupa se sufixo tiver 1-3 letras + dígito opcional (códigos de cor como AZI, BC2, VM2, VD)
+    // NÃO agrupa se sufixo começar com número como 4GB, 8GB, 16GB
+    const codigoDeCor = /^[A-Za-z]{1,3}[0-9]?$/.test(sufixo)
+    if (codigoDeCor) {
       return partes.slice(0, -1).join('-')
     }
   }
