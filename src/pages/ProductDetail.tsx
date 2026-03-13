@@ -561,10 +561,10 @@ const ProductDetail = () => {
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
-                  {product.preco_custo != null && product.preco_custo > 0 && (
+                  {displayPrecoCusto != null && displayPrecoCusto > 0 && (
                     <div className="mt-3 text-sm">
                       <p className="text-muted-foreground">
-                        {qty}x {product.nome} — {formatarBRL(precoAtual)} / unidade
+                        {qty}x {displayNome} — {formatarBRL(precoAtual)} / unidade
                       </p>
                       <p className="text-foreground font-bold text-lg mt-1">
                         Total: {formatarBRL(precoAtual * qty)}
