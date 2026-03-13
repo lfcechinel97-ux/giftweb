@@ -125,9 +125,6 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
           </TooltipProvider>
         )}
 
-        {cor && !hasVariants && (
-          <span className="text-[13px] text-muted-foreground">Cor: {cor}</span>
-        )}
 
         {precoMin != null && (
           <span className="text-green-cta font-bold text-sm">
