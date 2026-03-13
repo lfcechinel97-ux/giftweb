@@ -1,65 +1,144 @@
 import { useInView } from "@/hooks/useInView";
-import { LayoutGrid, Upload, CheckCircle, Wrench, Truck } from "lucide-react";
 
 const steps = [
-  { num: "01", icon: LayoutGrid, label: "Escolha o produto" },
-  { num: "02", icon: Upload, label: "Envie sua logo" },
-  { num: "03", icon: CheckCircle, label: "Aprove a arte" },
-  { num: "04", icon: Wrench, label: "Produção" },
-  { num: "05", icon: Truck, label: "Entrega" },
+  {
+    num: "01",
+    title: "Escolha o produto",
+    desc: "Explore nosso catálogo com centenas de brindes corporativos prontos para personalizar.",
+    img: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600",
+  },
+  {
+    num: "02",
+    title: "Envie sua logo",
+    desc: "Mande o arquivo da sua marca por WhatsApp ou e-mail. Aceitamos AI, PDF, PNG e SVG.",
+    img: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600",
+  },
+  {
+    num: "03",
+    title: "Aprove a arte",
+    desc: "Nossa equipe cria o mock-up gratuitamente. Você aprova antes de qualquer produção.",
+    img: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=600",
+  },
+  {
+    num: "04",
+    title: "Produção",
+    desc: "Fabricação com controle de qualidade. Você recebe fotos do lote antes do envio.",
+    img: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600",
+    badge: "⚡ 2 a 7 dias úteis",
+  },
+  {
+    num: "05",
+    title: "Entrega",
+    desc: "Enviamos para todo o Brasil com rastreamento em tempo real.",
+    img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600",
+  },
 ];
 
 const HowItWorks = () => {
   const { ref, inView } = useInView();
 
   return (
-    <section className="py-16 md:py-20 bg-background">
+    <section className="py-16 md:py-20 overflow-hidden" style={{ background: "#0B0F1A" }}>
       <div
         ref={ref}
-        className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
+        className={`transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
       >
         <div className="text-center mb-12">
-          <h2 className="text-foreground font-extrabold text-[32px]">
-            Seu pedido, do início ao <span className="text-highlight italic">fim</span>
+          <h2 className="text-white font-bold text-[32px]">
+            Seu pedido, do início ao <span className="text-green-cta italic">fim</span>
           </h2>
-          <p className="text-muted-foreground text-base mt-2">Simples, rápido e sem complicação.</p>
+          <p className="text-[15px] mt-2" style={{ color: "#9CA3AF" }}>
+            Simples, rápido e sem complicação.
+          </p>
         </div>
 
-        {/* Desktop: horizontal */}
-        <div className="hidden md:flex items-start justify-between relative">
-          {/* Dashed line */}
-          <div className="absolute top-[18px] left-[10%] right-[10%] border-t border-dashed border-border" />
+        {/* Desktop grid + Mobile horizontal scroll */}
+        <div className="relative max-w-[1200px] mx-auto px-6">
+          {/* Decorative connector line */}
+          <div
+            className="hidden md:block absolute top-1/2 left-[5%] right-[5%] h-px pointer-events-none"
+            style={{ background: "linear-gradient(to right, transparent, rgba(34,197,94,0.27), transparent)" }}
+          />
 
-          {steps.map((s) => {
-            const Icon = s.icon;
-            return (
-              <div key={s.num} className="flex flex-col items-center text-center relative z-10 w-1/5">
-                <Icon className="w-8 h-8 text-foreground mb-4" strokeWidth={1.5} />
-                <span className="text-green-cta font-bold text-xs mb-1">{s.num}</span>
-                <span className="text-foreground font-medium text-sm">{s.label}</span>
-              </div>
-            );
-          })}
-        </div>
+          <div
+            className="
+              grid gap-3
+              grid-cols-[repeat(5,260px)] md:grid-cols-5
+              overflow-x-auto md:overflow-visible
+              snap-x snap-mandatory md:snap-none
+              pb-4 md:pb-0
+              scrollbar-hide
+            "
+          >
+            {steps.map((s) => (
+              <div
+                key={s.num}
+                className="
+                  group relative rounded-2xl overflow-hidden cursor-default
+                  h-[300px] md:h-[340px] snap-start
+                "
+              >
+                {/* Photo */}
+                <img
+                  src={s.img}
+                  alt={s.title}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out brightness-[0.55] group-hover:scale-[1.07] group-hover:brightness-[0.7]"
+                />
 
-        {/* Mobile: vertical */}
-        <div className="flex md:hidden relative pl-8">
-          {/* Dashed vertical line */}
-          <div className="absolute left-[14px] top-0 bottom-0 border-l border-dashed border-border" />
+                {/* Gradient overlay */}
+                <div
+                  className="absolute inset-0 transition-all duration-400"
+                  style={{
+                    background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%, transparent 100%)",
+                  }}
+                />
+                {/* Hover overlay - separate div for smooth transition */}
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400"
+                  style={{
+                    background: "linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.45) 60%, rgba(0,0,0,0.15) 100%)",
+                  }}
+                />
 
-          <div className="flex flex-col gap-8">
-            {steps.map((s) => {
-              const Icon = s.icon;
-              return (
-                <div key={s.num} className="flex items-center gap-4 relative">
-                  <div className="absolute -left-8 w-7 h-7 rounded-full bg-background flex items-center justify-center z-10">
-                    <span className="text-green-cta font-bold text-[11px]">{s.num}</span>
-                  </div>
-                  <Icon className="w-7 h-7 text-foreground flex-shrink-0" strokeWidth={1.5} />
-                  <span className="text-foreground font-medium text-sm">{s.label}</span>
+                {/* Content */}
+                <div className="absolute inset-0 p-5 md:p-6 flex flex-col justify-end">
+                  {/* Step number - ghost green at top */}
+                  <span
+                    className="text-[48px] font-black leading-none mb-auto transition-colors duration-300"
+                    style={{ color: "rgba(34,197,94,0.25)" }}
+                  >
+                    <span className="group-hover:hidden">{s.num}</span>
+                    <span className="hidden group-hover:inline" style={{ color: "rgba(34,197,94,0.45)" }}>
+                      {s.num}
+                    </span>
+                  </span>
+
+                  {/* Badge - only step 4 */}
+                  {s.badge && (
+                    <span
+                      className="inline-block w-fit text-[10px] font-bold uppercase tracking-wider text-white rounded-full px-2 py-[3px] mb-1.5"
+                      style={{ background: "#22C55E", letterSpacing: "0.5px" }}
+                    >
+                      {s.badge}
+                    </span>
+                  )}
+
+                  {/* Title */}
+                  <h3 className="text-white text-base font-bold leading-tight mb-1.5 !text-[16px]">
+                    {s.title}
+                  </h3>
+
+                  {/* Description - reveal on hover */}
+                  <p
+                    className="text-[12px] leading-relaxed max-h-0 overflow-hidden opacity-0 group-hover:max-h-20 group-hover:opacity-100 transition-all duration-400"
+                    style={{ color: "#D1FAE5" }}
+                  >
+                    {s.desc}
+                  </p>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
       </div>
