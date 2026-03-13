@@ -306,9 +306,10 @@ const ProductDetail = () => {
 
             {/* Main layout */}
             <div className="grid md:grid-cols-[55%_45%] gap-6 md:gap-8">
-              {/* Gallery */}
-              <div className="flex flex-col gap-3 md:sticky md:top-6 self-start">
-                {/* Imagem principal - quadrada, sem zoom */}
+{/* Gallery */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+                {/* IMAGEM PRINCIPAL */}
                 <div style={{
                   width: '100%',
                   aspectRatio: '1 / 1',
@@ -319,50 +320,69 @@ const ProductDetail = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  overflow: 'hidden',
+                  overflow: 'hidden'
                 }}>
-                  <img
-                    src={mainImage}
-                    alt={product?.nome || 'Produto'}
-                    style={{
-                      maxWidth: '85%',
-                      maxHeight: '85%',
-                      objectFit: 'contain',
-                      opacity: isTransitioning ? 0 : 1,
-                      transition: 'opacity 0.15s ease',
-                    }}
-                    onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
-                  />
+                  {mainImage && (
+                    <img
+                      src={mainImage}
+                      alt={product?.nome || 'Produto'}
+                      style={{
+                        maxWidth: '85%',
+                        maxHeight: '85%',
+                        objectFit: 'contain',
+                        opacity: isTransitioning ? 0 : 1,
+                        transition: 'opacity 0.15s ease'
+                      }}
+                      onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
+                    />
+                  )}
                 </div>
-{/* Miniaturas só aparecem quando existem múltiplas imagens */}
+
+                {/* MINIATURAS */}
                 {allImages.length > 1 && (
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                    {allImages.map((src, i) => (
-                      <div
-                        key={i}
-                        onClick={() => handleThumbChange(src)}
-                        onMouseEnter={() => handleThumbChange(src)}
-                        style={{
-                          width: '72px', height: '72px',
-                          border: mainImage === src
-                            ? '2px solid #22C55E'
-                            : '2px solid #E5E7EB',
-                          borderRadius: '10px',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', padding: '6px', backgroundColor: '#FFF',
-                          boxShadow: mainImage === src
-                            ? '0 0 0 3px rgba(34,197,94,0.15)'
-                            : 'none',
-                        }}
-                      >
-                        <img 
-                          src={src} 
-                          style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} 
-                        />
-                      </div>
-                    ))}
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {allImages.map((src, index) => {
+
+                      const isActive = mainImage === src;
+
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => handleThumbChange(src)}
+                          onMouseEnter={() => handleThumbChange(src)}
+                          style={{
+                            width: '72px',
+                            height: '72px',
+                            backgroundColor: '#FFFFFF',
+                            border: isActive ? '2px solid #22C55E' : '2px solid #E5E7EB',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            padding: '6px',
+                            flexShrink: 0,
+                            boxShadow: isActive ? '0 0 0 3px rgba(34,197,94,0.15)' : 'none',
+                            transform: isActive ? 'translateY(-2px)' : 'none',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <img
+                            src={src}
+                            alt={`Foto ${index + 1}`}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'contain',
+                              pointerEvents: 'none'
+                            }}
+                          />
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
+
               </div>
 
               {/* Info */}
