@@ -85,7 +85,7 @@ const ProductDetail = () => {
           produtoPaiId
             ? supabase
                 .from("products_cache")
-                .select("id,slug,cor,codigo_amigavel,image_url,estoque")
+                .select("id,slug,cor,codigo_amigavel,image_url,image_urls,estoque,preco_custo,nome")
                 .or(`id.eq.${produtoPaiId},produto_pai.eq.${produtoPaiId}`)
                 .eq("ativo", true)
                 .eq("has_image", true)
@@ -106,6 +106,7 @@ const ProductDetail = () => {
         ]);
 
         setVariants((variantsRes.data || []) as VariantInfo[]);
+        setActiveVariantId(data.id);
         setRelated(relatedRes.data || []);
 
         if (isVariante && produtoPaiId) {
