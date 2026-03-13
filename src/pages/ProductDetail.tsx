@@ -49,6 +49,42 @@ const ProductDetail = () => {
   const [parentSlug, setParentSlug] = useState<string | null>(null);
   const qtySelectorRef = useRef<HTMLDivElement>(null);
 
+  // Estados da galeria de imagens
+  const [mainImage, setMainImage] = useState(product?.image_url || '');
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Derivar array de miniaturas de forma segura
+  const thumbnails = useMemo(() => {
+    if (!product) return [];
+    return [
+      product.image_url,
+      ...(product.image_urls || []),
+    ].filter((img): img is string =>
+      img &&
+      typeof img === 'string' &&
+      img.trim() !== '' &&
+      img.toLowerCase() !== 'null' &&
+      img.toLowerCase() !== 'undefined'
+    ).slice(0, 4); // máximo 4 imagens
+  }, [product]);
+
+  // Atualizar mainImage quando o product mudar
+  useEffect(() => {
+    if (product?.image_url) {
+      setMainImage(product.image_url);
+    }
+  }, [product?.image_url]);
+
+  // Função de troca com fade — usada por click E hover
+  const handleThumbChange = (src: string) => {
+    if (src === mainImage || isTransitioning) return; // evita fade desnecessário
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setMainImage(src);
+      setIsTransitioning(false);
+    }, 150);
+  };
+
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
