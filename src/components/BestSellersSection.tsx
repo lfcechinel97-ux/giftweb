@@ -28,7 +28,7 @@ const BestSellerCard = ({ p }: { p: ProductCache }) => {
   const precoMin = p.preco_custo ? calcularPreco(p.preco_custo, 1000) : null;
   const href = p.slug ? `/produto/${p.slug}` : `/produto/${p.codigo_amigavel}`;
 
-  const variantes = (Array.isArray(p.variantes) ? p.variantes : []) as VariantJson[];
+  const variantes = (Array.isArray(p.variantes) ? p.variantes : []) as unknown as VariantJson[];
   const allColorOptions: VariantJson[] = variantes.length > 0
     ? [{ slug: p.slug || p.codigo_amigavel, cor: p.cor || '', image: p.image_url || '', estoque: p.estoque ?? 0, codigo_amigavel: p.codigo_amigavel }, ...variantes]
     : [];
