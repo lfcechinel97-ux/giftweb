@@ -66,6 +66,7 @@ export type Database = {
           slug: string | null
           ultima_sync: string | null
           updated_at: string | null
+          variantes: Json | null
         }
         Insert: {
           altura?: number | null
@@ -94,6 +95,7 @@ export type Database = {
           slug?: string | null
           ultima_sync?: string | null
           updated_at?: string | null
+          variantes?: Json | null
         }
         Update: {
           altura?: number | null
@@ -122,6 +124,7 @@ export type Database = {
           slug?: string | null
           ultima_sync?: string | null
           updated_at?: string | null
+          variantes?: Json | null
         }
         Relationships: []
       }
