@@ -216,7 +216,8 @@ const ProductDetail = () => {
   const canonicalUrl = `${SITE_URL}/produto/${canonicalSlug}`;
   const categorySlug = product.categoria || "outros";
   const whatsappMsg = encodeURIComponent(
-    `Olá! Tenho interesse no produto: ${product.nome} (Cód: ${product.codigo_amigavel}). Quantidade: ${qty} unidades. Podem me enviar um orçamento?`
+    `Olá! Tenho interesse no produto: ${displayNome} (Cód: ${displayCodigo}). Quantidade: ${qty} unidades. Podem me enviar um orçamento?`
+  );
   );
 
   return (
