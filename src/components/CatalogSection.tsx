@@ -3,8 +3,8 @@ import catalogGeral from "@/assets/catalog-geral.png";
 import catalogCorporativo from "@/assets/catalog-corporativo.png";
 
 const banners = [
-  { title: "Catálogo Geral", img: catalogGeral, href: "#" },
-  { title: "Catálogo Corporativo", img: catalogCorporativo, href: "#" },
+  { title: "Catálogo +Vendidos\nCopos, Garrafas & Canetas", img: catalogGeral, href: "#" },
+  { title: "Catálogo #BestSeller\nGeral - Bolsas&Office", img: catalogCorporativo, href: "#" },
 ];
 
 const CatalogSection = () => {
