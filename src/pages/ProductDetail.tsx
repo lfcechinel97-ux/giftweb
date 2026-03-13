@@ -214,11 +214,15 @@ const ProductDetail = () => {
     }
     // Fade transition
     setImgFading(true);
+    setIsTransitioning(true);
     setTimeout(() => {
       setImageUrls(imgs);
       setActiveImg(0);
       setActiveVariantId(variant.id);
+      // Resetar galeria para a primeira imagem da nova variante
+      setMainImage(variant.image_url || '');
       setImgFading(false);
+      setIsTransitioning(false);
     }, 150);
     // Update URL without reload
     if (variant.slug) {
