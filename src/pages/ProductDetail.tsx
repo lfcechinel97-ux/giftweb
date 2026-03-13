@@ -42,8 +42,10 @@ const ProductDetail = () => {
   const [selectedRow, setSelectedRow] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
+  const [imgFading, setImgFading] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [variants, setVariants] = useState<VariantInfo[]>([]);
+  const [activeVariantId, setActiveVariantId] = useState<string | null>(null);
   const [parentSlug, setParentSlug] = useState<string | null>(null);
   const qtySelectorRef = useRef<HTMLDivElement>(null);
 
