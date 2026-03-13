@@ -72,7 +72,8 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
               alt={nome}
               loading="lazy"
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
+              onError={() => setImgError(true)}
+              style={imgError ? { display: 'none' } : undefined}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
