@@ -81,11 +81,11 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
           <h4 className="font-bold text-foreground text-[15px] leading-tight line-clamp-2">{nome}</h4>
         </Link>
 
-        {/* Color variants dots from jsonb */}
-        {hasVariants && (
+        {/* Color variants dots */}
+        {allColorOptions.length > 0 && (
           <TooltipProvider delayDuration={200}>
             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-              {variantes.slice(0, MAX_DOTS).map((v, i) => {
+              {allColorOptions.slice(0, MAX_DOTS).map((v, i) => {
                 const hex = getCorHex(v.cor);
                 const needsBorder = isLightColor(hex);
                 const outOfStock = v.estoque === 0 || v.estoque == null;
@@ -117,10 +117,10 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
                   </Tooltip>
                 );
               })}
-              {variantes.length > MAX_DOTS && (
-                <span className="text-[11px] text-muted-foreground">+{variantes.length - MAX_DOTS}</span>
+              {allColorOptions.length > MAX_DOTS && (
+                <span className="text-[11px] text-muted-foreground">+{allColorOptions.length - MAX_DOTS}</span>
               )}
-              <span className="text-[12px] text-muted-foreground ml-1">{variantes.length + 1} cores</span>
+              <span className="text-[12px] text-muted-foreground ml-1">{allColorOptions.length} cores</span>
             </div>
           </TooltipProvider>
         )}
