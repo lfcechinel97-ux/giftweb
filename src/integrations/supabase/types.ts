@@ -45,6 +45,7 @@ export type Database = {
           busca: string | null
           categoria: string | null
           codigo_amigavel: string
+          codigo_prefixo: string | null
           cor: string | null
           created_at: string | null
           descricao: string | null
@@ -72,6 +73,7 @@ export type Database = {
           busca?: string | null
           categoria?: string | null
           codigo_amigavel: string
+          codigo_prefixo?: string | null
           cor?: string | null
           created_at?: string | null
           descricao?: string | null
@@ -99,6 +101,7 @@ export type Database = {
           busca?: string | null
           categoria?: string | null
           codigo_amigavel?: string
+          codigo_prefixo?: string | null
           cor?: string | null
           created_at?: string | null
           descricao?: string | null
@@ -151,7 +154,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      set_variantes_por_prefixo: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

@@ -201,6 +201,7 @@ serve(async (req) => {
         ultima_sync: agora,
         is_variante: isVariante.has(chave),
         produto_pai: null,
+        codigo_prefixo: p.CodigoAmigavel ?? p.codigoAmigavel ?? chave,
       };
     });
     console.log("[SYNC] Stage 3 OK -", registros.length, "registros");
@@ -221,40 +222,9 @@ serve(async (req) => {
     }
     console.log("[SYNC] Stage 3c OK");
 
-    console.log("[SYNC] Stage 4: Setting produto_pai...");
-    const paiCodigos = Array.from(isPai);
-    const idDeCodigo = new Map<string, string>();
-    for (let i = 0; i < paiCodigos.length; i += CHUNK_SIZE) {
-      const chunk = paiCodigos.slice(i, i + CHUNK_SIZE);
-      const { data: rows, error } = await supabaseClient
-        .from("products_cache")
-        .select("id, codigo_amigavel")
-        .in("codigo_amigavel", chunk);
-      if (error) throw new Error("Fetch pais falhou: " + JSON.stringify(error));
-      for (const row of rows ?? []) idDeCodigo.set(row.codigo_amigavel, row.id);
-    }
-
-    for (let i = 0; i < paiCodigos.length; i += CHUNK_SIZE) {
-      const chunk = paiCodigos.slice(i, i + CHUNK_SIZE);
-      await supabaseClient
-        .from("products_cache")
-        .update({ produto_pai: null, is_variante: false })
-        .in("codigo_amigavel", chunk);
-    }
-
-    const variantePorPai = new Map<string, string[]>();
-    for (const [variante, paiCodigo] of paiDeCodigo.entries()) {
-      if (!variantePorPai.has(paiCodigo)) variantePorPai.set(paiCodigo, []);
-      variantePorPai.get(paiCodigo)!.push(variante);
-    }
-    for (const [paiCodigo, variantesCodigos] of variantePorPai.entries()) {
-      const paiId = idDeCodigo.get(paiCodigo);
-      if (!paiId) continue;
-      await supabaseClient
-        .from("products_cache")
-        .update({ produto_pai: paiId, is_variante: true })
-        .in("codigo_amigavel", variantesCodigos);
-    }
+    console.log("[SYNC] Stage 4: Setting produto_pai via SQL join...");
+    const { error: rpcError } = await supabaseClient.rpc("set_variantes_por_prefixo");
+    if (rpcError) console.error("[SYNC] Stage 4 RPC error:", JSON.stringify(rpcError));
     console.log("[SYNC] Stage 4 OK");
 
     const limite = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
