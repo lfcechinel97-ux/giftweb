@@ -334,31 +334,10 @@ const ProductDetail = () => {
                     onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
                   />
                 </div>
-                {/* Miniaturas só aparecem se houver imagens extras */}
-                {extraImages.length > 0 && (
+{/* Miniaturas só aparecem quando existem múltiplas imagens */}
+                {allImages.length > 1 && (
                   <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                    {/* Miniatura da imagem principal */}
-                    <div
-                      onClick={() => handleThumbChange(product?.image_url || '')}
-                      onMouseEnter={() => handleThumbChange(product?.image_url || '')}
-                      style={{
-                        width: '72px', height: '72px',
-                        border: mainImage === product?.image_url
-                          ? '2px solid #22C55E'
-                          : '2px solid #E5E7EB',
-                        borderRadius: '10px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer', padding: '6px', backgroundColor: '#FFF',
-                        boxShadow: mainImage === product?.image_url
-                          ? '0 0 0 3px rgba(34,197,94,0.15)'
-                          : 'none',
-                      }}
-                    >
-                      <img src={product?.image_url || ''} style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
-                    </div>
-
-                    {/* Miniaturas extras */}
-                    {extraImages.map((src, i) => (
+                    {allImages.map((src, i) => (
                       <div
                         key={i}
                         onClick={() => handleThumbChange(src)}
@@ -376,8 +355,14 @@ const ProductDetail = () => {
                             : 'none',
                         }}
                       >
-                        <img src={src} style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
+                        <img 
+                          src={src} 
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} 
+                        />
                       </div>
+                    ))}
+                  </div>
+                )}
                     ))}
                   </div>
                 )}
