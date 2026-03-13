@@ -218,7 +218,6 @@ const ProductDetail = () => {
   const whatsappMsg = encodeURIComponent(
     `Olá! Tenho interesse no produto: ${displayNome} (Cód: ${displayCodigo}). Quantidade: ${qty} unidades. Podem me enviar um orçamento?`
   );
-  );
 
   return (
     <>
