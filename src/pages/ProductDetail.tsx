@@ -24,7 +24,10 @@ interface VariantInfo {
   cor: string | null;
   codigo_amigavel: string;
   image_url: string | null;
+  image_urls: string[] | null;
   estoque: number | null;
+  preco_custo: number | null;
+  nome: string;
 }
 
 const QUANTITIES = [20, 50, 100, 200, 300, 500, 1000];
@@ -39,8 +42,10 @@ const ProductDetail = () => {
   const [selectedRow, setSelectedRow] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
+  const [imgFading, setImgFading] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [variants, setVariants] = useState<VariantInfo[]>([]);
+  const [activeVariantId, setActiveVariantId] = useState<string | null>(null);
   const [parentSlug, setParentSlug] = useState<string | null>(null);
   const qtySelectorRef = useRef<HTMLDivElement>(null);
 
@@ -80,7 +85,7 @@ const ProductDetail = () => {
           produtoPaiId
             ? supabase
                 .from("products_cache")
-                .select("id,slug,cor,codigo_amigavel,image_url,estoque")
+                .select("id,slug,cor,codigo_amigavel,image_url,image_urls,estoque,preco_custo,nome")
                 .or(`id.eq.${produtoPaiId},produto_pai.eq.${produtoPaiId}`)
                 .eq("ativo", true)
                 .eq("has_image", true)
@@ -101,6 +106,7 @@ const ProductDetail = () => {
         ]);
 
         setVariants((variantsRes.data || []) as VariantInfo[]);
+        setActiveVariantId(data.id);
         setRelated(relatedRes.data || []);
 
         if (isVariante && produtoPaiId) {
@@ -118,24 +124,70 @@ const ProductDetail = () => {
       });
   }, [slug, navigate]);
 
-  const precoBase = product?.preco_custo ? product.preco_custo * getMarkup(product.preco_custo) : 0;
-  const precoAtual = product?.preco_custo ? calcularPreco(product.preco_custo, qty) : 0;
-  const precoMin = product?.preco_custo ? getPrecoMinimo(product.preco_custo) : 0;
+  // Derive active variant data
+  const activeVariant = useMemo(() => {
+    if (!activeVariantId || variants.length === 0) return null;
+    return variants.find(v => v.id === activeVariantId) || null;
+  }, [activeVariantId, variants]);
+
+  // Use active variant's data for pricing/display, fallback to product
+  const displayCodigo = activeVariant?.codigo_amigavel || product?.codigo_amigavel || '';
+  const displayEstoque = activeVariant?.estoque ?? product?.estoque;
+  const displayPrecoCusto = activeVariant?.preco_custo ?? product?.preco_custo;
+  const displayNome = activeVariant?.nome || product?.nome || '';
+
+  const precoBase = displayPrecoCusto ? displayPrecoCusto * getMarkup(displayPrecoCusto) : 0;
+  const precoAtual = displayPrecoCusto ? calcularPreco(displayPrecoCusto, qty) : 0;
+  const precoMin = displayPrecoCusto ? getPrecoMinimo(displayPrecoCusto) : 0;
 
   const tableRows = useMemo(() => {
-    if (!product?.preco_custo) return [];
+    if (!displayPrecoCusto) return [];
     return QUANTITIES.map((q) => {
-      const unit = calcularPreco(product.preco_custo!, q);
+      const unit = calcularPreco(displayPrecoCusto, q);
       const base = precoBase;
       const desc = getDesconto(q);
       return { qty: q, unit, base, desc };
     });
-  }, [product?.preco_custo, precoBase]);
+  }, [displayPrecoCusto, precoBase]);
 
   const handleSelectRow = (index: number) => {
     setSelectedRow(index);
     setQty(QUANTITIES[index]);
     qtySelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const fadeToImage = (index: number) => {
+    setImgFading(true);
+    setTimeout(() => {
+      setActiveImg(index);
+      setImgFading(false);
+    }, 150);
+  };
+
+  const handleSwitchVariant = (variant: VariantInfo) => {
+    if (variant.id === activeVariantId) return;
+    // Build image list from variant
+    const imgs: string[] = [];
+    if (variant.image_urls && Array.isArray(variant.image_urls)) {
+      for (const u of variant.image_urls) {
+        if (u && (u as string).trim()) imgs.push(u as string);
+      }
+    }
+    if (imgs.length === 0 && variant.image_url) {
+      imgs.push(variant.image_url);
+    }
+    // Fade transition
+    setImgFading(true);
+    setTimeout(() => {
+      setImageUrls(imgs);
+      setActiveImg(0);
+      setActiveVariantId(variant.id);
+      setImgFading(false);
+    }, 150);
+    // Update URL without reload
+    if (variant.slug) {
+      window.history.replaceState(null, '', `/produto/${variant.slug}`);
+    }
   };
 
   if (loading) {
@@ -164,7 +216,7 @@ const ProductDetail = () => {
   const canonicalUrl = `${SITE_URL}/produto/${canonicalSlug}`;
   const categorySlug = product.categoria || "outros";
   const whatsappMsg = encodeURIComponent(
-    `Olá! Tenho interesse no produto: ${product.nome} (Cód: ${product.codigo_amigavel}). Quantidade: ${qty} unidades. Podem me enviar um orçamento?`
+    `Olá! Tenho interesse no produto: ${displayNome} (Cód: ${displayCodigo}). Quantidade: ${qty} unidades. Podem me enviar um orçamento?`
   );
 
   return (
@@ -213,12 +265,13 @@ const ProductDetail = () => {
             <div className="grid md:grid-cols-[55%_45%] gap-6 md:gap-8">
               {/* Gallery */}
               <div className="relative">
-                <div className="aspect-square rounded-2xl border border-border overflow-hidden bg-card relative group">
+                <div className="h-[420px] rounded-2xl border border-border overflow-hidden bg-card relative group">
                   {imageUrls.length > 0 ? (
                     <img
                       src={imageUrls[activeImg]}
-                      alt={product.nome}
-                      className="w-full h-full object-cover transition-opacity duration-200"
+                      alt={displayNome}
+                      className="w-full h-full object-contain transition-opacity duration-150"
+                      style={{ opacity: imgFading ? 0 : 1 }}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
                     />
                   ) : (
@@ -239,11 +292,13 @@ const ProductDetail = () => {
                     {imageUrls.map((url, i) => (
                       <button
                         key={i}
-                        onClick={() => setActiveImg(i)}
-                        className="w-[60px] h-[60px] rounded-lg border-2 overflow-hidden transition-colors"
-                        style={{ borderColor: activeImg === i ? "hsl(142,71%,45%)" : "hsl(220,13%,91%)" }}
+                        onClick={() => fadeToImage(i)}
+                        className="w-[72px] h-[72px] rounded-lg overflow-hidden transition-all duration-150"
+                        style={{
+                          border: activeImg === i ? '2px solid hsl(142,71%,45%)' : '2px solid transparent',
+                        }}
                       >
-                        <img src={url} alt={`${product.nome} ${i + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }} />
+                        <img src={url} alt={`${displayNome} ${i + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }} />
                       </button>
                     ))}
                   </div>
@@ -252,12 +307,11 @@ const ProductDetail = () => {
 
               {/* Info */}
               <div className="flex flex-col gap-4">
-                <h1 className="font-black text-[28px] md:text-[32px] leading-tight text-foreground">{product.nome}</h1>
-                <span className="text-[13px] text-muted-foreground">Código: {product.codigo_amigavel}</span>
-
-                <div className="flex items-center gap-2 text-muted-foreground text-[13px]">
-                  <Clock className="w-4 h-4" />
-                  <span>Prazo de produção: {PRAZO_PRODUCAO}</span>
+                <h1 className="font-black text-[28px] md:text-[32px] leading-tight text-foreground">{displayNome}</h1>
+                <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
+                  <span>Código: {displayCodigo}</span>
+                  <span className="text-border">|</span>
+                  <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {PRAZO_PRODUCAO}</span>
                 </div>
 
                 {/* Color variant selector */}
@@ -268,18 +322,14 @@ const ProductDetail = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         {variants.map((v) => {
                           const hex = getCorHex(v.cor);
-                          const isCurrent = v.slug === slug;
+                          const isCurrent = v.id === activeVariantId;
                           const needsBorder = isLightColor(hex);
                           const outOfStock = v.estoque === 0 || v.estoque === null;
                           return (
                             <Tooltip key={v.id}>
                               <TooltipTrigger asChild>
                                 <button
-                                  onClick={() => {
-                                    if (v.slug && v.slug !== slug) {
-                                      navigate(`/produto/${v.slug}`);
-                                    }
-                                  }}
+                                  onClick={() => handleSwitchVariant(v)}
                                   className="rounded-full transition-all"
                                   style={{
                                     width: 32,
@@ -313,7 +363,7 @@ const ProductDetail = () => {
                 ) : null}
 
                 {/* Stock badge */}
-                {product.estoque != null && product.estoque > 0 ? (
+                {displayEstoque != null && displayEstoque > 0 ? (
                   <span className="inline-flex items-center self-start px-3 py-1 rounded-full bg-green-cta/15 text-green-cta text-xs font-semibold">
                     Em estoque
                   </span>
@@ -324,7 +374,7 @@ const ProductDetail = () => {
                 )}
 
                 {/* Price highlight + PIX + installments */}
-                {product.preco_custo != null && product.preco_custo > 0 && (() => {
+                {displayPrecoCusto != null && displayPrecoCusto > 0 && (() => {
                   const precoPix = precoMin * 0.97;
                   const parcela2x = precoMin / 2;
                   return (
@@ -420,7 +470,7 @@ const ProductDetail = () => {
                 )}
 
                 {/* Pricing table */}
-                {product.preco_custo != null && product.preco_custo > 0 && (
+                {displayPrecoCusto != null && displayPrecoCusto > 0 && (
                   <div className="mt-4">
                     <h3 className="font-bold text-lg text-foreground mb-3">Compre com desconto</h3>
                     <div className="rounded-xl border border-border overflow-hidden">
@@ -511,10 +561,10 @@ const ProductDetail = () => {
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
-                  {product.preco_custo != null && product.preco_custo > 0 && (
+                  {displayPrecoCusto != null && displayPrecoCusto > 0 && (
                     <div className="mt-3 text-sm">
                       <p className="text-muted-foreground">
-                        {qty}x {product.nome} — {formatarBRL(precoAtual)} / unidade
+                        {qty}x {displayNome} — {formatarBRL(precoAtual)} / unidade
                       </p>
                       <p className="text-foreground font-bold text-lg mt-1">
                         Total: {formatarBRL(precoAtual * qty)}
