@@ -1,10 +1,10 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { calcularPreco, formatarBRL } from "@/utils/price";
 import { getCorHex, isLightColor } from "@/utils/colorHex";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
 
 interface VariantJson {
   slug: string;
@@ -38,10 +38,11 @@ export const ProductCardSkeleton = () => (
   </div>
 );
 
-const MAX_DOTS = 4;
+const MAX_DOTS = 6;
 
 const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel, variantes, estoque }: ProductCardProps) => {
   const navigate = useNavigate();
+  const [imagemAtiva, setImagemAtiva] = useState(image_url);
   const precoMin = preco_custo ? calcularPreco(preco_custo, 1000) : null;
   const preco20 = preco_custo ? calcularPreco(preco_custo, 20) : null;
   const href = slug ? `/produto/${slug}` : `/produto/${codigo_amigavel}`;
@@ -53,12 +54,16 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
   const isOutOfStock = !hasVariants && (estoque === 0 || estoque === null);
 
   return (
-    <div className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-250 hover:-translate-y-1 hover:border-green-cta" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}>
+    <div
+      className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-250 hover:-translate-y-1 hover:border-green-cta"
+      style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}
+      onMouseLeave={() => setImagemAtiva(image_url)}
+    >
       <Link to={href} className="block">
         <div className="relative aspect-square bg-secondary overflow-hidden">
-          {image_url ? (
+          {imagemAtiva ? (
             <img
-              src={image_url}
+              src={imagemAtiva}
               alt={nome}
               loading="lazy"
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -82,40 +87,34 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
         </Link>
 
         {/* Color variants */}
-        {allColorOptions.length === 1 && (
-          <span className="text-xs text-muted-foreground mt-0.5">Cor: {allColorOptions[0].cor || '—'}</span>
-        )}
         {allColorOptions.length > 1 && (
           <TooltipProvider delayDuration={200}>
-            <div className="flex items-center mt-0.5" style={{ gap: 6 }}>
+            <div className="flex items-center mt-1" style={{ gap: 8 }}>
               {allColorOptions.slice(0, MAX_DOTS).map((v, i) => {
                 const hex = getCorHex(v.cor);
                 const needsBorder = isLightColor(hex);
-                const outOfStock = v.estoque === 0 || v.estoque == null;
                 return (
                   <Tooltip key={v.codigo_amigavel || i}>
                     <TooltipTrigger asChild>
-                      <button
+                      <span
+                        onMouseEnter={() => setImagemAtiva(v.image || image_url)}
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           navigate(v.slug ? `/produto/${v.slug}` : `/produto/${v.codigo_amigavel}`);
                         }}
-                        className="relative inline-block rounded-full cursor-pointer"
+                        className="inline-block rounded-full transition-transform duration-150 hover:scale-[1.15]"
                         style={{
-                          width: 12,
-                          height: 12,
+                          width: 16,
+                          height: 16,
                           backgroundColor: hex,
-                          border: needsBorder ? '1px solid hsl(var(--border))' : 'none',
+                          border: needsBorder ? '1px solid #9CA3AF' : 'none',
+                          cursor: 'pointer',
                         }}
-                      >
-                        {outOfStock && (
-                          <X className="absolute -top-0.5 -right-0.5 text-destructive" style={{ width: 10, height: 10, strokeWidth: 3 }} />
-                        )}
-                      </button>
+                      />
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs">
-                      {v.cor || 'Cor'}{outOfStock ? ' (sem estoque)' : ''}
+                      {v.cor || 'Cor'}
                     </TooltipContent>
                   </Tooltip>
                 );
@@ -126,7 +125,6 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
             </div>
           </TooltipProvider>
         )}
-
 
         {precoMin != null && (
           <span className="text-green-cta font-bold text-sm">
