@@ -8,11 +8,11 @@ const corsHeaders = {
 }
 
 const MOCK_PRODUCTS = [
-  {"CodigoAmigavel": "9139A-AZU", "Nome": "Squeeze Alumínio 500ml", "CorWebPrincipal": "Azul", "ImageLink": "https://placehold.co/400", "PrecoVenda": "15.00", "QuantidadeDisponivel": "100"},
-  {"CodigoAmigavel": "9139A-VRM", "Nome": "Squeeze Alumínio 500ml", "CorWebPrincipal": "Vermelho", "ImageLink": "https://placehold.co/400", "PrecoVenda": "15.00", "QuantidadeDisponivel": "80"},
-  {"CodigoAmigavel": "9139A-PRE", "Nome": "Squeeze Alumínio 500ml", "CorWebPrincipal": "Preto", "ImageLink": "https://placehold.co/400", "PrecoVenda": "15.00", "QuantidadeDisponivel": "60"},
-  {"CodigoAmigavel": "00033-4GB", "Nome": "Pen Drive 4GB", "CorWebPrincipal": "", "ImageLink": "https://placehold.co/400", "PrecoVenda": "8.00", "QuantidadeDisponivel": "200"},
-  {"CodigoAmigavel": "17011C", "Nome": "Garrafa Inox 750ml", "CorWebPrincipal": "Laranja", "ImageLink": "https://placehold.co/400", "PrecoVenda": "25.00", "QuantidadeDisponivel": "50"}
+  {"CodigoAmigavel": "9139A", "CodigoComposto": "9139A-AZU", "Nome": "Squeeze Alumínio 500ml", "CorWebPrincipal": "Azul", "ImageLink": "https://placehold.co/400", "PrecoVenda": "15.00", "QuantidadeDisponivel": "100"},
+  {"CodigoAmigavel": "9139A", "CodigoComposto": "9139A-VRM", "Nome": "Squeeze Alumínio 500ml", "CorWebPrincipal": "Vermelho", "ImageLink": "https://placehold.co/400", "PrecoVenda": "15.00", "QuantidadeDisponivel": "80"},
+  {"CodigoAmigavel": "9139A", "CodigoComposto": "9139A-PRE", "Nome": "Squeeze Alumínio 500ml", "CorWebPrincipal": "Preto", "ImageLink": "https://placehold.co/400", "PrecoVenda": "15.00", "QuantidadeDisponivel": "60"},
+  {"CodigoAmigavel": "00033-4GB", "CodigoComposto": "00033-4GB-MAD", "Nome": "Pen Drive 4GB", "CorWebPrincipal": "Madeira", "ImageLink": "https://placehold.co/400", "PrecoVenda": "8.00", "QuantidadeDisponivel": "200"},
+  {"CodigoAmigavel": "17011C", "CodigoComposto": "17011C", "Nome": "Garrafa Inox 750ml", "CorWebPrincipal": "Laranja", "ImageLink": "https://placehold.co/400", "PrecoVenda": "25.00", "QuantidadeDisponivel": "50"}
 ]
 
 function getCategoria(nome: string): string {
@@ -33,7 +33,7 @@ function getSlug(nome: string, codigo: string): string {
 }
 
 function getBusca(p: any): string {
-  return [p.Nome ?? '', p.Descricao ?? '', p.CorWebPrincipal ?? '', p.CodigoAmigavel ?? ''].join(' ').toLowerCase()
+  return [p.Nome ?? '', p.Descricao ?? '', p.CorWebPrincipal ?? '', p.CodigoAmigavel ?? '', p.CodigoComposto ?? ''].join(' ').toLowerCase()
 }
 
 function getImageUrls(p: any): string[] {
@@ -43,15 +43,8 @@ function getImageUrls(p: any): string[] {
     .slice(0, 4)
 }
 
-function getCodigoPrefixo(codigo: string): string {
-  if (codigo.includes('/')) return codigo.split('/')[0]
-  const partes = codigo.split('-')
-  if (partes.length >= 2) {
-    const sufixo = partes[partes.length - 1]
-    if (/^[A-Za-z]{1,3}[0-9]?$/.test(sufixo)) return partes.slice(0, -1).join('-')
-  }
-  return codigo
-}
+
+
 
 const CHUNK_SIZE = 500
 
@@ -96,58 +89,40 @@ serve(async (req) => {
     console.log('[SYNC] Stage 1 OK - produtos:', produtos.length)
     if (!produtos.length) throw new Error('API retornou lista vazia')
 
-    // === STAGE 2: Deduplicar e gerar codigos unicos ===
-    console.log('[SYNC] Stage 2: Deduplicating and generating unique codes...')
+    // === STAGE 2: Deduplicar por CodigoComposto e agrupar por CodigoAmigavel ===
+    console.log('[SYNC] Stage 2: Deduplicating by CodigoComposto...')
     const produtosMap = new Map<string, any>()
     for (const p of produtos) {
-      const codigo = p.CodigoAmigavel ?? p.codigoAmigavel ?? ''
-      if (!codigo) continue
-      const cor = p.CorWebPrincipal ?? p.corWebPrincipal ?? ''
-      const chave = codigo + '||' + cor.toUpperCase()
+      const codigoComposto = p.CodigoComposto ?? p.codigoComposto ?? ''
+      const codigoAmigavel = p.CodigoAmigavel ?? p.codigoAmigavel ?? ''
+      const chave = codigoComposto || codigoAmigavel
+      if (!chave) continue
       produtosMap.set(chave, p)
     }
 
-    // Gerar codigo_amigavel unico para cada produto
-    const usados = new Set<string>()
-    const chaveParaCodigo = new Map<string, string>()
-    for (const [chave, p] of produtosMap.entries()) {
-      const codigo = p.CodigoAmigavel ?? p.codigoAmigavel ?? ''
-      const cor = p.CorWebPrincipal ?? p.corWebPrincipal ?? ''
-      let codigoUnico = codigo
-      if (cor) {
-        const sufixoBase = cor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4)
-        let tentativa = codigo + '-' + sufixoBase
-        let contador = 2
-        while (usados.has(tentativa)) {
-          tentativa = codigo + '-' + sufixoBase.slice(0, 3) + contador
-          contador++
-        }
-        codigoUnico = tentativa
-      }
-      usados.add(codigoUnico)
-      chaveParaCodigo.set(chave, codigoUnico)
-    }
-
-    // Agrupar por prefixo
+    // Agrupar por CodigoAmigavel (pai)
     const groups = new Map<string, string[]>()
-    for (const codigoUnico of chaveParaCodigo.values()) {
-      const prefix = getCodigoPrefixo(codigoUnico)
-      if (!groups.has(prefix)) groups.set(prefix, [])
-      groups.get(prefix)!.push(codigoUnico)
+    for (const [chave, p] of produtosMap.entries()) {
+      const codigoPai = p.CodigoAmigavel ?? p.codigoAmigavel ?? chave
+      if (!groups.has(codigoPai)) groups.set(codigoPai, [])
+      groups.get(codigoPai)!.push(chave)
     }
 
+    // Determinar pais e variantes
     const paiDeCodigo = new Map<string, string>()
     const isPai = new Set<string>()
     const isVariante = new Set<string>()
-    for (const [_prefix, codigos] of groups) {
-      if (codigos.length === 1) {
-        isPai.add(codigos[0])
-      } else {
-        codigos.sort()
-        isPai.add(codigos[0])
-        for (const v of codigos.slice(1)) {
-          isVariante.add(v)
-          paiDeCodigo.set(v, codigos[0])
+
+    for (const [codigoPai, codigos] of groups) {
+      codigos.sort()
+      // O registro cujo CodigoComposto == CodigoAmigavel é o pai
+      // Se não existir, usar o primeiro da lista
+      const paiCodigo = codigos.find(c => c === codigoPai) ?? codigos[0]
+      isPai.add(paiCodigo)
+      for (const c of codigos) {
+        if (c !== paiCodigo) {
+          isVariante.add(c)
+          paiDeCodigo.set(c, paiCodigo)
         }
       }
     }
@@ -157,14 +132,13 @@ serve(async (req) => {
     console.log('[SYNC] Stage 3: Preparing records...')
     const agora = new Date().toISOString()
     const registros = Array.from(produtosMap.entries()).map(([chave, p]) => {
-      const codigoUnico = chaveParaCodigo.get(chave)!
-      const nome = p.Nome ?? p.nome ?? codigoUnico
+      const nome = p.Nome ?? p.nome ?? chave
       const imageUrls = getImageUrls(p)
       const imageLink = imageUrls[0] ?? ''
       const hasImage = !!(imageLink && !imageLink.includes('placehold.co'))
       return {
-        codigo_amigavel: codigoUnico,
-        slug: getSlug(nome, codigoUnico),
+        codigo_amigavel: chave,
+        slug: getSlug(nome, chave),
         nome,
         descricao: p.Descricao ?? p.descricao ?? null,
         image_url: imageLink || null,
@@ -183,22 +157,26 @@ serve(async (req) => {
         ativo: true,
         busca: getBusca(p),
         ultima_sync: agora,
-        is_variante: isVariante.has(codigoUnico),
+        is_variante: isVariante.has(chave),
         produto_pai: null,
       }
     })
     console.log('[SYNC] Stage 3 OK -', registros.length, 'registros')
 
-    // === STAGE 3b: Remover registros antigos sem sufixo ===
-    console.log('[SYNC] Stage 3b: Removing old records without suffix...')
-    const prefixosComVariacao = new Set<string>()
-    for (const r of registros) {
-      const prefixo = getCodigoPrefixo(r.codigo_amigavel)
-      if (prefixo !== r.codigo_amigavel) prefixosComVariacao.add(prefixo)
+    // === STAGE 3b: Remover registros antigos cujo CodigoAmigavel agora tem variantes ===
+    console.log('[SYNC] Stage 3b: Removing old parent-only records...')
+    const codigosNovoSet = new Set(registros.map(r => r.codigo_amigavel))
+    const paisParaDeletar: string[] = []
+    for (const [codigoPai] of groups) {
+      const codigos = groups.get(codigoPai)!
+      // Se o pai (CodigoAmigavel) não existe como registro próprio mas tem variantes, deletar registro antigo
+      if (!codigosNovoSet.has(codigoPai) && codigos.length > 0) {
+        paisParaDeletar.push(codigoPai)
+      }
     }
-    if (prefixosComVariacao.size > 0) {
-      await supabaseClient.from('products_cache').delete().in('codigo_amigavel', Array.from(prefixosComVariacao))
-      console.log('[SYNC] Stage 3b OK - deleted', prefixosComVariacao.size, 'old records')
+    if (paisParaDeletar.length > 0) {
+      await supabaseClient.from('products_cache').delete().in('codigo_amigavel', paisParaDeletar)
+      console.log('[SYNC] Stage 3b OK - deleted', paisParaDeletar.length, 'old records')
     }
 
     // === STAGE 3c: Upsert ===
