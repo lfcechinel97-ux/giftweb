@@ -49,36 +49,39 @@ const ProductDetail = () => {
   const [parentSlug, setParentSlug] = useState<string | null>(null);
   const qtySelectorRef = useRef<HTMLDivElement>(null);
 
-  // Estados da galeria de imagens
-  const [mainImage, setMainImage] = useState(product?.image_url || '');
+  // Construir lista de imagens válidas
+  const allImages = [
+    product?.image_url,
+    product?.image_urls?.[0],
+    product?.image_urls?.[1],
+    product?.image_urls?.[2],
+  ]
+  .filter(img =>
+    img &&
+    typeof img === 'string' &&
+    img.trim() !== '' &&
+    img !== 'null' &&
+    img !== 'undefined'
+  )
+  .filter((img, index, self) => self.indexOf(img) === index); // remove duplicadas
+
+  // Estados da galeria
+  const [mainImage, setMainImage] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Apenas imagens extras — ImageLink (principal) NUNCA entra aqui
-  const extraImages = useMemo(() => {
-    if (!product) return [];
-    return [
-      product.image_urls?.[0],
-      product.image_urls?.[1],
-      product.image_urls?.[2],
-    ].filter((img): img is string =>
-      typeof img === 'string' &&
-      img.trim().length > 0 &&
-      img !== 'null' &&
-      img !== 'undefined'
-    );
-  }, [product]);
-
-  // Atualizar mainImage quando o product mudar
+  // Sincronizar imagem principal quando o produto carregar
   useEffect(() => {
-    if (product?.image_url) {
-      setMainImage(product.image_url);
+    if (allImages.length > 0) {
+      setMainImage(allImages[0]);
     }
   }, [product?.image_url]);
 
-  // Função de troca com fade — usada por click E hover
+  // Função de troca de imagem
   const handleThumbChange = (src: string) => {
-    if (src === mainImage || isTransitioning) return; // evita fade desnecessário
+    if (src === mainImage || isTransitioning) return;
+
     setIsTransitioning(true);
+
     setTimeout(() => {
       setMainImage(src);
       setIsTransitioning(false);
