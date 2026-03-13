@@ -54,7 +54,7 @@ async function fetchHomepageData() {
   const randomOffset = Math.floor(Math.random() * 100);
 
   const [maisVendidos, destaques, categorias, squeezesCount, baratosCount] = await Promise.all([
-    fetchBestSellers(),
+    fetchFeaturedProducts(),
 
     supabase
       .from("products_cache")
