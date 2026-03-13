@@ -33,7 +33,7 @@ function getSlug(nome: string, codigo: string): string {
 }
 
 function getBusca(p: any): string {
-  return [p.Nome ?? '', p.Descricao ?? '', p.CorWebPrincipal ?? '', p.CodigoAmigavel ?? ''].join(' ').toLowerCase()
+  return [p.Nome ?? '', p.Descricao ?? '', p.CorWebPrincipal ?? '', p.CodigoAmigavel ?? '', p.CodigoComposto ?? ''].join(' ').toLowerCase()
 }
 
 function getImageUrls(p: any): string[] {
