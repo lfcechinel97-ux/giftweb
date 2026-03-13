@@ -49,36 +49,39 @@ const ProductDetail = () => {
   const [parentSlug, setParentSlug] = useState<string | null>(null);
   const qtySelectorRef = useRef<HTMLDivElement>(null);
 
-  // Estados da galeria de imagens
-  const [mainImage, setMainImage] = useState(product?.image_url || '');
+  // Construir lista de imagens válidas
+  const allImages = [
+    product?.image_url,
+    product?.image_urls?.[0],
+    product?.image_urls?.[1],
+    product?.image_urls?.[2],
+  ]
+  .filter(img =>
+    img &&
+    typeof img === 'string' &&
+    img.trim() !== '' &&
+    img !== 'null' &&
+    img !== 'undefined'
+  )
+  .filter((img, index, self) => self.indexOf(img) === index); // remove duplicadas
+
+  // Estados da galeria
+  const [mainImage, setMainImage] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Apenas imagens extras — ImageLink (principal) NUNCA entra aqui
-  const extraImages = useMemo(() => {
-    if (!product) return [];
-    return [
-      product.image_urls?.[0],
-      product.image_urls?.[1],
-      product.image_urls?.[2],
-    ].filter((img): img is string =>
-      typeof img === 'string' &&
-      img.trim().length > 0 &&
-      img !== 'null' &&
-      img !== 'undefined'
-    );
-  }, [product]);
-
-  // Atualizar mainImage quando o product mudar
+  // Sincronizar imagem principal quando o produto carregar
   useEffect(() => {
-    if (product?.image_url) {
-      setMainImage(product.image_url);
+    if (allImages.length > 0) {
+      setMainImage(allImages[0]);
     }
   }, [product?.image_url]);
 
-  // Função de troca com fade — usada por click E hover
+  // Função de troca de imagem
   const handleThumbChange = (src: string) => {
-    if (src === mainImage || isTransitioning) return; // evita fade desnecessário
+    if (src === mainImage || isTransitioning) return;
+
     setIsTransitioning(true);
+
     setTimeout(() => {
       setMainImage(src);
       setIsTransitioning(false);
@@ -331,31 +334,10 @@ const ProductDetail = () => {
                     onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
                   />
                 </div>
-                {/* Miniaturas só aparecem se houver imagens extras */}
-                {extraImages.length > 0 && (
+{/* Miniaturas só aparecem quando existem múltiplas imagens */}
+                {allImages.length > 1 && (
                   <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                    {/* Miniatura da imagem principal */}
-                    <div
-                      onClick={() => handleThumbChange(product?.image_url || '')}
-                      onMouseEnter={() => handleThumbChange(product?.image_url || '')}
-                      style={{
-                        width: '72px', height: '72px',
-                        border: mainImage === product?.image_url
-                          ? '2px solid #22C55E'
-                          : '2px solid #E5E7EB',
-                        borderRadius: '10px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer', padding: '6px', backgroundColor: '#FFF',
-                        boxShadow: mainImage === product?.image_url
-                          ? '0 0 0 3px rgba(34,197,94,0.15)'
-                          : 'none',
-                      }}
-                    >
-                      <img src={product?.image_url || ''} style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
-                    </div>
-
-                    {/* Miniaturas extras */}
-                    {extraImages.map((src, i) => (
+                    {allImages.map((src, i) => (
                       <div
                         key={i}
                         onClick={() => handleThumbChange(src)}
@@ -373,7 +355,10 @@ const ProductDetail = () => {
                             : 'none',
                         }}
                       >
-                        <img src={src} style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} />
+                        <img 
+                          src={src} 
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} 
+                        />
                       </div>
                     ))}
                   </div>
