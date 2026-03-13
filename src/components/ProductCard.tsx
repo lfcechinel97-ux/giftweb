@@ -43,6 +43,10 @@ const MAX_DOTS = 6;
 const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel, variantes, estoque }: ProductCardProps) => {
   const navigate = useNavigate();
   const [imagemAtiva, setImagemAtiva] = useState(image_url);
+  const [imgError, setImgError] = useState(false);
+
+  // Don't render card if no valid image
+  if (!image_url || image_url.includes("placehold.co")) return null;
   const precoMin = preco_custo ? calcularPreco(preco_custo, 1000) : null;
   const preco20 = preco_custo ? calcularPreco(preco_custo, 20) : null;
   const href = slug ? `/produto/${slug}` : `/produto/${codigo_amigavel}`;
@@ -68,7 +72,8 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
               alt={nome}
               loading="lazy"
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
+              onError={() => setImgError(true)}
+              style={imgError ? { display: 'none' } : undefined}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
