@@ -124,24 +124,70 @@ const ProductDetail = () => {
       });
   }, [slug, navigate]);
 
-  const precoBase = product?.preco_custo ? product.preco_custo * getMarkup(product.preco_custo) : 0;
-  const precoAtual = product?.preco_custo ? calcularPreco(product.preco_custo, qty) : 0;
-  const precoMin = product?.preco_custo ? getPrecoMinimo(product.preco_custo) : 0;
+  // Derive active variant data
+  const activeVariant = useMemo(() => {
+    if (!activeVariantId || variants.length === 0) return null;
+    return variants.find(v => v.id === activeVariantId) || null;
+  }, [activeVariantId, variants]);
+
+  // Use active variant's data for pricing/display, fallback to product
+  const displayCodigo = activeVariant?.codigo_amigavel || product?.codigo_amigavel || '';
+  const displayEstoque = activeVariant?.estoque ?? product?.estoque;
+  const displayPrecoCusto = activeVariant?.preco_custo ?? product?.preco_custo;
+  const displayNome = activeVariant?.nome || product?.nome || '';
+
+  const precoBase = displayPrecoCusto ? displayPrecoCusto * getMarkup(displayPrecoCusto) : 0;
+  const precoAtual = displayPrecoCusto ? calcularPreco(displayPrecoCusto, qty) : 0;
+  const precoMin = displayPrecoCusto ? getPrecoMinimo(displayPrecoCusto) : 0;
 
   const tableRows = useMemo(() => {
-    if (!product?.preco_custo) return [];
+    if (!displayPrecoCusto) return [];
     return QUANTITIES.map((q) => {
-      const unit = calcularPreco(product.preco_custo!, q);
+      const unit = calcularPreco(displayPrecoCusto, q);
       const base = precoBase;
       const desc = getDesconto(q);
       return { qty: q, unit, base, desc };
     });
-  }, [product?.preco_custo, precoBase]);
+  }, [displayPrecoCusto, precoBase]);
 
   const handleSelectRow = (index: number) => {
     setSelectedRow(index);
     setQty(QUANTITIES[index]);
     qtySelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const fadeToImage = (index: number) => {
+    setImgFading(true);
+    setTimeout(() => {
+      setActiveImg(index);
+      setImgFading(false);
+    }, 150);
+  };
+
+  const handleSwitchVariant = (variant: VariantInfo) => {
+    if (variant.id === activeVariantId) return;
+    // Build image list from variant
+    const imgs: string[] = [];
+    if (variant.image_urls && Array.isArray(variant.image_urls)) {
+      for (const u of variant.image_urls) {
+        if (u && (u as string).trim()) imgs.push(u as string);
+      }
+    }
+    if (imgs.length === 0 && variant.image_url) {
+      imgs.push(variant.image_url);
+    }
+    // Fade transition
+    setImgFading(true);
+    setTimeout(() => {
+      setImageUrls(imgs);
+      setActiveImg(0);
+      setActiveVariantId(variant.id);
+      setImgFading(false);
+    }, 150);
+    // Update URL without reload
+    if (variant.slug) {
+      window.history.replaceState(null, '', `/produto/${variant.slug}`);
+    }
   };
 
   if (loading) {
