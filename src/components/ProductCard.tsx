@@ -1,10 +1,16 @@
-import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { calcularPreco, formatarBRL } from "@/utils/price";
 import { getCorHex, isLightColor } from "@/utils/colorHex";
-import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+interface VariantJson {
+  slug: string;
+  cor: string;
+  image: string;
+  estoque: number;
+  codigo_amigavel: string;
+}
 
 interface ProductCardProps {
   id?: string;
@@ -14,15 +20,7 @@ interface ProductCardProps {
   cor: string | null;
   preco_custo: number | null;
   codigo_amigavel: string;
-}
-
-interface VariantInfo {
-  id: string;
-  slug: string | null;
-  cor: string | null;
-  codigo_amigavel: string;
-  image_url: string | null;
-  estoque: number | null;
+  variantes?: VariantJson[] | null;
 }
 
 export const ProductCardSkeleton = () => (
@@ -39,52 +37,16 @@ export const ProductCardSkeleton = () => (
 
 const MAX_DOTS = 4;
 
-const ProductCard = ({ id, nome, slug, image_url, cor, preco_custo, codigo_amigavel }: ProductCardProps) => {
+const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel, variantes }: ProductCardProps) => {
+  const navigate = useNavigate();
   const precoMin = preco_custo ? calcularPreco(preco_custo, 1000) : null;
   const preco20 = preco_custo ? calcularPreco(preco_custo, 20) : null;
   const href = slug ? `/produto/${slug}` : `/produto/${codigo_amigavel}`;
 
-  const [variants, setVariants] = useState<VariantInfo[] | null>(null);
-  const [hasBeenVisible, setHasBeenVisible] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  // Intersection Observer: fetch variants only when visible
-  useEffect(() => {
-    if (!id || hasBeenVisible) return;
-    const el = cardRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setHasBeenVisible(true);
-          obs.disconnect();
-        }
-      },
-      { threshold: 0.1 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [id, hasBeenVisible]);
-
-  // Fetch variants when visible
-  useEffect(() => {
-    if (!hasBeenVisible || !id) return;
-    supabase
-      .from("products_cache")
-      .select("id,slug,cor,codigo_amigavel,image_url,estoque")
-      .eq("produto_pai", id)
-      .eq("ativo", true)
-      .eq("has_image", true)
-      .order("codigo_amigavel")
-      .then(({ data }) => {
-        if (data && data.length > 1) {
-          setVariants(data as VariantInfo[]);
-        }
-      });
-  }, [hasBeenVisible, id]);
+  const hasVariants = variantes && variantes.length > 0;
 
   return (
-    <div ref={cardRef} className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-250 hover:-translate-y-1 hover:border-green-cta" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}>
+    <div className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-250 hover:-translate-y-1 hover:border-green-cta" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}>
       <Link to={href} className="block">
         <div className="relative aspect-square bg-secondary overflow-hidden">
           {image_url ? (
@@ -107,44 +69,44 @@ const ProductCard = ({ id, nome, slug, image_url, cor, preco_custo, codigo_amiga
           <h4 className="font-bold text-foreground text-[15px] leading-tight line-clamp-2">{nome}</h4>
         </Link>
 
-        {/* Color variants dots */}
-        {variants && variants.length > 1 && (
+        {/* Color variants dots from jsonb */}
+        {hasVariants && (
           <TooltipProvider delayDuration={200}>
             <div className="flex items-center gap-1.5 mt-0.5">
-              {variants.slice(0, MAX_DOTS).map((v) => {
+              {variantes.slice(0, MAX_DOTS).map((v, i) => {
                 const hex = getCorHex(v.cor);
-                const isCurrent = v.codigo_amigavel === codigo_amigavel;
                 const needsBorder = isLightColor(hex);
                 return (
-                  <Tooltip key={v.id}>
+                  <Tooltip key={v.codigo_amigavel || i}>
                     <TooltipTrigger asChild>
-                      <Link
-                        to={v.slug ? `/produto/${v.slug}` : `/produto/${v.codigo_amigavel}`}
-                        className="block rounded-full transition-all"
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          navigate(v.slug ? `/produto/${v.slug}` : `/produto/${v.codigo_amigavel}`);
+                        }}
+                        className="block rounded-full transition-all cursor-pointer"
                         style={{
                           width: 14,
                           height: 14,
                           backgroundColor: hex,
                           border: needsBorder ? '1px solid hsl(var(--border))' : 'none',
-                          outline: isCurrent ? '2px solid hsl(142,71%,45%)' : 'none',
-                          outlineOffset: 1,
                         }}
-                        onClick={(e) => e.stopPropagation()}
                       />
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs">{v.cor || 'Cor'}</TooltipContent>
                   </Tooltip>
                 );
               })}
-              {variants.length > MAX_DOTS && (
-                <span className="text-[11px] text-muted-foreground">+{variants.length - MAX_DOTS}</span>
+              {variantes.length > MAX_DOTS && (
+                <span className="text-[11px] text-muted-foreground">+{variantes.length - MAX_DOTS}</span>
               )}
-              <span className="text-[12px] text-muted-foreground ml-1">{variants.length} cores</span>
+              <span className="text-[12px] text-muted-foreground ml-1">{variantes.length + 1} cores</span>
             </div>
           </TooltipProvider>
         )}
 
-        {cor && (!variants || variants.length <= 1) && (
+        {cor && !hasVariants && (
           <span className="text-[13px] text-muted-foreground">Cor: {cor}</span>
         )}
 
