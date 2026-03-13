@@ -43,15 +43,8 @@ function getImageUrls(p: any): string[] {
     .slice(0, 4)
 }
 
-function getCodigoPrefixo(codigo: string): string {
-  if (codigo.includes('/')) return codigo.split('/')[0]
-  const partes = codigo.split('-')
-  if (partes.length >= 2) {
-    const sufixo = partes[partes.length - 1]
-    if (/^[A-Za-z]{1,3}[0-9]?$/.test(sufixo)) return partes.slice(0, -1).join('-')
-  }
-  return codigo
-}
+
+
 
 const CHUNK_SIZE = 500
 
