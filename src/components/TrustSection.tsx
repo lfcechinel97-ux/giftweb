@@ -5,10 +5,10 @@ import instaPost4 from "@/assets/insta-post-4.jpg";
 import { Instagram, Play, ExternalLink, Users } from "lucide-react";
 
 const posts = [
-{ img: instaPost1, caption: "Kit corporativo completo com garrafas e cadernos personalizados 💼✨ #brindes #corporativo", isVideo: false },
-{ img: instaPost2, caption: "Ecobags personalizadas para eventos sustentáveis 🌿 #ecobag #sustentabilidade", isVideo: false },
-{ img: instaPost3, caption: "Kits executivos com canetas, canecas e acessórios premium 🎁 #brindescorporativos", isVideo: false },
-{ img: instaPost4, caption: "Nos bastidores da produção: personalização a laser dos seus brindes 🔥", isVideo: true }];
+{ img: "/lovable-uploads/8dbc70eb-ca9b-4cf0-9dde-ba8153926b9e.png", caption: "Confra da equipe de SP! Ao pessoal que faz tudo acontecer por aqui, gratidão pelo empenho e dedicação com a empresa, que essa parceria só cresça, sempre dispostos a crescer e evoluir💙🙏🏻.", isVideo: false },
+{ img: "/lovable-uploads/d87c8aae-85c2-49cb-bed8-ad6f5a491a17.png", caption: "FAÇA VOCÊ MESMO✍🏻!!!\nModalidade na qual você participa da customização dos seus brindes, garantindo um preço ainda mais acessível! Chama nossos vendedores no whatsapp para saber mais.✍🏻😍 ", isVideo: false },
+{ img: "/lovable-uploads/5314f0ec-d122-4966-8f45-6f959f97d9d3.png", caption: "Presenteie seus colaboradores com brindes que encantam e fazem a diferença no dia a dia!", isVideo: false },
+{ img: instaPost4, caption: "Nos bastidores da produção: personalização de camisetas e uniformes", isVideo: true }];
 
 
 const followerAvatars = [
@@ -61,7 +61,7 @@ const TrustSection = () =>
           }
             </div>
             <div className="p-3">
-              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">{post.caption}</p>
+              <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed mb-3 whitespace-pre-line">{post.caption}</p>
               <a target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:underline" href="https://www.instagram.com/giftweboficial/reel/DVROkQxkRsi/">
                 <ExternalLink size={12} />
                 Ver no Instagram

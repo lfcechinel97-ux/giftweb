@@ -3,8 +3,8 @@ import catalogGeral from "@/assets/catalog-geral.png";
 import catalogCorporativo from "@/assets/catalog-corporativo.png";
 
 const banners = [
-  { title: "Catálogo Geral", img: catalogGeral, href: "#" },
-  { title: "Catálogo Corporativo", img: catalogCorporativo, href: "#" },
+  { title: "Catálogo +Vendidos\nCopos, Garrafas & Canetas", img: catalogGeral, href: "#" },
+  { title: "Catálogo #BestSeller\nGeral - Bolsas&Office", img: catalogCorporativo, href: "#" },
 ];
 
 const CatalogSection = () => {
@@ -32,7 +32,7 @@ const CatalogSection = () => {
                 alt={b.title}
                 className="w-full h-auto object-contain drop-shadow-2xl"
               />
-              <p className="text-center text-foreground font-bold text-lg mt-2">{b.title}</p>
+              <p className="text-center text-foreground font-bold text-lg mt-2 whitespace-pre-line">{b.title}</p>
             </a>
           ))}
         </div>
