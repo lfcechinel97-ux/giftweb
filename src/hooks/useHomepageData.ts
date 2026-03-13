@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface ProductCache {
   id: string;
@@ -12,22 +13,36 @@ export interface ProductCache {
   estoque: number | null;
   codigo_amigavel: string;
   descricao: string | null;
+  variantes?: Json | null;
+  variantes_count?: number | null;
+}
+
+const BEST_SELLER_CATEGORIES = ["copos", "garrafas", "mochilas", "bolsas", "escritorio", "kits", "outros"];
+
+async function fetchBestSellers(): Promise<ProductCache[]> {
+  const results = await Promise.all(
+    BEST_SELLER_CATEGORIES.map((cat) =>
+      supabase
+        .from("products_cache")
+        .select("id,nome,slug,image_url,cor,preco_custo,categoria,estoque,codigo_amigavel,descricao,variantes,variantes_count")
+        .eq("ativo", true)
+        .eq("has_image", true)
+        .eq("is_variante", false)
+        .eq("categoria", cat)
+        .gt("estoque", 0)
+        .order("variantes_count", { ascending: false })
+        .order("estoque", { ascending: false })
+        .limit(1)
+    )
+  );
+  return results.flatMap((r) => (r.data || []) as ProductCache[]);
 }
 
 async function fetchHomepageData() {
   const randomOffset = Math.floor(Math.random() * 100);
 
   const [maisVendidos, destaques, categorias, squeezesCount, baratosCount] = await Promise.all([
-    supabase
-      .from("products_cache")
-      .select("id,nome,slug,image_url,cor,preco_custo,categoria,estoque,codigo_amigavel,descricao")
-      .eq("ativo", true)
-      .eq("has_image", true)
-      .eq("is_variante", false)
-      .gt("estoque", 0)
-      .order("variantes_count", { ascending: false })
-      .order("estoque", { ascending: false })
-      .limit(8),
+    fetchBestSellers(),
 
     supabase
       .from("products_cache")
@@ -47,7 +62,6 @@ async function fetchHomepageData() {
       .eq("is_variante", false)
       .gt("estoque", 0),
 
-    // Count squeezes
     supabase
       .from("products_cache")
       .select("id", { count: "exact", head: true })
@@ -57,7 +71,6 @@ async function fetchHomepageData() {
       .gt("estoque", 0)
       .or("nome.ilike.%SQUEEZE%,descricao.ilike.%SQUEEZE%"),
 
-    // Count baratos
     supabase
       .from("products_cache")
       .select("id", { count: "exact", head: true })
@@ -68,7 +81,6 @@ async function fetchHomepageData() {
       .lte("preco_custo", 8),
   ]);
 
-  // Count by category
   const catCounts: Record<string, number> = {};
   if (categorias.data) {
     for (const row of categorias.data) {
@@ -80,7 +92,7 @@ async function fetchHomepageData() {
   catCounts["brindes-baratos"] = baratosCount.count || 0;
 
   return {
-    maisVendidos: (maisVendidos.data || []) as ProductCache[],
+    maisVendidos: maisVendidos as ProductCache[],
     destaques: (destaques.data || []) as ProductCache[],
     categorias: catCounts,
   };
