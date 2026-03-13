@@ -53,20 +53,31 @@ const ProductDetail = () => {
   const [mainImage, setMainImage] = useState(product?.image_url || '');
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Derivar array de miniaturas de forma segura
+  // ImageLink já é a imagem principal — miniaturas são APENAS as extras
   const thumbnails = useMemo(() => {
     if (!product) return [];
     return [
-      product.image_url,
-      ...(product.image_urls || []),
+      product.image_urls?.[0],
+      product.image_urls?.[1],
+      product.image_urls?.[2],
     ].filter((img): img is string =>
       img &&
       typeof img === 'string' &&
       img.trim() !== '' &&
       img.toLowerCase() !== 'null' &&
       img.toLowerCase() !== 'undefined'
-    ).slice(0, 4); // máximo 4 imagens
+    );
   }, [product]);
+
+  // Array completo para navegação (principal + extras)
+  const allImages = useMemo(() => {
+    if (!product) return [];
+    const main = product.image_url;
+    return [
+      main,
+      ...thumbnails,
+    ].filter((img): img is string => Boolean(img));
+  }, [product, thumbnails]);
 
   // Atualizar mainImage quando o product mudar
   useEffect(() => {
@@ -331,15 +342,15 @@ const ProductDetail = () => {
                     onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
                   />
                 </div>
-                {/* MINIATURAS — renderiza apenas se houver mais de 1 imagem */}
-                {thumbnails.length > 1 && (
+                {/* Só renderiza se existirem imagens extras além da principal */}
+                {allImages.length > 1 && (
                   <div style={{
                     display: 'flex',
                     gap: '8px',
                     flexWrap: 'wrap',
                     marginTop: '12px',
                   }}>
-                    {thumbnails.map((src, index) => {
+                    {allImages.map((src, index) => {
                       const isActive = mainImage === src;
                       return (
                         <div
@@ -349,7 +360,7 @@ const ProductDetail = () => {
                           style={{
                             width: '72px',
                             height: '72px',
-                            backgroundColor: '#F9FAFB',
+                            backgroundColor: '#FFFFFF',
                             border: isActive ? '2px solid #22C55E' : '2px solid #E5E7EB',
                             borderRadius: '10px',
                             display: 'flex',
@@ -358,11 +369,8 @@ const ProductDetail = () => {
                             cursor: 'pointer',
                             padding: '6px',
                             flexShrink: 0,
-                            boxShadow: isActive
-                              ? '0 0 0 3px rgba(34,197,94,0.15)'
-                              : 'none',
-                            transition: 'border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease',
-                            transform: isActive ? 'translateY(-2px)' : 'none',
+                            boxShadow: isActive ? '0 0 0 3px rgba(34,197,94,0.15)' : 'none',
+                            transition: 'all 0.15s ease',
                           }}
                         >
                           <img
