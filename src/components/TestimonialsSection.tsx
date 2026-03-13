@@ -50,7 +50,7 @@ const TestimonialsSection = () => {
   };
 
   return (
-    <section className="py-8 md:py-10 bg-surface-alt">
+    <section className="py-8 md:py-10 bg-background">
       <div
         ref={ref}
         className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
@@ -86,9 +86,10 @@ const TestimonialsSection = () => {
 
 const TestimonialCard = ({ text, name, company, role, photo, delay }: { text: string; name: string; company: string; role: string; photo: string; delay: number }) => (
   <div
-    className="rounded-[20px] bg-card border border-border p-6 transition-all duration-500 hover:border-green-cta hover:shadow-[0_8px_40px_rgba(34,197,94,0.08)]"
+    className="rounded-[20px] bg-card border border-border p-6 transition-all duration-500 hover:border-green-cta"
     style={{
       animation: `fadeSlideIn 0.6s ease-out ${delay}ms both`,
+      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
     }}
   >
     <span className="text-green-cta/30 font-black text-6xl leading-none select-none">"</span>

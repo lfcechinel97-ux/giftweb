@@ -9,11 +9,11 @@ const CorporateQuotation = () => {
 
   return (
     <>
-      <section className="py-14 md:py-16 bg-surface-alt relative overflow-hidden">
+      <section className="py-14 md:py-16 relative overflow-hidden" style={{ background: "hsl(222,47%,7%)" }}>
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse at center, hsl(var(--green-cta) / 0.06) 0%, transparent 70%)",
+            background: "radial-gradient(ellipse at center, rgba(34,197,94,0.08) 0%, transparent 70%)",
           }}
         />
         <div
@@ -29,7 +29,7 @@ const CorporateQuotation = () => {
             Solicitar Cotação Corporativa
           </button>
 
-          <p className="mt-4 text-muted-foreground text-sm">
+          <p className="mt-4 text-white/70 text-sm">
             Atendimento rápido para empresas, eventos e ações de marketing.
           </p>
         </div>

@@ -61,7 +61,6 @@ const ProductDetail = () => {
         }
         setProduct(data);
 
-        // Parse image_urls
         const imgs: string[] = [];
         if (data.image_urls && Array.isArray(data.image_urls)) {
           for (const u of data.image_urls) {
@@ -74,11 +73,9 @@ const ProductDetail = () => {
         setImageUrls(imgs);
         setActiveImg(0);
 
-        // Determine produto_pai id
         const isVariante = (data as any).is_variante === true;
         const produtoPaiId = isVariante ? (data as any).produto_pai : data.id;
 
-        // Fetch variants + related in parallel
         const [variantsRes, relatedRes] = await Promise.all([
           produtoPaiId
             ? supabase
@@ -104,7 +101,6 @@ const ProductDetail = () => {
         setVariants((variantsRes.data || []) as VariantInfo[]);
         setRelated(relatedRes.data || []);
 
-        // Get parent slug for canonical
         if (isVariante && produtoPaiId) {
           const { data: paiData } = await supabase
             .from("products_cache")
@@ -215,7 +211,7 @@ const ProductDetail = () => {
             <div className="grid md:grid-cols-[55%_45%] gap-6 md:gap-8">
               {/* Gallery */}
               <div className="relative">
-                <div className="aspect-square rounded-2xl border border-border overflow-hidden bg-secondary relative group">
+                <div className="aspect-square rounded-2xl border border-border overflow-hidden bg-card relative group">
                   {imageUrls.length > 0 ? (
                     <img
                       src={imageUrls[activeImg]}
@@ -243,7 +239,7 @@ const ProductDetail = () => {
                         key={i}
                         onClick={() => setActiveImg(i)}
                         className="w-[60px] h-[60px] rounded-lg border-2 overflow-hidden transition-colors"
-                        style={{ borderColor: activeImg === i ? "hsl(142,71%,45%)" : "hsl(210,25%,17%)" }}
+                        style={{ borderColor: activeImg === i ? "hsl(142,71%,45%)" : "hsl(220,13%,91%)" }}
                       >
                         <img src={url} alt={`${product.nome} ${i + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }} />
                       </button>
@@ -287,7 +283,7 @@ const ProductDetail = () => {
                                     width: 32,
                                     height: 32,
                                     backgroundColor: hex,
-                                    border: needsBorder ? '2px solid hsl(var(--border))' : '2px solid transparent',
+                                    border: needsBorder ? '2px solid hsl(220,13%,91%)' : '2px solid transparent',
                                     outline: isCurrent ? '2px solid hsl(142,71%,45%)' : 'none',
                                     outlineOffset: 2,
                                     opacity: outOfStock ? 0.4 : 1,
@@ -339,7 +335,7 @@ const ProductDetail = () => {
                 {(product.altura || product.largura || product.profundidade || product.peso) && (
                   <div className="grid grid-cols-2 gap-2">
                     {product.altura != null && (
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-background border border-border">
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary border border-border">
                         <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
                         <div>
                           <span className="text-[11px] text-muted-foreground block">Altura</span>
@@ -348,7 +344,7 @@ const ProductDetail = () => {
                       </div>
                     )}
                     {product.largura != null && (
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-background border border-border">
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary border border-border">
                         <MoveHorizontal className="w-4 h-4 text-muted-foreground" />
                         <div>
                           <span className="text-[11px] text-muted-foreground block">Largura</span>
@@ -357,7 +353,7 @@ const ProductDetail = () => {
                       </div>
                     )}
                     {product.profundidade != null && (
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-background border border-border">
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary border border-border">
                         <Ruler className="w-4 h-4 text-muted-foreground" />
                         <div>
                           <span className="text-[11px] text-muted-foreground block">Comprimento</span>
@@ -366,7 +362,7 @@ const ProductDetail = () => {
                       </div>
                     )}
                     {product.peso != null && (
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-background border border-border">
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary border border-border">
                         <Weight className="w-4 h-4 text-muted-foreground" />
                         <div>
                           <span className="text-[11px] text-muted-foreground block">Peso</span>
@@ -395,9 +391,9 @@ const ProductDetail = () => {
                           {tableRows.map((row, i) => (
                             <tr
                               key={row.qty}
-                              className="border-t border-border transition-colors cursor-pointer"
+                              className="border-t border-border transition-colors cursor-pointer hover:bg-secondary/50"
                               style={{
-                                backgroundColor: selectedRow === i ? "hsl(210,25%,12%)" : undefined,
+                                backgroundColor: selectedRow === i ? "hsl(142,71%,45%,0.06)" : undefined,
                                 borderLeft: selectedRow === i ? "3px solid hsl(142,71%,45%)" : "3px solid transparent",
                               }}
                               onClick={() => handleSelectRow(i)}
@@ -431,7 +427,7 @@ const ProductDetail = () => {
                                   onClick={(e) => { e.stopPropagation(); handleSelectRow(i); }}
                                   className="px-3 py-1 rounded-lg text-[13px] font-semibold border transition-colors"
                                   style={{
-                                    borderColor: selectedRow === i ? "hsl(142,71%,45%)" : "hsl(210,25%,17%)",
+                                    borderColor: selectedRow === i ? "hsl(142,71%,45%)" : "hsl(220,13%,91%)",
                                     color: selectedRow === i ? "hsl(142,71%,45%)" : "hsl(var(--muted-foreground))",
                                   }}
                                 >
@@ -460,7 +456,7 @@ const ProductDetail = () => {
                       min={20}
                       value={qty}
                       onChange={(e) => setQty(Math.max(20, parseInt(e.target.value) || 20))}
-                      className="w-20 text-center py-2 rounded-lg bg-background border border-border text-foreground font-bold text-lg focus:outline-none focus:border-green-cta"
+                      className="w-20 text-center py-2 rounded-lg bg-card border border-border text-foreground font-bold text-lg focus:outline-none focus:border-green-cta"
                     />
                     <button
                       onClick={() => setQty(qty + 10)}
@@ -536,7 +532,7 @@ const ProductDetail = () => {
         {/* Lightbox */}
         {lightbox && imageUrls.length > 0 && (
           <div
-            className="fixed inset-0 z-50 bg-background/90 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
             onClick={() => setLightbox(false)}
           >
             <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center">

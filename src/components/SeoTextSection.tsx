@@ -1,5 +1,5 @@
 const SeoTextSection = () => (
-  <section className="py-[60px]" style={{ background: "hsl(220, 40%, 6%)" }}>
+  <section className="py-[60px] bg-background">
     <div className="container max-w-[800px] mx-auto">
       <h2 className="font-bold text-[22px] text-foreground mb-6">
         Gift Web — Brindes Personalizados para Empresas
