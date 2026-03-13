@@ -38,7 +38,7 @@ export const ProductCardSkeleton = () => (
   </div>
 );
 
-const MAX_DOTS = 8;
+const MAX_DOTS = 4;
 
 const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel, variantes, estoque }: ProductCardProps) => {
   const navigate = useNavigate();
