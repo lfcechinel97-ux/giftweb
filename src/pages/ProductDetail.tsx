@@ -470,7 +470,7 @@ const ProductDetail = () => {
                 )}
 
                 {/* Pricing table */}
-                {product.preco_custo != null && product.preco_custo > 0 && (
+                {displayPrecoCusto != null && displayPrecoCusto > 0 && (
                   <div className="mt-4">
                     <h3 className="font-bold text-lg text-foreground mb-3">Compre com desconto</h3>
                     <div className="rounded-xl border border-border overflow-hidden">
