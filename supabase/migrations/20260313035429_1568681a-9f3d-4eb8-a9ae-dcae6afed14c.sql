@@ -1,0 +1,1 @@
+SELECT set_variantes_por_prefixo();
