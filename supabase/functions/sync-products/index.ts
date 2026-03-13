@@ -96,58 +96,40 @@ serve(async (req) => {
     console.log('[SYNC] Stage 1 OK - produtos:', produtos.length)
     if (!produtos.length) throw new Error('API retornou lista vazia')
 
-    // === STAGE 2: Deduplicar e gerar codigos unicos ===
-    console.log('[SYNC] Stage 2: Deduplicating and generating unique codes...')
+    // === STAGE 2: Deduplicar por CodigoComposto e agrupar por CodigoAmigavel ===
+    console.log('[SYNC] Stage 2: Deduplicating by CodigoComposto...')
     const produtosMap = new Map<string, any>()
     for (const p of produtos) {
-      const codigo = p.CodigoAmigavel ?? p.codigoAmigavel ?? ''
-      if (!codigo) continue
-      const cor = p.CorWebPrincipal ?? p.corWebPrincipal ?? ''
-      const chave = codigo + '||' + cor.toUpperCase()
+      const codigoComposto = p.CodigoComposto ?? p.codigoComposto ?? ''
+      const codigoAmigavel = p.CodigoAmigavel ?? p.codigoAmigavel ?? ''
+      const chave = codigoComposto || codigoAmigavel
+      if (!chave) continue
       produtosMap.set(chave, p)
     }
 
-    // Gerar codigo_amigavel unico para cada produto
-    const usados = new Set<string>()
-    const chaveParaCodigo = new Map<string, string>()
-    for (const [chave, p] of produtosMap.entries()) {
-      const codigo = p.CodigoAmigavel ?? p.codigoAmigavel ?? ''
-      const cor = p.CorWebPrincipal ?? p.corWebPrincipal ?? ''
-      let codigoUnico = codigo
-      if (cor) {
-        const sufixoBase = cor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4)
-        let tentativa = codigo + '-' + sufixoBase
-        let contador = 2
-        while (usados.has(tentativa)) {
-          tentativa = codigo + '-' + sufixoBase.slice(0, 3) + contador
-          contador++
-        }
-        codigoUnico = tentativa
-      }
-      usados.add(codigoUnico)
-      chaveParaCodigo.set(chave, codigoUnico)
-    }
-
-    // Agrupar por prefixo
+    // Agrupar por CodigoAmigavel (pai)
     const groups = new Map<string, string[]>()
-    for (const codigoUnico of chaveParaCodigo.values()) {
-      const prefix = getCodigoPrefixo(codigoUnico)
-      if (!groups.has(prefix)) groups.set(prefix, [])
-      groups.get(prefix)!.push(codigoUnico)
+    for (const [chave, p] of produtosMap.entries()) {
+      const codigoPai = p.CodigoAmigavel ?? p.codigoAmigavel ?? chave
+      if (!groups.has(codigoPai)) groups.set(codigoPai, [])
+      groups.get(codigoPai)!.push(chave)
     }
 
+    // Determinar pais e variantes
     const paiDeCodigo = new Map<string, string>()
     const isPai = new Set<string>()
     const isVariante = new Set<string>()
-    for (const [_prefix, codigos] of groups) {
-      if (codigos.length === 1) {
-        isPai.add(codigos[0])
-      } else {
-        codigos.sort()
-        isPai.add(codigos[0])
-        for (const v of codigos.slice(1)) {
-          isVariante.add(v)
-          paiDeCodigo.set(v, codigos[0])
+
+    for (const [codigoPai, codigos] of groups) {
+      codigos.sort()
+      // O registro cujo CodigoComposto == CodigoAmigavel é o pai
+      // Se não existir, usar o primeiro da lista
+      const paiCodigo = codigos.find(c => c === codigoPai) ?? codigos[0]
+      isPai.add(paiCodigo)
+      for (const c of codigos) {
+        if (c !== paiCodigo) {
+          isVariante.add(c)
+          paiDeCodigo.set(c, paiCodigo)
         }
       }
     }
