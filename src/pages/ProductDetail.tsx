@@ -363,9 +363,6 @@ const ProductDetail = () => {
                     ))}
                   </div>
                 )}
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* Info */}
