@@ -342,15 +342,15 @@ const ProductDetail = () => {
                     onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
                   />
                 </div>
-                {/* MINIATURAS — renderiza apenas se houver mais de 1 imagem */}
-                {thumbnails.length > 1 && (
+                {/* Só renderiza se existirem imagens extras além da principal */}
+                {allImages.length > 1 && (
                   <div style={{
                     display: 'flex',
                     gap: '8px',
                     flexWrap: 'wrap',
                     marginTop: '12px',
                   }}>
-                    {thumbnails.map((src, index) => {
+                    {allImages.map((src, index) => {
                       const isActive = mainImage === src;
                       return (
                         <div
@@ -360,7 +360,7 @@ const ProductDetail = () => {
                           style={{
                             width: '72px',
                             height: '72px',
-                            backgroundColor: '#F9FAFB',
+                            backgroundColor: '#FFFFFF',
                             border: isActive ? '2px solid #22C55E' : '2px solid #E5E7EB',
                             borderRadius: '10px',
                             display: 'flex',
@@ -369,11 +369,8 @@ const ProductDetail = () => {
                             cursor: 'pointer',
                             padding: '6px',
                             flexShrink: 0,
-                            boxShadow: isActive
-                              ? '0 0 0 3px rgba(34,197,94,0.15)'
-                              : 'none',
-                            transition: 'border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease',
-                            transform: isActive ? 'translateY(-2px)' : 'none',
+                            boxShadow: isActive ? '0 0 0 3px rgba(34,197,94,0.15)' : 'none',
+                            transition: 'all 0.15s ease',
                           }}
                         >
                           <img
