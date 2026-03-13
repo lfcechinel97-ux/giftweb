@@ -265,12 +265,13 @@ const ProductDetail = () => {
             <div className="grid md:grid-cols-[55%_45%] gap-6 md:gap-8">
               {/* Gallery */}
               <div className="relative">
-                <div className="aspect-square rounded-2xl border border-border overflow-hidden bg-card relative group">
+                <div className="h-[420px] rounded-2xl border border-border overflow-hidden bg-card relative group">
                   {imageUrls.length > 0 ? (
                     <img
                       src={imageUrls[activeImg]}
-                      alt={product.nome}
-                      className="w-full h-full object-cover transition-opacity duration-200"
+                      alt={displayNome}
+                      className="w-full h-full object-contain transition-opacity duration-150"
+                      style={{ opacity: imgFading ? 0 : 1 }}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
                     />
                   ) : (
@@ -291,11 +292,13 @@ const ProductDetail = () => {
                     {imageUrls.map((url, i) => (
                       <button
                         key={i}
-                        onClick={() => setActiveImg(i)}
-                        className="w-[60px] h-[60px] rounded-lg border-2 overflow-hidden transition-colors"
-                        style={{ borderColor: activeImg === i ? "hsl(142,71%,45%)" : "hsl(220,13%,91%)" }}
+                        onClick={() => fadeToImage(i)}
+                        className="w-[72px] h-[72px] rounded-lg overflow-hidden transition-all duration-150"
+                        style={{
+                          border: activeImg === i ? '2px solid hsl(142,71%,45%)' : '2px solid transparent',
+                        }}
                       >
-                        <img src={url} alt={`${product.nome} ${i + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }} />
+                        <img src={url} alt={`${displayNome} ${i + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }} />
                       </button>
                     ))}
                   </div>
@@ -304,12 +307,11 @@ const ProductDetail = () => {
 
               {/* Info */}
               <div className="flex flex-col gap-4">
-                <h1 className="font-black text-[28px] md:text-[32px] leading-tight text-foreground">{product.nome}</h1>
-                <span className="text-[13px] text-muted-foreground">Código: {product.codigo_amigavel}</span>
-
-                <div className="flex items-center gap-2 text-muted-foreground text-[13px]">
-                  <Clock className="w-4 h-4" />
-                  <span>Prazo de produção: {PRAZO_PRODUCAO}</span>
+                <h1 className="font-black text-[28px] md:text-[32px] leading-tight text-foreground">{displayNome}</h1>
+                <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
+                  <span>Código: {displayCodigo}</span>
+                  <span className="text-border">|</span>
+                  <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {PRAZO_PRODUCAO}</span>
                 </div>
 
                 {/* Color variant selector */}
@@ -320,18 +322,14 @@ const ProductDetail = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         {variants.map((v) => {
                           const hex = getCorHex(v.cor);
-                          const isCurrent = v.slug === slug;
+                          const isCurrent = v.id === activeVariantId;
                           const needsBorder = isLightColor(hex);
                           const outOfStock = v.estoque === 0 || v.estoque === null;
                           return (
                             <Tooltip key={v.id}>
                               <TooltipTrigger asChild>
                                 <button
-                                  onClick={() => {
-                                    if (v.slug && v.slug !== slug) {
-                                      navigate(`/produto/${v.slug}`);
-                                    }
-                                  }}
+                                  onClick={() => handleSwitchVariant(v)}
                                   className="rounded-full transition-all"
                                   style={{
                                     width: 32,
@@ -365,7 +363,7 @@ const ProductDetail = () => {
                 ) : null}
 
                 {/* Stock badge */}
-                {product.estoque != null && product.estoque > 0 ? (
+                {displayEstoque != null && displayEstoque > 0 ? (
                   <span className="inline-flex items-center self-start px-3 py-1 rounded-full bg-green-cta/15 text-green-cta text-xs font-semibold">
                     Em estoque
                   </span>
