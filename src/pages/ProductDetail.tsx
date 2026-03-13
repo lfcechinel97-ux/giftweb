@@ -264,13 +264,14 @@ const ProductDetail = () => {
             {/* Main layout */}
             <div className="grid md:grid-cols-[55%_45%] gap-6 md:gap-8">
               {/* Gallery */}
-              <div className="relative">
-                <div className="h-[420px] rounded-2xl border border-border overflow-hidden bg-card relative group">
+              <div className="flex flex-col gap-3 md:sticky md:top-6 self-start">
+                <div className="h-[420px] rounded-2xl overflow-hidden relative group flex items-center justify-center"
+                  style={{ background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 16 }}>
                   {imageUrls.length > 0 ? (
                     <img
                       src={imageUrls[activeImg]}
                       alt={displayNome}
-                      className="w-full h-full object-contain transition-opacity duration-150"
+                      className="max-w-full max-h-[380px] object-contain transition-opacity duration-150"
                       style={{ opacity: imgFading ? 0 : 1 }}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
                     />
@@ -288,17 +289,20 @@ const ProductDetail = () => {
                 </div>
                 {/* Thumbnails */}
                 {imageUrls.length > 1 && (
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex gap-2">
                     {imageUrls.map((url, i) => (
                       <button
                         key={i}
                         onClick={() => fadeToImage(i)}
-                        className="w-[72px] h-[72px] rounded-lg overflow-hidden transition-all duration-150"
+                        className="w-[80px] h-[80px] rounded-[10px] overflow-hidden p-1.5 transition-all duration-150 hover:-translate-y-0.5"
                         style={{
-                          border: activeImg === i ? '2px solid hsl(142,71%,45%)' : '2px solid transparent',
+                          background: '#F9FAFB',
+                          border: activeImg === i ? '2px solid #22C55E' : '2px solid #E5E7EB',
+                          boxShadow: activeImg === i ? '0 0 0 3px rgba(34,197,94,0.15)' : 'none',
+                          cursor: activeImg === i ? 'default' : 'pointer',
                         }}
                       >
-                        <img src={url} alt={`${displayNome} ${i + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }} />
+                        <img src={url} alt={`${displayNome} ${i + 1}`} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }} />
                       </button>
                     ))}
                   </div>
