@@ -323,24 +323,53 @@ const ProductDetail = () => {
                     </button>
                   )}
                 </div>
-                {/* Thumbnails */}
-                {imageUrls.length > 1 && (
-                  <div className="flex gap-2">
-                    {imageUrls.map((url, i) => (
-                      <button
-                        key={i}
-                        onClick={() => fadeToImage(i)}
-                        className="w-[80px] h-[80px] rounded-[10px] overflow-hidden p-1.5 transition-all duration-150 hover:-translate-y-0.5"
-                        style={{
-                          background: '#F9FAFB',
-                          border: activeImg === i ? '2px solid #22C55E' : '2px solid #E5E7EB',
-                          boxShadow: activeImg === i ? '0 0 0 3px rgba(34,197,94,0.15)' : 'none',
-                          cursor: activeImg === i ? 'default' : 'pointer',
-                        }}
-                      >
-                        <img src={url} alt={`${displayNome} ${i + 1}`} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }} />
-                      </button>
-                    ))}
+                {/* MINIATURAS — renderiza apenas se houver mais de 1 imagem */}
+                {thumbnails.length > 1 && (
+                  <div style={{
+                    display: 'flex',
+                    gap: '8px',
+                    flexWrap: 'wrap',
+                    marginTop: '12px',
+                  }}>
+                    {thumbnails.map((src, index) => {
+                      const isActive = mainImage === src;
+                      return (
+                        <div
+                          key={index}
+                          onClick={() => handleThumbChange(src)}
+                          onMouseEnter={() => handleThumbChange(src)}
+                          style={{
+                            width: '72px',
+                            height: '72px',
+                            backgroundColor: '#F9FAFB',
+                            border: isActive ? '2px solid #22C55E' : '2px solid #E5E7EB',
+                            borderRadius: '10px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            padding: '6px',
+                            flexShrink: 0,
+                            boxShadow: isActive
+                              ? '0 0 0 3px rgba(34,197,94,0.15)'
+                              : 'none',
+                            transition: 'border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease',
+                            transform: isActive ? 'translateY(-2px)' : 'none',
+                          }}
+                        >
+                          <img
+                            src={src}
+                            alt={`Foto ${index + 1}`}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'contain',
+                              pointerEvents: 'none',
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
