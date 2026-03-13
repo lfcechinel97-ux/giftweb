@@ -45,9 +45,9 @@ const AllProducts = () => {
     if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
     if (apenasEstoque) query = query.gt("estoque", 0);
 
-    if (sortBy === "menor_preco") query = query.order("estoque", { ascending: false, nullsFirst: false }).order("preco_custo", { ascending: true });
-    else if (sortBy === "maior_estoque") query = query.order("estoque", { ascending: false, nullsFirst: false });
-    else query = query.order("estoque", { ascending: false, nullsFirst: false }).order("nome");
+    if (sortBy === "menor_preco") query = query.order("sort_estoque").order("preco_custo", { ascending: true }).order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false });
+    else if (sortBy === "maior_estoque") query = query.order("sort_estoque").order("estoque", { ascending: false, nullsFirst: false }).order("variantes_count", { ascending: false });
+    else query = query.order("sort_estoque").order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false });
 
     const { data, count } = await query.range(from, to);
     setProducts(data || []);

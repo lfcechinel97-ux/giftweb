@@ -48,8 +48,9 @@ const SearchPage = () => {
       .eq("has_image", true)
       .eq("is_variante", false)
       .ilike("busca", `%${q}%`)
+      .order("sort_estoque")
+      .order("variantes_count", { ascending: false })
       .order("estoque", { ascending: false, nullsFirst: false })
-      .order("nome")
       .range(from, to);
 
     setProducts(data || []);
