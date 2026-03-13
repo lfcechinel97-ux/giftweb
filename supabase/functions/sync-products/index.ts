@@ -163,16 +163,20 @@ serve(async (req) => {
     })
     console.log('[SYNC] Stage 3 OK -', registros.length, 'registros')
 
-    // === STAGE 3b: Remover registros antigos sem sufixo ===
-    console.log('[SYNC] Stage 3b: Removing old records without suffix...')
-    const prefixosComVariacao = new Set<string>()
-    for (const r of registros) {
-      const prefixo = getCodigoPrefixo(r.codigo_amigavel)
-      if (prefixo !== r.codigo_amigavel) prefixosComVariacao.add(prefixo)
+    // === STAGE 3b: Remover registros antigos cujo CodigoAmigavel agora tem variantes ===
+    console.log('[SYNC] Stage 3b: Removing old parent-only records...')
+    const codigosNovoSet = new Set(registros.map(r => r.codigo_amigavel))
+    const paisParaDeletar: string[] = []
+    for (const [codigoPai] of groups) {
+      const codigos = groups.get(codigoPai)!
+      // Se o pai (CodigoAmigavel) não existe como registro próprio mas tem variantes, deletar registro antigo
+      if (!codigosNovoSet.has(codigoPai) && codigos.length > 0) {
+        paisParaDeletar.push(codigoPai)
+      }
     }
-    if (prefixosComVariacao.size > 0) {
-      await supabaseClient.from('products_cache').delete().in('codigo_amigavel', Array.from(prefixosComVariacao))
-      console.log('[SYNC] Stage 3b OK - deleted', prefixosComVariacao.size, 'old records')
+    if (paisParaDeletar.length > 0) {
+      await supabaseClient.from('products_cache').delete().in('codigo_amigavel', paisParaDeletar)
+      console.log('[SYNC] Stage 3b OK - deleted', paisParaDeletar.length, 'old records')
     }
 
     // === STAGE 3c: Upsert ===
