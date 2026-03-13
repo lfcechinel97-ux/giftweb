@@ -374,7 +374,7 @@ const ProductDetail = () => {
                 )}
 
                 {/* Price highlight + PIX + installments */}
-                {product.preco_custo != null && product.preco_custo > 0 && (() => {
+                {displayPrecoCusto != null && displayPrecoCusto > 0 && (() => {
                   const precoPix = precoMin * 0.97;
                   const parcela2x = precoMin / 2;
                   return (
