@@ -560,6 +560,25 @@ const ProductDetail = () => {
                   </div>
                 )}
 
+                {/* Payment methods */}
+                <div className="flex gap-4 items-center p-3 rounded-[10px] bg-secondary mt-3">
+                  <div className="flex-1 flex flex-col items-center gap-1.5">
+                    <img src="/logos/pix.png" alt="PIX" className="h-6 w-auto object-contain" />
+                    <span className="text-[11px] text-foreground font-medium">PIX</span>
+                    <span className="text-[10px] text-muted-foreground">3% desconto</span>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center gap-1.5">
+                    <CreditCard className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-[11px] text-foreground font-medium">Cartão 2x</span>
+                    <span className="text-[10px] text-muted-foreground">sem juros</span>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center gap-1.5">
+                    <img src="/logos/boleto.png" alt="Boleto" className="h-6 w-auto object-contain" />
+                    <span className="text-[11px] text-foreground font-medium">Boleto</span>
+                    <span className="text-[10px] text-muted-foreground">para PJ</span>
+                  </div>
+                </div>
+
                 {/* Quantity selector */}
                 <div ref={qtySelectorRef} className="mt-4 p-4 rounded-xl bg-card border border-border">
                   <div className="flex items-center gap-4">
