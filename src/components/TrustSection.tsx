@@ -61,7 +61,7 @@ const TrustSection = () =>
           }
             </div>
             <div className="p-3">
-              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-3">{post.caption}</p>
+              <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed mb-3 whitespace-pre-line">{post.caption}</p>
               <a target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:underline" href="https://www.instagram.com/giftweboficial/reel/DVROkQxkRsi/">
                 <ExternalLink size={12} />
                 Ver no Instagram
