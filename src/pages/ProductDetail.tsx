@@ -13,7 +13,7 @@ import ProductCard, { ProductCardSkeleton } from "@/components/ProductCard";
 import HowItWorks from "@/components/HowItWorks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Clock, Minus, Plus, ZoomIn, X, MessageCircle, Ruler, Weight, ArrowUpDown, MoveHorizontal } from "lucide-react";
+import { Clock, Minus, Plus, ZoomIn, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, Truck, Palette, Building2, CreditCard } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products_cache">;
