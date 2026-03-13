@@ -4,13 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { WHATSAPP_NUMBER } from "@/config/site";
 
 const categoryLinks = [
-  { name: "Garrafas", route: "/garrafas" },
-  { name: "Copos e Canecas", route: "/copos" },
-  { name: "Mochilas", route: "/mochilas" },
-  { name: "Bolsas", route: "/bolsas" },
-  { name: "Escritório", route: "/escritorio" },
-  { name: "Squeezes", route: "/squeezes" },
-];
+{ name: "Garrafas", route: "/garrafas" },
+{ name: "Copos e Canecas", route: "/copos" },
+{ name: "Mochilas", route: "/mochilas" },
+{ name: "Bolsas", route: "/bolsas" },
+{ name: "Escritório", route: "/escritorio" },
+{ name: "Squeezes", route: "/squeezes" }];
+
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -41,7 +41,7 @@ const Header = () => {
       {/* Top bar */}
       <div className="bg-navy-dark text-muted-foreground" style={{ fontSize: 13 }}>
         <div className="container flex items-center justify-center py-2 gap-1">
-          <span>⚡ Atendimento rápido via WhatsApp    💳 Pagamento facilitado </span>
+          <span className="text-primary-foreground">⚡ Atendimento rápido via WhatsApp    💳 Pagamento Facilitado </span>
           <span className="mx-1">|</span>
           <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="font-bold text-green-cta hover:underline">
             Atendimento Comercial
@@ -54,13 +54,13 @@ const Header = () => {
         className="border-b border-border transition-all duration-300"
         style={{
           backgroundColor: scrolled ? "rgba(11,15,26,0.85)" : "hsl(222,47%,7%)",
-          backdropFilter: scrolled ? "blur(12px)" : "none",
-        }}
-      >
+          backdropFilter: scrolled ? "blur(12px)" : "none"
+        }}>
+        
         {/* Line 1 */}
         <div className="container flex items-center justify-between gap-4 py-3">
           <a href="/" className="flex items-baseline gap-0.5 shrink-0">
-            <span className="font-extrabold text-foreground font-serif text-left text-5xl">Gift Web</span>
+            <span className="font-extrabold font-serif text-left text-5xl text-primary-foreground">Gift Web</span>
             <span className="text-sm font-medium text-green-cta ml-1">B R I N D E S</span>
           </a>
 
@@ -71,8 +71,8 @@ const Header = () => {
               placeholder="Estou procurando por..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-[10px] border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-text-meta focus:outline-none focus:ring-2 focus:ring-green-cta/40 px-[30px]"
-            />
+              className="w-full rounded-[10px] border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-text-meta focus:outline-none focus:ring-2 focus:ring-green-cta/40 px-[30px]" />
+            
             <button type="submit" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-meta">
               <Search size={16} />
             </button>
@@ -83,8 +83,8 @@ const Header = () => {
             target="_blank"
             rel="noreferrer"
             className="hidden sm:flex items-center gap-2 rounded-[10px] bg-green-cta px-5 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 transition-all duration-200 shrink-0"
-            style={{ boxShadow: "0 0 20px rgba(34,197,94,0.3)" }}
-          >
+            style={{ boxShadow: "0 0 20px rgba(34,197,94,0.3)" }}>
+            
             <MessageCircle size={16} />
             {phoneFormatted}
           </a>
@@ -102,11 +102,11 @@ const Header = () => {
               TODOS BRINDES
             </a>
 
-            {categoryLinks.map((cat) => (
-              <a key={cat.name} href={cat.route} className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+            {categoryLinks.map((cat) =>
+            <a key={cat.name} href={cat.route} className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
                 {cat.name}
               </a>
-            ))}
+            )}
 
             <a href="/brindes-baratos" className="px-4 py-3 text-[13px] font-bold uppercase hover:opacity-80 transition-colors duration-200 text-green-cta">
               BRINDES BARATOS
@@ -115,17 +115,17 @@ const Header = () => {
         </div>
 
         {/* Mobile menu */}
-        {mobileOpen && (
-          <div className="lg:hidden border-t border-border pb-4">
+        {mobileOpen &&
+        <div className="lg:hidden border-t border-border pb-4">
             <div className="container flex flex-col gap-3 pt-3">
               <form onSubmit={handleSearch} className="relative">
                 <input
-                  type="text"
-                  placeholder="Estou procurando por..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full rounded-[10px] border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-text-meta focus:outline-none focus:ring-2 focus:ring-green-cta/40"
-                />
+                type="text"
+                placeholder="Estou procurando por..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-[10px] border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-text-meta focus:outline-none focus:ring-2 focus:ring-green-cta/40" />
+              
                 <button type="submit" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-meta">
                   <Search size={16} />
                 </button>
@@ -136,11 +136,11 @@ const Header = () => {
                 TODOS BRINDES
               </a>
 
-              {categoryLinks.map((cat) => (
-                <a key={cat.name} href={cat.route} className="text-sm font-bold uppercase text-muted-foreground hover:text-green-cta py-1">
+              {categoryLinks.map((cat) =>
+            <a key={cat.name} href={cat.route} className="text-sm font-bold uppercase text-muted-foreground hover:text-green-cta py-1">
                   {cat.name}
                 </a>
-              ))}
+            )}
 
               <a href="/brindes-baratos" className="text-sm font-bold uppercase text-green-cta py-1">
                 BRINDES BARATOS
@@ -152,10 +152,10 @@ const Header = () => {
               </a>
             </div>
           </div>
-        )}
+        }
       </div>
-    </header>
-  );
+    </header>);
+
 };
 
 export default Header;
