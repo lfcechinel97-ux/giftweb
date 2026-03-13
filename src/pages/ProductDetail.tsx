@@ -435,7 +435,21 @@ const ProductDetail = () => {
                   <p>✓ Entrega para todo o Brasil</p>
                 </div>
 
-                {/* Dimensions */}
+                {/* Trust bar */}
+                <div className="flex gap-3 py-3 my-2 border-t border-b border-border">
+                  <div className="flex-1 flex flex-col items-center gap-1">
+                    <Truck className="w-5 h-5 text-green-cta" />
+                    <span className="text-[11px] text-muted-foreground text-center">Entrega para<br/>todo o Brasil</span>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center gap-1">
+                    <Palette className="w-5 h-5 text-green-cta" />
+                    <span className="text-[11px] text-muted-foreground text-center">Arte grátis<br/>inclusa</span>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center gap-1">
+                    <Building2 className="w-5 h-5 text-green-cta" />
+                    <span className="text-[11px] text-muted-foreground text-center">+5 anos de<br/>mercado</span>
+                  </div>
+                </div>
                 {(product.altura || product.largura || product.profundidade || product.peso) && (
                   <div className="grid grid-cols-2 gap-2">
                     {product.altura != null && (
