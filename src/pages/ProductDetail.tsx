@@ -299,46 +299,22 @@ const ProductDetail = () => {
 
             {/* Main layout */}
             <div className="grid md:grid-cols-[55%_45%] gap-6 md:gap-8">
-{/* Gallery */}
+              {/* Gallery */}
               <div className="flex flex-col gap-3 md:sticky md:top-6 self-start">
-                {/* CONTAINER DA IMAGEM PRINCIPAL */}
-                <div style={{
-                  width: '100%',
-                  aspectRatio: '1 / 1',
-                  backgroundColor: '#F9FAFB',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden',
-                  position: 'relative',
-                }}>
-                  {mainImage ? (
+                <div className="h-[420px] rounded-2xl overflow-hidden relative group flex items-center justify-center"
+                  style={{ background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 16 }}>
+                  {imageUrls.length > 0 ? (
                     <img
-                      src={mainImage}
-                      alt={product?.nome || 'Produto'}
-                      style={{
-                        maxWidth: '90%',
-                        maxHeight: '90%',
-                        objectFit: 'contain',
-                        opacity: isTransitioning ? 0 : 1,
-                        transition: 'opacity 0.15s ease, transform 0.3s ease',
-                        transformOrigin: 'center center',
-                        cursor: 'zoom-in',
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.transform = 'scale(1.18)';
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
+                      src={imageUrls[activeImg]}
+                      alt={displayNome}
+                      className="max-w-full max-h-[380px] object-contain transition-opacity duration-150"
+                      style={{ opacity: imgFading ? 0 : 1 }}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">Sem imagem</div>
                   )}
-                  {mainImage && (
+                  {imageUrls.length > 0 && (
                     <button
                       onClick={() => setLightbox(true)}
                       className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-card/80 border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
