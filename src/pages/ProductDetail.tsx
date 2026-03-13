@@ -53,31 +53,20 @@ const ProductDetail = () => {
   const [mainImage, setMainImage] = useState(product?.image_url || '');
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // ImageLink já é a imagem principal — miniaturas são APENAS as extras
-  const thumbnails = useMemo(() => {
+  // Apenas imagens extras — ImageLink (principal) NUNCA entra aqui
+  const extraImages = useMemo(() => {
     if (!product) return [];
     return [
       product.image_urls?.[0],
       product.image_urls?.[1],
       product.image_urls?.[2],
     ].filter((img): img is string =>
-      img &&
       typeof img === 'string' &&
-      img.trim() !== '' &&
-      img.toLowerCase() !== 'null' &&
-      img.toLowerCase() !== 'undefined'
+      img.trim().length > 0 &&
+      img !== 'null' &&
+      img !== 'undefined'
     );
   }, [product]);
-
-  // Array completo para navegação (principal + extras)
-  const allImages = useMemo(() => {
-    if (!product) return [];
-    const main = product.image_url;
-    return [
-      main,
-      ...thumbnails,
-    ].filter((img): img is string => Boolean(img));
-  }, [product, thumbnails]);
 
   // Atualizar mainImage quando o product mudar
   useEffect(() => {
