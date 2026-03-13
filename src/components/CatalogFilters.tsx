@@ -50,7 +50,7 @@ const CatalogFilters = ({
             placeholder="Buscar produtos..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-card border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-green-cta transition-colors"
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-card border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-green-cta focus:ring-2 focus:ring-green-cta/15 transition-colors"
           />
           {searchTerm && (
             <button onClick={() => onSearchChange("")} className="absolute right-3 top-1/2 -translate-y-1/2">

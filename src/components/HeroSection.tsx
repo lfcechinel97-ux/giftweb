@@ -78,12 +78,10 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="py-8 relative overflow-hidden" style={{ background: "linear-gradient(135deg, hsl(222,47%,7%) 0%, hsl(210,50%,13%) 100%)" }}>
-      <div className="absolute pointer-events-none" style={{ width: 600, height: 600, top: "50%", right: "-10%", transform: "translateY(-50%)", background: "radial-gradient(circle, rgba(34,197,94,0.06) 0%, transparent 70%)", filter: "blur(120px)" }} />
-
+    <section className="py-8 relative overflow-hidden bg-background">
       <div className="container flex flex-col lg:flex-row relative z-10" style={{ minHeight: 270 }}>
         {/* Filter panel */}
-        <div className="lg:w-[36%] bg-card rounded-[20px] border border-border p-10 flex flex-col gap-5 shrink-0" style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.5)" }}>
+        <div className="lg:w-[36%] bg-card rounded-[20px] border border-border p-10 flex flex-col gap-5 shrink-0" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
           <h2 className="font-black text-[38px] leading-tight text-foreground" style={{ maxWidth: "100%" }}>
             Explore nosso catálogo de<br />
             <span className="text-highlight">brindes:</span>
@@ -93,7 +91,7 @@ const HeroSection = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full appearance-none rounded-[10px] border border-border bg-background py-3 pl-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40"
+              className="w-full appearance-none rounded-[10px] border border-border bg-card py-3 pl-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40 focus:border-green-cta"
             >
               <option value="">Escolha a categoria de brinde</option>
               {categories.map((c) => <option key={c.route} value={c.route}>{c.label}</option>)}
@@ -111,8 +109,8 @@ const HeroSection = () => {
               <input type="range" min={0} max={500} value={priceMax} onChange={(e) => setPriceMax(Math.max(Number(e.target.value), priceMin))} className="w-full" />
             </div>
             <div className="flex gap-3 mt-2">
-              <input type="text" inputMode="numeric" value={priceMin} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMin(Math.min(v, priceMax)); }} className="w-full rounded-[10px] border border-border bg-background py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40" />
-              <input type="text" inputMode="numeric" value={priceMax} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMax(Math.max(v, priceMin)); }} className="w-full rounded-[10px] border border-border bg-background py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40" />
+              <input type="text" inputMode="numeric" value={priceMin} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMin(Math.min(v, priceMax)); }} className="w-full rounded-[10px] border border-border bg-card py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40 focus:border-green-cta" />
+              <input type="text" inputMode="numeric" value={priceMax} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMax(Math.max(v, priceMin)); }} className="w-full rounded-[10px] border border-border bg-card py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40 focus:border-green-cta" />
             </div>
           </div>
 
@@ -128,13 +126,13 @@ const HeroSection = () => {
                     className="w-10 h-10 rounded-full border-2 transition-all duration-200"
                     style={{
                       backgroundColor: c.bg,
-                      borderColor: selectedColor === i ? "hsl(142,71%,45%)" : "hsl(210,25%,17%)",
+                      borderColor: selectedColor === i ? "hsl(142,71%,45%)" : "hsl(220,13%,91%)",
                       boxShadow: selectedColor === i ? "0 0 0 3px rgba(34,197,94,0.25)" : "none",
                       transform: selectedColor === i ? "scale(1.1)" : "scale(1)",
                     }}
                   />
                   {hoveredColor === i && (
-                    <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground whitespace-nowrap z-30 pointer-events-none">
+                    <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-card border border-border rounded-md px-2 py-1 text-xs text-foreground whitespace-nowrap z-30 pointer-events-none shadow-sm">
                       {c.name}
                     </div>
                   )}
@@ -161,23 +159,23 @@ const HeroSection = () => {
               <img src={heroBanner} alt="Brindes corporativos personalizados" className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(11,15,26,0.85) 0%, rgba(11,15,26,0.3) 100%)" }} />
               <div className="relative z-10 flex items-center h-full p-8 md:p-14">
-                <h2 className="text-foreground font-black text-[36px] md:text-[52px] leading-tight max-w-xl" style={{ opacity: i === currentSlide ? 1 : 0, transform: i === currentSlide ? "translateY(0)" : "translateY(20px)", transition: "opacity 0.8s ease-out 0.4s, transform 0.8s ease-out 0.4s" }}>
+                <h2 className="text-white font-black text-[36px] md:text-[52px] leading-tight max-w-xl" style={{ opacity: i === currentSlide ? 1 : 0, transform: i === currentSlide ? "translateY(0)" : "translateY(20px)", transition: "opacity 0.8s ease-out 0.4s, transform 0.8s ease-out 0.4s" }}>
                   {slide.text} <span className="text-highlight">{slide.highlight}</span>
                 </h2>
               </div>
             </div>
           ))}
 
-          <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-border flex items-center justify-center text-foreground transition-all duration-200 hover:bg-green-cta hover:border-green-cta" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white transition-all duration-200 hover:bg-green-cta hover:border-green-cta" style={{ background: "rgba(255,255,255,0.08)" }}>
             <ChevronLeft size={22} />
           </button>
-          <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-border flex items-center justify-center text-foreground transition-all duration-200 hover:bg-green-cta hover:border-green-cta" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white transition-all duration-200 hover:bg-green-cta hover:border-green-cta" style={{ background: "rgba(255,255,255,0.08)" }}>
             <ChevronRight size={22} />
           </button>
 
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
             {slides.map((_, i) => (
-              <button key={i} onClick={() => setCurrentSlide(i)} className={`w-3 h-3 rounded-full transition-all duration-300 ${i === currentSlide ? "bg-green-cta w-6" : "bg-border hover:bg-muted-foreground"}`} />
+              <button key={i} onClick={() => setCurrentSlide(i)} className={`w-3 h-3 rounded-full transition-all duration-300 ${i === currentSlide ? "bg-green-cta w-6" : "bg-white/40 hover:bg-white/60"}`} />
             ))}
           </div>
         </div>

@@ -13,9 +13,9 @@ const links = [
 ];
 
 const SeoLinksSection = () => (
-  <section className="py-12" style={{ background: "hsl(220, 45%, 5%)" }}>
+  <section className="py-12" style={{ background: "hsl(222,47%,7%)" }}>
     <div className="container">
-      <h2 className="font-extrabold text-[24px] text-foreground mb-8">
+      <h2 className="font-extrabold text-[24px] text-white mb-8">
         Categorias <span className="text-highlight italic">populares</span>
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -25,11 +25,11 @@ const SeoLinksSection = () => (
             <Link
               key={item.href}
               to={item.href}
-              className="flex items-center gap-3 bg-card border border-border rounded-xl px-5 py-4 group transition-all duration-200 hover:border-green-cta"
+              className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-5 py-4 group transition-all duration-200 hover:border-green-cta"
             >
-              <Icon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-              <span className="text-foreground font-semibold text-[15px] flex-1">{item.label}</span>
-              <ArrowRight className="w-4 h-4 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1 group-hover:text-green-cta flex-shrink-0" />
+              <Icon className="w-5 h-5 text-white/50 flex-shrink-0" />
+              <span className="text-white font-semibold text-[15px] flex-1">{item.label}</span>
+              <ArrowRight className="w-4 h-4 text-white/40 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-green-cta flex-shrink-0" />
             </Link>
           );
         })}

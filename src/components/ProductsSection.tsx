@@ -7,10 +7,10 @@ interface ProductCardProps {
 
 const ProductCard = ({ name, color, price, badge }: ProductCardProps) => (
   <div
-    className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-250 hover:-translate-y-1 hover:border-green-cta"
-    style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}
-    onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 8px 40px rgba(34,197,94,0.12)")}
-    onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 4px 24px rgba(0,0,0,0.4)")}
+    className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-200 hover:-translate-y-1 hover:border-green-cta"
+    style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
+    onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.10)")}
+    onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)")}
   >
     <div className="relative aspect-square bg-secondary flex items-center justify-center">
       <span className="text-muted-foreground text-sm">Imagem do produto</span>

@@ -21,7 +21,7 @@ const ClientsSection = () => {
   const { ref, inView } = useInView();
 
   return (
-    <section className="py-8 bg-surface-alt border-t border-b border-border">
+    <section className="py-8 bg-background border-t border-border">
       <div
         ref={ref}
         className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
@@ -43,7 +43,7 @@ const ClientsSection = () => {
                 <img
                   src={company.logo}
                   alt={company.name}
-                  className="max-h-full max-w-full object-contain brightness-0 invert opacity-80"
+                  className="max-h-full max-w-full object-contain opacity-80"
                   loading="lazy"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;

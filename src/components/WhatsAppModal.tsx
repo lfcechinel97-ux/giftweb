@@ -72,14 +72,14 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
   if (!open) return null;
 
   const inputClass = (field: string) =>
-    `rounded-xl border ${errors[field] ? "border-destructive ring-2 ring-destructive/30" : "border-border"} bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40`;
+    `rounded-xl border ${errors[field] ? "border-destructive ring-2 ring-destructive/30" : "border-border"} bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40 focus:border-green-cta`;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
         className="relative w-full max-w-md rounded-2xl bg-card border border-border p-6 animate-scale-in overflow-y-auto max-h-[90vh]"
-        style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }}
+        style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}
       >
         <button
           onClick={onClose}

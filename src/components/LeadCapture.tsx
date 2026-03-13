@@ -29,12 +29,12 @@ const LeadCapture = () => {
   };
 
   return (
-    <section className="py-12" style={{ background: "linear-gradient(135deg, hsl(222,47%,7%) 0%, hsl(210,50%,13%) 100%)" }}>
+    <section className="py-12" style={{ background: "hsl(222,47%,7%)" }}>
       <div className="container max-w-2xl text-center">
-        <h2 className="text-foreground mb-2">
+        <h2 className="text-white mb-2">
           Ganhe 5% de <span className="text-highlight">desconto</span> na primeira compra
         </h2>
-        <p className="text-muted-foreground mb-8">Cadastre-se e receba ofertas exclusivas</p>
+        <p className="text-white/60 mb-8">Cadastre-se e receba ofertas exclusivas</p>
 
         {status === "success" ? (
           <p className="text-green-cta font-bold text-lg">Cadastro realizado! Seu desconto foi enviado. ✅</p>
@@ -45,7 +45,7 @@ const LeadCapture = () => {
               placeholder="Seu nome"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="rounded-[10px] bg-card border border-border text-foreground placeholder:text-text-meta px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/60 transition-all duration-200"
+              className="rounded-[10px] bg-white/5 border border-white/10 text-white placeholder:text-white/40 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/60 transition-all duration-200"
             />
             <input
               type="email"
@@ -53,14 +53,14 @@ const LeadCapture = () => {
               required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="rounded-[10px] bg-card border border-border text-foreground placeholder:text-text-meta px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/60 transition-all duration-200"
+              className="rounded-[10px] bg-white/5 border border-white/10 text-white placeholder:text-white/40 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/60 transition-all duration-200"
             />
             <input
               type="text"
               placeholder="Empresa (opcional)"
               value={form.company}
               onChange={(e) => setForm({ ...form, company: e.target.value })}
-              className="rounded-[10px] bg-card border border-border text-foreground placeholder:text-text-meta px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/60 transition-all duration-200"
+              className="rounded-[10px] bg-white/5 border border-white/10 text-white placeholder:text-white/40 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-cta/60 transition-all duration-200"
             />
             <button
               type="submit"
@@ -70,8 +70,8 @@ const LeadCapture = () => {
             >
               {status === "loading" ? "Enviando..." : "Cadastrar"}
             </button>
-            {status === "duplicate" && <p className="text-muted-foreground text-sm sm:col-span-2">Este e-mail já está cadastrado.</p>}
-            {status === "error" && <p className="text-destructive text-sm sm:col-span-2">Erro ao cadastrar. Tente novamente.</p>}
+            {status === "duplicate" && <p className="text-white/60 text-sm sm:col-span-2">Este e-mail já está cadastrado.</p>}
+            {status === "error" && <p className="text-red-400 text-sm sm:col-span-2">Erro ao cadastrar. Tente novamente.</p>}
           </form>
         )}
       </div>

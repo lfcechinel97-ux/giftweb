@@ -34,7 +34,7 @@ const BenefitsBar = () => {
   };
 
   return (
-    <section className="bg-surface-alt border-t border-b border-border" style={{ padding: "28px 0" }}>
+    <section className="bg-card border-t border-b border-border" style={{ padding: "28px 0" }}>
       <div className="container">
         {/* Desktop */}
         <div className="hidden lg:grid grid-cols-5 gap-4">
