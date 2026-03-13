@@ -55,15 +55,25 @@ const MOCK_PRODUCTS = [
   },
 ];
 
+function getCodigoPrefixo(codigo: string): string {
+  if (codigo.includes('/')) return codigo.split('/')[0];
+  const partes = codigo.split('-');
+  if (partes.length >= 2) {
+    const sufixo = partes[partes.length - 1];
+    if (/^[A-Za-z]{1,4}[0-9]?$/.test(sufixo)) return partes.slice(0, -1).join('-');
+  }
+  return codigo;
+}
+
 function getCategoria(nome: string): string {
   const n = nome.toUpperCase();
-  if (n.includes("CANECA") || n.includes("COPO") || n.includes("TACA") || n.includes("TAÇA")) return "copos";
-  if (n.includes("GARRAFA") || n.includes("SQUEEZE") || n.includes("TERMICA")) return "garrafas";
-  if (n.includes("MOCHILA")) return "mochilas";
-  if (n.includes("BOLSA") || n.includes("SACOLA")) return "bolsas";
-  if (n.includes("CANETA") || n.includes("BLOCO") || n.includes("CADERNO") || n.includes("AGENDA")) return "escritorio";
-  if (n.includes("KIT")) return "kits";
-  return "outros";
+  if (n.includes('CANECA') || n.includes('COPO') || n.includes('TACA') || n.includes('TAÇA')) return 'copos';
+  if (n.includes('GARRAFA') || n.includes('SQUEEZE') || n.includes('TERMICA')) return 'garrafas';
+  if (n.includes('MOCHILA')) return 'mochilas';
+  if (n.includes('BOLSA') || n.includes('SACOLA')) return 'bolsas';
+  if (n.includes('CANETA') || n.includes('BLOCO') || n.includes('CADERNO') || n.includes('AGENDA')) return 'escritorio';
+  if (n.includes('KIT')) return 'kits';
+  return 'outros';
 }
 
 function getSlug(nome: string, codigo: string): string {
