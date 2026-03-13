@@ -17,32 +17,44 @@ export interface ProductCache {
   variantes_count?: number | null;
 }
 
-const BEST_SELLER_CATEGORIES = ["copos", "garrafas", "mochilas", "bolsas", "escritorio", "kits", "outros"];
+// Produtos específicos definidos manualmente para a seção "Mais procurados"
+const FEATURED_PRODUCT_CODES = [
+  "06033-VD",
+  "18949M-VM",
+  "18645L-VD",
+  "01320-VM",
+  "18537P-VD",
+  "08103-VM",
+  "14091-VD",
+  "9139I-VD",
+];
 
-async function fetchBestSellers(): Promise<ProductCache[]> {
-  const results = await Promise.all(
-    BEST_SELLER_CATEGORIES.map((cat) =>
-      supabase
-        .from("products_cache")
-        .select("id,nome,slug,image_url,cor,preco_custo,categoria,estoque,codigo_amigavel,descricao,variantes,variantes_count")
-        .eq("ativo", true)
-        .eq("has_image", true)
-        .eq("is_variante", false)
-        .eq("categoria", cat)
-        .gt("estoque", 0)
-        .order("variantes_count", { ascending: false })
-        .order("estoque", { ascending: false })
-        .limit(1)
-    )
-  );
-  return results.flatMap((r) => (r.data || []) as ProductCache[]);
+async function fetchFeaturedProducts(): Promise<ProductCache[]> {
+  const { data, error } = await supabase
+    .from("products_cache")
+    .select("id,nome,slug,image_url,cor,preco_custo,categoria,estoque,codigo_amigavel,descricao,variantes,variantes_count")
+    .in("codigo_amigavel", FEATURED_PRODUCT_CODES)
+    .eq("is_variante", false)
+    .eq("ativo", true)
+    .eq("has_image", true);
+
+  if (error) {
+    console.error("Erro ao buscar produtos em destaque:", error);
+    return [];
+  }
+
+  // Ordenar os produtos na ordem exata definida em FEATURED_PRODUCT_CODES
+  const productMap = new Map((data || []).map((p) => [p.codigo_amigavel, p]));
+  return FEATURED_PRODUCT_CODES
+    .map((code) => productMap.get(code))
+    .filter((p) => p !== undefined) as ProductCache[];
 }
 
 async function fetchHomepageData() {
   const randomOffset = Math.floor(Math.random() * 100);
 
   const [maisVendidos, destaques, categorias, squeezesCount, baratosCount] = await Promise.all([
-    fetchBestSellers(),
+    fetchFeaturedProducts(),
 
     supabase
       .from("products_cache")
