@@ -201,6 +201,7 @@ serve(async (req) => {
         ultima_sync: agora,
         is_variante: isVariante.has(chave),
         produto_pai: null,
+        codigo_prefixo: p.CodigoAmigavel ?? p.codigoAmigavel ?? chave,
       };
     });
     console.log("[SYNC] Stage 3 OK -", registros.length, "registros");
