@@ -13,7 +13,7 @@ import ProductCard, { ProductCardSkeleton } from "@/components/ProductCard";
 import HowItWorks from "@/components/HowItWorks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Clock, Minus, Plus, ZoomIn, X, MessageCircle, Ruler, Weight, ArrowUpDown, MoveHorizontal } from "lucide-react";
+import { Clock, Minus, Plus, ZoomIn, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, Truck, Palette, Building2, CreditCard } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products_cache">;
@@ -364,11 +364,15 @@ const ProductDetail = () => {
 
                 {/* Stock badge */}
                 {displayEstoque != null && displayEstoque > 0 ? (
-                  <span className="inline-flex items-center self-start px-3 py-1 rounded-full bg-green-cta/15 text-green-cta text-xs font-semibold">
+                  <span className="inline-flex items-center self-start gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium"
+                    style={{ background: '#DCFCE7', color: '#15803D', border: '1px solid #BBF7D0' }}>
+                    <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#22C55E' }} />
                     Em estoque
                   </span>
                 ) : (
-                  <span className="inline-flex items-center self-start px-3 py-1 rounded-full bg-destructive/15 text-destructive text-xs font-semibold">
+                  <span className="inline-flex items-center self-start gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium"
+                    style={{ background: '#FEE2E2', color: '#B91C1C', border: '1px solid #FECACA' }}>
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#B91C1C' }} />
                     Indisponível
                   </span>
                 )}
@@ -388,7 +392,11 @@ const ProductDetail = () => {
                       <p className="text-muted-foreground text-[13px]">
                         ou 2x de {formatarBRL(parcela2x)} sem juros no cartão
                       </p>
-                      <p className="text-muted-foreground text-[13px] mt-1">Pedido mínimo: 20 unidades</p>
+                      <span className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-md text-[13px] font-medium"
+                        style={{ background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE' }}>
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                        Pedido mínimo: 20 unidades
+                      </span>
                     </div>
                   );
                 })()}
@@ -427,7 +435,21 @@ const ProductDetail = () => {
                   <p>✓ Entrega para todo o Brasil</p>
                 </div>
 
-                {/* Dimensions */}
+                {/* Trust bar */}
+                <div className="flex gap-3 py-3 my-2 border-t border-b border-border">
+                  <div className="flex-1 flex flex-col items-center gap-1">
+                    <Truck className="w-5 h-5 text-green-cta" />
+                    <span className="text-[11px] text-muted-foreground text-center">Entrega para<br/>todo o Brasil</span>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center gap-1">
+                    <Palette className="w-5 h-5 text-green-cta" />
+                    <span className="text-[11px] text-muted-foreground text-center">Arte grátis<br/>inclusa</span>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center gap-1">
+                    <Building2 className="w-5 h-5 text-green-cta" />
+                    <span className="text-[11px] text-muted-foreground text-center">+5 anos de<br/>mercado</span>
+                  </div>
+                </div>
                 {(product.altura || product.largura || product.profundidade || product.peso) && (
                   <div className="grid grid-cols-2 gap-2">
                     {product.altura != null && (
@@ -537,6 +559,25 @@ const ProductDetail = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Payment methods */}
+                <div className="flex gap-4 items-center p-3 rounded-[10px] bg-secondary mt-3">
+                  <div className="flex-1 flex flex-col items-center gap-1.5">
+                    <img src="/logos/pix.png" alt="PIX" className="h-6 w-auto object-contain" />
+                    <span className="text-[11px] text-foreground font-medium">PIX</span>
+                    <span className="text-[10px] text-muted-foreground">3% desconto</span>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center gap-1.5">
+                    <CreditCard className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-[11px] text-foreground font-medium">Cartão 2x</span>
+                    <span className="text-[10px] text-muted-foreground">sem juros</span>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center gap-1.5">
+                    <img src="/logos/boleto.png" alt="Boleto" className="h-6 w-auto object-contain" />
+                    <span className="text-[11px] text-foreground font-medium">Boleto</span>
+                    <span className="text-[10px] text-muted-foreground">para PJ</span>
+                  </div>
+                </div>
 
                 {/* Quantity selector */}
                 <div ref={qtySelectorRef} className="mt-4 p-4 rounded-xl bg-card border border-border">
