@@ -139,14 +139,13 @@ serve(async (req) => {
     console.log('[SYNC] Stage 3: Preparing records...')
     const agora = new Date().toISOString()
     const registros = Array.from(produtosMap.entries()).map(([chave, p]) => {
-      const codigoUnico = chaveParaCodigo.get(chave)!
-      const nome = p.Nome ?? p.nome ?? codigoUnico
+      const nome = p.Nome ?? p.nome ?? chave
       const imageUrls = getImageUrls(p)
       const imageLink = imageUrls[0] ?? ''
       const hasImage = !!(imageLink && !imageLink.includes('placehold.co'))
       return {
-        codigo_amigavel: codigoUnico,
-        slug: getSlug(nome, codigoUnico),
+        codigo_amigavel: chave,
+        slug: getSlug(nome, chave),
         nome,
         descricao: p.Descricao ?? p.descricao ?? null,
         image_url: imageLink || null,
@@ -165,7 +164,7 @@ serve(async (req) => {
         ativo: true,
         busca: getBusca(p),
         ultima_sync: agora,
-        is_variante: isVariante.has(codigoUnico),
+        is_variante: isVariante.has(chave),
         produto_pai: null,
       }
     })
