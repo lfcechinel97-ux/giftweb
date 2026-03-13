@@ -364,11 +364,15 @@ const ProductDetail = () => {
 
                 {/* Stock badge */}
                 {displayEstoque != null && displayEstoque > 0 ? (
-                  <span className="inline-flex items-center self-start px-3 py-1 rounded-full bg-green-cta/15 text-green-cta text-xs font-semibold">
+                  <span className="inline-flex items-center self-start gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium"
+                    style={{ background: '#DCFCE7', color: '#15803D', border: '1px solid #BBF7D0' }}>
+                    <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#22C55E' }} />
                     Em estoque
                   </span>
                 ) : (
-                  <span className="inline-flex items-center self-start px-3 py-1 rounded-full bg-destructive/15 text-destructive text-xs font-semibold">
+                  <span className="inline-flex items-center self-start gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium"
+                    style={{ background: '#FEE2E2', color: '#B91C1C', border: '1px solid #FECACA' }}>
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#B91C1C' }} />
                     Indisponível
                   </span>
                 )}
