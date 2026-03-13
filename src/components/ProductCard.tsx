@@ -47,6 +47,9 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
   const href = slug ? `/produto/${slug}` : `/produto/${codigo_amigavel}`;
 
   const hasVariants = variantes && variantes.length > 0;
+  const allColorOptions = hasVariants
+    ? [{ slug: slug || codigo_amigavel, cor: cor || '', image: image_url || '', estoque: estoque ?? 0, codigo_amigavel }, ...variantes]
+    : [];
   const isOutOfStock = !hasVariants && (estoque === 0 || estoque === null);
 
   return (
