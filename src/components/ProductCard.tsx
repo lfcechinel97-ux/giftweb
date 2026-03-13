@@ -3,6 +3,8 @@ import { calcularPreco, formatarBRL } from "@/utils/price";
 import { getCorHex, isLightColor } from "@/utils/colorHex";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 
 interface VariantJson {
   slug: string;
@@ -21,6 +23,7 @@ interface ProductCardProps {
   preco_custo: number | null;
   codigo_amigavel: string;
   variantes?: VariantJson[] | null;
+  estoque?: number | null;
 }
 
 export const ProductCardSkeleton = () => (
@@ -35,15 +38,16 @@ export const ProductCardSkeleton = () => (
   </div>
 );
 
-const MAX_DOTS = 4;
+const MAX_DOTS = 8;
 
-const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel, variantes }: ProductCardProps) => {
+const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel, variantes, estoque }: ProductCardProps) => {
   const navigate = useNavigate();
   const precoMin = preco_custo ? calcularPreco(preco_custo, 1000) : null;
   const preco20 = preco_custo ? calcularPreco(preco_custo, 20) : null;
   const href = slug ? `/produto/${slug}` : `/produto/${codigo_amigavel}`;
 
   const hasVariants = variantes && variantes.length > 0;
+  const isOutOfStock = !hasVariants && (estoque === 0 || estoque === null);
 
   return (
     <div className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-250 hover:-translate-y-1 hover:border-green-cta" style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}>
@@ -62,6 +66,11 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
               <span className="text-muted-foreground text-sm">Sem imagem</span>
             </div>
           )}
+          {isOutOfStock && (
+            <Badge className="absolute top-2 left-2 bg-muted text-muted-foreground border-border text-[11px] pointer-events-none">
+              Fora de Estoque
+            </Badge>
+          )}
         </div>
       </Link>
       <div className="p-4 flex flex-col gap-1.5">
@@ -72,10 +81,11 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
         {/* Color variants dots from jsonb */}
         {hasVariants && (
           <TooltipProvider delayDuration={200}>
-            <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
               {variantes.slice(0, MAX_DOTS).map((v, i) => {
                 const hex = getCorHex(v.cor);
                 const needsBorder = isLightColor(hex);
+                const outOfStock = v.estoque === 0 || v.estoque == null;
                 return (
                   <Tooltip key={v.codigo_amigavel || i}>
                     <TooltipTrigger asChild>
@@ -85,16 +95,22 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
                           e.stopPropagation();
                           navigate(v.slug ? `/produto/${v.slug}` : `/produto/${v.codigo_amigavel}`);
                         }}
-                        className="block rounded-full transition-all cursor-pointer"
+                        className="relative block rounded-full transition-all cursor-pointer"
                         style={{
                           width: 14,
                           height: 14,
                           backgroundColor: hex,
                           border: needsBorder ? '1px solid hsl(var(--border))' : 'none',
                         }}
-                      />
+                      >
+                        {outOfStock && (
+                          <X className="absolute -top-0.5 -right-0.5 text-destructive" style={{ width: 10, height: 10, strokeWidth: 3 }} />
+                        )}
+                      </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">{v.cor || 'Cor'}</TooltipContent>
+                    <TooltipContent side="top" className="text-xs">
+                      {v.cor || 'Cor'}{outOfStock ? ' (sem estoque)' : ''}
+                    </TooltipContent>
                   </Tooltip>
                 );
               })}

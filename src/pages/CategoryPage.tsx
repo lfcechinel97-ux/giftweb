@@ -25,6 +25,15 @@ const CATEGORIES: Record<string, string> = {
   kits: "Kits",
 };
 
+const CATEGORY_NAME_FILTERS: Record<string, string> = {
+  garrafas: "nome.ilike.GARRAFA%",
+  copos: "nome.ilike.COPO%,nome.ilike.CANECA%",
+  mochilas: "nome.ilike.MOCHILA%",
+  bolsas: "nome.ilike.BOLSA%,nome.ilike.SACOLA%",
+  escritorio: "nome.ilike.CANETA%,nome.ilike.BLOCO%,nome.ilike.CADERNO%,nome.ilike.AGENDA%",
+  kits: "nome.ilike.KIT%",
+};
+
 interface CategoryPageProps {
   category: string;
 }
@@ -44,6 +53,7 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
 
   const categoryLabel = CATEGORIES[category] || category;
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const nameFilter = CATEGORY_NAME_FILTERS[category] || "";
 
   useEffect(() => {
     if (urlCor) setSelectedCor(urlCor);
@@ -57,10 +67,11 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
     let query = supabase
       .from("products_cache")
       .select("*", { count: "exact" })
-      .eq("categoria", category)
       .eq("ativo", true)
       .eq("has_image", true)
       .eq("is_variante", false);
+
+    if (nameFilter) query = query.or(nameFilter);
 
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
     if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
@@ -70,21 +81,24 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
     setProducts(data || []);
     setTotal(count || 0);
     setLoading(false);
-  }, [category, page, searchTerm, selectedCor, apenasEstoque]);
+  }, [category, page, searchTerm, selectedCor, apenasEstoque, nameFilter]);
 
   useEffect(() => {
-    supabase
+    let q = supabase
       .from("products_cache")
       .select("cor")
-      .eq("categoria", category)
       .eq("ativo", true)
       .eq("has_image", true)
-      .not("cor", "is", null)
-      .then(({ data }) => {
-        const unique = [...new Set((data || []).map((d) => d.cor).filter(Boolean))] as string[];
-        setCores(unique.sort());
-      });
-  }, [category]);
+      .eq("is_variante", false)
+      .not("cor", "is", null);
+
+    if (nameFilter) q = q.or(nameFilter);
+
+    q.then(({ data }) => {
+      const unique = [...new Set((data || []).map((d) => d.cor).filter(Boolean))] as string[];
+      setCores(unique.sort());
+    });
+  }, [category, nameFilter]);
 
   useEffect(() => {
     fetchProducts();
@@ -158,6 +172,7 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
                     preco_custo={p.preco_custo}
                     codigo_amigavel={p.codigo_amigavel}
                     variantes={p.variantes as any}
+                    estoque={p.estoque}
                   />
                 ))}
               </div>
