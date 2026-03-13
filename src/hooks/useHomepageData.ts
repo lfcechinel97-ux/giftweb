@@ -47,7 +47,7 @@ async function fetchFeaturedProducts(): Promise<ProductCache[]> {
   const productMap = new Map((data || []).map((p) => [p.codigo_amigavel, p]));
   return FEATURED_PRODUCT_CODES
     .map((code) => productMap.get(code))
-    .filter((p): p is ProductCache => p !== undefined);
+    .filter((p) => p !== undefined) as ProductCache[];
 }
 
 async function fetchHomepageData() {
