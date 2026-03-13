@@ -520,6 +520,7 @@ const ProductDetail = () => {
                       cor={p.cor}
                       preco_custo={p.preco_custo}
                       codigo_amigavel={p.codigo_amigavel}
+                      variantes={p.variantes as any}
                     />
                   ))}
                 </div>
