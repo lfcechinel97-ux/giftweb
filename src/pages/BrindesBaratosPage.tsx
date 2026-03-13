@@ -51,7 +51,7 @@ const BrindesBaratosPage = () => {
     if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
     if (apenasEstoque) query = query.gt("estoque", 0);
 
-    const { data, count } = await query.order("estoque", { ascending: false, nullsFirst: false }).order("preco_custo", { ascending: true }).range(from, to);
+    const { data, count } = await query.order("sort_estoque").order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false }).range(from, to);
     setProducts(data || []);
     setTotal(count || 0);
     setLoading(false);

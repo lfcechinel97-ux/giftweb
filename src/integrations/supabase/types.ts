@@ -64,9 +64,11 @@ export type Database = {
           profundidade: number | null
           site_link: string | null
           slug: string | null
+          sort_estoque: number | null
           ultima_sync: string | null
           updated_at: string | null
           variantes: Json | null
+          variantes_count: number | null
         }
         Insert: {
           altura?: number | null
@@ -93,9 +95,11 @@ export type Database = {
           profundidade?: number | null
           site_link?: string | null
           slug?: string | null
+          sort_estoque?: number | null
           ultima_sync?: string | null
           updated_at?: string | null
           variantes?: Json | null
+          variantes_count?: number | null
         }
         Update: {
           altura?: number | null
@@ -122,9 +126,11 @@ export type Database = {
           profundidade?: number | null
           site_link?: string | null
           slug?: string | null
+          sort_estoque?: number | null
           ultima_sync?: string | null
           updated_at?: string | null
           variantes?: Json | null
+          variantes_count?: number | null
         }
         Relationships: []
       }

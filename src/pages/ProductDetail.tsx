@@ -95,6 +95,8 @@ const ProductDetail = () => {
             .eq("is_variante", false)
             .gt("estoque", 0)
             .neq("slug", slug)
+            .order("variantes_count", { ascending: false })
+            .order("estoque", { ascending: false })
             .limit(4),
         ]);
 

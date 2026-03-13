@@ -25,6 +25,7 @@ async function fetchHomepageData() {
       .eq("has_image", true)
       .eq("is_variante", false)
       .gt("estoque", 0)
+      .order("variantes_count", { ascending: false })
       .order("estoque", { ascending: false })
       .limit(8),
 
