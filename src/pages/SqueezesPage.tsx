@@ -44,7 +44,7 @@ const SqueezesPage = () => {
       .eq("ativo", true)
       .eq("has_image", true)
       .eq("is_variante", false)
-      .or("nome.ilike.%SQUEEZE%,descricao.ilike.%SQUEEZE%");
+      .ilike("nome", "SQUEEZE%");
 
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
     if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
@@ -62,7 +62,8 @@ const SqueezesPage = () => {
       .select("cor")
       .eq("ativo", true)
       .eq("has_image", true)
-      .or("nome.ilike.%SQUEEZE%,descricao.ilike.%SQUEEZE%")
+      .eq("is_variante", false)
+      .ilike("nome", "SQUEEZE%")
       .not("cor", "is", null)
       .then(({ data }) => {
         const unique = [...new Set((data || []).map((d) => d.cor).filter(Boolean))] as string[];
@@ -112,7 +113,7 @@ const SqueezesPage = () => {
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {products.map((p) => (
-                  <ProductCard key={p.id} id={p.id} nome={p.nome} slug={p.slug} image_url={p.image_url} cor={p.cor} preco_custo={p.preco_custo} codigo_amigavel={p.codigo_amigavel} variantes={p.variantes as any} />
+                  <ProductCard key={p.id} id={p.id} nome={p.nome} slug={p.slug} image_url={p.image_url} cor={p.cor} preco_custo={p.preco_custo} codigo_amigavel={p.codigo_amigavel} variantes={p.variantes as any} estoque={p.estoque} />
                 ))}
               </div>
             )}
