@@ -81,10 +81,13 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
           <h4 className="font-bold text-foreground text-[15px] leading-tight line-clamp-2">{nome}</h4>
         </Link>
 
-        {/* Color variants dots */}
-        {allColorOptions.length > 0 && (
+        {/* Color variants */}
+        {allColorOptions.length === 1 && (
+          <span className="text-xs text-muted-foreground mt-0.5">Cor: {allColorOptions[0].cor || '—'}</span>
+        )}
+        {allColorOptions.length > 1 && (
           <TooltipProvider delayDuration={200}>
-            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            <div className="flex items-center mt-0.5" style={{ gap: 6 }}>
               {allColorOptions.slice(0, MAX_DOTS).map((v, i) => {
                 const hex = getCorHex(v.cor);
                 const needsBorder = isLightColor(hex);
@@ -98,10 +101,10 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
                           e.stopPropagation();
                           navigate(v.slug ? `/produto/${v.slug}` : `/produto/${v.codigo_amigavel}`);
                         }}
-                        className="relative block rounded-full transition-all cursor-pointer"
+                        className="relative inline-block rounded-full cursor-pointer"
                         style={{
-                          width: 14,
-                          height: 14,
+                          width: 12,
+                          height: 12,
                           backgroundColor: hex,
                           border: needsBorder ? '1px solid hsl(var(--border))' : 'none',
                         }}
@@ -120,7 +123,6 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
               {allColorOptions.length > MAX_DOTS && (
                 <span className="text-[11px] text-muted-foreground">+{allColorOptions.length - MAX_DOTS}</span>
               )}
-              <span className="text-[12px] text-muted-foreground ml-1">{allColorOptions.length} cores</span>
             </div>
           </TooltipProvider>
         )}
