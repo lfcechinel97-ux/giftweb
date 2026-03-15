@@ -127,7 +127,7 @@ const BestSellersSection = ({ products, loading }: Props) => {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {loading
-            ? Array.from({ length: 7 }).map((_, i) => (
+            ? Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="rounded-[16px] bg-card border border-border p-3">
                   <Skeleton className="aspect-square rounded-xl w-full mb-3" />
                   <Skeleton className="h-4 w-3/4 mb-1" />
