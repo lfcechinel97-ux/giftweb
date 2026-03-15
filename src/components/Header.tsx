@@ -34,7 +34,7 @@ const Header = () => {
     }
   };
 
-  const phoneFormatted = "(48) 99652-5312";
+  const phoneFormatted = "(48) 99665-2844";
 
   return (
     <header className="sticky top-0 z-50">
