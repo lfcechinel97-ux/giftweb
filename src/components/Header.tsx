@@ -147,7 +147,7 @@ const Header = () => {
               </a>
 
               <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-[10px] bg-green-cta px-4 py-2.5 text-sm font-bold text-primary-foreground" style={{ boxShadow: "0 0 20px rgba(34,197,94,0.3)" }}>
-                <MessageCircle size={16} />
+                <img src="/logos/whatsapp-white.svg" alt="WhatsApp" className="w-4 h-4" />
                 {phoneFormatted}
               </a>
             </div>
