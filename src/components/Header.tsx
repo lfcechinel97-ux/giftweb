@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, X, Search, MessageCircle } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { WHATSAPP_NUMBER } from "@/config/site";
 
