@@ -37,7 +37,7 @@ async function fetchFeaturedProducts(): Promise<ProductCache[]> {
   );
   return results
     .map(r => r.data)
-    .filter((p): p is ProductCache => p !== null);
+    .filter((p): p is NonNullable<typeof p> => p !== null) as ProductCache[];
 }
 
 async function fetchHomepageData() {
