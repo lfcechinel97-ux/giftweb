@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, X, Search, MessageCircle } from "lucide-react";
+import { Menu, X, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { WHATSAPP_NUMBER } from "@/config/site";
 
@@ -34,7 +34,7 @@ const Header = () => {
     }
   };
 
-  const phoneFormatted = "(48) 99652-5312";
+  const phoneFormatted = "(48) 99665-2844";
 
   return (
     <header className="sticky top-0 z-50">
@@ -85,7 +85,7 @@ const Header = () => {
             className="hidden sm:flex items-center gap-2 rounded-[10px] bg-green-cta px-5 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 transition-all duration-200 shrink-0"
             style={{ boxShadow: "0 0 20px rgba(34,197,94,0.3)" }}>
             
-            <MessageCircle size={16} />
+            <img src="/logos/whatsapp-white.svg" alt="WhatsApp" className="w-4 h-4" />
             {phoneFormatted}
           </a>
 
@@ -147,7 +147,7 @@ const Header = () => {
               </a>
 
               <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-[10px] bg-green-cta px-4 py-2.5 text-sm font-bold text-primary-foreground" style={{ boxShadow: "0 0 20px rgba(34,197,94,0.3)" }}>
-                <MessageCircle size={16} />
+                <img src="/logos/whatsapp-white.svg" alt="WhatsApp" className="w-4 h-4" />
                 {phoneFormatted}
               </a>
             </div>
