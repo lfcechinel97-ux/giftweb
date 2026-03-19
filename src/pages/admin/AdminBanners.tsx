@@ -128,7 +128,7 @@ export default function AdminBanners() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
-                  Mobile <span className="text-xs">(390×300px)</span>
+                  Mobile <span className="text-xs">(305×258px)</span>
                 </span>
                 <Button
                   size="sm"
