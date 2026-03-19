@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { useInView } from "@/hooks/useInView";
+import { supabase } from "@/integrations/supabase/client";
 
-const companies = [
+const defaultLogos = [
   { name: "Petrobras", logo: "/logos/petrobras.png" },
   { name: "Ambev", logo: "/logos/ambev.png" },
   { name: "Natura", logo: "/logos/natura.png" },
@@ -15,10 +17,33 @@ const companies = [
   { name: "WEG", logo: "/logos/weg.png" },
 ];
 
-const looped = [...companies, ...companies];
+interface LogoItem {
+  src: string;
+  alt: string;
+}
 
 const ClientsSection = () => {
   const { ref, inView } = useInView();
+  const [logos, setLogos] = useState<LogoItem[]>(
+    defaultLogos.map(l => ({ src: l.logo, alt: l.name }))
+  );
+
+  useEffect(() => {
+    supabase
+      .from("site_content")
+      .select("id, value, label")
+      .eq("section", "clientes")
+      .order("id")
+      .then(({ data }) => {
+        if (!data) return;
+        const dbLogos = data
+          .filter(r => r.value)
+          .map(r => ({ src: r.value!, alt: r.label || "" }));
+        if (dbLogos.length > 0) setLogos(dbLogos);
+      });
+  }, []);
+
+  const looped = [...logos, ...logos];
 
   return (
     <section className="py-8 bg-background border-t border-border">
@@ -27,31 +52,46 @@ const ClientsSection = () => {
         className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
       >
         <h2 className="text-center text-foreground font-extrabold text-[32px] mb-2">
-          Grandes clientes que confiam na <span className="text-highlight">Gift Web</span>
+          Grandes clientes que confiam na{" "}
+          <span className="text-highlight">Gift Web</span>
         </h2>
         <p className="text-center text-muted-foreground mb-6">
           Marcas que escolheram qualidade e personalização
         </p>
 
-        <div className="overflow-hidden">
-          <div className="flex gap-10 animate-scroll-clients hover:[animation-play-state:paused] w-max items-center">
-            {looped.map((company, i) => (
-              <div
+        <div
+          className="overflow-hidden"
+          onMouseEnter={e => {
+            const track = e.currentTarget.querySelector<HTMLDivElement>(".logos-track");
+            if (track) track.style.animationPlayState = "paused";
+          }}
+          onMouseLeave={e => {
+            const track = e.currentTarget.querySelector<HTMLDivElement>(".logos-track");
+            if (track) track.style.animationPlayState = "running";
+          }}
+        >
+          <div
+            className="logos-track flex items-center w-max"
+            style={{
+              gap: "64px",
+              animation: "scroll-logos 20s linear infinite",
+            }}
+          >
+            {looped.map((logo, i) => (
+              <img
                 key={i}
-                className="w-[140px] h-[60px] rounded-lg bg-card border border-border flex items-center justify-center flex-shrink-0 grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-500 p-3"
-              >
-                <img
-                  src={company.logo}
-                  alt={company.name}
-                  className="max-h-full max-w-full object-contain opacity-80"
-                  loading="lazy"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = "none";
-                    target.parentElement!.innerHTML = `<span class="text-muted-foreground text-xs font-bold tracking-wide uppercase">${company.name}</span>`;
-                  }}
-                />
-              </div>
+                src={logo.src}
+                alt={logo.alt}
+                loading="lazy"
+                className="flex-shrink-0 object-contain transition-opacity duration-200"
+                style={{
+                  height: "60px",
+                  width: "auto",
+                  opacity: 0.85,
+                }}
+                onMouseEnter={e => { (e.target as HTMLImageElement).style.opacity = "1"; }}
+                onMouseLeave={e => { (e.target as HTMLImageElement).style.opacity = "0.85"; }}
+              />
             ))}
           </div>
         </div>
