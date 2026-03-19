@@ -89,6 +89,92 @@ export default function AdminBanners() {
         </p>
       </div>
 
+      {[1, 2, 3].map(slideIdx => {
+        const deskRow = getRow(`banner_${slideIdx}_desk`);
+        const mobRow = getRow(`banner_${slideIdx}_mob`);
+        const state = slides[slideIdx];
+        const deskSrc = state?.deskPreview || deskRow?.value || null;
+        const mobSrc = state?.mobPreview || mobRow?.value || null;
+
+        return (
+          <div key={slideIdx} className="rounded-xl border border-border bg-card p-6 space-y-4">
+            <h2 className="font-semibold text-lg text-foreground">Slide {slideIdx}</h2>
+
+            {/* Desktop */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Desktop <span className="text-xs">(853×608px)</span>
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileRefs.current[`${slideIdx}_desk`]?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-1" /> Upload
+                </Button>
+                <input
+                  ref={el => { fileRefs.current[`${slideIdx}_desk`] = el; }}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) handleFile(slideIdx, 'desk', f);
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+              <div className="rounded-lg border border-border bg-muted/30 overflow-hidden" style={{ aspectRatio: '853/608' }}>
+                {deskSrc ? (
+                  <img src={deskSrc} alt={`Banner ${slideIdx} desktop`} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+                    Nenhuma imagem
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Mobile */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Mobile <span className="text-xs">(305×258px)</span>
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileRefs.current[`${slideIdx}_mob`]?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-1" /> Upload
+                </Button>
+                <input
+                  ref={el => { fileRefs.current[`${slideIdx}_mob`] = el; }}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) handleFile(slideIdx, 'mob', f);
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+              <div className="rounded-lg border border-border bg-muted/30 overflow-hidden max-w-[300px]" style={{ aspectRatio: '305/258' }}>
+                {mobSrc ? (
+                  <img src={mobSrc} alt={`Banner ${slideIdx} mobile`} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+                    Nenhuma imagem
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
       {/* Banner faixa "Brindes que fortalecem sua marca" */}
       {(() => {
         const deskSrc = slides[10]?.deskPreview || getRow('banner_marca_desk')?.value || null;
