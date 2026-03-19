@@ -92,7 +92,7 @@ export default function AdminBanners() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
-                  Desktop <span className="text-xs">(1200×500px)</span>
+                  Desktop <span className="text-xs">(853×608px)</span>
                 </span>
                 <Button
                   size="sm"
@@ -113,7 +113,7 @@ export default function AdminBanners() {
                   }}
                 />
               </div>
-              <div className="rounded-lg border border-border bg-muted/30 overflow-hidden" style={{ aspectRatio: '1200/500' }}>
+              <div className="rounded-lg border border-border bg-muted/30 overflow-hidden" style={{ aspectRatio: '853/608' }}>
                 {deskSrc ? (
                   <img src={deskSrc} alt={`Banner ${slideIdx} desktop`} className="w-full h-full object-cover" />
                 ) : (
@@ -128,7 +128,7 @@ export default function AdminBanners() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
-                  Mobile <span className="text-xs">(390×300px)</span>
+                  Mobile <span className="text-xs">(305×258px)</span>
                 </span>
                 <Button
                   size="sm"
@@ -149,7 +149,7 @@ export default function AdminBanners() {
                   }}
                 />
               </div>
-              <div className="rounded-lg border border-border bg-muted/30 overflow-hidden max-w-[300px]" style={{ aspectRatio: '390/300' }}>
+              <div className="rounded-lg border border-border bg-muted/30 overflow-hidden max-w-[300px]" style={{ aspectRatio: '305/258' }}>
                 {mobSrc ? (
                   <img src={mobSrc} alt={`Banner ${slideIdx} mobile`} className="w-full h-full object-cover" />
                 ) : (
