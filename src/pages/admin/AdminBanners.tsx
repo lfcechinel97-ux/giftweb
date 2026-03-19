@@ -37,7 +37,6 @@ export default function AdminBanners() {
       for (const slideIdx of [1, 2, 3]) {
         const state = slides[slideIdx];
         if (!state) continue;
-
         if (state.deskFile) {
           const url = await uploadImage(`banner_${slideIdx}_desk`, state.deskFile);
           await updateValue(`banner_${slideIdx}_desk`, url);
@@ -45,6 +44,19 @@ export default function AdminBanners() {
         if (state.mobFile) {
           const url = await uploadImage(`banner_${slideIdx}_mob`, state.mobFile);
           await updateValue(`banner_${slideIdx}_mob`, url);
+        }
+      }
+
+      // Banner faixa
+      const marca = slides[10];
+      if (marca) {
+        if (marca.deskFile) {
+          const url = await uploadImage('banner_marca_desk', marca.deskFile);
+          await updateValue('banner_marca_desk', url);
+        }
+        if (marca.mobFile) {
+          const url = await uploadImage('banner_marca_mob', marca.mobFile);
+          await updateValue('banner_marca_mob', url);
         }
       }
 
