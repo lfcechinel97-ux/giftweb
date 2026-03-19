@@ -149,7 +149,7 @@ export default function AdminBanners() {
                   }}
                 />
               </div>
-              <div className="rounded-lg border border-border bg-muted/30 overflow-hidden max-w-[300px]" style={{ aspectRatio: '390/300' }}>
+              <div className="rounded-lg border border-border bg-muted/30 overflow-hidden max-w-[300px]" style={{ aspectRatio: '305/258' }}>
                 {mobSrc ? (
                   <img src={mobSrc} alt={`Banner ${slideIdx} mobile`} className="w-full h-full object-cover" />
                 ) : (
