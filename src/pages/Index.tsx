@@ -16,7 +16,7 @@ import SeoLinksSection from "@/components/SeoLinksSection";
 import { useHomepageData } from "@/hooks/useHomepageData";
 
 const Index = () => {
-  const { data, isLoading } = useHomepageData();
+  const { data } = useHomepageData();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
