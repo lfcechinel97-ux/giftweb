@@ -18,17 +18,13 @@ const defaultLogos = [
   { value: "/logos/weg.png" },
 ];
 
-const INTERVAL = 2500;
-const SLIDE_DURATION = 500;
-
 const ClientsSection = () => {
-  const { ref, inView } = useInView();
-  const isMobile = useIsMobile();
-  const VISIBLE = isMobile ? 3 : 5;
-
   const [logos, setLogos] = useState(defaultLogos);
   const [index, setIndex] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+  const VISIBLE = isMobile ? 3 : 5;
 
   useEffect(() => {
     supabase
@@ -46,76 +42,91 @@ const ClientsSection = () => {
   }, []);
 
   useEffect(() => {
-    const t = setInterval(() => {
-      if (trackRef.current) {
-        trackRef.current.style.transition = `transform ${SLIDE_DURATION}ms ease`;
-        trackRef.current.style.transform = "translateX(-100%)";
-      }
+    const interval = setInterval(() => {
+      if (!trackRef.current || !containerRef.current) return;
+      const totalWidth = containerRef.current.offsetWidth;
+      const singleItem = totalWidth / VISIBLE;
+
+      trackRef.current.style.transition = 'transform 600ms cubic-bezier(0.25, 0.1, 0.25, 1)';
+      trackRef.current.style.transform = `translateX(-${singleItem}px)`;
+
       setTimeout(() => {
         setIndex(prev => (prev + 1) % logos.length);
         if (trackRef.current) {
-          trackRef.current.style.transition = "none";
-          trackRef.current.style.transform = "translateX(0)";
+          trackRef.current.style.transition = 'none';
+          trackRef.current.style.transform = 'translateX(0)';
         }
-      }, SLIDE_DURATION);
-    }, INTERVAL);
-    return () => clearInterval(t);
-  }, [logos.length]);
+      }, 620);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [logos.length, VISIBLE]);
 
   const visible = Array.from({ length: VISIBLE + 1 }, (_, i) =>
     logos[(index + i) % logos.length]
   );
 
+  const itemWidth = `${100 / VISIBLE}%`;
+
   return (
-    <section className="py-8 bg-background border-t border-border">
-      <div
-        ref={ref}
-        className={`transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
-      >
-        <h2 className="text-center text-foreground font-extrabold text-[32px] mb-2">
-          Grandes clientes que confiam na{" "}
-          <span className="text-highlight">Gift Web</span>
+    <section style={{ padding: '40px 0', background: '#F8F9FA' }}>
+      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+        <h2 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 6px', color: '#111827' }}>
+          Grandes clientes que confiam na{' '}
+          <em style={{ fontStyle: 'italic', color: '#22C55E' }}>Gift Web</em>
         </h2>
-        <p className="text-center text-muted-foreground mb-6">
+        <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }}>
           Marcas que escolheram qualidade e personalização
         </p>
+      </div>
 
-        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px", overflow: "hidden" }}>
-          <div
-            ref={trackRef}
-            style={{
-              display: "grid",
-              gridTemplateColumns: `repeat(${VISIBLE + 1}, calc(100% / ${VISIBLE}))`,
-              gap: "0",
-              alignItems: "center",
-              transform: "translateX(0)",
-            }}
-          >
-            {visible.map((logo, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  padding: "0 16px",
-                }}
-              >
-                {logo?.value && (
-                  <img
-                    src={logo.value}
-                    alt={`Cliente ${i + 1}`}
-                    style={{
-                      height: "80px",
-                      width: "100%",
-                      maxWidth: "180px",
-                      objectFit: "contain",
-                    }}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
+      <div
+        ref={containerRef}
+        style={{
+          maxWidth: '1100px',
+          width: '100%',
+          margin: '0 auto',
+          padding: '0 24px',
+          overflow: 'hidden',
+          boxSizing: 'border-box' as const,
+        }}
+      >
+        <div
+          ref={trackRef}
+          style={{
+            display: 'flex',
+            flexDirection: 'row' as const,
+            transform: 'translateX(0)',
+            willChange: 'transform',
+          }}
+        >
+          {visible.map((logo, i) => (
+            <div
+              key={i}
+              style={{
+                flexShrink: 0,
+                width: itemWidth,
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '0 12px',
+                boxSizing: 'border-box' as const,
+              }}
+            >
+              {logo?.value && (
+                <img
+                  src={logo.value}
+                  alt={`Cliente ${i + 1}`}
+                  style={{
+                    height: '72px',
+                    width: '100%',
+                    objectFit: 'contain' as const,
+                    display: 'block',
+                  }}
+                />
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </section>
