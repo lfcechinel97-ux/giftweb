@@ -3,6 +3,7 @@ import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
 const swatchColors = [
   { bg: "#EF4444", name: "Vermelho" },
