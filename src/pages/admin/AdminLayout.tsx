@@ -9,7 +9,7 @@ const menuItems = [
   { icon: Layers, label: 'Categorias', path: '/admin/categorias' },
   { icon: CircleDot, label: 'Cat. Imagens', path: '/admin/categorias-imagens' },
   { icon: Image, label: '🖼 Banners', path: '/admin/banners' },
-  { icon: Star, label: 'Destaques', path: '/admin/destaques' },
+  { icon: Star, label: '⭐ Vitrine', path: '/admin/vitrine' },
 ];
 
 export default function AdminLayout() {
