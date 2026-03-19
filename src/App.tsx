@@ -18,6 +18,7 @@ import AdminLayout from "./pages/admin/AdminLayout.tsx";
 import AdminProducts from "./pages/admin/AdminProducts.tsx";
 import AdminProductEdit from "./pages/admin/AdminProductEdit.tsx";
 import AdminCategories from "./pages/AdminCategories.tsx";
+import AdminBanners from "./pages/admin/AdminBanners.tsx";
 import AdminGuard from "./components/admin/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
