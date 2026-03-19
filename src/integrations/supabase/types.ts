@@ -56,6 +56,45 @@ export type Database = {
         }
         Relationships: []
       }
+      product_spotlight_categories: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          id: string
+          position: number | null
+          product_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          id?: string
+          position?: number | null
+          product_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          id?: string
+          position?: number | null
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_spotlight_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "spotlight_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_spotlight_categories_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_cache"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products_cache: {
         Row: {
           altura: number | null
@@ -158,6 +197,39 @@ export type Database = {
           updated_at?: string | null
           variantes?: Json | null
           variantes_count?: number | null
+        }
+        Relationships: []
+      }
+      spotlight_categories: {
+        Row: {
+          active: boolean
+          category_type: string
+          created_at: string | null
+          description: string | null
+          id: string
+          label: string
+          position: number
+          slug: string
+        }
+        Insert: {
+          active?: boolean
+          category_type?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          label: string
+          position?: number
+          slug: string
+        }
+        Update: {
+          active?: boolean
+          category_type?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          label?: string
+          position?: number
+          slug?: string
         }
         Relationships: []
       }
