@@ -9,17 +9,6 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatarBRL } from '@/utils/price';
 
-const CATEGORIES = [
-  { value: '', label: 'Todas categorias' },
-  { value: 'garrafas', label: 'Garrafas' },
-  { value: 'copos', label: 'Copos' },
-  { value: 'mochilas', label: 'Mochilas' },
-  { value: 'bolsas', label: 'Bolsas' },
-  { value: 'kits', label: 'Kits' },
-  { value: 'escritorio', label: 'Escritório' },
-  { value: 'outros', label: 'Outros' },
-];
-
 const STATUS_FILTERS = [
   { value: 'all', label: 'Todos' },
   { value: 'active', label: 'Ativos' },
@@ -30,6 +19,19 @@ const STATUS_FILTERS = [
 const PAGE_SIZE = 20;
 
 async function fetchProducts(search: string, category: string, status: string, page: number) {
+  // If category selected, get linked product IDs from spotlight_products
+  let categoryProductIds: string[] | null = null;
+  if (category) {
+    const { data: linked } = await supabase
+      .from('spotlight_products')
+      .select('product_id')
+      .eq('category_slug', category);
+    categoryProductIds = linked?.map(l => l.product_id) ?? [];
+    if (categoryProductIds.length === 0) {
+      return { data: [], count: 0 };
+    }
+  }
+
   let query = supabase
     .from('products_cache')
     .select('id, nome, slug, image_url, codigo_amigavel, categoria, preco_custo, estoque, is_featured, is_hidden, variantes_count', { count: 'exact' })
@@ -38,7 +40,7 @@ async function fetchProducts(search: string, category: string, status: string, p
     .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
   if (search) query = query.ilike('nome', `%${search}%`);
-  if (category) query = query.eq('categoria', category);
+  if (categoryProductIds) query = query.in('id', categoryProductIds);
   if (status === 'featured') query = query.eq('is_featured', true);
   if (status === 'hidden') query = query.eq('is_hidden', true);
   if (status === 'active') query = query.eq('is_hidden', false);
@@ -54,8 +56,18 @@ export default function AdminProducts() {
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(0);
+  const [categories, setCategories] = useState<{slug: string, label: string}[]>([]);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase
+      .from('spotlight_categories')
+      .select('slug, label, position')
+      .eq('active', true)
+      .order('position', { ascending: true })
+      .then(({ data }) => setCategories(data ?? []));
+  }, []);
 
   // Debounce search
   useEffect(() => {
@@ -112,8 +124,9 @@ export default function AdminProducts() {
             <SelectValue placeholder="Todas categorias" />
           </SelectTrigger>
           <SelectContent>
-            {CATEGORIES.map((c) => (
-              <SelectItem key={c.value || 'all'} value={c.value || 'all'}>{c.label}</SelectItem>
+            <SelectItem value="all">Todas categorias</SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c.slug} value={c.slug}>{c.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>

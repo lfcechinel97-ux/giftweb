@@ -101,6 +101,7 @@ export type Database = {
           ativo: boolean | null
           busca: string | null
           categoria: string | null
+          categoria_manual: string | null
           codigo_amigavel: string
           codigo_prefixo: string | null
           cor: string | null
@@ -135,6 +136,7 @@ export type Database = {
           ativo?: boolean | null
           busca?: string | null
           categoria?: string | null
+          categoria_manual?: string | null
           codigo_amigavel: string
           codigo_prefixo?: string | null
           cor?: string | null
@@ -169,6 +171,7 @@ export type Database = {
           ativo?: boolean | null
           busca?: string | null
           categoria?: string | null
+          categoria_manual?: string | null
           codigo_amigavel?: string
           codigo_prefixo?: string | null
           cor?: string | null
@@ -230,6 +233,30 @@ export type Database = {
           label?: string
           position?: number
           slug?: string
+        }
+        Relationships: []
+      }
+      spotlight_products: {
+        Row: {
+          category_slug: string
+          created_at: string | null
+          id: number
+          position: number | null
+          product_id: string
+        }
+        Insert: {
+          category_slug: string
+          created_at?: string | null
+          id?: number
+          position?: number | null
+          product_id: string
+        }
+        Update: {
+          category_slug?: string
+          created_at?: string | null
+          id?: number
+          position?: number | null
+          product_id?: string
         }
         Relationships: []
       }
