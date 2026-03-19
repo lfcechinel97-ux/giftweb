@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { RefreshCw, Zap, Eye, Layers, Tag, Loader2 } from 'lucide-react';
+import { Zap, Eye, Layers, Tag, Loader2 } from 'lucide-react';
 
 export default function AdminCategories() {
   const queryClient = useQueryClient();
