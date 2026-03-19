@@ -85,7 +85,8 @@ const HeroSection = () => {
               className="w-full appearance-none rounded-[10px] border border-border bg-card py-3 pl-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40 focus:border-green-cta"
             >
               <option value="">Escolha a categoria de brinde</option>
-              {categories.map((c) => <option key={c.route} value={c.route}>{c.label}</option>)}
+              {categoriesLoading && <option disabled>Carregando...</option>}
+              {categories?.map((c) => <option key={c.slug} value={c.slug}>{c.label}</option>)}
             </select>
             <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-cta pointer-events-none" />
           </div>
