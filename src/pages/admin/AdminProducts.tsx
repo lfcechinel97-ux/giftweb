@@ -120,7 +120,7 @@ export default function AdminProducts() {
             className="pl-9"
           />
         </div>
-        <Select value={category} onValueChange={(v) => { setCategory(v === 'all' ? '' : v); setPage(0); }}>
+        <Select value={category || 'all'} onValueChange={(v) => { setCategory(v === 'all' ? '' : v); setPage(0); }}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Todas categorias" />
           </SelectTrigger>
