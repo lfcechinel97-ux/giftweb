@@ -11,6 +11,7 @@ const menuItems = [
   { icon: Image, label: '🖼 Banners', path: '/admin/banners' },
   { icon: Star, label: '⭐ Vitrine', path: '/admin/vitrine' },
   { icon: BookOpen, label: '📖 Catálogos', path: '/admin/catalogos' },
+  { icon: Users, label: '🏢 Clientes', path: '/admin/clientes' },
 ];
 
 export default function AdminLayout() {
