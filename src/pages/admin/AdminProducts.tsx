@@ -9,17 +9,6 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatarBRL } from '@/utils/price';
 
-const CATEGORIES = [
-  { value: '', label: 'Todas categorias' },
-  { value: 'garrafas', label: 'Garrafas' },
-  { value: 'copos', label: 'Copos' },
-  { value: 'mochilas', label: 'Mochilas' },
-  { value: 'bolsas', label: 'Bolsas' },
-  { value: 'kits', label: 'Kits' },
-  { value: 'escritorio', label: 'Escritório' },
-  { value: 'outros', label: 'Outros' },
-];
-
 const STATUS_FILTERS = [
   { value: 'all', label: 'Todos' },
   { value: 'active', label: 'Ativos' },
