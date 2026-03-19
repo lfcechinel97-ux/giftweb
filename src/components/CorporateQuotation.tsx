@@ -8,7 +8,7 @@ const CorporateQuotation = () => {
 
   return (
     <>
-      <section className="relative overflow-hidden bg-navy py-16 md:py-20">
+      <section className="relative overflow-hidden bg-navy py-8 md:py-10 px-6 md:px-12">
         {/* Radial green glow */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -28,32 +28,28 @@ const CorporateQuotation = () => {
 
         <div
           ref={ref}
-          className={`container relative z-10 flex flex-col md:flex-row items-center md:items-start md:justify-between gap-10 md:gap-16 transition-all duration-700 ${
+          className={`relative z-10 mx-auto max-w-[1100px] grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center transition-all duration-700 ${
             inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
           }`}
         >
           {/* Left — Content */}
-          <div className="flex flex-col items-center md:items-start text-center md:text-left max-w-xl">
-            {/* Support line */}
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <span className="text-green-cta text-xs font-semibold uppercase tracking-[0.15em] mb-4">
               Atendimento corporativo especializado
             </span>
 
-            {/* Title */}
             <h2 className="text-white font-extrabold text-[28px] md:text-[36px] leading-tight mb-4">
               Solicite uma cotação para sua empresa
             </h2>
 
-            {/* Subtitle */}
             <p className="text-white/60 text-sm md:text-base leading-relaxed mb-8 max-w-lg">
               Brindes personalizados com suporte comercial, produção sob demanda
               e atendimento para todo o Brasil
             </p>
 
-            {/* CTA Button */}
             <button
               onClick={() => setOpen(true)}
-              className="group flex items-center justify-center gap-3 rounded-2xl bg-green-cta px-8 md:px-10 py-4 md:py-5 font-bold text-primary-foreground text-sm md:text-base uppercase tracking-wide transition-all duration-300 hover:brightness-110 hover:scale-[1.02] w-full md:w-auto animate-[pulse-whatsapp_2.5s_ease-in-out_infinite]"
+              className="group flex items-center justify-center gap-3 rounded-2xl bg-green-cta px-8 md:px-10 py-4 md:py-5 font-bold text-primary-foreground text-sm md:text-base uppercase tracking-wide transition-all duration-300 hover:brightness-110 hover:scale-[1.02] w-full md:w-auto animate-[pulse-whatsapp_3.5s_ease-out_infinite]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -66,26 +62,17 @@ const CorporateQuotation = () => {
               Solicitar Cotação Corporativa
             </button>
 
-            {/* Online badge */}
             <div className="mt-5 flex items-center gap-2">
-              <span
-                className="w-2 h-2 rounded-full bg-green-cta animate-[blink_2s_ease-in-out_infinite]"
-              />
-              <span className="text-white/50 text-xs font-medium">
-                Online agora
-              </span>
+              <span className="w-2 h-2 rounded-full bg-green-cta animate-[blink_2s_ease-in-out_infinite]" />
+              <span className="text-white/50 text-xs font-medium">Online agora</span>
             </div>
           </div>
 
-          {/* Right — Decorative element (hidden on mobile) */}
-          <div className="hidden md:flex items-center justify-center flex-shrink-0 select-none pointer-events-none">
+          {/* Right — Decorative (hidden on mobile) */}
+          <div className="hidden md:flex items-center justify-center select-none pointer-events-none">
             <span
               className="font-black text-green-cta leading-none"
-              style={{
-                fontSize: "140px",
-                opacity: 0.04,
-                letterSpacing: "-0.04em",
-              }}
+              style={{ fontSize: "100px", opacity: 0.06, letterSpacing: "-4px" }}
             >
               B2B
             </span>
