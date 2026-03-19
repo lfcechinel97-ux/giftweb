@@ -36,6 +36,7 @@ async function fetchProducts(search: string, category: string, status: string, p
     .from('products_cache')
     .select('id, nome, slug, image_url, codigo_amigavel, categoria, preco_custo, estoque, is_featured, is_hidden, variantes_count', { count: 'exact' })
     .eq('is_variante', false)
+    .eq('ativo', true)
     .order('nome', { ascending: true })
     .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
