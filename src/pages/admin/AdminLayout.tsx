@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Package, Star, Globe, Plus, LogOut, Layers, Image, CircleDot, BookOpen } from 'lucide-react';
+import { Package, Star, Globe, Plus, LogOut, Layers, Image, CircleDot, BookOpen, Users } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
