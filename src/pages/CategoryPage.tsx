@@ -35,10 +35,12 @@ const CATEGORY_NAME_FILTERS: Record<string, string> = {
 };
 
 interface CategoryPageProps {
-  category: string;
+  category?: string;
 }
 
-const CategoryPage = ({ category }: CategoryPageProps) => {
+const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
+  const { slug } = useParams<{ slug: string }>();
+  const category = categoryProp || slug || "";
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
   const urlCor = searchParams.get("cor") || "";
