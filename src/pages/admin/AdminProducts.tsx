@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Search, Eye, EyeOff, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { formatPrice } from '@/utils/price';
+import { formatarBRL } from '@/utils/price';
 
 const CATEGORIES = [
   { value: '', label: 'Todas categorias' },
