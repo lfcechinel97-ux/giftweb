@@ -113,7 +113,7 @@ export default function AdminBanners() {
                   }}
                 />
               </div>
-              <div className="rounded-lg border border-border bg-muted/30 overflow-hidden" style={{ aspectRatio: '1200/500' }}>
+              <div className="rounded-lg border border-border bg-muted/30 overflow-hidden" style={{ aspectRatio: '853/608' }}>
                 {deskSrc ? (
                   <img src={deskSrc} alt={`Banner ${slideIdx} desktop`} className="w-full h-full object-cover" />
                 ) : (
