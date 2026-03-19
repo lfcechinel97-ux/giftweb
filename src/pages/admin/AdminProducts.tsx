@@ -56,8 +56,18 @@ export default function AdminProducts() {
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(0);
+  const [categories, setCategories] = useState<{slug: string, label: string}[]>([]);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase
+      .from('spotlight_categories')
+      .select('slug, label, position')
+      .eq('active', true)
+      .order('position', { ascending: true })
+      .then(({ data }) => setCategories(data ?? []));
+  }, []);
 
   // Debounce search
   useEffect(() => {
