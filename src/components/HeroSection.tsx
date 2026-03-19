@@ -2,17 +2,7 @@ import { useState, useEffect, useCallback, useRef, TouchEvent } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import heroBanner from "@/assets/hero-banner.jpg";
-
-const categories = [
-  { label: "Copos", route: "copos" },
-  { label: "Garrafas", route: "garrafas" },
-  { label: "Mochilas", route: "mochilas" },
-  { label: "Bolsas", route: "bolsas" },
-  { label: "Escritório", route: "escritorio" },
-  { label: "Kit Corporativo", route: "kits" },
-  { label: "Squeezes", route: "squeezes" },
-  { label: "Brindes Baratos", route: "brindes-baratos" },
-];
+import { useBaseCategories } from "@/hooks/useBaseCategories";
 
 const swatchColors = [
   { bg: "#EF4444", name: "Vermelho" },
@@ -36,6 +26,7 @@ const slides = [
 ];
 
 const HeroSection = () => {
+  const { data: categories, isLoading: categoriesLoading } = useBaseCategories();
   const [priceMin, setPriceMin] = useState(0);
   const [priceMax, setPriceMax] = useState(250);
   const [selectedColor, setSelectedColor] = useState<number | null>(null);
@@ -94,7 +85,8 @@ const HeroSection = () => {
               className="w-full appearance-none rounded-[10px] border border-border bg-card py-3 pl-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40 focus:border-green-cta"
             >
               <option value="">Escolha a categoria de brinde</option>
-              {categories.map((c) => <option key={c.route} value={c.route}>{c.label}</option>)}
+              {categoriesLoading && <option disabled>Carregando...</option>}
+              {categories?.map((c) => <option key={c.slug} value={c.slug}>{c.label}</option>)}
             </select>
             <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-cta pointer-events-none" />
           </div>
