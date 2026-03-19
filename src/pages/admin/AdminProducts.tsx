@@ -230,6 +230,15 @@ export default function AdminProducts() {
                     <EyeOff className="h-4 w-4 text-muted-foreground" />
                   )}
                 </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8"
+                  title="Editar"
+                  onClick={() => navigate(`/admin/produtos/${p.id}`)}
+                >
+                  <Pencil className="h-4 w-4 text-muted-foreground" />
+                </Button>
               </div>
             </div>
           ))
