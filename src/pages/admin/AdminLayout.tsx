@@ -10,6 +10,7 @@ const menuItems = [
   { icon: CircleDot, label: 'Cat. Imagens', path: '/admin/categorias-imagens' },
   { icon: Image, label: '🖼 Banners', path: '/admin/banners' },
   { icon: Star, label: '⭐ Vitrine', path: '/admin/vitrine' },
+  { icon: BookOpen, label: '📖 Catálogos', path: '/admin/catalogos' },
 ];
 
 export default function AdminLayout() {
