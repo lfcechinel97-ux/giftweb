@@ -203,6 +203,45 @@ export type Database = {
         }
         Relationships: []
       }
+      site_content: {
+        Row: {
+          height_desk: number | null
+          height_mob: number | null
+          id: string
+          label: string | null
+          section: string | null
+          type: string
+          updated_at: string | null
+          value: string | null
+          width_desk: number | null
+          width_mob: number | null
+        }
+        Insert: {
+          height_desk?: number | null
+          height_mob?: number | null
+          id: string
+          label?: string | null
+          section?: string | null
+          type?: string
+          updated_at?: string | null
+          value?: string | null
+          width_desk?: number | null
+          width_mob?: number | null
+        }
+        Update: {
+          height_desk?: number | null
+          height_mob?: number | null
+          id?: string
+          label?: string | null
+          section?: string | null
+          type?: string
+          updated_at?: string | null
+          value?: string | null
+          width_desk?: number | null
+          width_mob?: number | null
+        }
+        Relationships: []
+      }
       spotlight_categories: {
         Row: {
           active: boolean
