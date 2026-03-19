@@ -56,6 +56,7 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
   const categoryLabel = CATEGORIES[category] || category;
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const nameFilter = CATEGORY_NAME_FILTERS[category] || "";
+  const isSpotlightCategory = !nameFilter && !CATEGORIES[category];
 
   useEffect(() => {
     if (urlCor) setSelectedCor(urlCor);
