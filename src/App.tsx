@@ -15,6 +15,7 @@ import SqueezesPage from "./pages/SqueezesPage.tsx";
 import BrindesBaratosPage from "./pages/BrindesBaratosPage.tsx";
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import AdminLayout from "./pages/admin/AdminLayout.tsx";
+import AdminProducts from "./pages/admin/AdminProducts.tsx";
 import AdminGuard from "./components/admin/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
@@ -31,7 +32,7 @@ const App = () => (
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
               <Route path="sync" element={<AdminSync />} />
-              <Route path="produtos" element={<div className="text-muted-foreground">Página de Produtos (em breve)</div>} />
+              <Route path="produtos" element={<AdminProducts />} />
               <Route path="destaques" element={<div className="text-muted-foreground">Página de Destaques (em breve)</div>} />
             </Route>
             <Route path="/produto/:slug" element={<ProductDetail />} />
