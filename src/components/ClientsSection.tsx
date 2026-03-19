@@ -1,32 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useInView } from "@/hooks/useInView";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 
 const defaultLogos = [
-  { name: "Petrobras", logo: "/logos/petrobras.png" },
-  { name: "Ambev", logo: "/logos/ambev.png" },
-  { name: "Natura", logo: "/logos/natura.png" },
-  { name: "Itaú", logo: "/logos/itau.png" },
-  { name: "Bradesco", logo: "/logos/bradesco.png" },
-  { name: "Vale", logo: "/logos/vale.png" },
-  { name: "Embraer", logo: "/logos/embraer.png" },
-  { name: "Gerdau", logo: "/logos/gerdau.png" },
-  { name: "Vivo", logo: "/logos/vivo.png" },
-  { name: "Tim", logo: "/logos/tim.png" },
-  { name: "Globo", logo: "/logos/globo.png" },
-  { name: "WEG", logo: "/logos/weg.png" },
+  { src: "/logos/petrobras.png", alt: "Petrobras" },
+  { src: "/logos/ambev.png", alt: "Ambev" },
+  { src: "/logos/natura.png", alt: "Natura" },
+  { src: "/logos/itau.png", alt: "Itaú" },
+  { src: "/logos/bradesco.png", alt: "Bradesco" },
+  { src: "/logos/vale.png", alt: "Vale" },
+  { src: "/logos/embraer.png", alt: "Embraer" },
+  { src: "/logos/gerdau.png", alt: "Gerdau" },
+  { src: "/logos/vivo.png", alt: "Vivo" },
+  { src: "/logos/tim.png", alt: "Tim" },
+  { src: "/logos/globo.png", alt: "Globo" },
+  { src: "/logos/weg.png", alt: "WEG" },
 ];
 
-interface LogoItem {
-  src: string;
-  alt: string;
-}
+interface LogoItem { src: string; alt: string; }
 
 const ClientsSection = () => {
   const { ref, inView } = useInView();
-  const [logos, setLogos] = useState<LogoItem[]>(
-    defaultLogos.map(l => ({ src: l.logo, alt: l.name }))
-  );
+  const isMobile = useIsMobile();
+  const visibleCount = isMobile ? 3 : 5;
+
+  const [logos, setLogos] = useState<LogoItem[]>(defaultLogos);
+  const [startIndex, setStartIndex] = useState(0);
+  const [animating, setAnimating] = useState(false);
 
   useEffect(() => {
     supabase
@@ -43,7 +44,23 @@ const ClientsSection = () => {
       });
   }, []);
 
-  const looped = [...logos, ...logos];
+  const advance = useCallback(() => {
+    if (animating) return;
+    setAnimating(true);
+    setTimeout(() => {
+      setStartIndex(prev => (prev + 1) % logos.length);
+      setAnimating(false);
+    }, 400);
+  }, [animating, logos.length]);
+
+  useEffect(() => {
+    const t = setInterval(advance, 2500);
+    return () => clearInterval(t);
+  }, [advance]);
+
+  const visibleLogos = Array.from({ length: visibleCount }, (_, i) =>
+    logos[(startIndex + i) % logos.length]
+  );
 
   return (
     <section className="py-8 bg-background border-t border-border">
@@ -60,38 +77,36 @@ const ClientsSection = () => {
         </p>
 
         <div
-          className="overflow-hidden"
-          onMouseEnter={e => {
-            const track = e.currentTarget.querySelector<HTMLDivElement>(".logos-track");
-            if (track) track.style.animationPlayState = "paused";
-          }}
-          onMouseLeave={e => {
-            const track = e.currentTarget.querySelector<HTMLDivElement>(".logos-track");
-            if (track) track.style.animationPlayState = "running";
-          }}
+          className="mx-auto px-6 md:px-12"
+          style={{ maxWidth: "1100px" }}
         >
           <div
-            className="logos-track flex items-center w-max"
+            className={`grid items-center ${isMobile ? "grid-cols-3" : "grid-cols-5"}`}
             style={{
-              gap: "64px",
-              animation: "scroll-logos 20s linear infinite",
+              gap: "32px",
+              opacity: animating ? 0 : 1,
+              transform: animating ? "translateX(-10px)" : "translateX(0)",
+              transition: "opacity 0.4s ease, transform 0.4s ease",
             }}
           >
-            {looped.map((logo, i) => (
-              <img
-                key={i}
-                src={logo.src}
-                alt={logo.alt}
-                loading="lazy"
-                className="flex-shrink-0 object-contain transition-opacity duration-200"
-                style={{
-                  height: "60px",
-                  width: "auto",
-                  opacity: 0.85,
-                }}
-                onMouseEnter={e => { (e.target as HTMLImageElement).style.opacity = "1"; }}
-                onMouseLeave={e => { (e.target as HTMLImageElement).style.opacity = "0.85"; }}
-              />
+            {visibleLogos.map((logo, i) => (
+              <div key={`${startIndex}-${i}`} className="flex justify-center items-center">
+                <img
+                  src={logo.src}
+                  alt={logo.alt}
+                  loading="lazy"
+                  className="object-contain"
+                  style={{
+                    height: "80px",
+                    width: "auto",
+                    maxWidth: "160px",
+                    opacity: 0.85,
+                    transition: "opacity 0.2s ease",
+                  }}
+                  onMouseEnter={e => { (e.target as HTMLImageElement).style.opacity = "1"; }}
+                  onMouseLeave={e => { (e.target as HTMLImageElement).style.opacity = "0.85"; }}
+                />
+              </div>
             ))}
           </div>
         </div>
