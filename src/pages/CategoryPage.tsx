@@ -67,6 +67,57 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
+    // For spotlight categories, fetch product IDs from junction table
+    if (isSpotlightCategory) {
+      // Get category ID from slug
+      const { data: catData } = await supabase
+        .from("spotlight_categories")
+        .select("id, label")
+        .eq("slug", category)
+        .single();
+
+      if (!catData) {
+        setProducts([]);
+        setTotal(0);
+        setLoading(false);
+        return;
+      }
+
+      // Get linked product IDs
+      const { data: links } = await supabase
+        .from("product_spotlight_categories")
+        .select("product_id")
+        .eq("category_id", catData.id);
+
+      const productIds = (links || []).map(l => l.product_id);
+
+      if (productIds.length === 0) {
+        setProducts([]);
+        setTotal(0);
+        setLoading(false);
+        return;
+      }
+
+      let query = supabase
+        .from("products_cache")
+        .select("*", { count: "exact" })
+        .in("id", productIds)
+        .eq("ativo", true)
+        .eq("has_image", true)
+        .eq("is_variante", false);
+
+      if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
+      if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
+      if (apenasEstoque) query = query.gt("estoque", 0);
+
+      const { data, count } = await query.order("sort_estoque").order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false }).range(from, to);
+      setProducts(data || []);
+      setTotal(count || 0);
+      setLoading(false);
+      return;
+    }
+
+    // Legacy: hardcoded name-based filter
     let query = supabase
       .from("products_cache")
       .select("*", { count: "exact" })
@@ -84,7 +135,7 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
     setProducts(data || []);
     setTotal(count || 0);
     setLoading(false);
-  }, [category, page, searchTerm, selectedCor, apenasEstoque, nameFilter]);
+  }, [category, page, searchTerm, selectedCor, apenasEstoque, nameFilter, isSpotlightCategory]);
 
   useEffect(() => {
     let q = supabase
