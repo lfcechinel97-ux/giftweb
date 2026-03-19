@@ -124,6 +124,7 @@ export default function AdminProducts() {
             <SelectValue placeholder="Todas categorias" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all">Todas categorias</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c.slug} value={c.slug}>{c.label}</SelectItem>
             ))}
