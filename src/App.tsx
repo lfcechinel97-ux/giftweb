@@ -23,6 +23,7 @@ import AdminCategoryImages from "./pages/admin/AdminCategoryImages.tsx";
 import AdminVitrine from "./pages/admin/AdminVitrine.tsx";
 import AdminCatalogs from "./pages/admin/AdminCatalogs.tsx";
 import AdminClientes from "./pages/admin/AdminClientes.tsx";
+import AdminFooter from "./pages/admin/AdminFooter.tsx";
 import AdminGuard from "./components/admin/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
