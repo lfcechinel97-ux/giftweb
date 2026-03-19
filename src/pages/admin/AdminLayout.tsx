@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Package, Star, Globe, Plus, LogOut, Layers, Image, CircleDot, BookOpen, Users } from 'lucide-react';
+import { Package, Star, Globe, Plus, LogOut, Layers, Image, CircleDot, BookOpen, Users, PanelBottom } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,7 @@ const menuItems = [
   { icon: Star, label: '⭐ Vitrine', path: '/admin/vitrine' },
   { icon: BookOpen, label: '📖 Catálogos', path: '/admin/catalogos' },
   { icon: Users, label: '🏢 Clientes', path: '/admin/clientes' },
+  { icon: PanelBottom, label: 'Rodapé', path: '/admin/rodape' },
 ];
 
 export default function AdminLayout() {

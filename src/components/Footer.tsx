@@ -1,142 +1,157 @@
-import { Instagram, Facebook, MessageCircle, Phone, MapPin, ShieldCheck, Lock, CreditCard } from "lucide-react";
+import { Phone, Mail, Instagram, Facebook, MapPin } from "lucide-react";
+import { useSiteContent } from "@/hooks/useSiteContent";
 
-const paymentLogos = [
-  { name: "Visa", src: "/logos/visa.svg" },
-  { name: "Mastercard", src: "/logos/mastercard.svg" },
-  { name: "American Express", src: "/logos/amex.svg" },
-  { name: "Discover", src: "/logos/discover.svg" },
-  { name: "Diners Club", src: "/logos/diners.svg" },
-  { name: "Elo", src: "/logos/elo.svg" },
-  { name: "Aura", src: "/logos/aura.png" },
-  { name: "JCB", src: "/logos/jcb.svg" },
-  { name: "Pix", src: "/logos/pix.png" },
-  { name: "Boleto", src: "/logos/boleto.png" },
-];
-
-const securityBadges = [
-  { name: "SSL Secure", icon: Lock, color: "text-green-cta" },
-  { name: "Compra Segura", icon: ShieldCheck, color: "text-green-cta" },
-  { name: "Mercado Pago", icon: CreditCard, color: "text-[#009ee3]" },
-  { name: "Stone Pagamentos", icon: ShieldCheck, color: "text-[#00a868]" },
-];
-
-const Footer = () => (
-  <footer className="bg-navy-dark text-muted-foreground border-t border-border">
-    <div className="container py-10">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        {/* Col 1 – Contato */}
-        <div>
-          <div className="flex items-baseline gap-0.5 mb-4">
-            <span className="text-lg font-extrabold text-foreground">Gift Web</span>
-            <span className="text-xs font-semibold text-primary ml-1">brindes</span>
-          </div>
-          <div className="space-y-2 text-sm">
-            <p className="flex items-center gap-2">
-              <Phone size={14} className="text-primary" />
-              <span>(48) 99665-2844 <span className="text-muted-foreground/60">(SC)</span></span>
-            </p>
-            <p className="flex items-center gap-2">
-              <Phone size={14} className="text-primary" />
-              <span>(11) 97016-9697 <span className="text-muted-foreground/60">(SP)</span></span>
-            </p>
-            <p className="mt-3 text-xs">suporte@giftwebbrindes.com.br</p>
-          </div>
-          <div className="flex gap-2 mt-4">
-            <a href="#" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors text-foreground">
-              <Instagram size={16} strokeWidth={1.5} />
-            </a>
-            <a href="#" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors text-foreground">
-              <Facebook size={16} strokeWidth={1.5} />
-            </a>
-            <a href="https://wa.me/5548996652844" target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center hover:border-primary transition-colors text-foreground">
-              <MessageCircle size={16} strokeWidth={1.5} />
-            </a>
-          </div>
-        </div>
-
-        {/* Col 2 – Institucional */}
-        <div>
-          <h4 className="font-semibold mb-4 text-xs uppercase tracking-wider text-foreground">Institucional</h4>
-          <ul className="space-y-2 text-sm">
-            <li><a href="#" className="hover:text-primary transition-colors">Quem somos</a></li>
-            <li><a href="#" className="hover:text-primary transition-colors">Fale conosco</a></li>
-            <li><a href="#" className="hover:text-primary transition-colors">Política de troca e devolução</a></li>
-          </ul>
-        </div>
-
-        {/* Col 3 – Formas de Pagamento */}
-        <div>
-          <h4 className="font-semibold mb-4 text-xs uppercase tracking-wider text-foreground">Formas de pagamento</h4>
-          <div className="flex flex-wrap gap-3 items-center">
-            {paymentLogos.map((logo) => (
-              <div key={logo.name} className="h-8 w-12 bg-white rounded flex items-center justify-center p-1">
-                <img src={logo.src} alt={logo.name} className="max-h-full max-w-full object-contain" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Col 4 – Segurança */}
-        <div>
-          <h4 className="font-semibold mb-4 text-xs uppercase tracking-wider text-foreground">Segurança</h4>
-          <div className="grid grid-cols-2 gap-3">
-            {securityBadges.map((badge) => (
-              <div
-                key={badge.name}
-                className="flex flex-col items-center gap-2 p-3 rounded-xl bg-card border border-border"
-              >
-                <badge.icon size={28} className={badge.color} strokeWidth={1.5} />
-                <span className="text-[10px] text-center text-muted-foreground font-semibold leading-tight">{badge.name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Company info with location icons */}
-    <div className="border-t border-border">
-      <div className="container py-6">
-        <p className="font-semibold text-foreground/80 mb-4 text-[11px] text-center uppercase tracking-wider">
-          COMÉRCIO DE UTILIDADES LUKATI LTDA – GIFT WEB BRINDES
-        </p>
-        <div className="flex flex-col sm:flex-row justify-center gap-8 text-xs text-muted-foreground">
-          <div className="text-center">
-            <p className="flex items-center justify-center gap-1.5 font-medium text-foreground/70 mb-1">
-              <MapPin size={14} className="text-primary" />
-              Matriz – Santa Catarina
-            </p>
-            <p>Rua Cel Marcos Rovaris, 274 – Centro</p>
-            <p>Içara – SC</p>
-          </div>
-          <div className="text-center">
-            <p className="flex items-center justify-center gap-1.5 font-medium text-foreground/70 mb-1">
-              <MapPin size={14} className="text-primary" />
-              Filial – São Paulo
-            </p>
-            <p>Avenida Monteiro Lobato, 4550</p>
-            <p>Galpão 6 – Setor 7 – Cidade Jardim Cumbica</p>
-            <p>Guarulhos – SP</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Copyright */}
-    <div className="border-t border-border">
-      <div className="container py-5 flex flex-col items-center gap-3 text-center">
-        <p className="text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Gift Web Brindes – Todos os direitos reservados
-        </p>
-        <p className="text-primary font-semibold text-sm italic">
-          "Transforme cada brinde em uma lembrança da sua marca."
-        </p>
-        <p className="text-[10px] text-muted-foreground/60">
-          Atendendo empresas em todo o Brasil com brindes personalizados de qualidade.
-        </p>
-      </div>
-    </div>
-  </footer>
+const WhatsAppIcon = ({ size = 16 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2z"/>
+  </svg>
 );
+
+const Footer = () => {
+  const { rows } = useSiteContent("footer");
+
+  const get = (id: string) => rows.find((r) => r.id === id)?.value || "";
+
+  const footerLogo = get("footer_logo");
+  const tel1 = get("footer_telefone_1") || "(48) 99665-2844";
+  const tel2 = get("footer_telefone_2") || "(11) 97016-9697";
+  const email = get("footer_email") || "suporte@giftwebbrindes.com.br";
+  const endereco1 = get("footer_endereco_1") || "Rua Cel Marcos Rovaris, 274 – Centro, Içara – SC";
+  const endereco2 = get("footer_endereco_2") || "Av. Monteiro Lobato, 4550 – Galpão 6 – Setor 7 – Cidade Jardim Cumbica, Guarulhos – SP";
+  const frase = get("footer_frase") || "Transforme cada brinde em uma lembrança da sua marca.";
+  const linkInsta = get("footer_link_instagram") || "#";
+  const linkFb = get("footer_link_facebook") || "#";
+  const linkWa = get("footer_link_whatsapp") || "https://wa.me/5548996652844";
+
+  const paymentLogos = Array.from({ length: 8 }, (_, i) => get(`payment_logo_${i + 1}`));
+  const securityLogos = Array.from({ length: 4 }, (_, i) => get(`security_${i + 1}`));
+
+  return (
+    <footer className="bg-[#0B0F1A] text-white">
+      {/* Main 4 columns */}
+      <div className="container py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+          {/* Col 1 — Gift Web */}
+          <div>
+            {footerLogo ? (
+              <img src={footerLogo} alt="Gift Web Brindes" className="h-10 w-auto mb-5 object-contain" />
+            ) : (
+              <div className="mb-5">
+                <span className="text-lg font-extrabold">Gift Web</span>
+                <span className="text-xs font-semibold text-[#22C55E] ml-1">brindes</span>
+              </div>
+            )}
+
+            <div className="space-y-3 text-sm">
+              <a href={`tel:${tel1.replace(/\D/g, "")}`} className="flex items-center gap-2.5 text-[#9CA3AF] hover:text-white transition-colors">
+                <Phone size={14} className="text-[#22C55E] shrink-0" />
+                <span>{tel1} <span className="text-[#9CA3AF]/60">(SC)</span></span>
+              </a>
+              <a href={`tel:${tel2.replace(/\D/g, "")}`} className="flex items-center gap-2.5 text-[#9CA3AF] hover:text-white transition-colors">
+                <Phone size={14} className="text-[#22C55E] shrink-0" />
+                <span>{tel2} <span className="text-[#9CA3AF]/60">(SP)</span></span>
+              </a>
+              <a href={`mailto:${email}`} className="flex items-center gap-2.5 text-[#9CA3AF] hover:text-white transition-colors">
+                <Mail size={14} className="text-[#22C55E] shrink-0" />
+                <span className="text-xs">{email}</span>
+              </a>
+            </div>
+
+            <div className="flex gap-2.5 mt-5">
+              <a href={linkInsta} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#22C55E]/40 transition-colors">
+                <Instagram size={16} strokeWidth={1.5} />
+              </a>
+              <a href={linkFb} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#22C55E]/40 transition-colors">
+                <Facebook size={16} strokeWidth={1.5} />
+              </a>
+              <a href={linkWa} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#22C55E]/40 transition-colors">
+                <WhatsAppIcon size={16} />
+              </a>
+            </div>
+          </div>
+
+          {/* Col 2 — Institucional */}
+          <div>
+            <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Institucional</h4>
+            <ul className="space-y-3 text-sm">
+              <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors">Quem somos</a></li>
+              <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors">Fale conosco</a></li>
+              <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors">Política de troca e devolução</a></li>
+            </ul>
+          </div>
+
+          {/* Col 3 — Formas de Pagamento */}
+          <div>
+            <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Formas de pagamento</h4>
+            <div className="bg-white rounded-xl p-4">
+              <div className="grid grid-cols-4 gap-3 items-center justify-items-center">
+                {paymentLogos.map((src, i) =>
+                  src ? (
+                    <img key={i} src={src} alt={`Pagamento ${i + 1}`} className="h-6 w-auto object-contain" />
+                  ) : (
+                    <div key={i} className="h-6 w-10 bg-gray-100 rounded" />
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Col 4 — Segurança */}
+          <div>
+            <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Segurança</h4>
+            <div className="bg-white rounded-xl p-4">
+              <div className="grid grid-cols-2 gap-3 items-center justify-items-center">
+                {securityLogos.map((src, i) =>
+                  src ? (
+                    <img key={i} src={src} alt={`Segurança ${i + 1}`} className="h-7 w-auto object-contain" />
+                  ) : (
+                    <div key={i} className="h-7 w-14 bg-gray-100 rounded" />
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Endereços */}
+      <div className="border-t border-[rgba(34,197,94,0.15)]">
+        <div className="container py-6">
+          <div className="flex flex-col sm:flex-row justify-center gap-8 text-xs text-[#9CA3AF]">
+            <div className="text-center">
+              <p className="flex items-center justify-center gap-1.5 font-medium text-white/80 mb-1">
+                <MapPin size={14} className="text-[#22C55E]" />
+                Matriz – Santa Catarina
+              </p>
+              <p>{endereco1}</p>
+            </div>
+            <div className="text-center">
+              <p className="flex items-center justify-center gap-1.5 font-medium text-white/80 mb-1">
+                <MapPin size={14} className="text-[#22C55E]" />
+                Filial – São Paulo
+              </p>
+              <p>{endereco2}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Copyright */}
+      <div className="border-t border-[rgba(34,197,94,0.15)]">
+        <div className="container py-5 flex flex-col items-center gap-2 text-center">
+          <p className="text-xs text-[#9CA3AF]">
+            © {new Date().getFullYear()} Gift Web Brindes – Todos os direitos reservados
+          </p>
+          <p className="text-[#22C55E] font-semibold text-sm italic">
+            "{frase}"
+          </p>
+          <p className="text-[10px] text-[#9CA3AF]/60">
+            Atendendo empresas em todo o Brasil com brindes personalizados de qualidade.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+};
 
 export default Footer;
