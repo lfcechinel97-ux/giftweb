@@ -36,6 +36,7 @@ const App = () => (
               <Route path="sync" element={<AdminSync />} />
               <Route path="produtos" element={<AdminProducts />} />
               <Route path="produtos/:id" element={<AdminProductEdit />} />
+              <Route path="categorias" element={<AdminCategories />} />
               <Route path="destaques" element={<div className="text-muted-foreground">Página de Destaques (em breve)</div>} />
             </Route>
             <Route path="/produto/:slug" element={<ProductDetail />} />

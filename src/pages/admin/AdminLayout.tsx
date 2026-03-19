@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const menuItems = [
   { icon: Package, label: 'Produtos', path: '/admin/produtos' },
+  { icon: Layers, label: 'Categorias', path: '/admin/categorias' },
   { icon: Star, label: 'Destaques', path: '/admin/destaques' },
 ];
 
