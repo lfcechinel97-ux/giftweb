@@ -1,0 +1,25 @@
+INSERT INTO site_content (id, type, label, section, width_desk, height_desk)
+VALUES
+  ('footer_logo',           'image', 'Rodapé — Logo',              'footer', 160, 40),
+  ('payment_logo_1',        'image', 'Pagamento — Logo 1',         'footer', 80,  30),
+  ('payment_logo_2',        'image', 'Pagamento — Logo 2',         'footer', 80,  30),
+  ('payment_logo_3',        'image', 'Pagamento — Logo 3',         'footer', 80,  30),
+  ('payment_logo_4',        'image', 'Pagamento — Logo 4',         'footer', 80,  30),
+  ('payment_logo_5',        'image', 'Pagamento — Logo 5',         'footer', 80,  30),
+  ('payment_logo_6',        'image', 'Pagamento — Logo 6',         'footer', 80,  30),
+  ('payment_logo_7',        'image', 'Pagamento — Logo 7',         'footer', 80,  30),
+  ('payment_logo_8',        'image', 'Pagamento — Logo 8',         'footer', 80,  30),
+  ('security_1',            'image', 'Segurança — Logo 1',         'footer', 80,  40),
+  ('security_2',            'image', 'Segurança — Logo 2',         'footer', 80,  40),
+  ('security_3',            'image', 'Segurança — Logo 3',         'footer', 80,  40),
+  ('security_4',            'image', 'Segurança — Logo 4',         'footer', 80,  40),
+  ('footer_telefone_1',     'text',  'Rodapé — Telefone SC',       'footer', null, null),
+  ('footer_telefone_2',     'text',  'Rodapé — Telefone SP',       'footer', null, null),
+  ('footer_email',          'text',  'Rodapé — E-mail',            'footer', null, null),
+  ('footer_endereco_1',     'text',  'Rodapé — Endereço SC',       'footer', null, null),
+  ('footer_endereco_2',     'text',  'Rodapé — Endereço SP',       'footer', null, null),
+  ('footer_frase',          'text',  'Rodapé — Frase institucional','footer', null, null),
+  ('footer_link_instagram', 'link',  'Rodapé — Link Instagram',    'footer', null, null),
+  ('footer_link_facebook',  'link',  'Rodapé — Link Facebook',     'footer', null, null),
+  ('footer_link_whatsapp',  'link',  'Rodapé — Link WhatsApp',     'footer', null, null)
+ON CONFLICT (id) DO NOTHING;
