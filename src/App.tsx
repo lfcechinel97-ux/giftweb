@@ -14,6 +14,7 @@ import SearchPage from "./pages/SearchPage.tsx";
 import SqueezesPage from "./pages/SqueezesPage.tsx";
 import BrindesBaratosPage from "./pages/BrindesBaratosPage.tsx";
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
+import AdminLayout from "./pages/admin/AdminLayout.tsx";
 import AdminGuard from "./components/admin/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
