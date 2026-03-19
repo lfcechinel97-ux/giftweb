@@ -155,17 +155,23 @@ const HeroSection = () => {
 
         {/* Carousel */}
         <div className="lg:w-[64%] relative rounded-[16px] overflow-hidden flex items-center mt-6 lg:mt-0 border border-border" style={{ minHeight: 260 }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-          {slides.map((slide, i) => (
-            <div key={i} className="absolute inset-0" style={{ opacity: i === currentSlide ? 1 : 0, transform: i === currentSlide ? "scale(1)" : "scale(1.03)", transition: "opacity 1.2s ease-in-out, transform 1.4s ease-in-out", pointerEvents: i === currentSlide ? "auto" : "none" }}>
-              <img src={heroBanner} alt="Brindes corporativos personalizados" className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(11,15,26,0.85) 0%, rgba(11,15,26,0.3) 100%)" }} />
-              <div className="relative z-10 flex items-center h-full p-8 md:p-14">
-                <h2 className="text-white font-black text-[36px] md:text-[52px] leading-tight max-w-xl" style={{ opacity: i === currentSlide ? 1 : 0, transform: i === currentSlide ? "translateY(0)" : "translateY(20px)", transition: "opacity 0.8s ease-out 0.4s, transform 0.8s ease-out 0.4s" }}>
-                  {slide.text} <span className="text-highlight">{slide.highlight}</span>
-                </h2>
+          {slides.map((slide, i) => {
+            const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
+            const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);
+            const bannerSrc = (isMobile && mobRow?.value) ? mobRow.value : (deskRow?.value || heroBanner);
+
+            return (
+              <div key={i} className="absolute inset-0" style={{ opacity: i === currentSlide ? 1 : 0, transform: i === currentSlide ? "scale(1)" : "scale(1.03)", transition: "opacity 1.2s ease-in-out, transform 1.4s ease-in-out", pointerEvents: i === currentSlide ? "auto" : "none" }}>
+                <img src={bannerSrc} alt="Brindes corporativos personalizados" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(11,15,26,0.85) 0%, rgba(11,15,26,0.3) 100%)" }} />
+                <div className="relative z-10 flex items-center h-full p-8 md:p-14">
+                  <h2 className="text-white font-black text-[36px] md:text-[52px] leading-tight max-w-xl" style={{ opacity: i === currentSlide ? 1 : 0, transform: i === currentSlide ? "translateY(0)" : "translateY(20px)", transition: "opacity 0.8s ease-out 0.4s, transform 0.8s ease-out 0.4s" }}>
+                    {slide.text} <span className="text-highlight">{slide.highlight}</span>
+                  </h2>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white transition-all duration-200 hover:bg-green-cta hover:border-green-cta" style={{ background: "rgba(255,255,255,0.08)" }}>
             <ChevronLeft size={22} />
