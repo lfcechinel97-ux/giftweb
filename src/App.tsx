@@ -13,6 +13,8 @@ import AllProducts from "./pages/AllProducts.tsx";
 import SearchPage from "./pages/SearchPage.tsx";
 import SqueezesPage from "./pages/SqueezesPage.tsx";
 import BrindesBaratosPage from "./pages/BrindesBaratosPage.tsx";
+import AdminLogin from "./pages/admin/AdminLogin.tsx";
+import AdminGuard from "./components/admin/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
 
@@ -25,7 +27,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/admin/sync" element={<AdminSync />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/sync" element={<AdminGuard><AdminSync /></AdminGuard>} />
             <Route path="/produto/:slug" element={<ProductDetail />} />
             <Route path="/produtos" element={<AllProducts />} />
             <Route path="/busca" element={<SearchPage />} />
