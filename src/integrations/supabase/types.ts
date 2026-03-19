@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string | null
@@ -50,10 +68,13 @@ export type Database = {
           created_at: string | null
           descricao: string | null
           estoque: number | null
+          featured_position: number | null
           has_image: boolean | null
           id: string
           image_url: string | null
           image_urls: string[] | null
+          is_featured: boolean | null
+          is_hidden: boolean | null
           is_variante: boolean | null
           largura: number | null
           marca: string | null
@@ -81,10 +102,13 @@ export type Database = {
           created_at?: string | null
           descricao?: string | null
           estoque?: number | null
+          featured_position?: number | null
           has_image?: boolean | null
           id?: string
           image_url?: string | null
           image_urls?: string[] | null
+          is_featured?: boolean | null
+          is_hidden?: boolean | null
           is_variante?: boolean | null
           largura?: number | null
           marca?: string | null
@@ -112,10 +136,13 @@ export type Database = {
           created_at?: string | null
           descricao?: string | null
           estoque?: number | null
+          featured_position?: number | null
           has_image?: boolean | null
           id?: string
           image_url?: string | null
           image_urls?: string[] | null
+          is_featured?: boolean | null
+          is_hidden?: boolean | null
           is_variante?: boolean | null
           largura?: number | null
           marca?: string | null
