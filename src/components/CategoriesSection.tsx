@@ -75,6 +75,7 @@ const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
 /* ── Mobile carousel (preserved swipe behavior) ── */
 function MobileCarousel({ cats }: { cats: Array<{ key: string; name: string; img: string; route: string }> }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
   const isDragging = false;
   const dragStart = useRef({ x: 0, scrollLeft: 0, time: 0 });
   const animRef = useRef<number>(0);
