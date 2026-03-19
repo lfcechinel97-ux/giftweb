@@ -4,7 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Eye, EyeOff, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Eye, EyeOff, Star, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatarBRL } from '@/utils/price';
 
