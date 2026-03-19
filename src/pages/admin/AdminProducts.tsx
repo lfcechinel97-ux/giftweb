@@ -196,7 +196,7 @@ export default function AdminProducts() {
 
               {/* Price */}
               <span className="text-sm text-foreground text-right font-medium">
-                {p.preco_custo ? formatPrice(p.preco_custo) : '—'}
+                {p.preco_custo ? formatarBRL(p.preco_custo) : '—'}
               </span>
 
               {/* Stock */}
