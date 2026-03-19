@@ -16,6 +16,7 @@ import BrindesBaratosPage from "./pages/BrindesBaratosPage.tsx";
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import AdminLayout from "./pages/admin/AdminLayout.tsx";
 import AdminProducts from "./pages/admin/AdminProducts.tsx";
+import AdminProductEdit from "./pages/admin/AdminProductEdit.tsx";
 import AdminGuard from "./components/admin/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
