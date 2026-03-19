@@ -1,11 +1,12 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Package, Star, Globe, Plus, LogOut } from 'lucide-react';
+import { Package, Star, Globe, Plus, LogOut, Layers } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 
 const menuItems = [
   { icon: Package, label: 'Produtos', path: '/admin/produtos' },
+  { icon: Layers, label: 'Categorias', path: '/admin/categorias' },
   { icon: Star, label: 'Destaques', path: '/admin/destaques' },
 ];
 

@@ -94,6 +94,21 @@ export function detectBaseCategory(productName: string): string {
 }
 
 /**
+ * Preview: retorna um resumo de quantos produtos cairiam em cada categoria,
+ * sem gravar nada no banco.
+ */
+export function previewCategorization(
+  products: Array<{ id: string; nome: string }>
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const p of products) {
+    const slug = detectBaseCategory(p.nome);
+    counts[slug] = (counts[slug] || 0) + 1;
+  }
+  return counts;
+}
+
+/**
  * Auto-categoriza uma lista de produtos na tabela product_spotlight_categories.
  * Busca as categorias base do banco, mapeia cada produto e insere os vínculos.
  * Ignora conflitos (produto já categorizado na mesma categoria).
