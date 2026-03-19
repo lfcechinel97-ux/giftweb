@@ -1,33 +1,34 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useInView } from "@/hooks/useInView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 
 const defaultLogos = [
-  { src: "/logos/petrobras.png", alt: "Petrobras" },
-  { src: "/logos/ambev.png", alt: "Ambev" },
-  { src: "/logos/natura.png", alt: "Natura" },
-  { src: "/logos/itau.png", alt: "Itaú" },
-  { src: "/logos/bradesco.png", alt: "Bradesco" },
-  { src: "/logos/vale.png", alt: "Vale" },
-  { src: "/logos/embraer.png", alt: "Embraer" },
-  { src: "/logos/gerdau.png", alt: "Gerdau" },
-  { src: "/logos/vivo.png", alt: "Vivo" },
-  { src: "/logos/tim.png", alt: "Tim" },
-  { src: "/logos/globo.png", alt: "Globo" },
-  { src: "/logos/weg.png", alt: "WEG" },
+  { value: "/logos/petrobras.png" },
+  { value: "/logos/ambev.png" },
+  { value: "/logos/natura.png" },
+  { value: "/logos/itau.png" },
+  { value: "/logos/bradesco.png" },
+  { value: "/logos/vale.png" },
+  { value: "/logos/embraer.png" },
+  { value: "/logos/gerdau.png" },
+  { value: "/logos/vivo.png" },
+  { value: "/logos/tim.png" },
+  { value: "/logos/globo.png" },
+  { value: "/logos/weg.png" },
 ];
 
-interface LogoItem { src: string; alt: string; }
+const INTERVAL = 2500;
+const SLIDE_DURATION = 500;
 
 const ClientsSection = () => {
   const { ref, inView } = useInView();
   const isMobile = useIsMobile();
-  const visibleCount = isMobile ? 3 : 5;
+  const VISIBLE = isMobile ? 3 : 5;
 
-  const [logos, setLogos] = useState<LogoItem[]>(defaultLogos);
-  const [startIndex, setStartIndex] = useState(0);
-  const [isSliding, setIsSliding] = useState(false);
+  const [logos, setLogos] = useState(defaultLogos);
+  const [index, setIndex] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     supabase
@@ -39,27 +40,30 @@ const ClientsSection = () => {
         if (!data) return;
         const dbLogos = data
           .filter(r => r.value)
-          .map(r => ({ src: r.value!, alt: r.label || "" }));
+          .map(r => ({ value: r.value! }));
         if (dbLogos.length > 0) setLogos(dbLogos);
       });
   }, []);
 
-  const advance = useCallback(() => {
-    if (isSliding) return;
-    setIsSliding(true);
-    setTimeout(() => {
-      setStartIndex(prev => (prev + 1) % logos.length);
-      setIsSliding(false);
-    }, 400);
-  }, [isSliding, logos.length]);
-
   useEffect(() => {
-    const t = setInterval(advance, 2500);
+    const t = setInterval(() => {
+      if (trackRef.current) {
+        trackRef.current.style.transition = `transform ${SLIDE_DURATION}ms ease`;
+        trackRef.current.style.transform = "translateX(-100%)";
+      }
+      setTimeout(() => {
+        setIndex(prev => (prev + 1) % logos.length);
+        if (trackRef.current) {
+          trackRef.current.style.transition = "none";
+          trackRef.current.style.transform = "translateX(0)";
+        }
+      }, SLIDE_DURATION);
+    }, INTERVAL);
     return () => clearInterval(t);
-  }, [advance]);
+  }, [logos.length]);
 
-  const visibleLogos = Array.from({ length: visibleCount }, (_, i) =>
-    logos[(startIndex + i) % logos.length]
+  const visible = Array.from({ length: VISIBLE + 1 }, (_, i) =>
+    logos[(index + i) % logos.length]
   );
 
   return (
@@ -67,7 +71,6 @@ const ClientsSection = () => {
       <div
         ref={ref}
         className={`transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
-        style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}
       >
         <h2 className="text-center text-foreground font-extrabold text-[32px] mb-2">
           Grandes clientes que confiam na{" "}
@@ -77,34 +80,39 @@ const ClientsSection = () => {
           Marcas que escolheram qualidade e personalização
         </p>
 
-        <div style={{ overflow: "hidden" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px", overflow: "hidden" }}>
           <div
+            ref={trackRef}
             style={{
               display: "grid",
-              gridTemplateColumns: `repeat(${visibleCount}, 1fr)`,
-              gap: "32px",
+              gridTemplateColumns: `repeat(${VISIBLE + 1}, calc(100% / ${VISIBLE}))`,
+              gap: "0",
               alignItems: "center",
-              transform: isSliding ? "translateX(-60px)" : "translateX(0)",
-              transition: isSliding ? "transform 0.4s ease" : "none",
+              transform: "translateX(0)",
             }}
           >
-            {visibleLogos.map((logo, i) => (
-              <div key={`${startIndex}-${i}`} className="flex justify-center items-center">
-                <img
-                  src={logo.src}
-                  alt={logo.alt}
-                  loading="lazy"
-                  className="object-contain"
-                  style={{
-                    height: "80px",
-                    width: "auto",
-                    maxWidth: "160px",
-                    opacity: 0.85,
-                    transition: "opacity 0.2s ease",
-                  }}
-                  onMouseEnter={e => { (e.target as HTMLImageElement).style.opacity = "1"; }}
-                  onMouseLeave={e => { (e.target as HTMLImageElement).style.opacity = "0.85"; }}
-                />
+            {visible.map((logo, i) => (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: "0 16px",
+                }}
+              >
+                {logo?.value && (
+                  <img
+                    src={logo.value}
+                    alt={`Cliente ${i + 1}`}
+                    style={{
+                      height: "80px",
+                      width: "100%",
+                      maxWidth: "180px",
+                      objectFit: "contain",
+                    }}
+                  />
+                )}
               </div>
             ))}
           </div>
