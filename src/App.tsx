@@ -40,6 +40,7 @@ const App = () => (
               <Route path="produtos/:id" element={<AdminProductEdit />} />
               <Route path="categorias" element={<AdminCategories />} />
               <Route path="banners" element={<AdminBanners />} />
+              <Route path="categorias-imagens" element={<AdminCategoryImages />} />
               <Route path="destaques" element={<div className="text-muted-foreground">Página de Destaques (em breve)</div>} />
             </Route>
             <Route path="/categoria/:slug" element={<CategoryPage />} />

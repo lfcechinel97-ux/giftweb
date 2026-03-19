@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 const menuItems = [
   { icon: Package, label: 'Produtos', path: '/admin/produtos' },
   { icon: Layers, label: 'Categorias', path: '/admin/categorias' },
+  { icon: CircleDot, label: 'Cat. Imagens', path: '/admin/categorias-imagens' },
   { icon: Image, label: '🖼 Banners', path: '/admin/banners' },
   { icon: Star, label: 'Destaques', path: '/admin/destaques' },
 ];
