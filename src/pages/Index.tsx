@@ -33,7 +33,7 @@ const Index = () => {
         <TestimonialsSection />
         <HowItWorks />
         <TrustSection />
-        <SeoLinksSection />
+        
       </main>
       <Footer />
       <FloatingWhatsApp />
