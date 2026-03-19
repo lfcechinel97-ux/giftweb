@@ -56,9 +56,9 @@ const HeroSection = () => {
     const colorName = selectedColor !== null ? swatchColors[selectedColor].name : null;
 
     if (selectedCategory && q) {
-      navigate(`/${selectedCategory}?q=${encodeURIComponent(q)}${colorName ? `&cor=${encodeURIComponent(colorName)}` : ""}`);
+      navigate(`/categoria/${selectedCategory}?q=${encodeURIComponent(q)}${colorName ? `&cor=${encodeURIComponent(colorName)}` : ""}`);
     } else if (selectedCategory) {
-      navigate(`/${selectedCategory}${colorName ? `?cor=${encodeURIComponent(colorName)}` : ""}`);
+      navigate(`/categoria/${selectedCategory}${colorName ? `?cor=${encodeURIComponent(colorName)}` : ""}`);
     } else if (q) {
       navigate(`/busca?q=${encodeURIComponent(q)}`);
     } else if (colorName) {

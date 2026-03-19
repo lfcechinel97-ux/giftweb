@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { SITE_URL } from "@/config/site";
@@ -35,10 +35,12 @@ const CATEGORY_NAME_FILTERS: Record<string, string> = {
 };
 
 interface CategoryPageProps {
-  category: string;
+  category?: string;
 }
 
-const CategoryPage = ({ category }: CategoryPageProps) => {
+const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
+  const { slug } = useParams<{ slug: string }>();
+  const category = categoryProp || slug || "";
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
   const urlCor = searchParams.get("cor") || "";
@@ -46,14 +48,29 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [cores, setCores] = useState<string[]>([]);
+  const [dynamicLabel, setDynamicLabel] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCor, setSelectedCor] = useState<string | null>(urlCor || null);
   const [apenasEstoque, setApenasEstoque] = useState(false);
 
-  const categoryLabel = CATEGORIES[category] || category;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
   const nameFilter = CATEGORY_NAME_FILTERS[category] || "";
+  const isSpotlightCategory = !nameFilter && !CATEGORIES[category];
+  const categoryLabel = dynamicLabel || CATEGORIES[category] || category;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  // Fetch label for spotlight categories
+  useEffect(() => {
+    if (!isSpotlightCategory) return;
+    supabase
+      .from("spotlight_categories")
+      .select("label")
+      .eq("slug", category)
+      .single()
+      .then(({ data }) => {
+        if (data) setDynamicLabel(data.label);
+      });
+  }, [category, isSpotlightCategory]);
 
   useEffect(() => {
     if (urlCor) setSelectedCor(urlCor);
@@ -64,6 +81,57 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
+    // For spotlight categories, fetch product IDs from junction table
+    if (isSpotlightCategory) {
+      // Get category ID from slug
+      const { data: catData } = await supabase
+        .from("spotlight_categories")
+        .select("id, label")
+        .eq("slug", category)
+        .single();
+
+      if (!catData) {
+        setProducts([]);
+        setTotal(0);
+        setLoading(false);
+        return;
+      }
+
+      // Get linked product IDs
+      const { data: links } = await supabase
+        .from("product_spotlight_categories")
+        .select("product_id")
+        .eq("category_id", catData.id);
+
+      const productIds = (links || []).map(l => l.product_id);
+
+      if (productIds.length === 0) {
+        setProducts([]);
+        setTotal(0);
+        setLoading(false);
+        return;
+      }
+
+      let query = supabase
+        .from("products_cache")
+        .select("*", { count: "exact" })
+        .in("id", productIds)
+        .eq("ativo", true)
+        .eq("has_image", true)
+        .eq("is_variante", false);
+
+      if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
+      if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
+      if (apenasEstoque) query = query.gt("estoque", 0);
+
+      const { data, count } = await query.order("sort_estoque").order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false }).range(from, to);
+      setProducts(data || []);
+      setTotal(count || 0);
+      setLoading(false);
+      return;
+    }
+
+    // Legacy: hardcoded name-based filter
     let query = supabase
       .from("products_cache")
       .select("*", { count: "exact" })
@@ -81,7 +149,7 @@ const CategoryPage = ({ category }: CategoryPageProps) => {
     setProducts(data || []);
     setTotal(count || 0);
     setLoading(false);
-  }, [category, page, searchTerm, selectedCor, apenasEstoque, nameFilter]);
+  }, [category, page, searchTerm, selectedCor, apenasEstoque, nameFilter, isSpotlightCategory]);
 
   useEffect(() => {
     let q = supabase
