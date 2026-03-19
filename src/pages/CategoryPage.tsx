@@ -48,15 +48,29 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [cores, setCores] = useState<string[]>([]);
+  const [dynamicLabel, setDynamicLabel] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCor, setSelectedCor] = useState<string | null>(urlCor || null);
   const [apenasEstoque, setApenasEstoque] = useState(false);
 
-  const categoryLabel = CATEGORIES[category] || category;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
   const nameFilter = CATEGORY_NAME_FILTERS[category] || "";
   const isSpotlightCategory = !nameFilter && !CATEGORIES[category];
+  const categoryLabel = dynamicLabel || CATEGORIES[category] || category;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  // Fetch label for spotlight categories
+  useEffect(() => {
+    if (!isSpotlightCategory) return;
+    supabase
+      .from("spotlight_categories")
+      .select("label")
+      .eq("slug", category)
+      .single()
+      .then(({ data }) => {
+        if (data) setDynamicLabel(data.label);
+      });
+  }, [category, isSpotlightCategory]);
 
   useEffect(() => {
     if (urlCor) setSelectedCor(urlCor);
