@@ -105,8 +105,6 @@ const BestSellersSection = () => {
   const { ref, inView } = useInView();
   const { items, loading } = useShowcaseItems();
 
-  if (!loading && items.length === 0) return null;
-
   return (
     <section className="py-10 md:py-12 bg-surface-alt">
       <div
@@ -117,19 +115,25 @@ const BestSellersSection = () => {
           Brindes mais <span className="text-highlight">procurados</span> pelas empresas
         </h2>
 
-        <div
-          className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4"
-        >
-          {loading
-            ? Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="rounded-2xl bg-white border border-[#E5E7EB] p-3">
-                  <Skeleton className="aspect-square rounded-xl w-full mb-3" />
-                  <Skeleton className="h-3 w-3/4 mb-1" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              ))
-            : items.map((item) => <ShowcaseCard key={item.id} item={item} />)}
-        </div>
+        {!loading && items.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+            <p className="text-muted-foreground text-sm">
+              📦 Nenhum produto em destaque ainda. Configure no painel admin → Vitrine.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {loading
+              ? Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="rounded-2xl bg-white border border-[#E5E7EB] p-3">
+                    <Skeleton className="aspect-square rounded-xl w-full mb-3" />
+                    <Skeleton className="h-3 w-3/4 mb-1" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                ))
+              : items.map((item) => <ShowcaseCard key={item.id} item={item} />)}
+          </div>
+        )}
       </div>
     </section>
   );
