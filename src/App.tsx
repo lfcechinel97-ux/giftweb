@@ -21,6 +21,7 @@ import AdminCategories from "./pages/AdminCategories.tsx";
 import AdminBanners from "./pages/admin/AdminBanners.tsx";
 import AdminCategoryImages from "./pages/admin/AdminCategoryImages.tsx";
 import AdminVitrine from "./pages/admin/AdminVitrine.tsx";
+import AdminCatalogs from "./pages/admin/AdminCatalogs.tsx";
 import AdminGuard from "./components/admin/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
               <Route path="banners" element={<AdminBanners />} />
               <Route path="categorias-imagens" element={<AdminCategoryImages />} />
               <Route path="vitrine" element={<AdminVitrine />} />
+              <Route path="catalogos" element={<AdminCatalogs />} />
               <Route path="destaques" element={<div className="text-muted-foreground">Página de Destaques (em breve)</div>} />
             </Route>
             <Route path="/categoria/:slug" element={<CategoryPage />} />
