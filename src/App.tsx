@@ -32,7 +32,7 @@ const App = () => (
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
               <Route path="sync" element={<AdminSync />} />
-              <Route path="produtos" element={<div className="text-muted-foreground">Página de Produtos (em breve)</div>} />
+              <Route path="produtos" element={<AdminProducts />} />
               <Route path="destaques" element={<div className="text-muted-foreground">Página de Destaques (em breve)</div>} />
             </Route>
             <Route path="/produto/:slug" element={<ProductDetail />} />
