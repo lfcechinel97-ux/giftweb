@@ -26,7 +26,7 @@ const Index = () => {
         <BenefitsBar />
         <CorporateQuotation />
         <CategoriesSection categoryCounts={data?.categorias || {}} />
-        <BestSellersSection products={data?.maisVendidos || []} loading={isLoading} />
+        <BestSellersSection />
         <BannerSeparator />
         <CatalogSection />
         <ClientsSection />
