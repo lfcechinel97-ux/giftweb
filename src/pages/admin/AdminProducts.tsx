@@ -55,6 +55,7 @@ export default function AdminProducts() {
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(0);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Debounce search
   useEffect(() => {
