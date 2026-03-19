@@ -32,6 +32,45 @@ export type Database = {
         }
         Relationships: []
       }
+      homepage_featured_showcase: {
+        Row: {
+          badge_text: string | null
+          created_at: string | null
+          id: number
+          image_url: string | null
+          is_active: boolean | null
+          link_url: string | null
+          position: number
+          price_text: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          badge_text?: string | null
+          created_at?: string | null
+          id?: number
+          image_url?: string | null
+          is_active?: boolean | null
+          link_url?: string | null
+          position?: number
+          price_text?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          badge_text?: string | null
+          created_at?: string | null
+          id?: number
+          image_url?: string | null
+          is_active?: boolean | null
+          link_url?: string | null
+          position?: number
+          price_text?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string | null
