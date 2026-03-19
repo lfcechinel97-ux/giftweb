@@ -12,6 +12,7 @@ const menuItems = [
   { icon: Star, label: '⭐ Vitrine', path: '/admin/vitrine' },
   { icon: BookOpen, label: '📖 Catálogos', path: '/admin/catalogos' },
   { icon: Users, label: '🏢 Clientes', path: '/admin/clientes' },
+  { icon: PanelBottom, label: 'Rodapé', path: '/admin/rodape' },
 ];
 
 export default function AdminLayout() {
