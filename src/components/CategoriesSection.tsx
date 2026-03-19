@@ -22,7 +22,7 @@ interface Props {
   categoryCounts: Record<string, number>;
 }
 
-const CategoriesSection = ({ categoryCounts }: Props) => {
+const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
   const { ref, inView } = useInView();
   const { rows: siteRows } = useSiteContent("categorias");
 
