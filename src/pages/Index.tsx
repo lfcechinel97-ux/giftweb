@@ -12,7 +12,7 @@ import TrustSection from "@/components/TrustSection";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import CorporateQuotation from "@/components/CorporateQuotation";
-import SeoLinksSection from "@/components/SeoLinksSection";
+
 import { useHomepageData } from "@/hooks/useHomepageData";
 
 const Index = () => {
