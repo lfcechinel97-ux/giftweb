@@ -20,6 +20,7 @@ import AdminProductEdit from "./pages/admin/AdminProductEdit.tsx";
 import AdminCategories from "./pages/AdminCategories.tsx";
 import AdminBanners from "./pages/admin/AdminBanners.tsx";
 import AdminCategoryImages from "./pages/admin/AdminCategoryImages.tsx";
+import AdminVitrine from "./pages/admin/AdminVitrine.tsx";
 import AdminGuard from "./components/admin/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
