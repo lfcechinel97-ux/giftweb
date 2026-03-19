@@ -75,30 +75,59 @@ const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
 };
 
 function MobileCarousel({ cats }: { cats: Array<{ key: string; name: string; img: string; route: string }> }) {
-  const total = Math.ceil(cats.length / 2);
+  // Build groups of 2; if odd, pair last with first
+  const groups: Array<[typeof cats[0], typeof cats[0]]> = [];
+  for (let i = 0; i < cats.length; i += 2) {
+    if (i + 1 < cats.length) {
+      groups.push([cats[i], cats[i + 1]]);
+    } else {
+      groups.push([cats[i], cats[0]]);
+    }
+  }
+  const total = groups.length;
+
   const [slide, setSlide] = useState(0);
+  const [animating, setAnimating] = useState(false);
+  const [direction, setDirection] = useState<"left" | "right">("left");
+
+  const goTo = (next: number) => {
+    if (animating || next === slide) return;
+    setDirection(next > slide ? "left" : "right");
+    setAnimating(true);
+    setTimeout(() => {
+      setSlide(next);
+      setAnimating(false);
+    }, 300);
+  };
 
   useEffect(() => {
     const t = setInterval(() => {
-      setSlide((prev) => (prev + 1) % total);
+      goTo((slide + 1) % total);
     }, 2500);
     return () => clearInterval(t);
-  }, [total]);
+  }, [slide, total, animating]);
 
-  const visible = cats.slice(slide * 2, slide * 2 + 2);
+  const current = groups[slide] ?? groups[0];
 
   return (
-    <div className="lg:hidden">
+    <div className="lg:hidden overflow-hidden relative">
       <div
-        className="grid grid-cols-2 gap-4 px-6 transition-opacity duration-300"
+        className="grid grid-cols-2 gap-4 px-6"
+        style={{
+          opacity: animating ? 0 : 1,
+          transform: animating
+            ? `translateX(${direction === "left" ? "-20px" : "20px"})`
+            : "translateX(0)",
+          transition: "opacity 0.3s ease, transform 0.3s ease",
+        }}
       >
-        {visible.map((cat) => (
+        {current.map((cat, i) => (
           <Link
-            key={cat.key}
+            key={`${slide}-${i}`}
             to={cat.route}
             className="flex flex-col items-center gap-2.5 no-underline"
           >
-            <div className="w-[120px] h-[120px] rounded-full bg-muted overflow-hidden">
+            <div className="w-[120px] h-[120px] rounded-full bg-muted border-2 border-muted overflow-hidden">
               <img src={cat.img} alt={cat.name} className="w-full h-full object-cover" draggable={false} />
             </div>
             <span className="font-semibold text-[13px] text-foreground text-center">{cat.name}</span>
@@ -108,10 +137,10 @@ function MobileCarousel({ cats }: { cats: Array<{ key: string; name: string; img
 
       {/* Indicators */}
       <div className="flex justify-center gap-1.5 mt-4">
-        {Array.from({ length: total }).map((_, i) => (
+        {groups.map((_, i) => (
           <button
             key={i}
-            onClick={() => setSlide(i)}
+            onClick={() => goTo(i)}
             className="h-1.5 rounded-full transition-all duration-300"
             style={{
               width: slide === i ? 20 : 6,
