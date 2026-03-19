@@ -18,6 +18,7 @@ import AdminLayout from "./pages/admin/AdminLayout.tsx";
 import AdminProducts from "./pages/admin/AdminProducts.tsx";
 import AdminProductEdit from "./pages/admin/AdminProductEdit.tsx";
 import AdminCategories from "./pages/AdminCategories.tsx";
+import AdminBanners from "./pages/admin/AdminBanners.tsx";
 import AdminGuard from "./components/admin/AdminGuard.tsx";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="produtos" element={<AdminProducts />} />
               <Route path="produtos/:id" element={<AdminProductEdit />} />
               <Route path="categorias" element={<AdminCategories />} />
+              <Route path="banners" element={<AdminBanners />} />
               <Route path="destaques" element={<div className="text-muted-foreground">Página de Destaques (em breve)</div>} />
             </Route>
             <Route path="/categoria/:slug" element={<CategoryPage />} />
