@@ -2,17 +2,7 @@ import { useState, useEffect, useCallback, useRef, TouchEvent } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import heroBanner from "@/assets/hero-banner.jpg";
-
-const categories = [
-  { label: "Copos", route: "copos" },
-  { label: "Garrafas", route: "garrafas" },
-  { label: "Mochilas", route: "mochilas" },
-  { label: "Bolsas", route: "bolsas" },
-  { label: "Escritório", route: "escritorio" },
-  { label: "Kit Corporativo", route: "kits" },
-  { label: "Squeezes", route: "squeezes" },
-  { label: "Brindes Baratos", route: "brindes-baratos" },
-];
+import { useBaseCategories } from "@/hooks/useBaseCategories";
 
 const swatchColors = [
   { bg: "#EF4444", name: "Vermelho" },
