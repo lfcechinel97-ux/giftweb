@@ -27,7 +27,7 @@ const ClientsSection = () => {
 
   const [logos, setLogos] = useState<LogoItem[]>(defaultLogos);
   const [startIndex, setStartIndex] = useState(0);
-  const [animating, setAnimating] = useState(false);
+  const [isSliding, setIsSliding] = useState(false);
 
   useEffect(() => {
     supabase
@@ -45,13 +45,13 @@ const ClientsSection = () => {
   }, []);
 
   const advance = useCallback(() => {
-    if (animating) return;
-    setAnimating(true);
+    if (isSliding) return;
+    setIsSliding(true);
     setTimeout(() => {
       setStartIndex(prev => (prev + 1) % logos.length);
-      setAnimating(false);
+      setIsSliding(false);
     }, 400);
-  }, [animating, logos.length]);
+  }, [isSliding, logos.length]);
 
   useEffect(() => {
     const t = setInterval(advance, 2500);
@@ -66,7 +66,8 @@ const ClientsSection = () => {
     <section className="py-8 bg-background border-t border-border">
       <div
         ref={ref}
-        className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
+        className={`transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
+        style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 24px" }}
       >
         <h2 className="text-center text-foreground font-extrabold text-[32px] mb-2">
           Grandes clientes que confiam na{" "}
@@ -76,17 +77,15 @@ const ClientsSection = () => {
           Marcas que escolheram qualidade e personalização
         </p>
 
-        <div
-          className="mx-auto px-6 md:px-12"
-          style={{ maxWidth: "1100px" }}
-        >
+        <div style={{ overflow: "hidden" }}>
           <div
-            className={`grid items-center ${isMobile ? "grid-cols-3" : "grid-cols-5"}`}
             style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${visibleCount}, 1fr)`,
               gap: "32px",
-              opacity: animating ? 0 : 1,
-              transform: animating ? "translateX(-10px)" : "translateX(0)",
-              transition: "opacity 0.4s ease, transform 0.4s ease",
+              alignItems: "center",
+              transform: isSliding ? "translateX(-60px)" : "translateX(0)",
+              transition: isSliding ? "transform 0.4s ease" : "none",
             }}
           >
             {visibleLogos.map((logo, i) => (
