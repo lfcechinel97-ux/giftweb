@@ -46,6 +46,7 @@ const App = () => (
               <Route path="categorias-imagens" element={<AdminCategoryImages />} />
               <Route path="vitrine" element={<AdminVitrine />} />
               <Route path="catalogos" element={<AdminCatalogs />} />
+              <Route path="clientes" element={<AdminClientes />} />
               <Route path="destaques" element={<div className="text-muted-foreground">Página de Destaques (em breve)</div>} />
             </Route>
             <Route path="/categoria/:slug" element={<CategoryPage />} />
