@@ -57,7 +57,21 @@ const ProductDetail = () => {
     if (allImages.length > 0) setMainImage(allImages[0]);
   }, [allImages]);
 
-  const handleThumbChange = (src: string) => {
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (!lightbox) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setLightbox(false); return; }
+      const lbIndex = allVariants.findIndex(v => v.slug === activeVariantSlug);
+      const cur = lbIndex >= 0 ? lbIndex : 0;
+      if (e.key === 'ArrowLeft') handleSwitchVariant(allVariants[(cur - 1 + allVariants.length) % allVariants.length]);
+      if (e.key === 'ArrowRight') handleSwitchVariant(allVariants[(cur + 1) % allVariants.length]);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightbox, allVariants, activeVariantSlug]);
+
+
     if (src === mainImage || isTransitioning) return;
     setIsTransitioning(true);
     setTimeout(() => { setMainImage(src); setIsTransitioning(false); }, 150);
