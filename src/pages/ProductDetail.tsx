@@ -38,24 +38,22 @@ const ProductDetail = () => {
   const [selectedRow, setSelectedRow] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [mainImage, setMainImage] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
   // active variant slug tracks which variant is selected (defaults to current product slug)
   const [activeVariantSlug, setActiveVariantSlug] = useState<string | null>(null);
   const qtySelectorRef = useRef<HTMLDivElement>(null);
 
-  // Build all product images from current product
+  // Build all product images from current product (deduped)
   const allImages = useMemo(() => {
     if (!product) return [];
-    return [product.image_url, ...(product.image_urls || [])]
+    const raw = [product.image_url, ...(Array.isArray(product.image_urls) ? product.image_urls : [])] as (string | null | undefined)[];
+    return raw
       .filter((img): img is string => !!img && img.trim() !== '' && img !== 'null')
       .filter((img, i, arr) => arr.indexOf(img) === i);
   }, [product?.image_url, product?.image_urls]);
 
-  useEffect(() => {
-    if (allImages.length > 0) setMainImage(allImages[0]);
-  }, [allImages]);
+
 
 
   const handleThumbChange = (src: string) => {
