@@ -81,7 +81,7 @@ const HeroSection = () => {
     <section className="py-8 relative overflow-hidden bg-background">
       <div className="container flex flex-col lg:flex-row relative z-10" style={{ minHeight: 270 }}>
         {/* Filter panel */}
-        <div className="lg:w-[36%] bg-card rounded-[20px] border border-border p-4 lg:p-10 flex flex-col gap-4 lg:gap-5 shrink-0" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+        <div className="lg:w-[36%] bg-card rounded-[20px] border border-border px-3 py-4 lg:p-10 flex flex-col gap-3 lg:gap-5 shrink-0" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
           <h2 className="font-black text-[26px] lg:text-[38px] leading-tight text-foreground" style={{ maxWidth: "100%" }}>
             Explore nosso catálogo de<br />
             <span className="text-highlight">brindes:</span>
