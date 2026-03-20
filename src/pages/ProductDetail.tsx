@@ -13,7 +13,7 @@ import ProductCard from "@/components/ProductCard";
 import HowItWorks from "@/components/HowItWorks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Clock, Minus, Plus, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, Truck, Palette, Building2 } from "lucide-react";
+import { Clock, Minus, Plus, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, Truck, Palette, Building2, ZoomIn, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products_cache">;
@@ -56,6 +56,7 @@ const ProductDetail = () => {
   useEffect(() => {
     if (allImages.length > 0) setMainImage(allImages[0]);
   }, [allImages]);
+
 
   const handleThumbChange = (src: string) => {
     if (src === mainImage || isTransitioning) return;
@@ -129,6 +130,21 @@ const ProductDetail = () => {
     if (!activeVariantSlug) return null;
     return allVariants.find(v => v.slug === activeVariantSlug) || null;
   }, [activeVariantSlug, allVariants]);
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (!lightbox) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setLightbox(false); return; }
+      const idx = allVariants.findIndex(v => v.slug === activeVariantSlug);
+      const cur = idx >= 0 ? idx : 0;
+      if (e.key === 'ArrowLeft') handleSwitchVariant(allVariants[(cur - 1 + allVariants.length) % allVariants.length]);
+      if (e.key === 'ArrowRight') handleSwitchVariant(allVariants[(cur + 1) % allVariants.length]);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightbox, allVariants, activeVariantSlug]);
+
 
   const displayCodigo = activeVariant?.codigo_amigavel || product?.codigo_amigavel || '';
   const displayEstoque = activeVariant?.estoque ?? product?.estoque;
@@ -243,9 +259,11 @@ const ProductDetail = () => {
 
               {/* Gallery */}
               <div className="flex flex-col gap-3 w-full min-w-0">
+                {/* Main image with zoom button */}
                 <div
-                  className="w-full rounded-2xl border border-border bg-white overflow-hidden flex items-center justify-center"
+                  className="relative w-full rounded-2xl border border-border bg-white overflow-hidden flex items-center justify-center cursor-zoom-in"
                   style={{ aspectRatio: '1/1' }}
+                  onClick={() => setLightbox(true)}
                 >
                   {mainImage && (
                     <img
@@ -256,20 +274,39 @@ const ProductDetail = () => {
                       onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
                     />
                   )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setLightbox(true); }}
+                    className="absolute bottom-3 left-3 w-8 h-8 rounded-lg bg-white/90 border border-border flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+                    title="Ampliar imagem"
+                  >
+                    <ZoomIn className="w-4 h-4 text-muted-foreground" />
+                  </button>
                 </div>
-                {allImages.length > 1 && (
-                  <div className="flex gap-2 flex-wrap">
-                    {allImages.map((src, i) => {
-                      const active = mainImage === src;
+
+                {/* Variant thumbnails */}
+                {allVariants.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    {allVariants.map((v) => {
+                      const isActive = v.slug === activeVariantSlug;
+                      const thumbSrc = v.image || '';
                       return (
                         <button
-                          key={i}
-                          onClick={() => handleThumbChange(src)}
-                          onMouseEnter={() => handleThumbChange(src)}
-                          className="w-14 h-14 rounded-xl border-2 bg-white flex items-center justify-center p-1 shrink-0 transition-colors duration-150"
-                          style={{ borderColor: active ? '#22C55E' : '#E5E7EB' }}
+                          key={v.slug}
+                          onClick={() => handleSwitchVariant(v)}
+                          title={v.cor || ''}
+                          className="w-16 h-16 shrink-0 rounded-xl border-2 bg-white flex items-center justify-center p-1 transition-all duration-150"
+                          style={{ borderColor: isActive ? 'hsl(142,71%,45%)' : 'hsl(var(--border))' }}
                         >
-                          <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-contain pointer-events-none" />
+                          {thumbSrc ? (
+                            <img
+                              src={thumbSrc}
+                              alt={v.cor || 'variante'}
+                              className="w-full h-full object-contain rounded-lg pointer-events-none"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                          ) : (
+                            <div className="w-full h-full rounded-lg" style={{ backgroundColor: getCorHex(v.cor) }} />
+                          )}
                         </button>
                       );
                     })}
@@ -599,14 +636,80 @@ const ProductDetail = () => {
         <Footer />
         <FloatingWhatsApp />
 
-        {lightbox && imageUrls.length > 0 && (
-          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setLightbox(false)}>
-            <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-card border border-border flex items-center justify-center">
-              <X className="w-5 h-5 text-foreground" />
-            </button>
-            <img src={imageUrls[activeImg]} alt={product.nome} className="max-w-full max-h-[90vh] object-contain rounded-xl" />
-          </div>
-        )}
+        {lightbox && allVariants.length > 0 && (() => {
+          const lbIndex = allVariants.findIndex(v => v.slug === activeVariantSlug);
+          const currentLbIndex = lbIndex >= 0 ? lbIndex : 0;
+          const goPrev = (e: React.MouseEvent) => {
+            e.stopPropagation();
+            const prev = (currentLbIndex - 1 + allVariants.length) % allVariants.length;
+            handleSwitchVariant(allVariants[prev]);
+          };
+          const goNext = (e: React.MouseEvent) => {
+            e.stopPropagation();
+            const next = (currentLbIndex + 1) % allVariants.length;
+            handleSwitchVariant(allVariants[next]);
+          };
+          return (
+            <div
+              className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4"
+              onClick={() => setLightbox(false)}
+            >
+              {/* Close */}
+              <button
+                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
+                onClick={() => setLightbox(false)}
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
+
+              {/* Prev */}
+              {allVariants.length > 1 && (
+                <button
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
+                  onClick={goPrev}
+                >
+                  <ChevronLeft className="w-5 h-5 text-white" />
+                </button>
+              )}
+
+              {/* Main lightbox image */}
+              <div className="flex flex-col items-center gap-4 max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
+                <img
+                  src={mainImage}
+                  alt={product.nome}
+                  className="max-w-full max-h-[70vh] object-contain rounded-xl bg-white p-4"
+                  style={{ opacity: isTransitioning ? 0 : 1, transition: 'opacity 0.15s ease' }}
+                />
+                {activeVariant?.cor && (
+                  <span className="text-white/80 text-sm">{activeVariant.cor}</span>
+                )}
+                {/* Dot indicators */}
+                {allVariants.length > 1 && (
+                  <div className="flex gap-1.5 flex-wrap justify-center max-w-xs">
+                    {allVariants.map((v, i) => (
+                      <button
+                        key={v.slug}
+                        onClick={() => handleSwitchVariant(v)}
+                        className="w-2 h-2 rounded-full transition-all duration-150"
+                        style={{ backgroundColor: i === currentLbIndex ? 'white' : 'rgba(255,255,255,0.3)' }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Next */}
+              {allVariants.length > 1 && (
+                <button
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
+                  onClick={goNext}
+                >
+                  <ChevronRight className="w-5 h-5 text-white" />
+                </button>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </>
   );
