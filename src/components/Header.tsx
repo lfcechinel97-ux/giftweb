@@ -40,9 +40,12 @@ const Header = () => {
     <header className="sticky top-0 z-50">
       {/* Top bar */}
       <div className="bg-navy-dark text-muted-foreground" style={{ fontSize: 13 }}>
-        <div className="container flex items-center justify-center py-2 gap-1">
-          <span className="text-primary-foreground">⚡ Atendimento rápido via WhatsApp    💳 Pagamento Facilitado </span>
-          <span className="mx-1">|</span>
+        {/* Desktop: tudo em linha | Mobile: 2 linhas */}
+        <div className="container flex flex-col sm:flex-row items-center justify-center py-2 gap-0 sm:gap-1">
+          <span className="text-primary-foreground text-center leading-snug">
+            ⚡ Atendimento rápido via WhatsApp&nbsp;&nbsp;&nbsp;💳 Pagamento Facilitado
+          </span>
+          <span className="hidden sm:inline mx-1">|</span>
           <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer" className="font-bold text-green-cta hover:underline">
             Atendimento Comercial
           </a>

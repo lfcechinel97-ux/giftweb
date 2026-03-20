@@ -52,14 +52,11 @@ const CatalogSection = () => {
         ref={ref}
         className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
       >
-        <h2 className="text-foreground font-extrabold text-2xl md:text-[32px] text-center mb-8">
+        <h2 className="text-foreground font-extrabold text-2xl md:text-[32px] text-center mb-6">
           {sectionTitle || <>Baixe nosso <span className="text-highlight">catálogo</span></>}
         </h2>
 
-        <div
-          className="flex flex-wrap items-end justify-center"
-          style={{ gap: '32px' }}
-        >
+        <div className="flex flex-wrap items-center justify-center gap-8">
           {visibleItems.map((cat, i) => (
             <a
               key={i}
@@ -69,7 +66,7 @@ const CatalogSection = () => {
               className="group flex flex-col items-center transition-transform duration-200 hover:scale-[1.03]"
               style={{ width: '260px' }}
             >
-              <div style={{ width: '260px', height: '190px' }} className="flex items-end justify-center">
+              <div style={{ width: '260px', height: '190px' }} className="flex items-center justify-center">
                 <img
                   src={cat.img}
                   alt={cat.title || `Catálogo ${i + 1}`}

@@ -25,6 +25,7 @@ const ClientsSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const VISIBLE = isMobile ? 3 : 5;
+  const { ref: sectionRef, inView } = useInView(0.1);
 
   useEffect(() => {
     supabase
@@ -69,8 +70,12 @@ const ClientsSection = () => {
   const itemWidth = `${100 / VISIBLE}%`;
 
   return (
-    <section style={{ padding: '40px 0', background: '#F8F9FA' }}>
-      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+    <section
+      ref={sectionRef}
+      style={{ padding: '48px 0', background: '#F8F9FA' }}
+      className={`transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+    >
+      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
         <h2 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 6px', color: '#111827' }}>
           Grandes clientes que confiam na{' '}
           <em style={{ fontStyle: 'italic', color: '#22C55E' }}>Gift Web</em>
@@ -117,11 +122,20 @@ const ClientsSection = () => {
                 <img
                   src={logo.value}
                   alt={`Cliente ${i + 1}`}
+                  className="client-logo"
                   style={{
-                    height: '72px',
+                    height: '90px',
                     width: '100%',
                     objectFit: 'contain' as const,
                     display: 'block',
+                    filter: 'grayscale(100%) opacity(0.65)',
+                    transition: 'filter 0.35s ease',
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLImageElement).style.filter = 'grayscale(0%) opacity(1)';
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLImageElement).style.filter = 'grayscale(100%) opacity(0.65)';
                   }}
                 />
               )}
