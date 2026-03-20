@@ -127,14 +127,14 @@ function ImageGallery({
             onDragOver={(e) => onDragOver(e, i)}
             onDragEnd={onDragEnd}
             className={`relative group w-16 h-16 rounded-lg border-2 cursor-grab active:cursor-grabbing overflow-hidden transition-all ${
-              i === 0 ? 'border-green-500' : 'border-border hover:border-primary/40'
+              i === 0 ? 'border-primary' : 'border-border hover:border-primary/40'
             } ${dragIdx === i ? 'opacity-50 scale-95' : ''}`}
             title={i === 0 ? 'Imagem principal' : 'Clique para tornar principal'}
             onClick={() => setMain(i)}
           >
             <img src={url} alt={`img ${i}`} className="w-full h-full object-contain p-1 bg-background" />
             {i === 0 && (
-              <span className="absolute bottom-0 left-0 right-0 bg-green-500 text-white text-[9px] text-center py-0.5">Principal</span>
+              <span className="absolute bottom-0 left-0 right-0 bg-primary text-primary-foreground text-[9px] text-center py-0.5">Principal</span>
             )}
             <button
               type="button"
@@ -208,9 +208,17 @@ export default function AdminProductEdit() {
   const [imageMain, setImageMain] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+
+  // Use refs so handleSave always reads the latest image state
+  const imageMainRef = useRef<string | null>(null);
+  const imageUrlsRef = useRef<string[]>([]);
+
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (product) {
+    if (product && !initialized.current) {
+      initialized.current = true;
       setForm({
         nome: product.nome ?? '',
         descricao: product.descricao ?? '',
@@ -219,32 +227,38 @@ export default function AdminProductEdit() {
         is_hidden: product.is_hidden ?? false,
         featured_position: product.featured_position ?? 1,
       });
-      setImageMain(product.image_url ?? null);
       const imgs = (product.image_urls as string[] | null) ?? [];
-      // ensure main is first
-      if (product.image_url && !imgs.includes(product.image_url)) {
-        setImageUrls([product.image_url, ...imgs]);
-      } else {
-        setImageUrls(imgs.length ? imgs : (product.image_url ? [product.image_url] : []));
-      }
+      const finalImgs = product.image_url && !imgs.includes(product.image_url)
+        ? [product.image_url, ...imgs]
+        : (imgs.length ? imgs : (product.image_url ? [product.image_url] : []));
+      setImageMain(product.image_url ?? null);
+      setImageUrls(finalImgs);
+      imageMainRef.current = product.image_url ?? null;
+      imageUrlsRef.current = finalImgs;
     }
   }, [product]);
 
   const handleImagesUpdate = (main: string | null, imgs: string[]) => {
     setImageMain(main);
     setImageUrls(imgs);
+    imageMainRef.current = main;
+    imageUrlsRef.current = imgs;
+    setDirty(true);
   };
 
   const handleSave = async () => {
     setSaving(true);
+    const currentMain = imageMainRef.current;
+    const currentImgs = imageUrlsRef.current;
     const { error } = await supabase
       .from('products_cache')
       .update({
         nome: form.nome,
         descricao: form.descricao,
         categoria: form.categoria,
-        image_url: imageMain,
-        image_urls: imageUrls,
+        image_url: currentMain,
+        image_urls: currentImgs,
+        has_image: !!currentMain,
         is_featured: form.is_featured,
         is_hidden: form.is_hidden,
         featured_position: form.is_featured ? form.featured_position : null,
@@ -254,7 +268,10 @@ export default function AdminProductEdit() {
     if (error) {
       toast({ title: 'Erro ao salvar', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Produto atualizado!' });
+      setDirty(false);
+      toast({ title: '✅ Produto atualizado com sucesso!' });
+      // Reset init flag so product reload updates the form
+      initialized.current = false;
       queryClient.invalidateQueries({ queryKey: ['admin-product', id] });
     }
   };
@@ -415,9 +432,9 @@ export default function AdminProductEdit() {
               )}
             </div>
 
-            <Button onClick={handleSave} disabled={saving} className="w-full">
+            <Button onClick={handleSave} disabled={saving} className={`w-full ${dirty ? 'ring-2 ring-yellow-400' : ''}`}>
               <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Salvando...' : 'Salvar Alterações'}
+              {saving ? 'Salvando...' : dirty ? '⚠️ Salvar Alterações (não salvo)' : 'Salvar Alterações'}
             </Button>
           </div>
         </div>
