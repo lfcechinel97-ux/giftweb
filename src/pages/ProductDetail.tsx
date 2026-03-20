@@ -13,7 +13,7 @@ import ProductCard, { ProductCardSkeleton } from "@/components/ProductCard";
 import HowItWorks from "@/components/HowItWorks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Clock, Minus, Plus, ZoomIn, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, Truck, Palette, Building2, CreditCard } from "lucide-react";
+import { Clock, Minus, Plus, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, Truck, Palette, Building2, CreditCard } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products_cache">;
@@ -305,31 +305,18 @@ const ProductDetail = () => {
             />
 
             {/* Main layout */}
-            <div className="grid md:grid-cols-[55%_45%] gap-6 md:gap-8">
-{/* Gallery */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="grid md:grid-cols-[50%_50%] gap-6 md:gap-10 mt-4">
+              {/* Gallery */}
+              <div className="flex flex-col gap-3 w-full max-w-[480px] mx-auto md:max-w-none">
 
                 {/* IMAGEM PRINCIPAL */}
-                <div style={{
-                  width: '100%',
-                  aspectRatio: '1 / 1',
-                  backgroundColor: '#FFFFFF',
-                  border: '2px solid #E5E7EB',
-                  borderRadius: '20px',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden'
-                }}>
+                <div className="w-full rounded-2xl border-2 border-border bg-white overflow-hidden flex items-center justify-center" style={{ aspectRatio: '1/1' }}>
                   {mainImage && (
                     <img
                       src={mainImage}
                       alt={product?.nome || 'Produto'}
+                      className="w-full h-full object-contain p-4"
                       style={{
-                        maxWidth: '85%',
-                        maxHeight: '85%',
-                        objectFit: 'contain',
                         opacity: isTransitioning ? 0 : 1,
                         transition: 'opacity 0.15s ease'
                       }}
@@ -340,70 +327,54 @@ const ProductDetail = () => {
 
                 {/* MINIATURAS */}
                 {allImages.length > 1 && (
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <div className="flex gap-2 flex-wrap">
                     {allImages.map((src, index) => {
-
                       const isActive = mainImage === src;
-
                       return (
-                        <div
+                        <button
                           key={index}
                           onClick={() => handleThumbChange(src)}
                           onMouseEnter={() => handleThumbChange(src)}
+                          className="rounded-xl border-2 bg-white flex items-center justify-center p-1.5 transition-all duration-150 shrink-0"
                           style={{
-                            width: '72px',
-                            height: '72px',
-                            backgroundColor: '#FFFFFF',
-                            border: isActive ? '2px solid #22C55E' : '2px solid #E5E7EB',
-                            borderRadius: '10px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            padding: '6px',
-                            flexShrink: 0,
+                            width: 64,
+                            height: 64,
+                            borderColor: isActive ? '#22C55E' : '#E5E7EB',
                             boxShadow: isActive ? '0 0 0 3px rgba(34,197,94,0.15)' : 'none',
-                            transform: isActive ? 'translateY(-2px)' : 'none',
-                            transition: 'all 0.15s ease'
                           }}
                         >
                           <img
                             src={src}
                             alt={`Foto ${index + 1}`}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'contain',
-                              pointerEvents: 'none'
-                            }}
+                            className="w-full h-full object-contain pointer-events-none"
                           />
-                        </div>
-                      )
+                        </button>
+                      );
                     })}
                   </div>
                 )}
-
               </div>
 
               {/* Info */}
               <div className="flex flex-col gap-4">
-                <h1 className="font-black text-[28px] md:text-[32px] leading-tight text-foreground">{displayNome}</h1>
-                <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
-                  <span>Código: {displayCodigo}</span>
-                  <span className="text-border">|</span>
-                  <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {PRAZO_PRODUCAO}</span>
+                <h1 className="font-black text-2xl md:text-[28px] leading-tight text-foreground">{displayNome}</h1>
+                <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+                  <Clock className="w-3.5 h-3.5 shrink-0" />
+                  <span>{PRAZO_PRODUCAO}</span>
                 </div>
 
-                {/* Color variant selector */}
+                {/* Color variant selector — shows ALL variants with image thumbnails */}
                 {variants.length > 1 ? (
                   <TooltipProvider delayDuration={200}>
-                    <div className="flex flex-col gap-3">
-                      <span className="text-foreground text-sm font-semibold">Cor: <span className="text-muted-foreground font-normal">{activeVariant?.cor || product.cor || ''}</span></span>
-                      <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-col gap-2">
+                      <span className="text-foreground text-sm font-semibold">
+                        Cor: <span className="text-muted-foreground font-normal">{activeVariant?.cor || product.cor || ''}</span>
+                        <span className="ml-2 text-xs text-muted-foreground">({variants.length} opções)</span>
+                      </span>
+                      <div className="flex flex-wrap gap-2 max-h-[220px] overflow-y-auto pr-1">
                         {variants.map((v) => {
                           const hex = getCorHex(v.cor);
                           const isCurrent = v.id === activeVariantId;
-                          const needsBorder = isLightColor(hex);
                           const outOfStock = v.estoque === 0 || v.estoque === null;
                           const thumbSrc = v.image_url || '';
                           return (
@@ -411,19 +382,13 @@ const ProductDetail = () => {
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={() => handleSwitchVariant(v)}
-                                  className="relative group/variant rounded-xl overflow-hidden transition-all duration-200"
+                                  className="relative rounded-xl overflow-hidden transition-colors duration-150 shrink-0 bg-white"
                                   style={{
-                                    width: 56,
-                                    height: 56,
-                                    border: isCurrent
-                                      ? '2px solid hsl(142,71%,45%)'
-                                      : '2px solid hsl(220,13%,91%)',
-                                    outline: isCurrent ? '2px solid hsl(142,71%,45%,0.3)' : 'none',
-                                    outlineOffset: 2,
-                                    opacity: outOfStock ? 0.45 : 1,
+                                    width: 52,
+                                    height: 52,
+                                    border: isCurrent ? '2px solid hsl(142,71%,45%)' : '2px solid hsl(var(--border))',
+                                    opacity: outOfStock ? 0.5 : 1,
                                     cursor: isCurrent ? 'default' : 'pointer',
-                                    boxShadow: isCurrent ? '0 0 0 3px rgba(34,197,94,0.15)' : 'none',
-                                    background: '#fff',
                                     padding: 3,
                                   }}
                                 >
@@ -433,22 +398,19 @@ const ProductDetail = () => {
                                       alt={v.cor || 'variante'}
                                       className="w-full h-full object-contain rounded-lg"
                                       onError={(e) => {
-                                        // fallback to color swatch
                                         (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                        (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'block';
+                                        const fb = e.currentTarget.nextElementSibling as HTMLElement;
+                                        if (fb) fb.style.display = 'block';
                                       }}
                                     />
                                   ) : null}
                                   <div
                                     className="w-full h-full rounded-lg"
-                                    style={{
-                                      display: thumbSrc ? 'none' : 'block',
-                                      backgroundColor: hex,
-                                    }}
+                                    style={{ display: thumbSrc ? 'none' : 'block', backgroundColor: hex }}
                                   />
                                   {outOfStock && (
-                                    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/60">
-                                      <span className="text-[9px] font-bold text-red-500 leading-tight text-center">Sem<br/>estoque</span>
+                                    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
+                                      <span className="text-[8px] font-bold text-destructive leading-tight text-center">Sem<br/>estoque</span>
                                     </div>
                                   )}
                                 </button>
@@ -464,36 +426,31 @@ const ProductDetail = () => {
                   </TooltipProvider>
                 ) : product.cor ? (
                   <div className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded-full border border-border"
-                      style={{ backgroundColor: getCorHex(product.cor) }}
-                    />
+                    <div className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: getCorHex(product.cor) }} />
                     <span className="text-foreground text-sm font-medium">{product.cor}</span>
                   </div>
                 ) : null}
 
                 {/* Stock badge */}
                 {displayEstoque != null && displayEstoque > 0 ? (
-                  <span className="inline-flex items-center self-start gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium"
-                    style={{ background: '#DCFCE7', color: '#15803D', border: '1px solid #BBF7D0' }}>
-                    <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#22C55E' }} />
+                  <span className="inline-flex items-center self-start gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                    <span className="w-2 h-2 rounded-full animate-pulse bg-green-500" />
                     Em estoque
                   </span>
                 ) : (
-                  <span className="inline-flex items-center self-start gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium"
-                    style={{ background: '#FEE2E2', color: '#B91C1C', border: '1px solid #FECACA' }}>
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#B91C1C' }} />
+                  <span className="inline-flex items-center self-start gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                    <span className="w-2 h-2 rounded-full bg-red-700" />
                     Indisponível
                   </span>
                 )}
 
-                {/* Price highlight + PIX + installments */}
+                {/* Price highlight */}
                 {displayPrecoCusto != null && displayPrecoCusto > 0 && (() => {
                   const precoPix = precoMin * 0.97;
                   const parcela2x = precoMin / 2;
                   return (
-                    <div className="mt-2">
-                      <span className="text-green-cta font-bold text-[22px]">
+                    <div>
+                      <span className="text-green-cta font-bold text-xl">
                         A partir de {formatarBRL(precoMin)} / unidade
                       </span>
                       <p className="text-muted-foreground text-[13px] mt-1">
@@ -502,8 +459,7 @@ const ProductDetail = () => {
                       <p className="text-muted-foreground text-[13px]">
                         ou 2x de {formatarBRL(parcela2x)} sem juros no cartão
                       </p>
-                      <span className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-md text-[13px] font-medium"
-                        style={{ background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE' }}>
+                      <span className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-md text-[13px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
                         Pedido mínimo: 20 unidades
                       </span>
@@ -516,21 +472,8 @@ const ProductDetail = () => {
                   href={`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMsg}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 w-full rounded-[10px] flex items-center justify-center gap-2.5 text-primary-foreground font-semibold text-base transition-all duration-200"
-                  style={{
-                    backgroundColor: '#25D366',
-                    padding: '14px 24px',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#1EBE59';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(37,211,102,0.35)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#25D366';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                  className="mt-1 w-full rounded-xl flex items-center justify-center gap-2.5 text-white font-semibold text-sm py-3 px-5 transition-colors duration-200 hover:opacity-90 active:scale-[0.98]"
+                  style={{ backgroundColor: '#25D366' }}
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 shrink-0">
                     <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
