@@ -25,6 +25,9 @@ import AdminCatalogs from "./pages/admin/AdminCatalogs.tsx";
 import AdminClientes from "./pages/admin/AdminClientes.tsx";
 import AdminFooter from "./pages/admin/AdminFooter.tsx";
 import AdminGuard from "./components/admin/AdminGuard.tsx";
+import PrivacyPage from "./pages/PrivacyPage.tsx";
+import TermsPage from "./pages/TermsPage.tsx";
+import SecurityPage from "./pages/SecurityPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -63,6 +66,9 @@ const App = () => (
             <Route path="/kits" element={<CategoryPage category="kits" />} />
             <Route path="/squeezes" element={<SqueezesPage />} />
             <Route path="/brindes-baratos" element={<BrindesBaratosPage />} />
+            <Route path="/politica-de-privacidade" element={<PrivacyPage />} />
+            <Route path="/termos-de-uso" element={<TermsPage />} />
+            <Route path="/seguranca" element={<SecurityPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

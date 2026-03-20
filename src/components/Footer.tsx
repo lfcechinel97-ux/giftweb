@@ -1,4 +1,5 @@
 import { Phone, Mail, Instagram, Facebook, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useSiteContent } from "@/hooks/useSiteContent";
 
 const WhatsAppIcon = ({ size = 16 }: { size?: number }) => (
@@ -77,6 +78,9 @@ const Footer = () => {
               <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors">Quem somos</a></li>
               <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors">Fale conosco</a></li>
               <li><a href="#" className="text-[#9CA3AF] hover:text-white transition-colors">Política de troca e devolução</a></li>
+              <li><Link to="/politica-de-privacidade" className="text-[#9CA3AF] hover:text-white transition-colors">Política de Privacidade</Link></li>
+              <li><Link to="/termos-de-uso" className="text-[#9CA3AF] hover:text-white transition-colors">Termos de Uso</Link></li>
+              <li><Link to="/seguranca" className="text-[#9CA3AF] hover:text-white transition-colors">Segurança</Link></li>
             </ul>
           </div>
 
