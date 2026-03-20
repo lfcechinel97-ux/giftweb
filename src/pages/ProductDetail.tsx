@@ -401,8 +401,8 @@ const ProductDetail = () => {
                   <p>✓ Entrega para todo o Brasil</p>
                 </div>
 
-                {/* Trust bar */}
-                <div className="flex gap-2 py-3 border-t border-b border-border">
+                {/* Trust bar — hidden on mobile */}
+                <div className="hidden md:flex gap-2 py-3 border-t border-b border-border">
                   {[
                     { Icon: Truck, label: 'Entrega\nBrasil' },
                     { Icon: Palette, label: 'Arte grátis\ninclusa' },
