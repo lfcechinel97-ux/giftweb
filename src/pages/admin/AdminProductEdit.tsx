@@ -134,7 +134,7 @@ function ImageGallery({
           >
             <img src={url} alt={`img ${i}`} className="w-full h-full object-contain p-1 bg-background" />
             {i === 0 && (
-              <span className="absolute bottom-0 left-0 right-0 bg-green-500 text-white text-[9px] text-center py-0.5">Principal</span>
+              <span className="absolute bottom-0 left-0 right-0 bg-primary text-primary-foreground text-[9px] text-center py-0.5">Principal</span>
             )}
             <button
               type="button"
