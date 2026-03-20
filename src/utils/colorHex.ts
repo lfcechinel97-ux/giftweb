@@ -5,7 +5,7 @@ const COLOR_MAP: Record<string, string> = {
   'azul marinho': '#1E3A5F',
   'vermelho': '#EF4444',
   'verde': '#22C55E',
-  'preto': '#1F2937',
+  'preto': '#1E3A5F',
   'branco': '#F9FAFB',
   'amarelo': '#EAB308',
   'roxo': '#8B5CF6',
