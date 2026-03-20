@@ -39,7 +39,7 @@ export const ProductCardSkeleton = () => (
 );
 
 const MAX_DOTS = 6;
-const FADE_INTERVAL = 900; // ms between image switches on hover
+const FADE_INTERVAL = 1000; // ms between image switches on hover
 
 const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel, variantes, estoque }: ProductCardProps) => {
   const navigate = useNavigate();
