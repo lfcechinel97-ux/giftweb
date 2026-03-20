@@ -185,12 +185,6 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
             20 un: {formatarBRL(preco20)} / un
           </span>
         )}
-        <Link
-          to={href}
-          className="mt-2 w-full rounded-[10px] bg-green-cta text-primary-foreground py-2 text-sm font-bold text-center hover:brightness-110 transition-all duration-200 block"
-        >
-          Ver Produto
-        </Link>
       </div>
     </div>
   );
