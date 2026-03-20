@@ -127,7 +127,7 @@ function ImageGallery({
             onDragOver={(e) => onDragOver(e, i)}
             onDragEnd={onDragEnd}
             className={`relative group w-16 h-16 rounded-lg border-2 cursor-grab active:cursor-grabbing overflow-hidden transition-all ${
-              i === 0 ? 'border-green-500' : 'border-border hover:border-primary/40'
+              i === 0 ? 'border-primary' : 'border-border hover:border-primary/40'
             } ${dragIdx === i ? 'opacity-50 scale-95' : ''}`}
             title={i === 0 ? 'Imagem principal' : 'Clique para tornar principal'}
             onClick={() => setMain(i)}
