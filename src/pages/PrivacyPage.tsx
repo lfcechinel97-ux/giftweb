@@ -32,7 +32,7 @@ const PrivacyPage = () => (
           <h1 className="font-black text-[32px] md:text-[42px] leading-tight text-foreground mb-3">
             Política de <span className="text-highlight">Privacidade</span>
           </h1>
-          <p className="text-muted-foreground text-sm mb-10">Atualizado em março de 2025</p>
+          <p className="text-muted-foreground text-sm mb-10">Atualizado em março de 2026</p>
 
           <p className="text-muted-foreground leading-relaxed mb-8">
             A <strong className="text-foreground">Gift Web</strong> tem uma grande preocupação com a segurança de seus dados. Nosso compromisso é assegurar a privacidade de cada cliente. O sigilo de suas informações é muito importante. Desta forma, utilizamos neste site o Certificado de Segurança de alto nível.

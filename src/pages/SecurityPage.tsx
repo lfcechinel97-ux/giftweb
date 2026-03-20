@@ -31,7 +31,7 @@ const SecurityPage = () => (
               <span className="text-highlight">Segurança</span>
             </h1>
           </div>
-          <p className="text-muted-foreground text-sm mb-10">Atualizado em março de 2025</p>
+          <p className="text-muted-foreground text-sm mb-10">Atualizado em março de 2026</p>
 
           <p className="text-muted-foreground leading-relaxed mb-6">
             <strong className="text-foreground">Gift Web</strong> garante segurança e privacidade de identidade aos internautas que fazem compras na loja virtual.

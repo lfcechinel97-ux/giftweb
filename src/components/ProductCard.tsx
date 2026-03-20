@@ -39,7 +39,7 @@ export const ProductCardSkeleton = () => (
 );
 
 const MAX_DOTS = 6;
-const FADE_INTERVAL = 900; // ms between image switches on hover
+const FADE_INTERVAL = 1000; // ms between image switches on hover
 
 const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel, variantes, estoque }: ProductCardProps) => {
   const navigate = useNavigate();
@@ -101,15 +101,8 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
   return (
     <div
       className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-200 hover:-translate-y-1 hover:border-green-cta"
-      style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.10)";
-        startHoverCycle();
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)";
-        stopHoverCycle();
-      }}
+      onMouseEnter={() => startHoverCycle()}
+      onMouseLeave={() => stopHoverCycle()}
     >
       <Link to={href} className="block">
         <div className="relative aspect-square bg-secondary overflow-hidden">
@@ -118,8 +111,8 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
               src={imagemAtiva}
               alt={nome}
               loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              style={{ opacity: imgOpacity, transition: `opacity 0.15s ease, transform 0.3s ease` }}
+              className="w-full h-full object-cover"
+              style={{ opacity: imgOpacity, transition: `opacity 0.15s ease` }}
               onError={() => setImgError(true)}
             />
           ) : (
@@ -192,12 +185,6 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
             20 un: {formatarBRL(preco20)} / un
           </span>
         )}
-        <Link
-          to={href}
-          className="mt-2 w-full rounded-[10px] bg-green-cta text-primary-foreground py-2 text-sm font-bold text-center hover:brightness-110 transition-all duration-200 block"
-        >
-          Ver Produto
-        </Link>
       </div>
     </div>
   );
