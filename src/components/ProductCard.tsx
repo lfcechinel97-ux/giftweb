@@ -115,7 +115,7 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
 
   return (
     <div
-      className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-200 hover:-translate-y-1 hover:border-green-cta"
+      className="rounded-[16px] bg-card border border-border overflow-hidden group transition-colors duration-200 hover:border-green-cta"
       onMouseEnter={startCycle}
       onMouseLeave={stopCycle}
     >
