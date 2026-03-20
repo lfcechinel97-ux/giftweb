@@ -53,6 +53,7 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCor, setSelectedCor] = useState<string | null>(urlCor || null);
   const [apenasEstoque, setApenasEstoque] = useState(false);
+  const [sortBy, setSortBy] = useState("relevancia");
 
   const nameFilter = CATEGORY_NAME_FILTERS[category] || "";
   const isSpotlightCategory = !nameFilter && !CATEGORIES[category];
