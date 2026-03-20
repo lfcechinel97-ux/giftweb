@@ -397,31 +397,61 @@ const ProductDetail = () => {
                 {/* Color variant selector */}
                 {variants.length > 1 ? (
                   <TooltipProvider delayDuration={200}>
-                    <div className="flex flex-col gap-2">
-                      <span className="text-foreground text-sm font-semibold">Cor:</span>
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex flex-col gap-3">
+                      <span className="text-foreground text-sm font-semibold">Cor: <span className="text-muted-foreground font-normal">{activeVariant?.cor || product.cor || ''}</span></span>
+                      <div className="flex flex-wrap gap-2">
                         {variants.map((v) => {
                           const hex = getCorHex(v.cor);
                           const isCurrent = v.id === activeVariantId;
                           const needsBorder = isLightColor(hex);
                           const outOfStock = v.estoque === 0 || v.estoque === null;
+                          const thumbSrc = v.image_url || '';
                           return (
                             <Tooltip key={v.id}>
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={() => handleSwitchVariant(v)}
-                                  className="rounded-full transition-all"
+                                  className="relative group/variant rounded-xl overflow-hidden transition-all duration-200"
                                   style={{
-                                    width: 32,
-                                    height: 32,
-                                    backgroundColor: hex,
-                                    border: needsBorder ? '2px solid hsl(220,13%,91%)' : '2px solid transparent',
-                                    outline: isCurrent ? '2px solid hsl(142,71%,45%)' : 'none',
+                                    width: 56,
+                                    height: 56,
+                                    border: isCurrent
+                                      ? '2px solid hsl(142,71%,45%)'
+                                      : '2px solid hsl(220,13%,91%)',
+                                    outline: isCurrent ? '2px solid hsl(142,71%,45%,0.3)' : 'none',
                                     outlineOffset: 2,
-                                    opacity: outOfStock ? 0.4 : 1,
+                                    opacity: outOfStock ? 0.45 : 1,
                                     cursor: isCurrent ? 'default' : 'pointer',
+                                    boxShadow: isCurrent ? '0 0 0 3px rgba(34,197,94,0.15)' : 'none',
+                                    background: '#fff',
+                                    padding: 3,
                                   }}
-                                />
+                                >
+                                  {thumbSrc ? (
+                                    <img
+                                      src={thumbSrc}
+                                      alt={v.cor || 'variante'}
+                                      className="w-full h-full object-contain rounded-lg"
+                                      onError={(e) => {
+                                        // fallback to color swatch
+                                        (e.currentTarget as HTMLImageElement).style.display = 'none';
+                                        (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'block';
+                                      }}
+                                    />
+                                  ) : null}
+                                  <div
+                                    className="w-full h-full rounded-lg"
+                                    style={{
+                                      display: thumbSrc ? 'none' : 'block',
+                                      backgroundColor: hex,
+                                    }}
+                                  />
+                                  {outOfStock && (
+                                    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/60">
+                                      <span className="text-[9px] font-bold text-red-500 leading-tight text-center">Sem<br/>estoque</span>
+                                    </div>
+                                  )}
+                                </button>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="text-xs">
                                 {v.cor || 'Cor'}{outOfStock ? ' — Indisponível' : ''}
