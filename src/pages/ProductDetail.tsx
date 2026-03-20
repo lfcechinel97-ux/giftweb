@@ -38,24 +38,22 @@ const ProductDetail = () => {
   const [selectedRow, setSelectedRow] = useState(0);
   const [lightbox, setLightbox] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [mainImage, setMainImage] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
   // active variant slug tracks which variant is selected (defaults to current product slug)
   const [activeVariantSlug, setActiveVariantSlug] = useState<string | null>(null);
   const qtySelectorRef = useRef<HTMLDivElement>(null);
 
-  // Build all product images from current product
+  // Build all product images from current product (deduped)
   const allImages = useMemo(() => {
     if (!product) return [];
-    return [product.image_url, ...(product.image_urls || [])]
+    const raw = [product.image_url, ...(Array.isArray(product.image_urls) ? product.image_urls : [])] as (string | null | undefined)[];
+    return raw
       .filter((img): img is string => !!img && img.trim() !== '' && img !== 'null')
       .filter((img, i, arr) => arr.indexOf(img) === i);
   }, [product?.image_url, product?.image_urls]);
 
-  useEffect(() => {
-    if (allImages.length > 0) setMainImage(allImages[0]);
-  }, [allImages]);
+
 
 
   const handleThumbChange = (src: string) => {
@@ -93,13 +91,6 @@ const ProductDetail = () => {
         // Main image = the variant we opened, not the parent
         const variantImg = data.image_url || baseProduct.image_url || '';
         setMainImage(variantImg);
-
-        const imgs: string[] = [];
-        if (data.image_urls && Array.isArray(data.image_urls)) {
-          for (const u of data.image_urls) { if (u && (u as string).trim()) imgs.push(u as string); }
-        }
-        if (imgs.length === 0 && variantImg) imgs.push(variantImg);
-        setImageUrls(imgs);
         setActiveImg(0);
 
         const { data: relatedData } = await supabase
@@ -300,7 +291,23 @@ const ProductDetail = () => {
                   </button>
                 </div>
 
-                {/* Variant thumbnails */}
+                {/* Product image thumbnails (extra images uploaded in admin) */}
+                {allImages.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    {allImages.map((src, i) => (
+                      <button
+                        key={src + i}
+                        onClick={() => handleThumbChange(src)}
+                        className="shrink-0 w-16 h-16 rounded-xl border-2 overflow-hidden transition-all duration-150 bg-white"
+                        style={{ borderColor: mainImage === src ? 'hsl(142,71%,45%)' : 'hsl(var(--border))' }}
+                      >
+                        <img src={src} alt={`foto ${i + 1}`} className="w-full h-full object-contain p-1 pointer-events-none" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+
                 {allVariants.length > 1 && (
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                     {allVariants.map((v) => {
