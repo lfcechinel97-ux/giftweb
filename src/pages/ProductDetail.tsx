@@ -295,7 +295,7 @@ const ProductDetail = () => {
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1">
-          <div className="container py-6 md:py-8">
+          <div className="container px-4 py-4 md:py-8">
             <Breadcrumbs
               items={[
                 { label: "Início", href: "/" },
@@ -304,10 +304,10 @@ const ProductDetail = () => {
               ]}
             />
 
-            {/* Main layout */}
-            <div className="grid md:grid-cols-[50%_50%] gap-6 md:gap-10 mt-4">
+            {/* Main layout — single col on mobile, 2-col on md+ */}
+            <div className="flex flex-col md:grid md:grid-cols-2 gap-5 md:gap-10 mt-4">
               {/* Gallery */}
-              <div className="flex flex-col gap-3 w-full max-w-[480px] mx-auto md:max-w-none">
+              <div className="flex flex-col gap-3 w-full">
 
                 {/* IMAGEM PRINCIPAL */}
                 <div className="w-full rounded-2xl border-2 border-border bg-white overflow-hidden flex items-center justify-center" style={{ aspectRatio: '1/1' }}>
