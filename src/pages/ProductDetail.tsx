@@ -305,31 +305,18 @@ const ProductDetail = () => {
             />
 
             {/* Main layout */}
-            <div className="grid md:grid-cols-[55%_45%] gap-6 md:gap-8">
-{/* Gallery */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className="grid md:grid-cols-[50%_50%] gap-6 md:gap-10 mt-4">
+              {/* Gallery */}
+              <div className="flex flex-col gap-3 w-full max-w-[480px] mx-auto md:max-w-none">
 
                 {/* IMAGEM PRINCIPAL */}
-                <div style={{
-                  width: '100%',
-                  aspectRatio: '1 / 1',
-                  backgroundColor: '#FFFFFF',
-                  border: '2px solid #E5E7EB',
-                  borderRadius: '20px',
-                  boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  overflow: 'hidden'
-                }}>
+                <div className="w-full rounded-2xl border-2 border-border bg-white overflow-hidden flex items-center justify-center" style={{ aspectRatio: '1/1' }}>
                   {mainImage && (
                     <img
                       src={mainImage}
                       alt={product?.nome || 'Produto'}
+                      className="w-full h-full object-contain p-4"
                       style={{
-                        maxWidth: '85%',
-                        maxHeight: '85%',
-                        objectFit: 'contain',
                         opacity: isTransitioning ? 0 : 1,
                         transition: 'opacity 0.15s ease'
                       }}
@@ -340,49 +327,32 @@ const ProductDetail = () => {
 
                 {/* MINIATURAS */}
                 {allImages.length > 1 && (
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <div className="flex gap-2 flex-wrap">
                     {allImages.map((src, index) => {
-
                       const isActive = mainImage === src;
-
                       return (
-                        <div
+                        <button
                           key={index}
                           onClick={() => handleThumbChange(src)}
                           onMouseEnter={() => handleThumbChange(src)}
+                          className="rounded-xl border-2 bg-white flex items-center justify-center p-1.5 transition-all duration-150 shrink-0"
                           style={{
-                            width: '72px',
-                            height: '72px',
-                            backgroundColor: '#FFFFFF',
-                            border: isActive ? '2px solid #22C55E' : '2px solid #E5E7EB',
-                            borderRadius: '10px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            padding: '6px',
-                            flexShrink: 0,
+                            width: 64,
+                            height: 64,
+                            borderColor: isActive ? '#22C55E' : '#E5E7EB',
                             boxShadow: isActive ? '0 0 0 3px rgba(34,197,94,0.15)' : 'none',
-                            transform: isActive ? 'translateY(-2px)' : 'none',
-                            transition: 'all 0.15s ease'
                           }}
                         >
                           <img
                             src={src}
                             alt={`Foto ${index + 1}`}
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'contain',
-                              pointerEvents: 'none'
-                            }}
+                            className="w-full h-full object-contain pointer-events-none"
                           />
-                        </div>
-                      )
+                        </button>
+                      );
                     })}
                   </div>
                 )}
-
               </div>
 
               {/* Info */}
