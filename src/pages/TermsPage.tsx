@@ -32,7 +32,7 @@ const TermsPage = () => (
           <h1 className="font-black text-[32px] md:text-[42px] leading-tight text-foreground mb-3">
             Termos de <span className="text-highlight">Uso</span>
           </h1>
-          <p className="text-muted-foreground text-sm mb-10">Atualizado em março de 2025</p>
+          <p className="text-muted-foreground text-sm mb-10">Atualizado em março de 2026</p>
 
           <Section title="Restrições Relativas ao Uso de Conteúdo">
             <p>Este site é de propriedade e operação da <strong className="text-foreground">Gift Web</strong>.</p>
