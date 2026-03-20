@@ -195,7 +195,8 @@ const ProductDetail = () => {
       setActiveVariantSlug(variant.slug);
       setIsTransitioning(false);
     }, 150);
-    if (variant.slug) navigate(`/produto/${variant.slug}`, { replace: true });
+    // Update URL without triggering a page reload/re-fetch
+    if (variant.slug) window.history.replaceState(null, '', `/produto/${variant.slug}`);
   };
 
   if (loading) {
