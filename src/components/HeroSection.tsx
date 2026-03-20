@@ -112,9 +112,9 @@ const HeroSection = () => {
               <input type="range" min={0} max={500} value={priceMin} onChange={(e) => setPriceMin(Math.min(Number(e.target.value), priceMax))} className="w-full" />
               <input type="range" min={0} max={500} value={priceMax} onChange={(e) => setPriceMax(Math.max(Number(e.target.value), priceMin))} className="w-full" />
             </div>
-            <div className="flex gap-3 mt-2">
-              <input type="text" inputMode="numeric" value={priceMin} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMin(Math.min(v, priceMax)); }} className="w-full rounded-[10px] border border-border bg-card py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40 focus:border-green-cta" />
-              <input type="text" inputMode="numeric" value={priceMax} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMax(Math.max(v, priceMin)); }} className="w-full rounded-[10px] border border-border bg-card py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40 focus:border-green-cta" />
+            <div className="flex gap-2 mt-2">
+              <input type="text" inputMode="numeric" value={priceMin} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMin(Math.min(v, priceMax)); }} className="w-full rounded-xl border border-border bg-card py-2 px-3 text-sm font-bold text-primary text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200" />
+              <input type="text" inputMode="numeric" value={priceMax} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMax(Math.max(v, priceMin)); }} className="w-full rounded-xl border border-border bg-card py-2 px-3 text-sm font-bold text-primary text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200" />
             </div>
           </div>
 
