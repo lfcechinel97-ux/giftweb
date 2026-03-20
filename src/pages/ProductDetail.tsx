@@ -144,6 +144,21 @@ const ProductDetail = () => {
     return allVariants.find(v => v.slug === activeVariantSlug) || null;
   }, [activeVariantSlug, allVariants]);
 
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (!lightbox) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setLightbox(false); return; }
+      const idx = allVariants.findIndex(v => v.slug === activeVariantSlug);
+      const cur = idx >= 0 ? idx : 0;
+      if (e.key === 'ArrowLeft') handleSwitchVariant(allVariants[(cur - 1 + allVariants.length) % allVariants.length]);
+      if (e.key === 'ArrowRight') handleSwitchVariant(allVariants[(cur + 1) % allVariants.length]);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [lightbox, allVariants, activeVariantSlug]);
+
+
   const displayCodigo = activeVariant?.codigo_amigavel || product?.codigo_amigavel || '';
   const displayEstoque = activeVariant?.estoque ?? product?.estoque;
   const displayPrecoCusto = product?.preco_custo;
