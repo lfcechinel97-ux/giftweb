@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { calcularPreco, formatarBRL } from "@/utils/price";
 import { getCorHex, isLightColor } from "@/utils/colorHex";
@@ -33,24 +33,74 @@ export const ProductCardSkeleton = () => (
       <Skeleton className="h-4 w-3/4" />
       <Skeleton className="h-3 w-1/3" />
       <Skeleton className="h-4 w-1/2" />
-      <Skeleton className="h-9 w-full mt-1" />
     </div>
   </div>
 );
 
 const MAX_DOTS = 6;
-const FADE_INTERVAL = 1000; // ms between image switches on hover
+const CYCLE_INTERVAL = 1500; // 1.5s between image switches
+const FADE_DURATION = 200;   // ms for fade transition
 
 const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel, variantes, estoque }: ProductCardProps) => {
   const navigate = useNavigate();
-  const [imagemAtiva, setImagemAtiva] = useState(image_url);
-  const [imgOpacity, setImgOpacity] = useState(1);
-  const [imgError, setImgError] = useState(false);
-  const hoverInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const hoverImages = useRef<string[]>([]);
-  const hoverIndex = useRef(0);
+
+  // Build image list once
+  const images = useRef<string[]>([]);
+  if (images.current.length === 0 && image_url) {
+    images.current = [image_url];
+    if (variantes && variantes.length > 0) {
+      variantes.forEach(v => {
+        if (v.image && !images.current.includes(v.image)) images.current.push(v.image);
+      });
+    }
+  }
+
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [fading, setFading] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cycleRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isHovering = useRef(false);
+
+  const clearTimers = useCallback(() => {
+    if (cycleRef.current) { clearInterval(cycleRef.current); cycleRef.current = null; }
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+  }, []);
+
+  const goToIndex = useCallback((idx: number) => {
+    setFading(true);
+    timerRef.current = setTimeout(() => {
+      setActiveIdx(idx);
+      setFading(false);
+    }, FADE_DURATION);
+  }, []);
+
+  const startCycle = useCallback(() => {
+    if (images.current.length <= 1) return;
+    isHovering.current = true;
+    let idx = 1;
+    cycleRef.current = setInterval(() => {
+      if (!isHovering.current) return;
+      goToIndex(idx % images.current.length);
+      idx++;
+    }, CYCLE_INTERVAL);
+  }, [goToIndex]);
+
+  const stopCycle = useCallback(() => {
+    isHovering.current = false;
+    clearTimers();
+    // Fade back to first image
+    setFading(true);
+    timerRef.current = setTimeout(() => {
+      setActiveIdx(0);
+      setFading(false);
+    }, FADE_DURATION);
+  }, [clearTimers]);
+
+  // Cleanup on unmount
+  useEffect(() => () => clearTimers(), [clearTimers]);
 
   if (!image_url || image_url.includes("placehold.co")) return null;
+
   const precoMin = preco_custo ? calcularPreco(preco_custo, 1000) : null;
   const preco20 = preco_custo ? calcularPreco(preco_custo, 20) : null;
   const href = slug ? `/produto/${slug}` : `/produto/${codigo_amigavel}`;
@@ -61,65 +111,26 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
     : [];
   const isOutOfStock = !hasVariants && (estoque === 0 || estoque === null);
 
-  // Build image list from variants for hover cycling
-  const buildHoverImages = () => {
-    const imgs: string[] = [image_url];
-    if (hasVariants) {
-      variantes!.forEach(v => { if (v.image && !imgs.includes(v.image)) imgs.push(v.image); });
-    }
-    return imgs;
-  };
-
-  const fadeToImage = (src: string) => {
-    setImgOpacity(0);
-    setTimeout(() => {
-      setImagemAtiva(src);
-      setImgOpacity(1);
-    }, 150);
-  };
-
-  const startHoverCycle = () => {
-    const imgs = buildHoverImages();
-    if (imgs.length <= 1) return;
-    hoverImages.current = imgs;
-    hoverIndex.current = 1;
-    hoverInterval.current = setInterval(() => {
-      fadeToImage(hoverImages.current[hoverIndex.current % hoverImages.current.length]);
-      hoverIndex.current++;
-    }, FADE_INTERVAL);
-  };
-
-  const stopHoverCycle = () => {
-    if (hoverInterval.current) {
-      clearInterval(hoverInterval.current);
-      hoverInterval.current = null;
-    }
-    hoverIndex.current = 0;
-    fadeToImage(image_url);
-  };
+  const displayImage = images.current[activeIdx] || image_url;
 
   return (
     <div
       className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-200 hover:-translate-y-1 hover:border-green-cta"
-      onMouseEnter={() => startHoverCycle()}
-      onMouseLeave={() => stopHoverCycle()}
+      onMouseEnter={startCycle}
+      onMouseLeave={stopCycle}
     >
       <Link to={href} className="block">
         <div className="relative aspect-square bg-secondary overflow-hidden">
-          {imagemAtiva ? (
-            <img
-              src={imagemAtiva}
-              alt={nome}
-              loading="lazy"
-              className="w-full h-full object-cover"
-              style={{ opacity: imgOpacity, transition: `opacity 0.15s ease` }}
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="text-muted-foreground text-sm">Sem imagem</span>
-            </div>
-          )}
+          <img
+            src={displayImage}
+            alt={nome}
+            loading="lazy"
+            className="w-full h-full object-cover"
+            style={{
+              opacity: fading ? 0 : 1,
+              transition: `opacity ${FADE_DURATION}ms ease`,
+            }}
+          />
           {isOutOfStock && (
             <Badge className="absolute top-2 left-2 bg-muted text-muted-foreground border-border text-[11px] pointer-events-none">
               Fora de Estoque
@@ -127,15 +138,16 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
           )}
         </div>
       </Link>
+
       <div className="p-4 flex flex-col gap-1.5">
         <Link to={href}>
           <h4 className="font-bold text-foreground text-[15px] leading-tight line-clamp-2">{nome}</h4>
         </Link>
 
-        {/* Color variants */}
+        {/* Color variant dots */}
         {allColorOptions.length > 1 && (
           <TooltipProvider delayDuration={200}>
-            <div className="flex items-center mt-1" style={{ gap: 8 }}>
+            <div className="flex items-center mt-1 gap-2">
               {allColorOptions.slice(0, MAX_DOTS).map((v, i) => {
                 const hex = getCorHex(v.cor);
                 const needsBorder = isLightColor(hex);
@@ -144,21 +156,30 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
                     <TooltipTrigger asChild>
                       <span
                         onMouseEnter={() => {
-                          if (hoverInterval.current) { clearInterval(hoverInterval.current); hoverInterval.current = null; }
-                          fadeToImage(v.image || image_url);
+                          // pause cycle and show this variant's image
+                          clearTimers();
+                          isHovering.current = false;
+                          const imgIdx = images.current.indexOf(v.image);
+                          goToIndex(imgIdx >= 0 ? imgIdx : 0);
+                        }}
+                        onMouseLeave={() => {
+                          // resume cycling
+                          isHovering.current = true;
+                          startCycle();
                         }}
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           navigate(v.slug ? `/produto/${v.slug}` : `/produto/${v.codigo_amigavel}`);
                         }}
-                        className="inline-block rounded-full transition-transform duration-150 hover:scale-[1.15]"
+                        className="inline-block rounded-full transition-transform duration-150 hover:scale-[1.2]"
                         style={{
-                          width: 16,
-                          height: 16,
+                          width: 14,
+                          height: 14,
                           backgroundColor: hex,
                           border: needsBorder ? '1px solid #9CA3AF' : 'none',
                           cursor: 'pointer',
+                          flexShrink: 0,
                         }}
                       />
                     </TooltipTrigger>
