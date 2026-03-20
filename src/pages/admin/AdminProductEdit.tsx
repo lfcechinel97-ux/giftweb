@@ -432,9 +432,9 @@ export default function AdminProductEdit() {
               )}
             </div>
 
-            <Button onClick={handleSave} disabled={saving} className="w-full">
+            <Button onClick={handleSave} disabled={saving} className={`w-full ${dirty ? 'ring-2 ring-yellow-400' : ''}`}>
               <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Salvando...' : 'Salvar Alterações'}
+              {saving ? 'Salvando...' : dirty ? '⚠️ Salvar Alterações (não salvo)' : 'Salvar Alterações'}
             </Button>
           </div>
         </div>
