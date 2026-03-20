@@ -47,26 +47,25 @@ const CatalogSection = () => {
   if (visibleItems.length === 0) return null;
 
   return (
-    <section className="py-10 md:py-14 bg-background">
+    <section className="py-8 md:py-14 bg-background">
       <div
         ref={ref}
-        className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
+        className={`px-3 md:container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
       >
         <h2 className="text-foreground font-extrabold text-2xl md:text-[32px] text-center mb-6">
           {sectionTitle || <>Baixe nosso <span className="text-highlight">catálogo</span></>}
         </h2>
 
-        <div className="flex flex-wrap items-center justify-center gap-8">
+        <div className="flex flex-wrap items-center justify-center gap-5 md:gap-8">
           {visibleItems.map((cat, i) => (
             <a
               key={i}
               href={cat.link || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex flex-col items-center transition-transform duration-200 hover:scale-[1.03]"
-              style={{ width: '260px' }}
+              className="group flex flex-col items-center transition-transform duration-200 hover:scale-[1.03] w-[44vw] md:w-[260px]"
             >
-              <div style={{ width: '260px', height: '190px' }} className="flex items-center justify-center">
+              <div className="w-full md:w-[260px] h-[140px] md:h-[190px] flex items-center justify-center">
                 <img
                   src={cat.img}
                   alt={cat.title || `Catálogo ${i + 1}`}
@@ -74,7 +73,7 @@ const CatalogSection = () => {
                 />
               </div>
               {cat.title && (
-                <p className="text-center text-foreground font-semibold text-sm mt-3 whitespace-pre-line leading-tight">
+                <p className="text-center text-foreground font-semibold text-xs md:text-sm mt-3 whitespace-pre-line leading-tight">
                   {cat.title}
                 </p>
               )}
