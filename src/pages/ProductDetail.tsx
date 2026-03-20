@@ -71,8 +71,13 @@ const ProductDetail = () => {
     return () => window.removeEventListener('keydown', handler);
   }, [lightbox, allVariants, activeVariantSlug]);
 
-
+  const handleThumbChange = (src: string) => {
     if (src === mainImage || isTransitioning) return;
+    setIsTransitioning(true);
+    setTimeout(() => { setMainImage(src); setIsTransitioning(false); }, 150);
+  };
+
+
     setIsTransitioning(true);
     setTimeout(() => { setMainImage(src); setIsTransitioning(false); }, 150);
   };
