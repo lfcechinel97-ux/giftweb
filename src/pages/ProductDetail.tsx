@@ -39,25 +39,23 @@ const ProductDetail = () => {
   const [lightbox, setLightbox] = useState(false);
   const [activeImg, setActiveImg] = useState(0);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [variants, setVariants] = useState<VariantInfo[]>([]);
-  const [activeVariantId, setActiveVariantId] = useState<string | null>(null);
-  const [parentSlug, setParentSlug] = useState<string | null>(null);
   const [mainImage, setMainImage] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
+  // active variant slug tracks which variant is selected (defaults to current product slug)
+  const [activeVariantSlug, setActiveVariantSlug] = useState<string | null>(null);
   const qtySelectorRef = useRef<HTMLDivElement>(null);
 
-  const allImages = [
-    product?.image_url,
-    product?.image_urls?.[0],
-    product?.image_urls?.[1],
-    product?.image_urls?.[2],
-  ]
-    .filter(img => img && typeof img === 'string' && img.trim() !== '' && img !== 'null' && img !== 'undefined')
-    .filter((img, index, self) => self.indexOf(img) === index) as string[];
+  // Build all product images from current product
+  const allImages = useMemo(() => {
+    if (!product) return [];
+    return [product.image_url, ...(product.image_urls || [])]
+      .filter((img): img is string => !!img && img.trim() !== '' && img !== 'null')
+      .filter((img, i, arr) => arr.indexOf(img) === i);
+  }, [product?.image_url, product?.image_urls]);
 
   useEffect(() => {
     if (allImages.length > 0) setMainImage(allImages[0]);
-  }, [product?.image_url]);
+  }, [allImages]);
 
   const handleThumbChange = (src: string) => {
     if (src === mainImage || isTransitioning) return;
@@ -77,6 +75,7 @@ const ProductDetail = () => {
       .then(async ({ data, error }) => {
         if (error || !data) { navigate("/404", { replace: true }); return; }
         setProduct(data);
+        setActiveVariantSlug(data.slug);
 
         const imgs: string[] = [];
         if (data.image_urls && Array.isArray(data.image_urls)) {
@@ -86,55 +85,55 @@ const ProductDetail = () => {
         setImageUrls(imgs);
         setActiveImg(0);
 
-        const isVar = (data as any).is_variante === true;
-        const paiId = isVar ? (data as any).produto_pai : data.id;
+        const { data: relatedData } = await supabase
+          .from("products_cache")
+          .select("*")
+          .eq("categoria", data.categoria!)
+          .eq("ativo", true)
+          .eq("has_image", true)
+          .eq("is_variante", false)
+          .gt("estoque", 0)
+          .neq("slug", slug)
+          .order("variantes_count", { ascending: false })
+          .limit(4);
 
-        const [variantsRes, relatedRes] = await Promise.all([
-          paiId
-            ? supabase
-                .from("products_cache")
-                .select("id,slug,cor,codigo_amigavel,image_url,image_urls,estoque,preco_custo,nome")
-                .or(`id.eq.${paiId},produto_pai.eq.${paiId}`)
-                .eq("ativo", true)
-                .eq("has_image", true)
-                .order("codigo_amigavel")
-            : Promise.resolve({ data: [] }),
-          supabase
-            .from("products_cache")
-            .select("*")
-            .eq("categoria", data.categoria!)
-            .eq("ativo", true)
-            .eq("has_image", true)
-            .eq("is_variante", false)
-            .gt("estoque", 0)
-            .neq("slug", slug)
-            .order("variantes_count", { ascending: false })
-            .limit(4),
-        ]);
-
-        setVariants((variantsRes.data || []) as VariantInfo[]);
-        setActiveVariantId(data.id);
-        setRelated(relatedRes.data || []);
-
-        if (isVar && paiId) {
-          const { data: paiData } = await supabase.from("products_cache").select("slug").eq("id", paiId).single();
-          setParentSlug(paiData?.slug || null);
-        } else {
-          setParentSlug(null);
-        }
+        setRelated(relatedData || []);
         setLoading(false);
       });
   }, [slug, navigate]);
 
+  // Build variants list from the JSONB `variantes` field + current product as first option
+  const allVariants = useMemo((): VariantInfo[] => {
+    if (!product) return [];
+    const current: VariantInfo = {
+      slug: product.slug || '',
+      cor: product.cor,
+      codigo_amigavel: product.codigo_amigavel,
+      image: product.image_url,
+      estoque: product.estoque,
+    };
+    const others = Array.isArray(product.variantes)
+      ? (product.variantes as any[]).map(v => ({
+          slug: v.slug || '',
+          cor: v.cor || null,
+          codigo_amigavel: v.codigo_amigavel || '',
+          image: v.image || null,
+          estoque: typeof v.estoque === 'number' ? v.estoque : null,
+        }))
+      : [];
+    return [current, ...others];
+  }, [product]);
+
+  // The currently selected variant (used for main image swap on click)
   const activeVariant = useMemo(() => {
-    if (!activeVariantId || variants.length === 0) return null;
-    return variants.find(v => v.id === activeVariantId) || null;
-  }, [activeVariantId, variants]);
+    if (!activeVariantSlug) return null;
+    return allVariants.find(v => v.slug === activeVariantSlug) || null;
+  }, [activeVariantSlug, allVariants]);
 
   const displayCodigo = activeVariant?.codigo_amigavel || product?.codigo_amigavel || '';
   const displayEstoque = activeVariant?.estoque ?? product?.estoque;
-  const displayPrecoCusto = activeVariant?.preco_custo ?? product?.preco_custo;
-  const displayNome = activeVariant?.nome || product?.nome || '';
+  const displayPrecoCusto = product?.preco_custo;
+  const displayNome = product?.nome || '';
 
   const precoBase = displayPrecoCusto ? displayPrecoCusto * getMarkup(displayPrecoCusto) : 0;
   const precoAtual = displayPrecoCusto ? calcularPreco(displayPrecoCusto, qty) : 0;
@@ -157,21 +156,14 @@ const ProductDetail = () => {
   };
 
   const handleSwitchVariant = (variant: VariantInfo) => {
-    if (variant.id === activeVariantId) return;
-    const imgs: string[] = [];
-    if (variant.image_urls && Array.isArray(variant.image_urls)) {
-      for (const u of variant.image_urls) { if (u && (u as string).trim()) imgs.push(u as string); }
-    }
-    if (imgs.length === 0 && variant.image_url) imgs.push(variant.image_url);
+    if (variant.slug === activeVariantSlug) return;
     setIsTransitioning(true);
     setTimeout(() => {
-      setImageUrls(imgs);
-      setActiveImg(0);
-      setActiveVariantId(variant.id);
-      setMainImage(variant.image_url || '');
+      setMainImage(variant.image || '');
+      setActiveVariantSlug(variant.slug);
       setIsTransitioning(false);
     }, 150);
-    if (variant.slug) window.history.replaceState(null, '', `/produto/${variant.slug}`);
+    if (variant.slug) navigate(`/produto/${variant.slug}`, { replace: true });
   };
 
   if (loading) {
