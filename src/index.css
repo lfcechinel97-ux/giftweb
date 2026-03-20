@@ -69,16 +69,19 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
     font-size: 16px;
-    color: hsl(220 9% 46%);
+    color: hsl(222 30% 40%);
   }
   h1 {
-    @apply font-black text-[48px] leading-tight text-foreground;
+    @apply font-black text-[48px] leading-tight;
+    color: hsl(222 47% 11%);
   }
   h2 {
-    @apply font-extrabold text-[32px] leading-snug text-foreground;
+    @apply font-extrabold text-[32px] leading-snug;
+    color: hsl(222 47% 11%);
   }
   h3 {
-    @apply font-bold text-[24px] text-foreground;
+    @apply font-bold text-[24px];
+    color: hsl(222 47% 11%);
   }
 }
 
