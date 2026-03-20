@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Eye, EyeOff, Star, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { Search, Eye, EyeOff, Star, ChevronLeft, ChevronRight, Pencil, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatarBRL } from '@/utils/price';
@@ -253,6 +253,17 @@ export default function AdminProducts() {
                 >
                   <Pencil className="h-4 w-4 text-muted-foreground" />
                 </Button>
+                {p.slug && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    title="Ver no site"
+                    onClick={() => window.open(`/produto/${p.slug}`, '_blank')}
+                  >
+                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                )}
               </div>
             </div>
           ))
