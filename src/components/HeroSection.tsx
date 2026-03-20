@@ -94,7 +94,7 @@ const HeroSection = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full appearance-none rounded-[10px] border border-border bg-card py-3 pl-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40 focus:border-green-cta"
+              className="w-full appearance-none rounded-xl border border-border bg-card py-2.5 pl-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200"
             >
               <option value="">Escolha a categoria de brinde</option>
               {categoriesLoading && <option disabled>Carregando...</option>}
