@@ -75,26 +75,42 @@ const ProductDetail = () => {
       .single()
       .then(async ({ data, error }) => {
         if (error || !data) { navigate("/404", { replace: true }); return; }
-        setProduct(data);
+
+        // If this is a variant, load the parent product so we can get all variantes JSONB
+        let baseProduct = data;
+        if (data.is_variante && data.produto_pai) {
+          const { data: parentData } = await supabase
+            .from("products_cache")
+            .select("*")
+            .eq("id", data.produto_pai)
+            .single();
+          if (parentData) baseProduct = parentData;
+        }
+
+        setProduct(baseProduct);
+        // Active variant = the slug we actually navigated to
         setActiveVariantSlug(data.slug);
+        // Main image = the variant we opened, not the parent
+        const variantImg = data.image_url || baseProduct.image_url || '';
+        setMainImage(variantImg);
 
         const imgs: string[] = [];
         if (data.image_urls && Array.isArray(data.image_urls)) {
           for (const u of data.image_urls) { if (u && (u as string).trim()) imgs.push(u as string); }
         }
-        if (imgs.length === 0 && data.image_url) imgs.push(data.image_url);
+        if (imgs.length === 0 && variantImg) imgs.push(variantImg);
         setImageUrls(imgs);
         setActiveImg(0);
 
         const { data: relatedData } = await supabase
           .from("products_cache")
           .select("*")
-          .eq("categoria", data.categoria!)
+          .eq("categoria", baseProduct.categoria!)
           .eq("ativo", true)
           .eq("has_image", true)
           .eq("is_variante", false)
           .gt("estoque", 0)
-          .neq("slug", slug)
+          .neq("slug", baseProduct.slug)
           .order("variantes_count", { ascending: false })
           .limit(4);
 
