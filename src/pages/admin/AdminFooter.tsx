@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { useSiteContent, SiteContentRow } from "@/hooks/useSiteContent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 function ImageUploader({
   row,
@@ -61,6 +64,31 @@ function TextEditor({
   );
 }
 
+function CollapsibleSection({
+  title,
+  children,
+  defaultOpen = true,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <section className="border rounded-xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 bg-muted/40 hover:bg-muted/70 transition-colors"
+      >
+        <h3 className="text-base font-semibold">{title}</h3>
+        {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+      </button>
+      {open && <div className="p-5 space-y-4">{children}</div>}
+    </section>
+  );
+}
+
 export default function AdminFooter() {
   const { rows, loading, refetch, updateValue, uploadImage } = useSiteContent("footer");
 
@@ -87,40 +115,36 @@ export default function AdminFooter() {
   if (loading) return <p className="text-muted-foreground p-6">Carregando...</p>;
 
   return (
-    <div className="max-w-3xl space-y-10">
+    <div className="max-w-3xl space-y-5">
       <h2 className="text-xl font-bold">Rodapé</h2>
 
       {/* Logo */}
-      <section className="space-y-4">
-        <h3 className="text-lg font-semibold border-b pb-2">Logo do Rodapé</h3>
+      <CollapsibleSection title="Logo do Rodapé">
         <ImageUploader row={getRow("footer_logo")} onUpload={handleUpload} recommended="Recomendado: 160×40px, fundo transparente" />
-      </section>
+      </CollapsibleSection>
 
-      {/* Pagamento */}
-      <section className="space-y-4">
-        <h3 className="text-lg font-semibold border-b pb-2">Logos de Pagamento (8)</h3>
+      {/* Pagamento — colapsável, fechado por padrão */}
+      <CollapsibleSection title="Logos de Pagamento (8)" defaultOpen={false}>
         <p className="text-xs text-muted-foreground">Recomendado: 80×30px cada, PNG/SVG</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {Array.from({ length: 8 }, (_, i) => (
             <ImageUploader key={i} row={getRow(`payment_logo_${i + 1}`)} onUpload={handleUpload} />
           ))}
         </div>
-      </section>
+      </CollapsibleSection>
 
-      {/* Segurança */}
-      <section className="space-y-4">
-        <h3 className="text-lg font-semibold border-b pb-2">Logos de Segurança (4)</h3>
+      {/* Segurança — colapsável, fechado por padrão */}
+      <CollapsibleSection title="Logos de Segurança (4)" defaultOpen={false}>
         <p className="text-xs text-muted-foreground">Recomendado: 80×40px cada, PNG/SVG</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {Array.from({ length: 4 }, (_, i) => (
             <ImageUploader key={i} row={getRow(`security_${i + 1}`)} onUpload={handleUpload} />
           ))}
         </div>
-      </section>
+      </CollapsibleSection>
 
       {/* Textos */}
-      <section className="space-y-4">
-        <h3 className="text-lg font-semibold border-b pb-2">Textos e Links</h3>
+      <CollapsibleSection title="Textos e Links">
         <TextEditor row={getRow("footer_telefone_1")} onSave={handleSave} />
         <TextEditor row={getRow("footer_telefone_2")} onSave={handleSave} />
         <TextEditor row={getRow("footer_email")} onSave={handleSave} />
@@ -130,7 +154,7 @@ export default function AdminFooter() {
         <TextEditor row={getRow("footer_link_instagram")} onSave={handleSave} />
         <TextEditor row={getRow("footer_link_facebook")} onSave={handleSave} />
         <TextEditor row={getRow("footer_link_whatsapp")} onSave={handleSave} />
-      </section>
+      </CollapsibleSection>
     </div>
   );
 }

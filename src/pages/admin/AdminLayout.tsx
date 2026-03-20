@@ -28,8 +28,13 @@ export default function AdminLayout() {
       {/* Sidebar */}
       <aside className="w-[220px] min-h-screen bg-[hsl(228,40%,8%)] text-white fixed left-0 top-0 flex flex-col z-50">
         <div className="px-5 py-6 border-b border-white/10">
-          <h2 className="text-lg font-bold tracking-tight">Gift Web</h2>
-          <p className="text-xs text-white/50">Painel Admin</p>
+          <h2
+            className="text-xl font-black tracking-tight"
+            style={{ color: "hsl(142,71%,45%)", fontFamily: "inherit", letterSpacing: "-0.02em" }}
+          >
+            Gift<span style={{ color: "#fff" }}> Web</span>
+          </h2>
+          <p className="text-xs text-white/40 mt-0.5">Painel Administrativo</p>
         </div>
 
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
