@@ -95,8 +95,8 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-green-cta flex items-center justify-center">
-            <MessageCircle size={20} className="text-primary-foreground" />
+          <div className="w-10 h-10 rounded-full bg-green-cta flex items-center justify-center text-white">
+            <WppIcon size={20} />
           </div>
           <h3 className="text-foreground font-bold text-lg">Peça um orçamento rápido!</h3>
         </div>
