@@ -83,7 +83,7 @@ const Footer = () => {
           {/* Col 3 — Formas de Pagamento */}
           <div>
             <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Formas de pagamento</h4>
-            <div className="bg-white rounded-xl p-4 flex items-center justify-center">
+            <div className="flex items-center justify-center">
               <img
                 src="/logos/formaspags.png"
                 alt="Formas de pagamento aceitas"
