@@ -211,6 +211,8 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
               onApenasEstoqueChange={setApenasEstoque}
               onClearFilters={clearFilters}
               totalProducts={total}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
             />
 
             {loading ? (
