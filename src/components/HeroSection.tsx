@@ -147,10 +147,10 @@ const HeroSection = () => {
 
           <button
             onClick={handleSearch}
-            className="mt-auto flex items-center justify-center gap-2 rounded-[10px] bg-green-cta px-4 font-bold uppercase text-primary-foreground transition-all duration-200 hover:brightness-110"
-            style={{ height: 52, fontSize: 15, boxShadow: "0 0 24px rgba(34,197,94,0.2)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 24px rgba(34,197,94,0.4)")}
-            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 0 24px rgba(34,197,94,0.2)")}
+            className="mt-auto flex items-center justify-center gap-2 rounded-xl bg-primary px-4 font-bold uppercase text-primary-foreground transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
+            style={{ height: 50, fontSize: 14, letterSpacing: "0.5px", boxShadow: "0 0 20px rgba(34,197,94,0.18)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 28px rgba(34,197,94,0.38)")}
+            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 0 20px rgba(34,197,94,0.18)")}
           >
             BUSCAR BRINDE
           </button>
