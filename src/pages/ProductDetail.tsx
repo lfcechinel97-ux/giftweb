@@ -357,11 +357,10 @@ const ProductDetail = () => {
 
               {/* Info */}
               <div className="flex flex-col gap-4">
-                <h1 className="font-black text-[28px] md:text-[32px] leading-tight text-foreground">{displayNome}</h1>
-                <div className="flex items-center gap-3 text-[13px] text-muted-foreground">
-                  <span>Código: {displayCodigo}</span>
-                  <span className="text-border">|</span>
-                  <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {PRAZO_PRODUCAO}</span>
+                <h1 className="font-black text-2xl md:text-[28px] leading-tight text-foreground">{displayNome}</h1>
+                <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+                  <Clock className="w-3.5 h-3.5 shrink-0" />
+                  <span>{PRAZO_PRODUCAO}</span>
                 </div>
 
                 {/* Color variant selector */}
