@@ -143,7 +143,7 @@ const Header = () => {
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden text-foreground p-1 z-[110] relative"
+              className="lg:hidden text-white p-1 z-[110] relative"
             >
               {mobileOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
