@@ -66,6 +66,9 @@ const App = () => (
             <Route path="/kits" element={<CategoryPage category="kits" />} />
             <Route path="/squeezes" element={<SqueezesPage />} />
             <Route path="/brindes-baratos" element={<BrindesBaratosPage />} />
+            <Route path="/politica-de-privacidade" element={<PrivacyPage />} />
+            <Route path="/termos-de-uso" element={<TermsPage />} />
+            <Route path="/seguranca" element={<SecurityPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
