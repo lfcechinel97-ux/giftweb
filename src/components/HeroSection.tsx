@@ -157,7 +157,7 @@ const HeroSection = () => {
         </div>
 
         {/* Carousel */}
-        <div className="lg:w-[64%] relative rounded-[16px] overflow-hidden flex items-center mt-6 lg:mt-0 border border-border" style={{ minHeight: 260 }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <div className="lg:w-[64%] relative rounded-2xl overflow-hidden flex items-center mt-5 lg:mt-0 border border-border" style={{ minHeight: 270 }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
           {slides.map((slide, i) => {
             const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
             const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);
