@@ -237,6 +237,7 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
                     cor={p.cor}
                     preco_custo={p.preco_custo}
                     codigo_amigavel={p.codigo_amigavel}
+                    image_urls={p.image_urls}
                     variantes={p.variantes as any}
                     estoque={p.estoque}
                   />
