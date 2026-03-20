@@ -99,7 +99,7 @@ const AllProducts = () => {
               precoRange={[0, 100]} onPrecoRangeChange={() => {}} maxPreco={100}
               apenasEstoque={apenasEstoque} onApenasEstoqueChange={setApenasEstoque}
               onClearFilters={clearFilters} totalProducts={total}
-              showSort sortBy={sortBy} onSortChange={setSortBy}
+              sortBy={sortBy} onSortChange={setSortBy}
             />
 
             {loading ? (
