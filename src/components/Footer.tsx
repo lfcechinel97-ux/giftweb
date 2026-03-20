@@ -1,4 +1,5 @@
 import { Phone, Mail, Instagram, Facebook, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useSiteContent } from "@/hooks/useSiteContent";
 
 const WhatsAppIcon = ({ size = 16 }: { size?: number }) => (
