@@ -78,20 +78,23 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="py-8 relative overflow-hidden bg-background">
-      <div className="container flex flex-col lg:flex-row relative z-10" style={{ minHeight: 270 }}>
+    <section className="py-8 md:py-10 relative overflow-hidden bg-background">
+      <div className="container flex flex-col lg:flex-row relative z-10 gap-5" style={{ minHeight: 270 }}>
         {/* Filter panel */}
-        <div className="lg:w-[36%] bg-card rounded-[20px] border border-border px-3 py-4 lg:p-10 flex flex-col gap-3 lg:gap-5 shrink-0" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-          <h2 className="font-black text-[26px] lg:text-[38px] leading-tight text-foreground" style={{ maxWidth: "100%" }}>
-            Explore nosso catálogo de<br />
-            <span className="text-highlight">brindes:</span>
-          </h2>
+        <div className="lg:w-[36%] bg-card rounded-2xl border border-border px-4 py-5 lg:p-10 flex flex-col gap-4 lg:gap-5 shrink-0" style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}>
+          <div>
+            <h2 className="font-black text-[24px] lg:text-[36px] leading-tight text-foreground">
+              Explore nosso catálogo de<br />
+              <span className="text-highlight">brindes:</span>
+            </h2>
+            <p className="text-muted-foreground text-xs mt-1.5 hidden lg:block">Filtre por categoria, preço e cor</p>
+          </div>
 
           <div className="relative">
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full appearance-none rounded-[10px] border border-border bg-card py-3 pl-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-cta/40 focus:border-green-cta"
+              className="w-full appearance-none rounded-xl border border-border bg-card py-2.5 pl-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200"
             >
               <option value="">Escolha a categoria de brinde</option>
               {categoriesLoading && <option disabled>Carregando...</option>}
@@ -109,9 +112,9 @@ const HeroSection = () => {
               <input type="range" min={0} max={500} value={priceMin} onChange={(e) => setPriceMin(Math.min(Number(e.target.value), priceMax))} className="w-full" />
               <input type="range" min={0} max={500} value={priceMax} onChange={(e) => setPriceMax(Math.max(Number(e.target.value), priceMin))} className="w-full" />
             </div>
-            <div className="flex gap-3 mt-2">
-              <input type="text" inputMode="numeric" value={priceMin} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMin(Math.min(v, priceMax)); }} className="w-full rounded-[10px] border border-border bg-card py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40 focus:border-green-cta" />
-              <input type="text" inputMode="numeric" value={priceMax} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMax(Math.max(v, priceMin)); }} className="w-full rounded-[10px] border border-border bg-card py-2 px-3 text-sm font-bold text-green-cta text-center focus:outline-none focus:ring-2 focus:ring-green-cta/40 focus:border-green-cta" />
+            <div className="flex gap-2 mt-2">
+              <input type="text" inputMode="numeric" value={priceMin} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMin(Math.min(v, priceMax)); }} className="w-full rounded-xl border border-border bg-card py-2 px-3 text-sm font-bold text-primary text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200" />
+              <input type="text" inputMode="numeric" value={priceMax} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMax(Math.max(v, priceMin)); }} className="w-full rounded-xl border border-border bg-card py-2 px-3 text-sm font-bold text-primary text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200" />
             </div>
           </div>
 
@@ -144,17 +147,17 @@ const HeroSection = () => {
 
           <button
             onClick={handleSearch}
-            className="mt-auto flex items-center justify-center gap-2 rounded-[10px] bg-green-cta px-4 font-bold uppercase text-primary-foreground transition-all duration-200 hover:brightness-110"
-            style={{ height: 52, fontSize: 15, boxShadow: "0 0 24px rgba(34,197,94,0.2)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 24px rgba(34,197,94,0.4)")}
-            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 0 24px rgba(34,197,94,0.2)")}
+            className="mt-auto flex items-center justify-center gap-2 rounded-xl bg-primary px-4 font-bold uppercase text-primary-foreground transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
+            style={{ height: 50, fontSize: 14, letterSpacing: "0.5px", boxShadow: "0 0 20px rgba(34,197,94,0.18)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 28px rgba(34,197,94,0.38)")}
+            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 0 20px rgba(34,197,94,0.18)")}
           >
             BUSCAR BRINDE
           </button>
         </div>
 
         {/* Carousel */}
-        <div className="lg:w-[64%] relative rounded-[16px] overflow-hidden flex items-center mt-6 lg:mt-0 border border-border" style={{ minHeight: 260 }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <div className="lg:w-[64%] relative rounded-2xl overflow-hidden flex items-center mt-5 lg:mt-0 border border-border" style={{ minHeight: 270 }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
           {slides.map((slide, i) => {
             const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
             const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);

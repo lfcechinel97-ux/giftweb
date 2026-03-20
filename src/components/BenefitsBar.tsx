@@ -26,17 +26,25 @@ const BenefitsBar = () => {
   }, []);
 
   return (
-    <section className="bg-card border-t border-b border-border" style={{ padding: "28px 24px" }}>
+    <section
+      className="bg-card border-t border-b border-border"
+      style={{ padding: "20px 24px" }}
+    >
       <div className="max-w-[1200px] mx-auto">
         {/* MOBILE */}
-        <div className="flex flex-col items-center gap-4 lg:hidden">
+        <div className="flex flex-col items-center gap-3 lg:hidden">
           <div className="grid grid-cols-2 gap-3 w-full">
             {mobileGroups[mobileSlide].map(idx => {
               const Icon = items[idx].icon;
               return (
-                <div key={`${mobileSlide}-${idx}`} className="flex flex-col items-center text-center rounded-xl border border-border bg-secondary p-4 transition-opacity duration-400">
-                  <div className="text-primary mb-2">
-                    <Icon size={28} strokeWidth={1.5} />
+                <div
+                  key={`${mobileSlide}-${idx}`}
+                  className="flex flex-col items-center text-center rounded-xl border border-border bg-background p-4 transition-all duration-300"
+                  style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}
+                >
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2"
+                    style={{ background: "hsl(142 71% 45% / 0.08)" }}>
+                    <Icon size={20} strokeWidth={1.8} className="text-primary" />
                   </div>
                   <div className="text-xs font-bold text-foreground leading-[1.3]">{items[idx].title}</div>
                   <div className="text-[10px] text-muted-foreground mt-1 leading-[1.4]">{items[idx].sub}</div>
@@ -60,14 +68,17 @@ const BenefitsBar = () => {
           {items.map(({ icon: Icon, title, sub }, i) => (
             <div
               key={i}
-              className={`flex items-center gap-3.5 flex-1 px-6 ${i < items.length - 1 ? "border-r border-border" : ""}`}
+              className={`flex items-center gap-4 flex-1 px-6 group transition-all duration-200 ${i < items.length - 1 ? "border-r border-border" : ""}`}
             >
-              <div className="text-primary flex-shrink-0">
-                <Icon size={36} strokeWidth={1.5} />
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-105"
+                style={{ background: "hsl(142 71% 45% / 0.08)" }}
+              >
+                <Icon size={22} strokeWidth={1.8} className="text-primary" />
               </div>
               <div>
-                <div className="text-[13px] font-bold text-foreground leading-[1.3]">{title}</div>
-                <div className="text-[11px] text-muted-foreground mt-[3px] leading-[1.4]">{sub}</div>
+                <div className="text-[13px] font-bold text-foreground leading-[1.35]">{title}</div>
+                <div className="text-[11px] text-muted-foreground mt-[2px] leading-[1.4]">{sub}</div>
               </div>
             </div>
           ))}
