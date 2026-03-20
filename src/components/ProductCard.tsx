@@ -111,8 +111,8 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
               src={imagemAtiva}
               alt={nome}
               loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              style={{ opacity: imgOpacity, transition: `opacity 0.15s ease, transform 0.3s ease` }}
+              className="w-full h-full object-cover"
+              style={{ opacity: imgOpacity, transition: `opacity 0.15s ease` }}
               onError={() => setImgError(true)}
             />
           ) : (
