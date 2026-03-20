@@ -196,7 +196,7 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
             className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-green-cta px-6 py-3.5 font-bold text-primary-foreground text-sm uppercase tracking-wide transition-all duration-200 hover:brightness-110"
             style={{ boxShadow: "0 0 24px rgba(34,197,94,0.3)" }}
           >
-            <MessageCircle size={18} />
+            <WppIcon size={18} />
             Solicitar Orçamento no WhatsApp
           </button>
         </form>
