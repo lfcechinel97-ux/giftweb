@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useInView } from "@/hooks/useInView";
 import { supabase } from "@/integrations/supabase/client";
+import { Download } from "lucide-react";
 import catalogGeral from "@/assets/catalog-geral.png";
 import catalogCorporativo from "@/assets/catalog-corporativo.png";
 
@@ -47,35 +48,59 @@ const CatalogSection = () => {
   if (visibleItems.length === 0) return null;
 
   return (
-    <section className="py-8 md:py-14 bg-background">
+    <section className="py-10 md:py-16 bg-background">
       <div
         ref={ref}
         className={`px-3 md:container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
       >
-        <h2 className="text-foreground font-extrabold text-2xl md:text-[32px] text-center mb-6">
-          {sectionTitle || <>Baixe nosso <span className="text-highlight">catálogo</span></>}
-        </h2>
+        <div className="text-center mb-8">
+          <h2 className="text-foreground font-extrabold text-[26px] md:text-[32px]">
+            {sectionTitle || <>Baixe nosso <span className="text-highlight">catálogo</span></>}
+          </h2>
+          <p className="text-muted-foreground text-sm mt-1.5">Confira todos os produtos disponíveis para personalização</p>
+        </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-5 md:gap-8">
+        <div className="flex flex-wrap items-center justify-center gap-5 md:gap-10">
           {visibleItems.map((cat, i) => (
             <a
               key={i}
               href={cat.link || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex flex-col items-center transition-transform duration-200 hover:scale-[1.03] w-[44vw] md:w-[260px]"
+              className="group flex flex-col items-center w-[44vw] md:w-[260px]"
             >
-              <div className="w-full md:w-[260px] h-[140px] md:h-[190px] flex items-center justify-center">
+              <div
+                className="w-full md:w-[260px] h-[140px] md:h-[200px] flex items-center justify-center rounded-2xl transition-all duration-300"
+                style={{
+                  background: "hsl(var(--secondary))",
+                  border: "1.5px solid hsl(var(--border))",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.boxShadow = "0 10px 32px rgba(0,0,0,0.1)";
+                  el.style.transform = "scale(1.03) translateY(-3px)";
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.boxShadow = "0 2px 10px rgba(0,0,0,0.05)";
+                  el.style.transform = "scale(1) translateY(0)";
+                }}
+              >
                 <img
                   src={cat.img}
                   alt={cat.title || `Catálogo ${i + 1}`}
-                  className="max-w-full max-h-full object-contain drop-shadow-xl"
+                  className="max-w-[85%] max-h-[85%] object-contain drop-shadow-lg"
+                  style={{ transition: "transform 0.3s ease" }}
                 />
               </div>
               {cat.title && (
-                <p className="text-center text-foreground font-semibold text-xs md:text-sm mt-3 whitespace-pre-line leading-tight">
-                  {cat.title}
-                </p>
+                <div className="flex items-center gap-1.5 mt-3">
+                  <Download size={12} className="text-primary flex-shrink-0" />
+                  <p className="text-center text-foreground font-semibold text-xs md:text-sm whitespace-pre-line leading-tight">
+                    {cat.title}
+                  </p>
+                </div>
               )}
             </a>
           ))}

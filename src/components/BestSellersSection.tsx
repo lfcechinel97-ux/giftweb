@@ -45,17 +45,31 @@ const ShowcaseCard = ({ item }: { item: ShowcaseItem }) => {
   return (
     <Wrapper
       {...wrapperProps}
-      className="relative rounded-2xl bg-white border border-[#E5E7EB] p-3 transition-all duration-200 group hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] cursor-pointer block"
+      className="relative rounded-2xl bg-card border border-border p-3 transition-all duration-250 group hover:-translate-y-1 cursor-pointer block"
+      style={{
+        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+        transition: "box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease"
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.boxShadow = "0 8px 28px rgba(0,0,0,0.09)";
+        el.style.borderColor = "hsl(142 71% 45% / 0.35)";
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLElement;
+        el.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
+        el.style.borderColor = "hsl(var(--border))";
+      }}
     >
       {item.badge_text && (
         <div
           className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 rounded-full px-2.5 py-1 text-white uppercase tracking-wide"
           style={{
-            background: "linear-gradient(135deg, #16A34A, #22C55E)",
+            background: "linear-gradient(135deg, hsl(142 71% 35%), hsl(142 71% 45%))",
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: "0.5px",
-            boxShadow: "0 2px 8px rgba(34,197,94,0.35)",
+            boxShadow: "0 2px 8px rgba(34,197,94,0.28)",
           }}
         >
           🥇 {item.badge_text}
@@ -64,14 +78,14 @@ const ShowcaseCard = ({ item }: { item: ShowcaseItem }) => {
 
       <div
         className="aspect-square rounded-xl overflow-hidden mb-3"
-        style={{ background: "#F9FAFB" }}
+        style={{ background: "hsl(var(--muted))" }}
       >
         {item.image_url ? (
           <img
             src={item.image_url}
             alt={item.title || "Produto"}
             loading="lazy"
-            className="w-full h-full object-contain p-2"
+            className="w-full h-full object-contain p-2 transition-transform duration-300 group-hover:scale-[1.04]"
             onError={(e) => {
               (e.target as HTMLImageElement).src = "/placeholder-product.webp";
             }}
@@ -84,16 +98,13 @@ const ShowcaseCard = ({ item }: { item: ShowcaseItem }) => {
       </div>
 
       {item.title && (
-        <h4
-          className="uppercase leading-tight line-clamp-2 mb-1"
-          style={{ fontSize: 12, fontWeight: 700, color: "#111827" }}
-        >
+        <h4 className="text-foreground uppercase leading-tight line-clamp-2 mb-1.5" style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.3px" }}>
           {item.title}
         </h4>
       )}
 
       {item.price_text && (
-        <p style={{ fontSize: 15, fontWeight: 700, color: "#22C55E" }}>
+        <p className="text-primary font-bold" style={{ fontSize: 15 }}>
           {item.price_text}
         </p>
       )}
@@ -106,14 +117,17 @@ const BestSellersSection = () => {
   const { items, loading } = useShowcaseItems();
 
   return (
-    <section className="py-10 md:py-12 bg-surface-alt">
+    <section className="py-10 md:py-14 bg-secondary/30">
       <div
         ref={ref}
         className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
       >
-        <h2 className="text-foreground font-extrabold text-[32px] mb-6">
-          Brindes mais <span className="text-highlight">procurados</span> pelas empresas
-        </h2>
+        <div className="mb-7">
+          <h2 className="text-foreground font-extrabold text-[28px] md:text-[32px] leading-tight">
+            Brindes mais <span className="text-highlight">procurados</span> pelas empresas
+          </h2>
+          <p className="text-muted-foreground text-sm mt-1.5">Seleção curada dos produtos favoritos dos nossos clientes</p>
+        </div>
 
         {!loading && items.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
@@ -125,9 +139,9 @@ const BestSellersSection = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {loading
               ? Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="rounded-2xl bg-white border border-[#E5E7EB] p-3">
+                  <div key={i} className="rounded-2xl bg-card border border-border p-3">
                     <Skeleton className="aspect-square rounded-xl w-full mb-3" />
-                    <Skeleton className="h-3 w-3/4 mb-1" />
+                    <Skeleton className="h-3 w-3/4 mb-1.5" />
                     <Skeleton className="h-4 w-1/2" />
                   </div>
                 ))

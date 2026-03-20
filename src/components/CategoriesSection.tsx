@@ -39,30 +39,48 @@ const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
   });
 
   return (
-    <section className="py-10 md:py-12 bg-background">
+    <section className="py-10 md:py-14 bg-background">
       <div
         ref={ref}
         className={`container transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"}`}
       >
-        <h2 className="text-center text-foreground font-extrabold text-[32px] mb-8">
+        <h2 className="text-center text-foreground font-extrabold text-[28px] md:text-[32px] mb-2">
           Nossas <span className="text-highlight">Categorias</span>
         </h2>
+        <p className="text-center text-muted-foreground text-sm mb-8">Explore nossa linha completa de brindes corporativos</p>
 
         {/* Desktop: 7 columns, single row */}
         <div
           className="hidden lg:grid mx-auto"
-          style={{ gridTemplateColumns: "repeat(7, 1fr)", gap: 16, maxWidth: 1200, padding: "0 32px" }}
+          style={{ gridTemplateColumns: "repeat(7, 1fr)", gap: 20, maxWidth: 1200, padding: "0 32px" }}
         >
           {cats.map((cat) => (
             <Link
               key={cat.key}
               to={cat.route}
-              className="flex flex-col items-center gap-3 group transition-transform duration-200 hover:-translate-y-1"
+              className="flex flex-col items-center gap-3 group"
             >
-              <div className="w-[160px] h-[160px] rounded-full bg-muted border-2 border-muted overflow-hidden transition-colors duration-200 group-hover:border-green-cta">
+              <div
+                className="w-[148px] h-[148px] rounded-full overflow-hidden transition-all duration-300 group-hover:-translate-y-1.5"
+                style={{
+                  border: "2.5px solid hsl(var(--border))",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+                  transition: "border-color 0.25s, box-shadow 0.25s, transform 0.25s"
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = "hsl(142 71% 45%)";
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(34,197,94,0.18)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.borderColor = "hsl(var(--border))";
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 10px rgba(0,0,0,0.06)";
+                }}
+              >
                 <img src={cat.img} alt={cat.name} className="w-full h-full object-cover" draggable={false} />
               </div>
-              <span className="font-semibold text-[13px] text-foreground text-center">{cat.name}</span>
+              <span className="font-semibold text-[13px] text-foreground text-center leading-snug group-hover:text-primary transition-colors duration-200">
+                {cat.name}
+              </span>
             </Link>
           ))}
         </div>
@@ -75,7 +93,6 @@ const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
 };
 
 function MobileCarousel({ cats }: { cats: Array<{ key: string; name: string; img: string; route: string }> }) {
-  // Build groups of 2; if odd, pair last with first
   const groups: Array<[typeof cats[0], typeof cats[0]]> = [];
   for (let i = 0; i < cats.length; i += 2) {
     if (i + 1 < cats.length) {
@@ -112,7 +129,7 @@ function MobileCarousel({ cats }: { cats: Array<{ key: string; name: string; img
   return (
     <div className="lg:hidden overflow-hidden relative">
       <div
-        className="grid grid-cols-2 gap-4 px-6"
+        className="grid grid-cols-2 gap-5 px-6"
         style={{
           opacity: animating ? 0 : 1,
           transform: animating
@@ -127,7 +144,10 @@ function MobileCarousel({ cats }: { cats: Array<{ key: string; name: string; img
             to={cat.route}
             className="flex flex-col items-center gap-2.5 no-underline"
           >
-            <div className="w-[120px] h-[120px] rounded-full bg-muted border-2 border-muted overflow-hidden">
+            <div
+              className="w-[120px] h-[120px] rounded-full overflow-hidden border-2 border-border bg-muted"
+              style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+            >
               <img src={cat.img} alt={cat.name} className="w-full h-full object-cover" draggable={false} />
             </div>
             <span className="font-semibold text-[13px] text-foreground text-center">{cat.name}</span>
@@ -135,8 +155,7 @@ function MobileCarousel({ cats }: { cats: Array<{ key: string; name: string; img
         ))}
       </div>
 
-      {/* Indicators */}
-      <div className="flex justify-center gap-1.5 mt-4">
+      <div className="flex justify-center gap-1.5 mt-5">
         {groups.map((_, i) => (
           <button
             key={i}

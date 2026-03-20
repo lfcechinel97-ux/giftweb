@@ -72,15 +72,14 @@ const ClientsSection = () => {
   return (
     <section
       ref={sectionRef}
-      style={{ padding: '48px 0', background: '#F8F9FA' }}
-      className={`transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+      className={`py-12 md:py-14 bg-card border-t border-border transition-all duration-700 ${inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
     >
-      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 6px', color: '#111827' }}>
+      <div className="text-center mb-8 px-4">
+        <h2 className="text-foreground font-extrabold text-[22px] md:text-[26px] mb-1.5">
           Grandes clientes que confiam na{' '}
-          <em style={{ fontStyle: 'italic', color: '#22C55E' }}>Gift Web</em>
+          <em className="not-italic text-primary">Gift Web</em>
         </h2>
-        <p style={{ color: '#6B7280', fontSize: '14px', margin: 0 }}>
+        <p className="text-muted-foreground text-sm">
           Marcas que escolheram qualidade e personalização
         </p>
       </div>
@@ -122,20 +121,19 @@ const ClientsSection = () => {
                 <img
                   src={logo.value}
                   alt={`Cliente ${i + 1}`}
-                  className="client-logo"
                   style={{
-                    height: '90px',
+                    height: '80px',
                     width: '100%',
                     objectFit: 'contain' as const,
                     display: 'block',
-                    filter: 'grayscale(100%) opacity(0.65)',
-                    transition: 'filter 0.35s ease',
+                    filter: 'grayscale(100%) opacity(0.55)',
+                    transition: 'filter 0.3s ease',
                   }}
                   onMouseEnter={e => {
                     (e.currentTarget as HTMLImageElement).style.filter = 'grayscale(0%) opacity(1)';
                   }}
                   onMouseLeave={e => {
-                    (e.currentTarget as HTMLImageElement).style.filter = 'grayscale(100%) opacity(0.65)';
+                    (e.currentTarget as HTMLImageElement).style.filter = 'grayscale(100%) opacity(0.55)';
                   }}
                 />
               )}
