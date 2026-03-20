@@ -19,6 +19,7 @@ interface ProductCardProps {
   nome: string;
   slug: string | null;
   image_url: string | null;
+  image_urls?: string[] | null;
   cor: string | null;
   preco_custo: number | null;
   codigo_amigavel: string;
@@ -41,13 +42,20 @@ const MAX_DOTS = 6;
 const CYCLE_INTERVAL = 1500; // 1.5s between image switches
 const FADE_DURATION = 200;   // ms for fade transition
 
-const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel, variantes, estoque }: ProductCardProps) => {
+const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes, estoque }: ProductCardProps) => {
   const navigate = useNavigate();
 
-  // Build image list once
+  // Build image list once — primary image + extra image_urls + variant images
   const images = useRef<string[]>([]);
   if (images.current.length === 0 && image_url) {
     images.current = [image_url];
+    // Add extra images from image_urls array
+    if (image_urls && image_urls.length > 0) {
+      image_urls.forEach(img => {
+        if (img && !images.current.includes(img)) images.current.push(img);
+      });
+    }
+    // Add variant images
     if (variantes && variantes.length > 0) {
       variantes.forEach(v => {
         if (v.image && !images.current.includes(v.image)) images.current.push(v.image);
