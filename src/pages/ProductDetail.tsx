@@ -291,7 +291,23 @@ const ProductDetail = () => {
                   </button>
                 </div>
 
-                {/* Variant thumbnails */}
+                {/* Product image thumbnails (extra images uploaded in admin) */}
+                {allImages.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    {allImages.map((src, i) => (
+                      <button
+                        key={src + i}
+                        onClick={() => handleThumbChange(src)}
+                        className="shrink-0 w-16 h-16 rounded-xl border-2 overflow-hidden transition-all duration-150 bg-white"
+                        style={{ borderColor: mainImage === src ? 'hsl(142,71%,45%)' : 'hsl(var(--border))' }}
+                      >
+                        <img src={src} alt={`foto ${i + 1}`} className="w-full h-full object-contain p-1 pointer-events-none" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+
                 {allVariants.length > 1 && (
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                     {allVariants.map((v) => {
