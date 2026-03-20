@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Search, X, Filter } from "lucide-react";
+import { Search, X, Filter, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { getCorHex, isLightColor } from "@/utils/colorHex";
 
 interface CatalogFiltersProps {
   searchTerm: string;
