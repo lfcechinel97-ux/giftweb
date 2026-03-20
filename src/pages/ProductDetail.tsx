@@ -287,21 +287,21 @@ const ProductDetail = () => {
                 </div>
 
                 {/* Variant selector */}
-                {variants.length > 1 ? (
+                {allVariants.length > 1 ? (
                   <TooltipProvider delayDuration={200}>
                     <div className="flex flex-col gap-2">
                       <span className="text-foreground text-sm font-semibold">
                         Cor: <span className="text-muted-foreground font-normal">{activeVariant?.cor || product.cor || ''}</span>
-                        <span className="ml-1.5 text-xs text-muted-foreground">({variants.length} opções)</span>
+                        <span className="ml-1.5 text-xs text-muted-foreground">({allVariants.length} opções)</span>
                       </span>
-                      <div className="flex flex-wrap gap-2 max-h-[200px] overflow-y-auto">
-                        {variants.map((v) => {
+                      <div className="flex flex-wrap gap-2 max-h-[220px] overflow-y-auto pr-1">
+                        {allVariants.map((v) => {
                           const hex = getCorHex(v.cor);
-                          const isCurrent = v.id === activeVariantId;
+                          const isCurrent = v.slug === activeVariantSlug;
                           const outOfStock = v.estoque === 0 || v.estoque === null;
-                          const thumbSrc = v.image_url || '';
+                          const thumbSrc = v.image || '';
                           return (
-                            <Tooltip key={v.id}>
+                            <Tooltip key={v.slug}>
                               <TooltipTrigger asChild>
                                 <button
                                   onClick={() => handleSwitchVariant(v)}
