@@ -243,9 +243,11 @@ const ProductDetail = () => {
 
               {/* Gallery */}
               <div className="flex flex-col gap-3 w-full min-w-0">
+                {/* Main image with zoom button */}
                 <div
-                  className="w-full rounded-2xl border border-border bg-white overflow-hidden flex items-center justify-center"
+                  className="relative w-full rounded-2xl border border-border bg-white overflow-hidden flex items-center justify-center cursor-zoom-in"
                   style={{ aspectRatio: '1/1' }}
+                  onClick={() => setLightbox(true)}
                 >
                   {mainImage && (
                     <img
@@ -256,20 +258,39 @@ const ProductDetail = () => {
                       onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-product.webp"; }}
                     />
                   )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setLightbox(true); }}
+                    className="absolute bottom-3 left-3 w-8 h-8 rounded-lg bg-white/90 border border-border flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+                    title="Ampliar imagem"
+                  >
+                    <ZoomIn className="w-4 h-4 text-muted-foreground" />
+                  </button>
                 </div>
-                {allImages.length > 1 && (
-                  <div className="flex gap-2 flex-wrap">
-                    {allImages.map((src, i) => {
-                      const active = mainImage === src;
+
+                {/* Variant thumbnails */}
+                {allVariants.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    {allVariants.map((v) => {
+                      const isActive = v.slug === activeVariantSlug;
+                      const thumbSrc = v.image || '';
                       return (
                         <button
-                          key={i}
-                          onClick={() => handleThumbChange(src)}
-                          onMouseEnter={() => handleThumbChange(src)}
-                          className="w-14 h-14 rounded-xl border-2 bg-white flex items-center justify-center p-1 shrink-0 transition-colors duration-150"
-                          style={{ borderColor: active ? '#22C55E' : '#E5E7EB' }}
+                          key={v.slug}
+                          onClick={() => handleSwitchVariant(v)}
+                          title={v.cor || ''}
+                          className="w-16 h-16 shrink-0 rounded-xl border-2 bg-white flex items-center justify-center p-1 transition-all duration-150"
+                          style={{ borderColor: isActive ? 'hsl(142,71%,45%)' : 'hsl(var(--border))' }}
                         >
-                          <img src={src} alt={`Foto ${i + 1}`} className="w-full h-full object-contain pointer-events-none" />
+                          {thumbSrc ? (
+                            <img
+                              src={thumbSrc}
+                              alt={v.cor || 'variante'}
+                              className="w-full h-full object-contain rounded-lg pointer-events-none"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                          ) : (
+                            <div className="w-full h-full rounded-lg" style={{ backgroundColor: getCorHex(v.cor) }} />
+                          )}
                         </button>
                       );
                     })}
