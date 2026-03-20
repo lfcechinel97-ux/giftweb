@@ -93,13 +93,6 @@ const ProductDetail = () => {
         // Main image = the variant we opened, not the parent
         const variantImg = data.image_url || baseProduct.image_url || '';
         setMainImage(variantImg);
-
-        const imgs: string[] = [];
-        if (data.image_urls && Array.isArray(data.image_urls)) {
-          for (const u of data.image_urls) { if (u && (u as string).trim()) imgs.push(u as string); }
-        }
-        if (imgs.length === 0 && variantImg) imgs.push(variantImg);
-        setImageUrls(imgs);
         setActiveImg(0);
 
         const { data: relatedData } = await supabase
