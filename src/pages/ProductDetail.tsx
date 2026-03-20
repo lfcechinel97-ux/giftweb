@@ -77,11 +77,6 @@ const ProductDetail = () => {
     setTimeout(() => { setMainImage(src); setIsTransitioning(false); }, 150);
   };
 
-
-    setIsTransitioning(true);
-    setTimeout(() => { setMainImage(src); setIsTransitioning(false); }, 150);
-  };
-
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
