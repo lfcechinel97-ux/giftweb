@@ -180,37 +180,31 @@ const Header = () => {
       </header>
 
       {/* ── MOBILE FULLSCREEN MENU ── */}
-      {/* Overlay backdrop */}
       <div
-        className={`lg:hidden fixed inset-0 z-[100] bg-navy transition-opacity duration-300 ${
+        className={`lg:hidden fixed inset-0 z-[100] bg-navy flex flex-col transition-opacity duration-300 ${
           mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       >
-        {/* Close button */}
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="absolute top-4 right-4 text-white p-2"
-        >
-          <X size={28} />
-        </button>
-
-        {/* Logo */}
-        <div className="px-8 pt-16 pb-6 border-b border-white/10">
+        {/* Fixed header row inside menu */}
+        <div className="flex items-center justify-between px-6 pt-5 pb-5 border-b border-white/10 shrink-0">
           <a href="/" onClick={() => setMobileOpen(false)} className="flex items-baseline gap-1">
-            <span className="font-extrabold font-serif text-4xl text-white">Gift Web</span>
-            <span className="text-sm font-semibold text-green-cta ml-1">B R I N D E S</span>
+            <span className="font-extrabold font-serif text-3xl text-white">Gift Web</span>
+            <span className="text-xs font-semibold text-green-cta ml-1">B R I N D E S</span>
           </a>
+          <button onClick={() => setMobileOpen(false)} className="text-white p-1">
+            <X size={26} />
+          </button>
         </div>
 
-        {/* Search */}
-        <div className="px-6 py-5">
+        {/* Search — fixed inside menu */}
+        <div className="px-6 py-4 shrink-0">
           <form onSubmit={handleSearch} className="relative">
             <input
               type="text"
               placeholder="Estou procurando por..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-[10px] border border-border bg-white/10 py-3 pl-10 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-green-cta/40"
+              className="w-full rounded-[10px] border border-white/20 bg-white/10 py-3 pl-10 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-green-cta/40"
             />
             <button type="submit" className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">
               <Search size={16} />
@@ -218,8 +212,8 @@ const Header = () => {
           </form>
         </div>
 
-        {/* Nav links */}
-        <nav className="px-6 flex flex-col gap-1 overflow-y-auto">
+        {/* Scrollable nav area */}
+        <nav className="px-6 flex flex-col gap-1 overflow-y-auto flex-1 pb-10">
           <a
             href="/produtos"
             onClick={() => setMobileOpen(false)}
