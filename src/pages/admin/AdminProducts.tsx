@@ -253,6 +253,17 @@ export default function AdminProducts() {
                 >
                   <Pencil className="h-4 w-4 text-muted-foreground" />
                 </Button>
+                {p.slug && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    title="Ver no site"
+                    onClick={() => window.open(`/produto/${p.slug}`, '_blank')}
+                  >
+                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                )}
               </div>
             </div>
           ))
