@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { calcularPreco, formatarBRL } from "@/utils/price";
 import { getCorHex, isLightColor } from "@/utils/colorHex";
@@ -39,13 +39,17 @@ export const ProductCardSkeleton = () => (
 );
 
 const MAX_DOTS = 6;
+const FADE_INTERVAL = 900; // ms between image switches on hover
 
 const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel, variantes, estoque }: ProductCardProps) => {
   const navigate = useNavigate();
   const [imagemAtiva, setImagemAtiva] = useState(image_url);
+  const [imgOpacity, setImgOpacity] = useState(1);
   const [imgError, setImgError] = useState(false);
+  const hoverInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hoverImages = useRef<string[]>([]);
+  const hoverIndex = useRef(0);
 
-  // Don't render card if no valid image
   if (!image_url || image_url.includes("placehold.co")) return null;
   const precoMin = preco_custo ? calcularPreco(preco_custo, 1000) : null;
   const preco20 = preco_custo ? calcularPreco(preco_custo, 20) : null;
@@ -57,12 +61,55 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
     : [];
   const isOutOfStock = !hasVariants && (estoque === 0 || estoque === null);
 
+  // Build image list from variants for hover cycling
+  const buildHoverImages = () => {
+    const imgs: string[] = [image_url];
+    if (hasVariants) {
+      variantes!.forEach(v => { if (v.image && !imgs.includes(v.image)) imgs.push(v.image); });
+    }
+    return imgs;
+  };
+
+  const fadeToImage = (src: string) => {
+    setImgOpacity(0);
+    setTimeout(() => {
+      setImagemAtiva(src);
+      setImgOpacity(1);
+    }, 150);
+  };
+
+  const startHoverCycle = () => {
+    const imgs = buildHoverImages();
+    if (imgs.length <= 1) return;
+    hoverImages.current = imgs;
+    hoverIndex.current = 1;
+    hoverInterval.current = setInterval(() => {
+      fadeToImage(hoverImages.current[hoverIndex.current % hoverImages.current.length]);
+      hoverIndex.current++;
+    }, FADE_INTERVAL);
+  };
+
+  const stopHoverCycle = () => {
+    if (hoverInterval.current) {
+      clearInterval(hoverInterval.current);
+      hoverInterval.current = null;
+    }
+    hoverIndex.current = 0;
+    fadeToImage(image_url);
+  };
+
   return (
     <div
       className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-200 hover:-translate-y-1 hover:border-green-cta"
       style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
-      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.10)")}
-      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)"; setImagemAtiva(image_url); }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.10)";
+        startHoverCycle();
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)";
+        stopHoverCycle();
+      }}
     >
       <Link to={href} className="block">
         <div className="relative aspect-square bg-secondary overflow-hidden">
@@ -72,8 +119,8 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
               alt={nome}
               loading="lazy"
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              style={{ opacity: imgOpacity, transition: `opacity 0.15s ease, transform 0.3s ease` }}
               onError={() => setImgError(true)}
-              style={imgError ? { display: 'none' } : undefined}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
@@ -103,7 +150,10 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
                   <Tooltip key={v.codigo_amigavel || i}>
                     <TooltipTrigger asChild>
                       <span
-                        onMouseEnter={() => setImagemAtiva(v.image || image_url)}
+                        onMouseEnter={() => {
+                          if (hoverInterval.current) { clearInterval(hoverInterval.current); hoverInterval.current = null; }
+                          fadeToImage(v.image || image_url);
+                        }}
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
