@@ -105,6 +105,26 @@
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* Minimal global scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(220 13% 82%);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(142 71% 45% / 0.6);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(220 13% 82%) transparent;
+}
+
 /* Testimonial card fade-slide animation */
 @keyframes fadeSlideIn {
   from { opacity: 0; transform: translateY(12px); }
