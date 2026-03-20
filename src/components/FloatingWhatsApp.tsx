@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { MessageCircle } from "lucide-react";
 import WhatsAppModal from "./WhatsAppModal";
 
 const FloatingWhatsApp = () => {
@@ -16,7 +15,7 @@ const FloatingWhatsApp = () => {
         }}
         aria-label="Fale conosco pelo WhatsApp"
       >
-        <MessageCircle size={26} />
+        <img src="/logos/whatsapp-white.svg" alt="WhatsApp" className="w-7 h-7" />
       </button>
       <WhatsAppModal open={open} onClose={() => setOpen(false)} />
     </>

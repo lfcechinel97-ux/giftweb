@@ -83,32 +83,24 @@ const Footer = () => {
           {/* Col 3 — Formas de Pagamento */}
           <div>
             <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Formas de pagamento</h4>
-            <div className="bg-white rounded-xl p-4">
-              <div className="grid grid-cols-4 gap-3 items-center justify-items-center">
-                {paymentLogos.map((src, i) =>
-                  src ? (
-                    <img key={i} src={src} alt={`Pagamento ${i + 1}`} className="h-6 w-auto object-contain" />
-                  ) : (
-                    <div key={i} className="h-6 w-10 bg-gray-100 rounded" />
-                  )
-                )}
-              </div>
+            <div className="bg-white rounded-xl p-4 flex items-center justify-center">
+              <img
+                src="/logos/formaspags.png"
+                alt="Formas de pagamento aceitas"
+                className="w-full max-w-[220px] object-contain"
+              />
             </div>
           </div>
 
           {/* Col 4 — Segurança */}
           <div>
             <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Segurança</h4>
-            <div className="bg-white rounded-xl p-4">
-              <div className="grid grid-cols-2 gap-3 items-center justify-items-center">
-                {securityLogos.map((src, i) =>
-                  src ? (
-                    <img key={i} src={src} alt={`Segurança ${i + 1}`} className="h-7 w-auto object-contain" />
-                  ) : (
-                    <div key={i} className="h-7 w-14 bg-gray-100 rounded" />
-                  )
-                )}
-              </div>
+            <div className="bg-[#1a1f2e] rounded-xl p-4 flex items-center justify-center">
+              <img
+                src="/logos/ssl.svg"
+                alt="Site seguro SSL"
+                className="w-full max-w-[200px] object-contain"
+              />
             </div>
           </div>
         </div>
