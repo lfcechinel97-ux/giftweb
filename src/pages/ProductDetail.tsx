@@ -75,26 +75,42 @@ const ProductDetail = () => {
       .single()
       .then(async ({ data, error }) => {
         if (error || !data) { navigate("/404", { replace: true }); return; }
-        setProduct(data);
+
+        // If this is a variant, load the parent product so we can get all variantes JSONB
+        let baseProduct = data;
+        if (data.is_variante && data.produto_pai) {
+          const { data: parentData } = await supabase
+            .from("products_cache")
+            .select("*")
+            .eq("id", data.produto_pai)
+            .single();
+          if (parentData) baseProduct = parentData;
+        }
+
+        setProduct(baseProduct);
+        // Active variant = the slug we actually navigated to
         setActiveVariantSlug(data.slug);
+        // Main image = the variant we opened, not the parent
+        const variantImg = data.image_url || baseProduct.image_url || '';
+        setMainImage(variantImg);
 
         const imgs: string[] = [];
         if (data.image_urls && Array.isArray(data.image_urls)) {
           for (const u of data.image_urls) { if (u && (u as string).trim()) imgs.push(u as string); }
         }
-        if (imgs.length === 0 && data.image_url) imgs.push(data.image_url);
+        if (imgs.length === 0 && variantImg) imgs.push(variantImg);
         setImageUrls(imgs);
         setActiveImg(0);
 
         const { data: relatedData } = await supabase
           .from("products_cache")
           .select("*")
-          .eq("categoria", data.categoria!)
+          .eq("categoria", baseProduct.categoria!)
           .eq("ativo", true)
           .eq("has_image", true)
           .eq("is_variante", false)
           .gt("estoque", 0)
-          .neq("slug", slug)
+          .neq("slug", baseProduct.slug)
           .order("variantes_count", { ascending: false })
           .limit(4);
 
@@ -179,7 +195,8 @@ const ProductDetail = () => {
       setActiveVariantSlug(variant.slug);
       setIsTransitioning(false);
     }, 150);
-    if (variant.slug) navigate(`/produto/${variant.slug}`, { replace: true });
+    // Update URL without triggering a page reload/re-fetch
+    if (variant.slug) window.history.replaceState(null, '', `/produto/${variant.slug}`);
   };
 
   if (loading) {
@@ -651,12 +668,12 @@ const ProductDetail = () => {
           };
           return (
             <div
-              className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4"
+              className="fixed inset-0 z-[200] bg-black/85 flex items-center justify-center p-4"
               onClick={() => setLightbox(false)}
             >
               {/* Close */}
               <button
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
+                className="absolute top-4 right-4 z-[201] w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
                 onClick={() => setLightbox(false)}
               >
                 <X className="w-5 h-5 text-white" />
