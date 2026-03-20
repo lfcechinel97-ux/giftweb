@@ -101,15 +101,8 @@ const ProductCard = ({ nome, slug, image_url, cor, preco_custo, codigo_amigavel,
   return (
     <div
       className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-200 hover:-translate-y-1 hover:border-green-cta"
-      style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.10)";
-        startHoverCycle();
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)";
-        stopHoverCycle();
-      }}
+      onMouseEnter={() => startHoverCycle()}
+      onMouseLeave={() => stopHoverCycle()}
     >
       <Link to={href} className="block">
         <div className="relative aspect-square bg-secondary overflow-hidden">
