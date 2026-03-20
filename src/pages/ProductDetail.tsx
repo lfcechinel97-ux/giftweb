@@ -188,7 +188,7 @@ const ProductDetail = () => {
   if (!product) return null;
 
   const isVariante = (product as any).is_variante === true;
-  const canonicalSlug = isVariante && parentSlug ? parentSlug : product.slug;
+  const canonicalSlug = product.slug;
   const canonicalUrl = `${SITE_URL}/produto/${canonicalSlug}`;
   const categorySlug = product.categoria || "outros";
   const whatsappMsg = encodeURIComponent(
