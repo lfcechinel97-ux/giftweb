@@ -82,10 +82,13 @@ const HeroSection = () => {
       <div className="container flex flex-col lg:flex-row relative z-10 gap-5" style={{ minHeight: 270 }}>
         {/* Filter panel */}
         <div className="lg:w-[36%] bg-card rounded-2xl border border-border px-4 py-5 lg:p-10 flex flex-col gap-4 lg:gap-5 shrink-0" style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}>
-          <h2 className="font-black text-[26px] lg:text-[38px] leading-tight text-foreground" style={{ maxWidth: "100%" }}>
-            Explore nosso catálogo de<br />
-            <span className="text-highlight">brindes:</span>
-          </h2>
+          <div>
+            <h2 className="font-black text-[24px] lg:text-[36px] leading-tight text-foreground">
+              Explore nosso catálogo de<br />
+              <span className="text-highlight">brindes:</span>
+            </h2>
+            <p className="text-muted-foreground text-xs mt-1.5 hidden lg:block">Filtre por categoria, preço e cor</p>
+          </div>
 
           <div className="relative">
             <select
