@@ -31,9 +31,8 @@ const CorporateQuotation = () => {
             className={`relative z-10 w-full max-w-4xl md:rounded-3xl md:border md:border-white/10 md:bg-white/5 md:backdrop-blur-sm transition-all duration-700 ${
               inView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
             }`}
-            style={{ boxShadow: "none" } as React.CSSProperties}
           >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8 px-6 py-0 md:p-10" style={{ ...(window?.innerWidth >= 768 ? { boxShadow: "0 8px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06)" } : {}) }}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8 px-6 py-2 md:p-10">
               {/* Left: text */}
               <div className="flex flex-col items-center text-center md:items-start md:text-left flex-1">
                 <span className="text-green-cta text-xs font-semibold uppercase tracking-[0.15em] mb-4">
