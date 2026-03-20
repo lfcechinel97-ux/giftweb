@@ -25,6 +25,9 @@ import AdminCatalogs from "./pages/admin/AdminCatalogs.tsx";
 import AdminClientes from "./pages/admin/AdminClientes.tsx";
 import AdminFooter from "./pages/admin/AdminFooter.tsx";
 import AdminGuard from "./components/admin/AdminGuard.tsx";
+import PrivacyPage from "./pages/PrivacyPage.tsx";
+import TermsPage from "./pages/TermsPage.tsx";
+import SecurityPage from "./pages/SecurityPage.tsx";
 
 const queryClient = new QueryClient();
 
