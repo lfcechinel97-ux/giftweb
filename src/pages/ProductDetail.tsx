@@ -19,15 +19,11 @@ import type { Tables } from "@/integrations/supabase/types";
 type Product = Tables<"products_cache">;
 
 interface VariantInfo {
-  id: string;
-  slug: string | null;
+  slug: string;
   cor: string | null;
   codigo_amigavel: string;
-  image_url: string | null;
-  image_urls: string[] | null;
+  image: string | null;
   estoque: number | null;
-  preco_custo: number | null;
-  nome: string;
 }
 
 const QUANTITIES = [20, 50, 100, 200, 300, 500, 1000];
