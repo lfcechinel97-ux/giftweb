@@ -492,18 +492,42 @@ const ProductDetail = () => {
                 )}
 
                 {/* Payment */}
-                <div className="flex gap-3 items-center p-3 rounded-xl bg-secondary">
-                  {[
-                    { label: 'PIX', sub: '3% off' },
-                    { label: 'Cartão 2x', sub: 'sem juros' },
-                    { label: 'Boleto', sub: 'para PJ' },
-                  ].map(({ label, sub }) => (
-                    <div key={label} className="flex-1 flex flex-col items-center gap-0.5">
-                      <CreditCard className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-[10px] text-foreground font-medium">{label}</span>
-                      <span className="text-[9px] text-muted-foreground">{sub}</span>
-                    </div>
-                  ))}
+                <div className="flex gap-2 items-stretch p-3 rounded-xl bg-secondary divide-x divide-border">
+                  {/* PIX */}
+                  <div className="flex-1 flex flex-col items-center gap-1 px-2">
+                    <svg viewBox="0 0 512 512" className="w-6 h-6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M112.57 391.62c20.56 0 39.9-8.01 54.45-22.56l80.98-80.98c6.04-6.04 16.65-6.04 22.69 0l81.32 81.32c14.55 14.55 33.89 22.56 54.45 22.56h15.97l-102.6 102.6c-35.42 35.41-92.84 35.41-128.26 0L88.97 391.62h23.6z" fill="#32BCAD"/>
+                      <path d="M112.57 120.38c20.56 0 39.9 8.01 54.45 22.56l80.98 80.98c6.27 6.27 16.42 6.27 22.69 0l81.32-81.32c14.55-14.55 33.89-22.56 54.45-22.56h23.6L327.01 17.38c-35.42-35.41-92.84-35.41-128.26 0L96.15 120.38h16.42z" fill="#32BCAD"/>
+                      <path d="M494.62 198.99l-73.2-73.2h-14.96c-14.21 0-27.82 5.66-37.88 15.72l-81.32 81.32c-16.25 16.25-44.52 16.25-60.77 0l-80.98-80.98c-10.06-10.06-23.67-15.72-37.88-15.72H88.97l-73.2 73.2c-35.41 35.42-35.41 92.84 0 128.26l73.2 73.2h18.66c14.21 0 27.82-5.66 37.88-15.72l80.98-80.98c8.24-8.24 19.14-12.36 30.08-12.36 10.94 0 21.85 4.12 30.08 12.36l81.32 81.32c10.06 10.06 23.67 15.72 37.88 15.72h14.96l73.2-73.2c35.43-35.42 35.43-92.84.01-128.26z" fill="#32BCAD"/>
+                    </svg>
+                    <span className="text-[10px] text-foreground font-semibold">PIX</span>
+                    <span className="text-[9px] text-muted-foreground">3% off</span>
+                  </div>
+                  {/* Cartão */}
+                  <div className="flex-1 flex flex-col items-center gap-1 px-2">
+                    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground"/>
+                      <path d="M2 10h20" stroke="currentColor" strokeWidth="1.5" className="text-muted-foreground"/>
+                      <rect x="5" y="14" width="4" height="2" rx="0.5" fill="currentColor" className="text-muted-foreground"/>
+                    </svg>
+                    <span className="text-[10px] text-foreground font-semibold">Cartão 2x</span>
+                    <span className="text-[9px] text-muted-foreground">sem juros</span>
+                  </div>
+                  {/* Boleto */}
+                  <div className="flex-1 flex flex-col items-center gap-1 px-2">
+                    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="2" y="4" width="1.5" height="16" rx="0.5" className="text-muted-foreground" fill="currentColor"/>
+                      <rect x="5" y="4" width="1" height="16" rx="0.5" className="text-muted-foreground" fill="currentColor"/>
+                      <rect x="7.5" y="4" width="2" height="16" rx="0.5" className="text-muted-foreground" fill="currentColor"/>
+                      <rect x="11" y="4" width="1" height="16" rx="0.5" className="text-muted-foreground" fill="currentColor"/>
+                      <rect x="13.5" y="4" width="1.5" height="16" rx="0.5" className="text-muted-foreground" fill="currentColor"/>
+                      <rect x="16.5" y="4" width="1" height="16" rx="0.5" className="text-muted-foreground" fill="currentColor"/>
+                      <rect x="19" y="4" width="1.5" height="16" rx="0.5" className="text-muted-foreground" fill="currentColor"/>
+                      <rect x="21" y="4" width="1" height="16" rx="0.5" className="text-muted-foreground" fill="currentColor"/>
+                    </svg>
+                    <span className="text-[10px] text-foreground font-semibold">Boleto</span>
+                    <span className="text-[9px] text-muted-foreground">para PJ</span>
+                  </div>
                 </div>
 
                 {/* Qty selector */}
