@@ -77,41 +77,36 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
     if (urlCor) setSelectedCor(urlCor);
   }, [urlCor]);
 
+  const applySort = (query: any, sort: string) => {
+    if (sort === "menor_preco") return query.order("preco_custo", { ascending: true, nullsFirst: false });
+    if (sort === "maior_preco") return query.order("preco_custo", { ascending: false, nullsFirst: false });
+    if (sort === "maior_estoque") return query.order("estoque", { ascending: false, nullsFirst: false });
+    if (sort === "az") return query.order("nome", { ascending: true });
+    // relevancia (default)
+    return query.order("sort_estoque").order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false });
+  };
+
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
-    // For spotlight categories, fetch product IDs from junction table
     if (isSpotlightCategory) {
-      // Get category ID from slug
       const { data: catData } = await supabase
         .from("spotlight_categories")
         .select("id, label")
         .eq("slug", category)
         .single();
 
-      if (!catData) {
-        setProducts([]);
-        setTotal(0);
-        setLoading(false);
-        return;
-      }
+      if (!catData) { setProducts([]); setTotal(0); setLoading(false); return; }
 
-      // Get linked product IDs
       const { data: links } = await supabase
         .from("product_spotlight_categories")
         .select("product_id")
         .eq("category_id", catData.id);
 
       const productIds = (links || []).map(l => l.product_id);
-
-      if (productIds.length === 0) {
-        setProducts([]);
-        setTotal(0);
-        setLoading(false);
-        return;
-      }
+      if (productIds.length === 0) { setProducts([]); setTotal(0); setLoading(false); return; }
 
       let query = supabase
         .from("products_cache")
@@ -124,15 +119,15 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
       if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
       if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
       if (apenasEstoque) query = query.gt("estoque", 0);
+      query = applySort(query, sortBy);
 
-      const { data, count } = await query.order("sort_estoque").order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false }).range(from, to);
+      const { data, count } = await query.range(from, to);
       setProducts(data || []);
       setTotal(count || 0);
       setLoading(false);
       return;
     }
 
-    // Legacy: hardcoded name-based filter
     let query = supabase
       .from("products_cache")
       .select("*", { count: "exact" })
@@ -141,16 +136,16 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
       .eq("is_variante", false);
 
     if (nameFilter) query = query.or(nameFilter);
-
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
     if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
     if (apenasEstoque) query = query.gt("estoque", 0);
+    query = applySort(query, sortBy);
 
-    const { data, count } = await query.order("sort_estoque").order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false }).range(from, to);
+    const { data, count } = await query.range(from, to);
     setProducts(data || []);
     setTotal(count || 0);
     setLoading(false);
-  }, [category, page, searchTerm, selectedCor, apenasEstoque, nameFilter, isSpotlightCategory]);
+  }, [category, page, searchTerm, selectedCor, apenasEstoque, sortBy, nameFilter, isSpotlightCategory]);
 
   useEffect(() => {
     let q = supabase
