@@ -668,12 +668,12 @@ const ProductDetail = () => {
           };
           return (
             <div
-              className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4"
+              className="fixed inset-0 z-[200] bg-black/85 flex items-center justify-center p-4"
               onClick={() => setLightbox(false)}
             >
               {/* Close */}
               <button
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
+                className="absolute top-4 right-4 z-[201] w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
                 onClick={() => setLightbox(false)}
               >
                 <X className="w-5 h-5 text-white" />
