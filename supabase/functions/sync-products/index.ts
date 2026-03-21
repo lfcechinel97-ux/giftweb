@@ -55,14 +55,19 @@ const MOCK_PRODUCTS = [
   },
 ];
 
-function getCodigoPrefixo(codigo: string): string {
-  if (codigo.includes('/')) return codigo.split('/')[0];
-  const partes = codigo.split('-');
-  if (partes.length >= 2) {
-    const sufixo = partes[partes.length - 1];
-    if (/^[A-Za-z]{1,4}[0-9]?$/.test(sufixo)) return partes.slice(0, -1).join('-');
-  }
-  return codigo;
+function normalizeNomeBase(nome: string): string {
+  return nome
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+// Chave de agrupamento: CodigoAmigavel + nome normalizado.
+// Garante que produtos com mesmo código base mas nomes diferentes não sejam agrupados.
+function getCodigoPrefixo(codigoAmigavel: string, nome: string): string {
+  return `${codigoAmigavel}|${normalizeNomeBase(nome)}`;
 }
 
 function getCategoria(nome: string): string {
