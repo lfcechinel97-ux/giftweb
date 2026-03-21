@@ -97,10 +97,10 @@ const ProductDetail = () => {
       });
   }, [slug, navigate]);
 
-  // The main image is from the variant we navigated to (or base product)
+  // The main image is from the selected variant (or base product)
   const mainImage = useMemo(() => {
-    return currentVariantData?.image_url || product?.image_url || '';
-  }, [currentVariantData, product]);
+    return selectedVariant?.image || product?.image_url || '';
+  }, [selectedVariant, product]);
 
   // Build ALL images: unify API images (image_urls from base product) + admin-uploaded images
   // The base product's image_urls contains all images from API sync.
