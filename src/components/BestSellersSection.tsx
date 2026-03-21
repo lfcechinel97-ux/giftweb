@@ -69,7 +69,7 @@ const ShowcaseCard = ({ item }: { item: ShowcaseItem }) => {
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: "0.5px",
-            boxShadow: "0 2px 8px rgba(34,197,94,0.28)",
+            boxShadow: "0 2px 8px rgba(163,230,53,0.28)",
           }}
         >
           🥇 {item.badge_text}
