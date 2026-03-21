@@ -4,7 +4,7 @@ const COLOR_MAP: Record<string, string> = {
   'azul royal': '#3B82F6',
   'azul marinho': '#1E3A5F',
   'vermelho': '#EF4444',
-  'verde': '#22C55E',
+  'verde': '#A3E635',
   'preto': '#1E3A5F',
   'branco': '#F9FAFB',
   'amarelo': '#EAB308',
@@ -14,7 +14,7 @@ const COLOR_MAP: Record<string, string> = {
   'laranja': '#F97316',
   'marrom': '#92400E',
   'dourado': '#F59E0B',
-  'prata': '#9CA3AF',
+  'prata': 'hsl(200 30% 65%)',
   'vinho': '#7F1D1D',
   'grafite': '#374151',
 };

@@ -39,7 +39,7 @@ const LaunchSection = ({ products, loading }: Props) => {
                   <Link
                     key={p.id}
                     to={href}
-                    className="rounded-[16px] bg-card border border-border p-3 transition-all duration-250 group hover:-translate-y-1 hover:border-green-cta hover:shadow-[0_8px_40px_rgba(34,197,94,0.12)] cursor-pointer block"
+                    className="rounded-[16px] bg-card border border-border p-3 transition-all duration-250 group hover:-translate-y-1 hover:border-green-cta hover:shadow-[0_8px_40px_rgba(163,230,53,0.12)] cursor-pointer block"
                   >
                     <div className="aspect-square rounded-xl bg-secondary overflow-hidden mb-3 relative">
                       <span className="absolute top-3 left-3 rounded-md bg-green-cta px-2 py-0.5 text-xs font-bold text-primary-foreground uppercase z-10">
