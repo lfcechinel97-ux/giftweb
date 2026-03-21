@@ -643,8 +643,8 @@ const ProductDetail = () => {
                   </div>
                 )}
 
-                {/* Payment */}
-                <div className="flex gap-2 items-stretch p-3 rounded-xl bg-secondary divide-x divide-border">
+                {/* Payment — mobile only (desktop version is in left column) */}
+                <div className="flex md:hidden gap-2 items-stretch p-3 rounded-xl bg-secondary divide-x divide-border">
                   {/* PIX */}
                   <div className="flex-1 flex flex-col items-center gap-1 px-2">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30" className="w-6 h-6 text-muted-foreground" fill="currentColor">
