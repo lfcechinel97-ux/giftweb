@@ -126,14 +126,21 @@ const ProductDetail = () => {
     return [current, ...others];
   }, [product]);
 
-  // Build images for the ACTIVE variant only — thumbnails show only this product's gallery.
+  // Build images: main image of active variant + product.image_urls (extra photos of THIS product, not other variants).
+  // Variant thumbnails are shown separately in the second row below.
   const allImages = useMemo(() => {
     if (!product) return [];
-    const activeImg = activeVariantSlug
+    // Image of the active variant
+    const activeVarImg = activeVariantSlug
       ? allVariants.find(v => v.slug === activeVariantSlug)?.image || product.image_url
       : product.image_url;
-    const extras = Array.isArray(product.image_urls) ? product.image_urls : [];
-    const raw = [activeImg, ...extras] as (string | null | undefined)[];
+    // Extra photos belong to the product itself (uploaded in admin), not to variants
+    // Only show them if they are NOT the same as any variant's image
+    const variantImages = new Set(allVariants.map(v => v.image).filter(Boolean));
+    const extras = Array.isArray(product.image_urls)
+      ? (product.image_urls as string[]).filter(img => img && !variantImages.has(img))
+      : [];
+    const raw = [activeVarImg, ...extras] as (string | null | undefined)[];
     return raw
       .filter((img): img is string => !!img && img.trim() !== '' && img !== 'null')
       .filter((img, i, arr) => arr.indexOf(img) === i);
