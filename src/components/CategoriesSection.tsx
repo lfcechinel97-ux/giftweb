@@ -146,7 +146,7 @@ function MobileCarousel({ cats }: { cats: Array<{ key: string; name: string; img
           >
             <div
               className="w-[120px] h-[120px] rounded-full overflow-hidden border-2 border-border bg-muted"
-              style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
+              style={{ boxShadow: "0 2px 8px hsl(200 57% 27% / 0.06)" }}
             >
               <img src={cat.img} alt={cat.name} className="w-full h-full object-cover" draggable={false} />
             </div>

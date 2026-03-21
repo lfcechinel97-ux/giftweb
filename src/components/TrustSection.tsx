@@ -56,7 +56,7 @@ const TrustSection = () => (
               (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 6px rgba(0,0,0,0.04)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 6px hsl(200 57% 27% / 0.04)";
               (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
             }}
           >

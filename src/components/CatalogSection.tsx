@@ -83,7 +83,7 @@ const CatalogSection = () => {
                 }}
                 onMouseLeave={(e) => {
                   const el = e.currentTarget as HTMLElement;
-                  el.style.boxShadow = "0 2px 10px rgba(0,0,0,0.05)";
+                  el.style.boxShadow = "0 2px 10px hsl(200 57% 27% / 0.05)";
                   el.style.transform = "scale(1) translateY(0)";
                 }}
               >

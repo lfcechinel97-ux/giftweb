@@ -63,7 +63,7 @@ const ShowcaseCard = ({ item }: { item: ShowcaseItem }) => {
     >
       {item.badge_text && (
         <div
-          className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 rounded-full px-2.5 py-1 text-white uppercase tracking-wide"
+          className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 rounded-full px-2.5 py-1 text-navy uppercase tracking-wide"
           style={{
             background: "linear-gradient(135deg, hsl(82 84% 48%), hsl(82 84% 55%))",
             fontSize: 10,
