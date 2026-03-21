@@ -167,6 +167,8 @@ const ProductDetail = () => {
   // displayed as a variant), we also ensure the currentVariantData is always present.
   const allVariants = useMemo((): VariantInfo[] => {
     if (!product) return [];
+
+    // Build base option (the parent/current product itself)
     const baseOption: VariantInfo = {
       slug: product.slug || '',
       cor: product.cor,
@@ -174,24 +176,36 @@ const ProductDetail = () => {
       image: product.image_url,
       estoque: product.estoque,
     };
-    const othersFromJson = Array.isArray(product.variantes)
-      ? (product.variantes as any[]).map(v => ({
-          slug: v.slug || '',
-          cor: v.cor || null,
-          codigo_amigavel: v.codigo_amigavel || '',
-          image: v.image || null,
-          estoque: typeof v.estoque === 'number' ? v.estoque : null,
-        }))
-      : [];
 
-    const merged = [baseOption, ...othersFromJson];
+    // Parse variantes JSON — may come as array of objects
+    const rawVariantes = product.variantes;
+    const variantesArray: any[] = Array.isArray(rawVariantes)
+      ? rawVariantes
+      : (rawVariantes && typeof rawVariantes === 'object' ? Object.values(rawVariantes) : []);
 
-    // If the current page is a variant that isn't already in the list, add it
+    const othersFromJson: VariantInfo[] = variantesArray.map((v: any) => ({
+      slug: v.slug || '',
+      cor: v.cor || null,
+      codigo_amigavel: v.codigo_amigavel || '',
+      image: v.image || null,
+      estoque: typeof v.estoque === 'number' ? v.estoque : null,
+    }));
+
+    // Merge: parent first, then others (deduplicated by slug)
+    const all: VariantInfo[] = [baseOption, ...othersFromJson];
+    const seen = new Set<string>();
+    const merged = all.filter(v => {
+      if (!v.slug || seen.has(v.slug)) return false;
+      seen.add(v.slug);
+      return true;
+    });
+
+    // If the current page slug is a variant not yet in the list, add it
     if (currentVariantData && currentVariantData.is_variante) {
-      const alreadyIncluded = merged.some(v => v.slug === currentVariantData.slug);
-      if (!alreadyIncluded) {
+      const slug = currentVariantData.slug || '';
+      if (slug && !seen.has(slug)) {
         merged.push({
-          slug: currentVariantData.slug || '',
+          slug,
           cor: currentVariantData.cor,
           codigo_amigavel: currentVariantData.codigo_amigavel,
           image: currentVariantData.image_url,
