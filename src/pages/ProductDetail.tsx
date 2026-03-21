@@ -32,8 +32,8 @@ const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
-  // currentVariantSlug is the slug we navigated to (may be a variant)
   const [currentVariantData, setCurrentVariantData] = useState<Product | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<VariantInfo | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(20);
