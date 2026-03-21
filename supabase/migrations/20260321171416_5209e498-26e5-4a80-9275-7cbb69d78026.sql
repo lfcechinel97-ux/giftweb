@@ -1,0 +1,1 @@
+ALTER TABLE public.products_cache ADD COLUMN IF NOT EXISTS tabela_precos jsonb DEFAULT NULL;

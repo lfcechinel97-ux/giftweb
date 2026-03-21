@@ -165,6 +165,7 @@ export type Database = {
           site_link: string | null
           slug: string | null
           sort_estoque: number | null
+          tabela_precos: Json | null
           ultima_sync: string | null
           updated_at: string | null
           variantes: Json | null
@@ -200,6 +201,7 @@ export type Database = {
           site_link?: string | null
           slug?: string | null
           sort_estoque?: number | null
+          tabela_precos?: Json | null
           ultima_sync?: string | null
           updated_at?: string | null
           variantes?: Json | null
@@ -235,6 +237,7 @@ export type Database = {
           site_link?: string | null
           slug?: string | null
           sort_estoque?: number | null
+          tabela_precos?: Json | null
           ultima_sync?: string | null
           updated_at?: string | null
           variantes?: Json | null
