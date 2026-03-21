@@ -17,14 +17,13 @@ const BannerSeparator = () => {
   const src = (isMobile && mobRow?.value) ? mobRow.value : (deskRow?.value || bannerB2B);
 
   return (
-    <section className="w-full mx-4 md:mx-8 rounded-2xl overflow-hidden" style={{ width: 'auto' }}>
+    <div className="mx-4 md:mx-8 rounded-2xl overflow-hidden">
       <img
         src={src}
         alt="Brindes que fortalecem sua marca — Gift Web"
-        className="w-full block"
-        style={{ height: 'auto' }}
+        className="w-full h-auto block md:max-h-[160px] md:object-cover md:object-center"
       />
-    </section>
+    </div>
   );
 };
 
