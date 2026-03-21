@@ -288,7 +288,7 @@ const ProductDetail = () => {
                 <div
                   className="relative w-full rounded-2xl border border-border bg-white overflow-hidden flex items-center justify-center cursor-zoom-in"
                   style={{ aspectRatio: '1/1' }}
-                  onClick={() => setLightbox(true)}
+                  onClick={() => { setLbActive(0); setLightbox(true); }}
                 >
                   {mainImage && (
                     <img
