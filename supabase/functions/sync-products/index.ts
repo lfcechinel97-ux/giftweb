@@ -155,6 +155,7 @@ serve(async (req) => {
     console.log("[SYNC] Stage 2: Deduplicating and grouping...");
     const produtosMap = new Map<string, any>();
     for (const p of produtos) {
+      // Usa CodigoComposto como chave única de cada variação
       const codigoComposto = p.CodigoComposto ?? p.codigoComposto ?? "";
       const codigoAmigavel = p.CodigoAmigavel ?? p.codigoAmigavel ?? "";
       const chave = codigoComposto || codigoAmigavel;
@@ -162,20 +163,32 @@ serve(async (req) => {
       produtosMap.set(chave, p);
     }
 
-    const groups = new Map<string, string[]>();
+    // Agrupa por CodigoAmigavel + nome normalizado.
+    // Regra: mesmo código base E mesmo nome base = mesmo produto (variações de cor/imagem).
+    // Produtos com mesmo código mas nome diferente são produtos distintos.
+    const groups = new Map<string, string[]>(); // groupKey -> [codigoComposto, ...]
+    const chaveParaGrupoPai = new Map<string, string>(); // codigoComposto -> groupKey
     for (const [chave, p] of produtosMap.entries()) {
-      const codigoPai = p.CodigoAmigavel ?? p.codigoAmigavel ?? chave;
-      if (!groups.has(codigoPai)) groups.set(codigoPai, []);
-      groups.get(codigoPai)!.push(chave);
+      const codigoAmigavel = p.CodigoAmigavel ?? p.codigoAmigavel ?? chave;
+      const nome = p.Nome ?? p.nome ?? chave;
+      const groupKey = getCodigoPrefixo(codigoAmigavel, nome);
+      if (!groups.has(groupKey)) groups.set(groupKey, []);
+      groups.get(groupKey)!.push(chave);
+      chaveParaGrupoPai.set(chave, groupKey);
     }
 
     const paiDeCodigo = new Map<string, string>();
     const isPai = new Set<string>();
     const isVariante = new Set<string>();
 
-    for (const [codigoPai, codigos] of groups) {
+    for (const [groupKey, codigos] of groups) {
       codigos.sort();
-      const paiCodigo = codigos.find((c) => c === codigoPai) ?? codigos[0];
+      // Elege como pai o item cujo CodigoComposto = CodigoAmigavel (produto "raiz"),
+      // senão o código mais curto (menor número de caracteres), senão o primeiro alfabético.
+      const codigoAmigavelPart = groupKey.split("|")[0];
+      const paiCodigo =
+        codigos.find((c) => c === codigoAmigavelPart) ??
+        codigos.reduce((a, b) => (a.length <= b.length ? a : b));
       isPai.add(paiCodigo);
       for (const c of codigos) {
         if (c !== paiCodigo) {
@@ -184,12 +197,13 @@ serve(async (req) => {
         }
       }
     }
-    console.log("[SYNC] Stage 2 OK - pais:", isPai.size, "variantes:", isVariante.size);
+    console.log("[SYNC] Stage 2 OK - grupos:", groups.size, "pais:", isPai.size, "variantes:", isVariante.size);
 
     console.log("[SYNC] Stage 3: Preparing records...");
     const agora = new Date().toISOString();
     const registros = Array.from(produtosMap.entries()).map(([chave, p]) => {
       const nome = p.Nome ?? p.nome ?? chave;
+      const codigoAmigavel = p.CodigoAmigavel ?? p.codigoAmigavel ?? chave;
       const imageUrls = getImageUrls(p);
       const imageLink = imageUrls[0] ?? "";
       const hasImage = !!(imageLink && !imageLink.includes("placehold.co"));
@@ -216,7 +230,9 @@ serve(async (req) => {
         ultima_sync: agora,
         is_variante: isVariante.has(chave),
         produto_pai: null,
-        codigo_prefixo: getCodigoPrefixo(chave),
+        // Chave de agrupamento: CodigoAmigavel|nomeNormalizado
+        // A RPC set_variantes_por_prefixo usa este campo para vincular produto_pai
+        codigo_prefixo: getCodigoPrefixo(codigoAmigavel, nome),
       };
     });
     console.log("[SYNC] Stage 3 OK -", registros.length, "registros");
