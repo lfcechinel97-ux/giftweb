@@ -82,6 +82,9 @@ export default function AdminProducts() {
       .then(({ data }) => setCategories(data ?? []));
   }, []);
 
+  // Reset page when category or status changes
+  useEffect(() => { setPage(0); }, [category, status]);
+
   // Debounce search
   useEffect(() => {
     const t = setTimeout(() => {
