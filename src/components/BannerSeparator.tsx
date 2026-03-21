@@ -21,7 +21,7 @@ const BannerSeparator = () => {
       <img
         src={src}
         alt="Brindes que fortalecem sua marca — Gift Web"
-        className="w-full h-auto block md:max-h-[160px] md:object-cover md:object-center"
+        className="w-full h-auto block md:object-contain md:object-center"
       />
     </div>
   );
