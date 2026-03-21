@@ -650,27 +650,14 @@ const ProductDetail = () => {
         <FloatingWhatsApp />
 
         {lightbox && (() => {
-          const lbImages = [mainImage, ...extraImages].filter(Boolean);
-          const currentLbIndex = lbImages.indexOf(mainImage) >= 0 ? lbImages.indexOf(mainImage) : 0;
-          const [lbCurrent, setLbCurrent] = React.useState(currentLbIndex);
-          const allLbImages = [mainImage, ...extraImages].filter((img, i, arr) => img && arr.indexOf(img) === i);
-          const lbIdx = allLbImages.indexOf(mainImage);
-          const [lbActive, setLbActive] = React.useState(lbIdx >= 0 ? lbIdx : 0);
-
-          const goPrev = (e: React.MouseEvent) => {
-            e.stopPropagation();
-            setLbActive(i => (i - 1 + allLbImages.length) % allLbImages.length);
-          };
-          const goNext = (e: React.MouseEvent) => {
-            e.stopPropagation();
-            setLbActive(i => (i + 1) % allLbImages.length);
-          };
+          const allLbImages = [mainImage, ...extraImages].filter((img, i, arr) => !!img && arr.indexOf(img) === i);
+          const goPrev = (e: React.MouseEvent) => { e.stopPropagation(); setLbActive(i => (i - 1 + allLbImages.length) % allLbImages.length); };
+          const goNext = (e: React.MouseEvent) => { e.stopPropagation(); setLbActive(i => (i + 1) % allLbImages.length); };
           return (
             <div
               className="fixed inset-0 z-[200] bg-black/85 flex items-center justify-center p-4"
               onClick={() => setLightbox(false)}
             >
-              {/* Close */}
               <button
                 className="absolute top-4 right-4 z-[201] w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
                 onClick={() => setLightbox(false)}
@@ -678,7 +665,6 @@ const ProductDetail = () => {
                 <X className="w-5 h-5 text-white" />
               </button>
 
-              {/* Prev */}
               {allLbImages.length > 1 && (
                 <button
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
@@ -688,14 +674,12 @@ const ProductDetail = () => {
                 </button>
               )}
 
-              {/* Main lightbox image */}
               <div className="flex flex-col items-center gap-4 max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
                 <img
-                  src={allLbImages[lbActive]}
+                  src={allLbImages[lbActive] ?? mainImage}
                   alt={product.nome}
                   className="max-w-full max-h-[70vh] object-contain rounded-xl bg-white p-4"
                 />
-                {/* Dot indicators */}
                 {allLbImages.length > 1 && (
                   <div className="flex gap-1.5 flex-wrap justify-center max-w-xs">
                     {allLbImages.map((_, i) => (
@@ -710,7 +694,6 @@ const ProductDetail = () => {
                 )}
               </div>
 
-              {/* Next */}
               {allLbImages.length > 1 && (
                 <button
                   className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
