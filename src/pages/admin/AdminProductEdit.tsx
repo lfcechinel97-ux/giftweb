@@ -198,14 +198,12 @@ export default function AdminProductEdit() {
     enabled: !!id,
   });
 
-  // Also fetch all variants (sibling rows in products_cache)
+  // Also fetch all variants — use product data from first query, keyed on product.id + is_variante
+  const parentId = product?.is_variante ? product?.produto_pai : product?.id;
+
   const { data: variantRows, refetch: refetchVariants } = useQuery({
-    queryKey: ['admin-product-variants', id],
+    queryKey: ['admin-product-variants', parentId],
     queryFn: async () => {
-      if (!product) return [];
-      // Get the parent ID: if this product is the parent, use its own id;
-      // if it's a variant, use produto_pai
-      const parentId = product.is_variante ? product.produto_pai : product.id;
       if (!parentId) return [];
       const { data } = await supabase
         .from('products_cache')
@@ -214,7 +212,7 @@ export default function AdminProductEdit() {
         .eq('ativo', true);
       return data ?? [];
     },
-    enabled: !!product,
+    enabled: !!parentId,
   });
 
   const [form, setForm] = useState({
