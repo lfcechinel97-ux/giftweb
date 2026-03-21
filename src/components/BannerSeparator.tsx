@@ -17,7 +17,7 @@ const BannerSeparator = () => {
   const src = (isMobile && mobRow?.value) ? mobRow.value : (deskRow?.value || bannerB2B);
 
   return (
-    <section className="w-full">
+    <section className="w-full mx-4 md:mx-8 rounded-2xl overflow-hidden" style={{ width: 'auto' }}>
       <img
         src={src}
         alt="Brindes que fortalecem sua marca — Gift Web"
