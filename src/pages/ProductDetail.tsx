@@ -70,6 +70,14 @@ const ProductDetail = () => {
         }
 
         setProduct(baseProduct);
+        // Set the initial selected variant based on the URL slug
+        setSelectedVariant({
+          slug: data.slug || '',
+          cor: data.cor,
+          codigo_amigavel: data.codigo_amigavel,
+          image: data.image_url,
+          estoque: data.estoque,
+        });
         setActiveImg(0);
 
         const { data: relatedData } = await supabase
