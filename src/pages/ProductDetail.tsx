@@ -392,6 +392,20 @@ const ProductDetail = () => {
                     <p className="text-muted-foreground text-xs leading-relaxed whitespace-pre-line">{product.descricao}</p>
                   </div>
                 )}
+
+                {/* Trust bar — desktop only, below description in left column */}
+                <div className="hidden md:flex gap-2 py-3 border-t border-b border-border">
+                  {[
+                    { Icon: Truck, label: 'Entrega\nBrasil' },
+                    { Icon: Palette, label: 'Arte grátis\ninclusa' },
+                    { Icon: Building2, label: '+5 anos de\nmercado' },
+                  ].map(({ Icon, label }) => (
+                    <div key={label} className="flex-1 flex flex-col items-center gap-1">
+                      <Icon className="w-4 h-4 text-green-cta" />
+                      <span className="text-[10px] text-muted-foreground text-center leading-tight whitespace-pre-line">{label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* RIGHT: Info */}
