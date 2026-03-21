@@ -52,8 +52,8 @@ const ShowcaseCard = ({ item }: { item: ShowcaseItem }) => {
       }}
       onMouseEnter={(e) => {
         const el = e.currentTarget as HTMLElement;
-        el.style.boxShadow = "0 8px 28px rgba(0,0,0,0.09)";
-        el.style.borderColor = "hsl(142 71% 45% / 0.35)";
+        el.style.boxShadow = "0 8px 28px hsl(200 57% 27% / 0.09)";
+        el.style.borderColor = "hsl(82 84% 55% / 0.35)";
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLElement;
