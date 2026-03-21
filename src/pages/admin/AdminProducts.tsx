@@ -19,13 +19,22 @@ const STATUS_FILTERS = [
 const PAGE_SIZE = 20;
 
 async function fetchProducts(search: string, category: string, status: string, page: number) {
-  // If category selected, get linked product IDs from spotlight_products
+  // If category selected, get linked product IDs from product_spotlight_categories join
   let categoryProductIds: string[] | null = null;
   if (category) {
+    // Get the category id first
+    const { data: catData } = await supabase
+      .from('spotlight_categories')
+      .select('id')
+      .eq('slug', category)
+      .single();
+
+    if (!catData) return { data: [], count: 0 };
+
     const { data: linked } = await supabase
-      .from('spotlight_products')
+      .from('product_spotlight_categories')
       .select('product_id')
-      .eq('category_slug', category);
+      .eq('category_id', catData.id);
     categoryProductIds = linked?.map(l => l.product_id) ?? [];
     if (categoryProductIds.length === 0) {
       return { data: [], count: 0 };
@@ -40,7 +49,10 @@ async function fetchProducts(search: string, category: string, status: string, p
     .order('nome', { ascending: true })
     .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
-  if (search) query = query.ilike('nome', `%${search}%`);
+  if (search) {
+    // Search by name OR by SKU code (case insensitive)
+    query = query.or(`nome.ilike.%${search}%,codigo_amigavel.ilike.%${search}%`);
+  }
   if (categoryProductIds) query = query.in('id', categoryProductIds);
   if (status === 'featured') query = query.eq('is_featured', true);
   if (status === 'hidden') query = query.eq('is_hidden', true);
