@@ -73,7 +73,7 @@ const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor = "hsl(var(--border))";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 10px rgba(0,0,0,0.06)";
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 10px hsl(200 57% 27% / 0.06)";
                 }}
               >
                 <img src={cat.img} alt={cat.name} className="w-full h-full object-cover" draggable={false} />
