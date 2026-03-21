@@ -258,8 +258,9 @@ serve(async (req) => {
     if (rpcError) console.error("[SYNC] Stage 4 RPC error:", JSON.stringify(rpcError));
     console.log("[SYNC] Stage 4 OK");
 
+    // Mark products not seen in this sync as inactive (only if they have a ultima_sync that is stale)
     const limite = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    await supabaseClient.from("products_cache").update({ ativo: false }).lt("ultima_sync", limite);
+    await supabaseClient.from("products_cache").update({ ativo: false }).lt("ultima_sync", limite).eq("ativo", true);
 
     await supabaseClient
       .from("sync_log")
