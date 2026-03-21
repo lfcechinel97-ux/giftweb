@@ -37,6 +37,7 @@ const ProductDetail = () => {
   const [qty, setQty] = useState(20);
   const [selectedRow, setSelectedRow] = useState(0);
   const [lightbox, setLightbox] = useState(false);
+  const [lbActive, setLbActive] = useState(0);
   const [activeImg, setActiveImg] = useState(0);
   const [mainImage, setMainImage] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
