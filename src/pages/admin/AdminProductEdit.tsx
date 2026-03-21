@@ -9,9 +9,10 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Save, Upload, GripVertical, X, Plus, ImageOff } from 'lucide-react';
+import { ArrowLeft, Save, Upload, GripVertical, X, Plus, ImageOff, Images } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatarBRL } from '@/utils/price';
+import { getCorHex } from '@/utils/colorHex';
 import type { Json } from '@/integrations/supabase/types';
 import { toast as sonnerToast } from 'sonner';
 
@@ -35,14 +36,14 @@ const CATEGORIES = [
 
 // ─── Image gallery manager ────────────────────────────────────────────────────
 function ImageGallery({
-  mainImage,
   images,
   productId,
+  label,
   onUpdate,
 }: {
-  mainImage: string | null;
   images: string[];
   productId: string;
+  label?: string;
   onUpdate: (main: string | null, imgs: string[]) => void;
 }) {
   const [list, setList] = useState<string[]>(images);
@@ -78,7 +79,6 @@ function ImageGallery({
     onUpdate(newList[0], newList);
   };
 
-  // Drag-to-reorder
   const onDragStart = (i: number) => setDragIdx(i);
   const onDragOver = (e: React.DragEvent, i: number) => {
     e.preventDefault();
@@ -96,6 +96,7 @@ function ImageGallery({
 
   return (
     <div className="space-y-3">
+      {label && <p className="text-xs text-muted-foreground font-medium">{label}</p>}
       {/* Main preview */}
       <div className="rounded-xl border bg-background overflow-hidden relative group">
         {list[0] ? (
@@ -162,7 +163,7 @@ function ImageGallery({
       </div>
 
       <p className="text-[11px] text-muted-foreground">
-        Arraste para reordenar · Clique em uma miniatura para torná-la principal · Verde = imagem principal
+        Arraste para reordenar · Clique na miniatura para definir como principal
       </p>
 
       <input
@@ -197,6 +198,25 @@ export default function AdminProductEdit() {
     enabled: !!id,
   });
 
+  // Also fetch all variants (sibling rows in products_cache)
+  const { data: variantRows, refetch: refetchVariants } = useQuery({
+    queryKey: ['admin-product-variants', id],
+    queryFn: async () => {
+      if (!product) return [];
+      // Get the parent ID: if this product is the parent, use its own id;
+      // if it's a variant, use produto_pai
+      const parentId = product.is_variante ? product.produto_pai : product.id;
+      if (!parentId) return [];
+      const { data } = await supabase
+        .from('products_cache')
+        .select('id, slug, cor, image_url, image_urls, codigo_amigavel, estoque')
+        .eq('produto_pai', parentId)
+        .eq('ativo', true);
+      return data ?? [];
+    },
+    enabled: !!product,
+  });
+
   const [form, setForm] = useState({
     nome: '',
     descricao: '',
@@ -205,15 +225,20 @@ export default function AdminProductEdit() {
     is_hidden: false,
     featured_position: 1,
   });
+
+  // Base product images
   const [imageMain, setImageMain] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [dirty, setDirty] = useState(false);
-
-  // Use refs so handleSave always reads the latest image state
   const imageMainRef = useRef<string | null>(null);
   const imageUrlsRef = useRef<string[]>([]);
 
+  // Selected variant for editing its images
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+  const [variantImages, setVariantImages] = useState<string[]>([]);
+  const [savingVariant, setSavingVariant] = useState(false);
+
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -238,12 +263,49 @@ export default function AdminProductEdit() {
     }
   }, [product]);
 
+  // When a variant is selected, populate its images
+  useEffect(() => {
+    if (!selectedVariantId || !variantRows) return;
+    const row = variantRows.find(v => v.id === selectedVariantId);
+    if (!row) return;
+    const imgs = (row.image_urls as string[] | null) ?? [];
+    const finalImgs = row.image_url && !imgs.includes(row.image_url)
+      ? [row.image_url, ...imgs]
+      : (imgs.length ? imgs : (row.image_url ? [row.image_url] : []));
+    setVariantImages(finalImgs);
+  }, [selectedVariantId, variantRows]);
+
   const handleImagesUpdate = (main: string | null, imgs: string[]) => {
     setImageMain(main);
     setImageUrls(imgs);
     imageMainRef.current = main;
     imageUrlsRef.current = imgs;
     setDirty(true);
+  };
+
+  const handleVariantImagesUpdate = (_main: string | null, imgs: string[]) => {
+    setVariantImages(imgs);
+  };
+
+  const handleSaveVariantImages = async () => {
+    if (!selectedVariantId) return;
+    setSavingVariant(true);
+    const newMain = variantImages[0] ?? null;
+    const { error } = await supabase
+      .from('products_cache')
+      .update({
+        image_url: newMain,
+        image_urls: variantImages,
+        has_image: !!newMain,
+      })
+      .eq('id', selectedVariantId);
+    setSavingVariant(false);
+    if (error) {
+      toast({ title: 'Erro ao salvar imagens da variante', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: '✅ Imagens da variante salvas!' });
+      refetchVariants();
+    }
   };
 
   const handleSave = async () => {
@@ -270,7 +332,6 @@ export default function AdminProductEdit() {
     } else {
       setDirty(false);
       toast({ title: '✅ Produto atualizado com sucesso!' });
-      // Reset init flag so product reload updates the form
       initialized.current = false;
       queryClient.invalidateQueries({ queryKey: ['admin-product', id] });
     }
@@ -280,6 +341,7 @@ export default function AdminProductEdit() {
   if (!product) return <div className="p-8 text-muted-foreground">Produto não encontrado.</div>;
 
   const variantes = parseVariantes(product.variantes);
+  const selectedVariantRow = variantRows?.find(v => v.id === selectedVariantId);
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -290,11 +352,13 @@ export default function AdminProductEdit() {
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-8">
         {/* Left column */}
         <div className="space-y-4">
-          {/* Image gallery */}
+          {/* Image gallery — base product */}
           <div className="rounded-xl border bg-background p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Imagens</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">
+              Imagens do produto
+              {product.cor && <span className="ml-2 text-xs text-muted-foreground font-normal">({product.cor})</span>}
+            </h3>
             <ImageGallery
-              mainImage={imageMain}
               images={imageUrls}
               productId={id!}
               onUpdate={handleImagesUpdate}
@@ -326,23 +390,71 @@ export default function AdminProductEdit() {
             </div>
           </div>
 
-          {/* Variantes */}
+          {/* Variantes with image editing */}
           {variantes.length > 0 && (
             <div className="rounded-xl border bg-background p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-foreground">Variantes ({variantes.length})</h3>
-              <div className="space-y-2">
-                {variantes.map((v, i) => (
-                  <div key={i} className="flex items-center gap-3 text-sm">
-                    {v.image && (
-                      <img src={v.image} alt={v.cor ?? ''} className="w-8 h-8 rounded object-contain bg-muted" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <span className="text-foreground">{v.cor ?? v.codigo_amigavel}</span>
-                    </div>
-                    <Badge variant="outline" className="text-[11px]">Est: {v.estoque ?? 0}</Badge>
-                  </div>
-                ))}
+              <div className="flex items-center gap-2">
+                <Images className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-semibold text-foreground">Imagens por variante</h3>
               </div>
+              <p className="text-[11px] text-muted-foreground">
+                Clique em uma cor para gerenciar as fotos específicas daquela variante.
+              </p>
+
+              {/* Color dot selector */}
+              <div className="flex flex-wrap gap-2">
+                {variantRows?.map((v) => {
+                  const hex = getCorHex(v.cor ?? '');
+                  const isSelected = v.id === selectedVariantId;
+                  const hasCustomImg = (v.image_urls as string[] | null)?.some(u => u.includes('supabase.co/storage'));
+                  return (
+                    <button
+                      key={v.id}
+                      type="button"
+                      onClick={() => setSelectedVariantId(isSelected ? null : v.id)}
+                      title={v.cor ?? v.codigo_amigavel ?? ''}
+                      className="relative w-9 h-9 rounded-full transition-all duration-150 shrink-0"
+                      style={{
+                        backgroundColor: hex,
+                        border: isSelected ? '3px solid hsl(142,71%,45%)' : '2px solid hsl(var(--border))',
+                        boxShadow: isSelected ? '0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(142,71%,45%)' : undefined,
+                      }}
+                    >
+                      {hasCustomImg && (
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border border-background" title="Tem imagem personalizada" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Variant image editor */}
+              {selectedVariantId && selectedVariantRow && (
+                <div className="mt-3 p-3 rounded-lg border border-primary/30 bg-primary/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">
+                      Editando: <span className="text-primary">{selectedVariantRow.cor ?? selectedVariantRow.codigo_amigavel}</span>
+                    </span>
+                    <Badge variant="outline" className="text-[10px]">Est: {selectedVariantRow.estoque ?? 0}</Badge>
+                  </div>
+
+                  <ImageGallery
+                    images={variantImages}
+                    productId={selectedVariantRow.id}
+                    onUpdate={handleVariantImagesUpdate}
+                  />
+
+                  <Button
+                    size="sm"
+                    onClick={handleSaveVariantImages}
+                    disabled={savingVariant}
+                    className="w-full"
+                  >
+                    <Save className="h-3.5 w-3.5 mr-1.5" />
+                    {savingVariant ? 'Salvando...' : `Salvar imagens — ${selectedVariantRow.cor ?? selectedVariantRow.codigo_amigavel}`}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -371,7 +483,6 @@ export default function AdminProductEdit() {
               />
             </div>
 
-            {/* Categoria editável */}
             <div className="space-y-2">
               <Label>Categoria</Label>
               <Select

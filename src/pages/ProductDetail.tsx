@@ -102,27 +102,46 @@ const ProductDetail = () => {
     return selectedVariant?.image || product?.image_url || '';
   }, [selectedVariant, product]);
 
+  // When a non-base variant is selected, fetch its own image_urls from the DB
+  const [variantExtraImages, setVariantExtraImages] = useState<string[]>([]);
+  useEffect(() => {
+    const isBase = !selectedVariant || selectedVariant.slug === product?.slug;
+    if (isBase) { setVariantExtraImages([]); return; }
+    // Fetch the variant row to get its image_urls
+    supabase
+      .from('products_cache')
+      .select('image_url, image_urls')
+      .eq('slug', selectedVariant.slug)
+      .single()
+      .then(({ data }) => {
+        if (!data) { setVariantExtraImages([]); return; }
+        const urls = Array.isArray(data.image_urls) ? (data.image_urls as string[]) : [];
+        const merged = data.image_url && !urls.includes(data.image_url)
+          ? [data.image_url, ...urls]
+          : (urls.length ? urls : (data.image_url ? [data.image_url] : []));
+        // Extra = everything except the first (which is already mainImage)
+        setVariantExtraImages(merged.slice(1));
+      });
+  }, [selectedVariant?.slug, product?.slug]);
+
   // Build ALL images:
   // - When base product is selected → show all images (API + admin-uploaded)
-  // - When a variant is selected → show variant image + only admin-uploaded images
-  //   (admin images are stored in Supabase Storage, not XBZ CDN)
+  // - When a variant is selected → show variant image + variant's own extra images
   const allImages = useMemo(() => {
     if (!product) return [];
-    const urls = Array.isArray(product.image_urls) ? (product.image_urls as string[]) : [];
-    const isBaseSelected = selectedVariant?.slug === product.slug || !selectedVariant;
+    const isBaseSelected = !selectedVariant || selectedVariant.slug === product.slug;
 
     let extra: string[];
     if (isBaseSelected) {
-      // Show all images from the base product
+      const urls = Array.isArray(product.image_urls) ? (product.image_urls as string[]) : [];
       extra = urls;
     } else {
-      // Only keep admin-uploaded images (Supabase Storage URLs), not XBZ CDN images
-      extra = urls.filter(u => u.includes('supabase.co/storage'));
+      extra = variantExtraImages;
     }
 
     const all = [mainImage, ...extra].filter((img): img is string => !!img && img.trim() !== '' && img !== 'null');
     return all.filter((img, i, arr) => arr.indexOf(img) === i);
-  }, [product?.image_urls, mainImage, selectedVariant?.slug, product?.slug]);
+  }, [product?.image_urls, mainImage, selectedVariant?.slug, product?.slug, variantExtraImages]);
 
   // Thumbnail images = all except the active main (shown below main image)
   const [displayedMain, setDisplayedMain] = useState('');
