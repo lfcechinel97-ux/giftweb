@@ -174,8 +174,8 @@ const ProductDetail = () => {
     return merged;
   }, [product, currentVariantData]);
 
-  // Active variant = the slug we navigated to
-  const activeVariantSlug = currentVariantData?.slug || product?.slug || '';
+  // Active variant = the one selected locally (defaults to the URL slug on load)
+  const activeVariantSlug = selectedVariant?.slug || product?.slug || '';
 
   // Keyboard navigation for lightbox
   useEffect(() => {
@@ -189,8 +189,8 @@ const ProductDetail = () => {
     return () => window.removeEventListener('keydown', handler);
   }, [lightbox, allImages.length]);
 
-  const displayCodigo = currentVariantData?.codigo_amigavel || product?.codigo_amigavel || '';
-  const displayEstoque = currentVariantData?.estoque ?? product?.estoque;
+  const displayCodigo = selectedVariant?.codigo_amigavel || product?.codigo_amigavel || '';
+  const displayEstoque = selectedVariant?.estoque ?? product?.estoque;
   const displayPrecoCusto = product?.preco_custo;
   const displayNome = product?.nome || '';
 
