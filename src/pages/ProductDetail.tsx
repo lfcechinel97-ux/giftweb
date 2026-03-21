@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup } from "@/utils/price";
@@ -32,6 +32,8 @@ const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
+  // currentVariantSlug is the slug we navigated to (may be a variant)
+  const [currentVariantData, setCurrentVariantData] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(20);
@@ -39,23 +41,8 @@ const ProductDetail = () => {
   const [lightbox, setLightbox] = useState(false);
   const [lbActive, setLbActive] = useState(0);
   const [activeImg, setActiveImg] = useState(0);
-  const [mainImage, setMainImage] = useState('');
   const [isTransitioning, setIsTransitioning] = useState(false);
-  // active variant slug tracks which variant is selected (defaults to current product slug)
-  const [activeVariantSlug, setActiveVariantSlug] = useState<string | null>(null);
   const qtySelectorRef = useRef<HTMLDivElement>(null);
-
-
-
-
-
-
-
-  const handleThumbChange = (src: string) => {
-    if (src === mainImage || isTransitioning) return;
-    setIsTransitioning(true);
-    setTimeout(() => { setMainImage(src); setIsTransitioning(false); }, 150);
-  };
 
   useEffect(() => {
     if (!slug) return;
@@ -69,6 +56,8 @@ const ProductDetail = () => {
       .then(async ({ data, error }) => {
         if (error || !data) { navigate("/404", { replace: true }); return; }
 
+        setCurrentVariantData(data);
+
         // If this is a variant, load the parent product so we can get all variantes JSONB
         let baseProduct = data;
         if (data.is_variante && data.produto_pai) {
@@ -81,11 +70,6 @@ const ProductDetail = () => {
         }
 
         setProduct(baseProduct);
-        // Active variant = the slug we actually navigated to
-        setActiveVariantSlug(data.slug);
-        // Main image = the variant we opened, not the parent
-        const variantImg = data.image_url || baseProduct.image_url || '';
-        setMainImage(variantImg);
         setActiveImg(0);
 
         const { data: relatedData } = await supabase
@@ -104,6 +88,40 @@ const ProductDetail = () => {
         setLoading(false);
       });
   }, [slug, navigate]);
+
+  // The main image is from the variant we navigated to (or base product)
+  const mainImage = useMemo(() => {
+    return currentVariantData?.image_url || product?.image_url || '';
+  }, [currentVariantData, product]);
+
+  // Build ALL images: unify API images (image_urls from base product) + admin-uploaded images
+  // The base product's image_urls contains all images from API sync.
+  // Admin may also add extra images stored in image_urls.
+  // We show all of them deduplicated, with mainImage first.
+  const allImages = useMemo(() => {
+    if (!product) return [];
+    const urls = Array.isArray(product.image_urls) ? (product.image_urls as string[]) : [];
+    const all = [mainImage, ...urls].filter((img): img is string => !!img && img.trim() !== '' && img !== 'null');
+    // Deduplicate preserving order
+    return all.filter((img, i, arr) => arr.indexOf(img) === i);
+  }, [product?.image_urls, mainImage]);
+
+  // Thumbnail images = all except the active main (shown below main image)
+  const [displayedMain, setDisplayedMain] = useState('');
+  useEffect(() => {
+    setDisplayedMain(mainImage);
+    setActiveImg(0);
+  }, [mainImage]);
+
+  const handleThumbClick = (src: string, idx: number) => {
+    if (src === displayedMain || isTransitioning) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setDisplayedMain(src);
+      setActiveImg(idx);
+      setIsTransitioning(false);
+    }, 150);
+  };
 
   // Build variants list from the JSONB `variantes` field + current product as first option
   const allVariants = useMemo((): VariantInfo[] => {
@@ -127,51 +145,23 @@ const ProductDetail = () => {
     return [current, ...others];
   }, [product]);
 
-  // Extra product photos: images from image_urls that are NOT an image of any OTHER variant.
-  // - The active variant's image is already shown as the main image.
-  // - Images uploaded by admin that don't belong to any variant are shown as extra thumbnails.
-  // - Images that ARE other variants' images are excluded (those are in the variant selector row).
-  const extraImages = useMemo(() => {
-    if (!product) return [];
-    // Collect images belonging to OTHER variants (not the active one)
-    const otherVariantImages = new Set(
-      allVariants
-        .filter(v => v.slug !== activeVariantSlug)
-        .map(v => v.image)
-        .filter(Boolean)
-    );
-    const activeVarImage = allVariants.find(v => v.slug === activeVariantSlug)?.image || product.image_url;
-    const urls = Array.isArray(product.image_urls) ? (product.image_urls as string[]) : [];
-    return urls
-      .filter((img): img is string => !!img && img.trim() !== '' && img !== 'null')
-      .filter(img => !otherVariantImages.has(img))   // exclude other-variant images
-      .filter(img => img !== activeVarImage)          // exclude main image (already shown above)
-      .filter((img, i, arr) => arr.indexOf(img) === i); // deduplicate
-  }, [product?.image_urls, allVariants, activeVariantSlug]);
-
-  // The currently selected variant (used for main image swap on click)
-  const activeVariant = useMemo(() => {
-    if (!activeVariantSlug) return null;
-    return allVariants.find(v => v.slug === activeVariantSlug) || null;
-  }, [activeVariantSlug, allVariants]);
+  // Active variant = the slug we navigated to
+  const activeVariantSlug = currentVariantData?.slug || product?.slug || '';
 
   // Keyboard navigation for lightbox
   useEffect(() => {
     if (!lightbox) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { setLightbox(false); return; }
-      const idx = allVariants.findIndex(v => v.slug === activeVariantSlug);
-      const cur = idx >= 0 ? idx : 0;
-      if (e.key === 'ArrowLeft') handleSwitchVariant(allVariants[(cur - 1 + allVariants.length) % allVariants.length]);
-      if (e.key === 'ArrowRight') handleSwitchVariant(allVariants[(cur + 1) % allVariants.length]);
+      if (e.key === 'ArrowLeft') setLbActive(i => (i - 1 + allImages.length) % allImages.length);
+      if (e.key === 'ArrowRight') setLbActive(i => (i + 1) % allImages.length);
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [lightbox, allVariants, activeVariantSlug]);
+  }, [lightbox, allImages.length]);
 
-
-  const displayCodigo = activeVariant?.codigo_amigavel || product?.codigo_amigavel || '';
-  const displayEstoque = activeVariant?.estoque ?? product?.estoque;
+  const displayCodigo = currentVariantData?.codigo_amigavel || product?.codigo_amigavel || '';
+  const displayEstoque = currentVariantData?.estoque ?? product?.estoque;
   const displayPrecoCusto = product?.preco_custo;
   const displayNome = product?.nome || '';
 
@@ -195,18 +185,6 @@ const ProductDetail = () => {
     qtySelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
-  const handleSwitchVariant = (variant: VariantInfo) => {
-    if (variant.slug === activeVariantSlug) return;
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setMainImage(variant.image || '');
-      setActiveVariantSlug(variant.slug);
-      setIsTransitioning(false);
-    }, 150);
-    // Update URL without triggering a page reload/re-fetch
-    if (variant.slug) window.history.replaceState(null, '', `/produto/${variant.slug}`);
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -228,7 +206,6 @@ const ProductDetail = () => {
 
   if (!product) return null;
 
-  const isVariante = (product as any).is_variante === true;
   const canonicalSlug = product.slug;
   const canonicalUrl = `${SITE_URL}/produto/${canonicalSlug}`;
   const categorySlug = product.categoria || "outros";
@@ -269,7 +246,6 @@ const ProductDetail = () => {
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1">
-          {/* ── page wrapper: max-width + safe padding on all sizes ── */}
           <div className="w-full max-w-5xl mx-auto px-4 py-4 md:py-8">
             <Breadcrumbs
               items={[
@@ -282,17 +258,17 @@ const ProductDetail = () => {
             {/* ── Main area: stacked on mobile, 2 cols on md+ ── */}
             <div className="flex flex-col md:grid md:grid-cols-2 gap-5 md:gap-8 mt-4">
 
-              {/* Gallery */}
+              {/* LEFT: Gallery + Description */}
               <div className="flex flex-col gap-3 w-full min-w-0">
-                {/* Main image with zoom button */}
+                {/* Main image */}
                 <div
                   className="relative w-full rounded-2xl border border-border bg-white overflow-hidden flex items-center justify-center cursor-zoom-in"
                   style={{ aspectRatio: '1/1' }}
-                  onClick={() => { setLbActive(0); setLightbox(true); }}
+                  onClick={() => { setLbActive(activeImg); setLightbox(true); }}
                 >
-                  {mainImage && (
+                  {displayedMain && (
                     <img
-                      src={mainImage}
+                      src={displayedMain}
                       alt={product.nome}
                       className="w-full h-full object-contain p-3 md:p-6"
                       style={{ opacity: isTransitioning ? 0 : 1, transition: 'opacity 0.15s ease' }}
@@ -300,7 +276,7 @@ const ProductDetail = () => {
                     />
                   )}
                   <button
-                    onClick={(e) => { e.stopPropagation(); setLightbox(true); }}
+                    onClick={(e) => { e.stopPropagation(); setLbActive(activeImg); setLightbox(true); }}
                     className="absolute bottom-3 left-3 w-8 h-8 rounded-lg bg-white/90 border border-border flex items-center justify-center shadow-sm hover:bg-white transition-colors"
                     title="Ampliar imagem"
                   >
@@ -308,15 +284,15 @@ const ProductDetail = () => {
                   </button>
                 </div>
 
-                {/* Extra product photos (not variant images) */}
-                {extraImages.length > 0 && (
+                {/* Thumbnail row — all images (API + admin), excluding the currently displayed main */}
+                {allImages.length > 1 && (
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                    {extraImages.map((src, i) => (
+                    {allImages.map((src, i) => (
                       <button
                         key={src + i}
-                        onClick={() => handleThumbChange(src)}
+                        onClick={() => handleThumbClick(src, i)}
                         className="shrink-0 w-16 h-16 rounded-xl border-2 overflow-hidden transition-all duration-150 bg-white"
-                        style={{ borderColor: mainImage === src ? 'hsl(142,71%,45%)' : 'hsl(var(--border))' }}
+                        style={{ borderColor: displayedMain === src ? 'hsl(142,71%,45%)' : 'hsl(var(--border))' }}
                       >
                         <img src={src} alt={`foto ${i + 1}`} className="w-full h-full object-contain p-1 pointer-events-none" />
                       </button>
@@ -324,10 +300,16 @@ const ProductDetail = () => {
                   </div>
                 )}
 
-
+                {/* Description — inside left column, below gallery */}
+                {product.descricao && (
+                  <div className="mt-1 p-3 rounded-xl bg-secondary border border-border">
+                    <h3 className="font-semibold text-sm text-foreground mb-1.5">Descrição</h3>
+                    <p className="text-muted-foreground text-xs leading-relaxed whitespace-pre-line">{product.descricao}</p>
+                  </div>
+                )}
               </div>
 
-              {/* Info */}
+              {/* RIGHT: Info */}
               <div className="flex flex-col gap-3 w-full min-w-0">
                 <h1 className="font-black text-xl md:text-2xl leading-snug text-foreground break-words">{displayNome}</h1>
 
@@ -336,53 +318,39 @@ const ProductDetail = () => {
                   <span>{PRAZO_PRODUCAO}</span>
                 </div>
 
-                {/* Variant selector */}
+                {/* Variant selector — color dots only, navigate to variant URL */}
                 {allVariants.length > 1 ? (
                   <TooltipProvider delayDuration={200}>
                     <div className="flex flex-col gap-2">
                       <span className="text-foreground text-sm font-semibold">
-                        Cor: <span className="text-muted-foreground font-normal">{activeVariant?.cor || product.cor || ''}</span>
+                        Cor: <span className="text-muted-foreground font-normal">{currentVariantData?.cor || product.cor || ''}</span>
                         <span className="ml-1.5 text-xs text-muted-foreground">({allVariants.length} opções)</span>
                       </span>
-                      <div className="flex flex-wrap gap-2 max-h-[220px] overflow-y-auto pr-1">
+                      <div className="flex flex-wrap gap-2">
                         {allVariants.map((v) => {
                           const hex = getCorHex(v.cor);
                           const isCurrent = v.slug === activeVariantSlug;
                           const outOfStock = v.estoque === 0 || v.estoque === null;
-                          const thumbSrc = v.image || '';
                           return (
                             <Tooltip key={v.slug}>
                               <TooltipTrigger asChild>
-                                <button
-                                  onClick={() => handleSwitchVariant(v)}
-                                  className="relative rounded-xl overflow-hidden shrink-0 bg-white transition-colors duration-150"
+                                <Link
+                                  to={`/produto/${v.slug}`}
+                                  className="relative w-8 h-8 rounded-full shrink-0 transition-all duration-150"
                                   style={{
-                                    width: 48, height: 48,
-                                    border: isCurrent ? '2px solid hsl(142,71%,45%)' : '2px solid hsl(var(--border))',
-                                    opacity: outOfStock ? 0.5 : 1,
-                                    cursor: isCurrent ? 'default' : 'pointer',
-                                    padding: 3,
+                                    backgroundColor: hex,
+                                    border: isCurrent ? '3px solid hsl(142,71%,45%)' : '2px solid hsl(var(--border))',
+                                    opacity: outOfStock ? 0.45 : 1,
+                                    boxShadow: isCurrent ? '0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(142,71%,45%)' : undefined,
                                   }}
+                                  title={v.cor || 'Cor'}
                                 >
-                                  {thumbSrc ? (
-                                    <img
-                                      src={thumbSrc}
-                                      alt={v.cor || 'variante'}
-                                      className="w-full h-full object-contain rounded-lg"
-                                      onError={(e) => {
-                                        (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                        const fb = e.currentTarget.nextElementSibling as HTMLElement;
-                                        if (fb) fb.style.display = 'block';
-                                      }}
-                                    />
-                                  ) : null}
-                                  <div className="w-full h-full rounded-lg" style={{ display: thumbSrc ? 'none' : 'block', backgroundColor: hex }} />
                                   {outOfStock && (
-                                    <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/70">
-                                      <span className="text-[8px] font-bold text-destructive leading-tight text-center">Sem<br />estoque</span>
-                                    </div>
+                                    <span className="absolute inset-0 flex items-center justify-center">
+                                      <span className="w-0.5 h-full bg-destructive/70 rotate-45 absolute" />
+                                    </span>
                                   )}
-                                </button>
+                                </Link>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="text-xs">
                                 {v.cor || 'Cor'}{outOfStock ? ' — Indisponível' : ''}
@@ -395,7 +363,7 @@ const ProductDetail = () => {
                   </TooltipProvider>
                 ) : product.cor ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-full border border-border shrink-0" style={{ backgroundColor: getCorHex(product.cor) }} />
+                    <div className="w-5 h-5 rounded-full border border-border shrink-0" style={{ backgroundColor: getCorHex(product.cor) }} />
                     <span className="text-foreground text-sm font-medium">{product.cor}</span>
                   </div>
                 ) : null}
@@ -495,7 +463,7 @@ const ProductDetail = () => {
                   </div>
                 )}
 
-                {/* Pricing table — overflow-x-auto for mobile */}
+                {/* Pricing table */}
                 {displayPrecoCusto != null && displayPrecoCusto > 0 && (
                   <div className="mt-1">
                     <h3 className="font-bold text-base text-foreground mb-2">Compre com desconto</h3>
@@ -611,14 +579,6 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Description */}
-            {product.descricao && (
-              <div className="mt-8">
-                <h3 className="font-bold text-base text-foreground mb-2">Descrição</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">{product.descricao}</p>
-              </div>
-            )}
-
             {/* Related */}
             {related.length > 0 && (
               <div className="mt-10">
@@ -649,10 +609,12 @@ const ProductDetail = () => {
         <Footer />
         <FloatingWhatsApp />
 
+        {/* Lightbox — shows all images (API + admin) */}
         {lightbox && (() => {
-          const allLbImages = [mainImage, ...extraImages].filter((img, i, arr) => !!img && arr.indexOf(img) === i);
-          const goPrev = (e: React.MouseEvent) => { e.stopPropagation(); setLbActive(i => (i - 1 + allLbImages.length) % allLbImages.length); };
-          const goNext = (e: React.MouseEvent) => { e.stopPropagation(); setLbActive(i => (i + 1) % allLbImages.length); };
+          const lbImages = allImages.length > 0 ? allImages : [mainImage].filter(Boolean);
+          const safeLbActive = Math.min(lbActive, lbImages.length - 1);
+          const goPrev = (e: React.MouseEvent) => { e.stopPropagation(); setLbActive(i => (i - 1 + lbImages.length) % lbImages.length); };
+          const goNext = (e: React.MouseEvent) => { e.stopPropagation(); setLbActive(i => (i + 1) % lbImages.length); };
           return (
             <div
               className="fixed inset-0 z-[200] bg-black/85 flex items-center justify-center p-4"
@@ -665,7 +627,7 @@ const ProductDetail = () => {
                 <X className="w-5 h-5 text-white" />
               </button>
 
-              {allLbImages.length > 1 && (
+              {lbImages.length > 1 && (
                 <button
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
                   onClick={goPrev}
@@ -676,25 +638,25 @@ const ProductDetail = () => {
 
               <div className="flex flex-col items-center gap-4 max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
                 <img
-                  src={allLbImages[lbActive] ?? mainImage}
+                  src={lbImages[safeLbActive] ?? mainImage}
                   alt={product.nome}
                   className="max-w-full max-h-[70vh] object-contain rounded-xl bg-white p-4"
                 />
-                {allLbImages.length > 1 && (
+                {lbImages.length > 1 && (
                   <div className="flex gap-1.5 flex-wrap justify-center max-w-xs">
-                    {allLbImages.map((_, i) => (
+                    {lbImages.map((_, i) => (
                       <button
                         key={i}
                         onClick={() => setLbActive(i)}
                         className="w-2 h-2 rounded-full transition-all duration-150"
-                        style={{ backgroundColor: i === lbActive ? 'white' : 'rgba(255,255,255,0.3)' }}
+                        style={{ backgroundColor: i === safeLbActive ? 'white' : 'rgba(255,255,255,0.3)' }}
                       />
                     ))}
                   </div>
                 )}
               </div>
 
-              {allLbImages.length > 1 && (
+              {lbImages.length > 1 && (
                 <button
                   className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
                   onClick={goNext}
