@@ -123,17 +123,21 @@ const ProductDetail = () => {
     }, 150);
   };
 
-  // Build variants list from the JSONB `variantes` field + current product as first option
+  // Build variants list from the JSONB `variantes` field on the base product.
+  // The base product's `variantes` JSON contains all OTHER colors.
+  // We add the base product itself as the first option, then merge the others.
+  // If we navigated to a variant that is NOT in the list (e.g. it's the base product
+  // displayed as a variant), we also ensure the currentVariantData is always present.
   const allVariants = useMemo((): VariantInfo[] => {
     if (!product) return [];
-    const current: VariantInfo = {
+    const baseOption: VariantInfo = {
       slug: product.slug || '',
       cor: product.cor,
       codigo_amigavel: product.codigo_amigavel,
       image: product.image_url,
       estoque: product.estoque,
     };
-    const others = Array.isArray(product.variantes)
+    const othersFromJson = Array.isArray(product.variantes)
       ? (product.variantes as any[]).map(v => ({
           slug: v.slug || '',
           cor: v.cor || null,
@@ -142,8 +146,25 @@ const ProductDetail = () => {
           estoque: typeof v.estoque === 'number' ? v.estoque : null,
         }))
       : [];
-    return [current, ...others];
-  }, [product]);
+
+    const merged = [baseOption, ...othersFromJson];
+
+    // If the current page is a variant that isn't already in the list, add it
+    if (currentVariantData && currentVariantData.is_variante) {
+      const alreadyIncluded = merged.some(v => v.slug === currentVariantData.slug);
+      if (!alreadyIncluded) {
+        merged.push({
+          slug: currentVariantData.slug || '',
+          cor: currentVariantData.cor,
+          codigo_amigavel: currentVariantData.codigo_amigavel,
+          image: currentVariantData.image_url,
+          estoque: currentVariantData.estoque,
+        });
+      }
+    }
+
+    return merged;
+  }, [product, currentVariantData]);
 
   // Active variant = the slug we navigated to
   const activeVariantSlug = currentVariantData?.slug || product?.slug || '';
