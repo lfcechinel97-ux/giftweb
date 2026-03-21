@@ -352,7 +352,7 @@ const ProductDetail = () => {
                   <TooltipProvider delayDuration={200}>
                     <div className="flex flex-col gap-2">
                       <span className="text-foreground text-sm font-semibold">
-                        Cor: <span className="text-muted-foreground font-normal">{currentVariantData?.cor || product.cor || ''}</span>
+                        Cor: <span className="text-muted-foreground font-normal">{selectedVariant?.cor || product.cor || ''}</span>
                         <span className="ml-1.5 text-xs text-muted-foreground">({allVariants.length} opções)</span>
                       </span>
                       <div className="flex flex-wrap gap-2">
@@ -363,9 +363,21 @@ const ProductDetail = () => {
                           return (
                             <Tooltip key={v.slug}>
                               <TooltipTrigger asChild>
-                                <Link
-                                  to={`/produto/${v.slug}`}
-                                  className="relative w-8 h-8 rounded-full shrink-0 transition-all duration-150"
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedVariant(v);
+                                    // Update displayed image with transition
+                                    if (v.image && v.image !== displayedMain) {
+                                      setIsTransitioning(true);
+                                      setTimeout(() => {
+                                        setDisplayedMain(v.image!);
+                                        setActiveImg(0);
+                                        setIsTransitioning(false);
+                                      }, 150);
+                                    }
+                                  }}
+                                  className="relative w-8 h-8 rounded-full shrink-0 transition-all duration-150 cursor-pointer"
                                   style={{
                                     backgroundColor: hex,
                                     border: isCurrent ? '3px solid hsl(142,71%,45%)' : '2px solid hsl(var(--border))',
@@ -379,7 +391,7 @@ const ProductDetail = () => {
                                       <span className="w-0.5 h-full bg-destructive/70 rotate-45 absolute" />
                                     </span>
                                   )}
-                                </Link>
+                                </button>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="text-xs">
                                 {v.cor || 'Cor'}{outOfStock ? ' — Indisponível' : ''}
