@@ -214,7 +214,6 @@ const ProductDetail = () => {
       }
     }
 
-    console.log('[ProductDetail] allVariants count:', merged.length, 'slugs:', merged.map(v => v.slug));
     return merged;
   }, [product, currentVariantData]);
 
