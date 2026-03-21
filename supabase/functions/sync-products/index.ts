@@ -124,7 +124,7 @@ serve(async (req) => {
       const apiUrl = Deno.env.get("XBZ_API_URL");
       if (!apiUrl) throw new Error("XBZ_API_URL nao configurada");
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 25000);
+      const timeout = setTimeout(() => controller.abort(), 40000);
       let apiResponse: Response;
       try {
         apiResponse = await fetch(apiUrl, {
