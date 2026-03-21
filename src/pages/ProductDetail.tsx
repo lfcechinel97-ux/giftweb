@@ -44,14 +44,8 @@ const ProductDetail = () => {
   const [activeVariantSlug, setActiveVariantSlug] = useState<string | null>(null);
   const qtySelectorRef = useRef<HTMLDivElement>(null);
 
-  // Build all product images from current product (deduped)
-  const allImages = useMemo(() => {
-    if (!product) return [];
-    const raw = [product.image_url, ...(Array.isArray(product.image_urls) ? product.image_urls : [])] as (string | null | undefined)[];
-    return raw
-      .filter((img): img is string => !!img && img.trim() !== '' && img !== 'null')
-      .filter((img, i, arr) => arr.indexOf(img) === i);
-  }, [product?.image_url, product?.image_urls]);
+
+
 
 
 
@@ -131,6 +125,19 @@ const ProductDetail = () => {
       : [];
     return [current, ...others];
   }, [product]);
+
+  // Build images for the ACTIVE variant only — thumbnails show only this product's gallery.
+  const allImages = useMemo(() => {
+    if (!product) return [];
+    const activeImg = activeVariantSlug
+      ? allVariants.find(v => v.slug === activeVariantSlug)?.image || product.image_url
+      : product.image_url;
+    const extras = Array.isArray(product.image_urls) ? product.image_urls : [];
+    const raw = [activeImg, ...extras] as (string | null | undefined)[];
+    return raw
+      .filter((img): img is string => !!img && img.trim() !== '' && img !== 'null')
+      .filter((img, i, arr) => arr.indexOf(img) === i);
+  }, [product?.image_url, product?.image_urls, activeVariantSlug, allVariants]);
 
   // The currently selected variant (used for main image swap on click)
   const activeVariant = useMemo(() => {

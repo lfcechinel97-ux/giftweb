@@ -62,6 +62,7 @@ const SearchPage = () => {
 
   const handlePageChange = (p: number) => {
     setSearchParams({ q, page: p.toString() });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
