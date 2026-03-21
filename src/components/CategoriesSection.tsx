@@ -68,8 +68,8 @@ const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
                   transition: "border-color 0.25s, box-shadow 0.25s, transform 0.25s"
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.borderColor = "hsl(142 71% 45%)";
-                  (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(34,197,94,0.18)";
+                  (e.currentTarget as HTMLElement).style.borderColor = "hsl(82 84% 55%)";
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(163,230,53,0.18)";
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.borderColor = "hsl(var(--border))";
