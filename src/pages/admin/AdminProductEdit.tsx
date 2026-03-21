@@ -9,9 +9,9 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Save, Upload, GripVertical, X, Plus, ImageOff, Images } from 'lucide-react';
+import { ArrowLeft, Save, Upload, GripVertical, X, Plus, ImageOff, Images, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { formatarBRL } from '@/utils/price';
+import { formatarBRL, calcularPreco, getMarkup } from '@/utils/price';
 import { getCorHex } from '@/utils/colorHex';
 import type { Json } from '@/integrations/supabase/types';
 import { toast as sonnerToast } from 'sonner';
@@ -24,6 +24,11 @@ interface Variante {
   codigo_amigavel?: string;
 }
 
+interface TabelaPrecoRow {
+  qty: number;
+  desconto: number;
+}
+
 function parseVariantes(v: Json | null): Variante[] {
   if (!v || !Array.isArray(v)) return [];
   return v as unknown as Variante[];
@@ -32,6 +37,16 @@ function parseVariantes(v: Json | null): Variante[] {
 const CATEGORIES = [
   'garrafas', 'copos', 'mochilas', 'bolsas', 'escritorio', 'kits',
   'squeezes', 'brindes-baratos', 'outros',
+];
+
+const DEFAULT_TABELA: TabelaPrecoRow[] = [
+  { qty: 20,   desconto: 0 },
+  { qty: 50,   desconto: 0 },
+  { qty: 100,  desconto: 0.04 },
+  { qty: 200,  desconto: 0.07 },
+  { qty: 300,  desconto: 0.09 },
+  { qty: 500,  desconto: 0.12 },
+  { qty: 1000, desconto: 0.16 },
 ];
 
 // ─── Image gallery manager ────────────────────────────────────────────────────
@@ -216,18 +231,6 @@ export default function AdminProductEdit() {
     enabled: !!codigoPrefixo,
   });
 
-  interface TabelaPrecoRow { qty: number; desconto: number; }
-
-  const DEFAULT_TABELA: TabelaPrecoRow[] = [
-    { qty: 20,   desconto: 0 },
-    { qty: 50,   desconto: 0 },
-    { qty: 100,  desconto: 0.04 },
-    { qty: 200,  desconto: 0.07 },
-    { qty: 300,  desconto: 0.09 },
-    { qty: 500,  desconto: 0.12 },
-    { qty: 1000, desconto: 0.16 },
-  ];
-
   const [form, setForm] = useState({
     nome: '',
     descricao: '',
@@ -274,6 +277,14 @@ export default function AdminProductEdit() {
       setImageUrls(finalImgs);
       imageMainRef.current = product.image_url ?? null;
       imageUrlsRef.current = finalImgs;
+
+      // Load custom price table if exists
+      const tp = product.tabela_precos;
+      if (Array.isArray(tp) && tp.length > 0) {
+        setTabelaPrecos(tp as unknown as TabelaPrecoRow[]);
+      } else {
+        setTabelaPrecos(null);
+      }
     }
   }, [product]);
 
@@ -338,7 +349,8 @@ export default function AdminProductEdit() {
         is_featured: form.is_featured,
         is_hidden: form.is_hidden,
         featured_position: form.is_featured ? form.featured_position : null,
-      })
+        tabela_precos: tabelaPrecos ?? null,
+      } as Record<string, unknown>)
       .eq('id', id!);
     setSaving(false);
     if (error) {
@@ -351,11 +363,40 @@ export default function AdminProductEdit() {
     }
   };
 
+  // ── Tabela de preços helpers ──────────────────────────────────────────────
+  const activeTabelaRows = tabelaPrecos ?? DEFAULT_TABELA;
+  const isCustomTabela = tabelaPrecos !== null;
+
+  const updateTabelaRow = (idx: number, field: keyof TabelaPrecoRow, value: number) => {
+    const updated = activeTabelaRows.map((r, i) => i === idx ? { ...r, [field]: value } : r);
+    setTabelaPrecos(updated);
+    setDirty(true);
+  };
+
+  const addTabelaRow = () => {
+    const lastQty = activeTabelaRows[activeTabelaRows.length - 1]?.qty ?? 1000;
+    setTabelaPrecos([...activeTabelaRows, { qty: lastQty + 100, desconto: 0 }]);
+    setDirty(true);
+  };
+
+  const removeTabelaRow = (idx: number) => {
+    const updated = activeTabelaRows.filter((_, i) => i !== idx);
+    setTabelaPrecos(updated.length > 0 ? updated : null);
+    setDirty(true);
+  };
+
+  const resetTabela = () => {
+    setTabelaPrecos(null);
+    setDirty(true);
+  };
+
   if (isLoading) return <div className="p-8 text-muted-foreground">Carregando produto...</div>;
   if (!product) return <div className="p-8 text-muted-foreground">Produto não encontrado.</div>;
 
   const variantes = parseVariantes(product.variantes);
   const selectedVariantRow = variantRows?.find(v => v.id === selectedVariantId);
+  const precoCusto = product.preco_custo ?? 0;
+  const markup = precoCusto ? getMarkup(precoCusto) : 1;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -512,6 +553,107 @@ export default function AdminProductEdit() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* ── Tabela de preços ────────────────────────────────────────── */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Tabela "Compre com desconto"</Label>
+                  {isCustomTabela ? (
+                    <p className="text-xs text-primary font-medium mt-0.5">Personalizada para este produto</p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mt-0.5">Usando tabela padrão global</p>
+                  )}
+                </div>
+                {isCustomTabela && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={resetTabela}
+                    className="text-xs text-muted-foreground h-7 px-2"
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1" /> Resetar para padrão
+                  </Button>
+                )}
+              </div>
+
+              <div className="rounded-lg border overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/40">
+                      <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Qtd</th>
+                      <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Desconto %</th>
+                      {precoCusto > 0 && (
+                        <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Preço/un</th>
+                      )}
+                      <th className="w-8" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeTabelaRows.map((row, idx) => (
+                      <tr key={idx} className="border-b last:border-0 hover:bg-muted/20">
+                        <td className="px-2 py-1.5">
+                          <Input
+                            type="number"
+                            min={1}
+                            value={row.qty}
+                            onChange={(e) => {
+                              const v = parseInt(e.target.value) || 1;
+                              if (!isCustomTabela) setTabelaPrecos([...DEFAULT_TABELA]);
+                              updateTabelaRow(idx, 'qty', v);
+                            }}
+                            className="h-7 w-20 text-sm"
+                          />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <div className="flex items-center gap-1">
+                            <Input
+                              type="number"
+                              min={0}
+                              max={100}
+                              step={0.1}
+                              value={Math.round(row.desconto * 100 * 10) / 10}
+                              onChange={(e) => {
+                                const v = (parseFloat(e.target.value) || 0) / 100;
+                                if (!isCustomTabela) setTabelaPrecos([...DEFAULT_TABELA]);
+                                updateTabelaRow(idx, 'desconto', v);
+                              }}
+                              className="h-7 w-20 text-sm"
+                            />
+                            <span className="text-xs text-muted-foreground">%</span>
+                          </div>
+                        </td>
+                        {precoCusto > 0 && (
+                          <td className="px-3 py-1.5 text-xs text-muted-foreground font-medium tabular-nums">
+                            {formatarBRL(precoCusto * markup * (1 - row.desconto))}
+                          </td>
+                        )}
+                        <td className="px-2 py-1.5">
+                          <button
+                            type="button"
+                            onClick={() => removeTabelaRow(idx)}
+                            className="w-6 h-6 flex items-center justify-center rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addTabelaRow}
+                className="w-full h-8 text-xs"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar faixa
+              </Button>
             </div>
 
             <div className="flex items-center justify-between rounded-lg border p-4">
