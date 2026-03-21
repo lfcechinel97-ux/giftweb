@@ -1,20 +1,29 @@
+import { useState, useEffect } from "react";
+import { useSiteContent } from "@/hooks/useSiteContent";
+import bannerB2B from "@/assets/banner-b2b.jpg";
+
 const BannerSeparator = () => {
+  const { rows } = useSiteContent("banners");
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
+  const deskRow = rows.find((r) => r.id === "banner_marca_desk");
+  const mobRow = rows.find((r) => r.id === "banner_marca_mob");
+  const src = (isMobile && mobRow?.value) ? mobRow.value : (deskRow?.value || bannerB2B);
+
   return (
-    <section className="w-full px-4 md:px-6 py-4">
-      <div
-        className="w-full max-h-[80px] flex items-center justify-center rounded-2xl py-4 md:py-5 px-6 md:px-10 shadow-lg"
-        style={{
-          background: "linear-gradient(135deg, #1E4D6B, #163d56)",
-        }}
-      >
-        <p className="text-white text-sm md:text-base lg:text-lg font-light tracking-wide text-center leading-snug">
-          Brindes corporativos{" "}
-          <span style={{ color: "#A3E635" }} className="font-medium">
-            no prazo.
-          </span>{" "}
-          Sem complicação. Sem dor de cabeça.
-        </p>
-      </div>
+    <section className="w-full">
+      <img
+        src={src}
+        alt="Brindes que fortalecem sua marca — Gift Web"
+        className="w-full block"
+        style={{ height: 'auto' }}
+      />
     </section>
   );
 };
