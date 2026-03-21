@@ -298,10 +298,10 @@ const ProductDetail = () => {
                   </button>
                 </div>
 
-                {/* Product image thumbnails (extra images uploaded in admin) */}
-                {allImages.length > 1 && (
+                {/* Extra product photos (not variant images) */}
+                {extraImages.length > 0 && (
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                    {allImages.map((src, i) => (
+                    {extraImages.map((src, i) => (
                       <button
                         key={src + i}
                         onClick={() => handleThumbChange(src)}
