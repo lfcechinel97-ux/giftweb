@@ -216,6 +216,18 @@ export default function AdminProductEdit() {
     enabled: !!codigoPrefixo,
   });
 
+  interface TabelaPrecoRow { qty: number; desconto: number; }
+
+  const DEFAULT_TABELA: TabelaPrecoRow[] = [
+    { qty: 20,   desconto: 0 },
+    { qty: 50,   desconto: 0 },
+    { qty: 100,  desconto: 0.04 },
+    { qty: 200,  desconto: 0.07 },
+    { qty: 300,  desconto: 0.09 },
+    { qty: 500,  desconto: 0.12 },
+    { qty: 1000, desconto: 0.16 },
+  ];
+
   const [form, setForm] = useState({
     nome: '',
     descricao: '',
@@ -224,6 +236,9 @@ export default function AdminProductEdit() {
     is_hidden: false,
     featured_position: 1,
   });
+
+  // tabela_precos: null = use global default; array = custom
+  const [tabelaPrecos, setTabelaPrecos] = useState<TabelaPrecoRow[] | null>(null);
 
   // Base product images
   const [imageMain, setImageMain] = useState<string | null>(null);

@@ -243,17 +243,30 @@ const ProductDetail = () => {
 
   const tableRows = useMemo(() => {
     if (!displayPrecoCusto) return [];
+    // Use custom price table if available, otherwise fall back to global defaults
+    const customTable = product?.tabela_precos;
+    const customRows = Array.isArray(customTable) ? (customTable as { qty: number; desconto: number }[]) : null;
+    if (customRows && customRows.length > 0) {
+      const markup = getMarkup(displayPrecoCusto);
+      return customRows.map(r => ({
+        qty: r.qty,
+        unit: displayPrecoCusto * markup * (1 - r.desconto),
+        base: precoBase,
+        desc: r.desconto,
+      }));
+    }
     return QUANTITIES.map(q => ({
       qty: q,
       unit: calcularPreco(displayPrecoCusto, q),
       base: precoBase,
       desc: getDesconto(q),
     }));
-  }, [displayPrecoCusto, precoBase]);
+  }, [displayPrecoCusto, precoBase, product?.tabela_precos]);
 
   const handleSelectRow = (index: number) => {
     setSelectedRow(index);
-    setQty(QUANTITIES[index]);
+    const rowQty = tableRows[index]?.qty ?? QUANTITIES[index];
+    setQty(rowQty);
     qtySelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
