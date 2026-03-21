@@ -104,7 +104,7 @@ const TestimonialCard = ({
       boxShadow: "0 1px 6px hsl(200 57% 27% / 0.04)",
     }}
     onMouseEnter={(e) => {
-      (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(0,0,0,0.07)";
+      (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px hsl(200 57% 27% / 0.07)";
     }}
     onMouseLeave={(e) => {
       (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 6px rgba(0,0,0,0.04)";
