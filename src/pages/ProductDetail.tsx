@@ -525,7 +525,7 @@ const ProductDetail = () => {
                               key={row.qty}
                               className="border-t border-border cursor-pointer hover:bg-secondary/50 transition-colors"
                               style={{
-                                backgroundColor: selectedRow === i ? "hsl(142,71%,45%,0.06)" : undefined,
+                                backgroundColor: selectedRow === i ? "hsl(82,84%,55%,0.06)" : undefined,
                                 borderLeft: selectedRow === i ? "3px solid hsl(82,84%,55%)" : "3px solid transparent",
                               }}
                               onClick={() => handleSelectRow(i)}
