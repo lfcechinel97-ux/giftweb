@@ -44,21 +44,8 @@ const ProductDetail = () => {
   const [activeVariantSlug, setActiveVariantSlug] = useState<string | null>(null);
   const qtySelectorRef = useRef<HTMLDivElement>(null);
 
-  // Build images for the ACTIVE variant only (or the product itself when no variant selected).
-  // Thumbnails below the main image show only that product's own gallery — not all variants.
-  const allImages = useMemo(() => {
-    if (!product) return [];
-    // Find the active variant to get its specific image_url
-    const activeImg = activeVariantSlug
-      ? allVariants.find(v => v.slug === activeVariantSlug)?.image || product.image_url
-      : product.image_url;
-    // image_urls belong to the parent product record; combine with active variant's main image
-    const extras = Array.isArray(product.image_urls) ? product.image_urls : [];
-    const raw = [activeImg, ...extras] as (string | null | undefined)[];
-    return raw
-      .filter((img): img is string => !!img && img.trim() !== '' && img !== 'null')
-      .filter((img, i, arr) => arr.indexOf(img) === i);
-  }, [product?.image_url, product?.image_urls, activeVariantSlug, allVariants]);
+
+
 
 
 
