@@ -198,21 +198,22 @@ export default function AdminProductEdit() {
     enabled: !!id,
   });
 
-  // Also fetch all variants — use product data from first query, keyed on product.id + is_variante
-  const parentId = product?.is_variante ? product?.produto_pai : product?.id;
+  // Fetch all variants by codigo_prefixo (produto_pai may be null in DB)
+  const codigoPrefixo = product?.codigo_prefixo ?? null;
 
   const { data: variantRows, refetch: refetchVariants } = useQuery({
-    queryKey: ['admin-product-variants', parentId],
+    queryKey: ['admin-product-variants', codigoPrefixo],
     queryFn: async () => {
-      if (!parentId) return [];
+      if (!codigoPrefixo) return [];
       const { data } = await supabase
         .from('products_cache')
         .select('id, slug, cor, image_url, image_urls, codigo_amigavel, estoque')
-        .eq('produto_pai', parentId)
-        .eq('ativo', true);
+        .eq('codigo_prefixo', codigoPrefixo)
+        .eq('ativo', true)
+        .neq('id', product?.id ?? ''); // exclude the product being edited (it's the parent)
       return data ?? [];
     },
-    enabled: !!parentId,
+    enabled: !!codigoPrefixo,
   });
 
   const [form, setForm] = useState({
