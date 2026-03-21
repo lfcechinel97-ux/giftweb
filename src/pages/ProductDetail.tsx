@@ -324,34 +324,6 @@ const ProductDetail = () => {
                 )}
 
 
-                {allVariants.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                    {allVariants.map((v) => {
-                      const isActive = v.slug === activeVariantSlug;
-                      const thumbSrc = v.image || '';
-                      return (
-                        <button
-                          key={v.slug}
-                          onClick={() => handleSwitchVariant(v)}
-                          title={v.cor || ''}
-                          className="w-16 h-16 shrink-0 rounded-xl border-2 bg-white flex items-center justify-center p-1 transition-all duration-150"
-                          style={{ borderColor: isActive ? 'hsl(142,71%,45%)' : 'hsl(var(--border))' }}
-                        >
-                          {thumbSrc ? (
-                            <img
-                              src={thumbSrc}
-                              alt={v.cor || 'variante'}
-                              className="w-full h-full object-contain rounded-lg pointer-events-none"
-                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                            />
-                          ) : (
-                            <div className="w-full h-full rounded-lg" style={{ backgroundColor: getCorHex(v.cor) }} />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
 
               {/* Info */}
