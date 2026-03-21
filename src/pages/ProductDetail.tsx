@@ -102,17 +102,27 @@ const ProductDetail = () => {
     return selectedVariant?.image || product?.image_url || '';
   }, [selectedVariant, product]);
 
-  // Build ALL images: unify API images (image_urls from base product) + admin-uploaded images
-  // The base product's image_urls contains all images from API sync.
-  // Admin may also add extra images stored in image_urls.
-  // We show all of them deduplicated, with mainImage first.
+  // Build ALL images:
+  // - When base product is selected → show all images (API + admin-uploaded)
+  // - When a variant is selected → show variant image + only admin-uploaded images
+  //   (admin images are stored in Supabase Storage, not XBZ CDN)
   const allImages = useMemo(() => {
     if (!product) return [];
     const urls = Array.isArray(product.image_urls) ? (product.image_urls as string[]) : [];
-    const all = [mainImage, ...urls].filter((img): img is string => !!img && img.trim() !== '' && img !== 'null');
-    // Deduplicate preserving order
+    const isBaseSelected = selectedVariant?.slug === product.slug || !selectedVariant;
+
+    let extra: string[];
+    if (isBaseSelected) {
+      // Show all images from the base product
+      extra = urls;
+    } else {
+      // Only keep admin-uploaded images (Supabase Storage URLs), not XBZ CDN images
+      extra = urls.filter(u => u.includes('supabase.co/storage'));
+    }
+
+    const all = [mainImage, ...extra].filter((img): img is string => !!img && img.trim() !== '' && img !== 'null');
     return all.filter((img, i, arr) => arr.indexOf(img) === i);
-  }, [product?.image_urls, mainImage]);
+  }, [product?.image_urls, mainImage, selectedVariant?.slug, product?.slug]);
 
   // Thumbnail images = all except the active main (shown below main image)
   const [displayedMain, setDisplayedMain] = useState('');
