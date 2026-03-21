@@ -126,18 +126,27 @@ const ProductDetail = () => {
     return [current, ...others];
   }, [product]);
 
-  // Extra product photos: only images from image_urls that are NOT any variant's image.
-  // The main image (active variant) is shown separately above.
-  // Variant images are shown in the variant selector row — not here.
+  // Extra product photos: images from image_urls that are NOT an image of any OTHER variant.
+  // - The active variant's image is already shown as the main image.
+  // - Images uploaded by admin that don't belong to any variant are shown as extra thumbnails.
+  // - Images that ARE other variants' images are excluded (those are in the variant selector row).
   const extraImages = useMemo(() => {
     if (!product) return [];
-    const variantImages = new Set(allVariants.map(v => v.image).filter(Boolean));
+    // Collect images belonging to OTHER variants (not the active one)
+    const otherVariantImages = new Set(
+      allVariants
+        .filter(v => v.slug !== activeVariantSlug)
+        .map(v => v.image)
+        .filter(Boolean)
+    );
+    const activeVarImage = allVariants.find(v => v.slug === activeVariantSlug)?.image || product.image_url;
     const urls = Array.isArray(product.image_urls) ? (product.image_urls as string[]) : [];
     return urls
       .filter((img): img is string => !!img && img.trim() !== '' && img !== 'null')
-      .filter(img => !variantImages.has(img))
-      .filter((img, i, arr) => arr.indexOf(img) === i);
-  }, [product?.image_urls, allVariants]);
+      .filter(img => !otherVariantImages.has(img))   // exclude other-variant images
+      .filter(img => img !== activeVarImage)          // exclude main image (already shown above)
+      .filter((img, i, arr) => arr.indexOf(img) === i); // deduplicate
+  }, [product?.image_urls, allVariants, activeVariantSlug]);
 
   // The currently selected variant (used for main image swap on click)
   const activeVariant = useMemo(() => {
