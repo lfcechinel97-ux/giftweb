@@ -126,25 +126,18 @@ const ProductDetail = () => {
     return [current, ...others];
   }, [product]);
 
-  // Build images: main image of active variant + product.image_urls (extra photos of THIS product, not other variants).
-  // Variant thumbnails are shown separately in the second row below.
-  const allImages = useMemo(() => {
+  // Extra product photos: only images from image_urls that are NOT any variant's image.
+  // The main image (active variant) is shown separately above.
+  // Variant images are shown in the variant selector row — not here.
+  const extraImages = useMemo(() => {
     if (!product) return [];
-    // Image of the active variant
-    const activeVarImg = activeVariantSlug
-      ? allVariants.find(v => v.slug === activeVariantSlug)?.image || product.image_url
-      : product.image_url;
-    // Extra photos belong to the product itself (uploaded in admin), not to variants
-    // Only show them if they are NOT the same as any variant's image
     const variantImages = new Set(allVariants.map(v => v.image).filter(Boolean));
-    const extras = Array.isArray(product.image_urls)
-      ? (product.image_urls as string[]).filter(img => img && !variantImages.has(img))
-      : [];
-    const raw = [activeVarImg, ...extras] as (string | null | undefined)[];
-    return raw
+    const urls = Array.isArray(product.image_urls) ? (product.image_urls as string[]) : [];
+    return urls
       .filter((img): img is string => !!img && img.trim() !== '' && img !== 'null')
+      .filter(img => !variantImages.has(img))
       .filter((img, i, arr) => arr.indexOf(img) === i);
-  }, [product?.image_url, product?.image_urls, activeVariantSlug, allVariants]);
+  }, [product?.image_urls, allVariants]);
 
   // The currently selected variant (used for main image swap on click)
   const activeVariant = useMemo(() => {
@@ -305,10 +298,10 @@ const ProductDetail = () => {
                   </button>
                 </div>
 
-                {/* Product image thumbnails (extra images uploaded in admin) */}
-                {allImages.length > 1 && (
+                {/* Extra product photos (not variant images) */}
+                {extraImages.length > 0 && (
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                    {allImages.map((src, i) => (
+                    {extraImages.map((src, i) => (
                       <button
                         key={src + i}
                         onClick={() => handleThumbChange(src)}
