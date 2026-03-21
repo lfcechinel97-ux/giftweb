@@ -47,7 +47,7 @@ const ShowcaseCard = ({ item }: { item: ShowcaseItem }) => {
       {...wrapperProps}
       className="relative rounded-2xl bg-card border border-border p-3 transition-all duration-250 group hover:-translate-y-1 cursor-pointer block"
       style={{
-        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+        boxShadow: "0 1px 4px hsl(200 57% 27% / 0.04)",
         transition: "box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease"
       }}
       onMouseEnter={(e) => {
