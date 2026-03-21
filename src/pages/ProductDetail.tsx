@@ -299,7 +299,7 @@ const ProductDetail = () => {
                         key={src + i}
                         onClick={() => handleThumbChange(src)}
                         className="shrink-0 w-16 h-16 rounded-xl border-2 overflow-hidden transition-all duration-150 bg-white"
-                        style={{ borderColor: mainImage === src ? 'hsl(142,71%,45%)' : 'hsl(var(--border))' }}
+                        style={{ borderColor: mainImage === src ? 'hsl(82,84%,55%)' : 'hsl(var(--border))' }}
                       >
                         <img src={src} alt={`foto ${i + 1}`} className="w-full h-full object-contain p-1 pointer-events-none" />
                       </button>
@@ -319,7 +319,7 @@ const ProductDetail = () => {
                           onClick={() => handleSwitchVariant(v)}
                           title={v.cor || ''}
                           className="w-16 h-16 shrink-0 rounded-xl border-2 bg-white flex items-center justify-center p-1 transition-all duration-150"
-                          style={{ borderColor: isActive ? 'hsl(142,71%,45%)' : 'hsl(var(--border))' }}
+                          style={{ borderColor: isActive ? 'hsl(82,84%,55%)' : 'hsl(var(--border))' }}
                         >
                           {thumbSrc ? (
                             <img
@@ -369,7 +369,7 @@ const ProductDetail = () => {
                                   className="relative rounded-xl overflow-hidden shrink-0 bg-white transition-colors duration-150"
                                   style={{
                                     width: 48, height: 48,
-                                    border: isCurrent ? '2px solid hsl(142,71%,45%)' : '2px solid hsl(var(--border))',
+                                    border: isCurrent ? '2px solid hsl(82,84%,55%)' : '2px solid hsl(var(--border))',
                                     opacity: outOfStock ? 0.5 : 1,
                                     cursor: isCurrent ? 'default' : 'pointer',
                                     padding: 3,
@@ -525,8 +525,8 @@ const ProductDetail = () => {
                               key={row.qty}
                               className="border-t border-border cursor-pointer hover:bg-secondary/50 transition-colors"
                               style={{
-                                backgroundColor: selectedRow === i ? "hsl(142,71%,45%,0.06)" : undefined,
-                                borderLeft: selectedRow === i ? "3px solid hsl(142,71%,45%)" : "3px solid transparent",
+                                backgroundColor: selectedRow === i ? "hsl(82,84%,55%,0.06)" : undefined,
+                                borderLeft: selectedRow === i ? "3px solid hsl(82,84%,55%)" : "3px solid transparent",
                               }}
                               onClick={() => handleSelectRow(i)}
                             >

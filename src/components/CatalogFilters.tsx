@@ -137,7 +137,7 @@ const CatalogFilters = ({
                             ? "1.5px solid hsl(var(--border))"
                             : "1.5px solid transparent",
                           boxShadow: isSelected
-                            ? "0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(142,71%,45%)"
+                            ? "0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(82,84%,55%)"
                             : "0 1px 3px rgba(0,0,0,0.15)",
                           transform: isSelected ? "scale(1.15)" : "scale(1)",
                         }}
