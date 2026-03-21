@@ -13,7 +13,7 @@ const links = [
 ];
 
 const SeoLinksSection = () => (
-  <section className="py-12" style={{ background: "hsl(222,47%,7%)" }}>
+  <section className="py-12 bg-navy">
     <div className="container">
       <h2 className="font-extrabold text-[24px] text-white mb-8">
         Categorias <span className="text-highlight italic">populares</span>

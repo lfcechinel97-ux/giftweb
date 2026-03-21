@@ -29,7 +29,7 @@ const LeadCapture = () => {
   };
 
   return (
-    <section className="py-12" style={{ background: "hsl(222,47%,7%)" }}>
+    <section className="py-12 bg-navy">
       <div className="container max-w-2xl text-center">
         <h2 className="text-white mb-2">
           Ganhe 5% de <span className="text-highlight">desconto</span> na primeira compra
@@ -65,8 +65,8 @@ const LeadCapture = () => {
             <button
               type="submit"
               disabled={status === "loading"}
-              className="rounded-[10px] bg-green-cta px-6 py-3 font-bold text-primary-foreground hover:brightness-110 transition-all duration-200 disabled:opacity-60"
-              style={{ boxShadow: "0 0 20px rgba(34,197,94,0.2)" }}
+              className="rounded-[10px] bg-green-cta px-6 py-3 font-bold text-navy hover:brightness-110 transition-all duration-200 disabled:opacity-60"
+              style={{ boxShadow: "0 0 20px rgba(163,230,53,0.2)" }}
             >
               {status === "loading" ? "Enviando..." : "Cadastrar"}
             </button>
