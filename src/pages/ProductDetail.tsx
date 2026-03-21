@@ -648,18 +648,21 @@ const ProductDetail = () => {
         <Footer />
         <FloatingWhatsApp />
 
-        {lightbox && allVariants.length > 0 && (() => {
-          const lbIndex = allVariants.findIndex(v => v.slug === activeVariantSlug);
-          const currentLbIndex = lbIndex >= 0 ? lbIndex : 0;
+        {lightbox && (() => {
+          const lbImages = [mainImage, ...extraImages].filter(Boolean);
+          const currentLbIndex = lbImages.indexOf(mainImage) >= 0 ? lbImages.indexOf(mainImage) : 0;
+          const [lbCurrent, setLbCurrent] = React.useState(currentLbIndex);
+          const allLbImages = [mainImage, ...extraImages].filter((img, i, arr) => img && arr.indexOf(img) === i);
+          const lbIdx = allLbImages.indexOf(mainImage);
+          const [lbActive, setLbActive] = React.useState(lbIdx >= 0 ? lbIdx : 0);
+
           const goPrev = (e: React.MouseEvent) => {
             e.stopPropagation();
-            const prev = (currentLbIndex - 1 + allVariants.length) % allVariants.length;
-            handleSwitchVariant(allVariants[prev]);
+            setLbActive(i => (i - 1 + allLbImages.length) % allLbImages.length);
           };
           const goNext = (e: React.MouseEvent) => {
             e.stopPropagation();
-            const next = (currentLbIndex + 1) % allVariants.length;
-            handleSwitchVariant(allVariants[next]);
+            setLbActive(i => (i + 1) % allLbImages.length);
           };
           return (
             <div
@@ -675,7 +678,7 @@ const ProductDetail = () => {
               </button>
 
               {/* Prev */}
-              {allVariants.length > 1 && (
+              {allLbImages.length > 1 && (
                 <button
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
                   onClick={goPrev}
@@ -687,23 +690,19 @@ const ProductDetail = () => {
               {/* Main lightbox image */}
               <div className="flex flex-col items-center gap-4 max-w-lg w-full" onClick={(e) => e.stopPropagation()}>
                 <img
-                  src={mainImage}
+                  src={allLbImages[lbActive]}
                   alt={product.nome}
                   className="max-w-full max-h-[70vh] object-contain rounded-xl bg-white p-4"
-                  style={{ opacity: isTransitioning ? 0 : 1, transition: 'opacity 0.15s ease' }}
                 />
-                {activeVariant?.cor && (
-                  <span className="text-white/80 text-sm">{activeVariant.cor}</span>
-                )}
                 {/* Dot indicators */}
-                {allVariants.length > 1 && (
+                {allLbImages.length > 1 && (
                   <div className="flex gap-1.5 flex-wrap justify-center max-w-xs">
-                    {allVariants.map((v, i) => (
+                    {allLbImages.map((_, i) => (
                       <button
-                        key={v.slug}
-                        onClick={() => handleSwitchVariant(v)}
+                        key={i}
+                        onClick={() => setLbActive(i)}
                         className="w-2 h-2 rounded-full transition-all duration-150"
-                        style={{ backgroundColor: i === currentLbIndex ? 'white' : 'rgba(255,255,255,0.3)' }}
+                        style={{ backgroundColor: i === lbActive ? 'white' : 'rgba(255,255,255,0.3)' }}
                       />
                     ))}
                   </div>
@@ -711,7 +710,7 @@ const ProductDetail = () => {
               </div>
 
               {/* Next */}
-              {allVariants.length > 1 && (
+              {allLbImages.length > 1 && (
                 <button
                   className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
                   onClick={goNext}
