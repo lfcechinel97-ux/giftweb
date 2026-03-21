@@ -65,7 +65,7 @@ const ShowcaseCard = ({ item }: { item: ShowcaseItem }) => {
         <div
           className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 rounded-full px-2.5 py-1 text-white uppercase tracking-wide"
           style={{
-            background: "linear-gradient(135deg, hsl(142 71% 35%), hsl(142 71% 45%))",
+            background: "linear-gradient(135deg, hsl(82 84% 48%), hsl(82 84% 55%))",
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: "0.5px",
