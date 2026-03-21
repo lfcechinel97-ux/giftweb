@@ -64,7 +64,7 @@ const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
                 className="w-[148px] h-[148px] rounded-full overflow-hidden transition-all duration-300 group-hover:-translate-y-1.5"
                 style={{
                   border: "2.5px solid hsl(var(--border))",
-                  boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+                  boxShadow: "0 2px 10px hsl(200 57% 27% / 0.06)",
                   transition: "border-color 0.25s, box-shadow 0.25s, transform 0.25s"
                 }}
                 onMouseEnter={(e) => {
