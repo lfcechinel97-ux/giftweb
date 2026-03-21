@@ -392,6 +392,20 @@ const ProductDetail = () => {
                     <p className="text-muted-foreground text-xs leading-relaxed whitespace-pre-line">{product.descricao}</p>
                   </div>
                 )}
+
+                {/* Trust bar — desktop only, below description in left column */}
+                <div className="hidden md:flex gap-2 py-3 border-t border-b border-border">
+                  {[
+                    { Icon: Truck, label: 'Entrega\nBrasil' },
+                    { Icon: Palette, label: 'Arte grátis\ninclusa' },
+                    { Icon: Building2, label: '+5 anos de\nmercado' },
+                  ].map(({ Icon, label }) => (
+                    <div key={label} className="flex-1 flex flex-col items-center gap-1">
+                      <Icon className="w-4 h-4 text-green-cta" />
+                      <span className="text-[10px] text-muted-foreground text-center leading-tight whitespace-pre-line">{label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* RIGHT: Info */}
@@ -403,7 +417,7 @@ const ProductDetail = () => {
                   <span>{PRAZO_PRODUCAO}</span>
                 </div>
 
-                {/* Variant selector — color dots only, navigate to variant URL */}
+                {/* Variant selector — image thumbnails */}
                 {allVariants.length > 1 ? (
                   <TooltipProvider delayDuration={200}>
                     <div className="flex flex-col gap-2">
@@ -413,7 +427,6 @@ const ProductDetail = () => {
                       </span>
                       <div className="flex flex-wrap gap-2">
                         {allVariants.map((v) => {
-                          const hex = getCorHex(v.cor);
                           const isCurrent = v.slug === activeVariantSlug;
                           const outOfStock = v.estoque === 0 || v.estoque === null;
                           return (
@@ -423,7 +436,6 @@ const ProductDetail = () => {
                                   type="button"
                                   onClick={() => {
                                     setSelectedVariant(v);
-                                    // Update displayed image with transition
                                     if (v.image && v.image !== displayedMain) {
                                       setIsTransitioning(true);
                                       setTimeout(() => {
@@ -433,15 +445,30 @@ const ProductDetail = () => {
                                       }, 150);
                                     }
                                   }}
-                                  className="relative w-8 h-8 rounded-full shrink-0 transition-all duration-150 cursor-pointer"
+                                  className="relative w-14 h-14 rounded-xl shrink-0 overflow-hidden transition-all duration-150 cursor-pointer bg-white"
                                   style={{
-                                    backgroundColor: hex,
-                                    border: isCurrent ? '3px solid hsl(142,71%,45%)' : '2px solid hsl(var(--border))',
+                                    border: isCurrent
+                                      ? '2px solid hsl(142,71%,45%)'
+                                      : '2px solid hsl(var(--border))',
                                     opacity: outOfStock ? 0.45 : 1,
-                                    boxShadow: isCurrent ? '0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(142,71%,45%)' : undefined,
+                                    boxShadow: isCurrent
+                                      ? '0 0 0 2px hsl(142,71%,45% / 0.25)'
+                                      : undefined,
                                   }}
                                   title={v.cor || 'Cor'}
                                 >
+                                  {v.image ? (
+                                    <img
+                                      src={v.image}
+                                      alt={v.cor || 'variante'}
+                                      className="w-full h-full object-contain p-1 pointer-events-none"
+                                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder-product.webp'; }}
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-secondary">
+                                      <span className="text-[9px] text-muted-foreground text-center leading-tight px-0.5">{v.cor || '—'}</span>
+                                    </div>
+                                  )}
                                   {outOfStock && (
                                     <span className="absolute inset-0 flex items-center justify-center">
                                       <span className="w-0.5 h-full bg-destructive/70 rotate-45 absolute" />
@@ -516,19 +543,6 @@ const ProductDetail = () => {
                   <p>✓ Entrega para todo o Brasil</p>
                 </div>
 
-                {/* Trust bar — hidden on mobile */}
-                <div className="hidden md:flex gap-2 py-3 border-t border-b border-border">
-                  {[
-                    { Icon: Truck, label: 'Entrega\nBrasil' },
-                    { Icon: Palette, label: 'Arte grátis\ninclusa' },
-                    { Icon: Building2, label: '+5 anos de\nmercado' },
-                  ].map(({ Icon, label }) => (
-                    <div key={label} className="flex-1 flex flex-col items-center gap-1">
-                      <Icon className="w-4 h-4 text-green-cta" />
-                      <span className="text-[10px] text-muted-foreground text-center leading-tight whitespace-pre-line">{label}</span>
-                    </div>
-                  ))}
-                </div>
 
                 {/* Dimensions */}
                 {(product.altura || product.largura || product.profundidade || product.peso) && (
