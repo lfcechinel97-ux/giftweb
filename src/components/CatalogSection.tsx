@@ -74,16 +74,16 @@ const CatalogSection = () => {
                 style={{
                   background: "hsl(var(--secondary))",
                   border: "1.5px solid hsl(var(--border))",
-                  boxShadow: "0 2px 10px hsl(200 57% 27% / 0.05)",
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
                 }}
                 onMouseEnter={(e) => {
                   const el = e.currentTarget as HTMLElement;
-                  el.style.boxShadow = "0 10px 32px hsl(200 57% 27% / 0.1)";
+                  el.style.boxShadow = "0 10px 32px rgba(0,0,0,0.1)";
                   el.style.transform = "scale(1.03) translateY(-3px)";
                 }}
                 onMouseLeave={(e) => {
                   const el = e.currentTarget as HTMLElement;
-                  el.style.boxShadow = "0 2px 10px hsl(200 57% 27% / 0.05)";
+                  el.style.boxShadow = "0 2px 10px rgba(0,0,0,0.05)";
                   el.style.transform = "scale(1) translateY(0)";
                 }}
               >

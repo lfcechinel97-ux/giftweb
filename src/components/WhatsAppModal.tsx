@@ -82,10 +82,10 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-navy/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
         className="relative w-full max-w-md rounded-2xl bg-card border border-border p-6 animate-scale-in overflow-y-auto max-h-[90vh]"
-        style={{ boxShadow: "0 20px 60px hsl(200 57% 27% / 0.15)" }}
+        style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}
       >
         <button
           onClick={onClose}
@@ -95,7 +95,7 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
         </button>
 
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-green-cta flex items-center justify-center text-navy">
+          <div className="w-10 h-10 rounded-full bg-green-cta flex items-center justify-center text-white">
             <WppIcon size={20} />
           </div>
           <h3 className="text-foreground font-bold text-lg">Peça um orçamento rápido!</h3>
@@ -106,41 +106,95 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          {/* Nome */}
           <div>
             <label className="text-xs font-semibold text-foreground mb-1 block">
               Nome <span className="text-destructive">*</span>
             </label>
-            <input type="text" placeholder="Seu nome completo" value={form.name} onChange={(e) => update("name", e.target.value)} className={inputClass("name")} style={{ width: "100%" }} />
+            <input
+              type="text"
+              placeholder="Seu nome completo"
+              value={form.name}
+              onChange={(e) => update("name", e.target.value)}
+              className={inputClass("name")}
+              style={{ width: "100%" }}
+            />
           </div>
+
+          {/* Telefone */}
           <div>
             <label className="text-xs font-semibold text-foreground mb-1 block">
               Telefone / WhatsApp <span className="text-destructive">*</span>
             </label>
-            <input type="tel" placeholder="(11) 91234-5678" value={form.phone} onChange={(e) => update("phone", formatPhone(e.target.value))} className={inputClass("phone")} style={{ width: "100%" }} />
+            <input
+              type="tel"
+              placeholder="(11) 91234-5678"
+              value={form.phone}
+              onChange={(e) => update("phone", formatPhone(e.target.value))}
+              className={inputClass("phone")}
+              style={{ width: "100%" }}
+            />
           </div>
+
+          {/* Empresa */}
           <div>
             <label className="text-xs font-semibold text-muted-foreground mb-1 block">Empresa</label>
-            <input type="text" placeholder="Nome da empresa (opcional)" value={form.company} onChange={(e) => update("company", e.target.value)} className={inputClass("company")} style={{ width: "100%" }} />
+            <input
+              type="text"
+              placeholder="Nome da empresa (opcional)"
+              value={form.company}
+              onChange={(e) => update("company", e.target.value)}
+              className={inputClass("company")}
+              style={{ width: "100%" }}
+            />
           </div>
+
+          {/* Quantidade */}
           <div>
             <label className="text-xs font-semibold text-foreground mb-1 block">
               Quantidade aproximada <span className="text-destructive">*</span>
             </label>
-            <input type="text" inputMode="numeric" placeholder="Ex: 500" value={form.quantity} onChange={(e) => update("quantity", e.target.value.replace(/\D/g, ""))} className={inputClass("quantity")} style={{ width: "100%" }} />
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="Ex: 500"
+              value={form.quantity}
+              onChange={(e) => update("quantity", e.target.value.replace(/\D/g, ""))}
+              className={inputClass("quantity")}
+              style={{ width: "100%" }}
+            />
           </div>
+
+          {/* Orçamento */}
           <div>
             <label className="text-xs font-semibold text-muted-foreground mb-1 block">Orçamento para os brindes</label>
-            <input type="text" placeholder="R$ 0,00" value={form.budget} onChange={(e) => update("budget", formatCurrency(e.target.value))} className={inputClass("budget")} style={{ width: "100%" }} />
+            <input
+              type="text"
+              placeholder="R$ 0,00"
+              value={form.budget}
+              onChange={(e) => update("budget", formatCurrency(e.target.value))}
+              className={inputClass("budget")}
+              style={{ width: "100%" }}
+            />
           </div>
+
+          {/* Detalhes */}
           <div>
             <label className="text-xs font-semibold text-muted-foreground mb-1 block">Detalhes do pedido</label>
-            <textarea placeholder="Descreva o que precisa (opcional)" value={form.details} onChange={(e) => update("details", e.target.value)} rows={3} className={`${inputClass("details")} resize-none`} style={{ width: "100%" }} />
+            <textarea
+              placeholder="Descreva o que precisa (opcional)"
+              value={form.details}
+              onChange={(e) => update("details", e.target.value)}
+              rows={3}
+              className={`${inputClass("details")} resize-none`}
+              style={{ width: "100%" }}
+            />
           </div>
 
           <button
             type="submit"
-            className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-green-cta px-6 py-3.5 font-bold text-navy text-sm uppercase tracking-wide transition-all duration-200 hover:brightness-110"
-            style={{ boxShadow: "0 0 24px rgba(163,230,53,0.3)" }}
+            className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-green-cta px-6 py-3.5 font-bold text-primary-foreground text-sm uppercase tracking-wide transition-all duration-200 hover:brightness-110"
+            style={{ boxShadow: "0 0 24px rgba(34,197,94,0.3)" }}
           >
             <WppIcon size={18} />
             Solicitar Orçamento no WhatsApp

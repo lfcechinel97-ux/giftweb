@@ -27,7 +27,7 @@ const BenefitsBar = () => {
 
   return (
     <section
-      className="bg-navy"
+      className="bg-card border-t border-b border-border"
       style={{ padding: "20px 24px" }}
     >
       <div className="max-w-[1200px] mx-auto">
@@ -39,14 +39,15 @@ const BenefitsBar = () => {
               return (
                 <div
                   key={`${mobileSlide}-${idx}`}
-                  className="flex flex-col items-center text-center rounded-xl border border-white/10 bg-white/5 p-4 transition-all duration-300"
+                  className="flex flex-col items-center text-center rounded-xl border border-border bg-background p-4 transition-all duration-300"
+                  style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}
                 >
                   <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2"
-                    style={{ background: "hsl(82 84% 55% / 0.15)" }}>
-                    <Icon size={20} strokeWidth={1.8} className="text-green-cta" />
+                    style={{ background: "hsl(142 71% 45% / 0.08)" }}>
+                    <Icon size={20} strokeWidth={1.8} className="text-primary" />
                   </div>
-                  <div className="text-xs font-bold text-white leading-[1.3]">{items[idx].title}</div>
-                  <div className="text-[10px] text-white/60 mt-1 leading-[1.4]">{items[idx].sub}</div>
+                  <div className="text-xs font-bold text-foreground leading-[1.3]">{items[idx].title}</div>
+                  <div className="text-[10px] text-muted-foreground mt-1 leading-[1.4]">{items[idx].sub}</div>
                 </div>
               );
             })}
@@ -56,7 +57,7 @@ const BenefitsBar = () => {
               <div
                 key={i}
                 onClick={() => setMobileSlide(i)}
-                className={`h-1.5 rounded-full cursor-pointer transition-all duration-300 ${i === mobileSlide ? "w-5 bg-green-cta" : "w-1.5 bg-white/30"}`}
+                className={`h-1.5 rounded-full cursor-pointer transition-all duration-300 ${i === mobileSlide ? "w-5 bg-primary" : "w-1.5 bg-border"}`}
               />
             ))}
           </div>
@@ -67,17 +68,17 @@ const BenefitsBar = () => {
           {items.map(({ icon: Icon, title, sub }, i) => (
             <div
               key={i}
-              className={`flex items-center gap-4 flex-1 px-6 group transition-all duration-200 ${i < items.length - 1 ? "border-r border-white/10" : ""}`}
+              className={`flex items-center gap-4 flex-1 px-6 group transition-all duration-200 ${i < items.length - 1 ? "border-r border-border" : ""}`}
             >
               <div
                 className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:scale-105"
-                style={{ background: "hsl(82 84% 55% / 0.15)" }}
+                style={{ background: "hsl(142 71% 45% / 0.08)" }}
               >
-                <Icon size={22} strokeWidth={1.8} className="text-green-cta" />
+                <Icon size={22} strokeWidth={1.8} className="text-primary" />
               </div>
               <div>
-                <div className="text-[13px] font-bold text-white leading-[1.35]">{title}</div>
-                <div className="text-[11px] text-white/60 mt-[2px] leading-[1.4]">{sub}</div>
+                <div className="text-[13px] font-bold text-foreground leading-[1.35]">{title}</div>
+                <div className="text-[11px] text-muted-foreground mt-[2px] leading-[1.4]">{sub}</div>
               </div>
             </div>
           ))}

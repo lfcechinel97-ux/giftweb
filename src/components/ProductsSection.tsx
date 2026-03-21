@@ -8,9 +8,9 @@ interface ProductCardProps {
 const ProductCard = ({ name, color, price, badge }: ProductCardProps) => (
   <div
     className="rounded-[16px] bg-card border border-border overflow-hidden group transition-all duration-200 hover:-translate-y-1 hover:border-green-cta"
-    style={{ boxShadow: "0 2px 8px hsl(200 57% 27% / 0.05)" }}
-    onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 8px 20px hsl(200 57% 27% / 0.10)")}
-    onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 2px 8px hsl(200 57% 27% / 0.05)")}
+    style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
+    onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.10)")}
+    onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)")}
   >
     <div className="relative aspect-square bg-secondary flex items-center justify-center">
       <span className="text-muted-foreground text-sm">Imagem do produto</span>

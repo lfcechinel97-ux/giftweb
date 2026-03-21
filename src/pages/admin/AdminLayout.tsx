@@ -30,7 +30,7 @@ export default function AdminLayout() {
         <div className="px-5 py-6 border-b border-white/10">
           <h2
             className="text-xl font-black tracking-tight"
-            style={{ color: "hsl(82,84%,55%)", fontFamily: "inherit", letterSpacing: "-0.02em" }}
+            style={{ color: "hsl(142,71%,45%)", fontFamily: "inherit", letterSpacing: "-0.02em" }}
           >
             Gift<span style={{ color: "#fff" }}> Web</span>
           </h2>

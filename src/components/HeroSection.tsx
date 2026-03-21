@@ -13,7 +13,7 @@ const swatchColors = [
   { bg: "#A855F7", name: "Roxo" },
   { bg: "#EC4899", name: "Rosa" },
   { bg: "#F97316", name: "Laranja" },
-  { bg: "#1E4D6B", name: "Preto" },
+  { bg: "#1F2937", name: "Preto" },
   { bg: "#06B6D4", name: "Ciano" },
   { bg: "#FB7185", name: "Rose" },
   { bg: "#6366F1", name: "Índigo" },
@@ -81,7 +81,7 @@ const HeroSection = () => {
     <section className="py-8 md:py-10 relative overflow-hidden bg-background">
       <div className="container flex flex-col lg:flex-row relative z-10 gap-5" style={{ minHeight: 270 }}>
         {/* Filter panel */}
-        <div className="lg:w-[36%] bg-card rounded-2xl border border-border px-4 py-5 lg:p-10 flex flex-col gap-4 lg:gap-5 shrink-0" style={{ boxShadow: "0 2px 20px hsl(200 57% 27% / 0.07)" }}>
+        <div className="lg:w-[36%] bg-card rounded-2xl border border-border px-4 py-5 lg:p-10 flex flex-col gap-4 lg:gap-5 shrink-0" style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}>
           <div>
             <h2 className="font-black text-[24px] lg:text-[36px] leading-tight text-foreground">
               Explore nosso catálogo de<br />
@@ -130,8 +130,8 @@ const HeroSection = () => {
                     className="w-10 h-10 rounded-full border-2 transition-all duration-200"
                     style={{
                       backgroundColor: c.bg,
-                      borderColor: selectedColor === i ? "hsl(82,84%,55%)" : "hsl(200,13%,88%)",
-                      boxShadow: selectedColor === i ? "0 0 0 3px rgba(163,230,53,0.25)" : "none",
+                      borderColor: selectedColor === i ? "hsl(142,71%,45%)" : "hsl(220,13%,91%)",
+                      boxShadow: selectedColor === i ? "0 0 0 3px rgba(34,197,94,0.25)" : "none",
                       transform: selectedColor === i ? "scale(1.1)" : "scale(1)",
                     }}
                   />
@@ -148,9 +148,9 @@ const HeroSection = () => {
           <button
             onClick={handleSearch}
             className="mt-auto flex items-center justify-center gap-2 rounded-xl bg-primary px-4 font-bold uppercase text-primary-foreground transition-all duration-200 hover:brightness-110 active:scale-[0.97]"
-            style={{ height: 50, fontSize: 14, letterSpacing: "0.5px", boxShadow: "0 0 20px rgba(163,230,53,0.18)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 28px rgba(163,230,53,0.38)")}
-            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 0 20px rgba(163,230,53,0.18)")}
+            style={{ height: 50, fontSize: 14, letterSpacing: "0.5px", boxShadow: "0 0 20px rgba(34,197,94,0.18)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 0 28px rgba(34,197,94,0.38)")}
+            onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 0 20px rgba(34,197,94,0.18)")}
           >
             BUSCAR BRINDE
           </button>
@@ -170,10 +170,10 @@ const HeroSection = () => {
             );
           })}
 
-          <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white transition-all duration-200 hover:bg-green-cta hover:border-green-cta hover:text-navy" style={{ background: "hsl(200 57% 27% / 0.6)" }}>
+          <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white transition-all duration-200 hover:bg-green-cta hover:border-green-cta" style={{ background: "rgba(255,255,255,0.08)" }}>
             <ChevronLeft size={22} />
           </button>
-          <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white transition-all duration-200 hover:bg-green-cta hover:border-green-cta hover:text-navy" style={{ background: "hsl(200 57% 27% / 0.6)" }}>
+          <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white transition-all duration-200 hover:bg-green-cta hover:border-green-cta" style={{ background: "rgba(255,255,255,0.08)" }}>
             <ChevronRight size={22} />
           </button>
 

@@ -8,9 +8,9 @@ const FloatingWhatsApp = () => {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-[90] w-14 h-14 rounded-full bg-green-cta flex items-center justify-center text-navy transition-transform duration-200 hover:scale-110 active:scale-95"
+        className="fixed bottom-6 right-6 z-[90] w-14 h-14 rounded-full bg-green-cta flex items-center justify-center text-white transition-transform duration-200 hover:scale-110 active:scale-95"
         style={{
-          boxShadow: "0 4px 24px rgba(163,230,53,0.5)",
+          boxShadow: "0 4px 24px rgba(34,197,94,0.5)",
           animation: "pulse-green 2s cubic-bezier(0.4,0,0.6,1) infinite",
         }}
         aria-label="Fale conosco pelo WhatsApp"

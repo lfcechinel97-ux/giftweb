@@ -50,13 +50,13 @@ const TrustSection = () => (
           <div
             key={i}
             className="rounded-2xl overflow-hidden bg-card border border-border group transition-all duration-300"
-            style={{ boxShadow: "0 1px 6px hsl(200 57% 27% / 0.04)" }}
+            style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px hsl(200 57% 27% / 0.09)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.09)";
               (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 6px hsl(200 57% 27% / 0.04)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 6px rgba(0,0,0,0.04)";
               (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
             }}
           >

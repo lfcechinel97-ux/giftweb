@@ -47,29 +47,29 @@ const ShowcaseCard = ({ item }: { item: ShowcaseItem }) => {
       {...wrapperProps}
       className="relative rounded-2xl bg-card border border-border p-3 transition-all duration-250 group hover:-translate-y-1 cursor-pointer block"
       style={{
-        boxShadow: "0 1px 4px hsl(200 57% 27% / 0.04)",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
         transition: "box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease"
       }}
       onMouseEnter={(e) => {
         const el = e.currentTarget as HTMLElement;
-        el.style.boxShadow = "0 8px 28px hsl(200 57% 27% / 0.09)";
-        el.style.borderColor = "hsl(82 84% 55% / 0.35)";
+        el.style.boxShadow = "0 8px 28px rgba(0,0,0,0.09)";
+        el.style.borderColor = "hsl(142 71% 45% / 0.35)";
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLElement;
-        el.style.boxShadow = "0 1px 4px hsl(200 57% 27% / 0.04)";
+        el.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
         el.style.borderColor = "hsl(var(--border))";
       }}
     >
       {item.badge_text && (
         <div
-          className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 rounded-full px-2.5 py-1 text-navy uppercase tracking-wide"
+          className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1 rounded-full px-2.5 py-1 text-white uppercase tracking-wide"
           style={{
-            background: "linear-gradient(135deg, hsl(82 84% 48%), hsl(82 84% 55%))",
+            background: "linear-gradient(135deg, hsl(142 71% 35%), hsl(142 71% 45%))",
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: "0.5px",
-            boxShadow: "0 2px 8px rgba(163,230,53,0.28)",
+            boxShadow: "0 2px 8px rgba(34,197,94,0.28)",
           }}
         >
           🥇 {item.badge_text}

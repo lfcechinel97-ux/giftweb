@@ -13,17 +13,18 @@ const CorporateQuotation = () => {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse at 50% 50%, hsla(82,84%,55%,0.06) 0%, transparent 60%)",
+              "radial-gradient(ellipse at 50% 50%, hsla(142,71%,45%,0.06) 0%, transparent 60%)",
           }}
         />
         <div
           className="absolute top-0 left-0 right-0 h-px pointer-events-none"
           style={{
             background:
-              "linear-gradient(90deg, transparent, hsla(82,84%,55%,0.25), transparent)",
+              "linear-gradient(90deg, transparent, hsla(142,71%,45%,0.25), transparent)",
           }}
         />
 
+        {/* Card container — rounded, detached from sides on desktop */}
         <div className="px-0 md:px-4 py-10 md:py-12 flex justify-center">
           <div
             ref={ref}
@@ -32,6 +33,7 @@ const CorporateQuotation = () => {
             }`}
           >
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8 px-6 py-2 md:p-10">
+              {/* Left: text */}
               <div className="flex flex-col items-center text-center md:items-start md:text-left flex-1">
                 <span className="text-green-cta text-xs font-semibold uppercase tracking-[0.15em] mb-4">
                   Atendimento corporativo especializado
@@ -47,10 +49,11 @@ const CorporateQuotation = () => {
                 </p>
               </div>
 
+              {/* Right: CTA */}
               <div className="flex flex-col items-center gap-4 shrink-0">
                 <button
                   onClick={() => setOpen(true)}
-                  className="group inline-flex items-center justify-center gap-3 rounded-2xl bg-green-cta px-8 md:px-10 py-4 md:py-5 font-bold text-navy text-sm md:text-base uppercase tracking-wide transition-all duration-300 hover:brightness-110 hover:scale-[1.02] w-full md:w-auto"
+                  className="group inline-flex items-center justify-center gap-3 rounded-2xl bg-green-cta px-8 md:px-10 py-4 md:py-5 font-bold text-primary-foreground text-sm md:text-base uppercase tracking-wide transition-all duration-300 hover:brightness-110 hover:scale-[1.02] w-full md:w-auto"
                   style={{ animation: "pulse-whatsapp 3.5s ease-out infinite" }}
                 >
                   <svg
