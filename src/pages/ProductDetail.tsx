@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup } from "@/utils/price";
@@ -32,8 +32,8 @@ const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
-  // currentVariantSlug is the slug we navigated to (may be a variant)
   const [currentVariantData, setCurrentVariantData] = useState<Product | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<VariantInfo | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(20);
@@ -70,6 +70,14 @@ const ProductDetail = () => {
         }
 
         setProduct(baseProduct);
+        // Set the initial selected variant based on the URL slug
+        setSelectedVariant({
+          slug: data.slug || '',
+          cor: data.cor,
+          codigo_amigavel: data.codigo_amigavel,
+          image: data.image_url,
+          estoque: data.estoque,
+        });
         setActiveImg(0);
 
         const { data: relatedData } = await supabase
@@ -89,10 +97,10 @@ const ProductDetail = () => {
       });
   }, [slug, navigate]);
 
-  // The main image is from the variant we navigated to (or base product)
+  // The main image is from the selected variant (or base product)
   const mainImage = useMemo(() => {
-    return currentVariantData?.image_url || product?.image_url || '';
-  }, [currentVariantData, product]);
+    return selectedVariant?.image || product?.image_url || '';
+  }, [selectedVariant, product]);
 
   // Build ALL images: unify API images (image_urls from base product) + admin-uploaded images
   // The base product's image_urls contains all images from API sync.
@@ -166,8 +174,8 @@ const ProductDetail = () => {
     return merged;
   }, [product, currentVariantData]);
 
-  // Active variant = the slug we navigated to
-  const activeVariantSlug = currentVariantData?.slug || product?.slug || '';
+  // Active variant = the one selected locally (defaults to the URL slug on load)
+  const activeVariantSlug = selectedVariant?.slug || product?.slug || '';
 
   // Keyboard navigation for lightbox
   useEffect(() => {
@@ -181,8 +189,8 @@ const ProductDetail = () => {
     return () => window.removeEventListener('keydown', handler);
   }, [lightbox, allImages.length]);
 
-  const displayCodigo = currentVariantData?.codigo_amigavel || product?.codigo_amigavel || '';
-  const displayEstoque = currentVariantData?.estoque ?? product?.estoque;
+  const displayCodigo = selectedVariant?.codigo_amigavel || product?.codigo_amigavel || '';
+  const displayEstoque = selectedVariant?.estoque ?? product?.estoque;
   const displayPrecoCusto = product?.preco_custo;
   const displayNome = product?.nome || '';
 
@@ -344,7 +352,7 @@ const ProductDetail = () => {
                   <TooltipProvider delayDuration={200}>
                     <div className="flex flex-col gap-2">
                       <span className="text-foreground text-sm font-semibold">
-                        Cor: <span className="text-muted-foreground font-normal">{currentVariantData?.cor || product.cor || ''}</span>
+                        Cor: <span className="text-muted-foreground font-normal">{selectedVariant?.cor || product.cor || ''}</span>
                         <span className="ml-1.5 text-xs text-muted-foreground">({allVariants.length} opções)</span>
                       </span>
                       <div className="flex flex-wrap gap-2">
@@ -355,9 +363,21 @@ const ProductDetail = () => {
                           return (
                             <Tooltip key={v.slug}>
                               <TooltipTrigger asChild>
-                                <Link
-                                  to={`/produto/${v.slug}`}
-                                  className="relative w-8 h-8 rounded-full shrink-0 transition-all duration-150"
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedVariant(v);
+                                    // Update displayed image with transition
+                                    if (v.image && v.image !== displayedMain) {
+                                      setIsTransitioning(true);
+                                      setTimeout(() => {
+                                        setDisplayedMain(v.image!);
+                                        setActiveImg(0);
+                                        setIsTransitioning(false);
+                                      }, 150);
+                                    }
+                                  }}
+                                  className="relative w-8 h-8 rounded-full shrink-0 transition-all duration-150 cursor-pointer"
                                   style={{
                                     backgroundColor: hex,
                                     border: isCurrent ? '3px solid hsl(142,71%,45%)' : '2px solid hsl(var(--border))',
@@ -371,7 +391,7 @@ const ProductDetail = () => {
                                       <span className="w-0.5 h-full bg-destructive/70 rotate-45 absolute" />
                                     </span>
                                   )}
-                                </Link>
+                                </button>
                               </TooltipTrigger>
                               <TooltipContent side="top" className="text-xs">
                                 {v.cor || 'Cor'}{outOfStock ? ' — Indisponível' : ''}
