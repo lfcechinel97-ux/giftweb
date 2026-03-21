@@ -101,7 +101,7 @@ const TestimonialCard = ({
     className="rounded-2xl bg-card border border-border p-6 flex flex-col transition-all duration-300 hover:border-primary/30"
     style={{
       animation: `fadeSlideIn 0.55s cubic-bezier(0.16,1,0.3,1) ${delay}ms both`,
-      boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
+      boxShadow: "0 1px 6px hsl(200 57% 27% / 0.04)",
     }}
     onMouseEnter={(e) => {
       (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(0,0,0,0.07)";
