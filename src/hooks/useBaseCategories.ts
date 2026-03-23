@@ -10,7 +10,7 @@ export function useBaseCategories() {
         .select("slug, label, position")
         .eq("category_type", "base")
         .eq("active", true)
-        .order("position", { ascending: true });
+        .order("label", { ascending: true });
       return data ?? [];
     },
     staleTime: 600_000,

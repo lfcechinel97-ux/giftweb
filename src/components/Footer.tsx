@@ -8,6 +8,19 @@ const WhatsAppIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
+const footerCategories = [
+  { name: "Garrafas e Squeezes", slug: "garrafas-e-squeezes" },
+  { name: "Copos e Canecas", slug: "copos-e-canecas" },
+  { name: "Mochilas e Sacochilas", slug: "mochilas-e-sacochilas" },
+  { name: "Bolsas", slug: "bolsas" },
+  { name: "Canetas", slug: "canetas" },
+  { name: "Cadernetas", slug: "cadernetas" },
+  { name: "Kits", slug: "kits" },
+  { name: "Chaveiros", slug: "chaveiros" },
+  { name: "Guarda-chuvas", slug: "guarda-chuvas" },
+  { name: "Power Banks", slug: "power-banks" },
+];
+
 const Footer = () => {
   const { rows } = useSiteContent("footer");
 
@@ -24,12 +37,8 @@ const Footer = () => {
   const linkFb = get("footer_link_facebook") || "#";
   const linkWa = get("footer_link_whatsapp") || "https://wa.me/5548996652844";
 
-  const paymentLogos = Array.from({ length: 8 }, (_, i) => get(`payment_logo_${i + 1}`));
-  const securityLogos = Array.from({ length: 4 }, (_, i) => get(`security_${i + 1}`));
-
   return (
     <footer className="bg-[#0B0F1A] text-white">
-      {/* Main 4 columns */}
       <div className="container py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Col 1 — Gift Web */}
@@ -71,7 +80,26 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Col 2 — Institucional */}
+          {/* Col 2 — Categorias */}
+          <div>
+            <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Categorias</h4>
+            <ul className="space-y-2.5 text-sm">
+              {footerCategories.map((cat) => (
+                <li key={cat.slug}>
+                  <Link to={`/categoria/${cat.slug}`} className="text-[#9CA3AF] hover:text-white transition-colors">
+                    {cat.name}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link to="/produtos" className="text-[#22C55E] hover:text-white transition-colors font-medium">
+                  Ver todos →
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 3 — Institucional */}
           <div>
             <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Institucional</h4>
             <ul className="space-y-3 text-sm">
@@ -84,21 +112,17 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Col 3 — Formas de Pagamento */}
+          {/* Col 4 — Segurança & Pagamento */}
           <div>
             <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Formas de pagamento</h4>
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center mb-6">
               <img
                 src="/logos/formaspags.png"
                 alt="Formas de pagamento aceitas"
                 className="w-full max-w-[220px] object-contain"
               />
             </div>
-          </div>
-
-          {/* Col 4 — Segurança */}
-          <div>
-            <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Segurança</h4>
+            <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-3">Segurança</h4>
             <div className="bg-[#1a1f2e] rounded-xl p-4 flex items-center justify-center">
               <img
                 src="/logos/ssl.svg"

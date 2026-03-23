@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -12,8 +12,6 @@ import ProductDetail from "./pages/ProductDetail.tsx";
 import CategoryPage from "./pages/CategoryPage.tsx";
 import AllProducts from "./pages/AllProducts.tsx";
 import SearchPage from "./pages/SearchPage.tsx";
-import SqueezesPage from "./pages/SqueezesPage.tsx";
-import BrindesBaratosPage from "./pages/BrindesBaratosPage.tsx";
 import AdminLogin from "./pages/admin/AdminLogin.tsx";
 import AdminLayout from "./pages/admin/AdminLayout.tsx";
 import AdminProducts from "./pages/admin/AdminProducts.tsx";
@@ -66,14 +64,15 @@ const App = () => (
             <Route path="/produto/:slug" element={<ProductDetail />} />
             <Route path="/produtos" element={<AllProducts />} />
             <Route path="/busca" element={<SearchPage />} />
-            <Route path="/copos" element={<CategoryPage category="copos" />} />
-            <Route path="/garrafas" element={<CategoryPage category="garrafas" />} />
-            <Route path="/mochilas" element={<CategoryPage category="mochilas" />} />
-            <Route path="/bolsas" element={<CategoryPage category="bolsas" />} />
-            <Route path="/escritorio" element={<CategoryPage category="escritorio" />} />
-            <Route path="/kits" element={<CategoryPage category="kits" />} />
-            <Route path="/squeezes" element={<SqueezesPage />} />
-            <Route path="/brindes-baratos" element={<BrindesBaratosPage />} />
+            {/* Legacy redirects */}
+            <Route path="/garrafas" element={<Navigate to="/categoria/garrafas-e-squeezes" replace />} />
+            <Route path="/copos" element={<Navigate to="/categoria/copos-e-canecas" replace />} />
+            <Route path="/mochilas" element={<Navigate to="/categoria/mochilas-e-sacochilas" replace />} />
+            <Route path="/bolsas" element={<Navigate to="/categoria/bolsas" replace />} />
+            <Route path="/escritorio" element={<Navigate to="/categoria/canetas" replace />} />
+            <Route path="/kits" element={<Navigate to="/categoria/kits" replace />} />
+            <Route path="/squeezes" element={<Navigate to="/categoria/garrafas-e-squeezes" replace />} />
+            <Route path="/brindes-baratos" element={<Navigate to="/produtos" replace />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPage />} />
             <Route path="/termos-de-uso" element={<TermsPage />} />
             <Route path="/seguranca" element={<SecurityPage />} />

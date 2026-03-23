@@ -42,8 +42,7 @@ const HeroSection = () => {
     window.addEventListener('resize', handler);
     return () => window.removeEventListener('resize', handler);
   }, []);
-  const [priceMin, setPriceMin] = useState(0);
-  const [priceMax, setPriceMax] = useState(250);
+
   const [selectedColor, setSelectedColor] = useState<number | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [hoveredColor, setHoveredColor] = useState<number | null>(null);
@@ -107,21 +106,6 @@ const HeroSection = () => {
               {categories?.map((c) => <option key={c.slug} value={c.slug}>{c.label}</option>)}
             </select>
             <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-cta pointer-events-none" />
-          </div>
-
-          <div>
-            <div className="flex justify-between text-sm mb-2">
-              <span className="text-muted-foreground">A partir de: <strong className="text-green-cta">R$ {priceMin},00</strong></span>
-              <span className="text-muted-foreground">Valor máximo: <strong className="text-green-cta">R$ {priceMax},00</strong></span>
-            </div>
-            <div className="flex gap-3">
-              <input type="range" min={0} max={500} value={priceMin} onChange={(e) => setPriceMin(Math.min(Number(e.target.value), priceMax))} className="w-full" />
-              <input type="range" min={0} max={500} value={priceMax} onChange={(e) => setPriceMax(Math.max(Number(e.target.value), priceMin))} className="w-full" />
-            </div>
-            <div className="flex gap-2 mt-2">
-              <input type="text" inputMode="numeric" value={priceMin} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMin(Math.min(v, priceMax)); }} className="w-full rounded-xl border border-border bg-card py-2 px-3 text-sm font-bold text-primary text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200" />
-              <input type="text" inputMode="numeric" value={priceMax} onChange={(e) => { const v = Number(e.target.value.replace(/\D/g, "")); if (!isNaN(v)) setPriceMax(Math.max(v, priceMin)); }} className="w-full rounded-xl border border-border bg-card py-2 px-3 text-sm font-bold text-primary text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200" />
-            </div>
           </div>
 
           <div>

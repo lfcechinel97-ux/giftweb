@@ -1,15 +1,66 @@
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Menu, X, Search, ChevronDown, ChevronRight } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
 import { WHATSAPP_NUMBER } from "@/config/site";
 
-const categoryLinks = [
-  { name: "Garrafas", route: "/garrafas" },
-  { name: "Copos e Canecas", route: "/copos" },
-  { name: "Mochilas", route: "/mochilas" },
-  { name: "Bolsas", route: "/bolsas" },
-  { name: "Escritório", route: "/escritorio" },
-  { name: "Squeezes", route: "/squeezes" },
+const menuSections = [
+  {
+    title: "Bebidas",
+    items: [
+      { name: "Garrafas e Squeezes", slug: "garrafas-e-squeezes" },
+      { name: "Copos e Canecas", slug: "copos-e-canecas" },
+    ],
+  },
+  {
+    title: "Transporte",
+    items: [
+      { name: "Mochilas e Sacochilas", slug: "mochilas-e-sacochilas" },
+      { name: "Bolsas", slug: "bolsas" },
+      { name: "Necessaires", slug: "necessaires" },
+      { name: "Sacolas", slug: "sacolas" },
+      { name: "Malas", slug: "malas" },
+      { name: "Pastas", slug: "pastas" },
+      { name: "Estojos", slug: "estojos" },
+    ],
+  },
+  {
+    title: "Escritório",
+    items: [
+      { name: "Canetas", slug: "canetas" },
+      { name: "Cadernetas", slug: "cadernetas" },
+      { name: "Cadernos", slug: "cadernos" },
+      { name: "Blocos", slug: "blocos" },
+      { name: "Agendas", slug: "agendas" },
+    ],
+  },
+  {
+    title: "Tecnologia",
+    items: [
+      { name: "Pen Drives", slug: "pen-drives" },
+      { name: "Power Banks", slug: "power-banks" },
+      { name: "Fones", slug: "fones" },
+      { name: "Mouse Pads", slug: "mouse-pads" },
+      { name: "Suportes", slug: "suportes" },
+    ],
+  },
+  {
+    title: "Diversos",
+    items: [
+      { name: "Kits", slug: "kits" },
+      { name: "Chaveiros", slug: "chaveiros" },
+      { name: "Guarda-chuvas", slug: "guarda-chuvas" },
+      { name: "Espelhos", slug: "espelhos" },
+      { name: "Porta-retratos", slug: "porta-retratos" },
+      { name: "Porta-joias", slug: "porta-joias" },
+      { name: "Porta-objetos", slug: "porta-objetos" },
+      { name: "Cozinha e Mesa", slug: "cozinha-e-mesa" },
+      { name: "Marmitas", slug: "marmitas" },
+      { name: "Toalhas", slug: "toalhas" },
+      { name: "Caixas de Som", slug: "caixas-de-som" },
+      { name: "Caixas Organizadoras", slug: "caixas-organizadoras" },
+      { name: "Casa e Decoração", slug: "casa-e-decoracao" },
+    ],
+  },
 ];
 
 const Header = () => {
@@ -17,7 +68,10 @@ const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [megaMenuOpen, setMegaMenuOpen] = useState(false);
+  const [openMobileSection, setOpenMobileSection] = useState<string | null>(null);
   const lastScrollY = useRef(0);
+  const megaMenuTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,7 +89,6 @@ const Header = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Lock page scroll when menu is open (iOS-safe)
   useEffect(() => {
     if (mobileOpen) {
       const scrollY = window.scrollY;
@@ -69,11 +122,18 @@ const Header = () => {
     }
   };
 
+  const handleMegaEnter = () => {
+    if (megaMenuTimeout.current) clearTimeout(megaMenuTimeout.current);
+    setMegaMenuOpen(true);
+  };
+  const handleMegaLeave = () => {
+    megaMenuTimeout.current = setTimeout(() => setMegaMenuOpen(false), 200);
+  };
+
   const phoneFormatted = "(48) 99665-2844";
 
   return (
     <>
-      {/* Full header — hides on scroll down */}
       <header
         className={`sticky top-0 z-50 overflow-x-hidden transition-transform duration-300 ${
           hidden ? "-translate-y-full" : "translate-y-0"
@@ -105,7 +165,6 @@ const Header = () => {
             backdropFilter: scrolled ? "blur(12px)" : "none",
           }}
         >
-          {/* Line 1 */}
           <div className="container flex items-center justify-between gap-4 py-3">
             <a href="/" className="flex items-baseline gap-0.5 shrink-0 min-w-0">
               <span className="font-extrabold font-serif text-left text-3xl sm:text-4xl md:text-5xl text-primary-foreground leading-none">
@@ -116,7 +175,6 @@ const Header = () => {
               </span>
             </a>
 
-            {/* Search desktop */}
             <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-lg mx-4 relative">
               <input
                 type="text"
@@ -151,31 +209,73 @@ const Header = () => {
             </button>
           </div>
 
-          {/* Category nav — desktop only */}
+          {/* Category nav — desktop with mega-menu */}
           <div className="hidden lg:block border-t border-border bg-surface-alt">
             <div className="container flex items-center gap-0 py-0">
-              <a
-                href="/produtos"
+              <Link
+                to="/produtos"
                 className="flex items-center gap-2 bg-secondary text-foreground px-5 py-3 rounded-[8px] my-1 text-[13px] font-bold uppercase hover:bg-navy-hover transition-colors duration-200 shrink-0"
               >
                 <Menu size={16} />
                 TODOS BRINDES
-              </a>
-              {categoryLinks.map((cat) => (
-                <a
-                  key={cat.name}
-                  href={cat.route}
-                  className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200"
-                >
-                  {cat.name}
-                </a>
-              ))}
-              <a
-                href="/brindes-baratos"
-                className="px-4 py-3 text-[13px] font-bold uppercase hover:opacity-80 transition-colors duration-200 text-green-cta"
+              </Link>
+
+              {/* Mega-menu trigger */}
+              <div
+                className="relative"
+                onMouseEnter={handleMegaEnter}
+                onMouseLeave={handleMegaLeave}
               >
-                BRINDES BARATOS
-              </a>
+                <button className="flex items-center gap-1 px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+                  CATEGORIAS
+                  <ChevronDown size={14} className={`transition-transform duration-200 ${megaMenuOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {/* Mega-menu dropdown */}
+                <div
+                  className={`absolute left-0 top-full bg-card border border-border rounded-xl shadow-2xl transition-all duration-200 ${
+                    megaMenuOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-2 pointer-events-none"
+                  }`}
+                  style={{ width: 720, zIndex: 60 }}
+                >
+                  <div className="grid grid-cols-3 gap-0 p-5">
+                    {menuSections.map((section) => (
+                      <div key={section.title} className="mb-4">
+                        <h4 className="text-xs font-bold uppercase text-green-cta tracking-wider mb-2 px-2">
+                          {section.title}
+                        </h4>
+                        <ul className="space-y-0.5">
+                          {section.items.map((item) => (
+                            <li key={item.slug}>
+                              <Link
+                                to={`/categoria/${item.slug}`}
+                                onClick={() => setMegaMenuOpen(false)}
+                                className="block px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors duration-150"
+                              >
+                                {item.name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick links for top categories */}
+              <Link to="/categoria/garrafas-e-squeezes" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+                Garrafas
+              </Link>
+              <Link to="/categoria/copos-e-canecas" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+                Copos
+              </Link>
+              <Link to="/categoria/mochilas-e-sacochilas" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+                Mochilas
+              </Link>
+              <Link to="/categoria/kits" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+                Kits
+              </Link>
             </div>
           </div>
         </div>
@@ -187,7 +287,6 @@ const Header = () => {
           mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
       >
-        {/* Fixed header row inside menu */}
         <div className="flex items-center justify-between px-6 pt-5 pb-5 border-b border-white/10 shrink-0">
           <a href="/" onClick={() => setMobileOpen(false)} className="flex items-baseline gap-1">
             <span className="font-extrabold font-serif text-3xl text-white">Gift Web</span>
@@ -198,7 +297,6 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Search — fixed inside menu */}
         <div className="px-6 py-4 shrink-0">
           <form onSubmit={handleSearch} className="relative">
             <input
@@ -214,35 +312,47 @@ const Header = () => {
           </form>
         </div>
 
-        {/* Scrollable nav area */}
-        <nav className="px-6 flex flex-col gap-1 overflow-y-auto flex-1 pb-10">
-          <a
-            href="/produtos"
+        <nav className="px-6 flex flex-col gap-0 overflow-y-auto flex-1 pb-10">
+          <Link
+            to="/produtos"
             onClick={() => setMobileOpen(false)}
             className="flex items-center gap-3 py-4 text-base font-bold uppercase text-white border-b border-white/10"
           >
             <Menu size={18} className="text-green-cta" />
             Todos Brindes
-          </a>
-          {categoryLinks.map((cat) => (
-            <a
-              key={cat.name}
-              href={cat.route}
-              onClick={() => setMobileOpen(false)}
-              className="py-4 text-base font-semibold text-white/70 hover:text-white border-b border-white/10 transition-colors"
-            >
-              {cat.name}
-            </a>
-          ))}
-          <a
-            href="/brindes-baratos"
-            onClick={() => setMobileOpen(false)}
-            className="py-4 text-base font-bold text-green-cta border-b border-white/10"
-          >
-            Brindes Baratos
-          </a>
+          </Link>
 
-          {/* WhatsApp CTA */}
+          {menuSections.map((section) => (
+            <div key={section.title} className="border-b border-white/10">
+              <button
+                onClick={() => setOpenMobileSection(openMobileSection === section.title ? null : section.title)}
+                className="flex items-center justify-between w-full py-4 text-base font-semibold text-white/90"
+              >
+                {section.title}
+                <ChevronRight
+                  size={16}
+                  className={`text-green-cta transition-transform duration-200 ${
+                    openMobileSection === section.title ? "rotate-90" : ""
+                  }`}
+                />
+              </button>
+              {openMobileSection === section.title && (
+                <div className="pb-3 pl-4 space-y-1">
+                  {section.items.map((item) => (
+                    <Link
+                      key={item.slug}
+                      to={`/categoria/${item.slug}`}
+                      onClick={() => setMobileOpen(false)}
+                      className="block py-2 text-sm text-white/60 hover:text-white transition-colors"
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+
           <a
             href={`https://wa.me/${WHATSAPP_NUMBER}`}
             target="_blank"
@@ -258,7 +368,7 @@ const Header = () => {
         </nav>
       </div>
 
-      {/* Floating hamburger — visible on mobile only when header is scrolled out */}
+      {/* Floating hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
         className={`lg:hidden fixed top-3 right-4 z-[60] rounded-full w-10 h-10 flex items-center justify-center bg-navy/90 backdrop-blur-sm border border-white/10 text-white shadow-lg transition-all duration-300 ${

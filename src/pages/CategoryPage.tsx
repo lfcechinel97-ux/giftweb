@@ -16,64 +16,9 @@ type Product = Tables<"products_cache">;
 
 const PAGE_SIZE = 20;
 
-const CATEGORIES: Record<string, string> = {
-  copos: "Copos",
-  garrafas: "Garrafas",
-  mochilas: "Mochilas",
-  bolsas: "Bolsas",
-  escritorio: "Escritório",
-  kits: "Kits",
-};
-
-const CATEGORY_NAME_FILTERS: Record<string, string> = {
-  garrafas: "nome.ilike.GARRAFA%",
-  copos: "nome.ilike.COPO%,nome.ilike.CANECA%",
-  mochilas: "nome.ilike.MOCHILA%",
-  bolsas: "nome.ilike.BOLSA%,nome.ilike.SACOLA%",
-  escritorio: "nome.ilike.CANETA%,nome.ilike.BLOCO%,nome.ilike.CADERNO%,nome.ilike.AGENDA%",
-  kits: "nome.ilike.KIT%",
-};
-
-// Maps spotlight slugs to real "categoria" field values in products_cache
-// Used when filters are active to bypass the limited join table
-const SPOTLIGHT_TO_CATEGORIA: Record<string, string[]> = {
-  "garrafas-squeezes": ["garrafas"],
-  "canecas-copos": ["copos"],
-  "mochilas-bolsas": ["mochilas", "bolsas", "outros", "escritorio"],
-  "bolsas-termicas": ["bolsas", "garrafas", "outros"],
-  "sacolas": ["bolsas", "outros"],
-  "escritorio": ["escritorio", "outros"],
-  "canetas": ["escritorio", "outros", "kits"],
-  "blocos-cadernetas": ["escritorio", "outros"],
-  "bar-bebidas": ["outros", "kits", "garrafas", "bolsas"],
-  "cozinha": ["outros", "kits", "copos"],
-  "estojos-necessaires": ["outros", "escritorio", "kits"],
-  "diversos": ["outros", "kits", "escritorio", "bolsas", "copos"],
-  "chaveiros": ["outros"],
-  "cuidados-pessoais": ["outros", "kits"],
-  "ferramentas": ["kits", "outros"],
-  "informatica": ["outros"],
-  "caixa-som": ["outros"],
-  "fones-ouvido": ["outros"],
-  "carregadores": ["outros"],
-  "acessorios-celular": ["outros", "escritorio"],
-  "malas-frasqueiras": ["outros"],
-  "organizadores": ["outros", "escritorio"],
-  "lanternas-luminarias": ["outros"],
-  "guarda-chuva": ["outros"],
-  "moda": ["outros"],
-  "expositores": ["outros"],
-  "ventilacao-climatizadores": ["outros"],
-  "viagem": ["outros", "kits"],
-};
-
-interface CategoryPageProps {
-  category?: string;
-}
-
-const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
+const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const category = categoryProp || slug || "";
+  const category = slug || "";
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
   const urlCor = searchParams.get("cor") || "";
@@ -81,30 +26,27 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [cores, setCores] = useState<string[]>([]);
-  const [dynamicLabel, setDynamicLabel] = useState<string | null>(null);
+  const [categoryLabel, setCategoryLabel] = useState<string>(category);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCor, setSelectedCor] = useState<string | null>(urlCor || null);
   const [apenasEstoque, setApenasEstoque] = useState(false);
   const [sortBy, setSortBy] = useState("relevancia");
 
-  const nameFilter = CATEGORY_NAME_FILTERS[category] || "";
-  const isSpotlightCategory = !nameFilter && !CATEGORIES[category];
-  const categoryLabel = dynamicLabel || CATEGORIES[category] || category;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  // Fetch label for spotlight categories
+  // Fetch label from spotlight_categories
   useEffect(() => {
-    if (!isSpotlightCategory) return;
+    if (!category) return;
     supabase
       .from("spotlight_categories")
       .select("label")
       .eq("slug", category)
       .single()
       .then(({ data }) => {
-        if (data) setDynamicLabel(data.label);
+        if (data) setCategoryLabel(data.label);
       });
-  }, [category, isSpotlightCategory]);
+  }, [category]);
 
   useEffect(() => {
     if (urlCor) setSelectedCor(urlCor);
@@ -115,126 +57,56 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
     if (sort === "maior_preco") return query.order("preco_custo", { ascending: false, nullsFirst: false });
     if (sort === "maior_estoque") return query.order("estoque", { ascending: false, nullsFirst: false });
     if (sort === "az") return query.order("nome", { ascending: true });
-    // relevancia (default)
     return query.order("sort_estoque").order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false });
   };
 
   const fetchProducts = useCallback(async () => {
+    if (!category) return;
     setLoading(true);
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
-    if (isSpotlightCategory) {
-      // Fetch category ID first (needed for both filtered and unfiltered paths)
-      const { data: catData } = await supabase
-        .from("spotlight_categories")
-        .select("id, label")
-        .eq("slug", category)
-        .single();
+    // Get spotlight category ID
+    const { data: catData } = await supabase
+      .from("spotlight_categories")
+      .select("id")
+      .eq("slug", category)
+      .single();
 
-      if (!catData) { setProducts([]); setTotal(0); setLoading(false); return; }
-
-      const hasActiveFilters = !!searchTerm || !!selectedCor || apenasEstoque;
-
-      if (hasActiveFilters) {
-        const categoriasReais = SPOTLIGHT_TO_CATEGORIA[category];
-
-        if (categoriasReais) {
-          // Direct query on products_cache using real categoria values
-          let query = supabase
-            .from("products_cache")
-            .select("*", { count: "exact" })
-            .in("categoria", categoriasReais)
-            .eq("ativo", true)
-            .eq("has_image", true)
-            .eq("is_variante", false);
-
-          if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
-          if (selectedCor) {
-            const corValues = selectedCor.split(",").map(v => v.trim().toUpperCase()).filter(Boolean);
-            query = query.in("cor", corValues);
-          }
-          if (apenasEstoque) query = query.gt("estoque", 0);
-          query = applySort(query, sortBy);
-
-          const { data, count } = await query.range(from, to);
-          setProducts(data || []);
-          setTotal(count || 0);
-          setLoading(false);
-          return;
-        }
-
-        // Fallback for spotlights without categoria mapping (marketing categories)
-        const { data: idData } = await supabase
-          .from("product_spotlight_categories")
-          .select("product_id")
-          .eq("category_id", catData.id)
-          .range(0, 4999);
-
-        const productIds = (idData || []).map(d => d.product_id);
-        if (productIds.length === 0) { setProducts([]); setTotal(0); setLoading(false); return; }
-
-        let query = supabase
-          .from("products_cache")
-          .select("*", { count: "exact" })
-          .in("id", productIds)
-          .eq("ativo", true)
-          .eq("has_image", true)
-          .eq("is_variante", false);
-
-        if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
-        if (selectedCor) {
-          const corValues = selectedCor.split(",").map(v => v.trim().toUpperCase()).filter(Boolean);
-          query = query.in("cor", corValues);
-        }
-        if (apenasEstoque) query = query.gt("estoque", 0);
-        query = applySort(query, sortBy);
-
-        const { data, count } = await query.range(from, to);
-        setProducts(data || []);
-        setTotal(count || 0);
-        setLoading(false);
-        return;
-      }
-
-      // No filters active: use curated spotlight list for ordering
-
-      const { data: links } = await supabase
-        .from("product_spotlight_categories")
-        .select("product_id")
-        .eq("category_id", catData.id);
-
-      const productIds = (links || []).map(l => l.product_id);
-      if (productIds.length === 0) { setProducts([]); setTotal(0); setLoading(false); return; }
-
-      let query = supabase
-        .from("products_cache")
-        .select("*", { count: "exact" })
-        .in("id", productIds)
-        .eq("ativo", true)
-        .eq("has_image", true)
-        .eq("is_variante", false);
-
-      query = applySort(query, sortBy);
-
-      const { data, count } = await query.range(from, to);
-      setProducts(data || []);
-      setTotal(count || 0);
+    if (!catData) {
+      setProducts([]);
+      setTotal(0);
       setLoading(false);
       return;
     }
 
+    // Get all product IDs from the join table (up to 5000)
+    const { data: idData } = await supabase
+      .from("product_spotlight_categories")
+      .select("product_id")
+      .eq("category_id", catData.id)
+      .range(0, 4999);
+
+    const productIds = (idData || []).map((d) => d.product_id);
+    if (productIds.length === 0) {
+      setProducts([]);
+      setTotal(0);
+      setLoading(false);
+      return;
+    }
+
+    // Query products_cache by IDs
     let query = supabase
       .from("products_cache")
       .select("*", { count: "exact" })
+      .in("id", productIds)
       .eq("ativo", true)
       .eq("has_image", true)
       .eq("is_variante", false);
 
-    if (nameFilter) query = query.or(nameFilter);
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
     if (selectedCor) {
-      const corValues = selectedCor.split(",").map(v => v.trim().toUpperCase()).filter(Boolean);
+      const corValues = selectedCor.split(",").map((v) => v.trim().toUpperCase()).filter(Boolean);
       query = query.in("cor", corValues);
     }
     if (apenasEstoque) query = query.gt("estoque", 0);
@@ -244,24 +116,41 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
     setProducts(data || []);
     setTotal(count || 0);
     setLoading(false);
-  }, [category, page, searchTerm, selectedCor, apenasEstoque, sortBy, nameFilter, isSpotlightCategory]);
+  }, [category, page, searchTerm, selectedCor, apenasEstoque, sortBy]);
 
+  // Fetch available colors for filters
   useEffect(() => {
-    let q = supabase
-      .from("products_cache")
-      .select("cor")
-      .eq("ativo", true)
-      .eq("has_image", true)
-      .eq("is_variante", false)
-      .not("cor", "is", null);
+    if (!category) return;
+    (async () => {
+      const { data: catData } = await supabase
+        .from("spotlight_categories")
+        .select("id")
+        .eq("slug", category)
+        .single();
+      if (!catData) return;
 
-    if (nameFilter) q = q.or(nameFilter);
+      const { data: idData } = await supabase
+        .from("product_spotlight_categories")
+        .select("product_id")
+        .eq("category_id", catData.id)
+        .range(0, 4999);
 
-    q.then(({ data }) => {
+      const productIds = (idData || []).map((d) => d.product_id);
+      if (productIds.length === 0) return;
+
+      const { data } = await supabase
+        .from("products_cache")
+        .select("cor")
+        .in("id", productIds)
+        .eq("ativo", true)
+        .eq("has_image", true)
+        .eq("is_variante", false)
+        .not("cor", "is", null);
+
       const unique = [...new Set((data || []).map((d) => d.cor).filter(Boolean))] as string[];
       setCores(unique.sort());
-    });
-  }, [category, nameFilter]);
+    })();
+  }, [category]);
 
   useEffect(() => {
     fetchProducts();
@@ -279,7 +168,7 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
     setApenasEstoque(false);
   };
 
-  const canonicalUrl = `${SITE_URL}/${category}${page > 1 ? `?page=${page}` : ""}`;
+  const canonicalUrl = `${SITE_URL}/categoria/${category}${page > 1 ? `?page=${page}` : ""}`;
 
   return (
     <>
@@ -327,7 +216,7 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {products.map((p) => (
-                    <ProductCard
+                  <ProductCard
                     key={p.id}
                     id={p.id}
                     nome={p.nome}
