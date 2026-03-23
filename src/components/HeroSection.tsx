@@ -6,18 +6,24 @@ import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContent } from "@/hooks/useSiteContent";
 
 const swatchColors = [
-  { bg: "#EF4444", name: "Vermelho" },
-  { bg: "#2563EB", name: "Azul" },
-  { bg: "#22C55E", name: "Verde" },
-  { bg: "#EAB308", name: "Amarelo" },
-  { bg: "#A855F7", name: "Roxo" },
-  { bg: "#EC4899", name: "Rosa" },
-  { bg: "#F97316", name: "Laranja" },
-  { bg: "#1F2937", name: "Preto" },
-  { bg: "#06B6D4", name: "Ciano" },
-  { bg: "#FB7185", name: "Rose" },
-  { bg: "#6366F1", name: "Índigo" },
-  { bg: "#14B8A6", name: "Teal" },
+  { bg: "#EF4444", name: "VERMELHO", values: ["VERMELHO"] },
+  { bg: "#2563EB", name: "AZUL", values: ["AZUL"] },
+  { bg: "#22C55E", name: "VERDE", values: ["VERDE"] },
+  { bg: "#EAB308", name: "AMARELO", values: ["AMARELO"] },
+  { bg: "#A855F7", name: "ROXO", values: ["ROXO"] },
+  { bg: "#EC4899", name: "ROSA", values: ["ROSA"] },
+  { bg: "#F97316", name: "LARANJA", values: ["LARANJA"] },
+  { bg: "#1F2937", name: "PRETO", values: ["PRETO"] },
+  { bg: "#FFFFFF", name: "BRANCO", values: ["BRANCO"] },
+  { bg: "#6B7280", name: "CINZA", values: ["CINZA", "CHUMBO"] },
+  { bg: "#92400E", name: "MARROM", values: ["MARROM"] },
+  { bg: "#F59E0B", name: "DOURADO", values: ["DOURADO"] },
+  { bg: "#9CA3AF", name: "PRATA / INOX", values: ["PRATA", "INOX", "COBRE"] },
+  { bg: "#D2B48C", name: "BEGE", values: ["BEGE"] },
+  { bg: "#CD7F32", name: "BRONZE", values: ["BRONZE"] },
+  { bg: "#7F1D1D", name: "VINHO", values: ["VINHO"] },
+  { bg: "#374151", name: "GRAFITE", values: ["GRAFITE"] },
+  { bg: "#C4A35A", name: "OUTROS", values: ["KRAFT", "TRANSPARENTE", "COLORIDO", "BAMBU", "MADEIRA"] },
 ];
 
 const slides = [
@@ -62,16 +68,16 @@ const HeroSection = () => {
 
   const handleSearch = () => {
     const q = searchText.trim();
-    const colorName = selectedColor !== null ? swatchColors[selectedColor].name : null;
+    const colorValues = selectedColor !== null ? swatchColors[selectedColor].values.join(",") : null;
 
     if (selectedCategory && q) {
-      navigate(`/categoria/${selectedCategory}?q=${encodeURIComponent(q)}${colorName ? `&cor=${encodeURIComponent(colorName)}` : ""}`);
+      navigate(`/categoria/${selectedCategory}?q=${encodeURIComponent(q)}${colorValues ? `&cor=${encodeURIComponent(colorValues)}` : ""}`);
     } else if (selectedCategory) {
-      navigate(`/categoria/${selectedCategory}${colorName ? `?cor=${encodeURIComponent(colorName)}` : ""}`);
+      navigate(`/categoria/${selectedCategory}${colorValues ? `?cor=${encodeURIComponent(colorValues)}` : ""}`);
     } else if (q) {
       navigate(`/busca?q=${encodeURIComponent(q)}`);
-    } else if (colorName) {
-      navigate(`/produtos?cor=${encodeURIComponent(colorName)}`);
+    } else if (colorValues) {
+      navigate(`/produtos?cor=${encodeURIComponent(colorValues)}`);
     } else {
       navigate("/produtos");
     }
@@ -121,27 +127,39 @@ const HeroSection = () => {
           <div>
             <label className="text-sm font-medium text-muted-foreground mb-2 block">Cor</label>
             <div className="flex flex-wrap gap-2">
-              {swatchColors.map((c, i) => (
-                <div key={i} className="relative">
-                  <button
-                    onClick={() => setSelectedColor(i === selectedColor ? null : i)}
-                    onMouseEnter={() => setHoveredColor(i)}
-                    onMouseLeave={() => setHoveredColor(null)}
-                    className="w-10 h-10 rounded-full border-2 transition-all duration-200"
-                    style={{
-                      backgroundColor: c.bg,
-                      borderColor: selectedColor === i ? "hsl(142,71%,45%)" : "hsl(220,13%,91%)",
-                      boxShadow: selectedColor === i ? "0 0 0 3px rgba(34,197,94,0.25)" : "none",
-                      transform: selectedColor === i ? "scale(1.1)" : "scale(1)",
-                    }}
-                  />
-                  {hoveredColor === i && (
-                    <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-card border border-border rounded-md px-2 py-1 text-xs text-foreground whitespace-nowrap z-30 pointer-events-none shadow-sm">
-                      {c.name}
-                    </div>
-                  )}
-                </div>
-              ))}
+              {swatchColors.map((c, i) => {
+                const isWhite = c.bg === "#FFFFFF";
+                const isOutros = c.name === "OUTROS";
+                return (
+                  <div key={i} className="relative">
+                    <button
+                      onClick={() => setSelectedColor(i === selectedColor ? null : i)}
+                      onMouseEnter={() => setHoveredColor(i)}
+                      onMouseLeave={() => setHoveredColor(null)}
+                      className="w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center"
+                      style={{
+                        background: isOutros
+                          ? "conic-gradient(#EF4444, #EAB308, #22C55E, #2563EB, #A855F7, #EC4899, #EF4444)"
+                          : c.bg,
+                        borderColor: selectedColor === i
+                          ? "hsl(142,71%,45%)"
+                          : isWhite
+                            ? "#D1D5DB"
+                            : "hsl(220,13%,91%)",
+                        boxShadow: selectedColor === i ? "0 0 0 3px rgba(34,197,94,0.25)" : "none",
+                        transform: selectedColor === i ? "scale(1.1)" : "scale(1)",
+                      }}
+                    >
+                      {isOutros && <span className="text-white font-bold text-sm drop-shadow-md">+</span>}
+                    </button>
+                    {hoveredColor === i && (
+                      <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-card border border-border rounded-md px-2 py-1 text-xs text-foreground whitespace-nowrap z-30 pointer-events-none shadow-sm">
+                        {c.name}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
