@@ -92,15 +92,32 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
     const to = from + PAGE_SIZE - 1;
 
     if (isSpotlightCategory) {
+      // Fetch category ID first (needed for both filtered and unfiltered paths)
+      const { data: catData } = await supabase
+        .from("spotlight_categories")
+        .select("id, label")
+        .eq("slug", category)
+        .single();
+
+      if (!catData) { setProducts([]); setTotal(0); setLoading(false); return; }
+
       const hasActiveFilters = !!searchTerm || !!selectedCor || apenasEstoque;
 
       if (hasActiveFilters) {
-        // When filters are active, query products_cache directly by categoria field
-        // to avoid the 1000-row limit of the product_spotlight_categories join table
+        // Fetch all product IDs from join table (up to 5000)
+        const { data: idData } = await supabase
+          .from("product_spotlight_categories")
+          .select("product_id")
+          .eq("category_id", catData.id)
+          .range(0, 4999);
+
+        const productIds = (idData || []).map(d => d.product_id);
+        if (productIds.length === 0) { setProducts([]); setTotal(0); setLoading(false); return; }
+
         let query = supabase
           .from("products_cache")
           .select("*", { count: "exact" })
-          .eq("categoria", category)
+          .in("id", productIds)
           .eq("ativo", true)
           .eq("has_image", true)
           .eq("is_variante", false);
@@ -121,13 +138,6 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
       }
 
       // No filters active: use curated spotlight list for ordering
-      const { data: catData } = await supabase
-        .from("spotlight_categories")
-        .select("id, label")
-        .eq("slug", category)
-        .single();
-
-      if (!catData) { setProducts([]); setTotal(0); setLoading(false); return; }
 
       const { data: links } = await supabase
         .from("product_spotlight_categories")
