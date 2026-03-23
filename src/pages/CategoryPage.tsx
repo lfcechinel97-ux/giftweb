@@ -137,7 +137,34 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
       const hasActiveFilters = !!searchTerm || !!selectedCor || apenasEstoque;
 
       if (hasActiveFilters) {
-        // Fetch all product IDs from join table (up to 5000)
+        const categoriasReais = SPOTLIGHT_TO_CATEGORIA[category];
+
+        if (categoriasReais) {
+          // Direct query on products_cache using real categoria values
+          let query = supabase
+            .from("products_cache")
+            .select("*", { count: "exact" })
+            .in("categoria", categoriasReais)
+            .eq("ativo", true)
+            .eq("has_image", true)
+            .eq("is_variante", false);
+
+          if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
+          if (selectedCor) {
+            const corValues = selectedCor.split(",").map(v => v.trim().toUpperCase()).filter(Boolean);
+            query = query.in("cor", corValues);
+          }
+          if (apenasEstoque) query = query.gt("estoque", 0);
+          query = applySort(query, sortBy);
+
+          const { data, count } = await query.range(from, to);
+          setProducts(data || []);
+          setTotal(count || 0);
+          setLoading(false);
+          return;
+        }
+
+        // Fallback for spotlights without categoria mapping (marketing categories)
         const { data: idData } = await supabase
           .from("product_spotlight_categories")
           .select("product_id")
