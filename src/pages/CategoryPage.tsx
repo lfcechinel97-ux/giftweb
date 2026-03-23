@@ -34,6 +34,39 @@ const CATEGORY_NAME_FILTERS: Record<string, string> = {
   kits: "nome.ilike.KIT%",
 };
 
+// Maps spotlight slugs to real "categoria" field values in products_cache
+// Used when filters are active to bypass the limited join table
+const SPOTLIGHT_TO_CATEGORIA: Record<string, string[]> = {
+  "garrafas-squeezes": ["garrafas"],
+  "canecas-copos": ["copos"],
+  "mochilas-bolsas": ["mochilas", "bolsas", "outros", "escritorio"],
+  "bolsas-termicas": ["bolsas", "garrafas", "outros"],
+  "sacolas": ["bolsas", "outros"],
+  "escritorio": ["escritorio", "outros"],
+  "canetas": ["escritorio", "outros", "kits"],
+  "blocos-cadernetas": ["escritorio", "outros"],
+  "bar-bebidas": ["outros", "kits", "garrafas", "bolsas"],
+  "cozinha": ["outros", "kits", "copos"],
+  "estojos-necessaires": ["outros", "escritorio", "kits"],
+  "diversos": ["outros", "kits", "escritorio", "bolsas", "copos"],
+  "chaveiros": ["outros"],
+  "cuidados-pessoais": ["outros", "kits"],
+  "ferramentas": ["kits", "outros"],
+  "informatica": ["outros"],
+  "caixa-som": ["outros"],
+  "fones-ouvido": ["outros"],
+  "carregadores": ["outros"],
+  "acessorios-celular": ["outros", "escritorio"],
+  "malas-frasqueiras": ["outros"],
+  "organizadores": ["outros", "escritorio"],
+  "lanternas-luminarias": ["outros"],
+  "guarda-chuva": ["outros"],
+  "moda": ["outros"],
+  "expositores": ["outros"],
+  "ventilacao-climatizadores": ["outros"],
+  "viagem": ["outros", "kits"],
+};
+
 interface CategoryPageProps {
   category?: string;
 }
@@ -104,7 +137,34 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
       const hasActiveFilters = !!searchTerm || !!selectedCor || apenasEstoque;
 
       if (hasActiveFilters) {
-        // Fetch all product IDs from join table (up to 5000)
+        const categoriasReais = SPOTLIGHT_TO_CATEGORIA[category];
+
+        if (categoriasReais) {
+          // Direct query on products_cache using real categoria values
+          let query = supabase
+            .from("products_cache")
+            .select("*", { count: "exact" })
+            .in("categoria", categoriasReais)
+            .eq("ativo", true)
+            .eq("has_image", true)
+            .eq("is_variante", false);
+
+          if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
+          if (selectedCor) {
+            const corValues = selectedCor.split(",").map(v => v.trim().toUpperCase()).filter(Boolean);
+            query = query.in("cor", corValues);
+          }
+          if (apenasEstoque) query = query.gt("estoque", 0);
+          query = applySort(query, sortBy);
+
+          const { data, count } = await query.range(from, to);
+          setProducts(data || []);
+          setTotal(count || 0);
+          setLoading(false);
+          return;
+        }
+
+        // Fallback for spotlights without categoria mapping (marketing categories)
         const { data: idData } = await supabase
           .from("product_spotlight_categories")
           .select("product_id")
