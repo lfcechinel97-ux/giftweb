@@ -138,13 +138,6 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
       }
 
       // No filters active: use curated spotlight list for ordering
-      const { data: catData } = await supabase
-        .from("spotlight_categories")
-        .select("id, label")
-        .eq("slug", category)
-        .single();
-
-      if (!catData) { setProducts([]); setTotal(0); setLoading(false); return; }
 
       const { data: links } = await supabase
         .from("product_spotlight_categories")
