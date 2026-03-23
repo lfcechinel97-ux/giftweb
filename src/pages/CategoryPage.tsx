@@ -92,6 +92,35 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
     const to = from + PAGE_SIZE - 1;
 
     if (isSpotlightCategory) {
+      const hasActiveFilters = !!searchTerm || !!selectedCor || apenasEstoque;
+
+      if (hasActiveFilters) {
+        // When filters are active, query products_cache directly by categoria field
+        // to avoid the 1000-row limit of the product_spotlight_categories join table
+        let query = supabase
+          .from("products_cache")
+          .select("*", { count: "exact" })
+          .eq("categoria", category)
+          .eq("ativo", true)
+          .eq("has_image", true)
+          .eq("is_variante", false);
+
+        if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
+        if (selectedCor) {
+          const corValues = selectedCor.split(",").map(v => v.trim().toUpperCase()).filter(Boolean);
+          query = query.in("cor", corValues);
+        }
+        if (apenasEstoque) query = query.gt("estoque", 0);
+        query = applySort(query, sortBy);
+
+        const { data, count } = await query.range(from, to);
+        setProducts(data || []);
+        setTotal(count || 0);
+        setLoading(false);
+        return;
+      }
+
+      // No filters active: use curated spotlight list for ordering
       const { data: catData } = await supabase
         .from("spotlight_categories")
         .select("id, label")
@@ -116,12 +145,6 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
         .eq("has_image", true)
         .eq("is_variante", false);
 
-      if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
-      if (selectedCor) {
-        const corValues = selectedCor.split(",").map(v => v.trim().toUpperCase()).filter(Boolean);
-        query = query.in("cor", corValues);
-      }
-      if (apenasEstoque) query = query.gt("estoque", 0);
       query = applySort(query, sortBy);
 
       const { data, count } = await query.range(from, to);
