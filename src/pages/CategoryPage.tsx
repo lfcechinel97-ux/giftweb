@@ -34,6 +34,39 @@ const CATEGORY_NAME_FILTERS: Record<string, string> = {
   kits: "nome.ilike.KIT%",
 };
 
+// Maps spotlight slugs to real "categoria" field values in products_cache
+// Used when filters are active to bypass the limited join table
+const SPOTLIGHT_TO_CATEGORIA: Record<string, string[]> = {
+  "garrafas-squeezes": ["garrafas"],
+  "canecas-copos": ["copos"],
+  "mochilas-bolsas": ["mochilas", "bolsas", "outros", "escritorio"],
+  "bolsas-termicas": ["bolsas", "garrafas", "outros"],
+  "sacolas": ["bolsas", "outros"],
+  "escritorio": ["escritorio", "outros"],
+  "canetas": ["escritorio", "outros", "kits"],
+  "blocos-cadernetas": ["escritorio", "outros"],
+  "bar-bebidas": ["outros", "kits", "garrafas", "bolsas"],
+  "cozinha": ["outros", "kits", "copos"],
+  "estojos-necessaires": ["outros", "escritorio", "kits"],
+  "diversos": ["outros", "kits", "escritorio", "bolsas", "copos"],
+  "chaveiros": ["outros"],
+  "cuidados-pessoais": ["outros", "kits"],
+  "ferramentas": ["kits", "outros"],
+  "informatica": ["outros"],
+  "caixa-som": ["outros"],
+  "fones-ouvido": ["outros"],
+  "carregadores": ["outros"],
+  "acessorios-celular": ["outros", "escritorio"],
+  "malas-frasqueiras": ["outros"],
+  "organizadores": ["outros", "escritorio"],
+  "lanternas-luminarias": ["outros"],
+  "guarda-chuva": ["outros"],
+  "moda": ["outros"],
+  "expositores": ["outros"],
+  "ventilacao-climatizadores": ["outros"],
+  "viagem": ["outros", "kits"],
+};
+
 interface CategoryPageProps {
   category?: string;
 }
