@@ -127,27 +127,39 @@ const HeroSection = () => {
           <div>
             <label className="text-sm font-medium text-muted-foreground mb-2 block">Cor</label>
             <div className="flex flex-wrap gap-2">
-              {swatchColors.map((c, i) => (
-                <div key={i} className="relative">
-                  <button
-                    onClick={() => setSelectedColor(i === selectedColor ? null : i)}
-                    onMouseEnter={() => setHoveredColor(i)}
-                    onMouseLeave={() => setHoveredColor(null)}
-                    className="w-10 h-10 rounded-full border-2 transition-all duration-200"
-                    style={{
-                      backgroundColor: c.bg,
-                      borderColor: selectedColor === i ? "hsl(142,71%,45%)" : "hsl(220,13%,91%)",
-                      boxShadow: selectedColor === i ? "0 0 0 3px rgba(34,197,94,0.25)" : "none",
-                      transform: selectedColor === i ? "scale(1.1)" : "scale(1)",
-                    }}
-                  />
-                  {hoveredColor === i && (
-                    <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-card border border-border rounded-md px-2 py-1 text-xs text-foreground whitespace-nowrap z-30 pointer-events-none shadow-sm">
-                      {c.name}
-                    </div>
-                  )}
-                </div>
-              ))}
+              {swatchColors.map((c, i) => {
+                const isWhite = c.bg === "#FFFFFF";
+                const isOutros = c.name === "OUTROS";
+                return (
+                  <div key={i} className="relative">
+                    <button
+                      onClick={() => setSelectedColor(i === selectedColor ? null : i)}
+                      onMouseEnter={() => setHoveredColor(i)}
+                      onMouseLeave={() => setHoveredColor(null)}
+                      className="w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center"
+                      style={{
+                        background: isOutros
+                          ? "conic-gradient(#EF4444, #EAB308, #22C55E, #2563EB, #A855F7, #EC4899, #EF4444)"
+                          : c.bg,
+                        borderColor: selectedColor === i
+                          ? "hsl(142,71%,45%)"
+                          : isWhite
+                            ? "#D1D5DB"
+                            : "hsl(220,13%,91%)",
+                        boxShadow: selectedColor === i ? "0 0 0 3px rgba(34,197,94,0.25)" : "none",
+                        transform: selectedColor === i ? "scale(1.1)" : "scale(1)",
+                      }}
+                    >
+                      {isOutros && <span className="text-white font-bold text-sm drop-shadow-md">+</span>}
+                    </button>
+                    {hoveredColor === i && (
+                      <div className="absolute -top-9 left-1/2 -translate-x-1/2 bg-card border border-border rounded-md px-2 py-1 text-xs text-foreground whitespace-nowrap z-30 pointer-events-none shadow-sm">
+                        {c.name}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 

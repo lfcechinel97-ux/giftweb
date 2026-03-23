@@ -141,7 +141,11 @@ const CategoryPage = ({ category: categoryProp }: CategoryPageProps) => {
 
     if (nameFilter) query = query.or(nameFilter);
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
-    if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
+    if (selectedCor) {
+      const corValues = selectedCor.split(",").map(v => v.trim()).filter(Boolean);
+      if (corValues.length > 1) query = query.in("cor", corValues);
+      else query = query.ilike("cor", `%${corValues[0]}%`);
+    }
     if (apenasEstoque) query = query.gt("estoque", 0);
     query = applySort(query, sortBy);
 

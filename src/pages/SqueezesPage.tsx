@@ -47,7 +47,11 @@ const SqueezesPage = () => {
       .ilike("nome", "SQUEEZE%");
 
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
-    if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
+    if (selectedCor) {
+      const corValues = selectedCor.split(",").map(v => v.trim()).filter(Boolean);
+      if (corValues.length > 1) query = query.in("cor", corValues);
+      else query = query.ilike("cor", `%${corValues[0]}%`);
+    }
     if (apenasEstoque) query = query.gt("estoque", 0);
 
     const { data, count } = await query.order("sort_estoque").order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false }).range(from, to);

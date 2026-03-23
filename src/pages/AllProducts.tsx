@@ -42,7 +42,11 @@ const AllProducts = () => {
 
     let query = supabase.from("products_cache").select("*", { count: "exact" }).eq("ativo", true).eq("has_image", true).eq("is_variante", false);
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
-    if (selectedCor) query = query.ilike("cor", `%${selectedCor}%`);
+    if (selectedCor) {
+      const corValues = selectedCor.split(",").map(v => v.trim()).filter(Boolean);
+      if (corValues.length > 1) query = query.in("cor", corValues);
+      else query = query.ilike("cor", `%${corValues[0]}%`);
+    }
     if (apenasEstoque) query = query.gt("estoque", 0);
 
     if (sortBy === "menor_preco") query = query.order("sort_estoque").order("preco_custo", { ascending: true }).order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false });
