@@ -6,18 +6,24 @@ import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContent } from "@/hooks/useSiteContent";
 
 const swatchColors = [
-  { bg: "#EF4444", name: "Vermelho" },
-  { bg: "#2563EB", name: "Azul" },
-  { bg: "#22C55E", name: "Verde" },
-  { bg: "#EAB308", name: "Amarelo" },
-  { bg: "#A855F7", name: "Roxo" },
-  { bg: "#EC4899", name: "Rosa" },
-  { bg: "#F97316", name: "Laranja" },
-  { bg: "#1F2937", name: "Preto" },
-  { bg: "#06B6D4", name: "Ciano" },
-  { bg: "#FB7185", name: "Rose" },
-  { bg: "#6366F1", name: "Índigo" },
-  { bg: "#14B8A6", name: "Teal" },
+  { bg: "#EF4444", name: "VERMELHO", values: ["VERMELHO"] },
+  { bg: "#2563EB", name: "AZUL", values: ["AZUL"] },
+  { bg: "#22C55E", name: "VERDE", values: ["VERDE"] },
+  { bg: "#EAB308", name: "AMARELO", values: ["AMARELO"] },
+  { bg: "#A855F7", name: "ROXO", values: ["ROXO"] },
+  { bg: "#EC4899", name: "ROSA", values: ["ROSA"] },
+  { bg: "#F97316", name: "LARANJA", values: ["LARANJA"] },
+  { bg: "#1F2937", name: "PRETO", values: ["PRETO"] },
+  { bg: "#FFFFFF", name: "BRANCO", values: ["BRANCO"] },
+  { bg: "#6B7280", name: "CINZA", values: ["CINZA", "CHUMBO"] },
+  { bg: "#92400E", name: "MARROM", values: ["MARROM"] },
+  { bg: "#F59E0B", name: "DOURADO", values: ["DOURADO"] },
+  { bg: "#9CA3AF", name: "PRATA / INOX", values: ["PRATA", "INOX", "COBRE"] },
+  { bg: "#D2B48C", name: "BEGE", values: ["BEGE"] },
+  { bg: "#CD7F32", name: "BRONZE", values: ["BRONZE"] },
+  { bg: "#7F1D1D", name: "VINHO", values: ["VINHO"] },
+  { bg: "#374151", name: "GRAFITE", values: ["GRAFITE"] },
+  { bg: "#C4A35A", name: "OUTROS", values: ["KRAFT", "TRANSPARENTE", "COLORIDO", "BAMBU", "MADEIRA"] },
 ];
 
 const slides = [
