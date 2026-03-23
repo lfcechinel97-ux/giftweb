@@ -2,20 +2,31 @@ import { useState, useEffect } from "react";
 import { useInView } from "@/hooks/useInView";
 import { Link } from "react-router-dom";
 import { useSiteContent } from "@/hooks/useSiteContent";
+import { useBaseCategories } from "@/hooks/useBaseCategories";
 import catGarrafas from "@/assets/cat-garrafas.png";
 import catBolsas from "@/assets/cat-bolsas.png";
 import catMochilas from "@/assets/cat-mochilas.png";
 import catKit from "@/assets/cat-kit.png";
 import catBrindes from "@/assets/cat-brindes.png";
 
-const orderedCategories = [
-  { key: "garrafas", name: "Garrafas Térmicas", img: catGarrafas, route: "/garrafas" },
-  { key: "canecas", name: "Copos e Canecas", img: catGarrafas, route: "/copos" },
-  { key: "mochilas", name: "Mochilas", img: catMochilas, route: "/mochilas" },
-  { key: "kits", name: "Kits Corporativos", img: catKit, route: "/kits" },
-  { key: "bolsas", name: "Bolsas e Sacolas", img: catBolsas, route: "/bolsas" },
-  { key: "escritorio", name: "Material de Escritório", img: catBrindes, route: "/escritorio" },
-  { key: "squeezes", name: "Squeezes", img: catGarrafas, route: "/squeezes" },
+// Default images by slug keyword
+const defaultImages: Record<string, string> = {
+  garrafas: catGarrafas,
+  copos: catGarrafas,
+  canecas: catGarrafas,
+  mochilas: catMochilas,
+  bolsas: catBolsas,
+  kits: catKit,
+};
+
+const topSlugs = [
+  "garrafas-e-squeezes",
+  "copos-e-canecas",
+  "mochilas-e-sacochilas",
+  "kits",
+  "bolsas",
+  "canetas",
+  "chaveiros",
 ];
 
 interface Props {
@@ -25,16 +36,23 @@ interface Props {
 const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
   const { ref, inView } = useInView();
   const { rows: siteRows } = useSiteContent("categorias");
+  const { data: dbCategories } = useBaseCategories();
 
   const getContentValue = (id: string) => siteRows.find((r) => r.id === id)?.value || null;
 
-  const cats = orderedCategories.map((c) => {
-    const customImg = getContentValue(`cat_img_${c.key}`);
-    const customLink = getContentValue(`cat_link_${c.key}`);
+  // Build display list: use topSlugs order, fill from DB
+  const cats = topSlugs.map((slug) => {
+    const dbCat = dbCategories?.find((c) => c.slug === slug);
+    const label = dbCat?.label || slug;
+    const customImg = getContentValue(`cat_img_${slug}`);
+    const customLink = getContentValue(`cat_link_${slug}`);
+    const defaultImg = Object.entries(defaultImages).find(([k]) => slug.includes(k))?.[1] || catBrindes;
+
     return {
-      ...c,
-      img: customImg || c.img,
-      route: customLink || c.route,
+      key: slug,
+      name: label,
+      img: customImg || defaultImg,
+      route: customLink || `/categoria/${slug}`,
     };
   });
 
