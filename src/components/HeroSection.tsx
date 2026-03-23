@@ -68,16 +68,16 @@ const HeroSection = () => {
 
   const handleSearch = () => {
     const q = searchText.trim();
-    const colorName = selectedColor !== null ? swatchColors[selectedColor].name : null;
+    const colorValues = selectedColor !== null ? swatchColors[selectedColor].values.join(",") : null;
 
     if (selectedCategory && q) {
-      navigate(`/categoria/${selectedCategory}?q=${encodeURIComponent(q)}${colorName ? `&cor=${encodeURIComponent(colorName)}` : ""}`);
+      navigate(`/categoria/${selectedCategory}?q=${encodeURIComponent(q)}${colorValues ? `&cor=${encodeURIComponent(colorValues)}` : ""}`);
     } else if (selectedCategory) {
-      navigate(`/categoria/${selectedCategory}${colorName ? `?cor=${encodeURIComponent(colorName)}` : ""}`);
+      navigate(`/categoria/${selectedCategory}${colorValues ? `?cor=${encodeURIComponent(colorValues)}` : ""}`);
     } else if (q) {
       navigate(`/busca?q=${encodeURIComponent(q)}`);
-    } else if (colorName) {
-      navigate(`/produtos?cor=${encodeURIComponent(colorName)}`);
+    } else if (colorValues) {
+      navigate(`/produtos?cor=${encodeURIComponent(colorValues)}`);
     } else {
       navigate("/produtos");
     }
