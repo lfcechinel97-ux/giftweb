@@ -65,6 +65,9 @@ const TrustSection = () => (
                 src={post.img}
                 alt={post.caption}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                loading="lazy"
+                width={400}
+                height={400}
               />
               {post.isVideo && (
                 <div className="absolute inset-0 flex items-center justify-center">
