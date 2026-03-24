@@ -74,7 +74,7 @@ const HeroSection = () => {
     } else if (selectedCategory) {
       navigate(`/categoria/${selectedCategory}${colorValues ? `?cor=${encodeURIComponent(colorValues)}` : ""}`);
     } else if (q) {
-      navigate(`/busca?q=${encodeURIComponent(q)}`);
+      navigate(`/busca?q=${encodeURIComponent(q)}${colorValues ? `&cor=${encodeURIComponent(colorValues)}` : ""}`);
     } else if (colorValues) {
       navigate(`/produtos?cor=${encodeURIComponent(colorValues)}`);
     } else {

@@ -10,9 +10,6 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard, { ProductCardSkeleton } from "@/components/ProductCard";
 import CatalogFilters from "@/components/CatalogFilters";
 import CatalogPagination from "@/components/CatalogPagination";
-import type { Tables } from "@/integrations/supabase/types";
-
-type Product = Tables<"products_cache">;
 
 const PAGE_SIZE = 20;
 
@@ -22,7 +19,7 @@ const CategoryPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
   const urlCor = searchParams.get("cor") || "";
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [cores, setCores] = useState<string[]>([]);
@@ -52,92 +49,45 @@ const CategoryPage = () => {
     if (urlCor) setSelectedCor(urlCor);
   }, [urlCor]);
 
-  const applySort = (query: any, sort: string) => {
-    if (sort === "menor_preco") return query.order("preco_custo", { ascending: true, nullsFirst: false });
-    if (sort === "maior_preco") return query.order("preco_custo", { ascending: false, nullsFirst: false });
-    if (sort === "maior_estoque") return query.order("estoque", { ascending: false, nullsFirst: false });
-    if (sort === "az") return query.order("nome", { ascending: true });
-    return query.order("sort_estoque").order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false });
-  };
-
-  // Helper: fetch all product IDs from the join table for this category
-  const fetchProductIds = async (): Promise<string[] | null> => {
-    const { data: catData } = await supabase
-      .from("spotlight_categories")
-      .select("id")
-      .eq("slug", category)
-      .single();
-
-    if (!catData) return null;
-
-    const { data: idData } = await supabase
-      .from("product_spotlight_categories")
-      .select("product_id")
-      .eq("category_id", catData.id)
-      .range(0, 4999);
-
-    return (idData || []).map((d) => d.product_id);
-  };
+  // Fetch available colors via RPC
+  useEffect(() => {
+    if (!category) return;
+    supabase.rpc("get_category_colors", { p_category_slug: category }).then(({ data }) => {
+      if (data && Array.isArray(data)) {
+        setCores(data.filter(Boolean).sort());
+      }
+    });
+  }, [category]);
 
   const fetchProducts = useCallback(async () => {
     if (!category) return;
     setLoading(true);
-    const from = (page - 1) * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
 
-    const productIds = await fetchProductIds();
-    if (!productIds || productIds.length === 0) {
+    const corValues = selectedCor
+      ? selectedCor.split(",").map((v) => v.trim().toUpperCase()).filter(Boolean)
+      : null;
+
+    const { data, error } = await supabase.rpc("search_products_by_category", {
+      p_category_slug: category,
+      p_cor: corValues,
+      p_search: searchTerm || null,
+      p_apenas_estoque: apenasEstoque,
+      p_sort: sortBy,
+      p_page: page,
+      p_page_size: PAGE_SIZE,
+    });
+
+    if (error) {
+      console.error("RPC error:", error);
       setProducts([]);
       setTotal(0);
-      setLoading(false);
-      return;
+    } else if (data) {
+      const result = data as unknown as { rows: any[]; total_count: number };
+      setProducts(result.rows || []);
+      setTotal(result.total_count || 0);
     }
-
-    let query = supabase
-      .from("products_cache")
-      .select("*", { count: "exact" })
-      .in("id", productIds)
-      .eq("ativo", true)
-      .eq("has_image", true);
-
-    // When color filter is active, show variants too
-    if (!selectedCor) {
-      query = query.eq("is_variante", false);
-    }
-
-    if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
-    if (selectedCor) {
-      const corValues = selectedCor.split(",").map((v) => v.trim().toUpperCase()).filter(Boolean);
-      query = query.in("cor", corValues);
-    }
-    if (apenasEstoque) query = query.gt("estoque", 0);
-    query = applySort(query, sortBy);
-
-    const { data, count } = await query.range(from, to);
-    setProducts(data || []);
-    setTotal(count || 0);
     setLoading(false);
   }, [category, page, searchTerm, selectedCor, apenasEstoque, sortBy]);
-
-  // Fetch available colors using the join table
-  useEffect(() => {
-    if (!category) return;
-    (async () => {
-      const productIds = await fetchProductIds();
-      if (!productIds || productIds.length === 0) return;
-
-      const { data } = await supabase
-        .from("products_cache")
-        .select("cor")
-        .in("id", productIds)
-        .eq("ativo", true)
-        .eq("has_image", true)
-        .not("cor", "is", null);
-
-      const unique = [...new Set((data || []).map((d) => d.cor).filter(Boolean))] as string[];
-      setCores(unique.sort());
-    })();
-  }, [category]);
 
   useEffect(() => {
     fetchProducts();
@@ -202,7 +152,7 @@ const CategoryPage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {products.map((p) => (
+                {products.map((p: any) => (
                   <ProductCard
                     key={p.id}
                     id={p.id}
@@ -213,7 +163,7 @@ const CategoryPage = () => {
                     preco_custo={p.preco_custo}
                     codigo_amigavel={p.codigo_amigavel}
                     image_urls={p.image_urls}
-                    variantes={p.variantes as any}
+                    variantes={p.variantes}
                     estoque={p.estoque}
                   />
                 ))}

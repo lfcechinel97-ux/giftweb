@@ -8,61 +8,101 @@ import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard, { ProductCardSkeleton } from "@/components/ProductCard";
+import CatalogFilters from "@/components/CatalogFilters";
 import CatalogPagination from "@/components/CatalogPagination";
-import type { Tables } from "@/integrations/supabase/types";
 
-type Product = Tables<"products_cache">;
 const PAGE_SIZE = 20;
 
 const CATEGORIES = [
-  { slug: "copos", label: "Copos" },
-  { slug: "garrafas", label: "Garrafas" },
-  { slug: "mochilas", label: "Mochilas" },
+  { slug: "copos-e-canecas", label: "Copos e Canecas" },
+  { slug: "garrafas-e-squeezes", label: "Garrafas e Squeezes" },
+  { slug: "mochilas-e-sacochilas", label: "Mochilas" },
   { slug: "bolsas", label: "Bolsas" },
-  { slug: "escritorio", label: "Escritório" },
+  { slug: "canetas", label: "Canetas" },
   { slug: "kits", label: "Kits" },
-  { slug: "squeezes", label: "Squeezes" },
-  { slug: "brindes-baratos", label: "Brindes Baratos" },
+  { slug: "chaveiros", label: "Chaveiros" },
+  { slug: "guarda-chuvas", label: "Guarda-chuvas" },
 ];
 
 const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const q = searchParams.get("q") || "";
   const page = parseInt(searchParams.get("page") || "1");
-  const [products, setProducts] = useState<Product[]>([]);
+  const urlCor = searchParams.get("cor") || "";
+  const [products, setProducts] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [cores, setCores] = useState<string[]>([]);
+
+  const [selectedCor, setSelectedCor] = useState<string | null>(urlCor || null);
+  const [apenasEstoque, setApenasEstoque] = useState(false);
+  const [sortBy, setSortBy] = useState("relevancia");
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const fetchResults = useCallback(async () => {
-    if (!q) { setProducts([]); setTotal(0); setLoading(false); return; }
-    setLoading(true);
-    const from = (page - 1) * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
+  useEffect(() => {
+    if (urlCor) setSelectedCor(urlCor);
+  }, [urlCor]);
 
-    const { data, count } = await supabase
+  // Fetch available colors for the search results
+  useEffect(() => {
+    if (!q) return;
+    supabase
       .from("products_cache")
-      .select("*", { count: "exact" })
+      .select("cor")
       .eq("ativo", true)
       .eq("has_image", true)
-      .eq("is_variante", false)
       .ilike("busca", `%${q}%`)
-      .order("sort_estoque")
-      .order("variantes_count", { ascending: false })
-      .order("estoque", { ascending: false, nullsFirst: false })
-      .range(from, to);
+      .not("cor", "is", null)
+      .then(({ data }) => {
+        const unique = [...new Set((data || []).map((d) => d.cor).filter(Boolean))] as string[];
+        setCores(unique.sort());
+      });
+  }, [q]);
 
-    setProducts(data || []);
-    setTotal(count || 0);
+  const fetchResults = useCallback(async () => {
+    if (!q && !selectedCor) { setProducts([]); setTotal(0); setLoading(false); return; }
+    setLoading(true);
+
+    const corValues = selectedCor
+      ? selectedCor.split(",").map((v) => v.trim().toUpperCase()).filter(Boolean)
+      : null;
+
+    const { data, error } = await supabase.rpc("search_products_global", {
+      p_cor: corValues,
+      p_search: q || null,
+      p_apenas_estoque: apenasEstoque,
+      p_sort: sortBy,
+      p_page: page,
+      p_page_size: PAGE_SIZE,
+    });
+
+    if (error) {
+      console.error("RPC error:", error);
+      setProducts([]);
+      setTotal(0);
+    } else if (data) {
+      const result = data as unknown as { rows: any[]; total_count: number };
+      setProducts(result.rows || []);
+      setTotal(result.total_count || 0);
+    }
     setLoading(false);
-  }, [q, page]);
+  }, [q, page, selectedCor, apenasEstoque, sortBy]);
 
   useEffect(() => { fetchResults(); }, [fetchResults]);
 
   const handlePageChange = (p: number) => {
-    setSearchParams({ q, page: p.toString() });
+    const params: Record<string, string> = {};
+    if (q) params.q = q;
+    params.page = p.toString();
+    if (selectedCor) params.cor = selectedCor;
+    setSearchParams(params);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const clearFilters = () => {
+    setSelectedCor(null);
+    setApenasEstoque(false);
   };
 
   return (
@@ -82,6 +122,23 @@ const SearchPage = () => {
             </h1>
             <p className="text-muted-foreground mb-6">{total} produtos encontrados</p>
 
+            <CatalogFilters
+              searchTerm=""
+              onSearchChange={() => {}}
+              cores={cores}
+              selectedCor={selectedCor}
+              onCorChange={setSelectedCor}
+              precoRange={[0, 100]}
+              onPrecoRangeChange={() => {}}
+              maxPreco={100}
+              apenasEstoque={apenasEstoque}
+              onApenasEstoqueChange={setApenasEstoque}
+              onClearFilters={clearFilters}
+              totalProducts={total}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+            />
+
             {loading ? (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)}
@@ -94,7 +151,7 @@ const SearchPage = () => {
                   {CATEGORIES.map((c) => (
                     <Link
                       key={c.slug}
-                      to={`/${c.slug}`}
+                      to={`/categoria/${c.slug}`}
                       className="px-4 py-2 rounded-lg border border-border text-foreground text-sm hover:border-green-cta transition-colors"
                     >
                       {c.label}
@@ -104,8 +161,8 @@ const SearchPage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {products.map((p) => (
-                  <ProductCard key={p.id} id={p.id} nome={p.nome} slug={p.slug} image_url={p.image_url} image_urls={p.image_urls} cor={p.cor} preco_custo={p.preco_custo} codigo_amigavel={p.codigo_amigavel} variantes={p.variantes as any} estoque={p.estoque} />
+                {products.map((p: any) => (
+                  <ProductCard key={p.id} id={p.id} nome={p.nome} slug={p.slug} image_url={p.image_url} image_urls={p.image_urls} cor={p.cor} preco_custo={p.preco_custo} codigo_amigavel={p.codigo_amigavel} variantes={p.variantes} estoque={p.estoque} />
                 ))}
               </div>
             )}

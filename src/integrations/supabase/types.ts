@@ -370,6 +370,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_category_colors: {
+        Args: { p_category_slug: string }
+        Returns: string[]
+      }
+      search_products_by_category: {
+        Args: {
+          p_apenas_estoque?: boolean
+          p_category_slug: string
+          p_cor?: string[]
+          p_page?: number
+          p_page_size?: number
+          p_search?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
+      search_products_global: {
+        Args: {
+          p_apenas_estoque?: boolean
+          p_cor?: string[]
+          p_page?: number
+          p_page_size?: number
+          p_search?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
       set_variantes_por_prefixo: { Args: never; Returns: undefined }
     }
     Enums: {

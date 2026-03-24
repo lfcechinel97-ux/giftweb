@@ -64,8 +64,6 @@ function normalizeNomeBase(nome: string): string {
     .replace(/\s+/g, " ");
 }
 
-// Chave de agrupamento: CodigoAmigavel + nome normalizado.
-// Garante que produtos com mesmo código base mas nomes diferentes não sejam agrupados.
 function getCodigoPrefixo(codigoAmigavel: string, nome: string): string {
   return `${codigoAmigavel}|${normalizeNomeBase(nome)}`;
 }
@@ -92,16 +90,86 @@ function extrairCor(p: any): string | null {
   return null;
 }
 
+// Expanded: 32 granular categories matching spotlight_categories slugs
 function getCategoria(nome: string): string {
   const n = nome.toUpperCase();
-  if (n.includes('CANECA') || n.includes('COPO') || n.includes('TACA') || n.includes('TAÇA')) return 'copos';
-  if (n.includes('GARRAFA') || n.includes('SQUEEZE') || n.includes('TERMICA')) return 'garrafas';
-  if (n.includes('MOCHILA')) return 'mochilas';
-  if (n.includes('BOLSA') || n.includes('SACOLA')) return 'bolsas';
-  if (n.includes('CANETA') || n.includes('BLOCO') || n.includes('CADERNO') || n.includes('AGENDA')) return 'escritorio';
+
+  // Specific matches first (order matters - more specific before generic)
+  if (n.includes('AGENDA')) return 'agendas';
+  if (n.includes('CADERNETA')) return 'cadernetas';
+  if (n.includes('CADERNO')) return 'cadernos';
+  if (n.includes('BLOCO')) return 'blocos';
+  if (n.includes('CANETA') || n.includes('LAPISEIRA') || n.includes('MARCA TEXTO') || n.includes('MARCA-TEXTO')) return 'canetas';
+
+  if (n.includes('CANECA') || n.includes('COPO') || n.includes('TACA') || n.includes('TAÇA') || n.includes('MUG')) return 'copos-e-canecas';
+  if (n.includes('GARRAFA') || n.includes('SQUEEZE') || n.includes('TERMICA') || n.includes('TÉRMICA')) return 'garrafas-e-squeezes';
+
+  if (n.includes('MOCHILA') || n.includes('SACOCHILA')) return 'mochilas-e-sacochilas';
+  if (n.includes('NECESSAIRE')) return 'necessaires';
+  if (n.includes('SACOLA')) return 'sacolas';
+  if (n.includes('MALA') && !n.includes('MALABAR')) return 'malas';
+  if (n.includes('PASTA')) return 'pastas';
+  if (n.includes('ESTOJO')) return 'estojos';
+  if (n.includes('BOLSA')) return 'bolsas';
+
+  if (n.includes('PEN DRIVE') || n.includes('PENDRIVE')) return 'pen-drives';
+  if (n.includes('POWER BANK') || n.includes('POWERBANK') || n.includes('CARREGADOR PORTATIL') || n.includes('CARREGADOR PORTÁTIL')) return 'power-banks';
+  if (n.includes('FONE') || n.includes('HEADPHONE') || n.includes('EARPHONE') || n.includes('HEADSET')) return 'fones';
+  if (n.includes('MOUSE PAD') || n.includes('MOUSEPAD')) return 'mouse-pads';
+  if (n.includes('SUPORTE') && (n.includes('CELULAR') || n.includes('NOTEBOOK') || n.includes('TABLET'))) return 'suportes';
+
+  if (n.includes('CHAVEIRO')) return 'chaveiros';
+  if (n.includes('GUARDA-CHUVA') || n.includes('GUARDA CHUVA') || n.includes('SOMBRINHA')) return 'guarda-chuvas';
+  if (n.includes('ESPELHO')) return 'espelhos';
+  if (n.includes('PORTA-RETRATO') || n.includes('PORTA RETRATO')) return 'porta-retratos';
+  if (n.includes('PORTA-JOIA') || n.includes('PORTA JOIA')) return 'porta-joias';
+  if (n.includes('PORTA-OBJETO') || n.includes('PORTA OBJETO') || n.includes('ORGANIZADOR')) return 'porta-objetos';
+  if (n.includes('CAIXA DE SOM') || n.includes('CAIXA SOM') || n.includes('SPEAKER')) return 'caixas-de-som';
+  if (n.includes('CAIXA ORGANIZADORA')) return 'caixas-organizadoras';
+  if (n.includes('MARMITA') || n.includes('LANCHEIRA') || n.includes('LUNCH')) return 'marmitas';
+  if (n.includes('TOALHA')) return 'toalhas';
+  if (n.includes('COZINHA') || n.includes('TABUA') || n.includes('TÁBUA') || n.includes('AVENTAL') || n.includes('ABRIDOR')) return 'cozinha-e-mesa';
   if (n.includes('KIT')) return 'kits';
+
+  // Generic fallback
   return 'outros';
 }
+
+// Map getCategoria values to spotlight_categories slugs
+// Most are already matching; this handles any discrepancies
+const CATEGORIA_TO_SLUG: Record<string, string> = {
+  'agendas': 'agendas',
+  'blocos': 'blocos',
+  'bolsas': 'bolsas',
+  'cadernetas': 'cadernetas',
+  'cadernos': 'cadernos',
+  'caixas-de-som': 'caixas-de-som',
+  'caixas-organizadoras': 'caixas-organizadoras',
+  'canetas': 'canetas',
+  'chaveiros': 'chaveiros',
+  'copos-e-canecas': 'copos-e-canecas',
+  'cozinha-e-mesa': 'cozinha-e-mesa',
+  'espelhos': 'espelhos',
+  'estojos': 'estojos',
+  'fones': 'fones',
+  'garrafas-e-squeezes': 'garrafas-e-squeezes',
+  'guarda-chuvas': 'guarda-chuvas',
+  'kits': 'kits',
+  'malas': 'malas',
+  'marmitas': 'marmitas',
+  'mochilas-e-sacochilas': 'mochilas-e-sacochilas',
+  'mouse-pads': 'mouse-pads',
+  'necessaires': 'necessaires',
+  'pastas': 'pastas',
+  'pen-drives': 'pen-drives',
+  'porta-joias': 'porta-joias',
+  'porta-objetos': 'porta-objetos',
+  'porta-retratos': 'porta-retratos',
+  'power-banks': 'power-banks',
+  'sacolas': 'sacolas',
+  'suportes': 'suportes',
+  'toalhas': 'toalhas',
+};
 
 function getSlug(nome: string, codigo: string): string {
   const base = nome
@@ -177,7 +245,6 @@ serve(async (req) => {
     console.log("[SYNC] Stage 2: Deduplicating and grouping...");
     const produtosMap = new Map<string, any>();
     for (const p of produtos) {
-      // Usa CodigoComposto como chave única de cada variação
       const codigoComposto = p.CodigoComposto ?? p.codigoComposto ?? "";
       const codigoAmigavel = p.CodigoAmigavel ?? p.codigoAmigavel ?? "";
       const chave = codigoComposto || codigoAmigavel;
@@ -185,11 +252,8 @@ serve(async (req) => {
       produtosMap.set(chave, p);
     }
 
-    // Agrupa por CodigoAmigavel + nome normalizado.
-    // Regra: mesmo código base E mesmo nome base = mesmo produto (variações de cor/imagem).
-    // Produtos com mesmo código mas nome diferente são produtos distintos.
-    const groups = new Map<string, string[]>(); // groupKey -> [codigoComposto, ...]
-    const chaveParaGrupoPai = new Map<string, string>(); // codigoComposto -> groupKey
+    const groups = new Map<string, string[]>();
+    const chaveParaGrupoPai = new Map<string, string>();
     for (const [chave, p] of produtosMap.entries()) {
       const codigoAmigavel = p.CodigoAmigavel ?? p.codigoAmigavel ?? chave;
       const nome = p.Nome ?? p.nome ?? chave;
@@ -205,8 +269,6 @@ serve(async (req) => {
 
     for (const [groupKey, codigos] of groups) {
       codigos.sort();
-      // Elege como pai o item cujo CodigoComposto = CodigoAmigavel (produto "raiz"),
-      // senão o código mais curto (menor número de caracteres), senão o primeiro alfabético.
       const codigoAmigavelPart = groupKey.split("|")[0];
       const paiCodigo =
         codigos.find((c) => c === codigoAmigavelPart) ??
@@ -252,8 +314,6 @@ serve(async (req) => {
         ultima_sync: agora,
         is_variante: isVariante.has(chave),
         produto_pai: null,
-        // Chave de agrupamento: CodigoAmigavel|nomeNormalizado
-        // A RPC set_variantes_por_prefixo usa este campo para vincular produto_pai
         codigo_prefixo: getCodigoPrefixo(codigoAmigavel, nome),
       };
     });
@@ -280,7 +340,67 @@ serve(async (req) => {
     if (rpcError) console.error("[SYNC] Stage 4 RPC error:", JSON.stringify(rpcError));
     console.log("[SYNC] Stage 4 OK");
 
-    // Mark products not seen in this sync as inactive (only if they have a ultima_sync that is stale)
+    // Stage 5: Auto-populate product_spotlight_categories
+    console.log("[SYNC] Stage 5: Populating product_spotlight_categories...");
+    try {
+      // Fetch all spotlight_categories (base type)
+      const { data: spotlightCats } = await supabaseClient
+        .from("spotlight_categories")
+        .select("id, slug")
+        .eq("category_type", "base")
+        .eq("active", true);
+
+      if (spotlightCats && spotlightCats.length > 0) {
+        const slugToId = new Map<string, string>();
+        for (const sc of spotlightCats) {
+          slugToId.set(sc.slug, sc.id);
+        }
+
+        // Fetch all active products with their categoria
+        const allProducts: { id: string; categoria: string }[] = [];
+        let offset = 0;
+        const batchSize = 1000;
+        while (true) {
+          const { data: batch } = await supabaseClient
+            .from("products_cache")
+            .select("id, categoria")
+            .eq("ativo", true)
+            .range(offset, offset + batchSize - 1);
+          if (!batch || batch.length === 0) break;
+          allProducts.push(...batch);
+          if (batch.length < batchSize) break;
+          offset += batchSize;
+        }
+        console.log("[SYNC] Stage 5: Found", allProducts.length, "active products to map");
+
+        // Map each product to its spotlight category
+        const mappings: { product_id: string; category_id: string; position: number }[] = [];
+        for (const prod of allProducts) {
+          const cat = prod.categoria || "outros";
+          // Try direct match first
+          let spotlightSlug = CATEGORIA_TO_SLUG[cat] || cat;
+          const catId = slugToId.get(spotlightSlug);
+          if (catId) {
+            mappings.push({ product_id: prod.id, category_id: catId, position: 0 });
+          }
+        }
+        console.log("[SYNC] Stage 5: Mapped", mappings.length, "product-category pairs");
+
+        // Upsert in chunks (on conflict do nothing via unique constraint)
+        for (let i = 0; i < mappings.length; i += CHUNK_SIZE) {
+          const chunk = mappings.slice(i, i + CHUNK_SIZE);
+          const { error: mapError } = await supabaseClient
+            .from("product_spotlight_categories")
+            .upsert(chunk, { onConflict: "product_id,category_id", ignoreDuplicates: true });
+          if (mapError) console.error("[SYNC] Stage 5 upsert error:", JSON.stringify(mapError));
+        }
+        console.log("[SYNC] Stage 5 OK");
+      }
+    } catch (stage5Err) {
+      console.error("[SYNC] Stage 5 error (non-fatal):", (stage5Err as Error).message);
+    }
+
+    // Mark products not seen in this sync as inactive
     const limite = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     await supabaseClient.from("products_cache").update({ ativo: false }).lt("ultima_sync", limite).eq("ativo", true);
 
