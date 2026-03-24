@@ -16,6 +16,43 @@ type Product = Tables<"products_cache">;
 
 const PAGE_SIZE = 20;
 
+// Maps spotlight slug → real products_cache.categoria values
+const SPOTLIGHT_TO_CATEGORIA: Record<string, string[]> = {
+  "copos-e-canecas": ["copos"],
+  "garrafas-e-squeezes": ["garrafas"],
+  "mochilas-e-sacochilas": ["mochilas"],
+  "bolsas": ["bolsas"],
+  "canetas": ["escritorio"],
+  "cadernetas": ["escritorio"],
+  "cadernos": ["escritorio"],
+  "blocos": ["escritorio"],
+  "agendas": ["escritorio"],
+  "kits": ["kits"],
+  "escritorio": ["escritorio"],
+  "sacolas": ["bolsas"],
+  "necessaires": ["bolsas"],
+  "estojos": ["bolsas"],
+  "pastas": ["bolsas"],
+  "malas": ["bolsas"],
+  "chaveiros": ["outros"],
+  "guarda-chuvas": ["outros"],
+  "pen-drives": ["outros"],
+  "power-banks": ["outros"],
+  "fones": ["outros"],
+  "mouse-pads": ["outros"],
+  "suportes": ["outros"],
+  "espelhos": ["outros"],
+  "porta-retratos": ["outros"],
+  "porta-joias": ["outros"],
+  "porta-objetos": ["outros"],
+  "cozinha-e-mesa": ["outros"],
+  "marmitas": ["outros"],
+  "toalhas": ["outros"],
+  "caixas-de-som": ["outros"],
+  "caixas-organizadoras": ["outros"],
+  "casa-e-decoracao": ["outros"],
+};
+
 const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const category = slug || "";
@@ -66,7 +103,40 @@ const CategoryPage = () => {
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
-    // Get spotlight category ID
+    const hasActiveFilters = !!(selectedCor || searchTerm || apenasEstoque);
+    const categoriasReais = SPOTLIGHT_TO_CATEGORIA[category];
+
+    // When filters are active AND we have a direct category mapping,
+    // bypass the join table and query products_cache directly
+    if (hasActiveFilters && categoriasReais) {
+      let query = supabase
+        .from("products_cache")
+        .select("*", { count: "exact" })
+        .eq("ativo", true)
+        .eq("has_image", true)
+        .in("categoria", categoriasReais);
+
+      // Don't filter out variants when color filter is active
+      if (!selectedCor) {
+        query = query.eq("is_variante", false);
+      }
+
+      if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
+      if (selectedCor) {
+        const corValues = selectedCor.split(",").map((v) => v.trim().toUpperCase()).filter(Boolean);
+        query = query.in("cor", corValues);
+      }
+      if (apenasEstoque) query = query.gt("estoque", 0);
+      query = applySort(query, sortBy);
+
+      const { data, count } = await query.range(from, to);
+      setProducts(data || []);
+      setTotal(count || 0);
+      setLoading(false);
+      return;
+    }
+
+    // Default flow: use join table for curated display
     const { data: catData } = await supabase
       .from("spotlight_categories")
       .select("id")
@@ -80,7 +150,6 @@ const CategoryPage = () => {
       return;
     }
 
-    // Get all product IDs from the join table (up to 5000)
     const { data: idData } = await supabase
       .from("product_spotlight_categories")
       .select("product_id")
@@ -95,24 +164,15 @@ const CategoryPage = () => {
       return;
     }
 
-    // Query products_cache by IDs
     let query = supabase
       .from("products_cache")
       .select("*", { count: "exact" })
       .in("id", productIds)
       .eq("ativo", true)
-      .eq("has_image", true);
-
-    // Only filter out variants when no color filter is active
-    if (!selectedCor) {
-      query = query.eq("is_variante", false);
-    }
+      .eq("has_image", true)
+      .eq("is_variante", false);
 
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
-    if (selectedCor) {
-      const corValues = selectedCor.split(",").map((v) => v.trim().toUpperCase()).filter(Boolean);
-      query = query.in("cor", corValues);
-    }
     if (apenasEstoque) query = query.gt("estoque", 0);
     query = applySort(query, sortBy);
 
@@ -122,10 +182,28 @@ const CategoryPage = () => {
     setLoading(false);
   }, [category, page, searchTerm, selectedCor, apenasEstoque, sortBy]);
 
-  // Fetch available colors for filters
+  // Fetch available colors for filters — use direct category when mapping exists
   useEffect(() => {
     if (!category) return;
     (async () => {
+      const categoriasReais = SPOTLIGHT_TO_CATEGORIA[category];
+
+      if (categoriasReais) {
+        // Direct query on products_cache by real categoria values
+        const { data } = await supabase
+          .from("products_cache")
+          .select("cor")
+          .in("categoria", categoriasReais)
+          .eq("ativo", true)
+          .eq("has_image", true)
+          .not("cor", "is", null);
+
+        const unique = [...new Set((data || []).map((d) => d.cor).filter(Boolean))] as string[];
+        setCores(unique.sort());
+        return;
+      }
+
+      // Fallback: use join table
       const { data: catData } = await supabase
         .from("spotlight_categories")
         .select("id")
