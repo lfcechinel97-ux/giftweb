@@ -122,11 +122,13 @@ const TestimonialCard = ({
     </p>
 
     <div className="border-t border-border pt-4 flex items-center gap-3">
-      <img
-        src={photo}
-        alt={name}
-        className="w-10 h-10 rounded-full object-cover border-2 border-border flex-shrink-0"
-      />
+      {photo ? (
+        <img src={photo} alt={name} className="w-10 h-10 rounded-full object-cover border-2 border-border flex-shrink-0" loading="lazy" />
+      ) : (
+        <div className="w-10 h-10 rounded-full bg-primary/10 border-2 border-border flex-shrink-0 flex items-center justify-center text-primary font-bold text-sm">
+          {name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+        </div>
+      )}
       <div>
         <p className="font-semibold text-foreground text-sm leading-tight">{name}</p>
         <p className="text-primary text-[11px] mt-0.5">{role} · {company}</p>

@@ -287,6 +287,9 @@ const Header = () => {
 
       {/* ── MOBILE FULLSCREEN MENU ── */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu de navegação"
         className={`lg:hidden fixed inset-0 z-[100] bg-navy flex flex-col transition-opacity duration-300 ${
           mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}

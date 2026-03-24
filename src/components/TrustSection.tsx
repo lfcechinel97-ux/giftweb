@@ -92,8 +92,10 @@ const TrustSection = () => (
       <div className="flex flex-col items-center mt-10 gap-4">
         <div className="flex items-center gap-3">
           <div className="flex -space-x-2">
-            {followerAvatars.map((src, i) => (
-              <img key={i} src={src} alt="" className="w-8 h-8 rounded-full border-2 border-card object-cover" />
+            {followerInitials.map((initials, i) => (
+              <div key={i} className="w-8 h-8 rounded-full border-2 border-card bg-primary/10 flex items-center justify-center text-primary font-bold text-[10px]">
+                {initials}
+              </div>
             ))}
           </div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">

@@ -120,6 +120,7 @@ const HeroSection = () => {
                       onClick={() => setSelectedColor(i === selectedColor ? null : i)}
                       onMouseEnter={() => setHoveredColor(i)}
                       onMouseLeave={() => setHoveredColor(null)}
+                      aria-label={`Filtrar por cor ${c.name}`}
                       className="w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center"
                       style={{
                         background: isOutros
