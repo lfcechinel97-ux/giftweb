@@ -1,43 +1,81 @@
 
 
-## Problema Identificado
+## Problema Raiz
 
-O Hero navega para `/categoria/garrafas-squeezes?cor=ROSA`. Na CategoryPage, quando há filtros ativos em uma spotlight category, o código faz:
+Existem **dois problemas** causando a discrepância (API mostra 51 copos rosa, site mostra quase nada):
 
-```
-.eq("categoria", "garrafas-squeezes")  // ← slug da spotlight, NÃO existe no campo categoria do banco
-```
+### Problema 1: Filtro `is_variante=false` elimina 45 de 46 resultados
+- No banco: 46 copos com `cor=ROSA`, mas **45 são variantes** e apenas **1 é pai**
+- O site filtra `is_variante=false` em todas as páginas, então só mostra 1 produto
+- **Solução**: Quando o filtro de cor estiver ativo, remover `is_variante=false` e mostrar cada variante como um card individual (cada uma tem cor e imagem própria)
 
-Mas os produtos têm `categoria = "garrafas"` ou `categoria = "copos"`, nunca `"garrafas-squeezes"`. Resultado: 0 produtos.
+### Problema 2: 4 produtos sem cor (campo vazio)
+- O sync usa `CorWebPrincipal` mas não tem fallback quando está vazio
+- **Solução**: No sync, quando `CorWebPrincipal` estiver vazio, extrair a cor das 3 letras após o traço no `CodigoComposto` (ex: `06520-AZU` → `AZU`) e mapear para o nome completo da cor
 
 ---
 
-## Solução
+## Plano de Implementação
 
-Quando filtros estão ativos em uma spotlight category, em vez de usar o slug como valor do campo `categoria`, buscar primeiro os product_ids da join table `product_spotlight_categories` e filtrar por eles.
+### 1. Edge Function `sync-products/index.ts`
 
-### Arquivo: `src/pages/CategoryPage.tsx`
+Adicionar função de fallback para cor:
 
-Alterar o bloco `hasActiveFilters` dentro de `isSpotlightCategory` (linhas ~94-121):
+```typescript
+const COR_ABREV: Record<string, string> = {
+  'AZU': 'AZUL', 'VRM': 'VERMELHO', 'VRD': 'VERDE', 'VD': 'VERDE',
+  'AMR': 'AMARELO', 'PRE': 'PRETO', 'BRA': 'BRANCO', 'ROS': 'ROSA',
+  'ROX': 'ROXO', 'LAR': 'LARANJA', 'CIN': 'CINZA', 'MAR': 'MARROM',
+  'DOU': 'DOURADO', 'PRA': 'PRATA', 'VIN': 'VINHO', 'GRA': 'GRAFITE',
+  'BEG': 'BEGE', 'PNK': 'ROSA', 'CHU': 'CHUMBO', 'MAD': 'MADEIRA',
+  'INX': 'INOX', 'TRA': 'TRANSPARENTE', 'KRA': 'KRAFT', 'BAM': 'BAMBU',
+  'BRO': 'BRONZE', 'RSE': 'ROSA', 'COB': 'COBRE',
+};
 
-1. Primeiro buscar o `category_id` da `spotlight_categories` (igual ao fluxo sem filtros)
-2. Buscar TODOS os `product_id` da `product_spotlight_categories` para aquela categoria (sem limit de 1000 — usar `.select("product_id").eq("category_id", catId)` com limit explícito alto, ex: 5000)
-3. Depois aplicar a query em `products_cache` com `.in("id", productIds)` + os filtros de cor, busca, estoque
-4. Remover o `.eq("categoria", category)` que é o causador do bug
-
-O fluxo fica idêntico ao sem filtros, mas adicionando os filtros de cor/busca/estoque na query final.
-
-### Detalhes técnicos
-
-```text
-Antes (bugado):
-  spotlight + filtro ativo → query products_cache WHERE categoria = 'garrafas-squeezes' AND cor IN ('ROSA')
-  → 0 resultados (categoria não existe)
-
-Depois (corrigido):
-  spotlight + filtro ativo → busca product_ids via join table → query products_cache WHERE id IN (...ids) AND cor IN ('ROSA')
-  → retorna produtos corretos
+function extrairCor(p: any): string | null {
+  // 1. Prioridade: CorWebPrincipal
+  const corWeb = (p.CorWebPrincipal ?? p.corWebPrincipal ?? "").trim().toUpperCase();
+  if (corWeb) return corWeb;
+  
+  // 2. Fallback: extrair do CodigoComposto (últimas letras após o último traço)
+  const codigo = p.CodigoComposto ?? p.codigoComposto ?? "";
+  const match = codigo.match(/-([A-Z]{2,4})(?:\/|$)/i);
+  if (match) {
+    const abrev = match[1].toUpperCase();
+    if (COR_ABREV[abrev]) return COR_ABREV[abrev];
+  }
+  return null;
+}
 ```
 
-Para lidar com o limite de 1000 rows do Supabase, a query de product_ids usará um range de 0-4999 (apenas IDs, payload pequeno).
+Na linha 219, trocar:
+```typescript
+// antes
+cor: p.CorWebPrincipal ?? p.corWebPrincipal ?? null,
+// depois
+cor: extrairCor(p),
+```
+
+### 2. CategoryPage.tsx — Remover `is_variante=false` quando cor está ativa
+
+Na query principal (linha ~105) e na query de cores (linha ~148):
+- Quando `selectedCor` estiver preenchido: **não** aplicar `.eq("is_variante", false)`
+- Quando sem filtro de cor: manter `.eq("is_variante", false)` (comportamento atual)
+
+Isso faz com que ao filtrar por ROSA, apareçam todos os 46 produtos rosa (pais + variantes), cada um com sua imagem e cor própria.
+
+### 3. AllProducts.tsx — Mesma lógica
+
+Aplicar a mesma regra: quando cor ativa, não filtrar `is_variante=false`.
+
+### 4. Resync necessário
+
+Após deploy do sync atualizado, será necessário rodar uma nova sincronização para que os 4 produtos sem cor recebam o valor correto via fallback do `CodigoComposto`.
+
+---
+
+## Arquivos a editar
+- `supabase/functions/sync-products/index.ts` — adicionar `extrairCor()` com fallback
+- `src/pages/CategoryPage.tsx` — condicional no filtro `is_variante`
+- `src/pages/AllProducts.tsx` — mesma condicional
 
