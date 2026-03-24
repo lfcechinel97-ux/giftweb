@@ -226,7 +226,11 @@ const Header = () => {
                 onMouseEnter={handleMegaEnter}
                 onMouseLeave={handleMegaLeave}
               >
-                <button className="flex items-center gap-1 px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+                <button
+                  aria-haspopup="true"
+                  aria-expanded={megaMenuOpen}
+                  className="flex items-center gap-1 px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200"
+                >
                   CATEGORIAS
                   <ChevronDown size={14} className={`transition-transform duration-200 ${megaMenuOpen ? "rotate-180" : ""}`} />
                 </button>
