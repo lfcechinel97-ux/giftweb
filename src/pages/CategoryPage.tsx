@@ -16,6 +16,43 @@ type Product = Tables<"products_cache">;
 
 const PAGE_SIZE = 20;
 
+// Maps spotlight slug → real products_cache.categoria values
+const SPOTLIGHT_TO_CATEGORIA: Record<string, string[]> = {
+  "copos-e-canecas": ["copos"],
+  "garrafas-e-squeezes": ["garrafas"],
+  "mochilas-e-sacochilas": ["mochilas"],
+  "bolsas": ["bolsas"],
+  "canetas": ["escritorio"],
+  "cadernetas": ["escritorio"],
+  "cadernos": ["escritorio"],
+  "blocos": ["escritorio"],
+  "agendas": ["escritorio"],
+  "kits": ["kits"],
+  "escritorio": ["escritorio"],
+  "sacolas": ["bolsas"],
+  "necessaires": ["bolsas"],
+  "estojos": ["bolsas"],
+  "pastas": ["bolsas"],
+  "malas": ["bolsas"],
+  "chaveiros": ["outros"],
+  "guarda-chuvas": ["outros"],
+  "pen-drives": ["outros"],
+  "power-banks": ["outros"],
+  "fones": ["outros"],
+  "mouse-pads": ["outros"],
+  "suportes": ["outros"],
+  "espelhos": ["outros"],
+  "porta-retratos": ["outros"],
+  "porta-joias": ["outros"],
+  "porta-objetos": ["outros"],
+  "cozinha-e-mesa": ["outros"],
+  "marmitas": ["outros"],
+  "toalhas": ["outros"],
+  "caixas-de-som": ["outros"],
+  "caixas-organizadoras": ["outros"],
+  "casa-e-decoracao": ["outros"],
+};
+
 const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const category = slug || "";
