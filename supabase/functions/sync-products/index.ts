@@ -70,6 +70,28 @@ function getCodigoPrefixo(codigoAmigavel: string, nome: string): string {
   return `${codigoAmigavel}|${normalizeNomeBase(nome)}`;
 }
 
+const COR_ABREV: Record<string, string> = {
+  'AZU': 'AZUL', 'VRM': 'VERMELHO', 'VRD': 'VERDE', 'VD': 'VERDE',
+  'AMR': 'AMARELO', 'PRE': 'PRETO', 'BRA': 'BRANCO', 'ROS': 'ROSA',
+  'ROX': 'ROXO', 'LAR': 'LARANJA', 'CIN': 'CINZA', 'MAR': 'MARROM',
+  'DOU': 'DOURADO', 'PRA': 'PRATA', 'VIN': 'VINHO', 'GRA': 'GRAFITE',
+  'BEG': 'BEGE', 'PNK': 'ROSA', 'CHU': 'CHUMBO', 'MAD': 'MADEIRA',
+  'INX': 'INOX', 'TRA': 'TRANSPARENTE', 'KRA': 'KRAFT', 'BAM': 'BAMBU',
+  'BRO': 'BRONZE', 'RSE': 'ROSA', 'COB': 'COBRE',
+};
+
+function extrairCor(p: any): string | null {
+  const corWeb = (p.CorWebPrincipal ?? p.corWebPrincipal ?? "").trim().toUpperCase();
+  if (corWeb) return corWeb;
+  const codigo = p.CodigoComposto ?? p.codigoComposto ?? "";
+  const match = codigo.match(/-([A-Z]{2,4})(?:\/|$)/i);
+  if (match) {
+    const abrev = match[1].toUpperCase();
+    if (COR_ABREV[abrev]) return COR_ABREV[abrev];
+  }
+  return null;
+}
+
 function getCategoria(nome: string): string {
   const n = nome.toUpperCase();
   if (n.includes('CANECA') || n.includes('COPO') || n.includes('TACA') || n.includes('TAÇA')) return 'copos';
