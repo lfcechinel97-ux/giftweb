@@ -88,10 +88,10 @@ const HeroSection = () => {
         {/* Filter panel */}
         <div className="lg:w-[36%] bg-card rounded-2xl border border-border px-4 py-5 lg:p-10 flex flex-col gap-4 lg:gap-5 shrink-0" style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}>
           <div>
-            <h2 className="font-black text-[24px] lg:text-[36px] leading-tight text-foreground">
+            <h1 className="font-black text-[24px] lg:text-[36px] leading-tight text-foreground">
               Explore nosso catálogo de<br />
               <span className="text-highlight">brindes:</span>
-            </h2>
+            </h1>
             <p className="text-muted-foreground text-xs mt-1.5 hidden lg:block">Filtre por categoria, preço e cor</p>
           </div>
 
@@ -120,6 +120,7 @@ const HeroSection = () => {
                       onClick={() => setSelectedColor(i === selectedColor ? null : i)}
                       onMouseEnter={() => setHoveredColor(i)}
                       onMouseLeave={() => setHoveredColor(null)}
+                      aria-label={`Filtrar por cor ${c.name}`}
                       className="w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center"
                       style={{
                         background: isOutros
@@ -167,7 +168,7 @@ const HeroSection = () => {
 
             return (
               <div key={i} className="absolute inset-0" style={{ opacity: i === currentSlide ? 1 : 0, transform: i === currentSlide ? "scale(1)" : "scale(1.03)", transition: "opacity 1.2s ease-in-out, transform 1.4s ease-in-out", pointerEvents: i === currentSlide ? "auto" : "none" }}>
-                <img src={bannerSrc} alt="Brindes corporativos personalizados" className="absolute inset-0 w-full h-full object-cover" />
+                <img src={bannerSrc} alt="Brindes corporativos personalizados" className="absolute inset-0 w-full h-full object-cover" width={800} height={400} loading={i === 0 ? "eager" : "lazy"} />
               </div>
             );
           })}

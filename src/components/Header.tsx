@@ -226,7 +226,11 @@ const Header = () => {
                 onMouseEnter={handleMegaEnter}
                 onMouseLeave={handleMegaLeave}
               >
-                <button className="flex items-center gap-1 px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+                <button
+                  aria-haspopup="true"
+                  aria-expanded={megaMenuOpen}
+                  className="flex items-center gap-1 px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200"
+                >
                   CATEGORIAS
                   <ChevronDown size={14} className={`transition-transform duration-200 ${megaMenuOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -283,6 +287,9 @@ const Header = () => {
 
       {/* ── MOBILE FULLSCREEN MENU ── */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu de navegação"
         className={`lg:hidden fixed inset-0 z-[100] bg-navy flex flex-col transition-opacity duration-300 ${
           mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}

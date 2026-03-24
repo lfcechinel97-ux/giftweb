@@ -120,7 +120,8 @@ const ClientsSection = () => {
               {logo?.value && (
                 <img
                   src={logo.value}
-                  alt={`Cliente ${i + 1}`}
+                  alt="Logo de cliente parceiro"
+                  loading="lazy"
                   style={{
                     height: '80px',
                     width: '100%',

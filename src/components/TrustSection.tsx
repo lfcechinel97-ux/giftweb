@@ -1,6 +1,3 @@
-import instaPost1 from "@/assets/insta-post-1.jpg";
-import instaPost2 from "@/assets/insta-post-2.jpg";
-import instaPost3 from "@/assets/insta-post-3.jpg";
 import instaPost4 from "@/assets/insta-post-4.jpg";
 import { Instagram, Play, ExternalLink, Users } from "lucide-react";
 
@@ -10,12 +7,7 @@ const posts = [
 { img: "/lovable-uploads/5314f0ec-d122-4966-8f45-6f959f97d9d3.png", caption: "Presenteie seus colaboradores com brindes que encantam e fazem a diferença no dia a dia!", isVideo: false },
 { img: instaPost4, caption: "Nos bastidores da produção: personalização de camisetas e uniformes", isVideo: true }];
 
-const followerAvatars = [
-"https://i.pravatar.cc/40?img=1",
-"https://i.pravatar.cc/40?img=2",
-"https://i.pravatar.cc/40?img=3",
-"https://i.pravatar.cc/40?img=4",
-"https://i.pravatar.cc/40?img=5"];
+const followerInitials = ["MC", "RA", "FO", "LS", "AP"];
 
 const TrustSection = () => (
   <section className="py-12 md:py-16 bg-secondary/30 border-t border-border">
@@ -65,6 +57,9 @@ const TrustSection = () => (
                 src={post.img}
                 alt={post.caption}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                loading="lazy"
+                width={400}
+                height={400}
               />
               {post.isVideo && (
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -94,8 +89,10 @@ const TrustSection = () => (
       <div className="flex flex-col items-center mt-10 gap-4">
         <div className="flex items-center gap-3">
           <div className="flex -space-x-2">
-            {followerAvatars.map((src, i) => (
-              <img key={i} src={src} alt="" className="w-8 h-8 rounded-full border-2 border-card object-cover" />
+            {followerInitials.map((initials, i) => (
+              <div key={i} className="w-8 h-8 rounded-full border-2 border-card bg-primary/10 flex items-center justify-center text-primary font-bold text-[10px]">
+                {initials}
+              </div>
             ))}
           </div>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground">

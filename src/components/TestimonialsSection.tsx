@@ -8,28 +8,28 @@ const testimonials = [
     name: "Mariana Costa",
     company: "Embraer",
     role: "Marketing",
-    photo: "https://i.pravatar.cc/80?img=32",
+    photo: "",
   },
   {
     text: "Qualidade excelente e atendimento diferenciado. Já fizemos mais de 10 pedidos e todos foram perfeitos.",
     name: "Ricardo Almeida",
     company: "Grupo XYZ",
     role: "Compras",
-    photo: "https://i.pravatar.cc/80?img=12",
+    photo: "",
   },
   {
     text: "Nosso evento corporativo foi um sucesso graças aos kits personalizados. Recomendo demais!",
     name: "Fernanda Oliveira",
     company: "Tech Corp Coach",
     role: "Eventos",
-    photo: "https://i.pravatar.cc/80?img=25",
+    photo: "",
   },
   {
     text: "Parceiros de confiança. Sempre entregam com qualidade e pontualidade, mesmo em grandes volumes.",
     name: "Lucas Santos",
     company: "StartUp Inc",
     role: "Diretoria",
-    photo: "https://i.pravatar.cc/80?img=53",
+    photo: "",
   },
 ];
 
@@ -122,11 +122,13 @@ const TestimonialCard = ({
     </p>
 
     <div className="border-t border-border pt-4 flex items-center gap-3">
-      <img
-        src={photo}
-        alt={name}
-        className="w-10 h-10 rounded-full object-cover border-2 border-border flex-shrink-0"
-      />
+      {photo ? (
+        <img src={photo} alt={name} className="w-10 h-10 rounded-full object-cover border-2 border-border flex-shrink-0" loading="lazy" />
+      ) : (
+        <div className="w-10 h-10 rounded-full bg-primary/10 border-2 border-border flex-shrink-0 flex items-center justify-center text-primary font-bold text-sm">
+          {name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+        </div>
+      )}
       <div>
         <p className="font-semibold text-foreground text-sm leading-tight">{name}</p>
         <p className="text-primary text-[11px] mt-0.5">{role} · {company}</p>
