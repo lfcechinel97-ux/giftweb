@@ -15,7 +15,7 @@ const testimonials = [
     name: "Ricardo Almeida",
     company: "Grupo XYZ",
     role: "Compras",
-    photo: "https://i.pravatar.cc/80?img=12",
+    photo: "",
   },
   {
     text: "Nosso evento corporativo foi um sucesso graças aos kits personalizados. Recomendo demais!",
