@@ -29,7 +29,7 @@ const testimonials = [
     name: "Lucas Santos",
     company: "StartUp Inc",
     role: "Diretoria",
-    photo: "https://i.pravatar.cc/80?img=53",
+    photo: "",
   },
 ];
 
