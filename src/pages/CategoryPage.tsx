@@ -101,8 +101,12 @@ const CategoryPage = () => {
       .select("*", { count: "exact" })
       .in("id", productIds)
       .eq("ativo", true)
-      .eq("has_image", true)
-      .eq("is_variante", false);
+      .eq("has_image", true);
+
+    // Only filter out variants when no color filter is active
+    if (!selectedCor) {
+      query = query.eq("is_variante", false);
+    }
 
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
     if (selectedCor) {
