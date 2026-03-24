@@ -182,10 +182,28 @@ const CategoryPage = () => {
     setLoading(false);
   }, [category, page, searchTerm, selectedCor, apenasEstoque, sortBy]);
 
-  // Fetch available colors for filters
+  // Fetch available colors for filters — use direct category when mapping exists
   useEffect(() => {
     if (!category) return;
     (async () => {
+      const categoriasReais = SPOTLIGHT_TO_CATEGORIA[category];
+
+      if (categoriasReais) {
+        // Direct query on products_cache by real categoria values
+        const { data } = await supabase
+          .from("products_cache")
+          .select("cor")
+          .in("categoria", categoriasReais)
+          .eq("ativo", true)
+          .eq("has_image", true)
+          .not("cor", "is", null);
+
+        const unique = [...new Set((data || []).map((d) => d.cor).filter(Boolean))] as string[];
+        setCores(unique.sort());
+        return;
+      }
+
+      // Fallback: use join table
       const { data: catData } = await supabase
         .from("spotlight_categories")
         .select("id")
