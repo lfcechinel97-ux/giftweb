@@ -40,7 +40,8 @@ const AllProducts = () => {
     const from = (page - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
-    let query = supabase.from("products_cache").select("*", { count: "exact" }).eq("ativo", true).eq("has_image", true).eq("is_variante", false);
+    let query = supabase.from("products_cache").select("*", { count: "exact" }).eq("ativo", true).eq("has_image", true);
+    if (!selectedCor) query = query.eq("is_variante", false);
     if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
     if (selectedCor) {
       const corValues = selectedCor.split(",").map(v => v.trim().toUpperCase()).filter(Boolean);
