@@ -88,10 +88,10 @@ const HeroSection = () => {
         {/* Filter panel */}
         <div className="lg:w-[36%] bg-card rounded-2xl border border-border px-4 py-5 lg:p-10 flex flex-col gap-4 lg:gap-5 shrink-0" style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}>
           <div>
-            <h2 className="font-black text-[24px] lg:text-[36px] leading-tight text-foreground">
+            <h1 className="font-black text-[24px] lg:text-[36px] leading-tight text-foreground">
               Explore nosso catálogo de<br />
               <span className="text-highlight">brindes:</span>
-            </h2>
+            </h1>
             <p className="text-muted-foreground text-xs mt-1.5 hidden lg:block">Filtre por categoria, preço e cor</p>
           </div>
 
