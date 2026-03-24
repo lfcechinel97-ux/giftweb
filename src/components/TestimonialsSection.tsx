@@ -22,7 +22,7 @@ const testimonials = [
     name: "Fernanda Oliveira",
     company: "Tech Corp Coach",
     role: "Eventos",
-    photo: "https://i.pravatar.cc/80?img=25",
+    photo: "",
   },
   {
     text: "Parceiros de confiança. Sempre entregam com qualidade e pontualidade, mesmo em grandes volumes.",
