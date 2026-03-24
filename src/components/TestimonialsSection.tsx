@@ -8,7 +8,7 @@ const testimonials = [
     name: "Mariana Costa",
     company: "Embraer",
     role: "Marketing",
-    photo: "https://i.pravatar.cc/80?img=32",
+    photo: "",
   },
   {
     text: "Qualidade excelente e atendimento diferenciado. Já fizemos mais de 10 pedidos e todos foram perfeitos.",
