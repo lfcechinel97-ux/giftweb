@@ -238,7 +238,7 @@ serve(async (req) => {
         image_urls: imageUrls.length > 0 ? imageUrls : null,
         has_image: hasImage,
         site_link: p.SiteLink ?? p.siteLink ?? null,
-        cor: p.CorWebPrincipal ?? p.corWebPrincipal ?? null,
+        cor: extrairCor(p),
         categoria: getCategoria(nome),
         marca: p.Marca ?? p.marca ?? "XBZ",
         preco_custo: parseFloat(p.PrecoVenda ?? p.precoVenda ?? "0") || 0,

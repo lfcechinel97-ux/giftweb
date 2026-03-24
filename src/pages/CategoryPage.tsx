@@ -148,7 +148,6 @@ const CategoryPage = () => {
         .in("id", productIds)
         .eq("ativo", true)
         .eq("has_image", true)
-        .eq("is_variante", false)
         .not("cor", "is", null);
 
       const unique = [...new Set((data || []).map((d) => d.cor).filter(Boolean))] as string[];
