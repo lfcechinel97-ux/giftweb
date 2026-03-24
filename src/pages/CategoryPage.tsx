@@ -82,8 +82,9 @@ const CategoryPage = () => {
       setProducts([]);
       setTotal(0);
     } else if (data) {
-      setProducts(data.rows || []);
-      setTotal(data.total_count || 0);
+      const result = data as unknown as { rows: any[]; total_count: number };
+      setProducts(result.rows || []);
+      setTotal(result.total_count || 0);
     }
     setLoading(false);
   }, [category, page, searchTerm, selectedCor, apenasEstoque, sortBy]);
