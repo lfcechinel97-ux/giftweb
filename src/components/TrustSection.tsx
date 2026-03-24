@@ -10,12 +10,7 @@ const posts = [
 { img: "/lovable-uploads/5314f0ec-d122-4966-8f45-6f959f97d9d3.png", caption: "Presenteie seus colaboradores com brindes que encantam e fazem a diferença no dia a dia!", isVideo: false },
 { img: instaPost4, caption: "Nos bastidores da produção: personalização de camisetas e uniformes", isVideo: true }];
 
-const followerAvatars = [
-"https://i.pravatar.cc/40?img=1",
-"https://i.pravatar.cc/40?img=2",
-"https://i.pravatar.cc/40?img=3",
-"https://i.pravatar.cc/40?img=4",
-"https://i.pravatar.cc/40?img=5"];
+const followerInitials = ["MC", "RA", "FO", "LS", "AP"];
 
 const TrustSection = () => (
   <section className="py-12 md:py-16 bg-secondary/30 border-t border-border">
