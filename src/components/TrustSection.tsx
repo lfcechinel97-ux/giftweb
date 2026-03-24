@@ -1,6 +1,3 @@
-import instaPost1 from "@/assets/insta-post-1.jpg";
-import instaPost2 from "@/assets/insta-post-2.jpg";
-import instaPost3 from "@/assets/insta-post-3.jpg";
 import instaPost4 from "@/assets/insta-post-4.jpg";
 import { Instagram, Play, ExternalLink, Users } from "lucide-react";
 
