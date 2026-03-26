@@ -29,11 +29,12 @@ const ClientsSection = () => {
   const { ref: sectionRef, inView } = useInView(0.1);
 
   useEffect(() => {
+    const clientRows = rows.filter(r => r.section === "clientes");
     const dbLogos = clientRows
       .filter(r => r.value)
       .map(r => ({ value: r.value! }));
     if (dbLogos.length > 0) setLogos(dbLogos);
-  }, [clientRows]);
+  }, [rows]);
 
   useEffect(() => {
     const interval = setInterval(() => {
