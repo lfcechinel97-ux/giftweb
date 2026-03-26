@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
 import { Slider } from "@/components/ui/slider";
+import { useMaxPrice } from "@/hooks/useMaxPrice";
 
 const PRICE_MIN_LIMIT = 0;
-const PRICE_MAX_LIMIT = 1000;
 const BANNER_DESK_BASE_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_desk.png";
 const BANNER_MOB_BASE_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_mob.png";
 const BANNER_DESK_VERSION = "20260321035400981";
