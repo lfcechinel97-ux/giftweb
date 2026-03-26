@@ -177,9 +177,11 @@ const HeroSection = () => {
                   alt="Brindes corporativos personalizados"
                   className="absolute inset-0 w-full h-full object-cover"
                   width={800}
-                  height={400}
+                  height={450}
                   loading={i === 0 ? "eager" : "lazy"}
-                  {...(i === 0 ? { fetchPriority: "high" as const } : {})}
+                  fetchPriority={i === 0 ? "high" : "low"}
+                  decoding={i === 0 ? "sync" : "async"}
+                  style={{ aspectRatio: "16/9" }}
                 />
               </div>
             );
