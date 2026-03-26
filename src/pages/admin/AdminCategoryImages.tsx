@@ -6,17 +6,17 @@ import { Upload, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const categories = [
-  { key: "garrafas", label: "Garrafas Térmicas" },
-  { key: "canecas", label: "Copos e Canecas" },
-  { key: "mochilas", label: "Mochilas" },
-  { key: "bolsas", label: "Bolsas e Sacolas" },
-  { key: "squeezes", label: "Squeezes" },
-  { key: "escritorio", label: "Material de Escritório" },
+  { key: "garrafas-e-squeezes", label: "Garrafas e Squeezes" },
+  { key: "copos-e-canecas", label: "Copos e Canecas" },
+  { key: "mochilas-e-sacochilas", label: "Mochilas e Sacochilas" },
   { key: "kits", label: "Kits Corporativos" },
+  { key: "bolsas", label: "Bolsas e Sacolas" },
+  { key: "canetas", label: "Canetas" },
+  { key: "chaveiros", label: "Chaveiros" },
 ];
 
 export default function AdminCategoryImages() {
-  const { rows, loading, updateValue, uploadImage, refetch } = useSiteContent("categorias");
+  const { rows, loading, upsertValue, uploadImage, refetch } = useSiteContent("categorias");
   const [files, setFiles] = useState<Record<string, { file: File; preview: string }>>({});
   const [links, setLinks] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -36,12 +36,12 @@ export default function AdminCategoryImages() {
         const fileState = files[cat.key];
         if (fileState) {
           const url = await uploadImage(`cat_img_${cat.key}`, fileState.file);
-          await updateValue(`cat_img_${cat.key}`, url);
+          await upsertValue(`cat_img_${cat.key}`, url, "categorias");
         }
 
         const linkVal = links[cat.key];
         if (linkVal !== undefined) {
-          await updateValue(`cat_link_${cat.key}`, linkVal);
+          await upsertValue(`cat_link_${cat.key}`, linkVal, "categorias");
         }
       }
 
