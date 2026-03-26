@@ -168,7 +168,7 @@ const HeroSection = () => {
             const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
             const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);
             const dynamicSrc = (isMobile && mobRow?.value) ? mobRow.value : (deskRow?.value || null);
-            const bannerSrc = dynamicSrc || heroBanner;
+            const bannerSrc = dynamicSrc || (isMobile ? heroBannerMob : heroBannerDesk);
             const isActive = i === currentSlide;
 
             return (
