@@ -119,6 +119,9 @@ const Footer = () => {
               <img
                 src="/logos/formaspags.png"
                 alt="Formas de pagamento aceitas"
+                loading="lazy"
+                width={220}
+                height={40}
                 className="w-full max-w-[220px] object-contain"
               />
             </div>
