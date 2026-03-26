@@ -117,7 +117,7 @@ const Footer = () => {
             <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Formas de pagamento</h4>
             <div className="flex items-center justify-center mb-6">
               <img
-                src="/logos/formaspags.png"
+                src="/logos/formaspags.webp"
                 alt="Formas de pagamento aceitas"
                 loading="lazy"
                 width={220}
