@@ -96,8 +96,10 @@ const HeroSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchText] = useState("");
   const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, maxPriceLimit]);
+  const [sliderRange, setSliderRange] = useState<[number, number]>([0, SLIDER_INTERNAL_MAX]);
   const [precoMin, setPrecoMin] = useState(String(PRICE_MIN_LIMIT));
   const [precoMax, setPrecoMax] = useState(String(maxPriceLimit));
+  const [activeQuickFilter, setActiveQuickFilter] = useState<number | null>(null);
   const touchStart = useRef(0);
   const navigate = useNavigate();
 
@@ -118,35 +120,65 @@ const HeroSection = () => {
   // Sync state when dynamic max loads
   useEffect(() => {
     setPriceRange([PRICE_MIN_LIMIT, maxPriceLimit]);
+    setSliderRange([0, SLIDER_INTERNAL_MAX]);
     setPrecoMin(String(PRICE_MIN_LIMIT));
     setPrecoMax(String(maxPriceLimit));
+    setActiveQuickFilter(null);
   }, [maxPriceLimit]);
 
-  const syncPriceRange = useCallback((nextMin: number, nextMax: number) => {
-    const clampedMin = clampPrice(Math.min(nextMin, nextMax), maxPriceLimit);
-    const clampedMax = clampPrice(Math.max(nextMin, nextMax), maxPriceLimit);
-
+  const syncFromPrices = useCallback((minP: number, maxP: number) => {
+    const clampedMin = clampPrice(Math.min(minP, maxP), maxPriceLimit);
+    const clampedMax = clampPrice(Math.max(minP, maxP), maxPriceLimit);
     setPriceRange([clampedMin, clampedMax]);
+    setSliderRange([priceToSlider(clampedMin, maxPriceLimit), priceToSlider(clampedMax, maxPriceLimit)]);
     setPrecoMin(String(clampedMin));
     setPrecoMax(String(clampedMax));
+    // Check if matches a quick filter
+    if (clampedMin === 0) {
+      const match = quickFilters.find(f => f.value !== null && f.value === clampedMax);
+      setActiveQuickFilter(match ? match.value : (clampedMax === maxPriceLimit ? -1 : null));
+    } else {
+      setActiveQuickFilter(null);
+    }
   }, [maxPriceLimit]);
 
-  const handlePriceRangeChange = useCallback((values: number[]) => {
-    const [nextMin = PRICE_MIN_LIMIT, nextMax = maxPriceLimit] = values;
-    syncPriceRange(nextMin, nextMax);
-  }, [syncPriceRange, maxPriceLimit]);
+  const handleSliderChange = useCallback((values: number[]) => {
+    const [sMin = 0, sMax = SLIDER_INTERNAL_MAX] = values;
+    setSliderRange([sMin, sMax]);
+    const pMin = sliderToPrice(sMin, maxPriceLimit);
+    const pMax = sliderToPrice(sMax, maxPriceLimit);
+    setPriceRange([pMin, pMax]);
+    setPrecoMin(String(pMin));
+    setPrecoMax(String(pMax));
+    // Check quick filter match
+    if (pMin === 0) {
+      const match = quickFilters.find(f => f.value !== null && f.value === pMax);
+      setActiveQuickFilter(match ? match.value : (pMax === maxPriceLimit ? -1 : null));
+    } else {
+      setActiveQuickFilter(null);
+    }
+  }, [maxPriceLimit]);
 
   const handlePriceInputChange = useCallback((field: "min" | "max", value: string) => {
     const sanitized = value.replace(/\D/g, "");
     const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : maxPriceLimit) : Number(sanitized), maxPriceLimit);
-
     if (field === "min") {
-      syncPriceRange(parsedValue, priceRange[1]);
-      return;
+      syncFromPrices(parsedValue, priceRange[1]);
+    } else {
+      syncFromPrices(priceRange[0], parsedValue);
     }
+  }, [priceRange, syncFromPrices, maxPriceLimit]);
 
-    syncPriceRange(priceRange[0], parsedValue);
-  }, [priceRange, syncPriceRange, maxPriceLimit]);
+  const handleQuickFilter = useCallback((value: number | null) => {
+    if (value === null) {
+      // "Todos"
+      syncFromPrices(0, maxPriceLimit);
+      setActiveQuickFilter(-1);
+    } else {
+      syncFromPrices(0, value);
+      setActiveQuickFilter(value);
+    }
+  }, [syncFromPrices, maxPriceLimit]);
 
   const handleSearch = () => {
     const q = searchText.trim();
