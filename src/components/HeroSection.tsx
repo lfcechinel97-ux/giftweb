@@ -59,13 +59,6 @@ const HeroSection = () => {
   const { getBySection } = useSiteContentContext();
   const bannerRows = getBySection("banners");
   const maxPriceLimit = useMaxPrice();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, []);
 
   const [selectedColor, setSelectedColor] = useState<number | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
