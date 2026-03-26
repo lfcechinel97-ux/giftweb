@@ -19,6 +19,8 @@ const AllProducts = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
   const urlCor = searchParams.get("cor") || "";
+  const urlPrecoMin = searchParams.get("preco_min") || "";
+  const urlPrecoMax = searchParams.get("preco_max") || "";
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
