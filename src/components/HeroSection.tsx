@@ -102,6 +102,7 @@ const HeroSection = () => {
   const [precoMax, setPrecoMax] = useState(String(effectiveMax));
   const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
   const touchStart = useRef(0);
+  const prevSliderRef = useRef<[number, number]>([0, SLIDER_INTERNAL_MAX]);
   const navigate = useNavigate();
 
   const nextSlide = useCallback(() => setCurrentSlide((prev) => (prev + 1) % slides.length), []);
