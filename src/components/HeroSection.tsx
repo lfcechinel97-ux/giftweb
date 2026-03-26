@@ -183,32 +183,34 @@ const HeroSection = () => {
             <div className="flex flex-wrap gap-1.5 mb-2.5 items-end">
               {quickFilters.map((f) => {
                 const isActive = activeQuickFilter === f.label;
-                return (
+                const btn = (
                   <button
                     key={f.label}
                     onClick={() => handleQuickFilter(f)}
-                    className={`px-3 rounded-lg text-xs font-medium border transition-all duration-200 ${
+                    className={`px-3 py-1 rounded-lg text-xs font-medium border transition-all duration-200 ${
                       isActive
                         ? "bg-primary text-primary-foreground border-primary"
                         : f.highlight
                           ? "bg-card text-muted-foreground hover:border-[#F59E0B]/70"
                           : "bg-card text-muted-foreground border-border hover:border-primary/50"
-                    } ${f.highlight ? "flex flex-col items-center py-1" : "py-1"}`}
+                    }`}
                     style={f.highlight && !isActive ? { borderColor: "rgba(245,158,11,0.5)" } : undefined}
                   >
-                    {f.highlight ? (
-                      <>
-                        <span className="flex items-center gap-1">
-                          <Medal size={12} color="#F59E0B" />
-                          {f.label}
-                        </span>
-                        <span className="text-[10px] italic leading-none" style={{ color: "#F59E0B" }}>mais pedido</span>
-                      </>
-                    ) : (
-                      f.label
-                    )}
+                    {f.label}
                   </button>
                 );
+                if (f.highlight) {
+                  return (
+                    <div key={f.label} className="relative">
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 flex items-center gap-0.5 mb-0.5 pointer-events-none">
+                        <Medal size={12} color="#F59E0B" />
+                        <span className="text-[10px] italic whitespace-nowrap" style={{ color: "#F59E0B" }}>mais pedido</span>
+                      </div>
+                      {btn}
+                    </div>
+                  );
+                }
+                return btn;
               })}
             </div>
             <div className="flex gap-2">
