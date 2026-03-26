@@ -19,8 +19,7 @@ const defaultLogos = [
 ];
 
 const ClientsSection = () => {
-  const { getBySection } = useSiteContentContext();
-  const clientRows = getBySection("clientes");
+  const { rows } = useSiteContentContext();
   const [logos, setLogos] = useState(defaultLogos);
   const [index, setIndex] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
