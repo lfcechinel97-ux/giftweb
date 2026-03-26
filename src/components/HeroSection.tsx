@@ -124,27 +124,16 @@ const HeroSection = () => {
     const em = Math.min(maxPriceLimit, FIXED_MAX);
     setPriceRange([PRICE_MIN_LIMIT, em]);
     setSliderRange([0, SLIDER_INTERNAL_MAX]);
+    prevSliderRef.current = [0, SLIDER_INTERNAL_MAX];
     setPrecoMin(String(PRICE_MIN_LIMIT));
     setPrecoMax(String(em));
     setActiveQuickFilter(null);
   }, [maxPriceLimit]);
 
-  const syncFromPrices = useCallback((minP: number, maxP: number) => {
+  const applySliderState = useCallback((sMin: number, sMax: number) => {
     const em = Math.min(maxPriceLimit, FIXED_MAX);
-    const clampedMin = clampPrice(Math.min(minP, maxP), em);
-    const clampedMax = clampPrice(Math.max(minP, maxP), em);
-    setPriceRange([clampedMin, clampedMax]);
-    setSliderRange([priceToSlider(clampedMin, em), priceToSlider(clampedMax, em)]);
-    setPrecoMin(String(clampedMin));
-    setPrecoMax(String(clampedMax));
-    const match = quickFilters.find(f => f.min === clampedMin && f.max === clampedMax);
-    setActiveQuickFilter(match ? match.label : null);
-  }, [maxPriceLimit]);
-
-  const handleSliderChange = useCallback((values: number[]) => {
-    const em = Math.min(maxPriceLimit, FIXED_MAX);
-    const [sMin = 0, sMax = SLIDER_INTERNAL_MAX] = values;
     setSliderRange([sMin, sMax]);
+    prevSliderRef.current = [sMin, sMax];
     const pMin = sliderToPrice(sMin, em);
     const pMax = sliderToPrice(sMax, em);
     setPriceRange([pMin, pMax]);
@@ -153,6 +142,34 @@ const HeroSection = () => {
     const match = quickFilters.find(f => f.min === pMin && f.max === pMax);
     setActiveQuickFilter(match ? match.label : null);
   }, [maxPriceLimit]);
+
+  const syncFromPrices = useCallback((minP: number, maxP: number) => {
+    const em = Math.min(maxPriceLimit, FIXED_MAX);
+    const clampedMin = clampPrice(Math.min(minP, maxP), em);
+    const clampedMax = clampPrice(Math.max(minP, maxP), em);
+    applySliderState(priceToSlider(clampedMin, em), priceToSlider(clampedMax, em));
+  }, [maxPriceLimit, applySliderState]);
+
+  const handleSliderChange = useCallback((values: number[]) => {
+    let [sMin = 0, sMax = SLIDER_INTERNAL_MAX] = values;
+    const [prevMin, prevMax] = prevSliderRef.current;
+
+    const deltaMin = Math.abs(sMin - prevMin);
+    const deltaMax = Math.abs(sMax - prevMax);
+
+    // Detect thumb swap: if min jumped a lot but max barely moved,
+    // Radix captured the wrong thumb — fix by keeping min and moving max
+    if (deltaMin > 30 && deltaMax < 10) {
+      sMax = sMin > prevMax ? sMin : Math.max(sMin, sMax);
+      sMin = prevMin;
+    } else if (deltaMax > 30 && deltaMin < 10) {
+      sMin = sMax < prevMin ? sMax : Math.min(sMin, sMax);
+      sMax = prevMax;
+    }
+
+    if (sMin > sMax) [sMin, sMax] = [sMax, sMin];
+    applySliderState(sMin, sMax);
+  }, [applySliderState]);
 
   const handlePriceInputChange = useCallback((field: "min" | "max", value: string) => {
     const em = Math.min(maxPriceLimit, FIXED_MAX);
