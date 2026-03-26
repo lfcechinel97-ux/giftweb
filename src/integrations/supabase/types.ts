@@ -370,33 +370,63 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calc_display_price: { Args: { p_preco_custo: number }; Returns: number }
       get_category_colors: {
         Args: { p_category_slug: string }
         Returns: string[]
       }
-      search_products_by_category: {
-        Args: {
-          p_apenas_estoque?: boolean
-          p_category_slug: string
-          p_cor?: string[]
-          p_page?: number
-          p_page_size?: number
-          p_search?: string
-          p_sort?: string
-        }
-        Returns: Json
-      }
-      search_products_global: {
-        Args: {
-          p_apenas_estoque?: boolean
-          p_cor?: string[]
-          p_page?: number
-          p_page_size?: number
-          p_search?: string
-          p_sort?: string
-        }
-        Returns: Json
-      }
+      search_products_by_category:
+        | {
+            Args: {
+              p_apenas_estoque?: boolean
+              p_category_slug: string
+              p_cor?: string[]
+              p_page?: number
+              p_page_size?: number
+              p_search?: string
+              p_sort?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_apenas_estoque?: boolean
+              p_category_slug: string
+              p_cor?: string[]
+              p_page?: number
+              p_page_size?: number
+              p_preco_max?: number
+              p_preco_min?: number
+              p_search?: string
+              p_sort?: string
+            }
+            Returns: Json
+          }
+      search_products_global:
+        | {
+            Args: {
+              p_apenas_estoque?: boolean
+              p_cor?: string[]
+              p_page?: number
+              p_page_size?: number
+              p_search?: string
+              p_sort?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_apenas_estoque?: boolean
+              p_cor?: string[]
+              p_page?: number
+              p_page_size?: number
+              p_preco_max?: number
+              p_preco_min?: number
+              p_search?: string
+              p_sort?: string
+            }
+            Returns: Json
+          }
       set_variantes_por_prefixo: { Args: never; Returns: undefined }
     }
     Enums: {
