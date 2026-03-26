@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef, TouchEvent } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import heroBanner from "@/assets/hero-banner.webp";
+// Use the same URL as the HTML preload to avoid double-download
+const heroBanner = "/hero-banner.webp";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
 
