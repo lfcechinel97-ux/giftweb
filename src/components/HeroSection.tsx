@@ -51,6 +51,7 @@ const HeroSection = () => {
   const { data: categories, isLoading: categoriesLoading } = useBaseCategories();
   const { getBySection } = useSiteContentContext();
   const bannerRows = getBySection("banners");
+  const maxPriceLimit = useMaxPrice();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -64,9 +65,9 @@ const HeroSection = () => {
   const [hoveredColor, setHoveredColor] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchText] = useState("");
-  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, PRICE_MAX_LIMIT]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, maxPriceLimit]);
   const [precoMin, setPrecoMin] = useState(String(PRICE_MIN_LIMIT));
-  const [precoMax, setPrecoMax] = useState(String(PRICE_MAX_LIMIT));
+  const [precoMax, setPrecoMax] = useState(String(maxPriceLimit));
   const touchStart = useRef(0);
   const navigate = useNavigate();
 
