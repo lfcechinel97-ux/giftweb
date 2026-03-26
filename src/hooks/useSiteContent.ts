@@ -65,7 +65,7 @@ export function useSiteContent(section?: string) {
       .from('site-images')
       .getPublicUrl(path);
 
-    return urlData.publicUrl + '?t=' + Date.now();
+    return urlData.publicUrl;
   };
 
   return { rows, loading, refetch: fetch, updateValue, upsertValue, uploadImage };
