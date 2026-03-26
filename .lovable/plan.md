@@ -1,59 +1,54 @@
 
+Objetivo: corrigir somente o bug do handle direito no filtro de preço do HeroSection, sem mexer no layout geral nem nas demais funcionalidades.
 
-# Plano: Corrigir CMS de Imagens + Filtro is_hidden
+1. Confirmar e atacar a causa real
+- O slider atual usa `@radix-ui/react-slider` em `src/components/ui/slider.tsx` e é consumido em `src/components/HeroSection.tsx`.
+- O problema não é “dois inputs range empilhados”; hoje não há `input type="range"` no projeto.
+- A falha está na lógica controlada do range: o `HeroSection` só recebe o array final em `handleSliderChange`, mas não preserva explicitamente qual thumb o usuário pretendia mover. Com faixa não linear e thumbs próximos, o valor mínimo pode “capturar” a interação do máximo.
 
-## Dois problemas distintos
+2. Ajuste planejado no HeroSection
+- Adicionar estado/ref para rastrear qual thumb está ativo: `min` ou `max`.
+- No início da interação (pointer/touch down na área do slider), calcular qual thumb está mais próximo do ponto tocado/clicado.
+- Se os dois estiverem muito próximos, usar a direção do movimento para desempatar:
+  - arrasto para a direita prioriza o thumb máximo
+  - arrasto para a esquerda prioriza o thumb mínimo
+- Ao receber `onValueChange`, reconciliar os valores preservando o thumb ativo, em vez de aceitar cegamente a troca de posição do array.
 
-### Problema 1: Imagens de categoria não aparecem no site
-O banco tem chaves antigas (`cat_img_garrafas`, `cat_img_canecas`, `cat_img_mochilas`...) mas o frontend busca por chaves novas (`cat_img_garrafas-e-squeezes`, `cat_img_copos-e-canecas`, `cat_img_mochilas-e-sacochilas`...). Nunca encontra nada.
+3. Pequeno ajuste no componente Slider reutilizável
+- Expor metadados/handlers necessários no `src/components/ui/slider.tsx` para permitir:
+  - identificar cada thumb (`data-thumb-index`)
+  - capturar início da interação no track/root
+  - manter visual atual das bolinhas
+- Não alterar o desenho do slider; apenas instrumentar a interação.
 
-### Problema 2: Produtos ocultos aparecem na busca e categorias
-As RPCs `search_products_global` e `search_products_by_category` não filtram `is_hidden = true`. O admin marca como oculto, mas o produto continua visível em todo o site.
+4. Regra de comportamento que será implementada
+- O handle direito nunca poderá mover o esquerdo.
+- O handle esquerdo nunca poderá “pular” para a posição do direito.
+- Quando o usuário clicar/arrastar perto do handle máximo, a atualização deve atuar no máximo.
+- Quando clicar/arrastar perto do mínimo, deve atuar no mínimo.
+- Continuar respeitando:
+  - range duplo
+  - preenchimento verde entre handles
+  - inputs manuais sincronizados
+  - quick filters
+  - teto atual de R$400
+  - URL com `preco_min` e `preco_max`
 
----
+5. Arquivos a alterar
+- `src/components/HeroSection.tsx`
+  - corrigir a lógica de captura/prioridade do thumb
+  - preservar sincronização com inputs e atalhos
+- `src/components/ui/slider.tsx`
+  - adicionar suporte mínimo para identificação/início da interação sem mudar visual
 
-## Solução
+6. Resultado esperado
+- Ao tentar arrastar a bolinha da direita, a esquerda não irá mais até lá.
+- O usuário conseguirá mexer no preço máximo de forma previsível, inclusive quando os handles estiverem próximos.
+- O visual atual do HeroSection permanece igual.
 
-### 1. Migration SQL — Migrar chaves antigas + adicionar filtro is_hidden nas RPCs
-
-**Migrar dados existentes:**
-```sql
-INSERT INTO site_content (id, value, type, section)
-SELECT 'cat_img_garrafas-e-squeezes', value, type, section 
-FROM site_content WHERE id = 'cat_img_garrafas'
-ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value;
--- Repetir para: canecas→copos-e-canecas, mochilas→mochilas-e-sacochilas, squeezes→garrafas-e-squeezes (merge), escritorio→canetas, etc.
-```
-
-**Atualizar as 3 RPCs** para adicionar `AND (pc.is_hidden IS NULL OR pc.is_hidden = false)`:
-- `search_products_global`
-- `search_products_by_category`
-- `get_category_colors`
-
-### 2. `src/components/CategoriesSection.tsx` — Fallback para chaves antigas
-
-Na função `getContentValue`, se não encontrar `cat_img_garrafas-e-squeezes`, tentar `cat_img_garrafas` como fallback. Isso garante que funcione durante a transição.
-
-### 3. `src/hooks/useSiteContent.ts` — Carregar todas as rows de categorias
-
-O hook filtra por `section = 'categorias'`, mas as chaves novas (salvas pelo admin atualizado) e as antigas coexistem. Garantir que o fetch traz ambas.
-
-### 4. Homepage queries — Filtrar is_hidden
-
-Revisar `useHomepageData.ts` para adicionar `.neq('is_hidden', true)` nas queries de destaques e mais vendidos.
-
----
-
-## Arquivos a editar
-
-| Arquivo | Mudança |
-|---------|---------|
-| **Migration SQL** | Copiar chaves antigas → novas + recriar 3 RPCs com filtro `is_hidden` |
-| `src/components/CategoriesSection.tsx` | Fallback para chaves antigas no `getContentValue` |
-| `src/hooks/useHomepageData.ts` | Adicionar `.neq('is_hidden', true)` em todas as queries |
-
-## Resultado
-- Imagens editadas no admin aparecem imediatamente no site
-- Produtos ocultos no admin desaparecem de busca, categorias e homepage
-- Compatibilidade com dados antigos preservada via fallback
-
+7. Validação que farei na implementação
+- Arrastar só o thumb direito com thumbs afastados
+- Arrastar só o thumb direito com thumbs próximos
+- Arrastar só o thumb esquerdo
+- Clicar nos atalhos e depois ajustar manualmente no slider
+- Confirmar que a busca continua navegando com `preco_min` e `preco_max`
