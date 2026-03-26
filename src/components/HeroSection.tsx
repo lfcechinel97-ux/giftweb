@@ -94,11 +94,13 @@ const HeroSection = () => {
   const [hoveredColor, setHoveredColor] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchText] = useState("");
-  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, maxPriceLimit]);
+  const FIXED_MAX = 400;
+  const effectiveMax = Math.min(maxPriceLimit, FIXED_MAX);
+  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, effectiveMax]);
   const [sliderRange, setSliderRange] = useState<[number, number]>([0, SLIDER_INTERNAL_MAX]);
   const [precoMin, setPrecoMin] = useState(String(PRICE_MIN_LIMIT));
-  const [precoMax, setPrecoMax] = useState(String(maxPriceLimit));
-  const [activeQuickFilter, setActiveQuickFilter] = useState<number | null>(null);
+  const [precoMax, setPrecoMax] = useState(String(effectiveMax));
+  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
   const touchStart = useRef(0);
   const navigate = useNavigate();
 
