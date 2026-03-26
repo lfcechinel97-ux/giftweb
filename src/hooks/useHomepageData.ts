@@ -53,6 +53,7 @@ async function fetchHomepageData() {
       .eq("ativo", true)
       .eq("has_image", true)
       .eq("is_variante", false)
+      .neq("is_hidden", true)
       .gt("estoque", 0)
       .order("updated_at", { ascending: false })
       .range(randomOffset, randomOffset + 7),
