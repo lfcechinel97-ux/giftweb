@@ -126,7 +126,7 @@ const HeroSection = () => {
     if (q) params.set("q", q);
     if (colorValues) params.set("cor", colorValues);
     if (Number(precoMin) > PRICE_MIN_LIMIT) params.set("preco_min", precoMin);
-    if (Number(precoMax) < PRICE_MAX_LIMIT) params.set("preco_max", precoMax);
+    if (Number(precoMax) < maxPriceLimit) params.set("preco_max", precoMax);
 
     const qs = params.toString() ? `?${params.toString()}` : "";
 
