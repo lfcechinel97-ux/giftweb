@@ -141,20 +141,16 @@ const HeroSection = () => {
   }, [maxPriceLimit]);
 
   const handleSliderChange = useCallback((values: number[]) => {
+    const em = Math.min(maxPriceLimit, FIXED_MAX);
     const [sMin = 0, sMax = SLIDER_INTERNAL_MAX] = values;
     setSliderRange([sMin, sMax]);
-    const pMin = sliderToPrice(sMin, maxPriceLimit);
-    const pMax = sliderToPrice(sMax, maxPriceLimit);
+    const pMin = sliderToPrice(sMin, em);
+    const pMax = sliderToPrice(sMax, em);
     setPriceRange([pMin, pMax]);
     setPrecoMin(String(pMin));
     setPrecoMax(String(pMax));
-    // Check quick filter match
-    if (pMin === 0) {
-      const match = quickFilters.find(f => f.value !== null && f.value === pMax);
-      setActiveQuickFilter(match ? match.value : (pMax === maxPriceLimit ? -1 : null));
-    } else {
-      setActiveQuickFilter(null);
-    }
+    const match = quickFilters.find(f => f.min === pMin && f.max === pMax);
+    setActiveQuickFilter(match ? match.label : null);
   }, [maxPriceLimit]);
 
   const handlePriceInputChange = useCallback((field: "min" | "max", value: string) => {
