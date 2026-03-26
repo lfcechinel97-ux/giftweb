@@ -54,6 +54,26 @@ const getVersionToken = (updatedAt: string | null | undefined, fallbackVersion: 
   return updatedAt.replace(/\D/g, "") || fallbackVersion;
 };
 
+const getBannerSources = (
+  index: number,
+  bannerRows: ReturnType<typeof useSiteContentContext>["getBySection"] extends (...args: any[]) => infer R ? R : never,
+) => {
+  const deskRow = bannerRows.find(r => r.id === `banner_${index + 1}_desk`);
+  const mobRow = bannerRows.find(r => r.id === `banner_${index + 1}_mob`);
+
+  const deskFallback = index === 0 ? buildVersionedUrl(BANNER_DESK_BASE_URL, BANNER_DESK_VERSION) : null;
+  const mobFallback = index === 0 ? buildVersionedUrl(BANNER_MOB_BASE_URL, BANNER_MOB_VERSION) : null;
+
+  const deskSrc = deskRow?.value
+    ? buildVersionedUrl(deskRow.value, getVersionToken(deskRow.updated_at, BANNER_DESK_VERSION))
+    : deskFallback;
+  const mobSrc = mobRow?.value
+    ? buildVersionedUrl(mobRow.value, getVersionToken(mobRow.updated_at, BANNER_MOB_VERSION))
+    : mobFallback;
+
+  return { deskSrc, mobSrc };
+};
+
 const HeroSection = () => {
   const { data: categories, isLoading: categoriesLoading } = useBaseCategories();
   const { getBySection } = useSiteContentContext();
@@ -87,6 +107,9 @@ const HeroSection = () => {
     const dx = e.changedTouches[0].clientX - touchStart.current;
     if (Math.abs(dx) > 50) { if (dx > 0) prevSlide(); else nextSlide(); }
   };
+
+  const { deskSrc, mobSrc } = getBannerSources(currentSlide, bannerRows);
+  const hasActiveBanner = deskSrc || mobSrc;
 
   const applyPrices = useCallback((minP: number, maxP: number) => {
     const em = Math.min(maxPriceLimit, FIXED_MAX);
@@ -145,9 +168,9 @@ const HeroSection = () => {
 
   return (
     <section className="py-8 md:py-10 relative overflow-hidden bg-background">
-      <div className="container flex flex-col lg:flex-row relative z-10 gap-5 overflow-hidden max-w-full" style={{ minHeight: 270 }}>
+      <div className="container relative z-10 flex max-w-full flex-col gap-5 overflow-hidden lg:flex-row" style={{ minHeight: 270 }}>
         {/* Filter panel */}
-        <div className="lg:w-[36%] bg-card rounded-2xl border border-border px-4 py-5 lg:p-10 flex flex-col gap-4 lg:gap-5 shrink-0" style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}>
+        <div className="w-full shrink-0 box-border rounded-2xl border border-border bg-card px-4 py-5 lg:w-[36%] lg:p-10 flex flex-col gap-4 lg:gap-5" style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}>
           <div>
             <h1 className="font-black text-[24px] lg:text-[36px] leading-tight text-foreground">
               Explore nosso catálogo de<br />
@@ -295,46 +318,64 @@ const HeroSection = () => {
 
         {/* Carousel */}
         <div
-          className="hero-carousel relative mt-5 w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-border lg:mt-0 lg:w-[64%]"
+          className="hero-carousel relative mx-auto mt-5 w-full min-w-0 max-w-full box-border overflow-hidden rounded-2xl border border-border lg:mt-0 lg:w-[64%]"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          <style>{`.hero-carousel { aspect-ratio: 16/9; } @media (max-width: 767px) { .hero-carousel { aspect-ratio: 4/3; } }`}</style>
-          {slides.map((slide, i) => {
-            const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
-            const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);
+          <style>{`
+            .hero-carousel,
+            .hero-carousel * {
+              box-sizing: border-box;
+            }
 
-            const deskFallback = i === 0 ? buildVersionedUrl(BANNER_DESK_BASE_URL, BANNER_DESK_VERSION) : null;
-            const mobFallback = i === 0 ? buildVersionedUrl(BANNER_MOB_BASE_URL, BANNER_MOB_VERSION) : null;
+            .hero-carousel-viewport,
+            .hero-carousel-frame,
+            .hero-carousel picture,
+            .hero-carousel img {
+              display: block;
+              width: 100%;
+              max-width: 100%;
+            }
 
-            const deskSrc = deskRow?.value
-              ? buildVersionedUrl(deskRow.value, getVersionToken(deskRow?.updated_at, BANNER_DESK_VERSION))
-              : deskFallback;
-            const mobSrc = mobRow?.value
-              ? buildVersionedUrl(mobRow.value, getVersionToken(mobRow?.updated_at, BANNER_MOB_VERSION))
-              : mobFallback;
+            .hero-carousel-viewport,
+            .hero-carousel-frame {
+              overflow: hidden;
+            }
 
-            const isActive = i === currentSlide;
-            const hasBanner = deskSrc || mobSrc;
+            .hero-carousel-media {
+              height: auto;
+              object-fit: contain;
+            }
 
-            return (
-              <div key={i} className="absolute inset-0 w-full h-full" style={{ opacity: isActive ? 1 : 0, transform: isActive ? "scale(1)" : "scale(1.03)", transition: "opacity 1.2s ease-in-out, transform 1.4s ease-in-out", pointerEvents: isActive ? "auto" : "none" }}>
-                {hasBanner && (
-                  <picture>
-                    {mobSrc && <source media="(max-width: 767px)" srcSet={mobSrc} />}
-                    <img
-                      src={deskSrc || mobSrc || ""}
-                      alt="Brindes corporativos personalizados"
-                      className="block w-full h-full object-cover"
-                      loading={i === 0 ? "eager" : "lazy"}
-                      fetchPriority={i === 0 ? "high" : "low"}
-                      decoding={i === 0 ? "sync" : "async"}
-                    />
-                  </picture>
-                )}
+            @media (min-width: 1024px) {
+              .hero-carousel-frame {
+                aspect-ratio: 16 / 9;
+              }
+
+              .hero-carousel-media {
+                height: 100%;
+                object-fit: cover;
+              }
+            }
+          `}</style>
+
+          <div className="hero-carousel-viewport relative w-full max-w-full overflow-hidden">
+            {hasActiveBanner && (
+              <div key={currentSlide} className="hero-carousel-frame w-full max-w-full overflow-hidden">
+                <picture>
+                  {mobSrc && <source media="(max-width: 767px)" srcSet={mobSrc} />}
+                  <img
+                    src={deskSrc || mobSrc || ""}
+                    alt="Brindes corporativos personalizados"
+                    className="hero-carousel-media block w-full max-w-full"
+                    loading={currentSlide === 0 ? "eager" : "lazy"}
+                    fetchPriority={currentSlide === 0 ? "high" : "low"}
+                    decoding={currentSlide === 0 ? "sync" : "async"}
+                  />
+                </picture>
               </div>
-            );
-          })}
+            )}
+          </div>
 
           <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white transition-all duration-200 hover:bg-green-cta hover:border-green-cta" style={{ background: "rgba(255,255,255,0.08)" }}>
             <ChevronLeft size={22} />
