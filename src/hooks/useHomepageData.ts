@@ -26,13 +26,14 @@ async function fetchFeaturedProducts(): Promise<ProductCache[]> {
         .from("products_cache")
         .select("id,nome,slug,image_url,cor,preco_custo,categoria,estoque,codigo_amigavel,descricao,variantes,variantes_count")
         .eq("categoria", cat)
-        .eq("is_variante", false)
-        .eq("ativo", true)
-        .eq("has_image", true)
-        .gt("estoque", 0)
-        .order("estoque", { ascending: false })
-        .limit(1)
-        .single()
+      .eq("is_variante", false)
+      .eq("ativo", true)
+      .eq("has_image", true)
+      .neq("is_hidden", true)
+      .gt("estoque", 0)
+      .order("estoque", { ascending: false })
+      .limit(1)
+      .single()
     )
   );
   return results
@@ -52,6 +53,7 @@ async function fetchHomepageData() {
       .eq("ativo", true)
       .eq("has_image", true)
       .eq("is_variante", false)
+      .neq("is_hidden", true)
       .gt("estoque", 0)
       .order("updated_at", { ascending: false })
       .range(randomOffset, randomOffset + 7),
@@ -62,6 +64,7 @@ async function fetchHomepageData() {
       .eq("ativo", true)
       .eq("has_image", true)
       .eq("is_variante", false)
+      .neq("is_hidden", true)
       .gt("estoque", 0),
 
     supabase
@@ -70,6 +73,7 @@ async function fetchHomepageData() {
       .eq("ativo", true)
       .eq("has_image", true)
       .eq("is_variante", false)
+      .neq("is_hidden", true)
       .gt("estoque", 0)
       .or("nome.ilike.%SQUEEZE%,descricao.ilike.%SQUEEZE%"),
 
@@ -79,6 +83,7 @@ async function fetchHomepageData() {
       .eq("ativo", true)
       .eq("has_image", true)
       .eq("is_variante", false)
+      .neq("is_hidden", true)
       .gt("estoque", 0)
       .lte("preco_custo", 8),
   ]);
