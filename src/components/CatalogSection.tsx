@@ -23,9 +23,10 @@ const CatalogSection = () => {
   const [sectionTitle, setSectionTitle] = useState("");
   const [items, setItems] = useState<CatalogItem[]>(defaults);
 
-  const catalogRows = getBySection("catalogs");
+  const { rows } = useSiteContentContext();
 
   useEffect(() => {
+    const catalogRows = rows.filter(r => r.section === "catalogs");
     if (catalogRows.length === 0) return;
     const map: Record<string, string> = {};
     catalogRows.forEach(r => { if (r.value) map[r.id] = r.value; });
@@ -38,7 +39,7 @@ const CatalogSection = () => {
       link: map[`catalog_${i}_link`] || defaults[i - 1]?.link || "#",
     }));
     setItems(newItems);
-  }, [catalogRows]);
+  }, [rows]);
 
   const visibleItems = items.filter(it => it.img);
   if (visibleItems.length === 0) return null;
