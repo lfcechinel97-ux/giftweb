@@ -19,8 +19,7 @@ const defaultLogos = [
 ];
 
 const ClientsSection = () => {
-  const { getBySection } = useSiteContentContext();
-  const clientRows = getBySection("clientes");
+  const { rows } = useSiteContentContext();
   const [logos, setLogos] = useState(defaultLogos);
   const [index, setIndex] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -30,11 +29,12 @@ const ClientsSection = () => {
   const { ref: sectionRef, inView } = useInView(0.1);
 
   useEffect(() => {
+    const clientRows = rows.filter(r => r.section === "clientes");
     const dbLogos = clientRows
       .filter(r => r.value)
       .map(r => ({ value: r.value! }));
     if (dbLogos.length > 0) setLogos(dbLogos);
-  }, [clientRows]);
+  }, [rows]);
 
   useEffect(() => {
     const interval = setInterval(() => {
