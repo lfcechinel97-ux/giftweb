@@ -105,7 +105,6 @@ const Index = () => {
         <Footer />
         <FloatingWhatsApp />
       </div>
-    </SiteContentProvider>
   );
 };
 
