@@ -92,6 +92,7 @@ const App = () => (
             </Routes>
           </Suspense>
         </BrowserRouter>
+        </SiteContentProvider>
       </TooltipProvider>
     </HelmetProvider>
   </QueryClientProvider>
