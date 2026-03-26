@@ -63,11 +63,10 @@ function sliderToPrice(pos: number, maxPrice: number): number {
 }
 
 const quickFilters = [
-  { label: "Até R$30", value: 30 },
-  { label: "Até R$50", value: 50 },
-  { label: "Até R$100", value: 100 },
-  { label: "Até R$200", value: 200 },
-  { label: "Todos", value: null },
+  { label: "Até R$10", min: 0, max: 10 },
+  { label: "Até R$30", min: 10.01, max: 30 },
+  { label: "Até R$50", min: 30.01, max: 50, highlight: true },
+  { label: "Até R$100", min: 50.01, max: 100 },
 ];
 
 const buildVersionedUrl = (url: string, version: string) => `${url}${url.includes("?") ? "&" : "?"}v=${version}`;
