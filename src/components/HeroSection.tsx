@@ -40,28 +40,6 @@ const slides = [
 
 const clampPrice = (value: number, max: number) => Math.min(max, Math.max(PRICE_MIN_LIMIT, value));
 
-// Non-linear mapping: 0-70% of slider = R$0-100, 70-100% = R$100-max
-const SLIDER_INTERNAL_MAX = 1000;
-const BREAKPOINT_RATIO = 0.7;
-const BREAKPOINT_PRICE = 100;
-const SLIDER_BREAKPOINT = Math.round(SLIDER_INTERNAL_MAX * BREAKPOINT_RATIO); // 700
-
-function priceToSlider(price: number, maxPrice: number): number {
-  if (price <= BREAKPOINT_PRICE) {
-    return Math.round((price / BREAKPOINT_PRICE) * SLIDER_BREAKPOINT);
-  }
-  const ratio = (price - BREAKPOINT_PRICE) / (maxPrice - BREAKPOINT_PRICE);
-  return Math.round(SLIDER_BREAKPOINT + ratio * (SLIDER_INTERNAL_MAX - SLIDER_BREAKPOINT));
-}
-
-function sliderToPrice(pos: number, maxPrice: number): number {
-  if (pos <= SLIDER_BREAKPOINT) {
-    return Math.round((pos / SLIDER_BREAKPOINT) * BREAKPOINT_PRICE);
-  }
-  const ratio = (pos - SLIDER_BREAKPOINT) / (SLIDER_INTERNAL_MAX - SLIDER_BREAKPOINT);
-  return Math.round(BREAKPOINT_PRICE + ratio * (maxPrice - BREAKPOINT_PRICE));
-}
-
 const quickFilters = [
   { label: "Até R$10", min: 0, max: 10 },
   { label: "Até R$30", min: 10.01, max: 30 },
