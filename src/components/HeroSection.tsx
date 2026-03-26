@@ -198,7 +198,7 @@ const HeroSection = () => {
               <Slider
                 value={priceRange}
                 min={PRICE_MIN_LIMIT}
-                max={PRICE_MAX_LIMIT}
+                max={maxPriceLimit}
                 step={1}
                 minStepsBetweenThumbs={1}
                 onValueChange={handlePriceRangeChange}
