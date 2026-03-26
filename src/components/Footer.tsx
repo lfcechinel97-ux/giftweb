@@ -130,6 +130,9 @@ const Footer = () => {
               <img
                 src="/logos/ssl.svg"
                 alt="Site seguro SSL"
+                loading="lazy"
+                width={200}
+                height={50}
                 className="w-full max-w-[200px] object-contain"
               />
             </div>
