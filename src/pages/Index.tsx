@@ -4,6 +4,7 @@ import HeroSection from "@/components/HeroSection";
 import BenefitsBar from "@/components/BenefitsBar";
 import CategoriesSection from "@/components/CategoriesSection";
 import BestSellersSection from "@/components/BestSellersSection";
+import LazySection from "@/components/LazySection";
 import BannerSeparator from "@/components/BannerSeparator";
 import CatalogSection from "@/components/CatalogSection";
 import ClientsSection from "@/components/ClientsSection";
