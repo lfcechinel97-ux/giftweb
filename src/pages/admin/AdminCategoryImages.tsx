@@ -6,13 +6,13 @@ import { Upload, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const categories = [
-  { key: "garrafas", label: "Garrafas Térmicas" },
-  { key: "canecas", label: "Copos e Canecas" },
-  { key: "mochilas", label: "Mochilas" },
-  { key: "bolsas", label: "Bolsas e Sacolas" },
-  { key: "squeezes", label: "Squeezes" },
-  { key: "escritorio", label: "Material de Escritório" },
+  { key: "garrafas-e-squeezes", label: "Garrafas e Squeezes" },
+  { key: "copos-e-canecas", label: "Copos e Canecas" },
+  { key: "mochilas-e-sacochilas", label: "Mochilas e Sacochilas" },
   { key: "kits", label: "Kits Corporativos" },
+  { key: "bolsas", label: "Bolsas e Sacolas" },
+  { key: "canetas", label: "Canetas" },
+  { key: "chaveiros", label: "Chaveiros" },
 ];
 
 export default function AdminCategoryImages() {
