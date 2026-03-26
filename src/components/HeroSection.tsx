@@ -152,7 +152,7 @@ const HeroSection = () => {
 
   return (
     <section className="py-8 md:py-10 relative overflow-hidden bg-background">
-      <div className="container flex flex-col lg:flex-row relative z-10 gap-5" style={{ minHeight: 270 }}>
+      <div className="container flex flex-col lg:flex-row relative z-10 gap-5 overflow-hidden max-w-full" style={{ minHeight: 270 }}>
         {/* Filter panel */}
         <div className="lg:w-[36%] bg-card rounded-2xl border border-border px-4 py-5 lg:p-10 flex flex-col gap-4 lg:gap-5 shrink-0" style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}>
           <div>
