@@ -4,6 +4,7 @@ import HeroSection from "@/components/HeroSection";
 import BenefitsBar from "@/components/BenefitsBar";
 import CategoriesSection from "@/components/CategoriesSection";
 import BestSellersSection from "@/components/BestSellersSection";
+import LazySection from "@/components/LazySection";
 import BannerSeparator from "@/components/BannerSeparator";
 import CatalogSection from "@/components/CatalogSection";
 import ClientsSection from "@/components/ClientsSection";
@@ -77,14 +78,30 @@ const Index = () => {
           <CorporateQuotation />
           <CategoriesSection categoryCounts={data?.categorias || {}} />
           <BestSellersSection />
-          <BannerSeparator />
-          <CatalogSection />
-          <ClientsSection />
-          <TestimonialsSection />
-          <HowItWorks />
-          <TrustSection />
-          <FAQSection />
-          <SeoTextSection />
+          <LazySection minHeight={300}>
+            <BannerSeparator />
+          </LazySection>
+          <LazySection minHeight={300}>
+            <CatalogSection />
+          </LazySection>
+          <LazySection minHeight={200}>
+            <ClientsSection />
+          </LazySection>
+          <LazySection minHeight={300}>
+            <TestimonialsSection />
+          </LazySection>
+          <LazySection minHeight={400}>
+            <HowItWorks />
+          </LazySection>
+          <LazySection minHeight={400}>
+            <TrustSection />
+          </LazySection>
+          <LazySection minHeight={300}>
+            <FAQSection />
+          </LazySection>
+          <LazySection minHeight={200}>
+            <SeoTextSection />
+          </LazySection>
         </main>
         <Footer />
         <FloatingWhatsApp />
