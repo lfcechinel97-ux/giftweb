@@ -164,16 +164,10 @@ const HeroSection = () => {
     }
   }, [priceRange, syncFromPrices, maxPriceLimit]);
 
-  const handleQuickFilter = useCallback((value: number | null) => {
-    if (value === null) {
-      // "Todos"
-      syncFromPrices(0, maxPriceLimit);
-      setActiveQuickFilter(-1);
-    } else {
-      syncFromPrices(0, value);
-      setActiveQuickFilter(value);
-    }
-  }, [syncFromPrices, maxPriceLimit]);
+  const handleQuickFilter = useCallback((filter: typeof quickFilters[number]) => {
+    syncFromPrices(filter.min, filter.max);
+    setActiveQuickFilter(filter.label);
+  }, [syncFromPrices]);
 
   const handleSearch = () => {
     const q = searchText.trim();
