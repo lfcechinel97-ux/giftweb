@@ -34,8 +34,8 @@ const SecurityPage = lazy(() => import("./pages/SecurityPage.tsx"));
 const queryClient = new QueryClient();
 
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  const { pathname, search } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname, search]);
   return null;
 };
 
