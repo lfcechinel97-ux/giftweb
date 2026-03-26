@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, TouchEvent } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Medal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
@@ -222,27 +222,33 @@ const HeroSection = () => {
           <div>
             <label className="text-sm font-medium text-muted-foreground mb-2 block">Faixa de preço</label>
             {/* Quick filter buttons */}
-            <div className="flex flex-wrap gap-1.5 mb-2.5">
+            <div className="flex flex-wrap gap-1.5 mb-2.5 items-end">
               {quickFilters.map((f) => {
                 const isActive = activeQuickFilter === f.label;
                 return (
                   <button
                     key={f.label}
                     onClick={() => handleQuickFilter(f)}
-                    className={`relative px-3 py-1 rounded-lg text-xs font-medium border transition-all duration-200 ${
+                    className={`px-3 rounded-lg text-xs font-medium border transition-all duration-200 ${
                       isActive
                         ? "bg-primary text-primary-foreground border-primary"
                         : f.highlight
-                          ? "bg-card text-muted-foreground border-primary/40 hover:border-primary/70"
+                          ? "bg-card text-muted-foreground hover:border-[#F59E0B]/70"
                           : "bg-card text-muted-foreground border-border hover:border-primary/50"
-                    }`}
+                    } ${f.highlight ? "flex flex-col items-center py-1" : "py-1"}`}
+                    style={f.highlight && !isActive ? { borderColor: "rgba(245,158,11,0.5)" } : undefined}
                   >
-                    {f.highlight && (
-                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold text-primary whitespace-nowrap leading-none">
-                        mais pedido
-                      </span>
+                    {f.highlight ? (
+                      <>
+                        <span className="flex items-center gap-1">
+                          <Medal size={12} color="#F59E0B" />
+                          {f.label}
+                        </span>
+                        <span className="text-[10px] italic leading-none" style={{ color: "#F59E0B" }}>mais pedido</span>
+                      </>
+                    ) : (
+                      f.label
                     )}
-                    {f.label}
                   </button>
                 );
               })}
