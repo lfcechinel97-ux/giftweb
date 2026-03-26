@@ -16,7 +16,7 @@ const categories = [
 ];
 
 export default function AdminCategoryImages() {
-  const { rows, loading, updateValue, uploadImage, refetch } = useSiteContent("categorias");
+  const { rows, loading, upsertValue, uploadImage, refetch } = useSiteContent("categorias");
   const [files, setFiles] = useState<Record<string, { file: File; preview: string }>>({});
   const [links, setLinks] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);

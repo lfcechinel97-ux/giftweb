@@ -68,5 +68,5 @@ export function useSiteContent(section?: string) {
     return urlData.publicUrl + '?t=' + Date.now();
   };
 
-  return { rows, loading, refetch: fetch, updateValue, uploadImage };
+  return { rows, loading, refetch: fetch, updateValue, upsertValue, uploadImage };
 }
