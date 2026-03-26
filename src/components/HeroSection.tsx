@@ -3,11 +3,14 @@ import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
+import { Slider } from "@/components/ui/slider";
 
-// Production banner URLs — same as preload in index.html
-const BANNER_DESK_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_desk.png";
-const BANNER_MOB_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_mob.png";
-
+const PRICE_MIN_LIMIT = 0;
+const PRICE_MAX_LIMIT = 1000;
+const BANNER_DESK_BASE_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_desk.png";
+const BANNER_MOB_BASE_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_mob.png";
+const BANNER_DESK_VERSION = "20260321035400981";
+const BANNER_MOB_VERSION = "20260321035402834";
 const swatchColors = [
   { bg: "#EF4444", name: "VERMELHO", values: ["VERMELHO"] },
   { bg: "#2563EB", name: "AZUL", values: ["AZUL"] },
@@ -35,6 +38,15 @@ const slides = [
   { text: "Do conceito à entrega, com", highlight: "excelência" },
 ];
 
+const clampPrice = (value: number) => Math.min(PRICE_MAX_LIMIT, Math.max(PRICE_MIN_LIMIT, value));
+
+const buildVersionedUrl = (url: string, version: string) => `${url}${url.includes("?") ? "&" : "?"}v=${version}`;
+
+const getVersionToken = (updatedAt: string | null | undefined, fallbackVersion: string) => {
+  if (!updatedAt) return fallbackVersion;
+  return updatedAt.replace(/\D/g, "") || fallbackVersion;
+};
+
 const HeroSection = () => {
   const { data: categories, isLoading: categoriesLoading } = useBaseCategories();
   const { getBySection } = useSiteContentContext();
@@ -51,9 +63,10 @@ const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [hoveredColor, setHoveredColor] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [searchText, setSearchText] = useState("");
-  const [precoMin, setPrecoMin] = useState("");
-  const [precoMax, setPrecoMax] = useState("");
+  const [searchText] = useState("");
+  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, PRICE_MAX_LIMIT]);
+  const [precoMin, setPrecoMin] = useState(String(PRICE_MIN_LIMIT));
+  const [precoMax, setPrecoMax] = useState(String(PRICE_MAX_LIMIT));
   const touchStart = useRef(0);
   const navigate = useNavigate();
 
@@ -71,6 +84,32 @@ const HeroSection = () => {
     if (Math.abs(dx) > 50) { if (dx > 0) prevSlide(); else nextSlide(); }
   };
 
+  const syncPriceRange = useCallback((nextMin: number, nextMax: number) => {
+    const clampedMin = clampPrice(Math.min(nextMin, nextMax));
+    const clampedMax = clampPrice(Math.max(nextMin, nextMax));
+
+    setPriceRange([clampedMin, clampedMax]);
+    setPrecoMin(String(clampedMin));
+    setPrecoMax(String(clampedMax));
+  }, []);
+
+  const handlePriceRangeChange = useCallback((values: number[]) => {
+    const [nextMin = PRICE_MIN_LIMIT, nextMax = PRICE_MAX_LIMIT] = values;
+    syncPriceRange(nextMin, nextMax);
+  }, [syncPriceRange]);
+
+  const handlePriceInputChange = useCallback((field: "min" | "max", value: string) => {
+    const sanitized = value.replace(/\D/g, "");
+    const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : PRICE_MAX_LIMIT) : Number(sanitized));
+
+    if (field === "min") {
+      syncPriceRange(parsedValue, priceRange[1]);
+      return;
+    }
+
+    syncPriceRange(priceRange[0], parsedValue);
+  }, [priceRange, syncPriceRange]);
+
   const handleSearch = () => {
     const q = searchText.trim();
     const colorValues = selectedColor !== null ? swatchColors[selectedColor].values.join(",") : null;
@@ -78,8 +117,8 @@ const HeroSection = () => {
 
     if (q) params.set("q", q);
     if (colorValues) params.set("cor", colorValues);
-    if (precoMin) params.set("preco_min", precoMin);
-    if (precoMax) params.set("preco_max", precoMax);
+    if (Number(precoMin) > PRICE_MIN_LIMIT) params.set("preco_min", precoMin);
+    if (Number(precoMax) < PRICE_MAX_LIMIT) params.set("preco_max", precoMax);
 
     const qs = params.toString() ? `?${params.toString()}` : "";
 
@@ -130,7 +169,7 @@ const HeroSection = () => {
                   type="number"
                   placeholder="Mín"
                   value={precoMin}
-                  onChange={(e) => setPrecoMin(e.target.value)}
+                  onChange={(e) => handlePriceInputChange("min", e.target.value)}
                   min="0"
                   className="w-full rounded-xl border border-border bg-card py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200"
                 />
@@ -141,11 +180,21 @@ const HeroSection = () => {
                   type="number"
                   placeholder="Máx"
                   value={precoMax}
-                  onChange={(e) => setPrecoMax(e.target.value)}
+                  onChange={(e) => handlePriceInputChange("max", e.target.value)}
                   min="0"
                   className="w-full rounded-xl border border-border bg-card py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200"
                 />
               </div>
+            </div>
+            <div className="mt-3 px-1">
+              <Slider
+                value={priceRange}
+                min={PRICE_MIN_LIMIT}
+                max={PRICE_MAX_LIMIT}
+                step={1}
+                minStepsBetweenThumbs={1}
+                onValueChange={handlePriceRangeChange}
+              />
             </div>
           </div>
 
@@ -205,28 +254,37 @@ const HeroSection = () => {
           {slides.map((slide, i) => {
             const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
             const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);
-            const dynamicSrc = (isMobile && mobRow?.value) ? mobRow.value : (deskRow?.value || null);
-            // For slide 0, use the production URL directly (matches preload in index.html)
+            const activeRow = isMobile ? mobRow : deskRow;
             const fallbackSrc = i === 0
-              ? (isMobile ? BANNER_MOB_URL : BANNER_DESK_URL)
-              : (isMobile ? BANNER_MOB_URL : BANNER_DESK_URL);
-            // Only use dynamic if it differs from fallback (avoids double download)
-            const bannerSrc = dynamicSrc && dynamicSrc !== fallbackSrc ? dynamicSrc : fallbackSrc;
+              ? buildVersionedUrl(
+                  isMobile ? BANNER_MOB_BASE_URL : BANNER_DESK_BASE_URL,
+                  isMobile ? BANNER_MOB_VERSION : BANNER_DESK_VERSION,
+                )
+              : null;
+            const fallbackVersion = i === 0 ? (isMobile ? BANNER_MOB_VERSION : BANNER_DESK_VERSION) : "";
+            const dynamicSrc = activeRow?.value ?? null;
+            const bannerSrc = dynamicSrc
+              ? buildVersionedUrl(dynamicSrc, getVersionToken(activeRow?.updated_at, fallbackVersion))
+              : fallbackSrc
+                ? fallbackSrc
+                : null;
             const isActive = i === currentSlide;
 
             return (
               <div key={i} className="absolute inset-0" style={{ opacity: isActive ? 1 : 0, transform: isActive ? "scale(1)" : "scale(1.03)", transition: "opacity 1.2s ease-in-out, transform 1.4s ease-in-out", pointerEvents: isActive ? "auto" : "none" }}>
-                <img
-                  src={bannerSrc}
-                  alt="Brindes corporativos personalizados"
-                  className="absolute inset-0 w-full h-full object-cover"
-                  width={800}
-                  height={450}
-                  loading={i === 0 ? "eager" : "lazy"}
-                  fetchPriority={i === 0 ? "high" : "low"}
-                  decoding={i === 0 ? "sync" : "async"}
-                  style={{ aspectRatio: "16/9" }}
-                />
+                {bannerSrc ? (
+                  <img
+                    src={bannerSrc}
+                    alt="Brindes corporativos personalizados"
+                    className="absolute inset-0 w-full h-full object-cover"
+                    width={800}
+                    height={450}
+                    loading={i === 0 ? "eager" : "lazy"}
+                    fetchPriority={i === 0 ? "high" : "low"}
+                    decoding={i === 0 ? "sync" : "async"}
+                    style={{ aspectRatio: "16/9" }}
+                  />
+                ) : null}
               </div>
             );
           })}
