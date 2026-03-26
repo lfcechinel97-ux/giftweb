@@ -224,19 +224,24 @@ const HeroSection = () => {
             {/* Quick filter buttons */}
             <div className="flex flex-wrap gap-1.5 mb-2.5">
               {quickFilters.map((f) => {
-                const isActive = f.value === null
-                  ? activeQuickFilter === -1
-                  : activeQuickFilter === f.value;
+                const isActive = activeQuickFilter === f.label;
                 return (
                   <button
                     key={f.label}
-                    onClick={() => handleQuickFilter(f.value)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium border transition-all duration-200 ${
+                    onClick={() => handleQuickFilter(f)}
+                    className={`relative px-3 py-1 rounded-lg text-xs font-medium border transition-all duration-200 ${
                       isActive
                         ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-card text-muted-foreground border-border hover:border-primary/50"
+                        : f.highlight
+                          ? "bg-card text-muted-foreground border-primary/40 hover:border-primary/70"
+                          : "bg-card text-muted-foreground border-border hover:border-primary/50"
                     }`}
                   >
+                    {f.highlight && (
+                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold text-primary whitespace-nowrap leading-none">
+                        mais pedido
+                      </span>
+                    )}
                     {f.label}
                   </button>
                 );
