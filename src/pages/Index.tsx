@@ -78,14 +78,30 @@ const Index = () => {
           <CorporateQuotation />
           <CategoriesSection categoryCounts={data?.categorias || {}} />
           <BestSellersSection />
-          <BannerSeparator />
-          <CatalogSection />
-          <ClientsSection />
-          <TestimonialsSection />
-          <HowItWorks />
-          <TrustSection />
-          <FAQSection />
-          <SeoTextSection />
+          <LazySection minHeight={300}>
+            <BannerSeparator />
+          </LazySection>
+          <LazySection minHeight={300}>
+            <CatalogSection />
+          </LazySection>
+          <LazySection minHeight={200}>
+            <ClientsSection />
+          </LazySection>
+          <LazySection minHeight={300}>
+            <TestimonialsSection />
+          </LazySection>
+          <LazySection minHeight={400}>
+            <HowItWorks />
+          </LazySection>
+          <LazySection minHeight={400}>
+            <TrustSection />
+          </LazySection>
+          <LazySection minHeight={300}>
+            <FAQSection />
+          </LazySection>
+          <LazySection minHeight={200}>
+            <SeoTextSection />
+          </LazySection>
         </main>
         <Footer />
         <FloatingWhatsApp />
