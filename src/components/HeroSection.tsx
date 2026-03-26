@@ -302,45 +302,47 @@ const HeroSection = () => {
 
         {/* Carousel */}
         <div
-          className="relative mt-5 flex w-full min-w-0 max-w-full items-center overflow-hidden rounded-2xl border border-border lg:mt-0 lg:w-[64%]"
-          style={{ minHeight: isMobile ? undefined : 270, aspectRatio: "16 / 9" }}
+          className="relative mt-5 w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-border lg:mt-0 lg:w-[64%]"
+          style={{ minHeight: undefined }}
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
+          {/* Aspect-ratio spacer: 16/9 on desktop, 4/3 on mobile */}
+          <div className="w-full" style={{ paddingBottom: "56.25%" }} />
+          <style>{`@media (max-width: 767px) { .hero-carousel-spacer { padding-bottom: 75% !important; } }`}</style>
+          <div className="hero-carousel-spacer absolute inset-0 w-full h-full" style={{ paddingBottom: undefined }}>
           {slides.map((slide, i) => {
             const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
             const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);
-            const activeRow = isMobile ? mobRow : deskRow;
-            const fallbackSrc = i === 0
-              ? buildVersionedUrl(
-                  isMobile ? BANNER_MOB_BASE_URL : BANNER_DESK_BASE_URL,
-                  isMobile ? BANNER_MOB_VERSION : BANNER_DESK_VERSION,
-                )
-              : null;
-            const fallbackVersion = i === 0 ? (isMobile ? BANNER_MOB_VERSION : BANNER_DESK_VERSION) : "";
-            const dynamicSrc = activeRow?.value ?? null;
-            const bannerSrc = dynamicSrc
-              ? buildVersionedUrl(dynamicSrc, getVersionToken(activeRow?.updated_at, fallbackVersion))
-              : fallbackSrc
-                ? fallbackSrc
-                : null;
+
+            const deskFallback = i === 0 ? buildVersionedUrl(BANNER_DESK_BASE_URL, BANNER_DESK_VERSION) : null;
+            const mobFallback = i === 0 ? buildVersionedUrl(BANNER_MOB_BASE_URL, BANNER_MOB_VERSION) : null;
+
+            const deskSrc = deskRow?.value
+              ? buildVersionedUrl(deskRow.value, getVersionToken(deskRow?.updated_at, BANNER_DESK_VERSION))
+              : deskFallback;
+            const mobSrc = mobRow?.value
+              ? buildVersionedUrl(mobRow.value, getVersionToken(mobRow?.updated_at, BANNER_MOB_VERSION))
+              : mobFallback;
+
             const isActive = i === currentSlide;
+            const hasBanner = deskSrc || mobSrc;
 
             return (
-              <div key={i} className="absolute inset-0" style={{ opacity: isActive ? 1 : 0, transform: isActive ? "scale(1)" : "scale(1.03)", transition: "opacity 1.2s ease-in-out, transform 1.4s ease-in-out", pointerEvents: isActive ? "auto" : "none" }}>
-                {bannerSrc ? (
-                  <img
-                    src={bannerSrc}
-                    alt="Brindes corporativos personalizados"
-                    className="absolute inset-0 w-full h-full object-cover"
-                    width={800}
-                    height={450}
-                    loading={i === 0 ? "eager" : "lazy"}
-                    fetchPriority={i === 0 ? "high" : "low"}
-                    decoding={i === 0 ? "sync" : "async"}
-                    style={{ aspectRatio: "16/9" }}
-                  />
-                ) : null}
+              <div key={i} className="absolute inset-0 w-full h-full" style={{ opacity: isActive ? 1 : 0, transform: isActive ? "scale(1)" : "scale(1.03)", transition: "opacity 1.2s ease-in-out, transform 1.4s ease-in-out", pointerEvents: isActive ? "auto" : "none" }}>
+                {hasBanner && (
+                  <picture className="block w-full h-full">
+                    {mobSrc && <source media="(max-width: 767px)" srcSet={mobSrc} />}
+                    <img
+                      src={deskSrc || mobSrc || ""}
+                      alt="Brindes corporativos personalizados"
+                      className="block w-full h-full object-cover"
+                      loading={i === 0 ? "eager" : "lazy"}
+                      fetchPriority={i === 0 ? "high" : "low"}
+                      decoding={i === 0 ? "sync" : "async"}
+                    />
+                  </picture>
+                )}
               </div>
             );
           })}
