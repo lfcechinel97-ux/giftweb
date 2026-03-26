@@ -18,7 +18,8 @@ const Slider = React.forwardRef<
     {(Array.isArray(props.value) ? props.value : (Array.isArray(props.defaultValue) ? props.defaultValue : [0])).map((_, i) => (
       <SliderPrimitive.Thumb
         key={i}
-        className="block h-[18px] w-[18px] rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-grab active:cursor-grabbing"
+        className="relative block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors cursor-grab active:cursor-grabbing focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 before:absolute before:inset-[-12px] before:content-[''] before:rounded-full"
+        style={{ touchAction: 'none', WebkitTapHighlightColor: 'transparent' }}
       />
     ))}
   </SliderPrimitive.Root>
