@@ -1,54 +1,37 @@
 
-Objetivo: corrigir somente o bug do handle direito no filtro de preço do HeroSection, sem mexer no layout geral nem nas demais funcionalidades.
 
-1. Confirmar e atacar a causa real
-- O slider atual usa `@radix-ui/react-slider` em `src/components/ui/slider.tsx` e é consumido em `src/components/HeroSection.tsx`.
-- O problema não é “dois inputs range empilhados”; hoje não há `input type="range"` no projeto.
-- A falha está na lógica controlada do range: o `HeroSection` só recebe o array final em `handleSliderChange`, mas não preserva explicitamente qual thumb o usuário pretendia mover. Com faixa não linear e thumbs próximos, o valor mínimo pode “capturar” a interação do máximo.
+# Correção: Thumb do slider difícil de arrastar
 
-2. Ajuste planejado no HeroSection
-- Adicionar estado/ref para rastrear qual thumb está ativo: `min` ou `max`.
-- No início da interação (pointer/touch down na área do slider), calcular qual thumb está mais próximo do ponto tocado/clicado.
-- Se os dois estiverem muito próximos, usar a direção do movimento para desempatar:
-  - arrasto para a direita prioriza o thumb máximo
-  - arrasto para a esquerda prioriza o thumb mínimo
-- Ao receber `onValueChange`, reconciliar os valores preservando o thumb ativo, em vez de aceitar cegamente a troca de posição do array.
+## Problema
+O thumb do slider tem apenas 18×18px de área clicável, tornando difícil clicar e arrastar, especialmente no mobile. A classe `touch-none` no Root do Radix impede o comportamento natural de arrasto contínuo.
 
-3. Pequeno ajuste no componente Slider reutilizável
-- Expor metadados/handlers necessários no `src/components/ui/slider.tsx` para permitir:
-  - identificar cada thumb (`data-thumb-index`)
-  - capturar início da interação no track/root
-  - manter visual atual das bolinhas
-- Não alterar o desenho do slider; apenas instrumentar a interação.
+## Causa raiz
+1. **Área de toque pequena demais** — 18×18px é menor que o mínimo recomendado de 44×44px para interação por toque
+2. **Sem retenção de captura** — quando o dedo/mouse sai do thumb durante o arrasto, pode perder o "grab"
 
-4. Regra de comportamento que será implementada
-- O handle direito nunca poderá mover o esquerdo.
-- O handle esquerdo nunca poderá “pular” para a posição do direito.
-- Quando o usuário clicar/arrastar perto do handle máximo, a atualização deve atuar no máximo.
-- Quando clicar/arrastar perto do mínimo, deve atuar no mínimo.
-- Continuar respeitando:
-  - range duplo
-  - preenchimento verde entre handles
-  - inputs manuais sincronizados
-  - quick filters
-  - teto atual de R$400
-  - URL com `preco_min` e `preco_max`
+## Correção (apenas `src/components/ui/slider.tsx`)
 
-5. Arquivos a alterar
-- `src/components/HeroSection.tsx`
-  - corrigir a lógica de captura/prioridade do thumb
-  - preservar sincronização com inputs e atalhos
-- `src/components/ui/slider.tsx`
-  - adicionar suporte mínimo para identificação/início da interação sem mudar visual
+Aumentar a área de interação do thumb sem mudar o visual:
+- Manter o visual de 18×18px (via pseudo-element ou background)
+- Expandir a área clicável real para **44×44px** usando padding + `box-sizing` ou uma técnica de hit-area invisível
+- Adicionar `touch-action: none` no thumb individual para garantir que o browser não intercepte o gesto
+- Usar `style={{ WebkitTapHighlightColor: 'transparent' }}` para evitar flash no mobile
 
-6. Resultado esperado
-- Ao tentar arrastar a bolinha da direita, a esquerda não irá mais até lá.
-- O usuário conseguirá mexer no preço máximo de forma previsível, inclusive quando os handles estiverem próximos.
-- O visual atual do HeroSection permanece igual.
+```tsx
+<SliderPrimitive.Thumb
+  key={i}
+  className="relative block h-5 w-5 rounded-full border-2 border-primary bg-background 
+    ring-offset-background transition-colors cursor-grab active:cursor-grabbing
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 
+    before:absolute before:inset-[-12px] before:content-[''] before:rounded-full"
+  style={{ touchAction: 'none' }}
+/>
+```
 
-7. Validação que farei na implementação
-- Arrastar só o thumb direito com thumbs afastados
-- Arrastar só o thumb direito com thumbs próximos
-- Arrastar só o thumb esquerdo
-- Clicar nos atalhos e depois ajustar manualmente no slider
-- Confirmar que a busca continua navegando com `preco_min` e `preco_max`
+O `before:absolute before:inset-[-12px]` cria uma área invisível de ~44px ao redor do thumb de 20px, facilitando o clique/toque sem mudar o visual. O Radix Slider já usa pointer capture internamente, então uma vez que o thumb é "agarrado", ele mantém o tracking mesmo com o mouse longe — o problema atual é apenas não conseguir acertar o thumb inicial.
+
+## Arquivos alterados
+- `src/components/ui/slider.tsx` — apenas expandir hit area do thumb
+
+Nenhuma mudança no `HeroSection.tsx`, layout, cores ou lógica de filtragem.
+
