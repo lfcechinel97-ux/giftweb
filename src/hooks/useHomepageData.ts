@@ -33,7 +33,7 @@ async function fetchFeaturedProducts(): Promise<ProductCache[]> {
       .gt("estoque", 0)
       .order("estoque", { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
     )
   );
   return results
