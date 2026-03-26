@@ -16,7 +16,7 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import CorporateQuotation from "@/components/CorporateQuotation";
 import SeoTextSection from "@/components/SeoTextSection";
 import FAQSection from "@/components/FAQSection";
-import { SiteContentProvider } from "@/contexts/SiteContentContext";
+
 
 import { useHomepageData } from "@/hooks/useHomepageData";
 import { SITE_URL } from "@/config/site";
