@@ -1,37 +1,30 @@
 
 
-# Correção: Thumb do slider difícil de arrastar
+# Ajuste do badge "mais pedido" no botão "Até R$50"
 
-## Problema
-O thumb do slider tem apenas 18×18px de área clicável, tornando difícil clicar e arrastar, especialmente no mobile. A classe `touch-none` no Root do Radix impede o comportamento natural de arrasto contínuo.
+## Problema atual
+A medalha e o texto "mais pedido" estão **dentro** do botão "Até R$50", usando `flex-col`, o que faz o botão ficar mais alto que os outros e quebra o alinhamento visual.
 
-## Causa raiz
-1. **Área de toque pequena demais** — 18×18px é menor que o mínimo recomendado de 44×44px para interação por toque
-2. **Sem retenção de captura** — quando o dedo/mouse sai do thumb durante o arrasto, pode perder o "grab"
+## Solução
+Posicionar a medalha + "mais pedido" **acima** do botão usando `position: absolute` ou wrapper relativo, mantendo o botão "Até R$50" com exatamente o mesmo tamanho e alinhamento dos demais (Até R$10, Até R$30, Até R$100).
 
-## Correção (apenas `src/components/ui/slider.tsx`)
+### Implementação (apenas `src/components/HeroSection.tsx`)
 
-Aumentar a área de interação do thumb sem mudar o visual:
-- Manter o visual de 18×18px (via pseudo-element ou background)
-- Expandir a área clicável real para **44×44px** usando padding + `box-sizing` ou uma técnica de hit-area invisível
-- Adicionar `touch-action: none` no thumb individual para garantir que o browser não intercepte o gesto
-- Usar `style={{ WebkitTapHighlightColor: 'transparent' }}` para evitar flash no mobile
+1. Envolver o botão "Até R$50" em um `<div className="relative">` 
+2. Mover o badge (medalha + "mais pedido") para um elemento **acima** do botão, posicionado com `absolute bottom-full` para flutuar sobre ele
+3. O botão em si fica com layout idêntico aos outros — mesma altura, mesmo padding `py-1`, sem `flex-col`
+4. O badge flutuante terá: medalha dourada (12px) + texto "mais pedido" em itálico, 10px, cor #F59E0B, centralizado horizontalmente sobre o botão
+5. Manter a borda dourada sutil no botão quando não ativo
 
-```tsx
-<SliderPrimitive.Thumb
-  key={i}
-  className="relative block h-5 w-5 rounded-full border-2 border-primary bg-background 
-    ring-offset-background transition-colors cursor-grab active:cursor-grabbing
-    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 
-    before:absolute before:inset-[-12px] before:content-[''] before:rounded-full"
-  style={{ touchAction: 'none' }}
-/>
+```text
+   🏅 mais pedido     ← badge flutuante (absolute, acima)
+  ┌──────────────┐
+  │  Até R$50    │    ← botão com mesmo tamanho dos outros
+  └──────────────┘
 ```
 
-O `before:absolute before:inset-[-12px]` cria uma área invisível de ~44px ao redor do thumb de 20px, facilitando o clique/toque sem mudar o visual. O Radix Slider já usa pointer capture internamente, então uma vez que o thumb é "agarrado", ele mantém o tracking mesmo com o mouse longe — o problema atual é apenas não conseguir acertar o thumb inicial.
-
-## Arquivos alterados
-- `src/components/ui/slider.tsx` — apenas expandir hit area do thumb
-
-Nenhuma mudança no `HeroSection.tsx`, layout, cores ou lógica de filtragem.
+### Não alterar
+- Tamanho/layout dos outros botões
+- Slider, inputs, cores, responsividade
+- Lógica de filtro ou navegação
 
