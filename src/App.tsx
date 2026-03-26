@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import { SiteContentProvider } from "@/contexts/SiteContentContext";
 
 // Lazy-loaded routes
 const AdminSync = lazy(() => import("./pages/AdminSync.tsx"));
@@ -50,6 +51,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <SiteContentProvider>
         <BrowserRouter>
           <ScrollToTop />
           <Suspense fallback={<Loading />}>
@@ -90,6 +92,7 @@ const App = () => (
             </Routes>
           </Suspense>
         </BrowserRouter>
+        </SiteContentProvider>
       </TooltipProvider>
     </HelmetProvider>
   </QueryClientProvider>

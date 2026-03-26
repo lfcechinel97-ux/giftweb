@@ -16,7 +16,7 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import CorporateQuotation from "@/components/CorporateQuotation";
 import SeoTextSection from "@/components/SeoTextSection";
 import FAQSection from "@/components/FAQSection";
-import { SiteContentProvider } from "@/contexts/SiteContentContext";
+
 
 import { useHomepageData } from "@/hooks/useHomepageData";
 import { SITE_URL } from "@/config/site";
@@ -57,7 +57,6 @@ const Index = () => {
   const { data } = useHomepageData();
 
   return (
-    <SiteContentProvider>
       <div className="min-h-screen flex flex-col bg-background">
         <Helmet>
           <title>Gift Web Brindes | Brindes Corporativos Personalizados para Empresas</title>
@@ -106,7 +105,6 @@ const Index = () => {
         <Footer />
         <FloatingWhatsApp />
       </div>
-    </SiteContentProvider>
   );
 };
 
