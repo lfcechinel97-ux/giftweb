@@ -129,19 +129,15 @@ const HeroSection = () => {
   }, [maxPriceLimit]);
 
   const syncFromPrices = useCallback((minP: number, maxP: number) => {
-    const clampedMin = clampPrice(Math.min(minP, maxP), maxPriceLimit);
-    const clampedMax = clampPrice(Math.max(minP, maxP), maxPriceLimit);
+    const em = Math.min(maxPriceLimit, FIXED_MAX);
+    const clampedMin = clampPrice(Math.min(minP, maxP), em);
+    const clampedMax = clampPrice(Math.max(minP, maxP), em);
     setPriceRange([clampedMin, clampedMax]);
-    setSliderRange([priceToSlider(clampedMin, maxPriceLimit), priceToSlider(clampedMax, maxPriceLimit)]);
+    setSliderRange([priceToSlider(clampedMin, em), priceToSlider(clampedMax, em)]);
     setPrecoMin(String(clampedMin));
     setPrecoMax(String(clampedMax));
-    // Check if matches a quick filter
-    if (clampedMin === 0) {
-      const match = quickFilters.find(f => f.value !== null && f.value === clampedMax);
-      setActiveQuickFilter(match ? match.value : (clampedMax === maxPriceLimit ? -1 : null));
-    } else {
-      setActiveQuickFilter(null);
-    }
+    const match = quickFilters.find(f => f.min === clampedMin && f.max === clampedMax);
+    setActiveQuickFilter(match ? match.label : null);
   }, [maxPriceLimit]);
 
   const handleSliderChange = useCallback((values: number[]) => {
