@@ -237,10 +237,10 @@ const HeroSection = () => {
             </div>
             <div className="mt-3 px-1">
               <Slider
-                value={sliderRange}
+                value={priceRange}
                 min={0}
-                max={SLIDER_INTERNAL_MAX}
-                step={1}
+                max={FIXED_MAX}
+                step={5}
                 minStepsBetweenThumbs={1}
                 onValueChange={handleSliderChange}
               />
