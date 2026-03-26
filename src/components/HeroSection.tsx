@@ -120,10 +120,11 @@ const HeroSection = () => {
 
   // Sync state when dynamic max loads
   useEffect(() => {
-    setPriceRange([PRICE_MIN_LIMIT, maxPriceLimit]);
+    const em = Math.min(maxPriceLimit, FIXED_MAX);
+    setPriceRange([PRICE_MIN_LIMIT, em]);
     setSliderRange([0, SLIDER_INTERNAL_MAX]);
     setPrecoMin(String(PRICE_MIN_LIMIT));
-    setPrecoMax(String(maxPriceLimit));
+    setPrecoMax(String(em));
     setActiveQuickFilter(null);
   }, [maxPriceLimit]);
 
