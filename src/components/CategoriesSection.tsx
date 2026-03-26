@@ -38,7 +38,24 @@ const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
   const { rows: siteRows } = useSiteContent("categorias");
   const { data: dbCategories } = useBaseCategories();
 
-  const getContentValue = (id: string) => siteRows.find((r) => r.id === id)?.value || null;
+  const legacyMap: Record<string, string> = {
+    "garrafas-e-squeezes": "garrafas",
+    "copos-e-canecas": "canecas",
+    "mochilas-e-sacochilas": "mochilas",
+    "canetas": "escritorio",
+  };
+  const getContentValue = (id: string) => {
+    const val = siteRows.find((r) => r.id === id)?.value;
+    if (val) return val;
+    // Fallback to legacy key
+    const slug = id.replace(/^cat_(img|link)_/, "");
+    const legacySlug = legacyMap[slug];
+    if (legacySlug) {
+      const legacyId = id.replace(slug, legacySlug);
+      return siteRows.find((r) => r.id === legacyId)?.value || null;
+    }
+    return null;
+  };
 
   // Build display list: use topSlugs order, fill from DB
   const cats = topSlugs.map((slug) => {
