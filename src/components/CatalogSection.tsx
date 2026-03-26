@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useInView } from "@/hooks/useInView";
 import { supabase } from "@/integrations/supabase/client";
 import { Download } from "lucide-react";
-import catalogGeral from "@/assets/catalog-geral.png";
-import catalogCorporativo from "@/assets/catalog-corporativo.png";
+import catalogGeral from "@/assets/catalog-geral.webp";
+import catalogCorporativo from "@/assets/catalog-corporativo.webp";
 
 interface CatalogItem {
   img: string;

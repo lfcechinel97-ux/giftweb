@@ -4,18 +4,18 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 
 const defaultLogos = [
-  { value: "/logos/petrobras.png" },
-  { value: "/logos/ambev.png" },
-  { value: "/logos/natura.png" },
-  { value: "/logos/itau.png" },
-  { value: "/logos/bradesco.png" },
-  { value: "/logos/vale.png" },
-  { value: "/logos/embraer.png" },
-  { value: "/logos/gerdau.png" },
-  { value: "/logos/vivo.png" },
-  { value: "/logos/tim.png" },
-  { value: "/logos/globo.png" },
-  { value: "/logos/weg.png" },
+  { value: "/logos/petrobras.webp" },
+  { value: "/logos/ambev.webp" },
+  { value: "/logos/natura.webp" },
+  { value: "/logos/itau.webp" },
+  { value: "/logos/bradesco.webp" },
+  { value: "/logos/vale.webp" },
+  { value: "/logos/embraer.webp" },
+  { value: "/logos/gerdau.webp" },
+  { value: "/logos/vivo.webp" },
+  { value: "/logos/tim.webp" },
+  { value: "/logos/globo.webp" },
+  { value: "/logos/weg.webp" },
 ];
 
 const ClientsSection = () => {

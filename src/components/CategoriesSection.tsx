@@ -3,11 +3,11 @@ import { useInView } from "@/hooks/useInView";
 import { Link } from "react-router-dom";
 import { useSiteContent } from "@/hooks/useSiteContent";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
-import catGarrafas from "@/assets/cat-garrafas.png";
-import catBolsas from "@/assets/cat-bolsas.png";
-import catMochilas from "@/assets/cat-mochilas.png";
-import catKit from "@/assets/cat-kit.png";
-import catBrindes from "@/assets/cat-brindes.png";
+import catGarrafas from "@/assets/cat-garrafas.webp";
+import catBolsas from "@/assets/cat-bolsas.webp";
+import catMochilas from "@/assets/cat-mochilas.webp";
+import catKit from "@/assets/cat-kit.webp";
+import catBrindes from "@/assets/cat-brindes.webp";
 
 // Default images by slug keyword
 const defaultImages: Record<string, string> = {

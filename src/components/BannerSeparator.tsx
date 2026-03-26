@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSiteContent } from "@/hooks/useSiteContent";
-import bannerB2B from "@/assets/banner-b2b.jpg";
+import bannerB2B from "@/assets/banner-b2b.webp";
 
 const BannerSeparator = () => {
   const { rows } = useSiteContent("banners");
