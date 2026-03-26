@@ -183,7 +183,7 @@ function MobileCarousel({ cats }: { cats: Array<{ key: string; name: string; img
               className="w-[120px] h-[120px] rounded-full overflow-hidden border-2 border-border bg-muted"
               style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
             >
-              <img src={cat.img} alt={cat.name} className="w-full h-full object-cover" draggable={false} />
+              <img src={cat.img} alt={cat.name} loading="lazy" width={120} height={120} className="w-full h-full object-cover" draggable={false} />
             </div>
             <span className="font-semibold text-[13px] text-foreground text-center">{cat.name}</span>
           </Link>

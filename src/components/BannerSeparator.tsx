@@ -21,6 +21,9 @@ const BannerSeparator = () => {
       <img
         src={src}
         alt="Brindes que fortalecem sua marca — Gift Web"
+        loading="lazy"
+        width={1200}
+        height={300}
         className="w-full h-auto block md:object-contain md:object-center"
       />
     </div>

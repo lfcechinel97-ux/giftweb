@@ -133,6 +133,8 @@ const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codi
             src={displayImage}
             alt={nome}
             loading="lazy"
+            width={400}
+            height={400}
             className="w-full h-full object-cover"
             style={{
               opacity: fading ? 0 : 1,

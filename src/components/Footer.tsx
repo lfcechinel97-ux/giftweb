@@ -44,7 +44,7 @@ const Footer = () => {
           {/* Col 1 — Gift Web */}
           <div>
             {footerLogo ? (
-              <img src={footerLogo} alt="Gift Web Brindes" className="h-10 w-auto mb-5 object-contain" />
+              <img src={footerLogo} alt="Gift Web Brindes" loading="lazy" width={160} height={40} className="h-10 w-auto mb-5 object-contain" />
             ) : (
               <div className="mb-5">
                 <span className="text-lg font-extrabold">Gift Web</span>

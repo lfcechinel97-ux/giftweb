@@ -90,6 +90,9 @@ const CatalogSection = () => {
                 <img
                   src={cat.img}
                   alt={cat.title || `Catálogo ${i + 1}`}
+                  loading="lazy"
+                  width={220}
+                  height={170}
                   className="max-w-[85%] max-h-[85%] object-contain drop-shadow-lg"
                   style={{ transition: "transform 0.3s ease" }}
                 />
