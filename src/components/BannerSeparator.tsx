@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useSiteContent } from "@/hooks/useSiteContent";
+import { useSiteContentContext } from "@/contexts/SiteContentContext";
 import bannerB2B from "@/assets/banner-b2b.webp";
 
 const BannerSeparator = () => {
-  const { rows } = useSiteContent("banners");
+  const { getBySection } = useSiteContentContext();
+  const rows = getBySection("banners");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {

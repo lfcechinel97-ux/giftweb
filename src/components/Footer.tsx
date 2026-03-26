@@ -1,6 +1,6 @@
 import { Phone, Mail, Instagram, Facebook, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useSiteContent } from "@/hooks/useSiteContent";
+import { useSiteContentContext } from "@/contexts/SiteContentContext";
 
 const WhatsAppIcon = ({ size = 16 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -22,7 +22,8 @@ const footerCategories = [
 ];
 
 const Footer = () => {
-  const { rows } = useSiteContent("footer");
+  const { getBySection } = useSiteContentContext();
+  const rows = getBySection("footer");
 
   const get = (id: string) => rows.find((r) => r.id === id)?.value || "";
 

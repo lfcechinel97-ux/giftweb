@@ -15,6 +15,7 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import CorporateQuotation from "@/components/CorporateQuotation";
 import SeoTextSection from "@/components/SeoTextSection";
 import FAQSection from "@/components/FAQSection";
+import { SiteContentProvider } from "@/contexts/SiteContentContext";
 
 import { useHomepageData } from "@/hooks/useHomepageData";
 import { SITE_URL } from "@/config/site";
@@ -55,38 +56,40 @@ const Index = () => {
   const { data } = useHomepageData();
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Helmet>
-        <title>Gift Web Brindes | Brindes Corporativos Personalizados para Empresas</title>
-        <meta name="description" content="Gift Web Brindes: mais de 3.000 brindes corporativos personalizados para empresas. Garrafas, copos, mochilas, kits e muito mais. Solicite seu orçamento!" />
-        <link rel="canonical" href={SITE_URL} />
-        <meta property="og:title" content="Gift Web Brindes | Brindes Corporativos Personalizados" />
-        <meta property="og:description" content="Mais de 3.000 brindes corporativos personalizados para empresas. Garrafas, copos, mochilas, kits e muito mais." />
-        <meta property="og:url" content={SITE_URL} />
-        <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
-        {localBusinessSchema.map((s, i) => (
-          <script key={i} type="application/ld+json">{JSON.stringify(s)}</script>
-        ))}
-      </Helmet>
-      <Header />
-      <main className="flex-1">
-        <HeroSection />
-        <BenefitsBar />
-        <CorporateQuotation />
-        <CategoriesSection categoryCounts={data?.categorias || {}} />
-        <BestSellersSection />
-        <BannerSeparator />
-        <CatalogSection />
-        <ClientsSection />
-        <TestimonialsSection />
-        <HowItWorks />
-        <TrustSection />
-        <FAQSection />
-        <SeoTextSection />
-      </main>
-      <Footer />
-      <FloatingWhatsApp />
-    </div>
+    <SiteContentProvider>
+      <div className="min-h-screen flex flex-col bg-background">
+        <Helmet>
+          <title>Gift Web Brindes | Brindes Corporativos Personalizados para Empresas</title>
+          <meta name="description" content="Gift Web Brindes: mais de 3.000 brindes corporativos personalizados para empresas. Garrafas, copos, mochilas, kits e muito mais. Solicite seu orçamento!" />
+          <link rel="canonical" href={SITE_URL} />
+          <meta property="og:title" content="Gift Web Brindes | Brindes Corporativos Personalizados" />
+          <meta property="og:description" content="Mais de 3.000 brindes corporativos personalizados para empresas. Garrafas, copos, mochilas, kits e muito mais." />
+          <meta property="og:url" content={SITE_URL} />
+          <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
+          {localBusinessSchema.map((s, i) => (
+            <script key={i} type="application/ld+json">{JSON.stringify(s)}</script>
+          ))}
+        </Helmet>
+        <Header />
+        <main className="flex-1">
+          <HeroSection />
+          <BenefitsBar />
+          <CorporateQuotation />
+          <CategoriesSection categoryCounts={data?.categorias || {}} />
+          <BestSellersSection />
+          <BannerSeparator />
+          <CatalogSection />
+          <ClientsSection />
+          <TestimonialsSection />
+          <HowItWorks />
+          <TrustSection />
+          <FAQSection />
+          <SeoTextSection />
+        </main>
+        <Footer />
+        <FloatingWhatsApp />
+      </div>
+    </SiteContentProvider>
   );
 };
 

@@ -3,7 +3,7 @@ import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import heroBanner from "@/assets/hero-banner.webp";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
-import { useSiteContent } from "@/hooks/useSiteContent";
+import { useSiteContentContext } from "@/contexts/SiteContentContext";
 
 const swatchColors = [
   { bg: "#EF4444", name: "VERMELHO", values: ["VERMELHO"] },
@@ -34,7 +34,8 @@ const slides = [
 
 const HeroSection = () => {
   const { data: categories, isLoading: categoriesLoading } = useBaseCategories();
-  const { rows: bannerRows } = useSiteContent('banners');
+  const { getBySection } = useSiteContentContext();
+  const bannerRows = getBySection("banners");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {

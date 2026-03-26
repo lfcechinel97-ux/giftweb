@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useInView } from "@/hooks/useInView";
-import { supabase } from "@/integrations/supabase/client";
 import { Download } from "lucide-react";
+import { useSiteContentContext } from "@/contexts/SiteContentContext";
 import catalogGeral from "@/assets/catalog-geral.webp";
 import catalogCorporativo from "@/assets/catalog-corporativo.webp";
 
@@ -19,32 +19,28 @@ const defaults: CatalogItem[] = [
 
 const CatalogSection = () => {
   const { ref, inView } = useInView();
+  const { getBySection } = useSiteContentContext();
   const [sectionTitle, setSectionTitle] = useState("");
   const [items, setItems] = useState<CatalogItem[]>(defaults);
 
+  const catalogRows = getBySection("catalogs");
+
   useEffect(() => {
-    supabase
-      .from("site_content")
-      .select("id, value")
-      .eq("section", "catalogs")
-      .then(({ data }) => {
-        if (!data || data.length === 0) return;
-        const map: Record<string, string> = {};
-        data.forEach(r => { if (r.value) map[r.id] = r.value; });
+    if (catalogRows.length === 0) return;
+    const map: Record<string, string> = {};
+    catalogRows.forEach(r => { if (r.value) map[r.id] = r.value; });
 
-        if (map['catalog_title']) setSectionTitle(map['catalog_title']);
+    if (map['catalog_title']) setSectionTitle(map['catalog_title']);
 
-        const newItems: CatalogItem[] = [1, 2, 3].map(i => ({
-          img: map[`catalog_${i}_img`] || defaults[i - 1]?.img || "",
-          title: map[`catalog_${i}_title`] || defaults[i - 1]?.title || "",
-          link: map[`catalog_${i}_link`] || defaults[i - 1]?.link || "#",
-        }));
-        setItems(newItems);
-      });
-  }, []);
+    const newItems: CatalogItem[] = [1, 2, 3].map(i => ({
+      img: map[`catalog_${i}_img`] || defaults[i - 1]?.img || "",
+      title: map[`catalog_${i}_title`] || defaults[i - 1]?.title || "",
+      link: map[`catalog_${i}_link`] || defaults[i - 1]?.link || "#",
+    }));
+    setItems(newItems);
+  }, [catalogRows]);
 
   const visibleItems = items.filter(it => it.img);
-
   if (visibleItems.length === 0) return null;
 
   return (
@@ -62,13 +58,7 @@ const CatalogSection = () => {
 
         <div className="flex flex-wrap items-center justify-center gap-5 md:gap-10">
           {visibleItems.map((cat, i) => (
-            <a
-              key={i}
-              href={cat.link || "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex flex-col items-center w-[44vw] md:w-[260px]"
-            >
+            <a key={i} href={cat.link || "#"} target="_blank" rel="noopener noreferrer" className="group flex flex-col items-center w-[44vw] md:w-[260px]">
               <div
                 className="w-full md:w-[260px] h-[140px] md:h-[200px] flex items-center justify-center rounded-2xl transition-all duration-300"
                 style={{
