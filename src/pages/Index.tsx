@@ -57,7 +57,6 @@ const Index = () => {
   const { data } = useHomepageData();
 
   return (
-    <SiteContentProvider>
       <div className="min-h-screen flex flex-col bg-background">
         <Helmet>
           <title>Gift Web Brindes | Brindes Corporativos Personalizados para Empresas</title>
