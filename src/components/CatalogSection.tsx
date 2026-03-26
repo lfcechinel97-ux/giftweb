@@ -19,7 +19,7 @@ const defaults: CatalogItem[] = [
 
 const CatalogSection = () => {
   const { ref, inView } = useInView();
-  const { getBySection } = useSiteContentContext();
+  // Use rows directly to avoid infinite loop from getBySection creating new arrays
   const [sectionTitle, setSectionTitle] = useState("");
   const [items, setItems] = useState<CatalogItem[]>(defaults);
 
