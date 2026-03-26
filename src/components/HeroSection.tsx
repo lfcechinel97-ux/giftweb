@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
 import { Slider } from "@/components/ui/slider";
+import { useMaxPrice } from "@/hooks/useMaxPrice";
 
 const PRICE_MIN_LIMIT = 0;
-const PRICE_MAX_LIMIT = 1000;
 const BANNER_DESK_BASE_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_desk.png";
 const BANNER_MOB_BASE_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_mob.png";
 const BANNER_DESK_VERSION = "20260321035400981";
@@ -38,7 +38,7 @@ const slides = [
   { text: "Do conceito à entrega, com", highlight: "excelência" },
 ];
 
-const clampPrice = (value: number) => Math.min(PRICE_MAX_LIMIT, Math.max(PRICE_MIN_LIMIT, value));
+const clampPrice = (value: number, max: number) => Math.min(max, Math.max(PRICE_MIN_LIMIT, value));
 
 const buildVersionedUrl = (url: string, version: string) => `${url}${url.includes("?") ? "&" : "?"}v=${version}`;
 
@@ -51,6 +51,7 @@ const HeroSection = () => {
   const { data: categories, isLoading: categoriesLoading } = useBaseCategories();
   const { getBySection } = useSiteContentContext();
   const bannerRows = getBySection("banners");
+  const maxPriceLimit = useMaxPrice();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -64,9 +65,9 @@ const HeroSection = () => {
   const [hoveredColor, setHoveredColor] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchText] = useState("");
-  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, PRICE_MAX_LIMIT]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, maxPriceLimit]);
   const [precoMin, setPrecoMin] = useState(String(PRICE_MIN_LIMIT));
-  const [precoMax, setPrecoMax] = useState(String(PRICE_MAX_LIMIT));
+  const [precoMax, setPrecoMax] = useState(String(maxPriceLimit));
   const touchStart = useRef(0);
   const navigate = useNavigate();
 
@@ -84,23 +85,30 @@ const HeroSection = () => {
     if (Math.abs(dx) > 50) { if (dx > 0) prevSlide(); else nextSlide(); }
   };
 
+  // Sync state when dynamic max loads
+  useEffect(() => {
+    setPriceRange([PRICE_MIN_LIMIT, maxPriceLimit]);
+    setPrecoMin(String(PRICE_MIN_LIMIT));
+    setPrecoMax(String(maxPriceLimit));
+  }, [maxPriceLimit]);
+
   const syncPriceRange = useCallback((nextMin: number, nextMax: number) => {
-    const clampedMin = clampPrice(Math.min(nextMin, nextMax));
-    const clampedMax = clampPrice(Math.max(nextMin, nextMax));
+    const clampedMin = clampPrice(Math.min(nextMin, nextMax), maxPriceLimit);
+    const clampedMax = clampPrice(Math.max(nextMin, nextMax), maxPriceLimit);
 
     setPriceRange([clampedMin, clampedMax]);
     setPrecoMin(String(clampedMin));
     setPrecoMax(String(clampedMax));
-  }, []);
+  }, [maxPriceLimit]);
 
   const handlePriceRangeChange = useCallback((values: number[]) => {
-    const [nextMin = PRICE_MIN_LIMIT, nextMax = PRICE_MAX_LIMIT] = values;
+    const [nextMin = PRICE_MIN_LIMIT, nextMax = maxPriceLimit] = values;
     syncPriceRange(nextMin, nextMax);
-  }, [syncPriceRange]);
+  }, [syncPriceRange, maxPriceLimit]);
 
   const handlePriceInputChange = useCallback((field: "min" | "max", value: string) => {
     const sanitized = value.replace(/\D/g, "");
-    const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : PRICE_MAX_LIMIT) : Number(sanitized));
+    const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : maxPriceLimit) : Number(sanitized), maxPriceLimit);
 
     if (field === "min") {
       syncPriceRange(parsedValue, priceRange[1]);
@@ -108,7 +116,7 @@ const HeroSection = () => {
     }
 
     syncPriceRange(priceRange[0], parsedValue);
-  }, [priceRange, syncPriceRange]);
+  }, [priceRange, syncPriceRange, maxPriceLimit]);
 
   const handleSearch = () => {
     const q = searchText.trim();
@@ -118,7 +126,7 @@ const HeroSection = () => {
     if (q) params.set("q", q);
     if (colorValues) params.set("cor", colorValues);
     if (Number(precoMin) > PRICE_MIN_LIMIT) params.set("preco_min", precoMin);
-    if (Number(precoMax) < PRICE_MAX_LIMIT) params.set("preco_max", precoMax);
+    if (Number(precoMax) < maxPriceLimit) params.set("preco_max", precoMax);
 
     const qs = params.toString() ? `?${params.toString()}` : "";
 
@@ -190,7 +198,7 @@ const HeroSection = () => {
               <Slider
                 value={priceRange}
                 min={PRICE_MIN_LIMIT}
-                max={PRICE_MAX_LIMIT}
+                max={maxPriceLimit}
                 step={1}
                 minStepsBetweenThumbs={1}
                 onValueChange={handlePriceRangeChange}

@@ -29,6 +29,8 @@ const SearchPage = () => {
   const q = searchParams.get("q") || "";
   const page = parseInt(searchParams.get("page") || "1");
   const urlCor = searchParams.get("cor") || "";
+  const urlPrecoMin = searchParams.get("preco_min") || "";
+  const urlPrecoMax = searchParams.get("preco_max") || "";
   const [products, setProducts] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -75,7 +77,9 @@ const SearchPage = () => {
       p_sort: sortBy,
       p_page: page,
       p_page_size: PAGE_SIZE,
-    });
+      p_preco_min: urlPrecoMin ? Number(urlPrecoMin) : null,
+      p_preco_max: urlPrecoMax ? Number(urlPrecoMax) : null,
+    } as any);
 
     if (error) {
       console.error("RPC error:", error);
@@ -87,7 +91,7 @@ const SearchPage = () => {
       setTotal(result.total_count || 0);
     }
     setLoading(false);
-  }, [q, page, selectedCor, apenasEstoque, sortBy]);
+  }, [q, page, selectedCor, apenasEstoque, sortBy, urlPrecoMin, urlPrecoMax]);
 
   useEffect(() => { fetchResults(); }, [fetchResults]);
 
