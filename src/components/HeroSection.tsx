@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useRef, TouchEvent } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-// Use the same URL as the HTML preload to avoid double-download
-const heroBanner = "/hero-banner.webp";
+// Use the same URLs as the HTML preload to avoid double-download
+const heroBannerDesk = "/hero-banner-desk.webp";
+const heroBannerMob = "/hero-banner-mob.webp";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
 
@@ -167,7 +168,7 @@ const HeroSection = () => {
             const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
             const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);
             const dynamicSrc = (isMobile && mobRow?.value) ? mobRow.value : (deskRow?.value || null);
-            const bannerSrc = dynamicSrc || heroBanner;
+            const bannerSrc = dynamicSrc || (isMobile ? heroBannerMob : heroBannerDesk);
             const isActive = i === currentSlide;
 
             return (
