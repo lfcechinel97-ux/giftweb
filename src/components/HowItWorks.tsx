@@ -136,8 +136,25 @@ const HowItWorks = () => {
                   </h3>
 
                   <p
-                    className="text-[12px] leading-relaxed max-h-0 overflow-hidden opacity-0 group-hover:max-h-20 group-hover:opacity-100 transition-all duration-400"
-                    style={{ color: "#D1FAE5" }}
+                    className="text-[12px] leading-relaxed overflow-hidden transition-all duration-400"
+                    style={{
+                      color: "#D1FAE5",
+                      opacity: 0,
+                      transform: "translateY(8px)",
+                    }}
+                    ref={(el) => {
+                      if (!el) return;
+                      const parent = el.closest('.group');
+                      if (!parent) return;
+                      parent.addEventListener('mouseenter', () => {
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                      });
+                      parent.addEventListener('mouseleave', () => {
+                        el.style.opacity = '0';
+                        el.style.transform = 'translateY(8px)';
+                      });
+                    }}
                   >
                     {s.desc}
                   </p>
