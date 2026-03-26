@@ -38,7 +38,7 @@ const slides = [
   { text: "Do conceito à entrega, com", highlight: "excelência" },
 ];
 
-const clampPrice = (value: number) => Math.min(PRICE_MAX_LIMIT, Math.max(PRICE_MIN_LIMIT, value));
+const clampPrice = (value: number, max: number) => Math.min(max, Math.max(PRICE_MIN_LIMIT, value));
 
 const buildVersionedUrl = (url: string, version: string) => `${url}${url.includes("?") ? "&" : "?"}v=${version}`;
 
