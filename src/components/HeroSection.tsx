@@ -116,16 +116,16 @@ const HeroSection = () => {
     const sanitized = value.replace(/\D/g, "");
     const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : em) : Number(sanitized), em);
     if (field === "min") {
-      syncFromPrices(parsedValue, priceRange[1]);
+      applyPrices(parsedValue, priceRange[1]);
     } else {
-      syncFromPrices(priceRange[0], parsedValue);
+      applyPrices(priceRange[0], parsedValue);
     }
-  }, [priceRange, syncFromPrices, maxPriceLimit]);
+  }, [priceRange, applyPrices, maxPriceLimit]);
 
   const handleQuickFilter = useCallback((filter: typeof quickFilters[number]) => {
-    syncFromPrices(filter.min, filter.max);
+    applyPrices(filter.min, filter.max);
     setActiveQuickFilter(filter.label);
-  }, [syncFromPrices]);
+  }, [applyPrices]);
 
   const handleSearch = () => {
     const q = searchText.trim();
