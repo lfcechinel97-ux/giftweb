@@ -40,28 +40,6 @@ const slides = [
 
 const clampPrice = (value: number, max: number) => Math.min(max, Math.max(PRICE_MIN_LIMIT, value));
 
-// Non-linear mapping: 0-70% of slider = R$0-100, 70-100% = R$100-max
-const SLIDER_INTERNAL_MAX = 1000;
-const BREAKPOINT_RATIO = 0.7;
-const BREAKPOINT_PRICE = 100;
-const SLIDER_BREAKPOINT = Math.round(SLIDER_INTERNAL_MAX * BREAKPOINT_RATIO); // 700
-
-function priceToSlider(price: number, maxPrice: number): number {
-  if (price <= BREAKPOINT_PRICE) {
-    return Math.round((price / BREAKPOINT_PRICE) * SLIDER_BREAKPOINT);
-  }
-  const ratio = (price - BREAKPOINT_PRICE) / (maxPrice - BREAKPOINT_PRICE);
-  return Math.round(SLIDER_BREAKPOINT + ratio * (SLIDER_INTERNAL_MAX - SLIDER_BREAKPOINT));
-}
-
-function sliderToPrice(pos: number, maxPrice: number): number {
-  if (pos <= SLIDER_BREAKPOINT) {
-    return Math.round((pos / SLIDER_BREAKPOINT) * BREAKPOINT_PRICE);
-  }
-  const ratio = (pos - SLIDER_BREAKPOINT) / (SLIDER_INTERNAL_MAX - SLIDER_BREAKPOINT);
-  return Math.round(BREAKPOINT_PRICE + ratio * (maxPrice - BREAKPOINT_PRICE));
-}
-
 const quickFilters = [
   { label: "Até R$10", min: 0, max: 10 },
   { label: "Até R$30", min: 10.01, max: 30 },
@@ -95,14 +73,12 @@ const HeroSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchText] = useState("");
   const FIXED_MAX = 400;
-  const effectiveMax = Math.min(maxPriceLimit, FIXED_MAX);
-  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, effectiveMax]);
-  const [sliderRange, setSliderRange] = useState<[number, number]>([0, SLIDER_INTERNAL_MAX]);
-  const [precoMin, setPrecoMin] = useState(String(PRICE_MIN_LIMIT));
-  const [precoMax, setPrecoMax] = useState(String(effectiveMax));
+  
+  const [priceRange, setPriceRange] = useState<[number, number]>([10, 70]);
+  const [precoMin, setPrecoMin] = useState("10");
+  const [precoMax, setPrecoMax] = useState("70");
   const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
   const touchStart = useRef(0);
-  const prevSliderRef = useRef<[number, number]>([0, SLIDER_INTERNAL_MAX]);
   const navigate = useNavigate();
 
   const nextSlide = useCallback(() => setCurrentSlide((prev) => (prev + 1) % slides.length), []);
@@ -119,73 +95,37 @@ const HeroSection = () => {
     if (Math.abs(dx) > 50) { if (dx > 0) prevSlide(); else nextSlide(); }
   };
 
-  // Sync state when dynamic max loads
-  useEffect(() => {
+  const applyPrices = useCallback((minP: number, maxP: number) => {
     const em = Math.min(maxPriceLimit, FIXED_MAX);
-    setPriceRange([PRICE_MIN_LIMIT, em]);
-    setSliderRange([0, SLIDER_INTERNAL_MAX]);
-    prevSliderRef.current = [0, SLIDER_INTERNAL_MAX];
-    setPrecoMin(String(PRICE_MIN_LIMIT));
-    setPrecoMax(String(em));
-    setActiveQuickFilter(null);
-  }, [maxPriceLimit]);
-
-  const applySliderState = useCallback((sMin: number, sMax: number) => {
-    const em = Math.min(maxPriceLimit, FIXED_MAX);
-    setSliderRange([sMin, sMax]);
-    prevSliderRef.current = [sMin, sMax];
-    const pMin = sliderToPrice(sMin, em);
-    const pMax = sliderToPrice(sMax, em);
-    setPriceRange([pMin, pMax]);
-    setPrecoMin(String(pMin));
-    setPrecoMax(String(pMax));
-    const match = quickFilters.find(f => f.min === pMin && f.max === pMax);
+    const cMin = clampPrice(Math.min(minP, maxP), em);
+    const cMax = clampPrice(Math.max(minP, maxP), em);
+    setPriceRange([cMin, cMax]);
+    setPrecoMin(String(cMin));
+    setPrecoMax(String(cMax));
+    const match = quickFilters.find(f => f.min === cMin && f.max === cMax);
     setActiveQuickFilter(match ? match.label : null);
   }, [maxPriceLimit]);
 
-  const syncFromPrices = useCallback((minP: number, maxP: number) => {
-    const em = Math.min(maxPriceLimit, FIXED_MAX);
-    const clampedMin = clampPrice(Math.min(minP, maxP), em);
-    const clampedMax = clampPrice(Math.max(minP, maxP), em);
-    applySliderState(priceToSlider(clampedMin, em), priceToSlider(clampedMax, em));
-  }, [maxPriceLimit, applySliderState]);
-
   const handleSliderChange = useCallback((values: number[]) => {
-    let [sMin = 0, sMax = SLIDER_INTERNAL_MAX] = values;
-    const [prevMin, prevMax] = prevSliderRef.current;
-
-    const deltaMin = Math.abs(sMin - prevMin);
-    const deltaMax = Math.abs(sMax - prevMax);
-
-    // Detect thumb swap: if min jumped a lot but max barely moved,
-    // Radix captured the wrong thumb — fix by keeping min and moving max
-    if (deltaMin > 30 && deltaMax < 10) {
-      sMax = sMin > prevMax ? sMin : Math.max(sMin, sMax);
-      sMin = prevMin;
-    } else if (deltaMax > 30 && deltaMin < 10) {
-      sMin = sMax < prevMin ? sMax : Math.min(sMin, sMax);
-      sMax = prevMax;
-    }
-
-    if (sMin > sMax) [sMin, sMax] = [sMax, sMin];
-    applySliderState(sMin, sMax);
-  }, [applySliderState]);
+    const [v0 = 0, v1 = FIXED_MAX] = values;
+    applyPrices(v0, v1);
+  }, [applyPrices]);
 
   const handlePriceInputChange = useCallback((field: "min" | "max", value: string) => {
     const em = Math.min(maxPriceLimit, FIXED_MAX);
     const sanitized = value.replace(/\D/g, "");
     const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : em) : Number(sanitized), em);
     if (field === "min") {
-      syncFromPrices(parsedValue, priceRange[1]);
+      applyPrices(parsedValue, priceRange[1]);
     } else {
-      syncFromPrices(priceRange[0], parsedValue);
+      applyPrices(priceRange[0], parsedValue);
     }
-  }, [priceRange, syncFromPrices, maxPriceLimit]);
+  }, [priceRange, applyPrices, maxPriceLimit]);
 
   const handleQuickFilter = useCallback((filter: typeof quickFilters[number]) => {
-    syncFromPrices(filter.min, filter.max);
+    applyPrices(filter.min, filter.max);
     setActiveQuickFilter(filter.label);
-  }, [syncFromPrices]);
+  }, [applyPrices]);
 
   const handleSearch = () => {
     const q = searchText.trim();
@@ -297,10 +237,10 @@ const HeroSection = () => {
             </div>
             <div className="mt-3 px-1">
               <Slider
-                value={sliderRange}
+                value={priceRange}
                 min={0}
-                max={SLIDER_INTERNAL_MAX}
-                step={1}
+                max={FIXED_MAX}
+                step={5}
                 minStepsBetweenThumbs={1}
                 onValueChange={handleSliderChange}
               />
