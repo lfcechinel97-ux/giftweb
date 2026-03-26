@@ -63,11 +63,10 @@ function sliderToPrice(pos: number, maxPrice: number): number {
 }
 
 const quickFilters = [
-  { label: "Até R$30", value: 30 },
-  { label: "Até R$50", value: 50 },
-  { label: "Até R$100", value: 100 },
-  { label: "Até R$200", value: 200 },
-  { label: "Todos", value: null },
+  { label: "Até R$10", min: 0, max: 10 },
+  { label: "Até R$30", min: 10.01, max: 30 },
+  { label: "Até R$50", min: 30.01, max: 50, highlight: true },
+  { label: "Até R$100", min: 50.01, max: 100 },
 ];
 
 const buildVersionedUrl = (url: string, version: string) => `${url}${url.includes("?") ? "&" : "?"}v=${version}`;
@@ -95,11 +94,13 @@ const HeroSection = () => {
   const [hoveredColor, setHoveredColor] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchText] = useState("");
-  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, maxPriceLimit]);
+  const FIXED_MAX = 400;
+  const effectiveMax = Math.min(maxPriceLimit, FIXED_MAX);
+  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, effectiveMax]);
   const [sliderRange, setSliderRange] = useState<[number, number]>([0, SLIDER_INTERNAL_MAX]);
   const [precoMin, setPrecoMin] = useState(String(PRICE_MIN_LIMIT));
-  const [precoMax, setPrecoMax] = useState(String(maxPriceLimit));
-  const [activeQuickFilter, setActiveQuickFilter] = useState<number | null>(null);
+  const [precoMax, setPrecoMax] = useState(String(effectiveMax));
+  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(null);
   const touchStart = useRef(0);
   const navigate = useNavigate();
 
@@ -119,49 +120,43 @@ const HeroSection = () => {
 
   // Sync state when dynamic max loads
   useEffect(() => {
-    setPriceRange([PRICE_MIN_LIMIT, maxPriceLimit]);
+    const em = Math.min(maxPriceLimit, FIXED_MAX);
+    setPriceRange([PRICE_MIN_LIMIT, em]);
     setSliderRange([0, SLIDER_INTERNAL_MAX]);
     setPrecoMin(String(PRICE_MIN_LIMIT));
-    setPrecoMax(String(maxPriceLimit));
+    setPrecoMax(String(em));
     setActiveQuickFilter(null);
   }, [maxPriceLimit]);
 
   const syncFromPrices = useCallback((minP: number, maxP: number) => {
-    const clampedMin = clampPrice(Math.min(minP, maxP), maxPriceLimit);
-    const clampedMax = clampPrice(Math.max(minP, maxP), maxPriceLimit);
+    const em = Math.min(maxPriceLimit, FIXED_MAX);
+    const clampedMin = clampPrice(Math.min(minP, maxP), em);
+    const clampedMax = clampPrice(Math.max(minP, maxP), em);
     setPriceRange([clampedMin, clampedMax]);
-    setSliderRange([priceToSlider(clampedMin, maxPriceLimit), priceToSlider(clampedMax, maxPriceLimit)]);
+    setSliderRange([priceToSlider(clampedMin, em), priceToSlider(clampedMax, em)]);
     setPrecoMin(String(clampedMin));
     setPrecoMax(String(clampedMax));
-    // Check if matches a quick filter
-    if (clampedMin === 0) {
-      const match = quickFilters.find(f => f.value !== null && f.value === clampedMax);
-      setActiveQuickFilter(match ? match.value : (clampedMax === maxPriceLimit ? -1 : null));
-    } else {
-      setActiveQuickFilter(null);
-    }
+    const match = quickFilters.find(f => f.min === clampedMin && f.max === clampedMax);
+    setActiveQuickFilter(match ? match.label : null);
   }, [maxPriceLimit]);
 
   const handleSliderChange = useCallback((values: number[]) => {
+    const em = Math.min(maxPriceLimit, FIXED_MAX);
     const [sMin = 0, sMax = SLIDER_INTERNAL_MAX] = values;
     setSliderRange([sMin, sMax]);
-    const pMin = sliderToPrice(sMin, maxPriceLimit);
-    const pMax = sliderToPrice(sMax, maxPriceLimit);
+    const pMin = sliderToPrice(sMin, em);
+    const pMax = sliderToPrice(sMax, em);
     setPriceRange([pMin, pMax]);
     setPrecoMin(String(pMin));
     setPrecoMax(String(pMax));
-    // Check quick filter match
-    if (pMin === 0) {
-      const match = quickFilters.find(f => f.value !== null && f.value === pMax);
-      setActiveQuickFilter(match ? match.value : (pMax === maxPriceLimit ? -1 : null));
-    } else {
-      setActiveQuickFilter(null);
-    }
+    const match = quickFilters.find(f => f.min === pMin && f.max === pMax);
+    setActiveQuickFilter(match ? match.label : null);
   }, [maxPriceLimit]);
 
   const handlePriceInputChange = useCallback((field: "min" | "max", value: string) => {
+    const em = Math.min(maxPriceLimit, FIXED_MAX);
     const sanitized = value.replace(/\D/g, "");
-    const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : maxPriceLimit) : Number(sanitized), maxPriceLimit);
+    const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : em) : Number(sanitized), em);
     if (field === "min") {
       syncFromPrices(parsedValue, priceRange[1]);
     } else {
@@ -169,16 +164,10 @@ const HeroSection = () => {
     }
   }, [priceRange, syncFromPrices, maxPriceLimit]);
 
-  const handleQuickFilter = useCallback((value: number | null) => {
-    if (value === null) {
-      // "Todos"
-      syncFromPrices(0, maxPriceLimit);
-      setActiveQuickFilter(-1);
-    } else {
-      syncFromPrices(0, value);
-      setActiveQuickFilter(value);
-    }
-  }, [syncFromPrices, maxPriceLimit]);
+  const handleQuickFilter = useCallback((filter: typeof quickFilters[number]) => {
+    syncFromPrices(filter.min, filter.max);
+    setActiveQuickFilter(filter.label);
+  }, [syncFromPrices]);
 
   const handleSearch = () => {
     const q = searchText.trim();
@@ -188,7 +177,7 @@ const HeroSection = () => {
     if (q) params.set("q", q);
     if (colorValues) params.set("cor", colorValues);
     if (Number(precoMin) > PRICE_MIN_LIMIT) params.set("preco_min", precoMin);
-    if (Number(precoMax) < maxPriceLimit) params.set("preco_max", precoMax);
+    if (Number(precoMax) < Math.min(maxPriceLimit, FIXED_MAX)) params.set("preco_max", precoMax);
 
     const qs = params.toString() ? `?${params.toString()}` : "";
 
@@ -235,19 +224,24 @@ const HeroSection = () => {
             {/* Quick filter buttons */}
             <div className="flex flex-wrap gap-1.5 mb-2.5">
               {quickFilters.map((f) => {
-                const isActive = f.value === null
-                  ? activeQuickFilter === -1
-                  : activeQuickFilter === f.value;
+                const isActive = activeQuickFilter === f.label;
                 return (
                   <button
                     key={f.label}
-                    onClick={() => handleQuickFilter(f.value)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium border transition-all duration-200 ${
+                    onClick={() => handleQuickFilter(f)}
+                    className={`relative px-3 py-1 rounded-lg text-xs font-medium border transition-all duration-200 ${
                       isActive
                         ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-card text-muted-foreground border-border hover:border-primary/50"
+                        : f.highlight
+                          ? "bg-card text-muted-foreground border-primary/40 hover:border-primary/70"
+                          : "bg-card text-muted-foreground border-border hover:border-primary/50"
                     }`}
                   >
+                    {f.highlight && (
+                      <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-semibold text-primary whitespace-nowrap leading-none">
+                        mais pedido
+                      </span>
+                    )}
                     {f.label}
                   </button>
                 );
