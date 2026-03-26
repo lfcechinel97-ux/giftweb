@@ -120,6 +120,8 @@ const ClientsSection = () => {
               {logo?.value && (
                 <img
                   src={logo.value}
+                  width={160}
+                  height={80}
                   alt="Logo de cliente parceiro"
                   loading="lazy"
                   style={{

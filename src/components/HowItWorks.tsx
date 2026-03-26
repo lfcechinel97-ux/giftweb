@@ -84,6 +84,8 @@ const HowItWorks = () => {
                   src={s.img}
                   alt={s.title}
                   loading="lazy"
+                  width={600}
+                  height={340}
                   className="absolute inset-0 w-full h-full object-cover transition-all duration-500 ease-out brightness-[0.5] group-hover:scale-[1.06] group-hover:brightness-[0.65]"
                 />
 
