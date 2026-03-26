@@ -77,7 +77,9 @@ const SearchPage = () => {
       p_sort: sortBy,
       p_page: page,
       p_page_size: PAGE_SIZE,
-    });
+      p_preco_min: urlPrecoMin ? Number(urlPrecoMin) : null,
+      p_preco_max: urlPrecoMax ? Number(urlPrecoMax) : null,
+    } as any);
 
     if (error) {
       console.error("RPC error:", error);
