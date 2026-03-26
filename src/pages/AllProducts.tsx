@@ -39,27 +39,33 @@ const AllProducts = () => {
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
-    const from = (page - 1) * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
 
-    let query = supabase.from("products_cache").select("*", { count: "exact" }).eq("ativo", true).eq("has_image", true);
-    if (!selectedCor) query = query.eq("is_variante", false);
-    if (searchTerm) query = query.ilike("busca", `%${searchTerm}%`);
-    if (selectedCor) {
-      const corValues = selectedCor.split(",").map(v => v.trim().toUpperCase()).filter(Boolean);
-      query = query.in("cor", corValues);
+    const corValues = selectedCor
+      ? selectedCor.split(",").map(v => v.trim().toUpperCase()).filter(Boolean)
+      : null;
+
+    const { data, error } = await supabase.rpc("search_products_global", {
+      p_cor: corValues,
+      p_search: searchTerm || null,
+      p_apenas_estoque: apenasEstoque,
+      p_sort: sortBy,
+      p_page: page,
+      p_page_size: PAGE_SIZE,
+      p_preco_min: urlPrecoMin ? Number(urlPrecoMin) : null,
+      p_preco_max: urlPrecoMax ? Number(urlPrecoMax) : null,
+    } as any);
+
+    if (error) {
+      console.error("RPC error:", error);
+      setProducts([]);
+      setTotal(0);
+    } else if (data) {
+      const result = data as unknown as { rows: any[]; total_count: number };
+      setProducts((result.rows || []) as Product[]);
+      setTotal(result.total_count || 0);
     }
-    if (apenasEstoque) query = query.gt("estoque", 0);
-
-    if (sortBy === "menor_preco") query = query.order("sort_estoque").order("preco_custo", { ascending: true }).order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false });
-    else if (sortBy === "maior_estoque") query = query.order("sort_estoque").order("estoque", { ascending: false, nullsFirst: false }).order("variantes_count", { ascending: false });
-    else query = query.order("sort_estoque").order("variantes_count", { ascending: false }).order("estoque", { ascending: false, nullsFirst: false });
-
-    const { data, count } = await query.range(from, to);
-    setProducts(data || []);
-    setTotal(count || 0);
     setLoading(false);
-  }, [page, searchTerm, selectedCor, apenasEstoque, sortBy]);
+  }, [page, searchTerm, selectedCor, apenasEstoque, sortBy, urlPrecoMin, urlPrecoMax]);
 
   useEffect(() => {
     supabase

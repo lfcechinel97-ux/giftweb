@@ -91,7 +91,7 @@ const SearchPage = () => {
       setTotal(result.total_count || 0);
     }
     setLoading(false);
-  }, [q, page, selectedCor, apenasEstoque, sortBy]);
+  }, [q, page, selectedCor, apenasEstoque, sortBy, urlPrecoMin, urlPrecoMax]);
 
   useEffect(() => { fetchResults(); }, [fetchResults]);
 

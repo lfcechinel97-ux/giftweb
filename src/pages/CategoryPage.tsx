@@ -91,7 +91,7 @@ const CategoryPage = () => {
       setTotal(result.total_count || 0);
     }
     setLoading(false);
-  }, [category, page, searchTerm, selectedCor, apenasEstoque, sortBy]);
+  }, [category, page, searchTerm, selectedCor, apenasEstoque, sortBy, urlPrecoMin, urlPrecoMax]);
 
   useEffect(() => {
     fetchProducts();
