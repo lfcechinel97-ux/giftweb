@@ -232,6 +232,27 @@ const HeroSection = () => {
           {/* Price range filter */}
           <div>
             <label className="text-sm font-medium text-muted-foreground mb-2 block">Faixa de preço</label>
+            {/* Quick filter buttons */}
+            <div className="flex flex-wrap gap-1.5 mb-2.5">
+              {quickFilters.map((f) => {
+                const isActive = f.value === null
+                  ? activeQuickFilter === -1
+                  : activeQuickFilter === f.value;
+                return (
+                  <button
+                    key={f.label}
+                    onClick={() => handleQuickFilter(f.value)}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium border transition-all duration-200 ${
+                      isActive
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-card text-muted-foreground border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
@@ -258,12 +279,12 @@ const HeroSection = () => {
             </div>
             <div className="mt-3 px-1">
               <Slider
-                value={priceRange}
-                min={PRICE_MIN_LIMIT}
-                max={maxPriceLimit}
+                value={sliderRange}
+                min={0}
+                max={SLIDER_INTERNAL_MAX}
                 step={1}
                 minStepsBetweenThumbs={1}
-                onValueChange={handlePriceRangeChange}
+                onValueChange={handleSliderChange}
               />
             </div>
           </div>
