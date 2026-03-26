@@ -11,9 +11,6 @@ const BANNER_DESK_BASE_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v
 const BANNER_MOB_BASE_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_mob.png";
 const BANNER_DESK_VERSION = "20260321035400981";
 const BANNER_MOB_VERSION = "20260321035402834";
-const BANNER_DESK_URL = `${BANNER_DESK_BASE_URL}?v=${BANNER_DESK_VERSION}`;
-const BANNER_MOB_URL = `${BANNER_MOB_BASE_URL}?v=${BANNER_MOB_VERSION}`;
-
 const swatchColors = [
   { bg: "#EF4444", name: "VERMELHO", values: ["VERMELHO"] },
   { bg: "#2563EB", name: "AZUL", values: ["AZUL"] },
@@ -66,7 +63,7 @@ const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [hoveredColor, setHoveredColor] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [searchText, setSearchText] = useState("");
+  const [searchText] = useState("");
   const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, PRICE_MAX_LIMIT]);
   const [precoMin, setPrecoMin] = useState(String(PRICE_MIN_LIMIT));
   const [precoMax, setPrecoMax] = useState(String(PRICE_MAX_LIMIT));
@@ -197,7 +194,6 @@ const HeroSection = () => {
                 step={1}
                 minStepsBetweenThumbs={1}
                 onValueChange={handlePriceRangeChange}
-                aria-label={["Valor mínimo", "Valor máximo"]}
               />
             </div>
           </div>
@@ -259,13 +255,18 @@ const HeroSection = () => {
             const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
             const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);
             const activeRow = isMobile ? mobRow : deskRow;
-            const fallbackBaseSrc = i === 0 ? (isMobile ? BANNER_MOB_BASE_URL : BANNER_DESK_BASE_URL) : null;
+            const fallbackSrc = i === 0
+              ? buildVersionedUrl(
+                  isMobile ? BANNER_MOB_BASE_URL : BANNER_DESK_BASE_URL,
+                  isMobile ? BANNER_MOB_VERSION : BANNER_DESK_VERSION,
+                )
+              : null;
             const fallbackVersion = i === 0 ? (isMobile ? BANNER_MOB_VERSION : BANNER_DESK_VERSION) : "";
             const dynamicSrc = activeRow?.value ?? null;
             const bannerSrc = dynamicSrc
               ? buildVersionedUrl(dynamicSrc, getVersionToken(activeRow?.updated_at, fallbackVersion))
-              : fallbackBaseSrc
-                ? buildVersionedUrl(fallbackBaseSrc, fallbackVersion)
+              : fallbackSrc
+                ? fallbackSrc
                 : null;
             const isActive = i === currentSlide;
 
