@@ -36,12 +36,12 @@ export default function AdminCategoryImages() {
         const fileState = files[cat.key];
         if (fileState) {
           const url = await uploadImage(`cat_img_${cat.key}`, fileState.file);
-          await updateValue(`cat_img_${cat.key}`, url);
+          await upsertValue(`cat_img_${cat.key}`, url, "categorias");
         }
 
         const linkVal = links[cat.key];
         if (linkVal !== undefined) {
-          await updateValue(`cat_link_${cat.key}`, linkVal);
+          await upsertValue(`cat_link_${cat.key}`, linkVal, "categorias");
         }
       }
 
