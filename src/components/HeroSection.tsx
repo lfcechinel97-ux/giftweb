@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useRef, TouchEvent } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-// Use the same URLs as the HTML preload to avoid double-download
-const heroBannerDesk = "/hero-banner-desk.webp";
-const heroBannerMob = "/hero-banner-mob.webp";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
+
+// Production banner URLs — same as preload in index.html
+const BANNER_DESK_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_desk.png";
+const BANNER_MOB_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_mob.png";
 
 const swatchColors = [
   { bg: "#EF4444", name: "VERMELHO", values: ["VERMELHO"] },
@@ -51,6 +52,8 @@ const HeroSection = () => {
   const [hoveredColor, setHoveredColor] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchText, setSearchText] = useState("");
+  const [precoMin, setPrecoMin] = useState("");
+  const [precoMax, setPrecoMax] = useState("");
   const touchStart = useRef(0);
   const navigate = useNavigate();
 
@@ -71,15 +74,21 @@ const HeroSection = () => {
   const handleSearch = () => {
     const q = searchText.trim();
     const colorValues = selectedColor !== null ? swatchColors[selectedColor].values.join(",") : null;
+    const params = new URLSearchParams();
 
-    if (selectedCategory && q) {
-      navigate(`/categoria/${selectedCategory}?q=${encodeURIComponent(q)}${colorValues ? `&cor=${encodeURIComponent(colorValues)}` : ""}`);
-    } else if (selectedCategory) {
-      navigate(`/categoria/${selectedCategory}${colorValues ? `?cor=${encodeURIComponent(colorValues)}` : ""}`);
+    if (q) params.set("q", q);
+    if (colorValues) params.set("cor", colorValues);
+    if (precoMin) params.set("preco_min", precoMin);
+    if (precoMax) params.set("preco_max", precoMax);
+
+    const qs = params.toString() ? `?${params.toString()}` : "";
+
+    if (selectedCategory) {
+      navigate(`/categoria/${selectedCategory}${qs}`);
     } else if (q) {
-      navigate(`/busca?q=${encodeURIComponent(q)}${colorValues ? `&cor=${encodeURIComponent(colorValues)}` : ""}`);
-    } else if (colorValues) {
-      navigate(`/produtos?cor=${encodeURIComponent(colorValues)}`);
+      navigate(`/busca${qs}`);
+    } else if (qs) {
+      navigate(`/produtos${qs}`);
     } else {
       navigate("/produtos");
     }
@@ -109,6 +118,35 @@ const HeroSection = () => {
               {categories?.map((c) => <option key={c.slug} value={c.slug}>{c.label}</option>)}
             </select>
             <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-cta pointer-events-none" />
+          </div>
+
+          {/* Price range filter */}
+          <div>
+            <label className="text-sm font-medium text-muted-foreground mb-2 block">Faixa de preço</label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
+                <input
+                  type="number"
+                  placeholder="Mín"
+                  value={precoMin}
+                  onChange={(e) => setPrecoMin(e.target.value)}
+                  min="0"
+                  className="w-full rounded-xl border border-border bg-card py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200"
+                />
+              </div>
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
+                <input
+                  type="number"
+                  placeholder="Máx"
+                  value={precoMax}
+                  onChange={(e) => setPrecoMax(e.target.value)}
+                  min="0"
+                  className="w-full rounded-xl border border-border bg-card py-2.5 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200"
+                />
+              </div>
+            </div>
           </div>
 
           <div>
@@ -168,7 +206,12 @@ const HeroSection = () => {
             const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
             const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);
             const dynamicSrc = (isMobile && mobRow?.value) ? mobRow.value : (deskRow?.value || null);
-            const bannerSrc = dynamicSrc || (isMobile ? heroBannerMob : heroBannerDesk);
+            // For slide 0, use the production URL directly (matches preload in index.html)
+            const fallbackSrc = i === 0
+              ? (isMobile ? BANNER_MOB_URL : BANNER_DESK_URL)
+              : (isMobile ? BANNER_MOB_URL : BANNER_DESK_URL);
+            // Only use dynamic if it differs from fallback (avoids double download)
+            const bannerSrc = dynamicSrc && dynamicSrc !== fallbackSrc ? dynamicSrc : fallbackSrc;
             const isActive = i === currentSlide;
 
             return (
