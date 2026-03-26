@@ -73,7 +73,7 @@ const HeroSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchText] = useState("");
   const FIXED_MAX = 400;
-  const effectiveMax = Math.min(maxPriceLimit, FIXED_MAX);
+  
   const [priceRange, setPriceRange] = useState<[number, number]>([10, 70]);
   const [precoMin, setPrecoMin] = useState("10");
   const [precoMax, setPrecoMax] = useState("70");
