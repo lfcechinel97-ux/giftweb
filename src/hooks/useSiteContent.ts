@@ -36,6 +36,18 @@ export function useSiteContent(section?: string) {
       .eq('id', id);
   };
 
+  const upsertValue = async (id: string, value: string, section?: string) => {
+    await supabase
+      .from('site_content')
+      .upsert({
+        id,
+        value,
+        type: 'image',
+        section: section || null,
+        updated_at: new Date().toISOString(),
+      } as any, { onConflict: 'id' });
+  };
+
   const uploadImage = async (id: string, file: File): Promise<string> => {
     const ext = file.name.split('.').pop();
     const path = `banners/${id}.${ext}`;
