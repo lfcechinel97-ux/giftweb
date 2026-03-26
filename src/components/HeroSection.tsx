@@ -40,6 +40,36 @@ const slides = [
 
 const clampPrice = (value: number, max: number) => Math.min(max, Math.max(PRICE_MIN_LIMIT, value));
 
+// Non-linear mapping: 0-70% of slider = R$0-100, 70-100% = R$100-max
+const SLIDER_INTERNAL_MAX = 1000;
+const BREAKPOINT_RATIO = 0.7;
+const BREAKPOINT_PRICE = 100;
+const SLIDER_BREAKPOINT = Math.round(SLIDER_INTERNAL_MAX * BREAKPOINT_RATIO); // 700
+
+function priceToSlider(price: number, maxPrice: number): number {
+  if (price <= BREAKPOINT_PRICE) {
+    return Math.round((price / BREAKPOINT_PRICE) * SLIDER_BREAKPOINT);
+  }
+  const ratio = (price - BREAKPOINT_PRICE) / (maxPrice - BREAKPOINT_PRICE);
+  return Math.round(SLIDER_BREAKPOINT + ratio * (SLIDER_INTERNAL_MAX - SLIDER_BREAKPOINT));
+}
+
+function sliderToPrice(pos: number, maxPrice: number): number {
+  if (pos <= SLIDER_BREAKPOINT) {
+    return Math.round((pos / SLIDER_BREAKPOINT) * BREAKPOINT_PRICE);
+  }
+  const ratio = (pos - SLIDER_BREAKPOINT) / (SLIDER_INTERNAL_MAX - SLIDER_BREAKPOINT);
+  return Math.round(BREAKPOINT_PRICE + ratio * (maxPrice - BREAKPOINT_PRICE));
+}
+
+const quickFilters = [
+  { label: "Até R$30", value: 30 },
+  { label: "Até R$50", value: 50 },
+  { label: "Até R$100", value: 100 },
+  { label: "Até R$200", value: 200 },
+  { label: "Todos", value: null },
+];
+
 const buildVersionedUrl = (url: string, version: string) => `${url}${url.includes("?") ? "&" : "?"}v=${version}`;
 
 const getVersionToken = (updatedAt: string | null | undefined, fallbackVersion: string) => {
@@ -66,8 +96,10 @@ const HeroSection = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [searchText] = useState("");
   const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN_LIMIT, maxPriceLimit]);
+  const [sliderRange, setSliderRange] = useState<[number, number]>([0, SLIDER_INTERNAL_MAX]);
   const [precoMin, setPrecoMin] = useState(String(PRICE_MIN_LIMIT));
   const [precoMax, setPrecoMax] = useState(String(maxPriceLimit));
+  const [activeQuickFilter, setActiveQuickFilter] = useState<number | null>(null);
   const touchStart = useRef(0);
   const navigate = useNavigate();
 
@@ -88,35 +120,65 @@ const HeroSection = () => {
   // Sync state when dynamic max loads
   useEffect(() => {
     setPriceRange([PRICE_MIN_LIMIT, maxPriceLimit]);
+    setSliderRange([0, SLIDER_INTERNAL_MAX]);
     setPrecoMin(String(PRICE_MIN_LIMIT));
     setPrecoMax(String(maxPriceLimit));
+    setActiveQuickFilter(null);
   }, [maxPriceLimit]);
 
-  const syncPriceRange = useCallback((nextMin: number, nextMax: number) => {
-    const clampedMin = clampPrice(Math.min(nextMin, nextMax), maxPriceLimit);
-    const clampedMax = clampPrice(Math.max(nextMin, nextMax), maxPriceLimit);
-
+  const syncFromPrices = useCallback((minP: number, maxP: number) => {
+    const clampedMin = clampPrice(Math.min(minP, maxP), maxPriceLimit);
+    const clampedMax = clampPrice(Math.max(minP, maxP), maxPriceLimit);
     setPriceRange([clampedMin, clampedMax]);
+    setSliderRange([priceToSlider(clampedMin, maxPriceLimit), priceToSlider(clampedMax, maxPriceLimit)]);
     setPrecoMin(String(clampedMin));
     setPrecoMax(String(clampedMax));
+    // Check if matches a quick filter
+    if (clampedMin === 0) {
+      const match = quickFilters.find(f => f.value !== null && f.value === clampedMax);
+      setActiveQuickFilter(match ? match.value : (clampedMax === maxPriceLimit ? -1 : null));
+    } else {
+      setActiveQuickFilter(null);
+    }
   }, [maxPriceLimit]);
 
-  const handlePriceRangeChange = useCallback((values: number[]) => {
-    const [nextMin = PRICE_MIN_LIMIT, nextMax = maxPriceLimit] = values;
-    syncPriceRange(nextMin, nextMax);
-  }, [syncPriceRange, maxPriceLimit]);
+  const handleSliderChange = useCallback((values: number[]) => {
+    const [sMin = 0, sMax = SLIDER_INTERNAL_MAX] = values;
+    setSliderRange([sMin, sMax]);
+    const pMin = sliderToPrice(sMin, maxPriceLimit);
+    const pMax = sliderToPrice(sMax, maxPriceLimit);
+    setPriceRange([pMin, pMax]);
+    setPrecoMin(String(pMin));
+    setPrecoMax(String(pMax));
+    // Check quick filter match
+    if (pMin === 0) {
+      const match = quickFilters.find(f => f.value !== null && f.value === pMax);
+      setActiveQuickFilter(match ? match.value : (pMax === maxPriceLimit ? -1 : null));
+    } else {
+      setActiveQuickFilter(null);
+    }
+  }, [maxPriceLimit]);
 
   const handlePriceInputChange = useCallback((field: "min" | "max", value: string) => {
     const sanitized = value.replace(/\D/g, "");
     const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : maxPriceLimit) : Number(sanitized), maxPriceLimit);
-
     if (field === "min") {
-      syncPriceRange(parsedValue, priceRange[1]);
-      return;
+      syncFromPrices(parsedValue, priceRange[1]);
+    } else {
+      syncFromPrices(priceRange[0], parsedValue);
     }
+  }, [priceRange, syncFromPrices, maxPriceLimit]);
 
-    syncPriceRange(priceRange[0], parsedValue);
-  }, [priceRange, syncPriceRange, maxPriceLimit]);
+  const handleQuickFilter = useCallback((value: number | null) => {
+    if (value === null) {
+      // "Todos"
+      syncFromPrices(0, maxPriceLimit);
+      setActiveQuickFilter(-1);
+    } else {
+      syncFromPrices(0, value);
+      setActiveQuickFilter(value);
+    }
+  }, [syncFromPrices, maxPriceLimit]);
 
   const handleSearch = () => {
     const q = searchText.trim();
@@ -170,6 +232,27 @@ const HeroSection = () => {
           {/* Price range filter */}
           <div>
             <label className="text-sm font-medium text-muted-foreground mb-2 block">Faixa de preço</label>
+            {/* Quick filter buttons */}
+            <div className="flex flex-wrap gap-1.5 mb-2.5">
+              {quickFilters.map((f) => {
+                const isActive = f.value === null
+                  ? activeQuickFilter === -1
+                  : activeQuickFilter === f.value;
+                return (
+                  <button
+                    key={f.label}
+                    onClick={() => handleQuickFilter(f.value)}
+                    className={`px-3 py-1 rounded-lg text-xs font-medium border transition-all duration-200 ${
+                      isActive
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-card text-muted-foreground border-border hover:border-primary/50"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
@@ -196,12 +279,12 @@ const HeroSection = () => {
             </div>
             <div className="mt-3 px-1">
               <Slider
-                value={priceRange}
-                min={PRICE_MIN_LIMIT}
-                max={maxPriceLimit}
+                value={sliderRange}
+                min={0}
+                max={SLIDER_INTERNAL_MAX}
                 step={1}
                 minStepsBetweenThumbs={1}
-                onValueChange={handlePriceRangeChange}
+                onValueChange={handleSliderChange}
               />
             </div>
           </div>
