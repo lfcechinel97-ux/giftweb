@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, TouchEvent } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Medal } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
