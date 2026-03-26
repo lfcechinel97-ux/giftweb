@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef, TouchEvent } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import heroBanner from "@/assets/hero-banner.webp";
+// Use the same URL as the HTML preload to avoid double-download
+const heroBanner = "/hero-banner.webp";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
 
@@ -161,7 +162,7 @@ const HeroSection = () => {
         </div>
 
         {/* Carousel */}
-        <div className="lg:w-[64%] relative rounded-2xl overflow-hidden flex items-center mt-5 lg:mt-0 border border-border" style={{ minHeight: 270 }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        <div className="lg:w-[64%] relative rounded-2xl overflow-hidden flex items-center mt-5 lg:mt-0 border border-border" style={{ minHeight: 270, aspectRatio: "16/9" }} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
           {slides.map((slide, i) => {
             const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
             const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);
@@ -176,9 +177,11 @@ const HeroSection = () => {
                   alt="Brindes corporativos personalizados"
                   className="absolute inset-0 w-full h-full object-cover"
                   width={800}
-                  height={400}
+                  height={450}
                   loading={i === 0 ? "eager" : "lazy"}
-                  {...(i === 0 ? { fetchPriority: "high" as const } : {})}
+                  fetchPriority={i === 0 ? "high" : "low"}
+                  decoding={i === 0 ? "sync" : "async"}
+                  style={{ aspectRatio: "16/9" }}
                 />
               </div>
             );

@@ -17,7 +17,7 @@ export interface ProductCache {
   variantes_count?: number | null;
 }
 
-const FEATURED_CATEGORIES = ["garrafas", "copos", "mochilas", "kits", "bolsas", "escritorio"];
+const FEATURED_CATEGORIES = ["garrafas-e-squeezes", "copos-e-canecas", "mochilas-e-sacochilas", "kits", "bolsas", "canetas"];
 
 async function fetchFeaturedProducts(): Promise<ProductCache[]> {
   const results = await Promise.all(
@@ -33,7 +33,7 @@ async function fetchFeaturedProducts(): Promise<ProductCache[]> {
       .gt("estoque", 0)
       .order("estoque", { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
     )
   );
   return results
