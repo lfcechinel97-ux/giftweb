@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useInView } from "@/hooks/useInView";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
+import { useSiteContentContext } from "@/contexts/SiteContentContext";
 
 const defaultLogos = [
   { value: "/logos/petrobras.webp" },
@@ -19,6 +19,8 @@ const defaultLogos = [
 ];
 
 const ClientsSection = () => {
+  const { getBySection } = useSiteContentContext();
+  const clientRows = getBySection("clientes");
   const [logos, setLogos] = useState(defaultLogos);
   const [index, setIndex] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -28,19 +30,11 @@ const ClientsSection = () => {
   const { ref: sectionRef, inView } = useInView(0.1);
 
   useEffect(() => {
-    supabase
-      .from("site_content")
-      .select("id, value, label")
-      .eq("section", "clientes")
-      .order("id")
-      .then(({ data }) => {
-        if (!data) return;
-        const dbLogos = data
-          .filter(r => r.value)
-          .map(r => ({ value: r.value! }));
-        if (dbLogos.length > 0) setLogos(dbLogos);
-      });
-  }, []);
+    const dbLogos = clientRows
+      .filter(r => r.value)
+      .map(r => ({ value: r.value! }));
+    if (dbLogos.length > 0) setLogos(dbLogos);
+  }, [clientRows]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -120,10 +114,10 @@ const ClientsSection = () => {
               {logo?.value && (
                 <img
                   src={logo.value}
-                  width={160}
-                  height={80}
                   alt="Logo de cliente parceiro"
                   loading="lazy"
+                  width={160}
+                  height={80}
                   style={{
                     height: '80px',
                     width: '100%',
