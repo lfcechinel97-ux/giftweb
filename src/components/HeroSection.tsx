@@ -154,8 +154,9 @@ const HeroSection = () => {
   }, [maxPriceLimit]);
 
   const handlePriceInputChange = useCallback((field: "min" | "max", value: string) => {
+    const em = Math.min(maxPriceLimit, FIXED_MAX);
     const sanitized = value.replace(/\D/g, "");
-    const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : maxPriceLimit) : Number(sanitized), maxPriceLimit);
+    const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : em) : Number(sanitized), em);
     if (field === "min") {
       syncFromPrices(parsedValue, priceRange[1]);
     } else {
