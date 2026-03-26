@@ -1,55 +1,55 @@
 
+Objetivo: corrigir a causa real do banner “sair para fora” no celular físico, sem mexer no filtro de preço nem no restante da homepage.
 
-# Correção: Banner overflow no mobile + Scroll to top
+1. Causa mais provável identificada no código atual
+- O `HeroSection` ainda força o container do carrossel com `aspectRatio: "16 / 9"` em todas as telas.
+- No mobile real, o banner usado pode ter proporção diferente do preview e, como o container fica preso em 16:9, a imagem é cortada/estourada visualmente.
+- Além disso, a escolha mobile/desktop depende de `window.innerWidth` em JavaScript. Em celular real isso pode divergir do layout efetivo no primeiro paint e durante resize/orientação.
 
-## Diagnóstico
+2. Correção que vou aplicar
+- Remover a dependência de `window.innerWidth` para decidir qual banner carregar no hero.
+- Trocar o `<img>` principal do hero por uma solução responsiva real (`<picture>` ou duas sources por media query), para que o próprio navegador escolha o banner mobile ou desktop.
+- Manter o primeiro render com fallback local imediato, mas com source responsiva.
+- No mobile, parar de forçar `aspect-ratio: 16/9` se o banner mobile tiver outra proporção; usar uma proporção própria do mobile ou deixar a altura seguir a imagem sem extrapolar largura.
+- Garantir no wrapper do banner:
+  - `w-full`
+  - `max-w-full`
+  - `overflow-hidden`
+  - nenhum `min-width`, `translate`, ou largura fixa em px
 
-### Bug 1 — Banner overflow no mobile
-O container do carrossel no HeroSection (linha 304) tem `aspectRatio: "16/9"` como inline style, que pode fazer o elemento expandir além da largura disponível. Além disso, a `section` pai tem `overflow-hidden` mas o `div.container` interno não tem `max-width: 100%` explícito — o Tailwind `container` class aplica `padding: 2rem` mas não limita a largura a 100vw em telas pequenas.
+3. Ajuste específico no HeroSection
+- Revisar apenas o bloco do carrossel:
+  - container externo
+  - wrapper de cada slide
+  - tag da imagem/banner
+- Garantir:
+  - imagem com `display:block`
+  - `width:100%`
+  - `height:100%` apenas se a proporção do container estiver correta
+  - `object-cover` somente se o crop for intencional e controlado
+- Se o problema for banner mobile com proporção diferente, usar:
+  - desktop: mantém proporção atual
+  - mobile: proporção própria do asset mobile, para não “estourar” horizontalmente
 
-**Causa provável**: O carousel div com `lg:w-[64%]` fica 100% no mobile, mas dentro de um `container` com padding de 2rem (32px cada lado). O `aspectRatio: 16/9` no style inline pode forçar largura além do disponível dependendo da altura mínima de 270px.
+4. O que não vou alterar
+- filtro de preço
+- botões rápidos
+- slider
+- badge “mais pedido”
+- lógica de navegação
+- outras seções
 
-**Correção**:
-1. Adicionar `max-w-full` e `overflow-hidden` ao wrapper `div.container` do HeroSection (linha 155)
-2. Garantir que a `section` raiz e o carousel div tenham `overflow: hidden`
-3. Adicionar `overflow-x: hidden` na `main` do Index.tsx como camada extra de segurança
+5. Arquivos a ajustar
+- `src/components/HeroSection.tsx`
+- possivelmente `index.html` apenas se o preload do hero também precisar virar responsivo para combinar com o banner correto no mobile
 
-### Bug 2 — Scroll não volta ao topo
-O componente `ScrollToTop` **já existe** em `App.tsx` (linhas 36-40) e está posicionado corretamente dentro do `BrowserRouter` (linha 56). No teste que fiz, a navegação para outra página **abriu no topo** corretamente.
+6. Resultado esperado
+- no preview mobile e no celular real, o banner fica totalmente contido na largura da tela
+- sem scroll horizontal
+- sem imagem “para fora da página”
+- sem depender de cálculo JS para decidir banner mobile vs desktop
+- sem quebrar desktop
 
-**Possíveis causas de falha intermitente**:
-- A query string muda mas o pathname permanece igual (ex: `/produtos?preco_min=10` → `/produtos?preco_min=30`), e o `useEffect` só depende de `pathname`, não de `search`
-- Navegação via `navigate()` com apenas mudança de query params não dispara o scroll
-
-**Correção**: Incluir `search` (query string) no `useEffect` do `ScrollToTop` para que mudanças de filtros também façam scroll ao topo.
-
-## Alterações
-
-### Arquivo 1: `src/App.tsx` (linhas 36-39)
-Mudar o `ScrollToTop` para observar `pathname` + `search`:
-```tsx
-const ScrollToTop = () => {
-  const { pathname, search } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname, search]);
-  return null;
-};
-```
-
-### Arquivo 2: `src/components/HeroSection.tsx` (linha 155)
-Adicionar `overflow-hidden max-w-full` ao container:
-```tsx
-<div className="container flex flex-col lg:flex-row relative z-10 gap-5 overflow-hidden max-w-full" style={{ minHeight: 270 }}>
-```
-
-### Arquivo 3: `src/pages/Index.tsx` (linha 74)
-Adicionar `overflow-x-hidden` à `main`:
-```tsx
-<main className="flex-1 overflow-x-hidden">
-```
-
-## Não altera
-- Filtro de preço, slider, botões rápidos
-- Badge "mais pedido"
-- Layout, cores, tipografia
-- Nenhum outro componente
-
+7. Detalhe técnico importante
+- Hoje o código usa `window.innerWidth < 768` e um container fixado em `16/9`. Essa combinação é frágil em dispositivo real.
+- A correção mais segura é deixar a responsividade do banner ser decidida por CSS/browser (`<picture>` + media query) e alinhar a proporção do container ao asset mobile real.
