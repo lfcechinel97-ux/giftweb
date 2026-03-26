@@ -164,11 +164,21 @@ const HeroSection = () => {
           {slides.map((slide, i) => {
             const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
             const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);
-            const bannerSrc = (isMobile && mobRow?.value) ? mobRow.value : (deskRow?.value || heroBanner);
+            const dynamicSrc = (isMobile && mobRow?.value) ? mobRow.value : (deskRow?.value || null);
+            const bannerSrc = dynamicSrc || heroBanner;
+            const isActive = i === currentSlide;
 
             return (
-              <div key={i} className="absolute inset-0" style={{ opacity: i === currentSlide ? 1 : 0, transform: i === currentSlide ? "scale(1)" : "scale(1.03)", transition: "opacity 1.2s ease-in-out, transform 1.4s ease-in-out", pointerEvents: i === currentSlide ? "auto" : "none" }}>
-                <img src={bannerSrc} alt="Brindes corporativos personalizados" className="absolute inset-0 w-full h-full object-cover" width={800} height={400} loading={i === 0 ? "eager" : "lazy"} />
+              <div key={i} className="absolute inset-0" style={{ opacity: isActive ? 1 : 0, transform: isActive ? "scale(1)" : "scale(1.03)", transition: "opacity 1.2s ease-in-out, transform 1.4s ease-in-out", pointerEvents: isActive ? "auto" : "none" }}>
+                <img
+                  src={bannerSrc}
+                  alt="Brindes corporativos personalizados"
+                  className="absolute inset-0 w-full h-full object-cover"
+                  width={800}
+                  height={400}
+                  loading={i === 0 ? "eager" : "lazy"}
+                  {...(i === 0 ? { fetchPriority: "high" as const } : {})}
+                />
               </div>
             );
           })}
