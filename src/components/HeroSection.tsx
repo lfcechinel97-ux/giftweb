@@ -85,23 +85,30 @@ const HeroSection = () => {
     if (Math.abs(dx) > 50) { if (dx > 0) prevSlide(); else nextSlide(); }
   };
 
+  // Sync state when dynamic max loads
+  useEffect(() => {
+    setPriceRange([PRICE_MIN_LIMIT, maxPriceLimit]);
+    setPrecoMin(String(PRICE_MIN_LIMIT));
+    setPrecoMax(String(maxPriceLimit));
+  }, [maxPriceLimit]);
+
   const syncPriceRange = useCallback((nextMin: number, nextMax: number) => {
-    const clampedMin = clampPrice(Math.min(nextMin, nextMax));
-    const clampedMax = clampPrice(Math.max(nextMin, nextMax));
+    const clampedMin = clampPrice(Math.min(nextMin, nextMax), maxPriceLimit);
+    const clampedMax = clampPrice(Math.max(nextMin, nextMax), maxPriceLimit);
 
     setPriceRange([clampedMin, clampedMax]);
     setPrecoMin(String(clampedMin));
     setPrecoMax(String(clampedMax));
-  }, []);
+  }, [maxPriceLimit]);
 
   const handlePriceRangeChange = useCallback((values: number[]) => {
-    const [nextMin = PRICE_MIN_LIMIT, nextMax = PRICE_MAX_LIMIT] = values;
+    const [nextMin = PRICE_MIN_LIMIT, nextMax = maxPriceLimit] = values;
     syncPriceRange(nextMin, nextMax);
-  }, [syncPriceRange]);
+  }, [syncPriceRange, maxPriceLimit]);
 
   const handlePriceInputChange = useCallback((field: "min" | "max", value: string) => {
     const sanitized = value.replace(/\D/g, "");
-    const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : PRICE_MAX_LIMIT) : Number(sanitized));
+    const parsedValue = clampPrice(sanitized === "" ? (field === "min" ? PRICE_MIN_LIMIT : maxPriceLimit) : Number(sanitized), maxPriceLimit);
 
     if (field === "min") {
       syncPriceRange(parsedValue, priceRange[1]);
@@ -109,7 +116,7 @@ const HeroSection = () => {
     }
 
     syncPriceRange(priceRange[0], parsedValue);
-  }, [priceRange, syncPriceRange]);
+  }, [priceRange, syncPriceRange, maxPriceLimit]);
 
   const handleSearch = () => {
     const q = searchText.trim();
