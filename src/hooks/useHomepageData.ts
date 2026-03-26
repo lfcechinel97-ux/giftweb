@@ -83,6 +83,7 @@ async function fetchHomepageData() {
       .eq("ativo", true)
       .eq("has_image", true)
       .eq("is_variante", false)
+      .neq("is_hidden", true)
       .gt("estoque", 0)
       .lte("preco_custo", 8),
   ]);
