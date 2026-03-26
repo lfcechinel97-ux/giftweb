@@ -302,15 +302,11 @@ const HeroSection = () => {
 
         {/* Carousel */}
         <div
-          className="relative mt-5 w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-border lg:mt-0 lg:w-[64%]"
-          style={{ minHeight: undefined }}
+          className="hero-carousel relative mt-5 w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-border lg:mt-0 lg:w-[64%]"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
-          {/* Aspect-ratio spacer: 16/9 on desktop, 4/3 on mobile */}
-          <div className="w-full" style={{ paddingBottom: "56.25%" }} />
-          <style>{`@media (max-width: 767px) { .hero-carousel-spacer { padding-bottom: 75% !important; } }`}</style>
-          <div className="hero-carousel-spacer absolute inset-0 w-full h-full" style={{ paddingBottom: undefined }}>
+          <style>{`.hero-carousel { aspect-ratio: 16/9; } @media (max-width: 767px) { .hero-carousel { aspect-ratio: 4/3; } }`}</style>
           {slides.map((slide, i) => {
             const deskRow = bannerRows.find(r => r.id === `banner_${i + 1}_desk`);
             const mobRow = bannerRows.find(r => r.id === `banner_${i + 1}_mob`);
@@ -331,7 +327,7 @@ const HeroSection = () => {
             return (
               <div key={i} className="absolute inset-0 w-full h-full" style={{ opacity: isActive ? 1 : 0, transform: isActive ? "scale(1)" : "scale(1.03)", transition: "opacity 1.2s ease-in-out, transform 1.4s ease-in-out", pointerEvents: isActive ? "auto" : "none" }}>
                 {hasBanner && (
-                  <picture className="block w-full h-full">
+                  <picture>
                     {mobSrc && <source media="(max-width: 767px)" srcSet={mobSrc} />}
                     <img
                       src={deskSrc || mobSrc || ""}
