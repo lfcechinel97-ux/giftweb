@@ -108,7 +108,7 @@ const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
 
   const precoMin = preco_custo ? calcularPreco(preco_custo, 1000) : null;
   const preco20 = preco_custo ? calcularPreco(preco_custo, 20) : null;
-  const href = slug ? `/produto/${slug}` : `/produto/${codigo_amigavel}`;
+  const href = slug ? `/catalogo/produto/${slug}` : `/catalogo/produto/${codigo_amigavel}`;
 
   const hasVariants = variantes && variantes.length > 0;
   const allColorOptions = hasVariants

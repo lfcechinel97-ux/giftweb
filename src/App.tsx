@@ -32,6 +32,7 @@ const PrivacyPage = lazy(() => import("./pages/PrivacyPage.tsx"));
 const TermsPage = lazy(() => import("./pages/TermsPage.tsx"));
 const SecurityPage = lazy(() => import("./pages/SecurityPage.tsx"));
 const CatalogPage = lazy(() => import("./pages/CatalogPage.tsx"));
+const CatalogProductDetail = lazy(() => import("./pages/CatalogProductDetail.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,7 @@ const App = () => (
               <Route path="/produto/:slug" element={<ProductDetail />} />
               <Route path="/produtos" element={<AllProducts />} />
               <Route path="/catalogo" element={<CatalogPage />} />
+              <Route path="/catalogo/produto/:slug" element={<CatalogProductDetail />} />
               <Route path="/busca" element={<SearchPage />} />
               {/* Legacy redirects */}
               <Route path="/garrafas" element={<Navigate to="/categoria/garrafas-e-squeezes" replace />} />
