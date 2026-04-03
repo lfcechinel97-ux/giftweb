@@ -143,9 +143,14 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
           </div>
         </div>
 
+        </div>
+
         {/* Row 2: Price range */}
         <div className="space-y-3">
-          <label className="text-sm font-semibold text-foreground">Faixa de preço</label>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--green-cta))] text-primary-foreground text-[10px] font-bold flex-shrink-0">2º</span>
+            <span className="text-sm font-bold text-[hsl(var(--green-cta))]">Quanto você quer investir?</span>
+          </div>
           <div className="flex flex-wrap gap-2">
             {QUICK_PRICES.map(qp => {
               const isActive = filters.precoMin === qp.min && filters.precoMax === qp.max;
