@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup } from "@/utils/price";
 import { getCorHex } from "@/utils/colorHex";
-import { PRAZO_PRODUCAO, WHATSAPP_NUMBER } from "@/config/site";
+import { WHATSAPP_NUMBER } from "@/config/site";
 import CatalogHeader from "@/components/catalog/CatalogHeader";
 import CatalogFooter from "@/components/catalog/CatalogFooter";
 import QuotationDrawer from "@/components/catalog/QuotationDrawer";
@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuotation } from "@/contexts/QuotationContext";
 import { toast } from "sonner";
-import { Clock, Minus, Plus, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, ZoomIn, ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Send } from "lucide-react";
+import { Minus, Plus, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, ZoomIn, ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Send } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products_cache">;
@@ -380,11 +380,23 @@ const CatalogProductDetail = () => {
                 {/* Name */}
                 <h1 className="font-black text-xl md:text-2xl leading-snug text-[#0F172A] break-words">{displayNome}</h1>
 
-                {/* Prazo */}
-                <div className="flex items-center gap-1.5 text-xs text-[#64748B]">
-                  <Clock className="w-3.5 h-3.5 shrink-0" />
-                  <span>{PRAZO_PRODUCAO}</span>
-                </div>
+                {/* Price — mobile only (right after title) */}
+                {displayPrecoCusto != null && displayPrecoCusto > 0 && (() => {
+                  const precoPix = precoMin * 0.97;
+                  const parcela2x = precoMin / 2;
+                  return (
+                    <div className="md:hidden">
+                      <span className="text-[#22C55E] font-bold text-lg block leading-tight">
+                        A partir de {formatarBRL(precoMin)} / unidade
+                      </span>
+                      <p className="text-[#64748B] text-xs mt-1">💲 No PIX: {formatarBRL(precoPix)} (economia de 3%)</p>
+                      <p className="text-[#64748B] text-xs">ou 2x de {formatarBRL(parcela2x)} sem juros no cartão</p>
+                      <span className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                        Pedido mínimo: 20 unidades
+                      </span>
+                    </div>
+                  );
+                })()}
 
                 {/* Variant selector */}
                 {allVariants.length > 1 ? (
@@ -471,12 +483,12 @@ const CatalogProductDetail = () => {
                   </span>
                 )}
 
-                {/* Price */}
+                {/* Price — desktop only */}
                 {displayPrecoCusto != null && displayPrecoCusto > 0 && (() => {
                   const precoPix = precoMin * 0.97;
                   const parcela2x = precoMin / 2;
                   return (
-                    <div>
+                    <div className="hidden md:block">
                       <span className="text-[#22C55E] font-bold text-lg md:text-xl block leading-tight">
                         A partir de {formatarBRL(precoMin)} / unidade
                       </span>
