@@ -1,4 +1,4 @@
-import { ShoppingBag } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { useQuotation } from "@/contexts/QuotationContext";
 
 const CatalogHeader = () => {
