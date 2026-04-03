@@ -164,15 +164,20 @@ const CatalogPage = () => {
         <CatalogHeader />
 
         <main className="flex-1">
-          {/* Compact hero */}
-          <section className="bg-[#0B0F1A] py-4 md:py-5">
-            <div className="container text-center">
-              <h1 className="text-lg md:text-2xl tracking-tight text-white/90">
-                <span className="font-normal">Catálogo</span>{" "}
-                <span className="font-bold text-[#22C55E]">Gift Web</span>
-              </h1>
-              <p className="text-xs md:text-sm text-white/50 mt-1">
-                Selecione e encontre seu brinde
+          {/* Compact hero with catalog branding */}
+          <section className="bg-white border-b border-[#E5E7EB] py-4 md:py-6">
+            <div className="container flex flex-col md:flex-row items-center justify-center md:justify-between gap-3 md:gap-6">
+              <div className="flex items-center gap-3 md:gap-4">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black italic text-[#0F172A] tracking-tight" style={{ fontFamily: "'Georgia', serif" }}>
+                  catálogo
+                </h1>
+                <div className="flex flex-col items-start">
+                  <span className="text-xs md:text-sm font-bold text-[#0F172A] tracking-wide uppercase">GIFT WEB</span>
+                  <span className="text-[9px] md:text-[10px] text-[#64748B] tracking-wide uppercase">BRINDES PERSONALIZADOS</span>
+                </div>
+              </div>
+              <p className="text-[11px] md:text-xs text-[#94A3B8] text-center md:text-right max-w-xs">
+                Valores de referência. Melhores condições pelo WhatsApp
               </p>
             </div>
           </section>
