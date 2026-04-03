@@ -151,7 +151,6 @@ const CatalogPage = () => {
       ...prev,
       categoria: slug || null,
     }));
-    // removed scrollIntoView to prevent unwanted scroll
   };
 
   return (
@@ -161,28 +160,25 @@ const CatalogPage = () => {
         <meta name="description" content="Explore nosso catálogo digital de brindes personalizados. Filtre por categoria, preço e cor para encontrar o brinde perfeito para sua marca." />
         <link rel="canonical" href={`${SITE_URL}/catalogo`} />
       </Helmet>
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#F8FAFC" }}>
         <CatalogHeader />
 
         <main className="flex-1">
-          {/* Hero title */}
-          <section className="relative overflow-hidden bg-gradient-to-br from-[#0B0F1A] via-[#111827] to-[#0B0F1A] pt-10 pb-6 md:pt-14 md:pb-8">
-            {/* Decorative elements */}
-            <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "40px 40px" }} />
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[hsl(var(--green-cta))]/10 rounded-full blur-[120px]" />
-            <div className="container text-center relative z-10">
-              <h1 className="text-3xl md:text-5xl tracking-tight text-white">
-                <span className="font-light">Catálogo Digital</span>{" "}
-                <span className="font-extrabold text-[hsl(var(--green-cta))] drop-shadow-[0_0_24px_hsl(var(--green-cta)/0.4)]">Gift Web</span>
+          {/* Compact hero */}
+          <section className="bg-[#0B0F1A] py-4 md:py-5">
+            <div className="container text-center">
+              <h1 className="text-lg md:text-2xl tracking-tight text-white/90">
+                <span className="font-normal">Catálogo</span>{" "}
+                <span className="font-bold text-[#22C55E]">Gift Web</span>
               </h1>
-              <p className="text-sm md:text-lg text-gray-300 mt-3 max-w-xl mx-auto leading-relaxed">
-                Encontre o brinde perfeito para sua marca — filtre por categoria, preço e cor
+              <p className="text-xs md:text-sm text-white/50 mt-1">
+                Selecione e encontre seu brinde
               </p>
             </div>
           </section>
 
           {/* MOBILE: filters inline → products (no stories) */}
-          <div className="lg:hidden container py-4 space-y-4">
+          <div className="lg:hidden container py-3 space-y-3">
             <CatalogMobileFilters
               filters={filters}
               onChange={handleFilterChange}
@@ -203,7 +199,7 @@ const CatalogPage = () => {
               />
             </div>
 
-            <div className="container py-4 md:py-6">
+            <div className="container py-4">
               <CatalogFilterBar
                 filters={filters}
                 onChange={handleFilterChange}
@@ -218,16 +214,16 @@ const CatalogPage = () => {
           {/* Product grid */}
           <div className="container pb-6">
             {loading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 {Array.from({ length: 12 }).map((_, i) => <CatalogProductCardSkeleton key={i} />)}
               </div>
             ) : products.length === 0 ? (
               <div className="text-center py-16">
-                <p className="text-muted-foreground text-lg">Nenhum produto encontrado.</p>
-                <p className="text-muted-foreground text-sm mt-1">Tente ajustar os filtros.</p>
+                <p className="text-[#64748B] text-base">Nenhum produto encontrado.</p>
+                <p className="text-[#94A3B8] text-sm mt-1">Tente ajustar os filtros.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 {products.map(p => (
                   <CatalogProductCard key={p.id} product={p} />
                 ))}

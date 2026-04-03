@@ -1,6 +1,5 @@
 import { Search } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { CATALOG_SWATCH_COLORS } from "@/components/catalog/catalogSwatchColors";
 
@@ -59,32 +58,40 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
   const isSwatchSelected = (swatch: typeof CATALOG_SWATCH_COLORS[0]) =>
     swatch.values.some(v => filters.corValues.includes(v));
 
+  const stepBadge = (n: string) => (
+    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#22C55E]/15 text-[#22C55E] text-[9px] font-bold flex-shrink-0">
+      {n}
+    </span>
+  );
+
   return (
-    <div className="space-y-5 bg-card border border-border rounded-xl p-4">
+    <div className="space-y-4 bg-white border border-[#E5E7EB] rounded-xl p-3.5">
       {/* Search */}
       <div>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94A3B8]" />
           <input
             type="text"
             placeholder="Buscar produto..."
             value={filters.search}
             onChange={e => onChange({ search: e.target.value })}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(var(--green-cta))]"
+            className="w-full pl-9 pr-4 py-2 rounded-lg bg-white border border-[#E5E7EB] text-[#0F172A] text-sm placeholder:text-[#94A3B8] focus:outline-none focus:border-[#22C55E]"
           />
         </div>
       </div>
 
-      {/* Separator text */}
-      <p className="text-sm text-muted-foreground text-center">Ou busque por categoria e preço</p>
+      <p className="text-xs text-[#94A3B8] text-center">Ou busque por categoria e preço</p>
 
-      {/* Category — always visible, native select */}
-      <div className="space-y-2">
-        <label className="text-sm font-semibold text-foreground block">Categoria</label>
+      {/* Category */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5">
+          {stepBadge("1")}
+          <span className="text-xs font-semibold text-[#0F172A]">Categoria</span>
+        </div>
         <select
           value={filters.categoria || ""}
           onChange={e => onChange({ categoria: e.target.value || null })}
-          className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:border-[hsl(var(--green-cta))] cursor-pointer"
+          className="w-full px-3 py-2 rounded-lg bg-white border border-[#E5E7EB] text-[#0F172A] text-sm focus:outline-none focus:border-[#22C55E] cursor-pointer"
         >
           <option value="">Todas as categorias</option>
           {categories.map(cat => (
@@ -93,20 +100,23 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
         </select>
       </div>
 
-      {/* Price — always visible */}
-      <div className="space-y-3">
-        <label className="text-sm font-semibold text-foreground block">Quanto você quer investir?</label>
-        <div className="flex flex-wrap gap-2">
+      {/* Price */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          {stepBadge("2")}
+          <span className="text-xs font-semibold text-[#0F172A]">Quanto você quer investir?</span>
+        </div>
+        <div className="flex flex-wrap gap-1.5">
           {QUICK_PRICES.map(qp => {
             const isActive = filters.precoMin === qp.min && filters.precoMax === qp.max;
             return (
               <button
                 key={qp.label}
                 onClick={() => handleQuickPrice(qp.min, qp.max)}
-                className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-all duration-200 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 ${
                   isActive
-                    ? "bg-[hsl(var(--green-cta))] text-primary-foreground border-[hsl(var(--green-cta))] shadow-md"
-                    : "border-border text-foreground hover:border-[hsl(var(--green-cta))]/50 bg-background"
+                    ? "bg-[#22C55E] text-white border-[#22C55E]"
+                    : "border-[#E5E7EB] text-[#475569] hover:border-[#22C55E]/40 bg-[#F1F5F9]"
                 }`}
               >
                 {qp.label}
@@ -114,19 +124,19 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
             );
           })}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">R$</span>
+            <span className="text-[10px] text-[#94A3B8]">R$</span>
             <input
               type="number"
               min={0}
               max={filters.precoMax}
               value={filters.precoMin}
               onChange={e => onChange({ precoMin: Math.max(0, Number(e.target.value)) })}
-              className="w-16 px-2 py-1.5 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:border-[hsl(var(--green-cta))]"
+              className="w-14 px-1.5 py-1 rounded-md bg-white border border-[#E5E7EB] text-[#0F172A] text-xs text-center focus:outline-none focus:border-[#22C55E]"
             />
           </div>
-          <div className="flex-1 slider-small-thumb">
+          <div className="flex-1 slider-small-thumb catalog-slider">
             <Slider
               min={0}
               max={Math.max(400, filters.precoMax)}
@@ -137,24 +147,27 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
             />
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">R$</span>
+            <span className="text-[10px] text-[#94A3B8]">R$</span>
             <input
               type="number"
               min={filters.precoMin}
               max={maxPreco}
               value={filters.precoMax}
               onChange={e => onChange({ precoMax: Math.min(maxPreco, Number(e.target.value)) })}
-              className="w-16 px-2 py-1.5 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:border-[hsl(var(--green-cta))]"
+              className="w-14 px-1.5 py-1 rounded-md bg-white border border-[#E5E7EB] text-[#0F172A] text-xs text-center focus:outline-none focus:border-[#22C55E]"
             />
           </div>
         </div>
       </div>
 
-      {/* Colors — always visible */}
-      <div className="space-y-2">
-        <label className="text-sm font-semibold text-foreground block">Qual cor você deseja?</label>
-        <p className="text-xs text-muted-foreground italic">Se não tem preferência, basta não selecionar.</p>
-        <div className="flex flex-wrap gap-2.5">
+      {/* Colors */}
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1.5">
+          {stepBadge("3")}
+          <span className="text-xs font-semibold text-[#0F172A]">Cor</span>
+        </div>
+        <p className="text-[10px] text-[#94A3B8] italic">Se não tem preferência, basta não selecionar.</p>
+        <div className="flex flex-wrap gap-2">
           {CATALOG_SWATCH_COLORS.map(swatch => {
             const selected = isSwatchSelected(swatch);
             const isWhite = swatch.bg === "#FFFFFF";
@@ -163,20 +176,20 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
               <button
                 key={swatch.name}
                 onClick={() => handleColorToggle(swatch.name)}
-                className="flex flex-col items-center gap-1"
+                className="flex flex-col items-center gap-0.5"
               >
                 <span
-                  className="block w-8 h-8 rounded-full transition-all duration-150"
+                  className="block w-6 h-6 rounded-full transition-all duration-150"
                   style={{
                     background: isOutros ? "conic-gradient(#EF4444, #EAB308, #22C55E, #2563EB, #A855F7, #EF4444)" : swatch.bg,
-                    border: isWhite ? "2px solid hsl(var(--border))" : "2px solid transparent",
+                    border: isWhite ? "1.5px solid #D1D5DB" : "1.5px solid transparent",
                     boxShadow: selected
-                      ? "0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(142,71%,45%)"
-                      : "0 1px 3px rgba(0,0,0,0.15)",
+                      ? "0 0 0 1.5px white, 0 0 0 3px #22C55E"
+                      : "none",
                     transform: selected ? "scale(1.1)" : "scale(1)",
                   }}
                 />
-                <span className={`text-[9px] leading-none max-w-[40px] text-center truncate ${selected ? "text-[hsl(var(--green-cta))] font-semibold" : "text-muted-foreground"}`}>
+                <span className={`text-[8px] leading-none max-w-[36px] text-center truncate ${selected ? "text-[#22C55E] font-semibold" : "text-[#94A3B8]"}`}>
                   {swatch.name.charAt(0) + swatch.name.slice(1).toLowerCase()}
                 </span>
               </button>
@@ -186,12 +199,17 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
       </div>
 
       {/* Search button */}
-      <Button
-        onClick={() => {}}
-        className="w-full bg-[hsl(var(--green-cta))] text-primary-foreground hover:bg-[hsl(var(--green-cta))]/90 text-base py-3 h-auto font-bold"
-      >
-        BUSCAR BRINDE
-      </Button>
+      <div>
+        <button
+          onClick={() => {}}
+          className="w-full bg-[#22C55E] text-white hover:bg-[#16A34A] text-sm py-2.5 rounded-lg font-semibold transition-colors"
+        >
+          BUSCAR BRINDE
+        </button>
+        <p className="text-[10px] text-[#94A3B8] text-center mt-1.5">
+          Você verá os melhores modelos para seu orçamento
+        </p>
+      </div>
     </div>
   );
 };
