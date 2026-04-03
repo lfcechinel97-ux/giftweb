@@ -151,7 +151,7 @@ const CatalogPage = () => {
       ...prev,
       categoria: slug || null,
     }));
-    document.getElementById("catalog-products")?.scrollIntoView({ behavior: "smooth" });
+    // removed scrollIntoView to prevent unwanted scroll
   };
 
   return (
