@@ -306,9 +306,8 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
             <button onClick={onClear} className="text-xs text-muted-foreground hover:text-foreground underline ml-1">
               Limpar tudo
             </button>
-          </>
-        )}
       </div>
+      )}
     </div>
   );
 };
