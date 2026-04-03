@@ -295,8 +295,9 @@ const CatalogProductDetail = () => {
             </button>
 
             <div className="flex flex-col md:grid md:grid-cols-2 gap-5 md:gap-8">
-              {/* LEFT: Gallery + Description */}
+              {/* LEFT column */}
               <div className="flex flex-col gap-3 w-full min-w-0">
+                {/* Gallery */}
                 <div
                   className="relative w-full rounded-2xl border border-[#E5E7EB] bg-white overflow-hidden flex items-center justify-center cursor-zoom-in"
                   style={{ aspectRatio: '1/1' }}
@@ -334,18 +335,52 @@ const CatalogProductDetail = () => {
                   </div>
                 )}
 
-                {product.descricao && (
-                  <div className="mt-1 p-3 rounded-xl bg-white border border-[#E5E7EB]">
-                    <h3 className="font-semibold text-sm text-[#0F172A] mb-1.5">Descrição</h3>
-                    <p className="text-[#64748B] text-xs leading-relaxed whitespace-pre-line">{product.descricao}</p>
-                  </div>
-                )}
+                {/* Description + Dimensions — DESKTOP ONLY */}
+                <div className="hidden md:flex flex-col gap-3">
+                  {product.descricao && (
+                    <div className="mt-1 p-3 rounded-xl bg-white border border-[#E5E7EB]">
+                      <h3 className="font-semibold text-sm text-[#0F172A] mb-1.5">Descrição</h3>
+                      <p className="text-[#64748B] text-xs leading-relaxed whitespace-pre-line">{product.descricao}</p>
+                    </div>
+                  )}
+
+                  {(product.altura || product.largura || product.profundidade || product.peso) && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {product.altura != null && (
+                        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-[#E5E7EB] min-w-0">
+                          <ArrowUpDown className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                          <div className="min-w-0"><span className="text-[10px] text-[#94A3B8] block">Altura</span><span className="text-[#0F172A] text-xs font-medium">{product.altura} cm</span></div>
+                        </div>
+                      )}
+                      {product.largura != null && (
+                        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-[#E5E7EB] min-w-0">
+                          <MoveHorizontal className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                          <div className="min-w-0"><span className="text-[10px] text-[#94A3B8] block">Largura</span><span className="text-[#0F172A] text-xs font-medium">{product.largura} cm</span></div>
+                        </div>
+                      )}
+                      {product.profundidade != null && (
+                        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-[#E5E7EB] min-w-0">
+                          <Ruler className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                          <div className="min-w-0"><span className="text-[10px] text-[#94A3B8] block">Comprimento</span><span className="text-[#0F172A] text-xs font-medium">{product.profundidade} cm</span></div>
+                        </div>
+                      )}
+                      {product.peso != null && (
+                        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-[#E5E7EB] min-w-0">
+                          <Weight className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                          <div className="min-w-0"><span className="text-[10px] text-[#94A3B8] block">Peso</span><span className="text-[#0F172A] text-xs font-medium">{product.peso} g</span></div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* RIGHT: Info */}
+              {/* RIGHT column */}
               <div className="flex flex-col gap-3 w-full min-w-0">
+                {/* Name */}
                 <h1 className="font-black text-xl md:text-2xl leading-snug text-[#0F172A] break-words">{displayNome}</h1>
 
+                {/* Prazo */}
                 <div className="flex items-center gap-1.5 text-xs text-[#64748B]">
                   <Clock className="w-3.5 h-3.5 shrink-0" />
                   <span>{PRAZO_PRODUCAO}</span>
@@ -379,7 +414,6 @@ const CatalogProductDetail = () => {
                                         setIsTransitioning(false);
                                       }, 150);
                                     }
-                                    // Update URL without reload
                                     if (v.slug) {
                                       window.history.replaceState(null, '', `/catalogo/produto/${v.slug}`);
                                     }
@@ -455,81 +489,6 @@ const CatalogProductDetail = () => {
                   );
                 })()}
 
-                {/* Dimensions */}
-                {(product.altura || product.largura || product.profundidade || product.peso) && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {product.altura != null && (
-                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-[#E5E7EB] min-w-0">
-                        <ArrowUpDown className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
-                        <div className="min-w-0"><span className="text-[10px] text-[#94A3B8] block">Altura</span><span className="text-[#0F172A] text-xs font-medium">{product.altura} cm</span></div>
-                      </div>
-                    )}
-                    {product.largura != null && (
-                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-[#E5E7EB] min-w-0">
-                        <MoveHorizontal className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
-                        <div className="min-w-0"><span className="text-[10px] text-[#94A3B8] block">Largura</span><span className="text-[#0F172A] text-xs font-medium">{product.largura} cm</span></div>
-                      </div>
-                    )}
-                    {product.profundidade != null && (
-                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-[#E5E7EB] min-w-0">
-                        <Ruler className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
-                        <div className="min-w-0"><span className="text-[10px] text-[#94A3B8] block">Comprimento</span><span className="text-[#0F172A] text-xs font-medium">{product.profundidade} cm</span></div>
-                      </div>
-                    )}
-                    {product.peso != null && (
-                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-[#E5E7EB] min-w-0">
-                        <Weight className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
-                        <div className="min-w-0"><span className="text-[10px] text-[#94A3B8] block">Peso</span><span className="text-[#0F172A] text-xs font-medium">{product.peso} g</span></div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Pricing table */}
-                {displayPrecoCusto != null && displayPrecoCusto > 0 && (
-                  <div className="mt-1">
-                    <h3 className="font-bold text-base text-[#0F172A] mb-2">Compre com desconto</h3>
-                    <div className="rounded-xl border border-[#E5E7EB] overflow-x-auto">
-                      <table className="w-full text-xs" style={{ minWidth: 280 }}>
-                        <thead>
-                          <tr className="bg-[#F1F5F9]">
-                            <th className="text-left px-3 py-2 text-[#64748B] font-medium whitespace-nowrap">Qtd</th>
-                            <th className="text-left px-3 py-2 text-[#64748B] font-medium whitespace-nowrap">Preço/un</th>
-                            <th className="text-left px-3 py-2 text-[#64748B] font-medium whitespace-nowrap">Economia</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {tableRows.map((row, i) => (
-                            <tr
-                              key={row.qty}
-                              className="border-t border-[#E5E7EB] cursor-pointer hover:bg-[#F8FAFC] transition-colors"
-                              style={{
-                                backgroundColor: selectedRow === i ? "rgba(34,197,94,0.06)" : undefined,
-                                borderLeft: selectedRow === i ? "3px solid #22C55E" : "3px solid transparent",
-                              }}
-                              onClick={() => handleSelectRow(i)}
-                            >
-                              <td className="px-3 py-2 text-[#0F172A] font-semibold whitespace-nowrap">
-                                {row.qty}
-                                {row.qty === 20 && <span className="ml-1 px-1 py-0.5 rounded text-[9px] font-semibold bg-[#F1F5F9] text-[#64748B]">Mín</span>}
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap">
-                                {row.desc > 0 && <span className="text-[#94A3B8] line-through text-[10px] mr-1">{formatarBRL(row.base)}</span>}
-                                <span className="text-[#0F172A] font-medium">{formatarBRL(row.unit)}</span>
-                              </td>
-                              <td className="px-3 py-2 whitespace-nowrap">
-                                {row.desc > 0 ? (
-                                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#22C55E]/15 text-[#22C55E]">-{Math.round(row.desc * 100)}%</span>
-                                ) : <span className="text-[#94A3B8]">—</span>}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-
                 {/* Qty selector + Add to quotation */}
                 <div ref={qtySelectorRef} className="p-3 rounded-xl bg-white border border-[#E5E7EB]">
                   <div className="flex items-center gap-3">
@@ -597,9 +556,94 @@ const CatalogProductDetail = () => {
                   </div>
                 )}
 
+                {/* Pricing table */}
+                {displayPrecoCusto != null && displayPrecoCusto > 0 && (
+                  <div className="mt-1">
+                    <h3 className="font-bold text-base text-[#0F172A] mb-2">Compre com desconto</h3>
+                    <div className="rounded-xl border border-[#E5E7EB] overflow-x-auto">
+                      <table className="w-full text-xs" style={{ minWidth: 280 }}>
+                        <thead>
+                          <tr className="bg-[#F1F5F9]">
+                            <th className="text-left px-3 py-2 text-[#64748B] font-medium whitespace-nowrap">Qtd</th>
+                            <th className="text-left px-3 py-2 text-[#64748B] font-medium whitespace-nowrap">Preço/un</th>
+                            <th className="text-left px-3 py-2 text-[#64748B] font-medium whitespace-nowrap">Economia</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {tableRows.map((row, i) => (
+                            <tr
+                              key={row.qty}
+                              className="border-t border-[#E5E7EB] cursor-pointer hover:bg-[#F8FAFC] transition-colors"
+                              style={{
+                                backgroundColor: selectedRow === i ? "rgba(34,197,94,0.06)" : undefined,
+                                borderLeft: selectedRow === i ? "3px solid #22C55E" : "3px solid transparent",
+                              }}
+                              onClick={() => handleSelectRow(i)}
+                            >
+                              <td className="px-3 py-2 text-[#0F172A] font-semibold whitespace-nowrap">
+                                {row.qty}
+                                {row.qty === 20 && <span className="ml-1 px-1 py-0.5 rounded text-[9px] font-semibold bg-[#F1F5F9] text-[#64748B]">Mín</span>}
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                {row.desc > 0 && <span className="text-[#94A3B8] line-through text-[10px] mr-1">{formatarBRL(row.base)}</span>}
+                                <span className="text-[#0F172A] font-medium">{formatarBRL(row.unit)}</span>
+                              </td>
+                              <td className="px-3 py-2 whitespace-nowrap">
+                                {row.desc > 0 ? (
+                                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#22C55E]/15 text-[#22C55E]">-{Math.round(row.desc * 100)}%</span>
+                                ) : <span className="text-[#94A3B8]">—</span>}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Trust text */}
                 <div className="text-[#64748B] text-xs leading-relaxed">
                   <p>✓ Personalização com sua logo inclusa</p>
                   <p>✓ Entrega para todo o Brasil</p>
+                </div>
+
+                {/* Description + Dimensions — MOBILE ONLY */}
+                <div className="md:hidden flex flex-col gap-3">
+                  {product.descricao && (
+                    <div className="mt-1 p-3 rounded-xl bg-white border border-[#E5E7EB]">
+                      <h3 className="font-semibold text-sm text-[#0F172A] mb-1.5">Descrição</h3>
+                      <p className="text-[#64748B] text-xs leading-relaxed whitespace-pre-line">{product.descricao}</p>
+                    </div>
+                  )}
+
+                  {(product.altura || product.largura || product.profundidade || product.peso) && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {product.altura != null && (
+                        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-[#E5E7EB] min-w-0">
+                          <ArrowUpDown className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                          <div className="min-w-0"><span className="text-[10px] text-[#94A3B8] block">Altura</span><span className="text-[#0F172A] text-xs font-medium">{product.altura} cm</span></div>
+                        </div>
+                      )}
+                      {product.largura != null && (
+                        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-[#E5E7EB] min-w-0">
+                          <MoveHorizontal className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                          <div className="min-w-0"><span className="text-[10px] text-[#94A3B8] block">Largura</span><span className="text-[#0F172A] text-xs font-medium">{product.largura} cm</span></div>
+                        </div>
+                      )}
+                      {product.profundidade != null && (
+                        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-[#E5E7EB] min-w-0">
+                          <Ruler className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                          <div className="min-w-0"><span className="text-[10px] text-[#94A3B8] block">Comprimento</span><span className="text-[#0F172A] text-xs font-medium">{product.profundidade} cm</span></div>
+                        </div>
+                      )}
+                      {product.peso != null && (
+                        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-white border border-[#E5E7EB] min-w-0">
+                          <Weight className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
+                          <div className="min-w-0"><span className="text-[10px] text-[#94A3B8] block">Peso</span><span className="text-[#0F172A] text-xs font-medium">{product.peso} g</span></div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
