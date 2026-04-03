@@ -77,6 +77,7 @@ const App = () => (
               <Route path="/categoria/:slug" element={<CategoryPage />} />
               <Route path="/produto/:slug" element={<ProductDetail />} />
               <Route path="/produtos" element={<AllProducts />} />
+              <Route path="/catalogo" element={<CatalogPage />} />
               <Route path="/busca" element={<SearchPage />} />
               {/* Legacy redirects */}
               <Route path="/garrafas" element={<Navigate to="/categoria/garrafas-e-squeezes" replace />} />
