@@ -9,7 +9,7 @@ const CatalogHeader = () => {
       <div className="container flex items-center justify-between py-2.5">
         <a href="/catalogo" className="flex items-center gap-1.5">
           <span className="text-base md:text-lg font-medium text-white/90 tracking-tight">
-            Catálogo
+            Gift Web
           </span>
           <span className="text-base md:text-lg font-bold text-[#22C55E] tracking-tight">
             Gift Web
