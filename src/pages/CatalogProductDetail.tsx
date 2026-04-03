@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuotation } from "@/contexts/QuotationContext";
 import { toast } from "sonner";
-import { Clock, Minus, Plus, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, ZoomIn, ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Send } from "lucide-react";
+import { Minus, Plus, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, ZoomIn, ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Send } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products_cache">;
