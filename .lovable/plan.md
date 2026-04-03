@@ -1,49 +1,24 @@
 
 
-# Reordenar seções do CatalogProductDetail — Desktop + Mobile
+# Ajustes no CatalogProductDetail — Preço no mobile + Remover prazo
 
 ## Arquivo: `src/pages/CatalogProductDetail.tsx`
 
-### Layout Desktop (md:grid-cols-2)
+### 1. Remover prazo de produção (desktop + mobile)
+Deletar o bloco do prazo (linhas 383-387) que mostra o ícone Clock + `PRAZO_PRODUCAO`. Remover também o import de `Clock` e `PRAZO_PRODUCAO` se não forem usados em outro lugar do arquivo.
 
-**Coluna esquerda:**
-1. Galeria (imagem + thumbs)
-2. Descrição
-3. Dimensões (altura, largura, etc.) — **movido de direita para esquerda**
+### 2. Mobile: preço logo após o título
+Atualmente a ordem na coluna direita é: Nome → ~~Prazo~~ → Variantes → Stock → Preço → Qty+CTA.
 
-**Coluna direita:**
-1. Nome
-2. Prazo
-3. Variantes (cores)
-4. Stock badge
-5. Preço
-6. Qty selector + Adicionar ao orçamento — **movido para cima**
-7. Compre com desconto (tabela) — **movido para baixo do botão**
-8. Trust text (personalização, entrega)
+No mobile, o preço deve vir logo após o nome, antes das variantes. Implementação:
+- Duplicar o bloco de preço (linhas 474-490) com `md:hidden` logo após o `<h1>` do nome
+- Adicionar `hidden md:block` ao bloco de preço original (que fica na posição atual no desktop, entre stock e qty)
 
-### Layout Mobile (single column, usando `order-` classes)
-
-Ordem sequencial:
-1. Galeria (foto + thumbs)
-2. Variantes
-3. Preço + Qty + Adicionar ao orçamento
-4. Compre com desconto (tabela)
-5. Descrição
-6. Dimensões
-
-**Implementação**: Extrair variantes, stock+preço, qty+add, tabela, descrição e dimensões como blocos separados com classes `order-N md:order-none`. No desktop, renderizar descrição e dimensões dentro da coluna esquerda e o resto na direita. No mobile, usar order para resequenciar tudo em coluna única.
-
-Abordagem mais limpa: usar layout condicional com blocos que aparecem em locais diferentes via `hidden md:block` / `md:hidden` para os elementos que mudam de coluna (descrição e dimensões).
-
-### Detalhes técnicos
-
-- Mover bloco de dimensões (linhas 458-486) para depois da descrição na coluna esquerda
-- Mover qty selector + CTA (linhas 533-598) para logo após o bloco de preço, antes da tabela
-- No mobile: renderizar variantes, preço, qty, tabela fora do grid de 2 colunas, usando `md:hidden` duplicado ou order classes
-- Nome e prazo ficam no topo da coluna direita (desktop) e acima das variantes (mobile)
+Assim:
+- **Mobile**: Nome → Preço → Variantes → Stock → Qty+CTA → Tabela → Descrição → Dimensões
+- **Desktop**: Nome → Variantes → Stock → Preço → Qty+CTA → Tabela → Trust → (descrição/dimensões na esquerda)
 
 ### Não alterar
 - Nenhum componente fora de /catalogo
-- Lógica de cálculo de preço, variantes, lightbox
-- CatalogHeader, CatalogFooter, QuotationDrawer
+- Lógica de cálculo, variantes, lightbox
 
