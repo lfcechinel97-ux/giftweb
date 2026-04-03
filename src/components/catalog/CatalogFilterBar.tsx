@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Search, X, ChevronDown } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { formatarBRL } from "@/utils/price";
 import { CATALOG_SWATCH_COLORS } from "@/components/catalog/catalogSwatchColors";
@@ -79,35 +78,40 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
   const isSwatchSelected = (swatch: typeof CATALOG_SWATCH_COLORS[0]) =>
     swatch.values.some(v => filters.corValues.includes(v));
 
+  const stepBadge = (n: string) => (
+    <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#22C55E]/15 text-[#22C55E] text-[10px] font-bold flex-shrink-0">
+      {n}
+    </span>
+  );
+
   return (
     <div id="catalog-products" className="scroll-mt-20">
-      <div className="bg-card border border-border rounded-xl p-5 mb-4 space-y-5">
-        {/* Row 1: Category + Search (inverted) */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--green-cta))] text-primary-foreground text-[10px] font-bold flex-shrink-0">1º</span>
-            <span className="text-sm font-bold text-[hsl(var(--green-cta))]">Selecione a categoria</span>
+      <div className="bg-white border border-[#E5E7EB] rounded-xl p-5 mb-3 space-y-4">
+        {/* Row 1: Category + Search */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            {stepBadge("1")}
+            <span className="text-xs font-semibold text-[#0F172A]">Selecione a categoria</span>
           </div>
           <div className="flex gap-3">
-            {/* Category first */}
             <div className="relative flex-[2] min-w-0">
               <button
                 onClick={() => setShowCategories(!showCategories)}
-                className={`w-full flex items-center justify-between gap-1.5 px-3 py-2.5 rounded-lg border text-sm transition-colors ${
+                className={`w-full flex items-center justify-between gap-1.5 px-3 py-2 rounded-lg border text-sm transition-colors ${
                   filters.categoria
-                    ? "border-[hsl(var(--green-cta))] text-[hsl(var(--green-cta))] bg-[hsl(var(--green-cta))]/5"
-                    : "border-border text-muted-foreground hover:text-foreground bg-background"
+                    ? "border-[#22C55E] text-[#22C55E] bg-[#22C55E]/5"
+                    : "border-[#E5E7EB] text-[#64748B] hover:text-[#0F172A] bg-white"
                 }`}
               >
                 <span className="truncate">{activeCategory?.label || "Categoria"}</span>
                 <ChevronDown className="w-3.5 h-3.5 flex-shrink-0" />
               </button>
               {showCategories && (
-                <div className="absolute top-full left-0 mt-1 w-full max-h-64 overflow-y-auto rounded-xl bg-card border border-border shadow-lg z-30 py-1">
+                <div className="absolute top-full left-0 mt-1 w-full max-h-64 overflow-y-auto rounded-lg bg-white border border-[#E5E7EB] shadow-lg z-30 py-1">
                   <button
                     onClick={() => { onChange({ categoria: null }); setShowCategories(false); }}
-                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                      !filters.categoria ? "text-[hsl(var(--green-cta))] font-semibold bg-[hsl(var(--green-cta))]/5" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    className={`w-full text-left px-3 py-1.5 text-sm transition-colors ${
+                      !filters.categoria ? "text-[#22C55E] font-medium bg-[#22C55E]/5" : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]"
                     }`}
                   >
                     Todas
@@ -116,10 +120,10 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
                     <button
                       key={cat.slug}
                       onClick={() => { onChange({ categoria: cat.slug }); setShowCategories(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                      className={`w-full text-left px-3 py-1.5 text-sm transition-colors ${
                         filters.categoria === cat.slug
-                          ? "text-[hsl(var(--green-cta))] font-semibold bg-[hsl(var(--green-cta))]/5"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          ? "text-[#22C55E] font-medium bg-[#22C55E]/5"
+                          : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]"
                       }`}
                     >
                       {cat.label}
@@ -129,19 +133,18 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
               )}
             </div>
 
-            {/* Search second */}
             <div className="relative flex-[3] min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94A3B8]" />
               <input
                 type="text"
                 placeholder="Buscar produto..."
                 value={filters.search}
                 onChange={e => onChange({ search: e.target.value })}
-                className="w-full pl-10 pr-9 py-2.5 rounded-lg bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(var(--green-cta))] focus:ring-2 focus:ring-[hsl(var(--green-cta))]/15 transition-colors"
+                className="w-full pl-9 pr-8 py-2 rounded-lg bg-white border border-[#E5E7EB] text-[#0F172A] text-sm placeholder:text-[#94A3B8] focus:outline-none focus:border-[#22C55E] transition-colors"
               />
               {filters.search && (
                 <button onClick={() => onChange({ search: "" })} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
+                  <X className="w-3 h-3 text-[#94A3B8] hover:text-[#0F172A]" />
                 </button>
               )}
             </div>
@@ -149,22 +152,22 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
         </div>
 
         {/* Row 2: Price range */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--green-cta))] text-primary-foreground text-[10px] font-bold flex-shrink-0">2º</span>
-            <span className="text-sm font-bold text-[hsl(var(--green-cta))]">Quanto você quer investir?</span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5">
+            {stepBadge("2")}
+            <span className="text-xs font-semibold text-[#0F172A]">Quanto você quer investir?</span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {QUICK_PRICES.map(qp => {
               const isActive = filters.precoMin === qp.min && filters.precoMax === qp.max;
               return (
                 <button
                   key={qp.label}
                   onClick={() => handleQuickPrice(qp.min, qp.max)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-200 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-200 ${
                     isActive
-                      ? "bg-[hsl(var(--green-cta))] text-primary-foreground border-[hsl(var(--green-cta))] shadow-md"
-                      : "border-border text-foreground hover:border-[hsl(var(--green-cta))]/50 bg-background"
+                      ? "bg-[#22C55E] text-white border-[#22C55E]"
+                      : "border-[#E5E7EB] text-[#475569] hover:border-[#22C55E]/40 bg-[#F1F5F9]"
                   }`}
                 >
                   {qp.label}
@@ -173,18 +176,18 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
             })}
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">R$</span>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-[#94A3B8]">R$</span>
               <input
                 type="number"
                 min={0}
                 max={filters.precoMax}
                 value={filters.precoMin}
                 onChange={e => onChange({ precoMin: Math.max(0, Number(e.target.value)) })}
-                className="w-20 px-2 py-1.5 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:border-[hsl(var(--green-cta))]"
+                className="w-16 px-2 py-1 rounded-md bg-white border border-[#E5E7EB] text-[#0F172A] text-xs text-center focus:outline-none focus:border-[#22C55E]"
               />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 catalog-slider">
               <Slider
                 min={0}
                 max={Math.max(400, filters.precoMax)}
@@ -194,28 +197,28 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
                 onValueChange={([min, max]) => onChange({ precoMin: min, precoMax: max })}
               />
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">R$</span>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-[#94A3B8]">R$</span>
               <input
                 type="number"
                 min={filters.precoMin}
                 max={maxPreco}
                 value={filters.precoMax}
                 onChange={e => onChange({ precoMax: Math.min(maxPreco, Number(e.target.value)) })}
-                className="w-20 px-2 py-1.5 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:border-[hsl(var(--green-cta))]"
+                className="w-16 px-2 py-1 rounded-md bg-white border border-[#E5E7EB] text-[#0F172A] text-xs text-center focus:outline-none focus:border-[#22C55E]"
               />
             </div>
           </div>
         </div>
 
         {/* Row 3: Colors */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--green-cta))] text-primary-foreground text-[10px] font-bold flex-shrink-0">3º</span>
-            <span className="text-sm font-bold text-[hsl(var(--green-cta))]">Qual cor você deseja?</span>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            {stepBadge("3")}
+            <span className="text-xs font-semibold text-[#0F172A]">Qual cor você deseja?</span>
+            <span className="text-[10px] text-[#94A3B8] italic ml-1">Se não tem preferência, basta não selecionar.</span>
           </div>
-          <p className="text-xs text-muted-foreground italic ml-7">Se não tem preferência, basta não selecionar.</p>
-          <div className="flex flex-wrap gap-2.5">
+          <div className="flex flex-wrap gap-2">
             {CATALOG_SWATCH_COLORS.map(swatch => {
               const selected = isSwatchSelected(swatch);
               const isWhite = swatch.bg === "#FFFFFF";
@@ -225,20 +228,20 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
                   key={swatch.name}
                   title={swatch.name}
                   onClick={() => handleColorToggle(swatch.name)}
-                  className="flex flex-col items-center gap-1 group"
+                  className="flex flex-col items-center gap-0.5 group"
                 >
                   <span
-                    className="block w-10 h-10 rounded-full transition-all duration-150"
+                    className="block w-7 h-7 rounded-full transition-all duration-150"
                     style={{
                       background: isOutros ? "conic-gradient(#EF4444, #EAB308, #22C55E, #2563EB, #A855F7, #EF4444)" : swatch.bg,
-                      border: isWhite ? "2px solid hsl(var(--border))" : "2px solid transparent",
+                      border: isWhite ? "1.5px solid #D1D5DB" : "1.5px solid transparent",
                       boxShadow: selected
-                        ? "0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(142,71%,45%)"
-                        : "0 1px 3px rgba(0,0,0,0.15)",
-                      transform: selected ? "scale(1.1)" : "scale(1)",
+                        ? "0 0 0 2px white, 0 0 0 3.5px #22C55E"
+                        : "none",
+                      transform: selected ? "scale(1.08)" : "scale(1)",
                     }}
                   />
-                  <span className={`text-[10px] leading-none max-w-[48px] text-center truncate ${selected ? "text-[hsl(var(--green-cta))] font-semibold" : "text-muted-foreground"}`}>
+                  <span className={`text-[9px] leading-none max-w-[40px] text-center truncate ${selected ? "text-[#22C55E] font-semibold" : "text-[#94A3B8]"}`}>
                     {swatch.name.charAt(0) + swatch.name.slice(1).toLowerCase()}
                   </span>
                 </button>
@@ -248,59 +251,59 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
         </div>
 
         {/* Row 4: Search button + Sort */}
-        <div className="flex items-center gap-3">
-          <Button
+        <div className="flex items-center gap-2 pt-1">
+          <button
             onClick={() => {}}
-            className="flex-1 bg-[hsl(var(--green-cta))] text-primary-foreground hover:bg-[hsl(var(--green-cta))]/90 text-base py-3 h-auto font-bold"
+            className="flex-1 bg-[#22C55E] text-white hover:bg-[#16A34A] text-sm py-2.5 rounded-lg font-semibold transition-colors"
           >
             BUSCAR BRINDE
-          </Button>
+          </button>
           <div className="relative">
             <select
               value={filters.sort}
               onChange={e => onChange({ sort: e.target.value })}
-              className="appearance-none pl-3 pr-8 py-3 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:border-[hsl(var(--green-cta))] cursor-pointer"
+              className="appearance-none pl-3 pr-7 py-2.5 rounded-lg bg-white border border-[#E5E7EB] text-[#475569] text-xs focus:outline-none focus:border-[#22C55E] cursor-pointer"
             >
               {SORT_OPTIONS.map(o => (
                 <option key={o.val} value={o.val}>{o.label}</option>
               ))}
             </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#94A3B8] pointer-events-none" />
           </div>
         </div>
       </div>
 
       {/* Active filter chips */}
       {hasFilters && (
-      <div className="flex items-center gap-2 flex-wrap mb-5">
-            {filters.categoria && activeCategory && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[hsl(var(--green-cta))]/10 text-[hsl(var(--green-cta))] text-xs font-medium">
-                {activeCategory.label}
-                <button onClick={() => onChange({ categoria: null })}><X className="w-3 h-3" /></button>
-              </span>
-            )}
-            {filters.corValues.length > 0 && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[hsl(var(--green-cta))]/10 text-[hsl(var(--green-cta))] text-xs font-medium">
-                {filters.corValues.length} cor(es)
-                <button onClick={() => onChange({ corValues: [] })}><X className="w-3 h-3" /></button>
-              </span>
-            )}
-            {(filters.precoMin > 0 || filters.precoMax < maxPreco) && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[hsl(var(--green-cta))]/10 text-[hsl(var(--green-cta))] text-xs font-medium">
-                {formatarBRL(filters.precoMin)} – {formatarBRL(filters.precoMax)}
-                <button onClick={() => onChange({ precoMin: 0, precoMax: maxPreco })}><X className="w-3 h-3" /></button>
-              </span>
-            )}
-            {filters.search && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[hsl(var(--green-cta))]/10 text-[hsl(var(--green-cta))] text-xs font-medium">
-                "{filters.search}"
-                <button onClick={() => onChange({ search: "" })}><X className="w-3 h-3" /></button>
-              </span>
-            )}
-            <button onClick={onClear} className="text-xs text-muted-foreground hover:text-foreground underline ml-1">
-              Limpar tudo
-            </button>
-      </div>
+        <div className="flex items-center gap-1.5 flex-wrap mb-4">
+          {filters.categoria && activeCategory && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#22C55E]/10 text-[#22C55E] text-[11px] font-medium">
+              {activeCategory.label}
+              <button onClick={() => onChange({ categoria: null })}><X className="w-2.5 h-2.5" /></button>
+            </span>
+          )}
+          {filters.corValues.length > 0 && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#22C55E]/10 text-[#22C55E] text-[11px] font-medium">
+              {filters.corValues.length} cor(es)
+              <button onClick={() => onChange({ corValues: [] })}><X className="w-2.5 h-2.5" /></button>
+            </span>
+          )}
+          {(filters.precoMin > 0 || filters.precoMax < maxPreco) && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#22C55E]/10 text-[#22C55E] text-[11px] font-medium">
+              {formatarBRL(filters.precoMin)} – {formatarBRL(filters.precoMax)}
+              <button onClick={() => onChange({ precoMin: 0, precoMax: maxPreco })}><X className="w-2.5 h-2.5" /></button>
+            </span>
+          )}
+          {filters.search && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#22C55E]/10 text-[#22C55E] text-[11px] font-medium">
+              "{filters.search}"
+              <button onClick={() => onChange({ search: "" })}><X className="w-2.5 h-2.5" /></button>
+            </span>
+          )}
+          <button onClick={onClear} className="text-[11px] text-[#94A3B8] hover:text-[#0F172A] underline ml-1">
+            Limpar tudo
+          </button>
+        </div>
       )}
     </div>
   );
