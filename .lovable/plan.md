@@ -1,48 +1,49 @@
 
 
-# Plano: Produto no catálogo + fixes
+# Reordenar seções do CatalogProductDetail — Desktop + Mobile
 
-## 3 entregas
+## Arquivo: `src/pages/CatalogProductDetail.tsx`
 
-### 1. Criar página de produto exclusiva do catálogo (`/catalogo/produto/:slug`)
+### Layout Desktop (md:grid-cols-2)
 
-**Nova rota**: `/catalogo/produto/:slug` em `App.tsx`
+**Coluna esquerda:**
+1. Galeria (imagem + thumbs)
+2. Descrição
+3. Dimensões (altura, largura, etc.) — **movido de direita para esquerda**
 
-**Novo arquivo**: `src/pages/CatalogProductDetail.tsx`
-- Baseado na estrutura do `ProductDetail.tsx` existente (galeria, variantes, preço, tabela de quantidades, dimensoes, lightbox)
-- Usa `CatalogHeader` e `CatalogFooter` no lugar de `Header`/`Footer`
-- **Substituir** o botao "Solicitar orcamento no WhatsApp" por botao **"Adicionar ao orcamento"** (verde, usa `useQuotation().addItem`)
-- Manter seletor de quantidade (+/- e input)
-- **Apos adicionar**: exibir dois botoes:
-  - "Continuar escolhendo" → volta para `/catalogo` (preservando filtros via `navigate(-1)`)
-  - "Enviar orcamento via WhatsApp" → abre WhatsApp direto (mesma logica do QuotationDrawer)
-- Remover: Breadcrumbs do site, HowItWorks, produtos relacionados com ProductCard do site, FloatingWhatsApp do site
-- Manter: QuotationBar no topo + QuotationDrawer
+**Coluna direita:**
+1. Nome
+2. Prazo
+3. Variantes (cores)
+4. Stock badge
+5. Preço
+6. Qty selector + Adicionar ao orçamento — **movido para cima**
+7. Compre com desconto (tabela) — **movido para baixo do botão**
+8. Trust text (personalização, entrega)
 
-**Atualizar link nos cards**: Em `CatalogProductCard.tsx`, mudar `href` de `/produto/${slug}` para `/catalogo/produto/${slug}`
+### Layout Mobile (single column, usando `order-` classes)
 
-### 2. Fix: botao "Enviar orcamento via WhatsApp" no QuotationDrawer
+Ordem sequencial:
+1. Galeria (foto + thumbs)
+2. Variantes
+3. Preço + Qty + Adicionar ao orçamento
+4. Compre com desconto (tabela)
+5. Descrição
+6. Dimensões
 
-**Arquivo**: `src/components/catalog/QuotationDrawer.tsx`
+**Implementação**: Extrair variantes, stock+preço, qty+add, tabela, descrição e dimensões como blocos separados com classes `order-N md:order-none`. No desktop, renderizar descrição e dimensões dentro da coluna esquerda e o resto na direita. No mobile, usar order para resequenciar tudo em coluna única.
 
-O `WHATSAPP_NUMBER` tem o valor `5548996652844`. O `window.open` com `https://wa.me/...` deve funcionar. Vou verificar se o problema e o formato do numero ou encoding. O numero parece correto (55 + DDD + numero). Possivel causa: o `window.open` esta sendo bloqueado por popup blocker porque nao e disparado diretamente por click do usuario (improvavel, pois esta em onClick). Outra causa: o botao pode nao estar recebendo o click. Vou garantir que o `onClick` esta no `Button` correto e adicionar `type="button"`.
+Abordagem mais limpa: usar layout condicional com blocos que aparecem em locais diferentes via `hidden md:block` / `md:hidden` para os elementos que mudam de coluna (descrição e dimensões).
 
-### 3. Mobile: dropdown de categoria com estilo igual ao desktop
+### Detalhes técnicos
 
-**Arquivo**: `src/components/catalog/CatalogMobileFilters.tsx`
+- Mover bloco de dimensões (linhas 458-486) para depois da descrição na coluna esquerda
+- Mover qty selector + CTA (linhas 533-598) para logo após o bloco de preço, antes da tabela
+- No mobile: renderizar variantes, preço, qty, tabela fora do grid de 2 colunas, usando `md:hidden` duplicado ou order classes
+- Nome e prazo ficam no topo da coluna direita (desktop) e acima das variantes (mobile)
 
-Substituir o `<select>` nativo por um dropdown customizado identico ao desktop (`CatalogFilterBar.tsx`): botao arredondado com borda verde quando selecionado + lista suspensa posicionada com `absolute`. Usar o mesmo estilo visual do desktop (rounded-lg, border verde ativo, hover suave).
-
-## Arquivos afetados
-
-- **Criar**: `src/pages/CatalogProductDetail.tsx`
-- **Editar**: `src/App.tsx` (nova rota)
-- **Editar**: `src/components/catalog/CatalogProductCard.tsx` (mudar href)
-- **Editar**: `src/components/catalog/QuotationDrawer.tsx` (fix botao WhatsApp)
-- **Editar**: `src/components/catalog/CatalogMobileFilters.tsx` (dropdown customizado)
-
-## Nao alterar
-- `ProductDetail.tsx` (pagina do site)
-- Header, Footer, HeroSection do site
-- Nenhum componente global
+### Não alterar
+- Nenhum componente fora de /catalogo
+- Lógica de cálculo de preço, variantes, lightbox
+- CatalogHeader, CatalogFooter, QuotationDrawer
 
