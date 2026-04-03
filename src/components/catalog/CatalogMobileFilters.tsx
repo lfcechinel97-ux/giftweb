@@ -26,9 +26,11 @@ interface CatalogMobileFiltersProps {
 
 const QUICK_PRICES = [
   { label: "Até R$10", min: 0, max: 10 },
-  { label: "Até R$30", min: 0, max: 30 },
-  { label: "Até R$50", min: 0, max: 50 },
-  { label: "Até R$100", min: 0, max: 100 },
+  { label: "Até R$30", min: 10.01, max: 30 },
+  { label: "Até R$50", min: 30.01, max: 50 },
+  { label: "Até R$100", min: 50.01, max: 100 },
+  { label: "Até R$200", min: 100.01, max: 200 },
+  { label: "Até R$400", min: 200.01, max: 400 },
 ];
 
 const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogMobileFiltersProps) => {
