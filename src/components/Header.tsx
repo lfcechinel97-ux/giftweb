@@ -280,6 +280,9 @@ const Header = () => {
               <Link to="/categoria/kits" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
                 Kits
               </Link>
+              <Link to="/catalogo" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+                Catálogo
+              </Link>
             </div>
           </div>
         </div>
@@ -327,6 +330,14 @@ const Header = () => {
           >
             <Menu size={18} className="text-green-cta" />
             Todos Brindes
+          </Link>
+          <Link
+            to="/catalogo"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3 py-4 text-base font-bold uppercase text-white border-b border-white/10"
+          >
+            <Search size={18} className="text-green-cta" />
+            Catálogo
           </Link>
 
           {menuSections.map((section) => (

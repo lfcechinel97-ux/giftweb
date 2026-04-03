@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { SiteContentProvider } from "@/contexts/SiteContentContext";
+import { QuotationProvider } from "@/contexts/QuotationContext";
 
 // Lazy-loaded routes
 const AdminSync = lazy(() => import("./pages/AdminSync.tsx"));
@@ -30,6 +31,7 @@ const AdminGuard = lazy(() => import("./components/admin/AdminGuard.tsx"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage.tsx"));
 const TermsPage = lazy(() => import("./pages/TermsPage.tsx"));
 const SecurityPage = lazy(() => import("./pages/SecurityPage.tsx"));
+const CatalogPage = lazy(() => import("./pages/CatalogPage.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -51,6 +53,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <QuotationProvider>
         <SiteContentProvider>
         <BrowserRouter>
           <ScrollToTop />
@@ -74,6 +77,7 @@ const App = () => (
               <Route path="/categoria/:slug" element={<CategoryPage />} />
               <Route path="/produto/:slug" element={<ProductDetail />} />
               <Route path="/produtos" element={<AllProducts />} />
+              <Route path="/catalogo" element={<CatalogPage />} />
               <Route path="/busca" element={<SearchPage />} />
               {/* Legacy redirects */}
               <Route path="/garrafas" element={<Navigate to="/categoria/garrafas-e-squeezes" replace />} />
@@ -93,6 +97,7 @@ const App = () => (
           </Suspense>
         </BrowserRouter>
         </SiteContentProvider>
+        </QuotationProvider>
       </TooltipProvider>
     </HelmetProvider>
   </QueryClientProvider>
