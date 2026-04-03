@@ -7,12 +7,12 @@ const CatalogHeader = () => {
   return (
     <header className="w-full bg-[#0B0F1A] border-b border-white/5">
       <div className="container flex items-center justify-between py-2.5">
-        <a href="/catalogo" className="flex items-center gap-1.5">
-          <span className="text-base md:text-lg font-medium text-white/90 tracking-tight">
+        <a href="/catalogo" className="flex items-center gap-1">
+          <span className="text-xl md:text-2xl font-black italic text-white tracking-tight" style={{ fontFamily: "'Georgia', serif" }}>
             Gift Web
           </span>
-          <span className="text-base md:text-lg font-bold text-[#22C55E] tracking-tight">
-            Gift Web
+          <span className="text-[10px] md:text-xs font-semibold text-[#22C55E] tracking-[0.15em] uppercase self-end mb-0.5">
+            BRINDES
           </span>
         </a>
 
