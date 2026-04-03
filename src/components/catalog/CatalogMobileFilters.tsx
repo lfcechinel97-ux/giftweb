@@ -179,6 +179,7 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
       {/* Colors — always visible */}
       <div className="space-y-2">
         <label className="text-sm font-semibold text-foreground block">Qual cor você deseja?</label>
+        <p className="text-xs text-muted-foreground italic">Se não tem preferência, basta não selecionar.</p>
         <div className="flex flex-wrap gap-2.5">
           {CATALOG_SWATCH_COLORS.map(swatch => {
             const selected = isSwatchSelected(swatch);
