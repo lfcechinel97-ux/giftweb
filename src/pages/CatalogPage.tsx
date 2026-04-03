@@ -178,7 +178,7 @@ const CatalogPage = () => {
             </div>
           </section>
 
-          {/* MOBILE: filters inline → stories → products */}
+          {/* MOBILE: filters inline → products (no stories) */}
           <div className="lg:hidden container py-4 space-y-4">
             <CatalogMobileFilters
               filters={filters}
@@ -188,10 +188,6 @@ const CatalogPage = () => {
               cores={cores}
               maxPreco={MAX_PRECO}
               totalProducts={total}
-            />
-            <CatalogStoryCategories
-              selected={filters.categoria}
-              onSelect={handleCategorySelect}
             />
           </div>
 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, X, ChevronDown, Medal } from "lucide-react";
+import { Search, X, ChevronDown } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
@@ -36,7 +36,7 @@ const SORT_OPTIONS = [
 const QUICK_PRICES = [
   { label: "Até R$10", min: 0, max: 10 },
   { label: "Até R$30", min: 0, max: 30 },
-  { label: "Até R$50", min: 0, max: 50, badge: true },
+  { label: "Até R$50", min: 0, max: 50 },
   { label: "Até R$100", min: 0, max: 100 },
 ];
 
@@ -80,69 +80,70 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
   return (
     <div id="catalog-products" className="scroll-mt-20">
       <div className="bg-card border border-border rounded-xl p-5 mb-4 space-y-5">
-        {/* Row 1: Search + Category */}
+        {/* Row 1: Category + Search (inverted) */}
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--green-cta))] text-primary-foreground text-[10px] font-bold flex-shrink-0">1º</span>
             <span className="text-sm font-bold text-[hsl(var(--green-cta))]">Selecione a categoria</span>
           </div>
           <div className="flex gap-3">
-            <div className="relative flex-[3] min-w-0">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Buscar produto..."
-              value={filters.search}
-              onChange={e => onChange({ search: e.target.value })}
-              className="w-full pl-10 pr-9 py-2.5 rounded-lg bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(var(--green-cta))] focus:ring-2 focus:ring-[hsl(var(--green-cta))]/15 transition-colors"
-            />
-            {filters.search && (
-              <button onClick={() => onChange({ search: "" })} className="absolute right-3 top-1/2 -translate-y-1/2">
-                <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
+            {/* Category first */}
+            <div className="relative flex-[2] min-w-0">
+              <button
+                onClick={() => setShowCategories(!showCategories)}
+                className={`w-full flex items-center justify-between gap-1.5 px-3 py-2.5 rounded-lg border text-sm transition-colors ${
+                  filters.categoria
+                    ? "border-[hsl(var(--green-cta))] text-[hsl(var(--green-cta))] bg-[hsl(var(--green-cta))]/5"
+                    : "border-border text-muted-foreground hover:text-foreground bg-background"
+                }`}
+              >
+                <span className="truncate">{activeCategory?.label || "Categoria"}</span>
+                <ChevronDown className="w-3.5 h-3.5 flex-shrink-0" />
               </button>
-            )}
-          </div>
-
-          <div className="relative flex-[2] min-w-0">
-            <button
-              onClick={() => setShowCategories(!showCategories)}
-              className={`w-full flex items-center justify-between gap-1.5 px-3 py-2.5 rounded-lg border text-sm transition-colors ${
-                filters.categoria
-                  ? "border-[hsl(var(--green-cta))] text-[hsl(var(--green-cta))] bg-[hsl(var(--green-cta))]/5"
-                  : "border-border text-muted-foreground hover:text-foreground bg-background"
-              }`}
-            >
-              <span className="truncate">{activeCategory?.label || "Categoria"}</span>
-              <ChevronDown className="w-3.5 h-3.5 flex-shrink-0" />
-            </button>
-            {showCategories && (
-              <div className="absolute top-full left-0 mt-1 w-full max-h-64 overflow-y-auto rounded-xl bg-card border border-border shadow-lg z-30 py-1">
-                <button
-                  onClick={() => { onChange({ categoria: null }); setShowCategories(false); }}
-                  className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                    !filters.categoria ? "text-[hsl(var(--green-cta))] font-semibold bg-[hsl(var(--green-cta))]/5" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  }`}
-                >
-                  Todas
-                </button>
-                {categories.map(cat => (
+              {showCategories && (
+                <div className="absolute top-full left-0 mt-1 w-full max-h-64 overflow-y-auto rounded-xl bg-card border border-border shadow-lg z-30 py-1">
                   <button
-                    key={cat.slug}
-                    onClick={() => { onChange({ categoria: cat.slug }); setShowCategories(false); }}
+                    onClick={() => { onChange({ categoria: null }); setShowCategories(false); }}
                     className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                      filters.categoria === cat.slug
-                        ? "text-[hsl(var(--green-cta))] font-semibold bg-[hsl(var(--green-cta))]/5"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      !filters.categoria ? "text-[hsl(var(--green-cta))] font-semibold bg-[hsl(var(--green-cta))]/5" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     }`}
                   >
-                    {cat.label}
+                    Todas
                   </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
+                  {categories.map(cat => (
+                    <button
+                      key={cat.slug}
+                      onClick={() => { onChange({ categoria: cat.slug }); setShowCategories(false); }}
+                      className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                        filters.categoria === cat.slug
+                          ? "text-[hsl(var(--green-cta))] font-semibold bg-[hsl(var(--green-cta))]/5"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
+            {/* Search second */}
+            <div className="relative flex-[3] min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Buscar produto..."
+                value={filters.search}
+                onChange={e => onChange({ search: e.target.value })}
+                className="w-full pl-10 pr-9 py-2.5 rounded-lg bg-background border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(var(--green-cta))] focus:ring-2 focus:ring-[hsl(var(--green-cta))]/15 transition-colors"
+              />
+              {filters.search && (
+                <button onClick={() => onChange({ search: "" })} className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <X className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Row 2: Price range */}
@@ -155,26 +156,17 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
             {QUICK_PRICES.map(qp => {
               const isActive = filters.precoMin === qp.min && filters.precoMax === qp.max;
               return (
-                <div key={qp.label} className="relative">
-                  {qp.badge && (
-                    <span className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 whitespace-nowrap">
-                      <Medal className="w-3 h-3 text-amber-500" />
-                      <span className="text-[10px] italic text-amber-500 font-medium">mais pedido</span>
-                    </span>
-                  )}
-                  <button
-                    onClick={() => handleQuickPrice(qp.min, qp.max)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-200 ${
-                      isActive
-                        ? "bg-[hsl(var(--green-cta))] text-primary-foreground border-[hsl(var(--green-cta))] shadow-md"
-                        : qp.badge
-                        ? "border-amber-400/50 text-foreground hover:border-amber-400 bg-background"
-                        : "border-border text-foreground hover:border-[hsl(var(--green-cta))]/50 bg-background"
-                    }`}
-                  >
-                    {qp.label}
-                  </button>
-                </div>
+                <button
+                  key={qp.label}
+                  onClick={() => handleQuickPrice(qp.min, qp.max)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-200 ${
+                    isActive
+                      ? "bg-[hsl(var(--green-cta))] text-primary-foreground border-[hsl(var(--green-cta))] shadow-md"
+                      : "border-border text-foreground hover:border-[hsl(var(--green-cta))]/50 bg-background"
+                  }`}
+                >
+                  {qp.label}
+                </button>
               );
             })}
           </div>
@@ -233,7 +225,7 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
                   className="flex flex-col items-center gap-1 group"
                 >
                   <span
-                    className="w-10 h-10 rounded-full transition-all duration-150"
+                    className="block w-10 h-10 rounded-full transition-all duration-150"
                     style={{
                       backgroundColor: isOutros ? undefined : swatch.bg,
                       background: isOutros ? "conic-gradient(#EF4444, #EAB308, #22C55E, #2563EB, #A855F7, #EF4444)" : undefined,
