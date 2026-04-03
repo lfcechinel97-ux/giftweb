@@ -331,6 +331,14 @@ const Header = () => {
             <Menu size={18} className="text-green-cta" />
             Todos Brindes
           </Link>
+          <Link
+            to="/catalogo"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3 py-4 text-base font-bold uppercase text-white border-b border-white/10"
+          >
+            <Search size={18} className="text-green-cta" />
+            Catálogo
+          </Link>
 
           {menuSections.map((section) => (
             <div key={section.title} className="border-b border-white/10">
