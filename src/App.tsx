@@ -53,6 +53,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <QuotationProvider>
         <SiteContentProvider>
         <BrowserRouter>
           <ScrollToTop />
