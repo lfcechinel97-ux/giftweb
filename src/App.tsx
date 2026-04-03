@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { SiteContentProvider } from "@/contexts/SiteContentContext";
+import { QuotationProvider } from "@/contexts/QuotationContext";
 
 // Lazy-loaded routes
 const AdminSync = lazy(() => import("./pages/AdminSync.tsx"));
