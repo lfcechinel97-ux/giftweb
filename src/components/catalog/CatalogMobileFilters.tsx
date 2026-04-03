@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Search } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useBaseCategories } from "@/hooks/useBaseCategories";

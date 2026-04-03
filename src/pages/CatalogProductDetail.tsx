@@ -8,7 +8,7 @@ import { PRAZO_PRODUCAO, WHATSAPP_NUMBER } from "@/config/site";
 import CatalogHeader from "@/components/catalog/CatalogHeader";
 import CatalogFooter from "@/components/catalog/CatalogFooter";
 import QuotationDrawer from "@/components/catalog/QuotationDrawer";
-import { QuotationBar } from "@/components/catalog/QuotationBar";
+import QuotationBar from "@/components/catalog/QuotationBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuotation } from "@/contexts/QuotationContext";
