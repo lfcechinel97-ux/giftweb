@@ -1,56 +1,35 @@
 
 
-# Correções na página /catalogo — Bugs e melhorias visuais
+# Correções no /catalogo — 6 ajustes
 
-## Problemas identificados
+## 1. Desktop: inverter Busca ↔ Categoria (`CatalogFilterBar.tsx`)
+Trocar a ordem dos campos na linha 1: **Categoria** primeiro (flex-[2]), **Buscar produto** depois (flex-[3]). Assim o dropdown fica alinhado com o "1º Selecione a categoria".
 
-1. **Scroll para o topo ao clicar**: O `handleCategorySelect` (linha 154 do CatalogPage) faz `scrollIntoView` para `#catalog-products`, e o `setSearchParams` em vários lugares causa re-render que pode rolar a página. Além disso, clicks nos stories e filtros estão trigando navegação/scroll indesejado.
+## 2. Scroll para o topo — causa raiz (`App.tsx`)
+O `ScrollToTop` (linha 40) escuta `search` (query string). Toda vez que um filtro muda no catálogo, a URL muda e dispara `window.scrollTo(0, 0)`. Solução: remover `search` da dependência do useEffect, mantendo apenas `pathname`. Isso corrige o bug globalmente sem afetar outras páginas.
 
-2. **Texto instrucional feio**: Está tudo numa linha só, genérico.
+## 3. Cores vazias — bug de display (`CatalogFilterBar.tsx` + `CatalogMobileFilters.tsx`)
+O `<span>` com `w-10 h-10` (desktop) e `w-8 h-8` (mobile) é um elemento inline por padrão — `width`/`height` não funcionam em elementos inline. Adicionar `block` ou `inline-block` ao className das bolinhas de cor em ambos os arquivos.
 
-3. **"Faixa de preço" → "Quanto você quer investir?"**: Renomear label.
+## 4. Remover badge "mais pedido" do botão "Até R$50" (`CatalogFilterBar.tsx` + `CatalogMobileFilters.tsx`)
+- Remover `badge: true` do array `QUICK_PRICES`
+- Remover o bloco condicional `{qp.badge && (...)}` que renderiza o Medal + texto
+- Remover a classe especial `border-amber-400/50` do botão — todos os botões ficam iguais
 
-4. **Cor sem subtexto**: Adicionar "Se não tem preferência, basta não selecionar" abaixo do título.
+## 5. Mobile: Categoria como lista suspensa (`CatalogMobileFilters.tsx`)
+Substituir os chips de categorias dentro do `Collapsible` por um `<select>` nativo (dropdown). Quando o usuário abre o accordion, vê um select com todas as categorias. Ocupa uma linha só, sem empurrar a página.
 
-5. **Cores bugadas**: As bolinhas usam `CATALOG_SWATCH_COLORS` mas podem não estar renderizando por algum problema de estilo (bg inline vs class). Verificar e garantir que todas apareçam.
+## 6. Mobile: remover Stories de categorias (`CatalogPage.tsx`)
+Remover o `<CatalogStoryCategories>` do bloco `lg:hidden` (linhas 192-195). Manter apenas no desktop.
 
-6. **"X produtos encontrados"**: Remover.
-
-## Alterações
-
-### Arquivo 1: `src/components/catalog/CatalogFilterBar.tsx`
-
-**Instrução como passo-a-passo visual (substituir linha 84-86)**:
-- Remover o parágrafo de texto corrido
-- Em cada seção (Categoria, Preço, Cor), adicionar um badge numérico no canto superior esquerdo do bloco:
-  - Seção Busca+Categoria: badge "1º" + label "Selecione a categoria" em verde/bold
-  - Seção Preço: badge "2º" + label "Quanto você quer investir?" em verde/bold
-  - Seção Cor: badge "3º" + label "Qual cor você deseja?" + subtexto "Se não tem preferência, basta não selecionar" em muted/italic
-
-**Renomear labels**:
-- "Faixa de preço" → "Quanto você quer investir?" (linha 148)
-- "Cor" → "Qual cor você deseja?" (linha 213)
-
-**Remover "X produtos encontrados" (linhas 271-306)**:
-- Manter apenas os chips de filtros ativos + "Limpar tudo", sem o contador
-
-**Cores — garantir renderização**:
-- Verificar que `backgroundColor` inline está sendo aplicado. O código parece correto (`swatch.bg`), mas pode haver um conflito de CSS. Garantir que os spans tenham `display: inline-block` ou similar para renderizar o background.
-
-### Arquivo 2: `src/components/catalog/CatalogMobileFilters.tsx`
-
-- Mesmas renomeações: "Quanto você quer investir?" e "Qual cor você deseja?" + subtexto
-- Garantir cores renderizando corretamente
-
-### Arquivo 3: `src/pages/CatalogPage.tsx`
-
-**Corrigir scroll indesejado**:
-- Remover o `scrollIntoView` da função `handleCategorySelect` (linha 154)
-- No `useEffect` que sincroniza searchParams (linhas 122-132), isso não deveria causar scroll. O problema pode ser o `setSearchParams` com `replace: true` que re-renderiza e o browser volta ao topo. Adicionar `scroll: false` ou prevenir scroll no setSearchParams.
+## Arquivos afetados
+- `src/App.tsx` — remover `search` do ScrollToTop
+- `src/components/catalog/CatalogFilterBar.tsx` — inverter campos, cor block, remover badge
+- `src/components/catalog/CatalogMobileFilters.tsx` — cor block, remover badge, select de categoria
+- `src/pages/CatalogPage.tsx` — remover stories no mobile
 
 ## Não alterar
+- Nenhum componente fora de /catalogo (exceto o fix pontual no ScrollToTop)
 - HeroSection, Header, Footer do site
-- CatalogHeader, CatalogFooter, CatalogStoryCategories
-- Slider, QuotationDrawer, ProductCard
-- Nenhum componente fora de /catalogo
+- Lógica RPC, QuotationContext, ProductCard
 
