@@ -1,55 +1,56 @@
 
 
-# Redesenho da página /catalogo — Catálogo Digital limpo
+# Correções na página /catalogo — Bugs e melhorias visuais
 
-## Resumo
-Transformar a página `/catalogo` de um layout "site" para um **catálogo digital limpo e independente**, sem header/footer do site. Criar header próprio com letreiro "Catálogo Digital Gift Web", categorias estilo stories do Instagram, filtro igual ao da homepage (imagem 3), e footer simplificado só com contato/endereços/pagamento.
+## Problemas identificados
 
-## Mudanças
+1. **Scroll para o topo ao clicar**: O `handleCategorySelect` (linha 154 do CatalogPage) faz `scrollIntoView` para `#catalog-products`, e o `setSearchParams` em vários lugares causa re-render que pode rolar a página. Além disso, clicks nos stories e filtros estão trigando navegação/scroll indesejado.
 
-### 1. Criar `src/components/catalog/CatalogHeader.tsx` — Header próprio do catálogo
-- Letreiro bonito: "Catálogo Digital" em bold + "Gift Web" em verde, tipografia elegante
-- Fundo escuro (#0B0F1A) ou branco clean, compacto
-- Sem menu de navegação do site, sem barra de busca do header principal
-- Ícone do carrinho de orçamento com badge de quantidade (abre o QuotationDrawer)
+2. **Texto instrucional feio**: Está tudo numa linha só, genérico.
 
-### 2. Criar `src/components/catalog/CatalogStoryCategories.tsx` — Categorias estilo Stories
-- Substituir o bento grid atual por uma **fila horizontal scrollável** estilo stories do Instagram
-- Cada categoria: **círculo com borda gradiente** (verde), imagem do produto dentro, nome abaixo
-- Scroll horizontal com snap, sem scrollbar visível
-- Ao clicar, aplica filtro de categoria e rola para os produtos
-- Categoria selecionada fica com borda mais grossa/destacada
-- Usa os mesmos dados do `useBaseCategories` + imagem do primeiro produto
+3. **"Faixa de preço" → "Quanto você quer investir?"**: Renomear label.
 
-### 3. Criar `src/components/catalog/CatalogFooter.tsx` — Footer simplificado
-- Fundo escuro (#0B0F1A), compacto
-- **Apenas**: telefones, email, endereço matriz + filial, formas de pagamento
-- **Remover**: categorias, institucional, SSL, frase, copyright extenso
-- Layout: 2-3 colunas simples (Contato | Endereços | Pagamento)
+4. **Cor sem subtexto**: Adicionar "Se não tem preferência, basta não selecionar" abaixo do título.
 
-### 4. Atualizar `src/pages/CatalogPage.tsx`
-- Trocar `<Header />` por `<CatalogHeader />`
-- Trocar `<Footer />` por `<CatalogFooter />`
-- Trocar `<CatalogHeroCategories />` por: letreiro hero + `<CatalogStoryCategories />`
-- Remover `<Breadcrumbs />`
-- Manter: filtros (CatalogFilterBar + CatalogMobileFilters), grid de produtos, paginação, QuotationBar, QuotationDrawer, FloatingWhatsApp
-- O bloco de filtro fica logo abaixo das stories (como na imagem 3: categoria dropdown, faixa de preço com botões rápidos + slider, cores, botão "BUSCAR BRINDE")
+5. **Cores bugadas**: As bolinhas usam `CATALOG_SWATCH_COLORS` mas podem não estar renderizando por algum problema de estilo (bg inline vs class). Verificar e garantir que todas apareçam.
 
-### 5. Seção Hero do catálogo
-- Título grande: "Explore nosso catálogo de **brindes:**" (brindes em verde/itálico, como imagem 3)
-- Subtítulo: "Filtre por categoria, preço e cor"
-- Abaixo: bloco de filtro compacto (dropdown categoria, preço com botões rápidos + slider + inputs, bolinhas de cor, botão verde "BUSCAR BRINDE")
-- Este bloco de filtro é o **mesmo estilo visual** da homepage (imagem 3)
+6. **"X produtos encontrados"**: Remover.
+
+## Alterações
+
+### Arquivo 1: `src/components/catalog/CatalogFilterBar.tsx`
+
+**Instrução como passo-a-passo visual (substituir linha 84-86)**:
+- Remover o parágrafo de texto corrido
+- Em cada seção (Categoria, Preço, Cor), adicionar um badge numérico no canto superior esquerdo do bloco:
+  - Seção Busca+Categoria: badge "1º" + label "Selecione a categoria" em verde/bold
+  - Seção Preço: badge "2º" + label "Quanto você quer investir?" em verde/bold
+  - Seção Cor: badge "3º" + label "Qual cor você deseja?" + subtexto "Se não tem preferência, basta não selecionar" em muted/italic
+
+**Renomear labels**:
+- "Faixa de preço" → "Quanto você quer investir?" (linha 148)
+- "Cor" → "Qual cor você deseja?" (linha 213)
+
+**Remover "X produtos encontrados" (linhas 271-306)**:
+- Manter apenas os chips de filtros ativos + "Limpar tudo", sem o contador
+
+**Cores — garantir renderização**:
+- Verificar que `backgroundColor` inline está sendo aplicado. O código parece correto (`swatch.bg`), mas pode haver um conflito de CSS. Garantir que os spans tenham `display: inline-block` ou similar para renderizar o background.
+
+### Arquivo 2: `src/components/catalog/CatalogMobileFilters.tsx`
+
+- Mesmas renomeações: "Quanto você quer investir?" e "Qual cor você deseja?" + subtexto
+- Garantir cores renderizando corretamente
+
+### Arquivo 3: `src/pages/CatalogPage.tsx`
+
+**Corrigir scroll indesejado**:
+- Remover o `scrollIntoView` da função `handleCategorySelect` (linha 154)
+- No `useEffect` que sincroniza searchParams (linhas 122-132), isso não deveria causar scroll. O problema pode ser o `setSearchParams` com `replace: true` que re-renderiza e o browser volta ao topo. Adicionar `scroll: false` ou prevenir scroll no setSearchParams.
 
 ## Não alterar
-- Nenhum componente fora de `/catalogo`
-- Header.tsx, Footer.tsx do site principal
-- HeroSection da homepage
-- Filtro de preço da homepage
-- Outras páginas (Index, ProductDetail, etc.)
-
-## Arquivos afetados
-- **Criar**: `CatalogHeader.tsx`, `CatalogStoryCategories.tsx`, `CatalogFooter.tsx`
-- **Editar**: `CatalogPage.tsx`
-- **Não editar**: `CatalogHeroCategories.tsx` (pode ficar sem uso, mas não deletar)
+- HeroSection, Header, Footer do site
+- CatalogHeader, CatalogFooter, CatalogStoryCategories
+- Slider, QuotationDrawer, ProductCard
+- Nenhum componente fora de /catalogo
 
