@@ -276,13 +276,9 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
         </div>
       </div>
 
-      {/* Active filter chips + count */}
+      {/* Active filter chips */}
+      {hasFilters && (
       <div className="flex items-center gap-2 flex-wrap mb-5">
-        <span className="text-sm text-muted-foreground">{totalProducts} produtos encontrados</span>
-
-        {hasFilters && (
-          <>
-            <span className="text-border">|</span>
             {filters.categoria && activeCategory && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[hsl(var(--green-cta))]/10 text-[hsl(var(--green-cta))] text-xs font-medium">
                 {activeCategory.label}
