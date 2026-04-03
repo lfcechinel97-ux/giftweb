@@ -3,12 +3,11 @@ import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { SITE_URL } from "@/config/site";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import CatalogHeader from "@/components/catalog/CatalogHeader";
+import CatalogFooter from "@/components/catalog/CatalogFooter";
+import CatalogStoryCategories from "@/components/catalog/CatalogStoryCategories";
 import CatalogPagination from "@/components/CatalogPagination";
-import CatalogHeroCategories from "@/components/catalog/CatalogHeroCategories";
 import CatalogFilterBar from "@/components/catalog/CatalogFilterBar";
 import CatalogMobileFilters from "@/components/catalog/CatalogMobileFilters";
 import CatalogProductCard, { CatalogProductCardSkeleton } from "@/components/catalog/CatalogProductCard";
@@ -155,26 +154,45 @@ const CatalogPage = () => {
   const handleCategorySelect = (slug: string) => {
     setFilters(prev => ({
       ...prev,
-      categoria: prev.categoria === slug ? null : slug,
+      categoria: slug || null,
     }));
+    // Scroll to products
+    document.getElementById("catalog-products")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <>
       <Helmet>
-        <title>Catálogo de Brindes Personalizados | Gift Web</title>
-        <meta name="description" content="Explore nosso catálogo completo de brindes personalizados. Filtre por categoria, preço e cor para encontrar o brinde perfeito para sua marca." />
+        <title>Catálogo Digital de Brindes Personalizados | Gift Web</title>
+        <meta name="description" content="Explore nosso catálogo digital de brindes personalizados. Filtre por categoria, preço e cor para encontrar o brinde perfeito para sua marca." />
         <link rel="canonical" href={`${SITE_URL}/catalogo`} />
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
-        <Header />
+        <CatalogHeader />
+
         <main className="flex-1">
-          {/* Hero Categories */}
-          <CatalogHeroCategories onSelectCategory={handleCategorySelect} />
+          {/* Hero title */}
+          <section className="bg-gradient-to-b from-[#0B0F1A] to-background pt-6 pb-2 md:pt-8 md:pb-4">
+            <div className="container text-center">
+              <h1 className="text-2xl md:text-4xl font-bold text-white">
+                Explore nosso catálogo de{" "}
+                <span className="text-[hsl(var(--green-cta))] italic">brindes</span>
+              </h1>
+              <p className="text-sm md:text-base text-gray-400 mt-2">
+                Filtre por categoria, preço e cor para encontrar o brinde perfeito
+              </p>
+            </div>
+          </section>
+
+          {/* Story categories */}
+          <div className="container">
+            <CatalogStoryCategories
+              selected={filters.categoria}
+              onSelect={handleCategorySelect}
+            />
+          </div>
 
           <div className="container py-4 md:py-6">
-            <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: "Catálogo" }]} />
-
             {/* Desktop horizontal filter bar */}
             <div className="hidden lg:block">
               <CatalogFilterBar
@@ -222,7 +240,8 @@ const CatalogPage = () => {
             <CatalogPagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
           </div>
         </main>
-        <Footer />
+
+        <CatalogFooter />
         <FloatingWhatsApp />
         <QuotationBar />
         <QuotationDrawer />
