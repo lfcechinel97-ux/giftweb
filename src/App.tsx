@@ -31,6 +31,7 @@ const AdminGuard = lazy(() => import("./components/admin/AdminGuard.tsx"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage.tsx"));
 const TermsPage = lazy(() => import("./pages/TermsPage.tsx"));
 const SecurityPage = lazy(() => import("./pages/SecurityPage.tsx"));
+const CatalogPage = lazy(() => import("./pages/CatalogPage.tsx"));
 
 const queryClient = new QueryClient();
 
