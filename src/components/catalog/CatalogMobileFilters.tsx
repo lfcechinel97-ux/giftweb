@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { X, Search, Filter } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import { X, Search, SlidersHorizontal } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { getCorHex, isLightColor } from "@/utils/colorHex";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
+import { formatarBRL } from "@/utils/price";
 
 interface Filters {
   search: string;
@@ -35,36 +35,47 @@ const SORT_OPTIONS = [
 ];
 
 const CatalogMobileFilters = ({ filters, onChange, onClear, onApply, cores, maxPreco, totalProducts }: CatalogMobileFiltersProps) => {
-  const [open, setOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const { data: categories = [] } = useBaseCategories();
-  const hasFilters = !!(filters.search || filters.categoria || filters.corValues.length > 0 || filters.apenasEstoque || filters.precoMin > 0 || filters.precoMax < maxPreco);
+
+  const hasFilters = !!(
+    filters.search ||
+    filters.categoria ||
+    filters.corValues.length > 0 ||
+    filters.precoMin > 0 ||
+    filters.precoMax < maxPreco
+  );
+
+  const handleApply = () => {
+    setIsOpen(false);
+    onApply();
+  };
 
   return (
     <>
-      {/* Trigger button — mobile only */}
       <button
-        onClick={() => setOpen(true)}
-        className="lg:hidden flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border bg-card text-sm text-muted-foreground hover:text-foreground transition-colors"
+        onClick={() => setIsOpen(true)}
+        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+          hasFilters
+            ? "border-green-cta text-green-cta bg-green-cta/5"
+            : "border-border text-muted-foreground bg-card"
+        }`}
       >
-        <Filter className="w-4 h-4" />
+        <SlidersHorizontal className="w-4 h-4" />
         Filtrar
-        {hasFilters && <span className="w-2 h-2 rounded-full bg-green-cta" />}
+        {hasFilters && <span className="w-1.5 h-1.5 rounded-full bg-green-cta" />}
       </button>
 
-      {/* Fullscreen modal */}
-      {open && (
-        <div className="fixed inset-0 z-[100] bg-background flex flex-col">
-          {/* Header */}
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] bg-background flex flex-col animate-fade-in">
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-            <h2 className="font-bold text-lg text-foreground">Filtros</h2>
-            <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
-              <X className="w-6 h-6" />
+            <h2 className="text-lg font-bold text-foreground">Filtrar brindes</h2>
+            <button onClick={() => setIsOpen(false)}>
+              <X className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
 
-          {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6">
-            {/* Search */}
             <div>
               <label className="text-sm font-semibold text-foreground mb-2 block">Buscar</label>
               <div className="relative">
@@ -79,13 +90,12 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, onApply, cores, maxP
               </div>
             </div>
 
-            {/* Sort */}
             <div>
               <label className="text-sm font-semibold text-foreground mb-2 block">Ordenar por</label>
               <select
                 value={filters.sort}
                 onChange={e => onChange({ sort: e.target.value })}
-                className="w-full px-3 py-2.5 rounded-lg bg-card border border-border text-foreground text-sm"
+                className="w-full px-3 py-2.5 rounded-lg bg-card border border-border text-foreground text-sm focus:outline-none focus:border-green-cta cursor-pointer"
               >
                 {SORT_OPTIONS.map(o => (
                   <option key={o.val} value={o.val}>{o.label}</option>
@@ -93,18 +103,27 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, onApply, cores, maxP
               </select>
             </div>
 
-            {/* Categories */}
             <div>
               <label className="text-sm font-semibold text-foreground mb-2 block">Categoria</label>
-              <div className="grid grid-cols-2 gap-1.5">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => onChange({ categoria: null })}
+                  className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                    !filters.categoria
+                      ? "border-green-cta text-green-cta bg-green-cta/10 font-semibold"
+                      : "border-border text-muted-foreground"
+                  }`}
+                >
+                  Todas
+                </button>
                 {categories.map(cat => (
                   <button
                     key={cat.slug}
                     onClick={() => onChange({ categoria: filters.categoria === cat.slug ? null : cat.slug })}
-                    className={`text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                    className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
                       filters.categoria === cat.slug
-                        ? "bg-green-cta/10 text-green-cta font-semibold border border-green-cta/30"
-                        : "text-muted-foreground bg-card border border-border"
+                        ? "border-green-cta text-green-cta bg-green-cta/10 font-semibold"
+                        : "border-border text-muted-foreground"
                     }`}
                   >
                     {cat.label}
@@ -113,7 +132,6 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, onApply, cores, maxP
               </div>
             </div>
 
-            {/* Price */}
             <div>
               <label className="text-sm font-semibold text-foreground mb-3 block">Faixa de preço</label>
               <Slider
@@ -124,30 +142,16 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, onApply, cores, maxP
                 onValueChange={([min, max]) => onChange({ precoMin: min, precoMax: max })}
                 className="mb-3"
               />
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={0}
-                  value={filters.precoMin}
-                  onChange={e => onChange({ precoMin: Math.max(0, Number(e.target.value)) })}
-                  className="flex-1 px-2 py-1.5 rounded-lg bg-card border border-border text-foreground text-sm text-center"
-                />
-                <span className="text-muted-foreground text-xs">até</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={filters.precoMax}
-                  onChange={e => onChange({ precoMax: Math.min(maxPreco, Number(e.target.value)) })}
-                  className="flex-1 px-2 py-1.5 rounded-lg bg-card border border-border text-foreground text-sm text-center"
-                />
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>{formatarBRL(filters.precoMin)}</span>
+                <span>{formatarBRL(filters.precoMax)}</span>
               </div>
             </div>
 
-            {/* Colors */}
             {cores.length > 0 && (
               <div>
                 <label className="text-sm font-semibold text-foreground mb-3 block">Cor</label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   {cores.map(c => {
                     const hex = getCorHex(c);
                     const light = isLightColor(hex);
@@ -155,7 +159,6 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, onApply, cores, maxP
                     return (
                       <button
                         key={c}
-                        title={c}
                         onClick={() => {
                           const next = isSelected
                             ? filters.corValues.filter(v => v !== c)
@@ -165,11 +168,13 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, onApply, cores, maxP
                         className="flex flex-col items-center gap-1"
                       >
                         <span
-                          className="w-8 h-8 rounded-full"
+                          className="w-8 h-8 rounded-full transition-all duration-150"
                           style={{
                             backgroundColor: hex,
                             border: light ? "1.5px solid hsl(var(--border))" : "1.5px solid transparent",
-                            boxShadow: isSelected ? "0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(142,71%,45%)" : "0 1px 3px rgba(0,0,0,0.15)",
+                            boxShadow: isSelected
+                              ? "0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(142,71%,45%)"
+                              : "0 1px 3px rgba(0,0,0,0.15)",
                             transform: isSelected ? "scale(1.15)" : "scale(1)",
                           }}
                         />
@@ -182,23 +187,16 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, onApply, cores, maxP
                 </div>
               </div>
             )}
-
-            {/* Stock */}
-            <div className="flex items-center gap-3">
-              <Switch checked={filters.apenasEstoque} onCheckedChange={v => onChange({ apenasEstoque: v })} />
-              <span className="text-sm text-muted-foreground">Apenas com estoque</span>
-            </div>
           </div>
 
-          {/* Footer */}
-          <div className="border-t border-border px-5 py-4 flex gap-3">
+          <div className="px-5 py-4 border-t border-border flex gap-3">
             {hasFilters && (
-              <Button variant="outline" onClick={onClear} className="flex-1 border-border text-muted-foreground">
+              <Button variant="outline" onClick={onClear} className="flex-1 border-border">
                 Limpar
               </Button>
             )}
-            <Button onClick={() => { onApply(); setOpen(false); }} className="flex-1 bg-green-cta hover:bg-green-cta/90 text-primary-foreground font-bold">
-              Ver {totalProducts} produtos
+            <Button onClick={handleApply} className="flex-1 bg-green-cta text-primary-foreground hover:bg-green-cta/90">
+              Ver {totalProducts} resultados
             </Button>
           </div>
         </div>
