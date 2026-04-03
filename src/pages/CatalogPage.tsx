@@ -59,7 +59,6 @@ const CatalogPage = () => {
   const [cores, setCores] = useState<string[]>([]);
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  // Fetch available colors
   useEffect(() => {
     supabase
       .from("products_cache")
@@ -75,7 +74,6 @@ const CatalogPage = () => {
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
-
     const corValues = filters.corValues.length > 0
       ? filters.corValues.map(v => v.trim().toUpperCase()).filter(Boolean)
       : null;
@@ -92,7 +90,6 @@ const CatalogPage = () => {
         p_preco_min: filters.precoMin > 0 ? filters.precoMin : null,
         p_preco_max: filters.precoMax < MAX_PRECO ? filters.precoMax : null,
       } as any);
-
       if (error) { console.error(error); setProducts([]); setTotal(0); }
       else if (data) {
         const result = data as unknown as { rows: any[]; total_count: number };
@@ -110,7 +107,6 @@ const CatalogPage = () => {
         p_preco_min: filters.precoMin > 0 ? filters.precoMin : null,
         p_preco_max: filters.precoMax < MAX_PRECO ? filters.precoMax : null,
       } as any);
-
       if (error) { console.error(error); setProducts([]); setTotal(0); }
       else if (data) {
         const result = data as unknown as { rows: any[]; total_count: number };
@@ -123,7 +119,6 @@ const CatalogPage = () => {
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
-  // Sync filters to URL
   useEffect(() => {
     const params: Record<string, string> = {};
     if (page > 1) params.page = page.toString();
@@ -156,7 +151,6 @@ const CatalogPage = () => {
       ...prev,
       categoria: slug || null,
     }));
-    // Scroll to products
     document.getElementById("catalog-products")?.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -184,17 +178,33 @@ const CatalogPage = () => {
             </div>
           </section>
 
-          {/* Story categories */}
-          <div className="container">
+          {/* MOBILE: filters inline → stories → products */}
+          <div className="lg:hidden container py-4 space-y-4">
+            <CatalogMobileFilters
+              filters={filters}
+              onChange={handleFilterChange}
+              onClear={handleClear}
+              onApply={() => {}}
+              cores={cores}
+              maxPreco={MAX_PRECO}
+              totalProducts={total}
+            />
             <CatalogStoryCategories
               selected={filters.categoria}
               onSelect={handleCategorySelect}
             />
           </div>
 
-          <div className="container py-4 md:py-6">
-            {/* Desktop horizontal filter bar */}
-            <div className="hidden lg:block">
+          {/* DESKTOP: stories → filter bar → products */}
+          <div className="hidden lg:block">
+            <div className="container">
+              <CatalogStoryCategories
+                selected={filters.categoria}
+                onSelect={handleCategorySelect}
+              />
+            </div>
+
+            <div className="container py-4 md:py-6">
               <CatalogFilterBar
                 filters={filters}
                 onChange={handleFilterChange}
@@ -204,24 +214,12 @@ const CatalogPage = () => {
                 totalProducts={total}
               />
             </div>
+          </div>
 
-            {/* Mobile filter trigger + count */}
-            <div className="flex items-center justify-between lg:hidden mb-4">
-              <CatalogMobileFilters
-                filters={filters}
-                onChange={handleFilterChange}
-                onClear={handleClear}
-                onApply={() => {}}
-                cores={cores}
-                maxPreco={MAX_PRECO}
-                totalProducts={total}
-              />
-              <span className="text-sm text-muted-foreground">{total} produtos</span>
-            </div>
-
-            {/* Product grid */}
+          {/* Product grid */}
+          <div className="container pb-6">
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
                 {Array.from({ length: 12 }).map((_, i) => <CatalogProductCardSkeleton key={i} />)}
               </div>
             ) : products.length === 0 ? (
@@ -230,7 +228,7 @@ const CatalogPage = () => {
                 <p className="text-muted-foreground text-sm mt-1">Tente ajustar os filtros.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
                 {products.map(p => (
                   <CatalogProductCard key={p.id} product={p} />
                 ))}
