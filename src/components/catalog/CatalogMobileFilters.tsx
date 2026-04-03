@@ -38,9 +38,9 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
 
   const handleQuickPrice = (min: number, max: number) => {
     if (filters.precoMin === min && filters.precoMax === max) {
-      onChange({ precoMin: 0, precoMax: maxPreco });
+      onChange({ precoMin: 0, precoMax: maxPreco, sort: "relevancia" });
     } else {
-      onChange({ precoMin: min, precoMax: max });
+      onChange({ precoMin: min, precoMax: max, sort: "maior_preco" });
     }
   };
 
