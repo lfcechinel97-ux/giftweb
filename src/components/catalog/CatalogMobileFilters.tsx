@@ -129,8 +129,9 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
           <div className="flex-1 slider-small-thumb">
             <Slider
               min={0}
-              max={Math.max(70, filters.precoMax)}
+              max={Math.max(400, filters.precoMax)}
               step={5}
+              minStepsBetweenThumbs={1}
               value={[filters.precoMin, filters.precoMax]}
               onValueChange={([min, max]) => onChange({ precoMin: min, precoMax: max })}
             />
