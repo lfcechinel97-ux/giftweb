@@ -178,8 +178,16 @@ input[type="range"]::-moz-range-thumb {
   50% { opacity: 0.2; }
 }
 
-/* Smaller slider thumb for mobile catalog */
+/* Catalog slider: thin track + small thumb */
 .slider-small-thumb [data-radix-collection-item] {
-  width: 16px !important;
-  height: 16px !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+.catalog-slider [role="slider"] {
+  width: 14px !important;
+  height: 14px !important;
+}
+.catalog-slider [data-orientation="horizontal"] > span:first-child {
+  height: 3px !important;
+}
 }
