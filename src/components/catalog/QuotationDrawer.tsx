@@ -72,7 +72,7 @@ const QuotationDrawer = () => {
             </div>
 
             <div className="border-t border-border pt-4 space-y-3">
-              <Button onClick={handleSendWhatsApp} className="w-full bg-green-cta hover:bg-green-cta/90 text-primary-foreground font-bold gap-2">
+              <Button type="button" onClick={handleSendWhatsApp} className="w-full bg-green-cta hover:bg-green-cta/90 text-primary-foreground font-bold gap-2">
                 <Send className="w-4 h-4" />
                 Enviar orçamento via WhatsApp
               </Button>
