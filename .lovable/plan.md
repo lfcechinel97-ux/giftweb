@@ -1,35 +1,64 @@
 
 
-# Correções no /catalogo — 6 ajustes
+# Correções no catálogo — Cores, Mobile e Slider
 
-## 1. Desktop: inverter Busca ↔ Categoria (`CatalogFilterBar.tsx`)
-Trocar a ordem dos campos na linha 1: **Categoria** primeiro (flex-[2]), **Buscar produto** depois (flex-[3]). Assim o dropdown fica alinhado com o "1º Selecione a categoria".
+## Problemas e soluções
 
-## 2. Scroll para o topo — causa raiz (`App.tsx`)
-O `ScrollToTop` (linha 40) escuta `search` (query string). Toda vez que um filtro muda no catálogo, a URL muda e dispara `window.scrollTo(0, 0)`. Solução: remover `search` da dependência do useEffect, mantendo apenas `pathname`. Isso corrige o bug globalmente sem afetar outras páginas.
+### 1. CORES NÃO APARECEM (desktop + mobile)
+**Causa raiz**: O código usa `backgroundColor` e `background` no mesmo objeto `style`, com um deles como `undefined`. Em React, quando o shorthand `background` aparece no objeto (mesmo como `undefined`), pode interferir com `backgroundColor`. Solução: usar **apenas `background`** para todas as cores — hex simples para cores normais, `conic-gradient` para "Outros".
 
-## 3. Cores vazias — bug de display (`CatalogFilterBar.tsx` + `CatalogMobileFilters.tsx`)
-O `<span>` com `w-10 h-10` (desktop) e `w-8 h-8` (mobile) é um elemento inline por padrão — `width`/`height` não funcionam em elementos inline. Adicionar `block` ou `inline-block` ao className das bolinhas de cor em ambos os arquivos.
+Ambos os arquivos: `CatalogFilterBar.tsx` (linha ~229-231) e `CatalogMobileFilters.tsx` (linha ~173-174):
+```tsx
+// DE:
+backgroundColor: isOutros ? undefined : swatch.bg,
+background: isOutros ? "conic-gradient(...)" : undefined,
 
-## 4. Remover badge "mais pedido" do botão "Até R$50" (`CatalogFilterBar.tsx` + `CatalogMobileFilters.tsx`)
-- Remover `badge: true` do array `QUICK_PRICES`
-- Remover o bloco condicional `{qp.badge && (...)}` que renderiza o Medal + texto
-- Remover a classe especial `border-amber-400/50` do botão — todos os botões ficam iguais
+// PARA:
+background: isOutros ? "conic-gradient(...)" : swatch.bg,
+```
+Remover `backgroundColor` completamente.
 
-## 5. Mobile: Categoria como lista suspensa (`CatalogMobileFilters.tsx`)
-Substituir os chips de categorias dentro do `Collapsible` por um `<select>` nativo (dropdown). Quando o usuário abre o accordion, vê um select com todas as categorias. Ocupa uma linha só, sem empurrar a página.
+### 2. Mobile: texto "Ou busque por categoria e preço"
+Em `CatalogMobileFilters.tsx`, entre o input de busca (linha 77) e a seção Categoria (linha 79), adicionar:
+```tsx
+<p className="text-sm text-muted-foreground text-center">Ou busque por categoria e preço</p>
+```
 
-## 6. Mobile: remover Stories de categorias (`CatalogPage.tsx`)
-Remover o `<CatalogStoryCategories>` do bloco `lg:hidden` (linhas 192-195). Manter apenas no desktop.
+### 3. Mobile: Categoria sempre visível (sem Collapsible)
+Remover o wrapper `Collapsible`/`CollapsibleTrigger`/`CollapsibleContent`. Renderizar diretamente:
+- Label "Categoria" (sem estado colapsável)
+- `<select>` nativo com opção default "Todas as categorias" (sem pré-seleção)
+- Remover `useState(false)` do `catOpen`
+
+### 4. Slider thumb menor (mobile)
+No `CatalogMobileFilters.tsx`, passar uma `className` customizada ao `<Slider>` ou criar um wrapper. Na verdade, o thumb é controlado pelo componente `slider.tsx` com `h-5 w-5`. Para mobile, a solução mais simples é passar uma className ao Slider e usar CSS para reduzir o thumb. Alternativa: usar inline style no container.
+
+Melhor abordagem: adicionar uma prop ou className ao Slider no mobile para thumbs menores. Como o Slider é global, vou adicionar uma classe wrapper no mobile e usar CSS descendant selector no `index.css`:
+```css
+.slider-small-thumb [data-radix-slider-thumb] {
+  width: 16px;
+  height: 16px;
+}
+```
+
+### 5. Slider — faixa 0-70 priorizada (mobile) e 0-100 (desktop)
+O slider atual vai de 0 ao `maxPreco` (400). O pedido é que a maior parte do trilho cubra 0-70 (mobile) e 0-100 (desktop). Isso requer mapeamento não-linear.
+
+Abordagem simples e eficaz: reduzir o `max` visual do slider para 100 (desktop) e 70 (mobile) nos botões rápidos e no slider principal, mas manter a possibilidade de digitar valores maiores nos inputs. Isso é mais previsível do que mapeamento não-linear.
+
+**Desktop** (`CatalogFilterBar.tsx`): mudar `max={maxPreco}` do Slider para `max={Math.max(100, filters.precoMax)}` — assim o slider vai até 100 por padrão, mas se o usuário digitar 200 no input, o slider se adapta.
+
+**Mobile** (`CatalogMobileFilters.tsx`): mesma lógica mas com `max={Math.max(70, filters.precoMax)}`.
+
+### 6. Remover "x produtos encontrados" 
+Já foi removido na versão anterior, confirmar que não voltou.
 
 ## Arquivos afetados
-- `src/App.tsx` — remover `search` do ScrollToTop
-- `src/components/catalog/CatalogFilterBar.tsx` — inverter campos, cor block, remover badge
-- `src/components/catalog/CatalogMobileFilters.tsx` — cor block, remover badge, select de categoria
-- `src/pages/CatalogPage.tsx` — remover stories no mobile
+- `src/components/catalog/CatalogFilterBar.tsx` — fix cores, slider max
+- `src/components/catalog/CatalogMobileFilters.tsx` — fix cores, texto separador, categoria sempre visível, slider menor e max 70
+- `src/index.css` — classe para thumb menor (opcional, pode fazer inline)
 
 ## Não alterar
-- Nenhum componente fora de /catalogo (exceto o fix pontual no ScrollToTop)
-- HeroSection, Header, Footer do site
-- Lógica RPC, QuotationContext, ProductCard
+- Nenhum componente fora de /catalogo
+- HeroSection, Header, Footer, slider.tsx global
 
