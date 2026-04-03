@@ -280,6 +280,9 @@ const Header = () => {
               <Link to="/categoria/kits" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
                 Kits
               </Link>
+              <Link to="/catalogo" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+                Catálogo
+              </Link>
             </div>
           </div>
         </div>
