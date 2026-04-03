@@ -1,53 +1,48 @@
 
 
-# Ajustes no catálogo — Slider, Preço, Hero e Header
+# Plano: Produto no catálogo + fixes
 
-## 1. Slider: step de R$5 e bug do thumb
+## 3 entregas
 
-**Problema do thumb**: O Radix Slider com dois thumbs às vezes confunde qual thumb mover quando estão próximos. O `minStepsBetweenThumbs` ajuda, mas o problema principal é que ao clicar na track, o Radix move o thumb mais próximo do ponto clicado. Quando o max está baixo (ex: 30) e o min está em 0, clicar perto do max pode mover o min.
+### 1. Criar página de produto exclusiva do catálogo (`/catalogo/produto/:slug`)
 
-**Solução**: Adicionar `minStepsBetweenThumbs={1}` ao Slider em ambos os arquivos. Manter `step={5}` (já está).
+**Nova rota**: `/catalogo/produto/:slug` em `App.tsx`
 
-## 2. Botões rápidos: adicionar R$200 e R$400 + lógica de faixa
+**Novo arquivo**: `src/pages/CatalogProductDetail.tsx`
+- Baseado na estrutura do `ProductDetail.tsx` existente (galeria, variantes, preço, tabela de quantidades, dimensoes, lightbox)
+- Usa `CatalogHeader` e `CatalogFooter` no lugar de `Header`/`Footer`
+- **Substituir** o botao "Solicitar orcamento no WhatsApp" por botao **"Adicionar ao orcamento"** (verde, usa `useQuotation().addItem`)
+- Manter seletor de quantidade (+/- e input)
+- **Apos adicionar**: exibir dois botoes:
+  - "Continuar escolhendo" → volta para `/catalogo` (preservando filtros via `navigate(-1)`)
+  - "Enviar orcamento via WhatsApp" → abre WhatsApp direto (mesma logica do QuotationDrawer)
+- Remover: Breadcrumbs do site, HowItWorks, produtos relacionados com ProductCard do site, FloatingWhatsApp do site
+- Manter: QuotationBar no topo + QuotationDrawer
 
-**Botões**: Adicionar `{ label: "Até R$200", min: 0, max: 200 }` e `{ label: "Até R$400", min: 0, max: 400 }` ao array `QUICK_PRICES` em ambos `CatalogFilterBar.tsx` e `CatalogMobileFilters.tsx`.
+**Atualizar link nos cards**: Em `CatalogProductCard.tsx`, mudar `href` de `/produto/${slug}` para `/catalogo/produto/${slug}`
 
-**Lógica de faixa progressiva**: Quando clica "Até R$30", setar `precoMin: 10.01, precoMax: 30`. A lógica:
-- Até R$10 → min: 0, max: 10
-- Até R$30 → min: 10.01, max: 30
-- Até R$50 → min: 30.01, max: 50
-- Até R$100 → min: 50.01, max: 100
-- Até R$200 → min: 100.01, max: 200
-- Até R$400 → min: 200.01, max: 400
+### 2. Fix: botao "Enviar orcamento via WhatsApp" no QuotationDrawer
 
-**Ordenação**: Quando um botão rápido é clicado, forçar `sort: "maior_preco"` para mostrar os mais caros primeiro (respeitando a lógica do RPC que já coloca sem estoque por último).
+**Arquivo**: `src/components/catalog/QuotationDrawer.tsx`
 
-## 3. Slider max range
+O `WHATSAPP_NUMBER` tem o valor `5548996652844`. O `window.open` com `https://wa.me/...` deve funcionar. Vou verificar se o problema e o formato do numero ou encoding. O numero parece correto (55 + DDD + numero). Possivel causa: o `window.open` esta sendo bloqueado por popup blocker porque nao e disparado diretamente por click do usuario (improvavel, pois esta em onClick). Outra causa: o botao pode nao estar recebendo o click. Vou garantir que o `onClick` esta no `Button` correto e adicionar `type="button"`.
 
-Desktop: `max={Math.max(400, filters.precoMax)}` (para acomodar o novo botão "Até R$400").
-Mobile: `max={Math.max(400, filters.precoMax)}` (mesma lógica, já que agora tem botão até R$400).
+### 3. Mobile: dropdown de categoria com estilo igual ao desktop
 
-## 4. Hero do catálogo — redesign (anexo 3)
+**Arquivo**: `src/components/catalog/CatalogMobileFilters.tsx`
 
-Redesenhar a section hero (linhas 168-179 de `CatalogPage.tsx`) com:
-- Fundo gradiente mais elaborado (dark com pattern sutil ou gradiente multi-stop)
-- Tipografia mais estilizada: "Catálogo Digital" em fonte fina/light, "Gift Web" em bold verde
-- Subtítulo mais legível com melhor contraste
-- Espaçamento e padding mais generosos
-
-## 5. Header — ícone carrinho
-
-Em `CatalogHeader.tsx`, trocar `ShoppingBag` por `ShoppingCart` (ambos do lucide-react).
+Substituir o `<select>` nativo por um dropdown customizado identico ao desktop (`CatalogFilterBar.tsx`): botao arredondado com borda verde quando selecionado + lista suspensa posicionada com `absolute`. Usar o mesmo estilo visual do desktop (rounded-lg, border verde ativo, hover suave).
 
 ## Arquivos afetados
 
-- `src/components/catalog/CatalogFilterBar.tsx` — novos botões, lógica de faixa, slider minSteps
-- `src/components/catalog/CatalogMobileFilters.tsx` — mesmas mudanças
-- `src/components/catalog/CatalogHeader.tsx` — ícone ShoppingCart
-- `src/pages/CatalogPage.tsx` — hero redesign
+- **Criar**: `src/pages/CatalogProductDetail.tsx`
+- **Editar**: `src/App.tsx` (nova rota)
+- **Editar**: `src/components/catalog/CatalogProductCard.tsx` (mudar href)
+- **Editar**: `src/components/catalog/QuotationDrawer.tsx` (fix botao WhatsApp)
+- **Editar**: `src/components/catalog/CatalogMobileFilters.tsx` (dropdown customizado)
 
-## Não alterar
-
-- Nenhum componente fora de /catalogo
-- slider.tsx global, Header.tsx, Footer.tsx do site
+## Nao alterar
+- `ProductDetail.tsx` (pagina do site)
+- Header, Footer, HeroSection do site
+- Nenhum componente global
 
