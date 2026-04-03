@@ -1,9 +1,7 @@
-import { useState } from "react";
-import { Search, ChevronDown } from "lucide-react";
+import { Search } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { CATALOG_SWATCH_COLORS } from "@/components/catalog/catalogSwatchColors";
 
 interface Filters {
@@ -35,7 +33,6 @@ const QUICK_PRICES = [
 
 const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogMobileFiltersProps) => {
   const { data: categories = [] } = useBaseCategories();
-  const [catOpen, setCatOpen] = useState(false);
 
   const handleQuickPrice = (min: number, max: number) => {
     if (filters.precoMin === min && filters.precoMax === max) {
@@ -76,25 +73,23 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
         </div>
       </div>
 
-      {/* Category — collapsed, native select */}
-      <Collapsible open={catOpen} onOpenChange={setCatOpen}>
-        <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-sm font-semibold text-foreground">
-          <span>Categoria {filters.categoria ? `· ${categories.find(c => c.slug === filters.categoria)?.label || ""}` : ""}</span>
-          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${catOpen ? "rotate-180" : ""}`} />
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <select
-            value={filters.categoria || ""}
-            onChange={e => onChange({ categoria: e.target.value || null })}
-            className="w-full mt-2 px-3 py-2.5 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:border-[hsl(var(--green-cta))] cursor-pointer"
-          >
-            <option value="">Todas as categorias</option>
-            {categories.map(cat => (
-              <option key={cat.slug} value={cat.slug}>{cat.label}</option>
-            ))}
-          </select>
-        </CollapsibleContent>
-      </Collapsible>
+      {/* Separator text */}
+      <p className="text-sm text-muted-foreground text-center">Ou busque por categoria e preço</p>
+
+      {/* Category — always visible, native select */}
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-foreground block">Categoria</label>
+        <select
+          value={filters.categoria || ""}
+          onChange={e => onChange({ categoria: e.target.value || null })}
+          className="w-full px-3 py-2.5 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:border-[hsl(var(--green-cta))] cursor-pointer"
+        >
+          <option value="">Todas as categorias</option>
+          {categories.map(cat => (
+            <option key={cat.slug} value={cat.slug}>{cat.label}</option>
+          ))}
+        </select>
+      </div>
 
       {/* Price — always visible */}
       <div className="space-y-3">
@@ -129,10 +124,10 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
               className="w-16 px-2 py-1.5 rounded-lg bg-background border border-border text-foreground text-sm text-center focus:outline-none focus:border-[hsl(var(--green-cta))]"
             />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 slider-small-thumb">
             <Slider
               min={0}
-              max={maxPreco}
+              max={Math.max(70, filters.precoMax)}
               step={5}
               value={[filters.precoMin, filters.precoMax]}
               onValueChange={([min, max]) => onChange({ precoMin: min, precoMax: max })}
@@ -170,8 +165,7 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
                 <span
                   className="block w-8 h-8 rounded-full transition-all duration-150"
                   style={{
-                    backgroundColor: isOutros ? undefined : swatch.bg,
-                    background: isOutros ? "conic-gradient(#EF4444, #EAB308, #22C55E, #2563EB, #A855F7, #EF4444)" : undefined,
+                    background: isOutros ? "conic-gradient(#EF4444, #EAB308, #22C55E, #2563EB, #A855F7, #EF4444)" : swatch.bg,
                     border: isWhite ? "2px solid hsl(var(--border))" : "2px solid transparent",
                     boxShadow: selected
                       ? "0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(142,71%,45%)"
