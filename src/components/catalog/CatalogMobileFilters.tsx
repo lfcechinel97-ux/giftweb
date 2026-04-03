@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, ChevronDown, Medal } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
@@ -29,7 +29,7 @@ interface CatalogMobileFiltersProps {
 const QUICK_PRICES = [
   { label: "Até R$10", min: 0, max: 10 },
   { label: "Até R$30", min: 0, max: 30 },
-  { label: "Até R$50", min: 0, max: 50, badge: true },
+  { label: "Até R$50", min: 0, max: 50 },
   { label: "Até R$100", min: 0, max: 100 },
 ];
 
@@ -76,38 +76,23 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
         </div>
       </div>
 
-      {/* Category — collapsed by default */}
+      {/* Category — collapsed, native select */}
       <Collapsible open={catOpen} onOpenChange={setCatOpen}>
         <CollapsibleTrigger className="flex items-center justify-between w-full py-2 text-sm font-semibold text-foreground">
           <span>Categoria {filters.categoria ? `· ${categories.find(c => c.slug === filters.categoria)?.label || ""}` : ""}</span>
           <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${catOpen ? "rotate-180" : ""}`} />
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="flex flex-wrap gap-2 pt-2 pb-1">
-            <button
-              onClick={() => onChange({ categoria: null })}
-              className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                !filters.categoria
-                  ? "border-[hsl(var(--green-cta))] text-[hsl(var(--green-cta))] bg-[hsl(var(--green-cta))]/10 font-semibold"
-                  : "border-border text-muted-foreground"
-              }`}
-            >
-              Todas
-            </button>
+          <select
+            value={filters.categoria || ""}
+            onChange={e => onChange({ categoria: e.target.value || null })}
+            className="w-full mt-2 px-3 py-2.5 rounded-lg bg-background border border-border text-foreground text-sm focus:outline-none focus:border-[hsl(var(--green-cta))] cursor-pointer"
+          >
+            <option value="">Todas as categorias</option>
             {categories.map(cat => (
-              <button
-                key={cat.slug}
-                onClick={() => onChange({ categoria: filters.categoria === cat.slug ? null : cat.slug })}
-                className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
-                  filters.categoria === cat.slug
-                    ? "border-[hsl(var(--green-cta))] text-[hsl(var(--green-cta))] bg-[hsl(var(--green-cta))]/10 font-semibold"
-                    : "border-border text-muted-foreground"
-                }`}
-              >
-                {cat.label}
-              </button>
+              <option key={cat.slug} value={cat.slug}>{cat.label}</option>
             ))}
-          </div>
+          </select>
         </CollapsibleContent>
       </Collapsible>
 
@@ -118,26 +103,17 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
           {QUICK_PRICES.map(qp => {
             const isActive = filters.precoMin === qp.min && filters.precoMax === qp.max;
             return (
-              <div key={qp.label} className="relative">
-                {qp.badge && (
-                  <span className="absolute -top-5 left-1/2 -translate-x-1/2 flex items-center gap-0.5 whitespace-nowrap">
-                    <Medal className="w-3 h-3 text-amber-500" />
-                    <span className="text-[10px] italic text-amber-500 font-medium">mais pedido</span>
-                  </span>
-                )}
-                <button
-                  onClick={() => handleQuickPrice(qp.min, qp.max)}
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-all duration-200 ${
-                    isActive
-                      ? "bg-[hsl(var(--green-cta))] text-primary-foreground border-[hsl(var(--green-cta))] shadow-md"
-                      : qp.badge
-                      ? "border-amber-400/50 text-foreground hover:border-amber-400 bg-background"
-                      : "border-border text-foreground hover:border-[hsl(var(--green-cta))]/50 bg-background"
-                  }`}
-                >
-                  {qp.label}
-                </button>
-              </div>
+              <button
+                key={qp.label}
+                onClick={() => handleQuickPrice(qp.min, qp.max)}
+                className={`px-3.5 py-2 rounded-lg text-sm font-medium border transition-all duration-200 ${
+                  isActive
+                    ? "bg-[hsl(var(--green-cta))] text-primary-foreground border-[hsl(var(--green-cta))] shadow-md"
+                    : "border-border text-foreground hover:border-[hsl(var(--green-cta))]/50 bg-background"
+                }`}
+              >
+                {qp.label}
+              </button>
             );
           })}
         </div>
@@ -192,7 +168,7 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
                 className="flex flex-col items-center gap-1"
               >
                 <span
-                  className="w-8 h-8 rounded-full transition-all duration-150"
+                  className="block w-8 h-8 rounded-full transition-all duration-150"
                   style={{
                     backgroundColor: isOutros ? undefined : swatch.bg,
                     background: isOutros ? "conic-gradient(#EF4444, #EAB308, #22C55E, #2563EB, #A855F7, #EF4444)" : undefined,

@@ -36,8 +36,8 @@ const CatalogPage = lazy(() => import("./pages/CatalogPage.tsx"));
 const queryClient = new QueryClient();
 
 const ScrollToTop = () => {
-  const { pathname, search } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname, search]);
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
 };
 
