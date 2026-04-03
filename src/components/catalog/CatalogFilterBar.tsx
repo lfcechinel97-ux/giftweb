@@ -80,15 +80,15 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
   return (
     <div id="catalog-products" className="scroll-mt-20">
       <div className="bg-card border border-border rounded-xl p-5 mb-4 space-y-5">
-        {/* Instruction */}
-        <p className="text-xs text-muted-foreground text-center">
-          1º Selecione a categoria abaixo · 2º Quanto você quer investir? · 3º Qual cor você deseja? Se não tem preferência, basta não selecionar.
-        </p>
-
         {/* Row 1: Search + Category */}
-        <div className="flex gap-3">
-          <div className="relative flex-[3] min-w-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--green-cta))] text-primary-foreground text-[10px] font-bold flex-shrink-0">1º</span>
+            <span className="text-sm font-bold text-[hsl(var(--green-cta))]">Selecione a categoria</span>
+          </div>
+          <div className="flex gap-3">
+            <div className="relative flex-[3] min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Buscar produto..."
