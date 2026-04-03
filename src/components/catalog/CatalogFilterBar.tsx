@@ -215,7 +215,11 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
 
         {/* Row 3: Colors */}
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-foreground">Cor</label>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[hsl(var(--green-cta))] text-primary-foreground text-[10px] font-bold flex-shrink-0">3º</span>
+            <span className="text-sm font-bold text-[hsl(var(--green-cta))]">Qual cor você deseja?</span>
+          </div>
+          <p className="text-xs text-muted-foreground italic ml-7">Se não tem preferência, basta não selecionar.</p>
           <div className="flex flex-wrap gap-2.5">
             {CATALOG_SWATCH_COLORS.map(swatch => {
               const selected = isSwatchSelected(swatch);
