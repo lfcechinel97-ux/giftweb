@@ -166,14 +166,17 @@ const CatalogPage = () => {
 
         <main className="flex-1">
           {/* Hero title */}
-          <section className="bg-gradient-to-b from-[#0B0F1A] to-background pt-6 pb-2 md:pt-8 md:pb-4">
-            <div className="container text-center">
-              <h1 className="text-2xl md:text-4xl font-bold text-white">
-                Explore nosso catálogo de{" "}
-                <span className="text-[hsl(var(--green-cta))] italic">brindes</span>
+          <section className="relative overflow-hidden bg-gradient-to-br from-[#0B0F1A] via-[#111827] to-[#0B0F1A] pt-10 pb-6 md:pt-14 md:pb-8">
+            {/* Decorative elements */}
+            <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)", backgroundSize: "40px 40px" }} />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[hsl(var(--green-cta))]/10 rounded-full blur-[120px]" />
+            <div className="container text-center relative z-10">
+              <h1 className="text-3xl md:text-5xl tracking-tight text-white">
+                <span className="font-light">Catálogo Digital</span>{" "}
+                <span className="font-extrabold text-[hsl(var(--green-cta))] drop-shadow-[0_0_24px_hsl(var(--green-cta)/0.4)]">Gift Web</span>
               </h1>
-              <p className="text-sm md:text-base text-gray-400 mt-2">
-                Filtre por categoria, preço e cor para encontrar o brinde perfeito
+              <p className="text-sm md:text-lg text-gray-300 mt-3 max-w-xl mx-auto leading-relaxed">
+                Encontre o brinde perfeito para sua marca — filtre por categoria, preço e cor
               </p>
             </div>
           </section>

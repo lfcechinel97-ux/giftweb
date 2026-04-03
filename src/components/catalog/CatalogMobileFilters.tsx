@@ -26,9 +26,11 @@ interface CatalogMobileFiltersProps {
 
 const QUICK_PRICES = [
   { label: "Até R$10", min: 0, max: 10 },
-  { label: "Até R$30", min: 0, max: 30 },
-  { label: "Até R$50", min: 0, max: 50 },
-  { label: "Até R$100", min: 0, max: 100 },
+  { label: "Até R$30", min: 10.01, max: 30 },
+  { label: "Até R$50", min: 30.01, max: 50 },
+  { label: "Até R$100", min: 50.01, max: 100 },
+  { label: "Até R$200", min: 100.01, max: 200 },
+  { label: "Até R$400", min: 200.01, max: 400 },
 ];
 
 const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogMobileFiltersProps) => {
@@ -36,9 +38,9 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
 
   const handleQuickPrice = (min: number, max: number) => {
     if (filters.precoMin === min && filters.precoMax === max) {
-      onChange({ precoMin: 0, precoMax: maxPreco });
+      onChange({ precoMin: 0, precoMax: maxPreco, sort: "relevancia" });
     } else {
-      onChange({ precoMin: min, precoMax: max });
+      onChange({ precoMin: min, precoMax: max, sort: "maior_preco" });
     }
   };
 
@@ -127,8 +129,9 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
           <div className="flex-1 slider-small-thumb">
             <Slider
               min={0}
-              max={Math.max(70, filters.precoMax)}
+              max={Math.max(400, filters.precoMax)}
               step={5}
+              minStepsBetweenThumbs={1}
               value={[filters.precoMin, filters.precoMax]}
               onValueChange={([min, max]) => onChange({ precoMin: min, precoMax: max })}
             />
