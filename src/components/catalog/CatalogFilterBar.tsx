@@ -227,8 +227,7 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
                   <span
                     className="block w-10 h-10 rounded-full transition-all duration-150"
                     style={{
-                      backgroundColor: isOutros ? undefined : swatch.bg,
-                      background: isOutros ? "conic-gradient(#EF4444, #EAB308, #22C55E, #2563EB, #A855F7, #EF4444)" : undefined,
+                      background: isOutros ? "conic-gradient(#EF4444, #EAB308, #22C55E, #2563EB, #A855F7, #EF4444)" : swatch.bg,
                       border: isWhite ? "2px solid hsl(var(--border))" : "2px solid transparent",
                       boxShadow: selected
                         ? "0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(142,71%,45%)"
