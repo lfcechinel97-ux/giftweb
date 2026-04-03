@@ -185,7 +185,7 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
             <div className="flex-1">
               <Slider
                 min={0}
-                max={maxPreco}
+                max={Math.max(100, filters.precoMax)}
                 step={5}
                 value={[filters.precoMin, filters.precoMax]}
                 onValueChange={([min, max]) => onChange({ precoMin: min, precoMax: max })}

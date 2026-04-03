@@ -177,3 +177,9 @@ input[type="range"]::-moz-range-thumb {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.2; }
 }
+
+/* Smaller slider thumb for mobile catalog */
+.slider-small-thumb [data-radix-collection-item] {
+  width: 16px !important;
+  height: 16px !important;
+}
