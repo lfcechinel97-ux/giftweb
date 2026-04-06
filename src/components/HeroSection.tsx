@@ -40,10 +40,10 @@ const slides = [
 
 const clampPrice = (value: number, max: number) => Math.min(max, Math.max(PRICE_MIN_LIMIT, value));
 
-const quickFilters = [
+const quickFilters: Array<{ label: string; min: number; max: number; highlight?: boolean }> = [
   { label: "Até R$10", min: 0, max: 10 },
   { label: "Até R$30", min: 10.01, max: 30 },
-  { label: "Até R$50", min: 30.01, max: 50, highlight: true },
+  { label: "Até R$50", min: 30.01, max: 50 },
   { label: "Até R$100", min: 50.01, max: 100 },
 ];
 
@@ -220,7 +220,6 @@ const HeroSection = () => {
                     <div key={f.label} className="relative">
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 flex items-center gap-0.5 mb-0.5 pointer-events-none">
                         <Medal size={12} color="#F59E0B" />
-                        <span className="text-[10px] italic whitespace-nowrap" style={{ color: "#F59E0B" }}>mais pedido</span>
                       </div>
                       {btn}
                     </div>

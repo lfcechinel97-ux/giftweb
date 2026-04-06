@@ -65,7 +65,7 @@ function normalizeNomeBase(nome: string): string {
 }
 
 function getCodigoPrefixo(codigoAmigavel: string, nome: string): string {
-  return `${codigoAmigavel}|${normalizeNomeBase(nome)}`;
+  return codigoAmigavel;
 }
 
 const COR_ABREV: Record<string, string> = {
