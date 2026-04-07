@@ -8,14 +8,14 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 async function run() {
   const { data, error } = await supabase
     .from('products_cache')
-    .select('codigo_amigavel, is_variante, produto_pai, codigo_prefixo')
-    .ilike('codigo_amigavel', '%18645L%')
-    .limit(10);
+    .select('codigo_amigavel, codigo_prefixo, produto_pai, is_variante, variantes_count, ativo')
+    .or('codigo_amigavel.ilike.%14726B%,codigo_amigavel.ilike.%14726L%')
+    .order('codigo_amigavel');
 
   if (error) {
-    console.error(error);
+    console.error("Erro na consulta:", error);
   } else {
-    console.log(data);
+    console.log(JSON.stringify(data, null, 2));
   }
 }
 

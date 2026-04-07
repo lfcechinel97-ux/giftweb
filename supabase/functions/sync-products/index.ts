@@ -65,6 +65,11 @@ function normalizeNomeBase(nome: string): string {
 }
 
 function getCodigoPrefixo(codigoAmigavel: string, nome: string): string {
+  // Regra de agrupamento:
+  // - CodigoAmigavel: Representa o produto pai (ex: 18645L)
+  // - CodigoComposto: Representa o produto pai + variação de cor (ex: 18645L-BC2)
+  // Essa regra ignorando o 'nome' foi priorizada pois funciona melhor 
+  // para agrupar as cores dos principais produtos da base da API de forma precisa.
   return codigoAmigavel;
 }
 
