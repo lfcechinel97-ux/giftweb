@@ -1,24 +1,45 @@
 
 
-# Ajustes no CatalogProductDetail — Preço no mobile + Remover prazo
+# Aplicar migração de variantes — caminho correto
 
-## Arquivo: `src/pages/CatalogProductDetail.tsx`
+## Situação atual
 
-### 1. Remover prazo de produção (desktop + mobile)
-Deletar o bloco do prazo (linhas 383-387) que mostra o ícone Clock + `PRAZO_PRODUCAO`. Remover também o import de `Clock` e `PRAZO_PRODUCAO` se não forem usados em outro lugar do arquivo.
+- O arquivo `supabase/migrations/20260406203900_fix_variantes_grouping.sql` **já existe** no projeto
+- A Edge Function `sync-products` **foi deployada** com sucesso
+- A migração **não foi aplicada** porque `psql` não tem permissão para UPDATE/CREATE FUNCTION
 
-### 2. Mobile: preço logo após o título
-Atualmente a ordem na coluna direita é: Nome → ~~Prazo~~ → Variantes → Stock → Preço → Qty+CTA.
+## O que precisa acontecer
 
-No mobile, o preço deve vir logo após o nome, antes das variantes. Implementação:
-- Duplicar o bloco de preço (linhas 474-490) com `md:hidden` logo após o `<h1>` do nome
-- Adicionar `hidden md:block` ao bloco de preço original (que fica na posição atual no desktop, entre stock e qty)
+A migração contém 3 operações que precisam de permissões elevadas:
+1. `UPDATE products_cache SET codigo_prefixo = ...` — normalizar prefixos legados
+2. `CREATE OR REPLACE FUNCTION set_variantes_por_prefixo()` — nova lógica de agrupamento
+3. `UPDATE products_cache SET ativo = true WHERE ...` + `SELECT set_variantes_por_prefixo()` — reativar pais e executar
 
-Assim:
-- **Mobile**: Nome → Preço → Variantes → Stock → Qty+CTA → Tabela → Descrição → Dimensões
-- **Desktop**: Nome → Variantes → Stock → Preço → Qty+CTA → Tabela → Trust → (descrição/dimensões na esquerda)
+## Plano: usar o migration tool do Lovable
 
-### Não alterar
-- Nenhum componente fora de /catalogo
-- Lógica de cálculo, variantes, lightbox
+Em vez de rodar via `psql`, preciso **recriar a migração usando a ferramenta de migração do Lovable** (que tem permissões de superuser). Vou:
+
+1. Deletar o arquivo de migração existente (que nunca foi aplicado)
+2. Criar uma nova migração via a ferramenta `supabase migration` com o mesmo SQL
+3. A ferramenta aplica automaticamente no banco com as permissões corretas
+4. Validar consultando os dados do produto `18645L` para confirmar que `codigo_prefixo` foi normalizado e as variantes foram linkadas
+
+## Validação pós-migração
+
+```sql
+SELECT codigo_amigavel, codigo_prefixo, is_variante, produto_pai IS NOT NULL as has_pai, variantes_count
+FROM products_cache
+WHERE codigo_amigavel LIKE '18645L%'
+ORDER BY codigo_amigavel;
+```
+
+Resultado esperado: `18645L` como pai com `variantes_count > 1`, e `18645L-AZ1`, `18645L-VDC` etc. com `is_variante = true` e `has_pai = true`.
+
+## Arquivos afetados
+- Deletar: `supabase/migrations/20260406203900_fix_variantes_grouping.sql`
+- Criar via migration tool: nova migração com o mesmo conteúdo SQL
+
+## Não alterar
+- Nenhum código de componente
+- Edge function (já deployada)
 
