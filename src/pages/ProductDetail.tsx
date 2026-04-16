@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup } from "@/utils/price";
 import { getCorHex } from "@/utils/colorHex";
-import { PRAZO_PRODUCAO, WHATSAPP_REDIRECT_URL, SITE_URL } from "@/config/site";
+import { WHATSAPP_REDIRECT_URL, SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
