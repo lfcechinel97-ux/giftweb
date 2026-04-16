@@ -1,23 +1,28 @@
+<final-text>Diagnóstico
 
-## Diagnóstico
+- Revisei o código e os CTAs dos produtos já apontam para `WHATSAPP_REDIRECT_URL = https://track.funnelmax.io/w/wr_4hhbabeuap7zenuk` em:
+  - `src/pages/ProductDetail.tsx`
+  - `src/pages/CatalogProductDetail.tsx`
+  - `src/components/WhatsAppModal.tsx`
+  - `src/components/catalog/QuotationDrawer.tsx`
+- Também confirmei que essa URL do FunnelMax redireciona para `api.whatsapp.com`. Então a tela que você está vendo não vem de um link antigo no código do site; ela é o destino final configurado no próprio link do FunnelMax.
 
-Encontrei 2 problemas:
+Do I know what the issue is?
 
-### 1. `src/pages/CatalogProductDetail.tsx` (linha 252) — bug real
-Ainda usa `https://wa.me/${WHATSAPP_NUMBER}?text=...` em vez do `WHATSAPP_REDIRECT_URL`. Isso é a página `/catalogo/produto/:slug` (segunda imagem que você mandou).
+- Sim. O site já está chamando a URL que você passou, mas como essa URL redireciona para o WhatsApp, o navegador acaba exibindo `api.whatsapp.com`. No preview isso ainda pode falhar com `ERR_BLOCKED_BY_RESPONSE`.
 
-### 2. `src/pages/ProductDetail.tsx` (linhas 297–299) — dead code que confunde
-A variável `whatsappMsg` ainda existe com o texto "Tenho interesse no produto: ..." mas **nunca é usada** (o botão da linha 550 já aponta para `WHATSAPP_REDIRECT_URL`). A primeira imagem (`api.whatsapp.com/send/?...BLOCO DE ANOTAÇÕES`) é cache antigo do navegador — o código atual da página de produto desktop está correto.
+Plano
 
-## Plano
+1. Padronizar todos os CTAs de produto para um único handler interno `openWhatsAppRedirect()` usando `window.open(WHATSAPP_REDIRECT_URL, "_blank", "noopener,noreferrer")`.
+2. Trocar o CTA principal de `src/pages/ProductDetail.tsx` de `<a href=...>` para botão com esse handler, para evitar navegação direta do preview/iframe.
+3. Garantir o mesmo handler em:
+   - `src/pages/CatalogProductDetail.tsx`
+   - `src/components/WhatsAppModal.tsx`
+   - `src/components/catalog/QuotationDrawer.tsx`
+4. Não alterar layout, texto, formulário, cores ou posição de nenhum botão.
+5. Validar que todos os botões de produto disparam exatamente a mesma URL base `https://track.funnelmax.io/w/wr_4hhbabeuap7zenuk`.
 
-**Arquivo 1: `src/pages/CatalogProductDetail.tsx`**
-- Remover import `WHATSAPP_NUMBER` (não será mais usado lá), adicionar `WHATSAPP_REDIRECT_URL`.
-- Linha 252: trocar `window.open(\`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}\`, "_blank")` por `window.open(WHATSAPP_REDIRECT_URL, "_blank")`.
+Resultado esperado
 
-**Arquivo 2: `src/pages/ProductDetail.tsx`**
-- Remover as linhas 297–299 (`const whatsappMsg = encodeURIComponent(...)`) — dead code.
-
-## Depois disso
-- Faça **hard reload** no navegador (Ctrl+Shift+R) para limpar o cache.
-- Todos os botões de WhatsApp do site irão abrir `https://track.funnelmax.io/w/wr_4hhbabeuap7zenuk`.
+- Em todos os produtos, o clique sempre sairá do mesmo ponto do código e abrirá a URL do FunnelMax que você passou.
+- Se você quiser que a barra de endereço permaneça em `track.funnelmax.io` sem ir para `api.whatsapp.com`, isso não é controlado pelo site; aí será preciso mudar o redirecionamento configurado no próprio FunnelMax.</final-text>
