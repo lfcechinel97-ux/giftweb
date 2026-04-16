@@ -1,45 +1,20 @@
 
+O usuário está certo. No `supabase/functions/product-feed/index.ts` a constante `SITE_URL` está hardcoded como `https://giftwebbrindes.com.br`, mas o domínio real é `https://giftweb.lovable.app`.
 
-# Aplicar migração de variantes — caminho correto
+## Plano
 
-## Situação atual
+**1. Atualizar `SITE_URL` em `supabase/functions/product-feed/index.ts`**
+- Trocar `"https://giftwebbrindes.com.br"` por `"https://giftweb.lovable.app"`
+- Redeploy automático da edge function
 
-- O arquivo `supabase/migrations/20260406203900_fix_variantes_grouping.sql` **já existe** no projeto
-- A Edge Function `sync-products` **foi deployada** com sucesso
-- A migração **não foi aplicada** porque `psql` não tem permissão para UPDATE/CREATE FUNCTION
+**2. Atualizar `src/config/site.ts`**
+- Mesma constante `SITE_URL` está hardcoded lá. Trocar para `https://giftweb.lovable.app` para manter consistência (usado em outros pontos do site, como sitemap/SEO).
 
-## O que precisa acontecer
+**3. Verificar `public/sitemap.xml`**
+- Se houver URLs com `giftwebbrindes.com.br`, substituir por `giftweb.lovable.app`.
 
-A migração contém 3 operações que precisam de permissões elevadas:
-1. `UPDATE products_cache SET codigo_prefixo = ...` — normalizar prefixos legados
-2. `CREATE OR REPLACE FUNCTION set_variantes_por_prefixo()` — nova lógica de agrupamento
-3. `UPDATE products_cache SET ativo = true WHERE ...` + `SELECT set_variantes_por_prefixo()` — reativar pais e executar
+## Resultado
+Após o deploy, o feed em `https://ozkbfxvouxgsdthnweyr.supabase.co/functions/v1/product-feed` passará a gerar links como:
+`https://giftweb.lovable.app/produto/agenda-2026-cromato-14926-vm`
 
-## Plano: usar o migration tool do Lovable
-
-Em vez de rodar via `psql`, preciso **recriar a migração usando a ferramenta de migração do Lovable** (que tem permissões de superuser). Vou:
-
-1. Deletar o arquivo de migração existente (que nunca foi aplicado)
-2. Criar uma nova migração via a ferramenta `supabase migration` com o mesmo SQL
-3. A ferramenta aplica automaticamente no banco com as permissões corretas
-4. Validar consultando os dados do produto `18645L` para confirmar que `codigo_prefixo` foi normalizado e as variantes foram linkadas
-
-## Validação pós-migração
-
-```sql
-SELECT codigo_amigavel, codigo_prefixo, is_variante, produto_pai IS NOT NULL as has_pai, variantes_count
-FROM products_cache
-WHERE codigo_amigavel LIKE '18645L%'
-ORDER BY codigo_amigavel;
-```
-
-Resultado esperado: `18645L` como pai com `variantes_count > 1`, e `18645L-AZ1`, `18645L-VDC` etc. com `is_variante = true` e `has_pai = true`.
-
-## Arquivos afetados
-- Deletar: `supabase/migrations/20260406203900_fix_variantes_grouping.sql`
-- Criar via migration tool: nova migração com o mesmo conteúdo SQL
-
-## Não alterar
-- Nenhum código de componente
-- Edge function (já deployada)
-
+No Google Merchant Center será necessário clicar em "Buscar agora" para forçar a releitura.
