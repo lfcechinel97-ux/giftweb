@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
-const SITE_URL = "https://giftwebbrindes.com.br";
+const SITE_URL = "https://giftweb.lovable.app";
 
 // Google Product Taxonomy mapping (Brazilian Portuguese categories → Google taxonomy IDs)
 // Reference: https://www.google.com/basepages/producttype/taxonomy-with-ids.pt-BR.txt
