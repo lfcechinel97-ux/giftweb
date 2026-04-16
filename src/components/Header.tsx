@@ -189,7 +189,7 @@ const Header = () => {
             </form>
 
             <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}`}
+              href={WHATSAPP_REDIRECT_URL}
               target="_blank"
               rel="noreferrer"
               className="hidden sm:flex items-center gap-2 rounded-[10px] bg-green-cta px-5 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 transition-all duration-200 shrink-0"
@@ -372,7 +372,7 @@ const Header = () => {
           ))}
 
           <a
-            href={`https://wa.me/${WHATSAPP_NUMBER}`}
+            href={WHATSAPP_REDIRECT_URL}
             target="_blank"
             rel="noreferrer"
             className="mt-6 flex items-center justify-center gap-3 rounded-2xl bg-green-cta px-6 py-4 text-sm font-bold text-white"
