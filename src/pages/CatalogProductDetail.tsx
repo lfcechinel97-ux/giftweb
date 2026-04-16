@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup } from "@/utils/price";
 import { getCorHex } from "@/utils/colorHex";
-import { WHATSAPP_NUMBER } from "@/config/site";
+import { WHATSAPP_REDIRECT_URL } from "@/config/site";
 import CatalogHeader from "@/components/catalog/CatalogHeader";
 import CatalogFooter from "@/components/catalog/CatalogFooter";
 import QuotationDrawer from "@/components/catalog/QuotationDrawer";
@@ -243,13 +243,7 @@ const CatalogProductDetail = () => {
   };
 
   const handleSendWhatsApp = () => {
-    const allItems = items;
-    const lines = allItems.map((item, i) => {
-      const price = item.price ? formatarBRL(calcularPreco(item.price, item.quantity)) : "sob consulta";
-      return `${i + 1}. ${item.name} (Cód: ${item.codigo_amigavel}) — Qtd: ${item.quantity} — ${price}/un`;
-    });
-    const msg = `Olá! Gostaria de solicitar um orçamento:\n\n${lines.join("\n")}\n\nTotal de itens: ${totalItems}`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+    window.open(WHATSAPP_REDIRECT_URL, "_blank");
   };
 
   if (loading) {
