@@ -1,6 +1,7 @@
 import { Phone, Mail, Instagram, Facebook, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
+import { WHATSAPP_REDIRECT_URL } from "@/config/site";
 
 const WhatsAppIcon = ({ size = 16 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -36,7 +37,7 @@ const Footer = () => {
   const frase = get("footer_frase") || "Transforme cada brinde em uma lembrança da sua marca.";
   const linkInsta = get("footer_link_instagram") || "#";
   const linkFb = get("footer_link_facebook") || "#";
-  const linkWa = get("footer_link_whatsapp") || "https://wa.me/5548996652844";
+  const linkWa = get("footer_link_whatsapp") || WHATSAPP_REDIRECT_URL;
 
   return (
     <footer className="bg-[#0B0F1A] text-white">
@@ -104,8 +105,8 @@ const Footer = () => {
           <div>
             <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Institucional</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href={`https://wa.me/5548996652844?text=Olá! Gostaria de saber mais sobre a Gift Web Brindes.`} target="_blank" rel="noreferrer" className="text-[#9CA3AF] hover:text-white transition-colors">Quem somos</a></li>
-              <li><a href={`https://wa.me/5548996652844?text=Olá! Gostaria de falar com o comercial.`} target="_blank" rel="noreferrer" className="text-[#9CA3AF] hover:text-white transition-colors">Fale conosco</a></li>
+              <li><a href={WHATSAPP_REDIRECT_URL} target="_blank" rel="noreferrer" className="text-[#9CA3AF] hover:text-white transition-colors">Quem somos</a></li>
+              <li><a href={WHATSAPP_REDIRECT_URL} target="_blank" rel="noreferrer" className="text-[#9CA3AF] hover:text-white transition-colors">Fale conosco</a></li>
               <li><Link to="/politica-de-trocas-e-devolucoes" className="text-[#9CA3AF] hover:text-white transition-colors">Política de troca e devolução</Link></li>
               <li><Link to="/politica-de-privacidade" className="text-[#9CA3AF] hover:text-white transition-colors">Política de Privacidade</Link></li>
               <li><Link to="/termos-de-uso" className="text-[#9CA3AF] hover:text-white transition-colors">Termos de Uso</Link></li>

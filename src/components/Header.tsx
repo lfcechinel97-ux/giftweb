@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Menu, X, Search, ChevronDown, ChevronRight } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
-import { WHATSAPP_NUMBER } from "@/config/site";
+import { WHATSAPP_REDIRECT_URL } from "@/config/site";
 
 const menuSections = [
   {
@@ -147,7 +147,7 @@ const Header = () => {
             </span>
             <span className="hidden sm:inline mx-1">|</span>
             <a
-              href={`https://wa.me/${WHATSAPP_NUMBER}`}
+              href={WHATSAPP_REDIRECT_URL}
               target="_blank"
               rel="noreferrer"
               className="font-bold text-green-cta hover:underline"

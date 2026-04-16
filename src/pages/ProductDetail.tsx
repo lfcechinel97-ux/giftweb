@@ -547,7 +547,7 @@ const ProductDetail = () => {
 
                 {/* WhatsApp CTA */}
                 <a
-                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMsg}`}
+                  href={WHATSAPP_REDIRECT_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full rounded-xl flex items-center justify-center gap-2 text-white font-semibold text-sm py-3 px-4 transition-opacity duration-150 hover:opacity-90 active:scale-[0.98]"
