@@ -10,7 +10,7 @@ const faqs = [
   {
     question: "Qual o prazo de entrega dos brindes personalizados?",
     answer:
-      "O prazo médio de produção é de 10 dias úteis após a aprovação da arte. O frete varia conforme a localidade, mas atendemos todo o Brasil com logística própria e parceiros.",
+      "O prazo médio de produção é de 2 a 10 dias úteis após a aprovação da arte. O frete varia conforme a localidade, mas atendemos todo o Brasil com logística própria e parceiros.",
   },
   {
     question: "Qual a quantidade mínima para pedidos?",
