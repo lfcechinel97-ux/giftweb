@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
+import { WHATSAPP_REDIRECT_URL } from "@/config/site";
 
 const WppIcon = ({ size = 20 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width={size} height={size}>
@@ -68,10 +69,7 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
     if (form.budget.trim()) lines.push(`Orçamento estimado: ${form.budget}`);
     if (form.details.trim()) lines.push(`Detalhes do pedido: ${form.details}`);
 
-    window.open(
-      `https://wa.me/5548996652844?text=${encodeURIComponent(lines.join("\n"))}`,
-      "_blank"
-    );
+    window.open(WHATSAPP_REDIRECT_URL, "_blank");
     onClose();
   };
 

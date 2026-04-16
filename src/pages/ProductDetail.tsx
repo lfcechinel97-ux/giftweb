@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup } from "@/utils/price";
 import { getCorHex } from "@/utils/colorHex";
-import { PRAZO_PRODUCAO, WHATSAPP_NUMBER, SITE_URL } from "@/config/site";
+import { PRAZO_PRODUCAO, WHATSAPP_REDIRECT_URL, SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
@@ -547,7 +547,7 @@ const ProductDetail = () => {
 
                 {/* WhatsApp CTA */}
                 <a
-                  href={`https://wa.me/${WHATSAPP_NUMBER}?text=${whatsappMsg}`}
+                  href={WHATSAPP_REDIRECT_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full rounded-xl flex items-center justify-center gap-2 text-white font-semibold text-sm py-3 px-4 transition-opacity duration-150 hover:opacity-90 active:scale-[0.98]"

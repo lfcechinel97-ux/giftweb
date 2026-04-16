@@ -22,7 +22,7 @@ const SeoTextSection = () => (
           Solicite um orçamento pelo WhatsApp e receba atendimento
           personalizado.{" "}
           <a
-            href="https://wa.me/5548996652844"
+            href="https://track.funnelmax.io/w/wr_4hhbabeuap7zenuk"
             target="_blank"
             rel="noreferrer"
             className="text-green-cta hover:underline font-medium"
