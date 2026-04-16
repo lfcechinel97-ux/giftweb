@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
   const items = allProducts.map((p) => {
     const price = calcDisplayPrice(p.preco_custo || 0);
     const availability = (p.estoque || 0) > 0 ? "in_stock" : "out_of_stock";
-    const link = `${SITE_URL}/catalogo/produto/${p.slug || p.codigo_amigavel}`;
+    const link = `${SITE_URL}/produto/${p.slug || p.codigo_amigavel}`;
     const googleCategory = GOOGLE_CATEGORY_MAP[p.categoria || ""] || DEFAULT_GOOGLE_CATEGORY;
     const description = p.descricao
       ? escapeXml(p.descricao.substring(0, 5000))
