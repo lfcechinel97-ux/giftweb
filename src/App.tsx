@@ -31,6 +31,7 @@ const AdminGuard = lazy(() => import("./components/admin/AdminGuard.tsx"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage.tsx"));
 const TermsPage = lazy(() => import("./pages/TermsPage.tsx"));
 const SecurityPage = lazy(() => import("./pages/SecurityPage.tsx"));
+const TrocasDevolucoesPage = lazy(() => import("./pages/TrocasDevolucoesPage.tsx"));
 const CatalogPage = lazy(() => import("./pages/CatalogPage.tsx"));
 const CatalogProductDetail = lazy(() => import("./pages/CatalogProductDetail.tsx"));
 
@@ -93,6 +94,7 @@ const App = () => (
               <Route path="/politica-de-privacidade" element={<PrivacyPage />} />
               <Route path="/termos-de-uso" element={<TermsPage />} />
               <Route path="/seguranca" element={<SecurityPage />} />
+              <Route path="/politica-de-trocas-e-devolucoes" element={<TrocasDevolucoesPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
