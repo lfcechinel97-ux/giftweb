@@ -106,7 +106,7 @@ const Footer = () => {
             <ul className="space-y-3 text-sm">
               <li><a href={`https://wa.me/5548996652844?text=Olá! Gostaria de saber mais sobre a Gift Web Brindes.`} target="_blank" rel="noreferrer" className="text-[#9CA3AF] hover:text-white transition-colors">Quem somos</a></li>
               <li><a href={`https://wa.me/5548996652844?text=Olá! Gostaria de falar com o comercial.`} target="_blank" rel="noreferrer" className="text-[#9CA3AF] hover:text-white transition-colors">Fale conosco</a></li>
-              <li><a href={`https://wa.me/5548996652844?text=Olá! Gostaria de saber sobre a política de troca e devolução.`} target="_blank" rel="noreferrer" className="text-[#9CA3AF] hover:text-white transition-colors">Política de troca e devolução</a></li>
+              <li><Link to="/politica-de-trocas-e-devolucoes" className="text-[#9CA3AF] hover:text-white transition-colors">Política de troca e devolução</Link></li>
               <li><Link to="/politica-de-privacidade" className="text-[#9CA3AF] hover:text-white transition-colors">Política de Privacidade</Link></li>
               <li><Link to="/termos-de-uso" className="text-[#9CA3AF] hover:text-white transition-colors">Termos de Uso</Link></li>
               <li><Link to="/seguranca" className="text-[#9CA3AF] hover:text-white transition-colors">Segurança</Link></li>
