@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import { WHATSAPP_REDIRECT_URL } from "@/config/site";
+import { WHATSAPP_REDIRECT_URL, WHATSAPP_NUMBER } from "@/config/site";
 
 const WppIcon = ({ size = 20 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width={size} height={size}>
@@ -11,6 +11,7 @@ const WppIcon = ({ size = 20 }: { size?: number }) => (
 interface WhatsAppModalProps {
   open: boolean;
   onClose: () => void;
+  useDirectMessage?: boolean;
 }
 
 const formatPhone = (value: string) => {
@@ -27,7 +28,7 @@ const formatCurrency = (value: string) => {
   return num.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 };
 
-const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
+const WhatsAppModal = ({ open, onClose, useDirectMessage = false }: WhatsAppModalProps) => {
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -69,7 +70,12 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
     if (form.budget.trim()) lines.push(`Orçamento estimado: ${form.budget}`);
     if (form.details.trim()) lines.push(`Detalhes do pedido: ${form.details}`);
 
-    window.open(WHATSAPP_REDIRECT_URL, "_blank");
+    if (useDirectMessage) {
+      const msg = lines.join("\n");
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+    } else {
+      window.open(WHATSAPP_REDIRECT_URL, "_blank");
+    }
     onClose();
   };
 
