@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ShoppingBag, Send } from "lucide-react";
 import { useQuotation } from "@/contexts/QuotationContext";
 import { calcularPreco, formatarBRL } from "@/utils/price";
-import { WHATSAPP_REDIRECT_URL } from "@/config/site";
+import { WHATSAPP_NUMBER } from "@/config/site";
 
 const QuotationDrawer = () => {
   const { items, totalItems, removeItem, updateQty, clearAll, isOpen, setIsOpen } = useQuotation();
@@ -14,7 +14,7 @@ const QuotationDrawer = () => {
       return `${i + 1}. ${item.name} (Cód: ${item.codigo_amigavel}) — Qtd: ${item.quantity} — ${price}/un`;
     });
     const msg = `Olá! Gostaria de solicitar um orçamento:\n\n${lines.join("\n")}\n\nTotal de itens: ${totalItems}`;
-    window.open(WHATSAPP_REDIRECT_URL, "_blank");
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   return (
