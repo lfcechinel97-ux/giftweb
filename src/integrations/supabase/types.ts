@@ -297,6 +297,7 @@ export type Database = {
           label: string
           position: number
           slug: string
+          tabela_multiplicadores: Json | null
         }
         Insert: {
           active?: boolean
@@ -307,6 +308,7 @@ export type Database = {
           label: string
           position?: number
           slug: string
+          tabela_multiplicadores?: Json | null
         }
         Update: {
           active?: boolean
@@ -317,6 +319,7 @@ export type Database = {
           label?: string
           position?: number
           slug?: string
+          tabela_multiplicadores?: Json | null
         }
         Relationships: []
       }
