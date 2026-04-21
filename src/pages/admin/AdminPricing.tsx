@@ -490,8 +490,9 @@ function CategoryCard({
                               <Button
                                 size="sm"
                                 className="bg-green-600 hover:bg-green-700 text-white h-8"
-                                disabled={savingKey === key || band.total === 0}
+                                disabled={savingKey === key}
                                 onClick={() => onApplyBand(band, band.total)}
+                                title={band.total === 0 ? "Salva a configuração para futuros produtos" : undefined}
                               >
                                 {savingKey === key ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
