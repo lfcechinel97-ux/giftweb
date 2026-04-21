@@ -1,47 +1,112 @@
 
-## Bug
+## Problema real
 
-Quando você edita os preços no `/admin/produtos`, o `PriceEditor` salva `tabela_precos` no formato novo `[{qty, multiplicador}]`. Mas as páginas de produto (`ProductDetail.tsx` e `CatalogProductDetail.tsx`) ainda leem só o formato legado `[{qty, desconto}]` — acessam `r.desconto` (que vira `undefined`), o cálculo `1 - undefined` resulta em **`NaN`**, e o front mostra "R$ NaN".
+Há dois problemas separados:
+
+1. **Preço ainda “buga” após editar no admin**
+   - A correção anterior tratou só a tabela “Compre com desconto”.
+   - Mas a PDP ainda usa o cálculo padrão em outros pontos (`precoMin`, `precoAtual`, total, mensagem do WhatsApp), ignorando a `tabela_precos` customizada.
+   - Resultado: parte da tela usa a tabela nova e outra parte usa a regra antiga, o que mantém inconsistência e pode continuar quebrando quando preço/multiplicador são alterados.
+
+2. **Ocultar no admin não some do site**
+   - Hoje o admin oculta só o **produto pai**.
+   - As **variantes** continuam com `is_hidden = false`.
+   - Além disso, `ProductDetail.tsx` e `CatalogProductDetail.tsx` buscam por `slug` sem filtrar `is_hidden`, então links diretos continuam abrindo o produto oculto.
 
 ## Correção
 
-### 1. `src/pages/ProductDetail.tsx` (memo `tableRows`, linhas 244–264)
-Trocar a leitura para suportar **ambos os formatos**:
-- Se a row tem `multiplicador` (formato novo do admin) → `unit = preco_custo * multiplicador`, e `desc = 1 - multiplicador / markupBase` (para mostrar o badge "-X%" e o preço base riscado de forma coerente, ou 0 se não der pra inferir).
-- Se a row tem `desconto` (formato legado) → manter cálculo atual `preco_custo * markup * (1 - desconto)`.
-- Se row não tem nenhum dos dois → ignorar (não gera linha NaN).
+### 1. Centralizar toda a leitura de preço customizado
+Criar um helper único em `src/utils/price.ts` para normalizar a tabela de preços e calcular:
 
-### 2. `src/pages/CatalogProductDetail.tsx` (memo `tableRows`, linhas 201–220)
-Aplicar exatamente a mesma correção.
+- linhas da tabela por quantidade
+- menor preço real (“A partir de”)
+- preço unitário da quantidade selecionada
+- total do pedido
+- fallback para a regra padrão quando não houver tabela customizada válida
 
-### 3. Reaproveitar helper já existente
-`src/utils/price.ts` já tem `getCustomMultiplier(tabelaPrecos, precoCusto, qty)` que entende os dois formatos. Vou usá-lo nas duas páginas para deixar a leitura única e à prova de futuro:
+Esse helper vai:
+- aceitar ambos os formatos:
+  - `[{ qty, multiplicador }]`
+  - `[{ quantidade, desconto }]`
+- aceitar valores numéricos ou string
+- ignorar linhas inválidas
+- nunca retornar `NaN`
 
-```ts
-const customRows = Array.isArray(product?.tabela_precos) ? product.tabela_precos : null;
-if (customRows?.length) {
-  const markup = getMarkup(displayPrecoCusto);
-  return customRows
-    .map((r: any) => {
-      const mult = getCustomMultiplier([r], displayPrecoCusto, r.qty ?? r.quantidade);
-      if (mult == null || !r.qty && !r.quantidade) return null;
-      const unit = displayPrecoCusto * mult;
-      const desc = Math.max(0, 1 - mult / markup);
-      return { qty: r.qty ?? r.quantidade, unit, base: precoBase, desc };
-    })
-    .filter(Boolean);
-}
-```
+### 2. Usar esse helper em todas as saídas da PDP
+Atualizar **as duas páginas**:
+- `src/pages/ProductDetail.tsx`
+- `src/pages/CatalogProductDetail.tsx`
 
-### 4. (Defensivo) `PriceEditor` — validação de input
-Em `src/pages/admin/AdminProducts.tsx` (`handleSave`, linhas 386–402): rejeitar `multiplicador` `NaN`/`<= 0` antes de enviar pro banco, com toast de erro. Isso impede que um produto fique com tabela quebrada caso o usuário deixe um campo vazio.
+Trocar estes cálculos isolados:
+- `precoMin`
+- `precoAtual`
+- `tableRows`
+- total (`precoAtual * qty`)
+- preço enviado no WhatsApp do catálogo
 
-## Resultado
-- Após editar preços no admin, a tabela "Compre com desconto" mostra valores corretos em R$ (e não mais "NaN").
-- Funciona tanto pra produtos editados pelo novo PriceEditor quanto pros antigos com formato `desconto`.
-- Editor admin valida antes de salvar.
+Por uma única fonte de verdade baseada no helper novo.
+
+Assim, quando o admin altera preço de custo + multiplicadores, todos os blocos da tela passam a refletir exatamente o mesmo cálculo.
+
+### 3. Corrigir ocultação para pai + variantes
+Hoje o admin lista só produtos pai, mas o hide/show precisa afetar o grupo inteiro.
+
+Vou implementar uma função de backend para admin, algo como:
+- `admin_set_product_visibility(p_product_id, p_hidden boolean)`
+
+Ela vai:
+- identificar o pai correto
+- atualizar o próprio pai
+- atualizar todas as variantes ligadas por `produto_pai`
+
+Depois trocar o admin para usar essa função em:
+- `src/pages/admin/AdminProducts.tsx` (ocultar individual e em massa)
+- `src/pages/admin/AdminProductEdit.tsx` (salvar `is_hidden` no editor completo)
+
+### 4. Bloquear acesso a produto oculto nas páginas públicas
+Mesmo com o update em lote, a PDP precisa ser defensiva.
+
+Em:
+- `src/pages/ProductDetail.tsx`
+- `src/pages/CatalogProductDetail.tsx`
+
+ajustar a busca inicial para:
+- não abrir produto com `is_hidden = true`
+- se o slug for de variante, carregar o pai e verificar se o pai está oculto
+- se estiver oculto, redirecionar (`/404` no site principal e `/catalogo` no catálogo)
+
+### 5. Manter o site sincronizado visualmente
+No admin, além do update no backend:
+- manter update otimista na lista
+- invalidar também as chaves públicas relevantes após salvar/ocultar:
+  - `homepage-data`
+  - listas do catálogo
+  - listas de busca
+- ajustar o texto do toast para não sugerir atraso quando o dado já estiver sendo persistido corretamente
 
 ## Arquivos
+
+### Backend
+- nova migration com `admin_set_product_visibility(...)`
+
+### Frontend
+- `src/utils/price.ts`
 - `src/pages/ProductDetail.tsx`
 - `src/pages/CatalogProductDetail.tsx`
 - `src/pages/admin/AdminProducts.tsx`
+- `src/pages/admin/AdminProductEdit.tsx`
+
+## Resultado esperado
+
+- Alterar **preço de custo** e **multiplicadores** no admin deixa:
+  - “A partir de”
+  - tabela “Compre com desconto”
+  - preço por quantidade
+  - total
+  - mensagem do WhatsApp
+  todos coerentes e sem `R$ NaN`.
+
+- Ocultar no admin passa a ocultar:
+  - o produto pai
+  - todas as variantes
+  - links diretos da PDP também deixam de abrir o item oculto.
