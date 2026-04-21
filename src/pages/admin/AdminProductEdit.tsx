@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Save, Upload, GripVertical, X, Plus, ImageOff, Images, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { formatarBRL, calcularPreco, getMarkup } from '@/utils/price';
+import { formatarBRL, calcularPreco, getMarkup, VOLUME_TIERS, getCustomMultiplier, getMultiplierForQty } from '@/utils/price';
 import { getCorHex } from '@/utils/colorHex';
 import type { Json } from '@/integrations/supabase/types';
 import { toast as sonnerToast } from 'sonner';
@@ -24,9 +24,10 @@ interface Variante {
   codigo_amigavel?: string;
 }
 
+// Linha da tabela de preços armazenada como {qty, multiplicador} (formato novo).
 interface TabelaPrecoRow {
   qty: number;
-  desconto: number;
+  multiplicador: number;
 }
 
 function parseVariantes(v: Json | null): Variante[] {
@@ -34,20 +35,14 @@ function parseVariantes(v: Json | null): Variante[] {
   return v as unknown as Variante[];
 }
 
-const CATEGORIES = [
-  'garrafas', 'copos', 'mochilas', 'bolsas', 'escritorio', 'kits',
-  'squeezes', 'brindes-baratos', 'outros',
-];
+interface CategoryOption { id: string; slug: string; label: string }
 
-const DEFAULT_TABELA: TabelaPrecoRow[] = [
-  { qty: 20,   desconto: 0 },
-  { qty: 50,   desconto: 0 },
-  { qty: 100,  desconto: 0.04 },
-  { qty: 200,  desconto: 0.07 },
-  { qty: 300,  desconto: 0.09 },
-  { qty: 500,  desconto: 0.12 },
-  { qty: 1000, desconto: 0.16 },
-];
+function buildDefaultTabela(precoCusto: number): TabelaPrecoRow[] {
+  return VOLUME_TIERS.map((qty) => ({
+    qty,
+    multiplicador: getMultiplierForQty(precoCusto || 0, qty),
+  }));
+}
 
 // ─── Image gallery manager ────────────────────────────────────────────────────
 function ImageGallery({
