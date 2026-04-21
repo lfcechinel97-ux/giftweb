@@ -210,9 +210,15 @@ export default function AdminPricing() {
         }
       }
 
-      toast.success(
-        `${productIds.length} produto(s) da faixa ${band.bucket} de "${cat.label}" atualizados`,
-      );
+      if (productIds.length > 0) {
+        toast.success(
+          `${productIds.length} produto(s) da faixa ${band.bucket} de "${cat.label}" atualizados`,
+        );
+      } else {
+        toast.success(
+          `Configuração salva para a faixa ${band.bucket}. 0 produtos nessa faixa atualmente — novos itens nessa faixa nascerão precificados.`,
+        );
+      }
       qc.invalidateQueries({ queryKey: ["admin-products"] });
       qc.invalidateQueries({ queryKey: ["admin-pricing-categories-v2"] });
     } catch (e: any) {
