@@ -321,7 +321,6 @@ function CategoryCard({
   setEditsForBand,
   onRestoreBand,
   onApplyBand,
-  onApplyCategory,
   savingKey,
 }: {
   cat: CategoryWithCount;
@@ -331,7 +330,6 @@ function CategoryCard({
   setEditsForBand: (bucket: string, qty: number, mult: number) => void;
   onRestoreBand: (band: BandDistribution) => void;
   onApplyBand: (band: BandDistribution, productCount: number) => void;
-  onApplyCategory: (productCount: number) => void;
   savingKey: string | null;
 }) {
   const qc = useQueryClient();
