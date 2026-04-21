@@ -30,3 +30,36 @@ export function getPrecoMinimo(precoCusto: number): number {
 export function formatarBRL(valor: number): string {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
+
+export const VOLUME_TIERS = [20, 50, 100, 200, 500, 1000] as const;
+
+/**
+ * Calcula o multiplicador efetivo para uma quantidade específica
+ * Multiplicador = markup_base * (1 - desconto_volume)
+ */
+export function getMultiplierForQty(precoCusto: number, qty: number): number {
+  return getMarkup(precoCusto) * (1 - getDesconto(qty));
+}
+
+/**
+ * Lê multiplicador customizado da tabela_precos (jsonb).
+ * Suporta dois formatos:
+ *  - [{qty, multiplicador}] (novo)
+ *  - [{quantidade, desconto}] (legado — converte para multiplicador)
+ */
+export function getCustomMultiplier(
+  tabelaPrecos: any,
+  precoCusto: number,
+  qty: number
+): number | null {
+  if (!Array.isArray(tabelaPrecos)) return null;
+  for (const row of tabelaPrecos) {
+    if (row?.qty === qty && typeof row.multiplicador === 'number') {
+      return row.multiplicador;
+    }
+    if (row?.quantidade === qty && typeof row.desconto === 'number') {
+      return getMarkup(precoCusto) * (1 - row.desconto);
+    }
+  }
+  return null;
+}

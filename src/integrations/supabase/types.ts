@@ -370,6 +370,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_search_products: {
+        Args: {
+          p_category_slug?: string
+          p_page?: number
+          p_page_size?: number
+          p_search?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
       calc_display_price: { Args: { p_preco_custo: number }; Returns: number }
       get_category_colors: {
         Args: { p_category_slug: string }
