@@ -463,7 +463,7 @@ function CategoryCard({
                           <td className="px-3 py-2 font-medium tabular-nums">
                             {band.bucket}
                           </td>
-                          <td className="px-2 py-2 text-center text-muted-foreground tabular-nums">
+                          <td className={`px-2 py-2 text-center tabular-nums ${band.total === 0 ? "text-muted-foreground/40" : "text-muted-foreground"}`}>
                             {band.total}
                           </td>
                           {TIERS.map((q) => {
