@@ -672,20 +672,125 @@ export default function AdminProductEdit() {
             </div>
 
             <div className="space-y-2">
-              <Label>Categoria</Label>
+              <Label>Categoria principal</Label>
               <Select
-                value={form.categoria}
-                onValueChange={(v) => setForm({ ...form, categoria: v })}
+                value={form.categoria || undefined}
+                onValueChange={(v) => { setForm({ ...form, categoria: v }); setDirty(true); }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
+                  {allCategories.map((c) => (
+                    <SelectItem key={c.slug} value={c.slug}>{c.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* ── Categorias adicionais (M:N) ──────────────────────────── */}
+            <div className="space-y-2">
+              <Label>Categorias adicionais</Label>
+              <p className="text-[11px] text-muted-foreground -mt-1">
+                Aparece também nessas categorias do site (ex: Copa do Mundo, Eventos).
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {extraCategorySlugs
+                  .filter((s) => s !== form.categoria)
+                  .map((slug) => {
+                    const cat = allCategories.find((c) => c.slug === slug);
+                    if (!cat) return null;
+                    return (
+                      <Badge
+                        key={slug}
+                        variant="outline"
+                        className="gap-1 pl-2 pr-1 py-0.5 text-xs bg-primary/5 border-primary/20"
+                      >
+                        {cat.label}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setExtraCategorySlugs((prev) => prev.filter((s) => s !== slug));
+                            setDirty(true);
+                          }}
+                          className="ml-0.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive p-0.5"
+                          aria-label={`Remover ${cat.label}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                {addingCategory ? (
+                  <Select
+                    value=""
+                    onValueChange={(v) => {
+                      if (v) {
+                        setExtraCategorySlugs((prev) => Array.from(new Set([...prev, v])));
+                        setDirty(true);
+                      }
+                      setAddingCategory(false);
+                    }}
+                  >
+                    <SelectTrigger className="h-7 w-[200px] text-xs">
+                      <SelectValue placeholder="Escolher categoria..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allCategories
+                        .filter((c) => c.slug !== form.categoria && !extraCategorySlugs.includes(c.slug))
+                        .map((c) => (
+                          <SelectItem key={c.slug} value={c.slug}>{c.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAddingCategory(true)}
+                    className="h-7 text-xs"
+                  >
+                    <Plus className="h-3 w-3 mr-1" /> Adicionar categoria
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* ── Preço de custo (API ou manual) ────────────────────────── */}
+            <div className="rounded-lg border p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Preço de custo</Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    {precoCustoManual
+                      ? 'Editado manualmente — sync da API XBZ não vai sobrescrever.'
+                      : 'Sincronizado automaticamente da API XBZ.'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-muted-foreground">Manual</span>
+                  <Switch
+                    checked={precoCustoManual}
+                    onCheckedChange={(v) => { setPrecoCustoManual(v); setDirty(true); }}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">R$</span>
+                <Input
+                  inputMode="decimal"
+                  value={precoCustoEdit}
+                  disabled={!precoCustoManual}
+                  onChange={(e) => { setPrecoCustoEdit(e.target.value); setDirty(true); }}
+                  className="h-9 w-32"
+                />
+                {!precoCustoManual && (product?.preco_custo ?? 0) > 0 && (
+                  <span className="text-[11px] text-muted-foreground">
+                    (API: {formatarBRL(product?.preco_custo ?? 0)})
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* ── Tabela de preços ────────────────────────────────────────── */}
@@ -717,7 +822,7 @@ export default function AdminProductEdit() {
                   <thead>
                     <tr className="border-b bg-muted/40">
                       <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Qtd</th>
-                      <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Desconto %</th>
+                      <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Multiplicador (×)</th>
                       {precoCusto > 0 && (
                         <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Preço/un</th>
                       )}
@@ -734,7 +839,7 @@ export default function AdminProductEdit() {
                             value={row.qty}
                             onChange={(e) => {
                               const v = parseInt(e.target.value) || 1;
-                              if (!isCustomTabela) setTabelaPrecos([...DEFAULT_TABELA]);
+                              if (!isCustomTabela) setTabelaPrecos([...defaultTabelaForCost]);
                               updateTabelaRow(idx, 'qty', v);
                             }}
                             className="h-7 w-20 text-sm"
@@ -744,23 +849,22 @@ export default function AdminProductEdit() {
                           <div className="flex items-center gap-1">
                             <Input
                               type="number"
-                              min={0}
-                              max={100}
-                              step={0.1}
-                              value={Math.round(row.desconto * 100 * 10) / 10}
+                              min={0.1}
+                              step={0.05}
+                              value={Number(row.multiplicador).toFixed(2)}
                               onChange={(e) => {
-                                const v = (parseFloat(e.target.value) || 0) / 100;
-                                if (!isCustomTabela) setTabelaPrecos([...DEFAULT_TABELA]);
-                                updateTabelaRow(idx, 'desconto', v);
+                                const v = parseFloat(e.target.value.replace(',', '.')) || 0;
+                                if (!isCustomTabela) setTabelaPrecos([...defaultTabelaForCost]);
+                                updateTabelaRow(idx, 'multiplicador', v);
                               }}
-                              className="h-7 w-20 text-sm"
+                              className="h-7 w-24 text-sm"
                             />
-                            <span className="text-xs text-muted-foreground">%</span>
+                            <span className="text-xs text-muted-foreground">×</span>
                           </div>
                         </td>
                         {precoCusto > 0 && (
                           <td className="px-3 py-1.5 text-xs text-muted-foreground font-medium tabular-nums">
-                            {formatarBRL(precoCusto * markup * (1 - row.desconto))}
+                            {formatarBRL(precoCusto * row.multiplicador)}
                           </td>
                         )}
                         <td className="px-2 py-1.5">
@@ -777,6 +881,9 @@ export default function AdminProductEdit() {
                   </tbody>
                 </table>
               </div>
+              <p className="text-[11px] text-muted-foreground">
+                Markup base atual da API: <strong>{markup.toFixed(1)}×</strong> · Preço/un = preço de custo × multiplicador.
+              </p>
 
               <Button
                 type="button"
