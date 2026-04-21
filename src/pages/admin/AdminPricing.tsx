@@ -46,6 +46,53 @@ interface BandDistribution {
 const TIERS = VOLUME_TIERS as readonly number[];
 
 /**
+ * Preset padrão de multiplicadores por faixa de custo × volume.
+ * Valores extraídos da configuração base validada (imagem de referência).
+ * Cada linha = uma das 17 faixas de COST_BANDS, na mesma ordem.
+ * Cada coluna = um dos 7 volumes em VOLUME_TIERS [20, 50, 100, 200, 300, 500, 1000].
+ *
+ * Estes números NÃO ficam fixos no banco — são apenas o ponto de partida
+ * quando o admin clica em "Replicar para todas as categorias". Cada categoria
+ * pode ser editada livremente depois (faixa por faixa ou inteira).
+ */
+const PRESET_DEFAULT: Record<string, number[]> = {
+  "0,01–0,50":   [6.00, 6.00, 5.76, 5.58, 5.46, 5.28, 5.04],
+  "0,51–1,00":   [6.00, 6.00, 5.76, 5.58, 5.46, 5.28, 5.04],
+  "1,01–2,00":   [4.80, 4.80, 4.61, 4.37, 4.37, 4.22, 4.03],
+  "2,01–5,00":   [3.50, 3.00, 2.90, 2.80, 2.70, 2.60, 2.50],
+  "5,01–10,00":  [3.80, 3.70, 3.20, 3.00, 2.80, 2.60, 2.40],
+  "10,01–15,00": [2.80, 2.60, 2.50, 2.35, 2.05, 2.00, 1.80],
+  "15,01–20,00": [2.60, 2.50, 2.40, 2.25, 2.10, 1.95, 1.80],
+  "20,01–25,00": [2.40, 2.35, 2.30, 2.15, 2.00, 1.85, 1.70],
+  "25,01–30,00": [2.30, 2.25, 2.20, 2.05, 1.90, 1.75, 1.60],
+  "30,01–35,00": [2.25, 2.20, 2.15, 2.00, 1.85, 1.70, 1.55],
+  "35,01–40,00": [2.30, 2.15, 2.10, 1.95, 1.80, 1.65, 1.50],
+  "40,01–45,00": [2.15, 2.10, 2.05, 1.90, 1.75, 1.60, 1.45],
+  "45,01–50,00": [2.10, 2.05, 2.00, 1.85, 1.70, 1.55, 1.40],
+  "50,01–60,00": [2.05, 2.00, 1.95, 1.80, 1.65, 1.50, 1.35],
+  "60,01–70,00": [2.00, 1.95, 1.90, 1.75, 1.60, 1.45, 1.30],
+  "70,01–100,00":[1.95, 1.90, 1.85, 1.70, 1.55, 1.40, 1.25],
+  "100,01+":     [1.90, 1.85, 1.80, 1.65, 1.50, 1.35, 1.20],
+};
+
+/** Converte o preset (linha por bucket) em BandConfig[] usando COST_BANDS canônicas. */
+function buildPresetBandConfig(): BandConfig[] {
+  const out: BandConfig[] = [];
+  // Importação local para não criar dependência circular
+  // (COST_BANDS já vem de price.ts via re-export abaixo)
+  for (const band of COST_BANDS_LOCAL) {
+    const row = PRESET_DEFAULT[band.bucket];
+    if (!row) continue;
+    const tiers: TierRow[] = TIERS.map((qty, i) => ({
+      qty,
+      multiplicador: row[i] ?? 1,
+    }));
+    out.push({ min: band.min, max: band.max, tiers });
+  }
+  return out;
+}
+
+/**
  * Faixa 70,01+ não tem teto natural. Usamos um teto virtual fixo só para
  * estimar faturamento/lucro máximos na UI; visualmente sinalizamos com "+"
  * para deixar claro que o valor real pode ser maior.
