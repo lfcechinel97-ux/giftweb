@@ -495,12 +495,33 @@ function CategoryCard({
                           </td>
                           {TIERS.map((q) => {
                             const tier = tiers.find((t) => t.qty === q);
+                            const mult = tier?.multiplicador ?? 1;
+                            const isOpenEnded = band.max_val >= 999999;
+                            const effMax = isOpenEnded ? COST_MAX_VIRTUAL : band.max_val;
+                            const fatMin = band.min_val * mult * q;
+                            const fatMax = effMax * mult * q;
+                            const lucMin = band.min_val * (mult - 1) * q;
+                            const lucMax = effMax * (mult - 1) * q;
                             return (
-                              <td key={q} className="px-1 py-2 text-center">
-                                <MultiplierStepper
-                                  value={tier?.multiplicador ?? 1}
-                                  onChange={(v) => setEditsForBand(band.bucket, q, v)}
-                                />
+                              <td key={q} className="px-1 py-2 text-center align-middle">
+                                <div className="flex flex-col items-center gap-0.5">
+                                  <span
+                                    className="text-[10px] leading-tight text-muted-foreground tabular-nums whitespace-nowrap"
+                                    title={`Faturamento estimado para ${q} unid.`}
+                                  >
+                                    Fat.: {formatBRLRange(fatMin, fatMax, isOpenEnded)}
+                                  </span>
+                                  <MultiplierStepper
+                                    value={mult}
+                                    onChange={(v) => setEditsForBand(band.bucket, q, v)}
+                                  />
+                                  <span
+                                    className="text-[10px] leading-tight text-emerald-600 dark:text-emerald-500 tabular-nums whitespace-nowrap"
+                                    title={`Lucro bruto estimado para ${q} unid.`}
+                                  >
+                                    Lucro: {formatBRLRange(lucMin, lucMax, isOpenEnded)}
+                                  </span>
+                                </div>
                               </td>
                             );
                           })}
