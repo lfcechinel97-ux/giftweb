@@ -1,54 +1,24 @@
 
 
-## Marcar produtos como "Fora de Estoque" quando todas as variantes estão zeradas
+## Mostrar todas as 10 faixas de custo, mesmo sem produtos
 
-### Problema
-Hoje o badge "Fora de Estoque" no card só considera o `estoque` do produto pai. Quando o produto tem variantes (ex.: AGENDA DIÁRIA 2026 com 2 cores), o pai geralmente tem `estoque = 0` mesmo havendo variantes com estoque — e vice-versa: pode parecer disponível na lista mas todas as variantes estarem zeradas. Resultado: usuário clica num produto e descobre só na PDP que está indisponível.
-
-Precisamos calcular **estoque agregado** = max(estoque do pai, soma/max do estoque das variantes) e usar isso para:
-1. Mostrar badge "Fora de Estoque" no card.
-2. Filtrar via "Apenas em estoque" nos catálogos/busca.
-3. Ordenar (`sort_estoque`) corretamente.
-
-### Solução
-
-#### 1. Banco — coluna agregada `estoque_total`
-Adicionar coluna `estoque_total integer` em `products_cache`. Para cada produto:
-- Se **não tem variantes** (`is_variante = false` e `variantes IS NULL`): `estoque_total = COALESCE(estoque, 0)`.
-- Se é **pai com variantes**: `estoque_total = COALESCE(estoque, 0) + soma do estoque de todas as variantes filhas (is_variante = true AND produto_pai = pai.id)`.
-- Se é **variante**: `estoque_total = COALESCE(estoque, 0)` (continua individual; cards só mostram pais).
-
-#### 2. Recálculo automático
-- Atualizar `set_variantes_por_prefixo()` para recalcular `estoque_total` dos pais ao final do agrupamento (já roda na sync).
-- Adicionar trigger `BEFORE INSERT OR UPDATE OF estoque, produto_pai, is_variante` que recalcula `estoque_total` da linha + dispara update no pai se for variante.
-- Migration de backfill: rodar uma vez para preencher todos os registros existentes.
-
-#### 3. Atualizar `sort_estoque` para usar `estoque_total`
-Trigger `update_sort_estoque` passa a usar `estoque_total` em vez de `estoque`. Garante ordenação "em estoque primeiro" considerando variantes.
-
-#### 4. Atualizar RPCs de busca
-- `search_products_by_category` e `search_products_global`: trocar `COALESCE(pc.estoque, 0) > 0` por `COALESCE(pc.estoque_total, 0) > 0` no filtro `p_apenas_estoque`.
-
-#### 5. Frontend — `ProductCard.tsx`
-Hoje o card calcula `outOfStock` baseado em `estoque` + `variantes[].estoque` do JSONB. Trocar para usar `estoque_total` (vindo no payload já agregado), mantendo o fallback atual para compatibilidade caso a coluna não exista ainda em algum payload cacheado.
-
-```ts
-const outOfStock = (product.estoque_total ?? computeFromVariantes()) === 0;
-```
-
-#### 6. Catálogo B2B (`CatalogProductCard.tsx`)
-Mesma lógica — badge "Fora de Estoque" baseado em `estoque_total`.
+### Mudança
+Hoje `get_category_cost_distribution` filtra com `HAVING count(DISTINCT pc.id) > 0`, então faixas vazias somem da UI. Vou remover esse filtro: a RPC retornará sempre as 10 faixas fixas, com `total = 0` para as vazias.
 
 ### Arquivos
-- **Migration**: nova coluna `estoque_total`, função de recálculo, trigger, backfill, atualização de `set_variantes_por_prefixo` e `update_sort_estoque`.
-- **Migration**: atualizar `search_products_by_category` e `search_products_global` para usar `estoque_total` no filtro `p_apenas_estoque`.
-- **`src/components/ProductCard.tsx`**: usar `estoque_total` para badge.
-- **`src/components/catalog/CatalogProductCard.tsx`**: idem.
-- **`src/integrations/supabase/types.ts`**: regenerado.
 
-### Resultado esperado
-- "AGENDA DIÁRIA 2026" com 2 variantes zeradas mostra badge **"Fora de Estoque"** direto na lista — sem precisar clicar.
-- Filtro "Apenas em estoque" esconde produtos cujas variantes estão todas zeradas.
-- Ordenação por relevância empurra esses produtos pro fim (já são "sort_estoque = 1").
-- Edição manual de `estoque` ou nova sync recalcula automaticamente via trigger.
+**Migration** — recriar `get_category_cost_distribution(p_category_id uuid)`:
+- Remover o `HAVING count > 0`.
+- Retornar sempre as 10 bandas (`0,01–0,50` até `70,01+`) com seu `total` (pode ser 0).
+
+**`src/pages/admin/AdminPricing.tsx`**:
+- Header do card: trocar "X faixa(s)" por contagem de faixas com produtos (ex.: "29 produto(s) · 5/10 faixa(s) com estoque") para deixar claro que faixas vazias agora aparecem.
+- Sub-tabela: linhas com `total = 0` continuam editáveis normalmente (steppers + Aplicar habilitados). A coluna "Produtos" mostra `0` em cinza claro.
+- Botão `Aplicar` numa faixa vazia: salva os multiplicadores em `spotlight_categories.tabela_multiplicadores` (memória da config), mas o update em massa de `products_cache` não atinge nenhum produto — toast informa "Configuração salva. 0 produtos nessa faixa atualmente."
+- `Aplicar categoria inteira`: itera todas as 10 faixas, salvando a config completa; produtos só são atualizados nas faixas com itens.
+
+### Resultado
+- Categoria "Agendas" agora mostra todas as 10 faixas (0,01–0,50 até 70,01+), não só as 5 atuais.
+- Admin define multiplicador para a faixa 5,01–10,00 hoje; quando um produto novo entrar nessa faixa via sync (que copia config de categoria) ou edição manual, ele já nascerá precificado conforme.
+- Compatível com o formato JSONB existente (`[{min, max, tiers}]`).
 
