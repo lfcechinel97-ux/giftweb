@@ -167,6 +167,65 @@ export default function AdminPricing() {
     band?: BandDistribution;
     productCount: number;
   } | null>(null);
+  const [replicating, setReplicating] = useState(false);
+  const [confirmReplicate, setConfirmReplicate] = useState(false);
+
+  const replicateToAll = async () => {
+    setReplicating(true);
+    try {
+      const cats = categories ?? [];
+      const presetConfig = buildPresetBandConfig();
+      let totalCats = 0;
+      let totalProducts = 0;
+
+      for (const cat of cats) {
+        // 1. Salvar config completa (17 faixas) na categoria
+        const { error: catErr } = await supabase
+          .from("spotlight_categories")
+          .update({ tabela_multiplicadores: presetConfig as any })
+          .eq("id", cat.id);
+        if (catErr) throw catErr;
+        totalCats += 1;
+
+        // 2. Para cada faixa, atualizar tabela_precos dos produtos vinculados
+        for (const band of presetConfig) {
+          const { data: links } = await supabase
+            .from("product_spotlight_categories")
+            .select("product_id, products_cache!inner(id, preco_custo, ativo)")
+            .eq("category_id", cat.id)
+            .gte("products_cache.preco_custo", band.min)
+            .lte("products_cache.preco_custo", band.max)
+            .eq("products_cache.ativo", true);
+          const productIds = Array.from(
+            new Set((links ?? []).map((l: any) => l.product_id)),
+          );
+          const CHUNK = 200;
+          for (let i = 0; i < productIds.length; i += CHUNK) {
+            const slice = productIds.slice(i, i + CHUNK);
+            const { error: updErr } = await supabase
+              .from("products_cache")
+              .update({ tabela_precos: band.tiers as any })
+              .in("id", slice);
+            if (updErr) throw updErr;
+          }
+          totalProducts += productIds.length;
+        }
+      }
+
+      toast.success(
+        `Preset replicado em ${totalCats} categoria(s) · ${totalProducts} produto(s) atualizados`,
+      );
+      setEdits({}); // limpa cache local de edits para refletir novo padrão
+      qc.invalidateQueries({ queryKey: ["admin-pricing-categories-v2"] });
+      qc.invalidateQueries({ queryKey: ["admin-products"] });
+      qc.invalidateQueries({ queryKey: ["category-cost-distribution"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao replicar preset");
+    } finally {
+      setReplicating(false);
+      setConfirmReplicate(false);
+    }
+  };
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ["admin-pricing-categories-v2"],
