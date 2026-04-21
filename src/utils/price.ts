@@ -46,11 +46,18 @@ export const COST_BANDS: CostBand[] = [
   { bucket: '1,01–2,00', min: 1.01, max: 2.0 },
   { bucket: '2,01–5,00', min: 2.01, max: 5.0 },
   { bucket: '5,01–10,00', min: 5.01, max: 10.0 },
-  { bucket: '10,01–20,00', min: 10.01, max: 20.0 },
-  { bucket: '20,01–30,00', min: 20.01, max: 30.0 },
-  { bucket: '30,01–50,00', min: 30.01, max: 50.0 },
-  { bucket: '50,01–70,00', min: 50.01, max: 70.0 },
-  { bucket: '70,01+', min: 70.01, max: 999999 },
+  { bucket: '10,01–15,00', min: 10.01, max: 15.0 },
+  { bucket: '15,01–20,00', min: 15.01, max: 20.0 },
+  { bucket: '20,01–25,00', min: 20.01, max: 25.0 },
+  { bucket: '25,01–30,00', min: 25.01, max: 30.0 },
+  { bucket: '30,01–35,00', min: 30.01, max: 35.0 },
+  { bucket: '35,01–40,00', min: 35.01, max: 40.0 },
+  { bucket: '40,01–45,00', min: 40.01, max: 45.0 },
+  { bucket: '45,01–50,00', min: 45.01, max: 50.0 },
+  { bucket: '50,01–60,00', min: 50.01, max: 60.0 },
+  { bucket: '60,01–70,00', min: 60.01, max: 70.0 },
+  { bucket: '70,01–100,00', min: 70.01, max: 100.0 },
+  { bucket: '100,01+', min: 100.01, max: 999999 },
 ];
 
 /** Retorna a CostBand correspondente a um preço de custo (ou null). */
