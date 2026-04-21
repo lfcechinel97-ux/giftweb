@@ -269,7 +269,6 @@ export default function AdminPricing() {
             onApplyBand={(band, productCount) =>
               setConfirm({ cat, band, productCount })
             }
-            onApplyCategory={(productCount) => setConfirm({ cat, productCount })}
             savingKey={savingKey}
           />
         ))}
