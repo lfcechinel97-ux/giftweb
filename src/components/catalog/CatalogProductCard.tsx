@@ -162,6 +162,11 @@ const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
               transition: `opacity ${FADE_DURATION}ms ease`,
             }}
           />
+          {isOutOfStock && (
+            <span className="absolute top-2 left-2 bg-muted text-muted-foreground border border-border text-[10px] font-medium px-2 py-0.5 rounded pointer-events-none">
+              Fora de Estoque
+            </span>
+          )}
         </div>
       </Link>
 
