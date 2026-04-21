@@ -25,6 +25,7 @@ interface ProductCardProps {
   codigo_amigavel: string;
   variantes?: VariantJson[] | null;
   estoque?: number | null;
+  estoque_total?: number | null;
 }
 
 export const ProductCardSkeleton = () => (
@@ -42,7 +43,7 @@ const MAX_DOTS = 6;
 const CYCLE_INTERVAL = 1500; // 1.5s between image switches
 const FADE_DURATION = 200;   // ms for fade transition
 
-const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes, estoque }: ProductCardProps) => {
+const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes, estoque, estoque_total }: ProductCardProps) => {
   const navigate = useNavigate();
 
   // Build image list once — primary image + extra image_urls + variant images
@@ -117,7 +118,13 @@ const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codi
   const allColorOptions = hasVariants
     ? [{ slug: slug || codigo_amigavel, cor: cor || '', image: image_url || '', estoque: estoque ?? 0, codigo_amigavel }, ...variantes]
     : [];
-  const isOutOfStock = !hasVariants && (estoque === 0 || estoque === null);
+  // Use estoque_total when available (sums variants); fallback to legacy logic
+  const aggregatedStock = estoque_total ?? (
+    hasVariants
+      ? (estoque ?? 0) + variantes.reduce((sum, v) => sum + (v.estoque ?? 0), 0)
+      : (estoque ?? 0)
+  );
+  const isOutOfStock = aggregatedStock === 0;
 
   const displayImage = images.current[activeIdx] || image_url;
 

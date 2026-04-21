@@ -147,6 +147,7 @@ export type Database = {
           created_at: string | null
           descricao: string | null
           estoque: number | null
+          estoque_total: number | null
           featured_position: number | null
           has_image: boolean | null
           id: string
@@ -184,6 +185,7 @@ export type Database = {
           created_at?: string | null
           descricao?: string | null
           estoque?: number | null
+          estoque_total?: number | null
           featured_position?: number | null
           has_image?: boolean | null
           id?: string
@@ -221,6 +223,7 @@ export type Database = {
           created_at?: string | null
           descricao?: string | null
           estoque?: number | null
+          estoque_total?: number | null
           featured_position?: number | null
           has_image?: boolean | null
           id?: string
@@ -411,6 +414,7 @@ export type Database = {
           total: number
         }[]
       }
+      recalc_estoque_total: { Args: { p_id: string }; Returns: undefined }
       search_products_by_category:
         | {
             Args: {

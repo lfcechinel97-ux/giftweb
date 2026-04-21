@@ -39,7 +39,7 @@ export const CatalogProductCardSkeleton = () => (
 );
 
 const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
-  const { nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes: rawVariantes, estoque } = product;
+  const { nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes: rawVariantes, estoque, estoque_total } = product;
   const variantes = rawVariantes as unknown as VariantJson[] | null;
   const { addItem } = useQuotation();
 
@@ -115,6 +115,13 @@ const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
     ? [{ cor: cor || '', image: image_url || '' }, ...variantes.map(v => ({ cor: v.cor, image: v.image }))]
     : [];
 
+  const aggregatedStock = estoque_total ?? (
+    hasVariants
+      ? (estoque ?? 0) + variantes.reduce((sum, v) => sum + (v.estoque ?? 0), 0)
+      : (estoque ?? 0)
+  );
+  const isOutOfStock = aggregatedStock === 0;
+
   const displayImage = images.current[activeIdx] || image_url;
 
   const handleAdd = (e: React.MouseEvent) => {
@@ -155,6 +162,11 @@ const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
               transition: `opacity ${FADE_DURATION}ms ease`,
             }}
           />
+          {isOutOfStock && (
+            <span className="absolute top-2 left-2 bg-muted text-muted-foreground border border-border text-[10px] font-medium px-2 py-0.5 rounded pointer-events-none">
+              Fora de Estoque
+            </span>
+          )}
         </div>
       </Link>
 
