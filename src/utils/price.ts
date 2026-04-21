@@ -53,13 +53,98 @@ export function getCustomMultiplier(
   qty: number
 ): number | null {
   if (!Array.isArray(tabelaPrecos)) return null;
-  for (const row of tabelaPrecos) {
-    if (row?.qty === qty && typeof row.multiplicador === 'number') {
-      return row.multiplicador;
+  const toNum = (v: any): number | null => {
+    if (typeof v === 'number' && isFinite(v)) return v;
+    if (typeof v === 'string') {
+      const n = parseFloat(v.replace(',', '.'));
+      return isFinite(n) ? n : null;
     }
-    if (row?.quantidade === qty && typeof row.desconto === 'number') {
-      return getMarkup(precoCusto) * (1 - row.desconto);
+    return null;
+  };
+  for (const row of tabelaPrecos) {
+    if (!row || typeof row !== 'object') continue;
+    const rowQty = toNum(row.qty ?? row.quantidade);
+    if (rowQty !== qty) continue;
+    const mult = toNum(row.multiplicador);
+    if (mult != null && mult > 0) return mult;
+    const desc = toNum(row.desconto);
+    if (desc != null) {
+      const m = getMarkup(precoCusto) * (1 - desc);
+      if (m > 0) return m;
     }
   }
   return null;
+}
+
+/**
+ * Normaliza a tabela de preços do produto retornando rows válidas.
+ * Suporta formatos `{qty, multiplicador}` e `{quantidade, desconto}`,
+ * valores em string ou número, e descarta linhas inválidas.
+ * Se nada válido existir, retorna null para usar o fallback padrão.
+ */
+export interface PriceRow {
+  qty: number;
+  unit: number;
+  base: number;
+  desc: number;
+}
+
+export function getNormalizedPriceRows(
+  tabelaPrecos: any,
+  precoCusto: number
+): PriceRow[] | null {
+  if (!precoCusto || precoCusto <= 0) return null;
+  if (!Array.isArray(tabelaPrecos) || tabelaPrecos.length === 0) return null;
+  const markup = getMarkup(precoCusto);
+  const base = precoCusto * markup;
+  const rows: PriceRow[] = [];
+  for (const r of tabelaPrecos) {
+    if (!r || typeof r !== 'object') continue;
+    const qtyRaw = (r as any).qty ?? (r as any).quantidade;
+    const qty = typeof qtyRaw === 'number' ? qtyRaw : parseInt(String(qtyRaw), 10);
+    if (!qty || !isFinite(qty) || qty <= 0) continue;
+    const mult = getCustomMultiplier([r], precoCusto, qty);
+    if (mult == null || !isFinite(mult) || mult <= 0) continue;
+    const unit = precoCusto * mult;
+    if (!isFinite(unit) || unit <= 0) continue;
+    const desc = Math.max(0, 1 - mult / markup);
+    rows.push({ qty, unit, base, desc });
+  }
+  if (!rows.length) return null;
+  rows.sort((a, b) => a.qty - b.qty);
+  return rows;
+}
+
+/**
+ * Calcula o preço unitário para uma quantidade levando em conta a tabela
+ * customizada (se válida) ou caindo no cálculo padrão. Nunca retorna NaN.
+ */
+export function getEffectiveUnitPrice(
+  tabelaPrecos: any,
+  precoCusto: number,
+  qty: number
+): number {
+  if (!precoCusto || precoCusto <= 0) return 0;
+  const rows = getNormalizedPriceRows(tabelaPrecos, precoCusto);
+  if (rows && rows.length) {
+    // pega a maior faixa <= qty; se qty < menor faixa, usa a menor
+    let chosen = rows[0];
+    for (const r of rows) {
+      if (r.qty <= qty) chosen = r;
+    }
+    return chosen.unit;
+  }
+  return calcularPreco(precoCusto, qty);
+}
+
+/**
+ * Menor preço unitário disponível para um produto (usado em "A partir de").
+ */
+export function getEffectiveMinPrice(tabelaPrecos: any, precoCusto: number): number {
+  if (!precoCusto || precoCusto <= 0) return 0;
+  const rows = getNormalizedPriceRows(tabelaPrecos, precoCusto);
+  if (rows && rows.length) {
+    return Math.min(...rows.map(r => r.unit));
+  }
+  return getPrecoMinimo(precoCusto);
 }
