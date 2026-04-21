@@ -513,7 +513,7 @@ function CategoryCard({
                   size="sm"
                   variant="outline"
                   onClick={() => setLocalConfirmBands(bands)}
-                  disabled={savingCat || totalProducts === 0}
+                  disabled={savingCat}
                 >
                   <Save className="h-3.5 w-3.5 mr-1" />
                   Aplicar categoria inteira
