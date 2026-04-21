@@ -80,7 +80,7 @@ function buildPresetBandConfig(): BandConfig[] {
   const out: BandConfig[] = [];
   // Importação local para não criar dependência circular
   // (COST_BANDS já vem de price.ts via re-export abaixo)
-  for (const band of COST_BANDS_LOCAL) {
+  for (const band of COST_BANDS) {
     const row = PRESET_DEFAULT[band.bucket];
     if (!row) continue;
     const tiers: TierRow[] = TIERS.map((qty, i) => ({
