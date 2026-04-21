@@ -1,55 +1,55 @@
 
 
-## O que muda
+## Nova página: Precificação por Categoria
 
-### 1. Editor admin — preço de custo recalcula a tabela em tempo real
-Em `AdminProductEdit.tsx`, a coluna **Preço/un** já é calculada como `precoCustoUI × multiplicador`. Hoje, ao alterar o campo **Preço de custo** (modo Manual), o `precoCustoUI` atualiza, mas a tabela só re-renderiza visualmente — os multiplicadores não mudam (o que está correto). Vou garantir que:
+### Rota e menu
+- Nova rota admin: `/admin/precificacao` em `src/App.tsx`.
+- Novo item no sidebar do `AdminLayout.tsx`: **"Precificação"** (ícone `Calculator` ou `DollarSign`), entre **Categorias** e **Cat. Imagens**.
 
-- Ao digitar no campo **Preço de custo** (Manual ON), todas as células da coluna **Preço/un** atualizem instantaneamente (já depende de `precoCustoUI`, só preciso confirmar reatividade — sem cálculo extra).
-- Quando o usuário muda **só o multiplicador** de uma linha, o **Preço/un** daquela linha atualiza no ato (já é o caso).
-- Adicionar uma 4ª coluna **"Desconto vs. 20"** na tabela do admin, mostrando exatamente o mesmo % que vai aparecer na PDP, com 2 casas decimais. Isso dá feedback visual imediato pro admin: ele altera o multiplicador da faixa 50 e vê na hora "−2,63%".
+### Modelo de dados
+- Migration: adicionar coluna `tabela_multiplicadores jsonb` em `spotlight_categories`.
+  - Formato: `[{ qty: 20, multiplicador: 3.8 }, { qty: 50, multiplicador: 3.7 }, ...]` (mesmo formato já usado em `products_cache.tabela_precos`).
+  - Default `null` → significa "usar multiplicadores padrão do sistema" (markup × volume discount).
 
-### 2. PDP — % de desconto baseado no preço da linha de 20 (não no markup base)
-Hoje a coluna **Economia** da PDP calcula `desc = 1 - mult/markupBase` e mostra `Math.round(desc * 100)%`. Isso usa o **markup teórico**, não o preço real da primeira faixa. Resultado: se o admin colocar multiplicador 3,80 na faixa 20 e 3,70 na faixa 50, a tela mostra "−3%" arredondado, mesmo o usuário esperando "−2,63%".
+### UI da página `/admin/precificacao`
+- Tabela com uma linha por categoria ativa (busca em `spotlight_categories` ordenando por `category_type` depois `position`).
+- Colunas:
+  - **Categoria** (label + badge "Base"/"Marketing")
+  - **Produtos** (contagem via `product_spotlight_categories`)
+  - **Multiplicadores** — 7 inputs lado a lado: `20`, `50`, `100`, `200`, `300`, `500`, `1000+`
+  - **Ação** — botão **"Aplicar"** (verde) por linha
+- Cada input de multiplicador é um **stepper customizado**:
+  - Botão `−` à esquerda (decrementa 0,1)
+  - Input numérico central (digitar livremente, formato `2,50` aceitando vírgula ou ponto)
+  - Botão `+` à direita (incrementa 0,1)
+  - Mínimo 1.0, máximo 10.0, 2 casas decimais
+- Header da tabela tem um botão global **"Restaurar padrão"** que preenche todos com markup atual derivado das regras de `price.ts` (apenas visual, só salva ao clicar Aplicar).
+- Ao carregar: se a categoria já tem `tabela_multiplicadores`, mostra esses valores; senão mostra o cálculo padrão (markup base × (1 − desconto da faixa)) para a faixa de preço média da categoria como sugestão (read-only label "padrão"), ainda permitindo editar.
 
-Vou trocar a lógica em `getNormalizedPriceRows` (ou na renderização das duas PDPs) para:
+### Comportamento "Aplicar"
+Ao clicar **Aplicar** na linha de uma categoria:
+1. **Confirmação**: dialog com "Aplicar multiplicadores a X produtos da categoria 'Y'? Isso sobrescreve a tabela de preços individual de cada produto."
+2. Salva os multiplicadores em `spotlight_categories.tabela_multiplicadores` (memória de qual foi a última config aplicada).
+3. Atualiza em massa `products_cache.tabela_precos` para todos os produtos vinculados àquela categoria via `product_spotlight_categories` — gravando exatamente o array `[{qty, multiplicador}]` configurado.
+4. Toast verde: "X produtos atualizados".
+5. Invalida cache do React Query (`['admin-products']`, etc).
 
-```
-descPctVs20 = 1 - (unit_da_faixa / unit_da_faixa_20)
-```
+Importante: preserva o `preco_custo` de cada produto (não mexe). Como o front calcula `unit = preco_custo × multiplicador`, o preço final ajusta automaticamente, respeitando custos individuais.
 
-Onde **faixa 20** é a primeira linha (menor qty). E formatar com 2 casas decimais via `pt-BR` (ex.: `2,63%`).
+### Ações em lote
+- Topo da página: botão **"Aplicar a todas"** (faz a aplicação para todas as categorias ativas com seus multiplicadores atuais — útil para repricing geral).
 
-Ajustes em:
-- `src/utils/price.ts`: no `PriceRow`, manter `desc` (compat) e adicionar `descVsFirst` calculado relativo ao primeiro `unit`.
-- `src/pages/ProductDetail.tsx` (linha ~620): trocar `Math.round(row.desc * 100)%` por `row.descVsFirst.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})%`.
-- `src/pages/CatalogProductDetail.tsx` (linha ~596): mesma troca.
+### Arquivos
+- **Migration**: `spotlight_categories.tabela_multiplicadores jsonb`.
+- **`src/App.tsx`**: nova rota `precificacao`.
+- **`src/pages/admin/AdminLayout.tsx`**: novo item de menu.
+- **`src/pages/admin/AdminPricing.tsx`** (novo): página completa com a tabela.
+- **`src/components/admin/MultiplierStepper.tsx`** (novo): componente reutilizável `−` / input / `+`.
+- **`src/integrations/supabase/types.ts`**: regenerado com novo campo.
 
-### 3. Linha de 20 (Min) sem desconto
-A linha 20 (Min) continua mostrando "—" (já está). Garantir que o cálculo `descVsFirst` da própria linha 20 seja 0 (ou ignorar a renderização do badge quando idx === 0).
-
-### 4. Helper de formatação
-Adicionar utilitário em `src/utils/price.ts`:
-
-```ts
-export function formatPercent2(frac: number): string {
-  return (frac * 100).toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }) + '%';
-}
-```
-
-Usar nas duas PDPs e na nova coluna do admin.
-
-## Arquivos
-- `src/utils/price.ts` — novo `descVsFirst` em `PriceRow`, helper `formatPercent2`.
-- `src/pages/admin/AdminProductEdit.tsx` — nova coluna "Desconto vs. 20" na tabela.
-- `src/pages/ProductDetail.tsx` — usar `descVsFirst` + `formatPercent2`.
-- `src/pages/CatalogProductDetail.tsx` — mesmo.
-
-## Resultado
-- Admin altera **preço de custo** → toda a coluna "Preço/un" recalcula no ato.
-- Admin altera **multiplicador** de uma faixa → "Preço/un" e "Desconto vs. 20" daquela linha mudam no ato; mesmos números aparecem na PDP pública.
-- PDP mostra desconto real entre faixas com 2 casas decimais (ex.: "−2,63%" em vez de "−3%").
+### Resultado esperado
+- Admin abre `/admin/precificacao`, vê 32+ categorias com seus multiplicadores nas 7 faixas.
+- Clica `+` no multiplicador da faixa 100 da categoria "Copos e Canecas" → vai de 3,40 para 3,50.
+- Clica **Aplicar** → todos os ~120 produtos de copos têm `tabela_precos` atualizada e o preço da faixa 100 sobe ~3% no site instantaneamente.
+- Edição manual de produto continua funcionando e sobrescreve a configuração da categoria (último a salvar vence).
 
