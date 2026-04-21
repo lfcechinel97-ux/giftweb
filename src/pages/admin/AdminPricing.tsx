@@ -86,19 +86,6 @@ function normalizeTiers(rows: any[]): TierRow[] {
   return TIERS.map((qty) => ({ qty, multiplicador: map.get(qty) ?? 1 }));
 }
 
-/** Constrói o array a salvar a partir dos edits da categoria + bands ativas. */
-function buildSavePayload(
-  bandsActive: BandDistribution[],
-  edits: Record<string, TierRow[]>,
-  catId: string,
-): BandConfig[] {
-  return bandsActive.map((b) => ({
-    min: Number(b.min_val),
-    max: Number(b.max_val),
-    tiers: edits[`${catId}::${b.bucket}`] ?? defaultTiersForCost((Number(b.min_val) + Number(b.max_val)) / 2),
-  }));
-}
-
 export default function AdminPricing() {
   const qc = useQueryClient();
   // edits[`${catId}::${bucket}`] = TierRow[]
