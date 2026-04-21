@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { MultiplierStepper } from "@/components/admin/MultiplierStepper";
-import { VOLUME_TIERS, getMarkup, getDesconto, COST_BANDS, type CostBand } from "@/utils/price";
+import { VOLUME_TIERS, getMarkup, getDesconto, type CostBand } from "@/utils/price";
 
 type TierRow = { qty: number; multiplicador: number };
 type BandConfig = { min: number; max: number; tiers: TierRow[] };
