@@ -398,20 +398,31 @@ export default function AdminProductEdit() {
     const currentMain = imageMainRef.current;
     const currentImgs = imageUrlsRef.current;
 
+    // Resolve preço de custo (manual editado x mantém o da API)
+    let costToSave: number | null = null;
+    if (precoCustoManual) {
+      const c = parseFloat((precoCustoEdit || '0').replace(',', '.'));
+      if (!isNaN(c) && c >= 0) costToSave = c;
+    }
+
     // 1) Update product fields (visibility goes through the RPC below)
+    const updatePayload: Record<string, unknown> = {
+      nome: form.nome,
+      descricao: form.descricao,
+      categoria: form.categoria,
+      image_url: currentMain,
+      image_urls: currentImgs,
+      has_image: !!currentMain,
+      is_featured: form.is_featured,
+      featured_position: form.is_featured ? form.featured_position : null,
+      tabela_precos: tabelaPrecos ?? null,
+      preco_custo_manual: precoCustoManual,
+    };
+    if (costToSave !== null) updatePayload.preco_custo = costToSave;
+
     const { error } = await supabase
       .from('products_cache')
-      .update({
-        nome: form.nome,
-        descricao: form.descricao,
-        categoria: form.categoria,
-        image_url: currentMain,
-        image_urls: currentImgs,
-        has_image: !!currentMain,
-        is_featured: form.is_featured,
-        featured_position: form.is_featured ? form.featured_position : null,
-        tabela_precos: tabelaPrecos ?? null,
-      } as Record<string, unknown>)
+      .update(updatePayload)
       .eq('id', id!);
 
     // 2) Sync visibility to parent + variants
@@ -424,39 +435,85 @@ export default function AdminProductEdit() {
       if (vErr) visibilityError = vErr.message;
     }
 
+    // 3) Sincroniza categorias (principal + adicionais) em product_spotlight_categories
+    let catError: string | null = null;
+    if (!error && id) {
+      const desiredSlugs = new Set<string>([form.categoria, ...extraCategorySlugs].filter(Boolean));
+      const desiredIds = new Set<string>(
+        Array.from(desiredSlugs)
+          .map((s) => allCategories.find((c) => c.slug === s)?.id)
+          .filter(Boolean) as string[],
+      );
+      const currentIds = new Set<string>((extraCategoryRows as any[]).map((r) => r.category_id));
+
+      const toAdd = [...desiredIds].filter((cid) => !currentIds.has(cid));
+      const toRemove = [...currentIds].filter((cid) => !desiredIds.has(cid));
+
+      if (toAdd.length) {
+        const { error: addErr } = await supabase
+          .from('product_spotlight_categories')
+          .insert(toAdd.map((cid) => ({ product_id: id, category_id: cid, position: 0 })));
+        if (addErr) catError = addErr.message;
+      }
+      if (!catError && toRemove.length) {
+        const { error: rmErr } = await supabase
+          .from('product_spotlight_categories')
+          .delete()
+          .eq('product_id', id)
+          .in('category_id', toRemove);
+        if (rmErr) catError = rmErr.message;
+      }
+    }
+
     setSaving(false);
     if (error) {
       toast({ title: 'Erro ao salvar', description: error.message, variant: 'destructive' });
     } else if (visibilityError) {
       toast({ title: 'Erro ao atualizar visibilidade', description: visibilityError, variant: 'destructive' });
+    } else if (catError) {
+      toast({ title: 'Erro ao salvar categorias', description: catError, variant: 'destructive' });
     } else {
       setDirty(false);
       toast({ title: '✅ Produto atualizado com sucesso!' });
       initialized.current = false;
+      refetchExtraCats();
       queryClient.invalidateQueries({ queryKey: ['admin-product', id] });
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['homepage-data'] });
+      queryClient.invalidateQueries({ queryKey: ['catalog'] });
+      queryClient.invalidateQueries({ queryKey: ['search'] });
+      queryClient.invalidateQueries({ queryKey: ['category'] });
     }
   };
 
+  // Preço de custo efetivo usado na UI (edição manual sobrepõe o do produto)
+  const precoCustoUI = precoCustoManual
+    ? (parseFloat((precoCustoEdit || '0').replace(',', '.')) || 0)
+    : (product?.preco_custo ?? 0);
+
   // ── Tabela de preços helpers ──────────────────────────────────────────────
-  const activeTabelaRows = tabelaPrecos ?? DEFAULT_TABELA;
+  const defaultTabelaForCost: TabelaPrecoRow[] = buildDefaultTabela(precoCustoUI);
+  const activeTabelaRows = tabelaPrecos ?? defaultTabelaForCost;
   const isCustomTabela = tabelaPrecos !== null;
 
   const updateTabelaRow = (idx: number, field: keyof TabelaPrecoRow, value: number) => {
-    const updated = activeTabelaRows.map((r, i) => i === idx ? { ...r, [field]: value } : r);
+    const base = isCustomTabela ? activeTabelaRows : defaultTabelaForCost;
+    const updated = base.map((r, i) => i === idx ? { ...r, [field]: value } : r);
     setTabelaPrecos(updated);
     setDirty(true);
   };
 
   const addTabelaRow = () => {
-    const lastQty = activeTabelaRows[activeTabelaRows.length - 1]?.qty ?? 1000;
-    setTabelaPrecos([...activeTabelaRows, { qty: lastQty + 100, desconto: 0 }]);
+    const base = isCustomTabela ? activeTabelaRows : defaultTabelaForCost;
+    const lastQty = base[base.length - 1]?.qty ?? 1000;
+    const lastMult = base[base.length - 1]?.multiplicador ?? getMarkup(precoCustoUI);
+    setTabelaPrecos([...base, { qty: lastQty + 100, multiplicador: lastMult }]);
     setDirty(true);
   };
 
   const removeTabelaRow = (idx: number) => {
-    const updated = activeTabelaRows.filter((_, i) => i !== idx);
+    const base = isCustomTabela ? activeTabelaRows : defaultTabelaForCost;
+    const updated = base.filter((_, i) => i !== idx);
     setTabelaPrecos(updated.length > 0 ? updated : null);
     setDirty(true);
   };
@@ -471,7 +528,7 @@ export default function AdminProductEdit() {
 
   const variantes = parseVariantes(product.variantes);
   const selectedVariantRow = variantRows?.find(v => v.id === selectedVariantId);
-  const precoCusto = product.preco_custo ?? 0;
+  const precoCusto = precoCustoUI;
   const markup = precoCusto ? getMarkup(precoCusto) : 1;
 
   return (
