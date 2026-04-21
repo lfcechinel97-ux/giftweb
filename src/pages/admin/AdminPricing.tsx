@@ -370,6 +370,24 @@ export default function AdminPricing() {
             Preço final = <strong>preço de custo × multiplicador</strong>.
           </p>
         </div>
+        <Button
+          variant="outline"
+          onClick={() => setConfirmReplicate(true)}
+          disabled={replicating || !categories?.length}
+          className="border-primary/40 text-primary hover:bg-primary/5"
+        >
+          {replicating ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Replicando...
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4 mr-2" />
+              Replicar preset para todas as categorias
+            </>
+          )}
+        </Button>
       </div>
 
       <Input
