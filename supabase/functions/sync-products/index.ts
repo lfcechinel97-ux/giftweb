@@ -332,13 +332,38 @@ serve(async (req) => {
       console.log("[SYNC] Stage 3b OK - deleted", antigosParaDeletar.length, "old records");
     }
 
-    console.log("[SYNC] Stage 3c: Upserting...");
+    console.log("[SYNC] Stage 3c: Upserting (preserving manual price overrides)...");
+    // Fetch existing manual-price overrides so we don't overwrite them
+    const codigosManual = new Set<string>();
+    {
+      let off = 0;
+      const bs = 1000;
+      while (true) {
+        const { data: batch } = await supabaseClient
+          .from("products_cache")
+          .select("codigo_amigavel")
+          .eq("preco_custo_manual", true)
+          .range(off, off + bs - 1);
+        if (!batch || batch.length === 0) break;
+        for (const r of batch) codigosManual.add(r.codigo_amigavel);
+        if (batch.length < bs) break;
+        off += bs;
+      }
+    }
+
     for (let i = 0; i < registros.length; i += CHUNK_SIZE) {
-      const chunk = registros.slice(i, i + CHUNK_SIZE);
+      const chunk = registros.slice(i, i + CHUNK_SIZE).map((r) => {
+        if (codigosManual.has(r.codigo_amigavel)) {
+          // Keep admin-edited preco_custo
+          const { preco_custo: _ignored, ...rest } = r;
+          return rest;
+        }
+        return r;
+      });
       const { error } = await supabaseClient.from("products_cache").upsert(chunk, { onConflict: "codigo_amigavel" });
       if (error) throw new Error("Upsert falhou: " + JSON.stringify(error));
     }
-    console.log("[SYNC] Stage 3c OK");
+    console.log("[SYNC] Stage 3c OK - manual overrides preserved:", codigosManual.size);
 
     console.log("[SYNC] Stage 4: Setting produto_pai via SQL join...");
     const { error: rpcError } = await supabaseClient.rpc("set_variantes_por_prefixo");
