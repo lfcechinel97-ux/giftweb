@@ -206,11 +206,17 @@ const CatalogProductDetail = () => {
     if (!displayPrecoCusto) return [];
     const custom = getNormalizedPriceRows(product?.tabela_precos, displayPrecoCusto);
     if (custom && custom.length) return custom;
-    return QUANTITIES.map(q => ({
+    const fallback = QUANTITIES.map(q => ({
       qty: q,
       unit: calcularPreco(displayPrecoCusto, q),
       base: precoBase,
       desc: getDesconto(q),
+      descVsFirst: 0,
+    }));
+    const firstUnit = fallback[0]?.unit ?? 0;
+    return fallback.map(r => ({
+      ...r,
+      descVsFirst: firstUnit > 0 ? Math.max(0, 1 - r.unit / firstUnit) : 0,
     }));
   }, [displayPrecoCusto, precoBase, product?.tabela_precos]);
 
