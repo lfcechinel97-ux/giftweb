@@ -870,6 +870,21 @@ export default function AdminProductEdit() {
                             {formatarBRL(precoCusto * row.multiplicador)}
                           </td>
                         )}
+                        {precoCusto > 0 && (() => {
+                          const firstMult = activeTabelaRows[0]?.multiplicador ?? row.multiplicador;
+                          const frac = idx === 0 || firstMult <= 0 ? 0 : Math.max(0, 1 - row.multiplicador / firstMult);
+                          return (
+                            <td className="px-3 py-1.5 text-xs tabular-nums">
+                              {idx === 0 ? (
+                                <span className="text-muted-foreground">—</span>
+                              ) : frac > 0 ? (
+                                <span className="px-1.5 py-0.5 rounded-full text-[11px] font-semibold bg-green-cta/15 text-green-cta">-{formatPercent2(frac)}</span>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
+                          );
+                        })()}
                         <td className="px-2 py-1.5">
                           <button
                             type="button"
