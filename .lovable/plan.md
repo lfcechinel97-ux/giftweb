@@ -1,112 +1,69 @@
 
-## Problema real
 
-Há dois problemas separados:
+## Problemas
 
-1. **Preço ainda “buga” após editar no admin**
-   - A correção anterior tratou só a tabela “Compre com desconto”.
-   - Mas a PDP ainda usa o cálculo padrão em outros pontos (`precoMin`, `precoAtual`, total, mensagem do WhatsApp), ignorando a `tabela_precos` customizada.
-   - Resultado: parte da tela usa a tabela nova e outra parte usa a regra antiga, o que mantém inconsistência e pode continuar quebrando quando preço/multiplicador são alterados.
-
-2. **Ocultar no admin não some do site**
-   - Hoje o admin oculta só o **produto pai**.
-   - As **variantes** continuam com `is_hidden = false`.
-   - Além disso, `ProductDetail.tsx` e `CatalogProductDetail.tsx` buscam por `slug` sem filtrar `is_hidden`, então links diretos continuam abrindo o produto oculto.
+1. **PriceEditor da lista (`/admin/produtos`)** salva `tabela_precos`, mas o front da PDP ainda mostra preço errado/quebrado. No editor de produto detalhado (que abre no card) funciona porque ele usa `{qty, desconto}`, formato que TODA a leitura legacy entende. O PriceEditor inline salva `{qty, multiplicador}` — formato novo. O bug real: a lista usa `VOLUME_TIERS = [20,50,100,200,500,1000]` (faltam 300), enquanto o editor detalhado usa `[20,50,100,200,300,500,1000]`. Quando salva pela lista, a faixa 300 some — o que aparece no front como inconsistência grande de preço.
+2. **Editor detalhado** só permite editar **% desconto**, não multiplicador, e o preço de custo não é editável.
+3. **Categoria no editor detalhado** está vazia — a lista é hardcoded com 9 slugs antigos (`garrafas`, `copos`, `kits`...) que não batem com os 32 slugs reais (`garrafas-e-squeezes`, `copos-e-canecas`...). Quando o produto tem `categoria = 'copos-e-canecas'`, o Select não acha a opção e fica em branco.
+4. **Sem categorias múltiplas**: a coluna `categoria` é text único. A tabela `product_spotlight_categories` (M:N produto↔categoria) já existe e o front público já lê dela — só falta UI.
 
 ## Correção
 
-### 1. Centralizar toda a leitura de preço customizado
-Criar um helper único em `src/utils/price.ts` para normalizar a tabela de preços e calcular:
+### 1. Unificar PriceEditor (lista) com o editor detalhado
+- `src/utils/price.ts`: mudar `VOLUME_TIERS` para `[20, 50, 100, 200, 300, 500, 1000]` (inclui 300).
+- Resultado: salvar pela lista vai gerar a mesma estrutura que o editor detalhado, e a tabela "Compre com desconto" da PDP fica idêntica.
 
-- linhas da tabela por quantidade
-- menor preço real (“A partir de”)
-- preço unitário da quantidade selecionada
-- total do pedido
-- fallback para a regra padrão quando não houver tabela customizada válida
+### 2. Editor detalhado: preço de custo + multiplicadores + toggle API/manual
+Em `AdminProductEdit.tsx`:
+- Adicionar **toggle "Puxar preço de custo da API XBZ"** (default ON).
+  - ON → campo `preco_custo` é readonly, mostra valor da API.
+  - OFF → campo editável, salva no banco; sync futura **não sobrescreve** (ver passo 4).
+- Trocar coluna **"Desconto %"** por **"Multiplicador (×)"** na tabela "Compre com desconto":
+  - Input numérico tipo `2.50`.
+  - Coluna "Preço/un" recalcula = `preco_custo × multiplicador`.
+  - No save, gravar formato `{qty, multiplicador}` (mesmo do PriceEditor da lista).
+  - Ao carregar produto existente: converter `{qty, desconto}` legado para multiplicador via `markup × (1 - desconto)` para mostrar na UI.
 
-Esse helper vai:
-- aceitar ambos os formatos:
-  - `[{ qty, multiplicador }]`
-  - `[{ quantidade, desconto }]`
-- aceitar valores numéricos ou string
-- ignorar linhas inválidas
-- nunca retornar `NaN`
+### 3. Categoria: usar lista real + categorias múltiplas
+Em `AdminProductEdit.tsx`:
+- Trocar a constante `CATEGORIES` hardcoded por **fetch das `spotlight_categories` ativas** (mesma fonte que a lista do `/admin/produtos` já usa).
+- O `Select` da **categoria principal** vai mostrar o slug atual corretamente (ex: "Copos e Canecas").
+- Adicionar um bloco **"Categorias adicionais"** abaixo do select principal:
+  - Lista de chips/badges das categorias extras já vinculadas (lendo de `product_spotlight_categories`).
+  - Botão `+ Adicionar categoria` que abre um Select com as demais categorias disponíveis.
+  - Botão `×` em cada chip para remover.
+  - No `Salvar`, sincronizar `product_spotlight_categories`:
+    - Inserir vínculos novos.
+    - Remover vínculos que foram tirados.
+    - Garantir que a `categoria` principal também esteja vinculada.
+- Resultado: um copo térmico pode estar em "Copos e Canecas" (principal) + "Garrafas e Squeezes" + "Eventos" simultaneamente, e aparece em todas as páginas.
 
-### 2. Usar esse helper em todas as saídas da PDP
-Atualizar **as duas páginas**:
-- `src/pages/ProductDetail.tsx`
-- `src/pages/CatalogProductDetail.tsx`
+### 4. Proteger preço manual da próxima sync
+- Nova coluna em `products_cache`: `preco_custo_manual boolean default false`.
+- Quando o admin desliga "Puxar da API" e edita o preço: setar `preco_custo_manual = true`.
+- Em `supabase/functions/sync-products/index.ts`: no upsert, **pular `preco_custo`** quando `preco_custo_manual = true` (mantém o valor do admin).
 
-Trocar estes cálculos isolados:
-- `precoMin`
-- `precoAtual`
-- `tableRows`
-- total (`precoAtual * qty`)
-- preço enviado no WhatsApp do catálogo
-
-Por uma única fonte de verdade baseada no helper novo.
-
-Assim, quando o admin altera preço de custo + multiplicadores, todos os blocos da tela passam a refletir exatamente o mesmo cálculo.
-
-### 3. Corrigir ocultação para pai + variantes
-Hoje o admin lista só produtos pai, mas o hide/show precisa afetar o grupo inteiro.
-
-Vou implementar uma função de backend para admin, algo como:
-- `admin_set_product_visibility(p_product_id, p_hidden boolean)`
-
-Ela vai:
-- identificar o pai correto
-- atualizar o próprio pai
-- atualizar todas as variantes ligadas por `produto_pai`
-
-Depois trocar o admin para usar essa função em:
-- `src/pages/admin/AdminProducts.tsx` (ocultar individual e em massa)
-- `src/pages/admin/AdminProductEdit.tsx` (salvar `is_hidden` no editor completo)
-
-### 4. Bloquear acesso a produto oculto nas páginas públicas
-Mesmo com o update em lote, a PDP precisa ser defensiva.
-
-Em:
-- `src/pages/ProductDetail.tsx`
-- `src/pages/CatalogProductDetail.tsx`
-
-ajustar a busca inicial para:
-- não abrir produto com `is_hidden = true`
-- se o slug for de variante, carregar o pai e verificar se o pai está oculto
-- se estiver oculto, redirecionar (`/404` no site principal e `/catalogo` no catálogo)
-
-### 5. Manter o site sincronizado visualmente
-No admin, além do update no backend:
-- manter update otimista na lista
-- invalidar também as chaves públicas relevantes após salvar/ocultar:
-  - `homepage-data`
-  - listas do catálogo
-  - listas de busca
-- ajustar o texto do toast para não sugerir atraso quando o dado já estiver sendo persistido corretamente
+### 5. Visibilidade da lista admin (rápido)
+A coluna **Categoria** na lista (`/admin/produtos`) hoje mostra o slug bruto. Mostrar o `label` da categoria (mapear pelo `categories` já buscado).
 
 ## Arquivos
 
 ### Backend
-- nova migration com `admin_set_product_visibility(...)`
+- Migration: adicionar `preco_custo_manual boolean default false` em `products_cache`.
 
 ### Frontend
-- `src/utils/price.ts`
-- `src/pages/ProductDetail.tsx`
-- `src/pages/CatalogProductDetail.tsx`
-- `src/pages/admin/AdminProducts.tsx`
-- `src/pages/admin/AdminProductEdit.tsx`
+- `src/utils/price.ts` — adicionar `300` em `VOLUME_TIERS`.
+- `src/pages/admin/AdminProductEdit.tsx` — toggle preço de custo, tabela com multiplicador, fetch de categorias, UI de categorias múltiplas.
+- `src/pages/admin/AdminProducts.tsx` — exibir label da categoria em vez do slug.
+
+### Edge Function
+- `supabase/functions/sync-products/index.ts` — preservar `preco_custo` quando `preco_custo_manual = true`.
 
 ## Resultado esperado
 
-- Alterar **preço de custo** e **multiplicadores** no admin deixa:
-  - “A partir de”
-  - tabela “Compre com desconto”
-  - preço por quantidade
-  - total
-  - mensagem do WhatsApp
-  todos coerentes e sem `R$ NaN`.
+- Editar preço pela **lista** ou pelo **editor detalhado** produz exatamente o mesmo efeito no site.
+- Editor detalhado mostra preço de custo (com toggle API/manual) + multiplicadores ao lado de cada faixa, com preço final calculado em tempo real.
+- Categoria do produto aparece preenchida ao abrir o editor; alterar reflete imediatamente no site.
+- Possível vincular o mesmo produto a várias categorias (chips com `+` e `×`).
+- Próxima sync da API não sobrescreve preços editados manualmente.
 
-- Ocultar no admin passa a ocultar:
-  - o produto pai
-  - todas as variantes
-  - links diretos da PDP também deixam de abrir o item oculto.
