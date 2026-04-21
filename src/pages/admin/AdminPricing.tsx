@@ -210,9 +210,15 @@ export default function AdminPricing() {
         }
       }
 
-      toast.success(
-        `${productIds.length} produto(s) da faixa ${band.bucket} de "${cat.label}" atualizados`,
-      );
+      if (productIds.length > 0) {
+        toast.success(
+          `${productIds.length} produto(s) da faixa ${band.bucket} de "${cat.label}" atualizados`,
+        );
+      } else {
+        toast.success(
+          `Configuração salva para a faixa ${band.bucket}. 0 produtos nessa faixa atualmente — novos itens nessa faixa nascerão precificados.`,
+        );
+      }
       qc.invalidateQueries({ queryKey: ["admin-products"] });
       qc.invalidateQueries({ queryKey: ["admin-pricing-categories-v2"] });
     } catch (e: any) {
@@ -406,7 +412,7 @@ function CategoryCard({
         </div>
         <div className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
           {cat.product_count} produto(s)
-          {expanded && bands && ` · ${bands.length} faixa(s)`}
+          {expanded && bands && ` · ${bands.filter((b) => b.total > 0).length}/${bands.length} faixa(s) com produtos`}
         </div>
       </button>
 
@@ -420,7 +426,7 @@ function CategoryCard({
           )}
           {!loadingBands && (!bands || bands.length === 0) && (
             <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-              Nenhum produto ativo com preço de custo definido.
+              Não foi possível carregar as faixas de preço.
             </div>
           )}
           {!loadingBands && bands && bands.length > 0 && (
@@ -457,7 +463,7 @@ function CategoryCard({
                           <td className="px-3 py-2 font-medium tabular-nums">
                             {band.bucket}
                           </td>
-                          <td className="px-2 py-2 text-center text-muted-foreground tabular-nums">
+                          <td className={`px-2 py-2 text-center tabular-nums ${band.total === 0 ? "text-muted-foreground/40" : "text-muted-foreground"}`}>
                             {band.total}
                           </td>
                           {TIERS.map((q) => {
@@ -484,8 +490,9 @@ function CategoryCard({
                               <Button
                                 size="sm"
                                 className="bg-green-600 hover:bg-green-700 text-white h-8"
-                                disabled={savingKey === key || band.total === 0}
+                                disabled={savingKey === key}
                                 onClick={() => onApplyBand(band, band.total)}
+                                title={band.total === 0 ? "Salva a configuração para futuros produtos" : undefined}
                               >
                                 {savingKey === key ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -506,7 +513,7 @@ function CategoryCard({
                   size="sm"
                   variant="outline"
                   onClick={() => setLocalConfirmBands(bands)}
-                  disabled={savingCat || totalProducts === 0}
+                  disabled={savingCat}
                 >
                   <Save className="h-3.5 w-3.5 mr-1" />
                   Aplicar categoria inteira
