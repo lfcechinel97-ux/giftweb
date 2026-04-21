@@ -616,8 +616,8 @@ const ProductDetail = () => {
                                 <span className="text-foreground font-medium">{formatarBRL(row.unit)}</span>
                               </td>
                               <td className="px-3 py-2 whitespace-nowrap">
-                                {row.desc > 0 ? (
-                                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-cta/15 text-green-cta">-{Math.round(row.desc * 100)}%</span>
+                                {i > 0 && row.descVsFirst > 0 ? (
+                                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-cta/15 text-green-cta">-{formatPercent2(row.descVsFirst)}</span>
                                 ) : <span className="text-muted-foreground">—</span>}
                               </td>
                             </tr>

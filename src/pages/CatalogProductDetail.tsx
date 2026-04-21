@@ -592,8 +592,8 @@ const CatalogProductDetail = () => {
                                 <span className="text-[#0F172A] font-medium">{formatarBRL(row.unit)}</span>
                               </td>
                               <td className="px-3 py-2 whitespace-nowrap">
-                                {row.desc > 0 ? (
-                                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#22C55E]/15 text-[#22C55E]">-{Math.round(row.desc * 100)}%</span>
+                                {i > 0 && row.descVsFirst > 0 ? (
+                                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#22C55E]/15 text-[#22C55E]">-{formatPercent2(row.descVsFirst)}</span>
                                 ) : <span className="text-[#94A3B8]">—</span>}
                               </td>
                             </tr>
