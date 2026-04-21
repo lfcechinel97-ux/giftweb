@@ -115,6 +115,13 @@ const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
     ? [{ cor: cor || '', image: image_url || '' }, ...variantes.map(v => ({ cor: v.cor, image: v.image }))]
     : [];
 
+  const aggregatedStock = estoque_total ?? (
+    hasVariants
+      ? (estoque ?? 0) + variantes.reduce((sum, v) => sum + (v.estoque ?? 0), 0)
+      : (estoque ?? 0)
+  );
+  const isOutOfStock = aggregatedStock === 0;
+
   const displayImage = images.current[activeIdx] || image_url;
 
   const handleAdd = (e: React.MouseEvent) => {
