@@ -39,7 +39,7 @@ export const CatalogProductCardSkeleton = () => (
 );
 
 const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
-  const { nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes: rawVariantes, estoque } = product;
+  const { nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes: rawVariantes, estoque, estoque_total } = product;
   const variantes = rawVariantes as unknown as VariantJson[] | null;
   const { addItem } = useQuotation();
 
