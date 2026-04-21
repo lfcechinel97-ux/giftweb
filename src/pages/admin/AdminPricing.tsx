@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Save, RotateCcw, Layers, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, Save, RotateCcw, Layers, ChevronDown, ChevronRight, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { MultiplierStepper } from "@/components/admin/MultiplierStepper";
-import { VOLUME_TIERS, getMarkup, getDesconto, type CostBand } from "@/utils/price";
+import { VOLUME_TIERS, getMarkup, getDesconto, COST_BANDS, type CostBand } from "@/utils/price";
 
 type TierRow = { qty: number; multiplicador: number };
 type BandConfig = { min: number; max: number; tiers: TierRow[] };
@@ -44,6 +44,53 @@ interface BandDistribution {
 }
 
 const TIERS = VOLUME_TIERS as readonly number[];
+
+/**
+ * Preset padrão de multiplicadores por faixa de custo × volume.
+ * Valores extraídos da configuração base validada (imagem de referência).
+ * Cada linha = uma das 17 faixas de COST_BANDS, na mesma ordem.
+ * Cada coluna = um dos 7 volumes em VOLUME_TIERS [20, 50, 100, 200, 300, 500, 1000].
+ *
+ * Estes números NÃO ficam fixos no banco — são apenas o ponto de partida
+ * quando o admin clica em "Replicar para todas as categorias". Cada categoria
+ * pode ser editada livremente depois (faixa por faixa ou inteira).
+ */
+const PRESET_DEFAULT: Record<string, number[]> = {
+  "0,01–0,50":   [6.00, 6.00, 5.76, 5.58, 5.46, 5.28, 5.04],
+  "0,51–1,00":   [6.00, 6.00, 5.76, 5.58, 5.46, 5.28, 5.04],
+  "1,01–2,00":   [4.80, 4.80, 4.61, 4.37, 4.37, 4.22, 4.03],
+  "2,01–5,00":   [3.50, 3.00, 2.90, 2.80, 2.70, 2.60, 2.50],
+  "5,01–10,00":  [3.80, 3.70, 3.20, 3.00, 2.80, 2.60, 2.40],
+  "10,01–15,00": [2.80, 2.60, 2.50, 2.35, 2.05, 2.00, 1.80],
+  "15,01–20,00": [2.60, 2.50, 2.40, 2.25, 2.10, 1.95, 1.80],
+  "20,01–25,00": [2.40, 2.35, 2.30, 2.15, 2.00, 1.85, 1.70],
+  "25,01–30,00": [2.30, 2.25, 2.20, 2.05, 1.90, 1.75, 1.60],
+  "30,01–35,00": [2.25, 2.20, 2.15, 2.00, 1.85, 1.70, 1.55],
+  "35,01–40,00": [2.30, 2.15, 2.10, 1.95, 1.80, 1.65, 1.50],
+  "40,01–45,00": [2.15, 2.10, 2.05, 1.90, 1.75, 1.60, 1.45],
+  "45,01–50,00": [2.10, 2.05, 2.00, 1.85, 1.70, 1.55, 1.40],
+  "50,01–60,00": [2.05, 2.00, 1.95, 1.80, 1.65, 1.50, 1.35],
+  "60,01–70,00": [2.00, 1.95, 1.90, 1.75, 1.60, 1.45, 1.30],
+  "70,01–100,00":[1.95, 1.90, 1.85, 1.70, 1.55, 1.40, 1.25],
+  "100,01+":     [1.90, 1.85, 1.80, 1.65, 1.50, 1.35, 1.20],
+};
+
+/** Converte o preset (linha por bucket) em BandConfig[] usando COST_BANDS canônicas. */
+function buildPresetBandConfig(): BandConfig[] {
+  const out: BandConfig[] = [];
+  // Importação local para não criar dependência circular
+  // (COST_BANDS já vem de price.ts via re-export abaixo)
+  for (const band of COST_BANDS) {
+    const row = PRESET_DEFAULT[band.bucket];
+    if (!row) continue;
+    const tiers: TierRow[] = TIERS.map((qty, i) => ({
+      qty,
+      multiplicador: row[i] ?? 1,
+    }));
+    out.push({ min: band.min, max: band.max, tiers });
+  }
+  return out;
+}
 
 /**
  * Faixa 70,01+ não tem teto natural. Usamos um teto virtual fixo só para
@@ -120,6 +167,65 @@ export default function AdminPricing() {
     band?: BandDistribution;
     productCount: number;
   } | null>(null);
+  const [replicating, setReplicating] = useState(false);
+  const [confirmReplicate, setConfirmReplicate] = useState(false);
+
+  const replicateToAll = async () => {
+    setReplicating(true);
+    try {
+      const cats = categories ?? [];
+      const presetConfig = buildPresetBandConfig();
+      let totalCats = 0;
+      let totalProducts = 0;
+
+      for (const cat of cats) {
+        // 1. Salvar config completa (17 faixas) na categoria
+        const { error: catErr } = await supabase
+          .from("spotlight_categories")
+          .update({ tabela_multiplicadores: presetConfig as any })
+          .eq("id", cat.id);
+        if (catErr) throw catErr;
+        totalCats += 1;
+
+        // 2. Para cada faixa, atualizar tabela_precos dos produtos vinculados
+        for (const band of presetConfig) {
+          const { data: links } = await supabase
+            .from("product_spotlight_categories")
+            .select("product_id, products_cache!inner(id, preco_custo, ativo)")
+            .eq("category_id", cat.id)
+            .gte("products_cache.preco_custo", band.min)
+            .lte("products_cache.preco_custo", band.max)
+            .eq("products_cache.ativo", true);
+          const productIds = Array.from(
+            new Set((links ?? []).map((l: any) => l.product_id)),
+          );
+          const CHUNK = 200;
+          for (let i = 0; i < productIds.length; i += CHUNK) {
+            const slice = productIds.slice(i, i + CHUNK);
+            const { error: updErr } = await supabase
+              .from("products_cache")
+              .update({ tabela_precos: band.tiers as any })
+              .in("id", slice);
+            if (updErr) throw updErr;
+          }
+          totalProducts += productIds.length;
+        }
+      }
+
+      toast.success(
+        `Preset replicado em ${totalCats} categoria(s) · ${totalProducts} produto(s) atualizados`,
+      );
+      setEdits({}); // limpa cache local de edits para refletir novo padrão
+      qc.invalidateQueries({ queryKey: ["admin-pricing-categories-v2"] });
+      qc.invalidateQueries({ queryKey: ["admin-products"] });
+      qc.invalidateQueries({ queryKey: ["category-cost-distribution"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao replicar preset");
+    } finally {
+      setReplicating(false);
+      setConfirmReplicate(false);
+    }
+  };
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ["admin-pricing-categories-v2"],
@@ -264,6 +370,24 @@ export default function AdminPricing() {
             Preço final = <strong>preço de custo × multiplicador</strong>.
           </p>
         </div>
+        <Button
+          variant="outline"
+          onClick={() => setConfirmReplicate(true)}
+          disabled={replicating || !categories?.length}
+          className="border-primary/40 text-primary hover:bg-primary/5"
+        >
+          {replicating ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Replicando...
+            </>
+          ) : (
+            <>
+              <Copy className="h-4 w-4 mr-2" />
+              Replicar preset para todas as categorias
+            </>
+          )}
+        </Button>
       </div>
 
       <Input
@@ -332,6 +456,37 @@ export default function AdminPricing() {
               className="bg-green-600 hover:bg-green-700"
             >
               Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmReplicate} onOpenChange={(o) => !o && setConfirmReplicate(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replicar preset para todas as categorias?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso vai aplicar os multiplicadores padrão (17 faixas × 7 volumes) em{" "}
+              <strong>{categories?.length ?? 0} categoria(s)</strong> ativas e atualizar a
+              tabela de preços de todos os produtos vinculados. Os preços de custo são
+              preservados. Você pode editar cada categoria livremente depois.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={replicating}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={replicating}
+              onClick={replicateToAll}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {replicating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Replicando...
+                </>
+              ) : (
+                "Confirmar replicação"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
