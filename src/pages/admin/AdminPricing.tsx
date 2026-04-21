@@ -426,7 +426,7 @@ function CategoryCard({
           )}
           {!loadingBands && (!bands || bands.length === 0) && (
             <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-              Nenhum produto ativo com preço de custo definido.
+              Não foi possível carregar as faixas de preço.
             </div>
           )}
           {!loadingBands && bands && bands.length > 0 && (
