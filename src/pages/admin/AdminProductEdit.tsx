@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Save, Upload, GripVertical, X, Plus, ImageOff, Images, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { formatarBRL, getMarkup, VOLUME_TIERS, getMultiplierForQty } from '@/utils/price';
+import { formatarBRL, getMarkup, VOLUME_TIERS, getMultiplierForQty, formatPercent2 } from '@/utils/price';
 import { getCorHex } from '@/utils/colorHex';
 import type { Json } from '@/integrations/supabase/types';
 import { toast as sonnerToast } from 'sonner';
