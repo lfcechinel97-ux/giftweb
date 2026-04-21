@@ -278,7 +278,9 @@ export default function AdminProducts() {
                 </div>
 
                 {/* Category */}
-                <span className="text-sm text-muted-foreground capitalize hidden md:inline">{p.categoria}</span>
+                <span className="text-sm text-muted-foreground hidden md:inline">
+                  {categories.find(c => c.slug === p.categoria)?.label ?? p.categoria ?? '—'}
+                </span>
 
                 {/* Price */}
                 <span className="text-sm text-foreground md:text-right font-medium">

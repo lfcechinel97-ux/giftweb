@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Save, Upload, GripVertical, X, Plus, ImageOff, Images, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { formatarBRL, calcularPreco, getMarkup } from '@/utils/price';
+import { formatarBRL, getMarkup, VOLUME_TIERS, getMultiplierForQty } from '@/utils/price';
 import { getCorHex } from '@/utils/colorHex';
 import type { Json } from '@/integrations/supabase/types';
 import { toast as sonnerToast } from 'sonner';
@@ -24,9 +24,10 @@ interface Variante {
   codigo_amigavel?: string;
 }
 
+// Linha da tabela de preços armazenada como {qty, multiplicador} (formato novo).
 interface TabelaPrecoRow {
   qty: number;
-  desconto: number;
+  multiplicador: number;
 }
 
 function parseVariantes(v: Json | null): Variante[] {
@@ -34,20 +35,14 @@ function parseVariantes(v: Json | null): Variante[] {
   return v as unknown as Variante[];
 }
 
-const CATEGORIES = [
-  'garrafas', 'copos', 'mochilas', 'bolsas', 'escritorio', 'kits',
-  'squeezes', 'brindes-baratos', 'outros',
-];
+interface CategoryOption { id: string; slug: string; label: string }
 
-const DEFAULT_TABELA: TabelaPrecoRow[] = [
-  { qty: 20,   desconto: 0 },
-  { qty: 50,   desconto: 0 },
-  { qty: 100,  desconto: 0.04 },
-  { qty: 200,  desconto: 0.07 },
-  { qty: 300,  desconto: 0.09 },
-  { qty: 500,  desconto: 0.12 },
-  { qty: 1000, desconto: 0.16 },
-];
+function buildDefaultTabela(precoCusto: number): TabelaPrecoRow[] {
+  return VOLUME_TIERS.map((qty) => ({
+    qty,
+    multiplicador: getMultiplierForQty(precoCusto || 0, qty),
+  }));
+}
 
 // ─── Image gallery manager ────────────────────────────────────────────────────
 function ImageGallery({
@@ -231,6 +226,34 @@ export default function AdminProductEdit() {
     enabled: !!codigoPrefixo,
   });
 
+  // Lista real de categorias (vinda do banco) — substitui a hardcoded
+  const { data: allCategories = [] } = useQuery({
+    queryKey: ['admin-edit-categories'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('spotlight_categories')
+        .select('id, slug, label, position')
+        .eq('active', true)
+        .order('label', { ascending: true });
+      return (data ?? []) as CategoryOption[];
+    },
+    staleTime: 600_000,
+  });
+
+  // Categorias adicionais ligadas a este produto (M:N)
+  const { data: extraCategoryRows = [], refetch: refetchExtraCats } = useQuery({
+    queryKey: ['admin-product-categories', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase
+        .from('product_spotlight_categories')
+        .select('id, category_id')
+        .eq('product_id', id);
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
   const [form, setForm] = useState({
     nome: '',
     descricao: '',
@@ -240,11 +263,19 @@ export default function AdminProductEdit() {
     featured_position: 1,
   });
 
-  // tabela_precos: null = use global default; array = custom
+  // Categorias adicionais (slugs) — sem incluir a principal
+  const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>([]);
+  const [addingCategory, setAddingCategory] = useState(false);
+
+  // Preço de custo: manual on/off + valor editável
+  const [precoCustoManual, setPrecoCustoManual] = useState<boolean>(false);
+  const [precoCustoEdit, setPrecoCustoEdit] = useState<string>('0');
+
+  // tabela_precos: null = use global default; array = custom (formato {qty, multiplicador})
   const [tabelaPrecos, setTabelaPrecos] = useState<TabelaPrecoRow[] | null>(null);
 
   // Base product images
-  const [imageMain, setImageMain] = useState<string | null>(null);
+  const [, setImageMain] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const imageMainRef = useRef<string | null>(null);
   const imageUrlsRef = useRef<string[]>([]);
@@ -278,15 +309,44 @@ export default function AdminProductEdit() {
       imageMainRef.current = product.image_url ?? null;
       imageUrlsRef.current = finalImgs;
 
-      // Load custom price table if exists
+      // Preço de custo (manual ou da API)
+      const pManual = (product as any).preco_custo_manual === true;
+      setPrecoCustoManual(pManual);
+      setPrecoCustoEdit(String(product.preco_custo ?? 0));
+
+      // Carrega tabela personalizada (suporta formatos antigo {desconto} e novo {multiplicador})
       const tp = product.tabela_precos;
+      const cost = product.preco_custo ?? 0;
       if (Array.isArray(tp) && tp.length > 0) {
-        setTabelaPrecos(tp as unknown as TabelaPrecoRow[]);
+        const markupBase = getMarkup(cost || 1);
+        const normalized: TabelaPrecoRow[] = (tp as any[]).map((r) => {
+          const qty = Number(r.qty ?? r.quantidade) || 0;
+          let mult: number | null = null;
+          if (r.multiplicador != null) {
+            const m = typeof r.multiplicador === 'number' ? r.multiplicador : parseFloat(String(r.multiplicador).replace(',', '.'));
+            if (isFinite(m) && m > 0) mult = m;
+          }
+          if (mult == null && r.desconto != null) {
+            const d = typeof r.desconto === 'number' ? r.desconto : parseFloat(String(r.desconto).replace(',', '.'));
+            if (isFinite(d)) mult = markupBase * (1 - d);
+          }
+          return { qty, multiplicador: mult ?? markupBase };
+        }).filter((r) => r.qty > 0);
+        setTabelaPrecos(normalized.length ? normalized : null);
       } else {
         setTabelaPrecos(null);
       }
     }
   }, [product]);
+
+  // Sincroniza categorias adicionais quando os dados chegam
+  useEffect(() => {
+    if (!extraCategoryRows || !allCategories.length) return;
+    const slugs = extraCategoryRows
+      .map((r: any) => allCategories.find((c) => c.id === r.category_id)?.slug)
+      .filter(Boolean) as string[];
+    setExtraCategorySlugs(slugs);
+  }, [extraCategoryRows, allCategories]);
 
   // When a variant is selected, populate its images
   useEffect(() => {
@@ -338,20 +398,31 @@ export default function AdminProductEdit() {
     const currentMain = imageMainRef.current;
     const currentImgs = imageUrlsRef.current;
 
+    // Resolve preço de custo (manual editado x mantém o da API)
+    let costToSave: number | null = null;
+    if (precoCustoManual) {
+      const c = parseFloat((precoCustoEdit || '0').replace(',', '.'));
+      if (!isNaN(c) && c >= 0) costToSave = c;
+    }
+
     // 1) Update product fields (visibility goes through the RPC below)
+    const updatePayload: Record<string, unknown> = {
+      nome: form.nome,
+      descricao: form.descricao,
+      categoria: form.categoria,
+      image_url: currentMain,
+      image_urls: currentImgs,
+      has_image: !!currentMain,
+      is_featured: form.is_featured,
+      featured_position: form.is_featured ? form.featured_position : null,
+      tabela_precos: tabelaPrecos ?? null,
+      preco_custo_manual: precoCustoManual,
+    };
+    if (costToSave !== null) updatePayload.preco_custo = costToSave;
+
     const { error } = await supabase
       .from('products_cache')
-      .update({
-        nome: form.nome,
-        descricao: form.descricao,
-        categoria: form.categoria,
-        image_url: currentMain,
-        image_urls: currentImgs,
-        has_image: !!currentMain,
-        is_featured: form.is_featured,
-        featured_position: form.is_featured ? form.featured_position : null,
-        tabela_precos: tabelaPrecos ?? null,
-      } as Record<string, unknown>)
+      .update(updatePayload)
       .eq('id', id!);
 
     // 2) Sync visibility to parent + variants
@@ -364,39 +435,85 @@ export default function AdminProductEdit() {
       if (vErr) visibilityError = vErr.message;
     }
 
+    // 3) Sincroniza categorias (principal + adicionais) em product_spotlight_categories
+    let catError: string | null = null;
+    if (!error && id) {
+      const desiredSlugs = new Set<string>([form.categoria, ...extraCategorySlugs].filter(Boolean));
+      const desiredIds = new Set<string>(
+        Array.from(desiredSlugs)
+          .map((s) => allCategories.find((c) => c.slug === s)?.id)
+          .filter(Boolean) as string[],
+      );
+      const currentIds = new Set<string>((extraCategoryRows as any[]).map((r) => r.category_id));
+
+      const toAdd = [...desiredIds].filter((cid) => !currentIds.has(cid));
+      const toRemove = [...currentIds].filter((cid) => !desiredIds.has(cid));
+
+      if (toAdd.length) {
+        const { error: addErr } = await supabase
+          .from('product_spotlight_categories')
+          .insert(toAdd.map((cid) => ({ product_id: id, category_id: cid, position: 0 })));
+        if (addErr) catError = addErr.message;
+      }
+      if (!catError && toRemove.length) {
+        const { error: rmErr } = await supabase
+          .from('product_spotlight_categories')
+          .delete()
+          .eq('product_id', id)
+          .in('category_id', toRemove);
+        if (rmErr) catError = rmErr.message;
+      }
+    }
+
     setSaving(false);
     if (error) {
       toast({ title: 'Erro ao salvar', description: error.message, variant: 'destructive' });
     } else if (visibilityError) {
       toast({ title: 'Erro ao atualizar visibilidade', description: visibilityError, variant: 'destructive' });
+    } else if (catError) {
+      toast({ title: 'Erro ao salvar categorias', description: catError, variant: 'destructive' });
     } else {
       setDirty(false);
       toast({ title: '✅ Produto atualizado com sucesso!' });
       initialized.current = false;
+      refetchExtraCats();
       queryClient.invalidateQueries({ queryKey: ['admin-product', id] });
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['homepage-data'] });
+      queryClient.invalidateQueries({ queryKey: ['catalog'] });
+      queryClient.invalidateQueries({ queryKey: ['search'] });
+      queryClient.invalidateQueries({ queryKey: ['category'] });
     }
   };
 
+  // Preço de custo efetivo usado na UI (edição manual sobrepõe o do produto)
+  const precoCustoUI = precoCustoManual
+    ? (parseFloat((precoCustoEdit || '0').replace(',', '.')) || 0)
+    : (product?.preco_custo ?? 0);
+
   // ── Tabela de preços helpers ──────────────────────────────────────────────
-  const activeTabelaRows = tabelaPrecos ?? DEFAULT_TABELA;
+  const defaultTabelaForCost: TabelaPrecoRow[] = buildDefaultTabela(precoCustoUI);
+  const activeTabelaRows = tabelaPrecos ?? defaultTabelaForCost;
   const isCustomTabela = tabelaPrecos !== null;
 
   const updateTabelaRow = (idx: number, field: keyof TabelaPrecoRow, value: number) => {
-    const updated = activeTabelaRows.map((r, i) => i === idx ? { ...r, [field]: value } : r);
+    const base = isCustomTabela ? activeTabelaRows : defaultTabelaForCost;
+    const updated = base.map((r, i) => i === idx ? { ...r, [field]: value } : r);
     setTabelaPrecos(updated);
     setDirty(true);
   };
 
   const addTabelaRow = () => {
-    const lastQty = activeTabelaRows[activeTabelaRows.length - 1]?.qty ?? 1000;
-    setTabelaPrecos([...activeTabelaRows, { qty: lastQty + 100, desconto: 0 }]);
+    const base = isCustomTabela ? activeTabelaRows : defaultTabelaForCost;
+    const lastQty = base[base.length - 1]?.qty ?? 1000;
+    const lastMult = base[base.length - 1]?.multiplicador ?? getMarkup(precoCustoUI);
+    setTabelaPrecos([...base, { qty: lastQty + 100, multiplicador: lastMult }]);
     setDirty(true);
   };
 
   const removeTabelaRow = (idx: number) => {
-    const updated = activeTabelaRows.filter((_, i) => i !== idx);
+    const base = isCustomTabela ? activeTabelaRows : defaultTabelaForCost;
+    const updated = base.filter((_, i) => i !== idx);
     setTabelaPrecos(updated.length > 0 ? updated : null);
     setDirty(true);
   };
@@ -411,7 +528,7 @@ export default function AdminProductEdit() {
 
   const variantes = parseVariantes(product.variantes);
   const selectedVariantRow = variantRows?.find(v => v.id === selectedVariantId);
-  const precoCusto = product.preco_custo ?? 0;
+  const precoCusto = precoCustoUI;
   const markup = precoCusto ? getMarkup(precoCusto) : 1;
 
   return (
@@ -555,20 +672,125 @@ export default function AdminProductEdit() {
             </div>
 
             <div className="space-y-2">
-              <Label>Categoria</Label>
+              <Label>Categoria principal</Label>
               <Select
-                value={form.categoria}
-                onValueChange={(v) => setForm({ ...form, categoria: v })}
+                value={form.categoria || undefined}
+                onValueChange={(v) => { setForm({ ...form, categoria: v }); setDirty(true); }}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
+                  {allCategories.map((c) => (
+                    <SelectItem key={c.slug} value={c.slug}>{c.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* ── Categorias adicionais (M:N) ──────────────────────────── */}
+            <div className="space-y-2">
+              <Label>Categorias adicionais</Label>
+              <p className="text-[11px] text-muted-foreground -mt-1">
+                Aparece também nessas categorias do site (ex: Copa do Mundo, Eventos).
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {extraCategorySlugs
+                  .filter((s) => s !== form.categoria)
+                  .map((slug) => {
+                    const cat = allCategories.find((c) => c.slug === slug);
+                    if (!cat) return null;
+                    return (
+                      <Badge
+                        key={slug}
+                        variant="outline"
+                        className="gap-1 pl-2 pr-1 py-0.5 text-xs bg-primary/5 border-primary/20"
+                      >
+                        {cat.label}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setExtraCategorySlugs((prev) => prev.filter((s) => s !== slug));
+                            setDirty(true);
+                          }}
+                          className="ml-0.5 rounded-full hover:bg-destructive/10 text-muted-foreground hover:text-destructive p-0.5"
+                          aria-label={`Remover ${cat.label}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                {addingCategory ? (
+                  <Select
+                    value=""
+                    onValueChange={(v) => {
+                      if (v) {
+                        setExtraCategorySlugs((prev) => Array.from(new Set([...prev, v])));
+                        setDirty(true);
+                      }
+                      setAddingCategory(false);
+                    }}
+                  >
+                    <SelectTrigger className="h-7 w-[200px] text-xs">
+                      <SelectValue placeholder="Escolher categoria..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allCategories
+                        .filter((c) => c.slug !== form.categoria && !extraCategorySlugs.includes(c.slug))
+                        .map((c) => (
+                          <SelectItem key={c.slug} value={c.slug}>{c.label}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAddingCategory(true)}
+                    className="h-7 text-xs"
+                  >
+                    <Plus className="h-3 w-3 mr-1" /> Adicionar categoria
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* ── Preço de custo (API ou manual) ────────────────────────── */}
+            <div className="rounded-lg border p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Preço de custo</Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    {precoCustoManual
+                      ? 'Editado manualmente — sync da API XBZ não vai sobrescrever.'
+                      : 'Sincronizado automaticamente da API XBZ.'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] text-muted-foreground">Manual</span>
+                  <Switch
+                    checked={precoCustoManual}
+                    onCheckedChange={(v) => { setPrecoCustoManual(v); setDirty(true); }}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">R$</span>
+                <Input
+                  inputMode="decimal"
+                  value={precoCustoEdit}
+                  disabled={!precoCustoManual}
+                  onChange={(e) => { setPrecoCustoEdit(e.target.value); setDirty(true); }}
+                  className="h-9 w-32"
+                />
+                {!precoCustoManual && (product?.preco_custo ?? 0) > 0 && (
+                  <span className="text-[11px] text-muted-foreground">
+                    (API: {formatarBRL(product?.preco_custo ?? 0)})
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* ── Tabela de preços ────────────────────────────────────────── */}
@@ -600,7 +822,7 @@ export default function AdminProductEdit() {
                   <thead>
                     <tr className="border-b bg-muted/40">
                       <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Qtd</th>
-                      <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Desconto %</th>
+                      <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Multiplicador (×)</th>
                       {precoCusto > 0 && (
                         <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Preço/un</th>
                       )}
@@ -617,7 +839,7 @@ export default function AdminProductEdit() {
                             value={row.qty}
                             onChange={(e) => {
                               const v = parseInt(e.target.value) || 1;
-                              if (!isCustomTabela) setTabelaPrecos([...DEFAULT_TABELA]);
+                              if (!isCustomTabela) setTabelaPrecos([...defaultTabelaForCost]);
                               updateTabelaRow(idx, 'qty', v);
                             }}
                             className="h-7 w-20 text-sm"
@@ -627,23 +849,22 @@ export default function AdminProductEdit() {
                           <div className="flex items-center gap-1">
                             <Input
                               type="number"
-                              min={0}
-                              max={100}
-                              step={0.1}
-                              value={Math.round(row.desconto * 100 * 10) / 10}
+                              min={0.1}
+                              step={0.05}
+                              value={Number(row.multiplicador).toFixed(2)}
                               onChange={(e) => {
-                                const v = (parseFloat(e.target.value) || 0) / 100;
-                                if (!isCustomTabela) setTabelaPrecos([...DEFAULT_TABELA]);
-                                updateTabelaRow(idx, 'desconto', v);
+                                const v = parseFloat(e.target.value.replace(',', '.')) || 0;
+                                if (!isCustomTabela) setTabelaPrecos([...defaultTabelaForCost]);
+                                updateTabelaRow(idx, 'multiplicador', v);
                               }}
-                              className="h-7 w-20 text-sm"
+                              className="h-7 w-24 text-sm"
                             />
-                            <span className="text-xs text-muted-foreground">%</span>
+                            <span className="text-xs text-muted-foreground">×</span>
                           </div>
                         </td>
                         {precoCusto > 0 && (
                           <td className="px-3 py-1.5 text-xs text-muted-foreground font-medium tabular-nums">
-                            {formatarBRL(precoCusto * markup * (1 - row.desconto))}
+                            {formatarBRL(precoCusto * row.multiplicador)}
                           </td>
                         )}
                         <td className="px-2 py-1.5">
@@ -660,6 +881,9 @@ export default function AdminProductEdit() {
                   </tbody>
                 </table>
               </div>
+              <p className="text-[11px] text-muted-foreground">
+                Markup base atual da API: <strong>{markup.toFixed(1)}×</strong> · Preço/un = preço de custo × multiplicador.
+              </p>
 
               <Button
                 type="button"
