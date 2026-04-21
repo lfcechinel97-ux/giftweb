@@ -226,6 +226,34 @@ export default function AdminProductEdit() {
     enabled: !!codigoPrefixo,
   });
 
+  // Lista real de categorias (vinda do banco) — substitui a hardcoded
+  const { data: allCategories = [] } = useQuery({
+    queryKey: ['admin-edit-categories'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('spotlight_categories')
+        .select('id, slug, label, position')
+        .eq('active', true)
+        .order('label', { ascending: true });
+      return (data ?? []) as CategoryOption[];
+    },
+    staleTime: 600_000,
+  });
+
+  // Categorias adicionais ligadas a este produto (M:N)
+  const { data: extraCategoryRows = [], refetch: refetchExtraCats } = useQuery({
+    queryKey: ['admin-product-categories', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase
+        .from('product_spotlight_categories')
+        .select('id, category_id')
+        .eq('product_id', id);
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
   const [form, setForm] = useState({
     nome: '',
     descricao: '',
@@ -235,11 +263,19 @@ export default function AdminProductEdit() {
     featured_position: 1,
   });
 
-  // tabela_precos: null = use global default; array = custom
+  // Categorias adicionais (slugs) — sem incluir a principal
+  const [extraCategorySlugs, setExtraCategorySlugs] = useState<string[]>([]);
+  const [addingCategory, setAddingCategory] = useState(false);
+
+  // Preço de custo: manual on/off + valor editável
+  const [precoCustoManual, setPrecoCustoManual] = useState<boolean>(false);
+  const [precoCustoEdit, setPrecoCustoEdit] = useState<string>('0');
+
+  // tabela_precos: null = use global default; array = custom (formato {qty, multiplicador})
   const [tabelaPrecos, setTabelaPrecos] = useState<TabelaPrecoRow[] | null>(null);
 
   // Base product images
-  const [imageMain, setImageMain] = useState<string | null>(null);
+  const [, setImageMain] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const imageMainRef = useRef<string | null>(null);
   const imageUrlsRef = useRef<string[]>([]);
@@ -273,15 +309,44 @@ export default function AdminProductEdit() {
       imageMainRef.current = product.image_url ?? null;
       imageUrlsRef.current = finalImgs;
 
-      // Load custom price table if exists
+      // Preço de custo (manual ou da API)
+      const pManual = (product as any).preco_custo_manual === true;
+      setPrecoCustoManual(pManual);
+      setPrecoCustoEdit(String(product.preco_custo ?? 0));
+
+      // Carrega tabela personalizada (suporta formatos antigo {desconto} e novo {multiplicador})
       const tp = product.tabela_precos;
+      const cost = product.preco_custo ?? 0;
       if (Array.isArray(tp) && tp.length > 0) {
-        setTabelaPrecos(tp as unknown as TabelaPrecoRow[]);
+        const markupBase = getMarkup(cost || 1);
+        const normalized: TabelaPrecoRow[] = (tp as any[]).map((r) => {
+          const qty = Number(r.qty ?? r.quantidade) || 0;
+          let mult: number | null = null;
+          if (r.multiplicador != null) {
+            const m = typeof r.multiplicador === 'number' ? r.multiplicador : parseFloat(String(r.multiplicador).replace(',', '.'));
+            if (isFinite(m) && m > 0) mult = m;
+          }
+          if (mult == null && r.desconto != null) {
+            const d = typeof r.desconto === 'number' ? r.desconto : parseFloat(String(r.desconto).replace(',', '.'));
+            if (isFinite(d)) mult = markupBase * (1 - d);
+          }
+          return { qty, multiplicador: mult ?? markupBase };
+        }).filter((r) => r.qty > 0);
+        setTabelaPrecos(normalized.length ? normalized : null);
       } else {
         setTabelaPrecos(null);
       }
     }
   }, [product]);
+
+  // Sincroniza categorias adicionais quando os dados chegam
+  useEffect(() => {
+    if (!extraCategoryRows || !allCategories.length) return;
+    const slugs = extraCategoryRows
+      .map((r: any) => allCategories.find((c) => c.id === r.category_id)?.slug)
+      .filter(Boolean) as string[];
+    setExtraCategorySlugs(slugs);
+  }, [extraCategoryRows, allCategories]);
 
   // When a variant is selected, populate its images
   useEffect(() => {
