@@ -160,6 +160,7 @@ export type Database = {
           nome: string
           peso: number | null
           preco_custo: number | null
+          preco_custo_manual: boolean
           produto_pai: string | null
           profundidade: number | null
           site_link: string | null
@@ -196,6 +197,7 @@ export type Database = {
           nome: string
           peso?: number | null
           preco_custo?: number | null
+          preco_custo_manual?: boolean
           produto_pai?: string | null
           profundidade?: number | null
           site_link?: string | null
@@ -232,6 +234,7 @@ export type Database = {
           nome?: string
           peso?: number | null
           preco_custo?: number | null
+          preco_custo_manual?: boolean
           produto_pai?: string | null
           profundidade?: number | null
           site_link?: string | null
