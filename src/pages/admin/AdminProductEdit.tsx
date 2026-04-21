@@ -826,6 +826,9 @@ export default function AdminProductEdit() {
                       {precoCusto > 0 && (
                         <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Preço/un</th>
                       )}
+                      {precoCusto > 0 && (
+                        <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Desc. vs. 20</th>
+                      )}
                       <th className="w-8" />
                     </tr>
                   </thead>
