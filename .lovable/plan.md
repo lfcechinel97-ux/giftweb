@@ -1,24 +1,45 @@
 
 
-## Mostrar todas as 10 faixas de custo, mesmo sem produtos
+## Mover bolsas térmicas para a categoria "Bolsas"
 
-### Mudança
-Hoje `get_category_cost_distribution` filtra com `HAVING count(DISTINCT pc.id) > 0`, então faixas vazias somem da UI. Vou remover esse filtro: a RPC retornará sempre as 10 faixas fixas, com `total = 0` para as vazias.
+### Diagnóstico
+- 1.208 produtos com "térmica/termica" no nome estão vinculados à categoria **Garrafas e Squeezes** (`garrafas-e-squeezes`, id `59e0b987…`).
+- Devem estar em **Bolsas** (`bolsas`, id `e8665733…`). Alguns já estão lá em paralelo.
+- Vinculação dupla acontece porque `product_spotlight_categories` permite múltiplas categorias por produto.
+
+### Solução (2 passos via migration de dados)
+
+**1. Garantir vínculo em "Bolsas"** para todo produto que tem "bolsa térmica/termica" no nome:
+```sql
+INSERT INTO product_spotlight_categories (product_id, category_id)
+SELECT DISTINCT pc.id, 'e8665733-49a6-4465-8f65-1f4122a5bfa0'::uuid
+FROM products_cache pc
+WHERE (pc.nome ILIKE '%bolsa térmica%' OR pc.nome ILIKE '%bolsa termica%'
+       OR pc.nome ILIKE '%lancheira%' OR pc.nome ILIKE '%cooler bag%'
+       OR pc.nome ILIKE '%bag térmica%' OR pc.nome ILIKE '%bag termica%')
+ON CONFLICT DO NOTHING;
+```
+
+**2. Remover vínculo errado em "Garrafas e Squeezes"** apenas para esses produtos:
+```sql
+DELETE FROM product_spotlight_categories psc
+USING products_cache pc
+WHERE psc.product_id = pc.id
+  AND psc.category_id = '59e0b987-ee37-45da-869c-9ab62f16e607'
+  AND (pc.nome ILIKE '%bolsa térmica%' OR pc.nome ILIKE '%bolsa termica%'
+       OR pc.nome ILIKE '%lancheira%' OR pc.nome ILIKE '%cooler bag%'
+       OR pc.nome ILIKE '%bag térmica%' OR pc.nome ILIKE '%bag termica%');
+```
+
+> **Garrafas/squeezes térmicas** (com "garrafa térmica" ou "squeeze térmico" no nome) **continuam** em Garrafas e Squeezes — o filtro acima só pega itens que começam/contêm "bolsa térmica", "lancheira", "cooler bag" e "bag térmica". Esses são os reais "bolsas térmicas".
+
+### Por que estavam lá
+A sync herdou categorização de uma versão antiga das regras de `autoCategorize.ts` que mapeava bolsas térmicas para o slug `bolsas-termicas` (que não existe mais como categoria ativa) e o fallback acabou caindo em `garrafas-e-squeezes`. Como você mesmo disse que ajustes futuros serão pontuais via edição manual de produto, **não** vou tocar em `autoCategorize.ts` agora — apenas corrijo os dados existentes.
+
+### Validação pós-migration
+Após rodar, execute na UI: a categoria "Bolsas" mostrará +N bolsas térmicas, "Garrafas e Squeezes" deixará de exibir esses itens. Edição manual em `/admin/produtos/{id}` continua funcionando para casos isolados.
 
 ### Arquivos
-
-**Migration** — recriar `get_category_cost_distribution(p_category_id uuid)`:
-- Remover o `HAVING count > 0`.
-- Retornar sempre as 10 bandas (`0,01–0,50` até `70,01+`) com seu `total` (pode ser 0).
-
-**`src/pages/admin/AdminPricing.tsx`**:
-- Header do card: trocar "X faixa(s)" por contagem de faixas com produtos (ex.: "29 produto(s) · 5/10 faixa(s) com estoque") para deixar claro que faixas vazias agora aparecem.
-- Sub-tabela: linhas com `total = 0` continuam editáveis normalmente (steppers + Aplicar habilitados). A coluna "Produtos" mostra `0` em cinza claro.
-- Botão `Aplicar` numa faixa vazia: salva os multiplicadores em `spotlight_categories.tabela_multiplicadores` (memória da config), mas o update em massa de `products_cache` não atinge nenhum produto — toast informa "Configuração salva. 0 produtos nessa faixa atualmente."
-- `Aplicar categoria inteira`: itera todas as 10 faixas, salvando a config completa; produtos só são atualizados nas faixas com itens.
-
-### Resultado
-- Categoria "Agendas" agora mostra todas as 10 faixas (0,01–0,50 até 70,01+), não só as 5 atuais.
-- Admin define multiplicador para a faixa 5,01–10,00 hoje; quando um produto novo entrar nessa faixa via sync (que copia config de categoria) ou edição manual, ele já nascerá precificado conforme.
-- Compatível com o formato JSONB existente (`[{min, max, tiers}]`).
+- 1 migration de dados (INSERT + DELETE em `product_spotlight_categories`).
+- Sem alteração de schema, sem alteração de código frontend.
 
