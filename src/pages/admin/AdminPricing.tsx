@@ -412,7 +412,7 @@ function CategoryCard({
         </div>
         <div className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
           {cat.product_count} produto(s)
-          {expanded && bands && ` · ${bands.length} faixa(s)`}
+          {expanded && bands && ` · ${bands.filter((b) => b.total > 0).length}/${bands.length} faixa(s) com produtos`}
         </div>
       </button>
 
