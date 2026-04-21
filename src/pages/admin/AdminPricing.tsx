@@ -45,6 +45,33 @@ interface BandDistribution {
 
 const TIERS = VOLUME_TIERS as readonly number[];
 
+/**
+ * Faixa 70,01+ não tem teto natural. Usamos um teto virtual fixo só para
+ * estimar faturamento/lucro máximos na UI; visualmente sinalizamos com "+"
+ * para deixar claro que o valor real pode ser maior.
+ */
+const COST_MAX_VIRTUAL = 100;
+
+/** Formata número como moeda BRL, abreviando em milhares (k) acima de 1.000. */
+function formatBRLShort(v: number): string {
+  if (!isFinite(v) || v <= 0) return "R$ 0";
+  if (v >= 1000) {
+    const k = v / 1000;
+    const decimals = k >= 100 ? 0 : 1;
+    return `R$ ${k.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}k`;
+  }
+  return `R$ ${Math.round(v).toLocaleString("pt-BR")}`;
+}
+
+/** Formata um intervalo "min–max" de moeda. Se min===max, mostra um único valor. */
+function formatBRLRange(minV: number, maxV: number, openEnded = false): string {
+  const a = formatBRLShort(minV);
+  const b = formatBRLShort(maxV);
+  const suffix = openEnded ? "+" : "";
+  if (Math.abs(minV - maxV) < 0.005) return `${a}${suffix}`;
+  return `${a}–${b}${suffix}`;
+}
+
 /** Multiplicador padrão por faixa, baseado no preço de custo médio da banda. */
 function defaultTiersForCost(precoMedio: number): TierRow[] {
   const baseMarkup = getMarkup(precoMedio);
@@ -468,12 +495,33 @@ function CategoryCard({
                           </td>
                           {TIERS.map((q) => {
                             const tier = tiers.find((t) => t.qty === q);
+                            const mult = tier?.multiplicador ?? 1;
+                            const isOpenEnded = band.max_val >= 999999;
+                            const effMax = isOpenEnded ? COST_MAX_VIRTUAL : band.max_val;
+                            const fatMin = band.min_val * mult * q;
+                            const fatMax = effMax * mult * q;
+                            const lucMin = band.min_val * (mult - 1) * q;
+                            const lucMax = effMax * (mult - 1) * q;
                             return (
-                              <td key={q} className="px-1 py-2 text-center">
-                                <MultiplierStepper
-                                  value={tier?.multiplicador ?? 1}
-                                  onChange={(v) => setEditsForBand(band.bucket, q, v)}
-                                />
+                              <td key={q} className="px-1 py-2 text-center align-middle">
+                                <div className="flex flex-col items-center gap-0.5">
+                                  <span
+                                    className="text-[10px] leading-tight text-muted-foreground tabular-nums whitespace-nowrap"
+                                    title={`Faturamento estimado para ${q} unid.`}
+                                  >
+                                    Fat.: {formatBRLRange(fatMin, fatMax, isOpenEnded)}
+                                  </span>
+                                  <MultiplierStepper
+                                    value={mult}
+                                    onChange={(v) => setEditsForBand(band.bucket, q, v)}
+                                  />
+                                  <span
+                                    className="text-[10px] leading-tight text-emerald-600 dark:text-emerald-500 tabular-nums whitespace-nowrap"
+                                    title={`Lucro bruto estimado para ${q} unid.`}
+                                  >
+                                    Lucro: {formatBRLRange(lucMin, lucMax, isOpenEnded)}
+                                  </span>
+                                </div>
                               </td>
                             );
                           })}
