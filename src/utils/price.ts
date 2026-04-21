@@ -33,6 +33,32 @@ export function formatarBRL(valor: number): string {
 
 export const VOLUME_TIERS = [20, 50, 100, 200, 300, 500, 1000] as const;
 
+export interface CostBand {
+  bucket: string;
+  min: number;
+  max: number;
+}
+
+/** Faixas fixas de preço de custo usadas na precificação por categoria. */
+export const COST_BANDS: CostBand[] = [
+  { bucket: '0,01–0,50', min: 0.01, max: 0.5 },
+  { bucket: '0,51–1,00', min: 0.51, max: 1.0 },
+  { bucket: '1,01–2,00', min: 1.01, max: 2.0 },
+  { bucket: '2,01–5,00', min: 2.01, max: 5.0 },
+  { bucket: '5,01–10,00', min: 5.01, max: 10.0 },
+  { bucket: '10,01–20,00', min: 10.01, max: 20.0 },
+  { bucket: '20,01–30,00', min: 20.01, max: 30.0 },
+  { bucket: '30,01–50,00', min: 30.01, max: 50.0 },
+  { bucket: '50,01–70,00', min: 50.01, max: 70.0 },
+  { bucket: '70,01+', min: 70.01, max: 999999 },
+];
+
+/** Retorna a CostBand correspondente a um preço de custo (ou null). */
+export function bandForCost(precoCusto: number): CostBand | null {
+  if (!isFinite(precoCusto) || precoCusto <= 0) return null;
+  return COST_BANDS.find(b => precoCusto >= b.min && precoCusto <= b.max) ?? null;
+}
+
 /**
  * Calcula o multiplicador efetivo para uma quantidade específica
  * Multiplicador = markup_base * (1 - desconto_volume)

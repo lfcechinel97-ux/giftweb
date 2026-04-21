@@ -395,6 +395,22 @@ export type Database = {
         Args: { p_category_slug: string }
         Returns: string[]
       }
+      get_category_cost_distribution: {
+        Args: { p_category_id: string }
+        Returns: {
+          bucket: string
+          max_val: number
+          min_val: number
+          total: number
+        }[]
+      }
+      get_category_product_counts: {
+        Args: never
+        Returns: {
+          category_id: string
+          total: number
+        }[]
+      }
       search_products_by_category:
         | {
             Args: {
