@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
-import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup } from "@/utils/price";
+import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup, getCustomMultiplier } from "@/utils/price";
 import { getCorHex } from "@/utils/colorHex";
 import { WHATSAPP_REDIRECT_URL, SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
@@ -245,15 +245,21 @@ const ProductDetail = () => {
     if (!displayPrecoCusto) return [];
     // Use custom price table if available, otherwise fall back to global defaults
     const customTable = product?.tabela_precos;
-    const customRows = Array.isArray(customTable) ? (customTable as { qty: number; desconto: number }[]) : null;
+    const customRows = Array.isArray(customTable) ? (customTable as any[]) : null;
     if (customRows && customRows.length > 0) {
       const markup = getMarkup(displayPrecoCusto);
-      return customRows.map(r => ({
-        qty: r.qty,
-        unit: displayPrecoCusto * markup * (1 - r.desconto),
-        base: precoBase,
-        desc: r.desconto,
-      }));
+      const rows = customRows
+        .map((r: any) => {
+          const qty = r?.qty ?? r?.quantidade;
+          if (!qty) return null;
+          const mult = getCustomMultiplier([r], displayPrecoCusto, qty);
+          if (mult == null || !isFinite(mult) || mult <= 0) return null;
+          const unit = displayPrecoCusto * mult;
+          const desc = Math.max(0, 1 - mult / markup);
+          return { qty, unit, base: precoBase, desc };
+        })
+        .filter(Boolean) as { qty: number; unit: number; base: number; desc: number }[];
+      if (rows.length) return rows;
     }
     return QUANTITIES.map(q => ({
       qty: q,

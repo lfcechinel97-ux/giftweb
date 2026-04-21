@@ -390,6 +390,11 @@ function PriceEditor({
       qty,
       multiplicador: parseFloat((multipliers[qty] || '0').replace(',', '.')),
     }));
+    const invalid = tabela.find(r => isNaN(r.multiplicador) || r.multiplicador <= 0);
+    if (invalid) {
+      toast({ title: 'Multiplicador inválido', description: `Verifique o valor para ${invalid.qty} un (deve ser > 0).`, variant: 'destructive' });
+      return;
+    }
     setSaving(true);
     const { error } = await supabase
       .from('products_cache')
