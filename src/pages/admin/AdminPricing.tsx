@@ -236,55 +236,6 @@ export default function AdminPricing() {
     }
   };
 
-  const applyEntireCategory = async (cat: CategoryWithCount, bands: BandDistribution[]) => {
-    const key = `cat::${cat.id}`;
-    setSavingKey(key);
-    let total = 0;
-    try {
-      const payload = buildSavePayload(bands, edits, cat.id);
-      const { error: catErr } = await supabase
-        .from("spotlight_categories")
-        .update({ tabela_multiplicadores: payload as any })
-        .eq("id", cat.id);
-      if (catErr) throw catErr;
-
-      for (const band of bands) {
-        const min = Number(band.min_val);
-        const max = Number(band.max_val);
-        const tiers = edits[`${cat.id}::${band.bucket}`] ??
-          defaultTiersForCost((min + max) / 2);
-
-        const { data: links } = await supabase
-          .from("product_spotlight_categories")
-          .select("product_id, products_cache!inner(id, preco_custo, ativo)")
-          .eq("category_id", cat.id)
-          .gte("products_cache.preco_custo", min)
-          .lte("products_cache.preco_custo", max)
-          .eq("products_cache.ativo", true);
-        const productIds = Array.from(new Set((links ?? []).map((l: any) => l.product_id)));
-
-        const CHUNK = 200;
-        for (let i = 0; i < productIds.length; i += CHUNK) {
-          const slice = productIds.slice(i, i + CHUNK);
-          await supabase
-            .from("products_cache")
-            .update({ tabela_precos: tiers as any })
-            .in("id", slice);
-        }
-        total += productIds.length;
-      }
-
-      toast.success(`${total} produto(s) atualizados em "${cat.label}"`);
-      qc.invalidateQueries({ queryKey: ["admin-products"] });
-      qc.invalidateQueries({ queryKey: ["admin-pricing-categories-v2"] });
-    } catch (e: any) {
-      toast.error(e?.message ?? "Erro ao aplicar categoria");
-    } finally {
-      setSavingKey(null);
-      setConfirm(null);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
