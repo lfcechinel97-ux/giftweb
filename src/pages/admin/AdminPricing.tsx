@@ -460,6 +460,37 @@ export default function AdminPricing() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={confirmReplicate} onOpenChange={(o) => !o && setConfirmReplicate(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replicar preset para todas as categorias?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso vai aplicar os multiplicadores padrão (17 faixas × 7 volumes) em{" "}
+              <strong>{categories?.length ?? 0} categoria(s)</strong> ativas e atualizar a
+              tabela de preços de todos os produtos vinculados. Os preços de custo são
+              preservados. Você pode editar cada categoria livremente depois.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={replicating}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={replicating}
+              onClick={replicateToAll}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {replicating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Replicando...
+                </>
+              ) : (
+                "Confirmar replicação"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
