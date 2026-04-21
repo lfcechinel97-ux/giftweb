@@ -25,6 +25,7 @@ interface ProductCardProps {
   codigo_amigavel: string;
   variantes?: VariantJson[] | null;
   estoque?: number | null;
+  estoque_total?: number | null;
 }
 
 export const ProductCardSkeleton = () => (
