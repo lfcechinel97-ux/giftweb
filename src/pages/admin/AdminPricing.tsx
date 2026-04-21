@@ -52,24 +52,19 @@ const TIERS = VOLUME_TIERS as readonly number[];
  */
 const COST_MAX_VIRTUAL = 100;
 
-/** Formata número como moeda BRL, abreviando em milhares (k) acima de 1.000. */
-function formatBRLShort(v: number): string {
-  if (!isFinite(v) || v <= 0) return "R$ 0";
-  if (v >= 1000) {
-    const k = v / 1000;
-    const decimals = k >= 100 ? 0 : 1;
-    return `R$ ${k.toLocaleString("pt-BR", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}k`;
-  }
-  return `R$ ${Math.round(v).toLocaleString("pt-BR")}`;
+/** Formata número como inteiro pt-BR (sem moeda, sem decimais). */
+function formatInt(v: number): string {
+  if (!isFinite(v) || v <= 0) return "0";
+  return Math.round(v).toLocaleString("pt-BR");
 }
 
-/** Formata um intervalo "min–max" de moeda. Se min===max, mostra um único valor. */
-function formatBRLRange(minV: number, maxV: number, openEnded = false): string {
-  const a = formatBRLShort(minV);
-  const b = formatBRLShort(maxV);
+/** Formata um intervalo "min~max" usando inteiros. Se min===max, mostra um único valor. */
+function formatRange(minV: number, maxV: number, openEnded = false): string {
+  const a = formatInt(minV);
+  const b = formatInt(maxV);
   const suffix = openEnded ? "+" : "";
-  if (Math.abs(minV - maxV) < 0.005) return `${a}${suffix}`;
-  return `${a}–${b}${suffix}`;
+  if (Math.round(minV) === Math.round(maxV)) return `${a}${suffix}`;
+  return `${a}~${b}${suffix}`;
 }
 
 /** Multiplicador padrão por faixa, baseado no preço de custo médio da banda. */
@@ -505,21 +500,21 @@ function CategoryCard({
                             return (
                               <td key={q} className="px-1 py-2 text-center align-middle">
                                 <div className="flex flex-col items-center gap-0.5">
-                                  <span
-                                    className="text-[10px] leading-tight text-muted-foreground tabular-nums whitespace-nowrap"
-                                    title={`Faturamento estimado para ${q} unid.`}
-                                  >
-                                    Fat.: {formatBRLRange(fatMin, fatMax, isOpenEnded)}
-                                  </span>
                                   <MultiplierStepper
                                     value={mult}
                                     onChange={(v) => setEditsForBand(band.bucket, q, v)}
                                   />
                                   <span
+                                    className="text-[10px] leading-tight text-muted-foreground tabular-nums whitespace-nowrap"
+                                    title={`Faturamento estimado para ${q} unid.`}
+                                  >
+                                    Fat.: {formatRange(fatMin, fatMax, isOpenEnded)}
+                                  </span>
+                                  <span
                                     className="text-[10px] leading-tight text-emerald-600 dark:text-emerald-500 tabular-nums whitespace-nowrap"
                                     title={`Lucro bruto estimado para ${q} unid.`}
                                   >
-                                    Lucro: {formatBRLRange(lucMin, lucMax, isOpenEnded)}
+                                    Lucro: {formatRange(lucMin, lucMax, isOpenEnded)}
                                   </span>
                                 </div>
                               </td>
