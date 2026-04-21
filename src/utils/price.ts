@@ -31,7 +31,7 @@ export function formatarBRL(valor: number): string {
   return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-export const VOLUME_TIERS = [20, 50, 100, 200, 500, 1000] as const;
+export const VOLUME_TIERS = [20, 50, 100, 200, 300, 500, 1000] as const;
 
 /**
  * Calcula o multiplicador efetivo para uma quantidade específica
