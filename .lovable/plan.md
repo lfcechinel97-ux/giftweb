@@ -1,77 +1,54 @@
 
 
-## Problemas a resolver
+## Marcar produtos como "Fora de Estoque" quando todas as variantes estão zeradas
 
-### 1. Contagem zerada na maioria das categorias
-A query `supabase.from("product_spotlight_categories").select("category_id")` traz **só 1000 linhas** (limite default do PostgREST). Há ~7.500 vínculos no banco — então só as primeiras categorias contam corretamente, o resto fica em 0 e o botão "Aplicar" é desabilitado (`disabled={cat.product_count === 0}`).
+### Problema
+Hoje o badge "Fora de Estoque" no card só considera o `estoque` do produto pai. Quando o produto tem variantes (ex.: AGENDA DIÁRIA 2026 com 2 cores), o pai geralmente tem `estoque = 0` mesmo havendo variantes com estoque — e vice-versa: pode parecer disponível na lista mas todas as variantes estarem zeradas. Resultado: usuário clica num produto e descobre só na PDP que está indisponível.
 
-**Correção:** criar uma RPC `get_category_product_counts()` que retorna `[{category_id, count}]` agregado no banco (sem limite), ou usar `select("category_id", { count: "exact", head: true })` em loop por categoria (32 chamadas, mas confiável). Vou usar a RPC — uma chamada só.
+Precisamos calcular **estoque agregado** = max(estoque do pai, soma/max do estoque das variantes) e usar isso para:
+1. Mostrar badge "Fora de Estoque" no card.
+2. Filtrar via "Apenas em estoque" nos catálogos/busca.
+3. Ordenar (`sort_estoque`) corretamente.
 
-### 2. Subdivisão por faixa de preço de custo dentro da categoria
-Hoje a tabela tem **uma linha por categoria** com 7 multiplicadores. Vou trocar por **uma linha por (categoria × faixa de preço de custo)**, com as faixas:
+### Solução
 
-```
-0,01–0,50 | 0,51–1,00 | 1,01–2,00 | 2,01–5,00 | 5,01–10,00
-10,01–20,00 | 20,01–30,00 | 30,01–50,00 | 50,01–70,00 | 70,01+
-```
+#### 1. Banco — coluna agregada `estoque_total`
+Adicionar coluna `estoque_total integer` em `products_cache`. Para cada produto:
+- Se **não tem variantes** (`is_variante = false` e `variantes IS NULL`): `estoque_total = COALESCE(estoque, 0)`.
+- Se é **pai com variantes**: `estoque_total = COALESCE(estoque, 0) + soma do estoque de todas as variantes filhas (is_variante = true AND produto_pai = pai.id)`.
+- Se é **variante**: `estoque_total = COALESCE(estoque, 0)` (continua individual; cards só mostram pais).
 
-Cada linha mostra **só as faixas que existem na categoria** (ex.: Canetas não terá faixa 70+).
+#### 2. Recálculo automático
+- Atualizar `set_variantes_por_prefixo()` para recalcular `estoque_total` dos pais ao final do agrupamento (já roda na sync).
+- Adicionar trigger `BEFORE INSERT OR UPDATE OF estoque, produto_pai, is_variante` que recalcula `estoque_total` da linha + dispara update no pai se for variante.
+- Migration de backfill: rodar uma vez para preencher todos os registros existentes.
 
-#### UI nova
-- Cada categoria vira um **card expansível** (accordion). Fechado mostra: nome + total de produtos + nº de faixas ativas.
-- Ao expandir, aparece uma sub-tabela:
-  - **Linha** = faixa de preço de custo
-  - **Colunas** = `produtos nessa faixa` + 7 inputs (qty 20/50/100/200/300/500/1000+) + botão `Aplicar faixa`
-- Botão `Aplicar categoria inteira` no header do card aplica todas as faixas de uma vez.
+#### 3. Atualizar `sort_estoque` para usar `estoque_total`
+Trigger `update_sort_estoque` passa a usar `estoque_total` em vez de `estoque`. Garante ordenação "em estoque primeiro" considerando variantes.
 
-#### Modelo de dados
-Trocar `spotlight_categories.tabela_multiplicadores` (jsonb) de:
-```json
-[{qty: 20, multiplicador: 3.8}, ...]
-```
-para:
-```json
-[
-  {min: 0, max: 0.5, tiers: [{qty: 20, multiplicador: 6.0}, ...]},
-  {min: 0.51, max: 1, tiers: [...]},
-  ...
-]
+#### 4. Atualizar RPCs de busca
+- `search_products_by_category` e `search_products_global`: trocar `COALESCE(pc.estoque, 0) > 0` por `COALESCE(pc.estoque_total, 0) > 0` no filtro `p_apenas_estoque`.
+
+#### 5. Frontend — `ProductCard.tsx`
+Hoje o card calcula `outOfStock` baseado em `estoque` + `variantes[].estoque` do JSONB. Trocar para usar `estoque_total` (vindo no payload já agregado), mantendo o fallback atual para compatibilidade caso a coluna não exista ainda em algum payload cacheado.
+
+```ts
+const outOfStock = (product.estoque_total ?? computeFromVariantes()) === 0;
 ```
 
-Mantém compatibilidade: se vier no formato antigo (array plano de tiers), o front converte para uma única faixa "todas".
+#### 6. Catálogo B2B (`CatalogProductCard.tsx`)
+Mesma lógica — badge "Fora de Estoque" baseado em `estoque_total`.
 
-#### Detecção automática de faixas
-Ao carregar `/admin/precificacao`, para cada categoria, RPC retorna distribuição de produtos por faixa de custo (`get_category_cost_distribution`). Faixas com `count = 0` não aparecem na UI.
-
-#### Aplicação por faixa
-Ao clicar `Aplicar` numa faixa específica:
-1. Atualiza `spotlight_categories.tabela_multiplicadores` (substitui a faixa correspondente).
-2. Atualiza `products_cache.tabela_precos` **somente** dos produtos vinculados àquela categoria **E** com `preco_custo` dentro do range `[min, max]`. Em lotes de 200 IDs.
-
-### 3. Edição manual ainda vence
-A edição individual em `AdminProductEdit.tsx` continua sobrescrevendo (último a salvar vence) — comportamento solicitado pelo usuário.
-
-## Arquivos
-
-### Banco
-- **Migration**:
-  - `CREATE FUNCTION get_category_product_counts()` — retorna `[{category_id uuid, total bigint}]` agregando todos os PSC (sem limite de 1000).
-  - `CREATE FUNCTION get_category_cost_distribution(p_category_id uuid)` — retorna `[{bucket text, min numeric, max numeric, total bigint}]` para as 10 faixas fixas, com count > 0.
-
-### Frontend
-- **`src/pages/admin/AdminPricing.tsx`** (refatoração):
-  - Trocar tabela única por accordion de categorias.
-  - Cada accordion expandido busca distribuição de custo via RPC e mostra sub-tabela por faixa.
-  - Inputs `MultiplierStepper` por (faixa × qty).
-  - Botão `Aplicar faixa` (atualiza só produtos nessa faixa) e `Aplicar categoria` (todas as faixas).
-- **`src/utils/price.ts`**: adicionar constante `COST_BANDS` com as 10 faixas e helper `bandForCost(preco_custo) → COST_BAND`.
+### Arquivos
+- **Migration**: nova coluna `estoque_total`, função de recálculo, trigger, backfill, atualização de `set_variantes_por_prefixo` e `update_sort_estoque`.
+- **Migration**: atualizar `search_products_by_category` e `search_products_global` para usar `estoque_total` no filtro `p_apenas_estoque`.
+- **`src/components/ProductCard.tsx`**: usar `estoque_total` para badge.
+- **`src/components/catalog/CatalogProductCard.tsx`**: idem.
 - **`src/integrations/supabase/types.ts`**: regenerado.
 
-## Resultado esperado
-
-- Página `/admin/precificacao` lista todas as categorias com **contagem real** de produtos (não mais 0).
-- Expandindo "Canetas" aparecem só as faixas que existem (ex.: 0,51–1, 1,01–2, 2,01–5) — sem 70+.
-- Admin define multiplicadores diferentes por faixa de custo (ex.: caneta de R$ 0,80 com mult 6,0; caneta de R$ 4,00 com mult 3,8).
-- `Aplicar faixa` atinge só os produtos dentro do range; o resto da categoria permanece intacto.
-- Edição manual em `/admin/produtos/{id}` continua sobrepondo a configuração de categoria.
+### Resultado esperado
+- "AGENDA DIÁRIA 2026" com 2 variantes zeradas mostra badge **"Fora de Estoque"** direto na lista — sem precisar clicar.
+- Filtro "Apenas em estoque" esconde produtos cujas variantes estão todas zeradas.
+- Ordenação por relevância empurra esses produtos pro fim (já são "sort_estoque = 1").
+- Edição manual de `estoque` ou nova sync recalcula automaticamente via trigger.
 
