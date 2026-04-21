@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
-import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup, getCustomMultiplier } from "@/utils/price";
+import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup, getCustomMultiplier, getNormalizedPriceRows, getEffectiveUnitPrice, getEffectiveMinPrice } from "@/utils/price";
 import { getCorHex } from "@/utils/colorHex";
 import { WHATSAPP_REDIRECT_URL, SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
@@ -56,9 +56,10 @@ const ProductDetail = () => {
       .then(async ({ data, error }) => {
         if (error || !data) { navigate("/404", { replace: true }); return; }
 
+        if (data.is_hidden) { navigate("/404", { replace: true }); return; }
+
         setCurrentVariantData(data);
 
-        // If this is a variant, load the parent product so we can get all variantes JSONB
         let baseProduct = data;
         if (data.is_variante && data.produto_pai) {
           const { data: parentData } = await supabase
@@ -66,11 +67,13 @@ const ProductDetail = () => {
             .select("*")
             .eq("id", data.produto_pai)
             .single();
-          if (parentData) baseProduct = parentData;
+          if (parentData) {
+            if (parentData.is_hidden) { navigate("/404", { replace: true }); return; }
+            baseProduct = parentData;
+          }
         }
 
         setProduct(baseProduct);
-        // Set the initial selected variant based on the URL slug
         setSelectedVariant({
           slug: data.slug || '',
           cor: data.cor,
@@ -87,6 +90,7 @@ const ProductDetail = () => {
           .eq("ativo", true)
           .eq("has_image", true)
           .eq("is_variante", false)
+          .neq("is_hidden", true)
           .gt("estoque", 0)
           .neq("slug", baseProduct.slug)
           .order("variantes_count", { ascending: false })
@@ -238,29 +242,13 @@ const ProductDetail = () => {
   const displayNome = product?.nome || '';
 
   const precoBase = displayPrecoCusto ? displayPrecoCusto * getMarkup(displayPrecoCusto) : 0;
-  const precoAtual = displayPrecoCusto ? calcularPreco(displayPrecoCusto, qty) : 0;
-  const precoMin = displayPrecoCusto ? getPrecoMinimo(displayPrecoCusto) : 0;
+  const precoAtual = displayPrecoCusto ? getEffectiveUnitPrice(product?.tabela_precos, displayPrecoCusto, qty) : 0;
+  const precoMin = displayPrecoCusto ? getEffectiveMinPrice(product?.tabela_precos, displayPrecoCusto) : 0;
 
   const tableRows = useMemo(() => {
     if (!displayPrecoCusto) return [];
-    // Use custom price table if available, otherwise fall back to global defaults
-    const customTable = product?.tabela_precos;
-    const customRows = Array.isArray(customTable) ? (customTable as any[]) : null;
-    if (customRows && customRows.length > 0) {
-      const markup = getMarkup(displayPrecoCusto);
-      const rows = customRows
-        .map((r: any) => {
-          const qty = r?.qty ?? r?.quantidade;
-          if (!qty) return null;
-          const mult = getCustomMultiplier([r], displayPrecoCusto, qty);
-          if (mult == null || !isFinite(mult) || mult <= 0) return null;
-          const unit = displayPrecoCusto * mult;
-          const desc = Math.max(0, 1 - mult / markup);
-          return { qty, unit, base: precoBase, desc };
-        })
-        .filter(Boolean) as { qty: number; unit: number; base: number; desc: number }[];
-      if (rows.length) return rows;
-    }
+    const custom = getNormalizedPriceRows(product?.tabela_precos, displayPrecoCusto);
+    if (custom && custom.length) return custom;
     return QUANTITIES.map(q => ({
       qty: q,
       unit: calcularPreco(displayPrecoCusto, q),

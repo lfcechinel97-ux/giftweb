@@ -380,6 +380,10 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_set_product_visibility: {
+        Args: { p_hidden: boolean; p_product_id: string }
+        Returns: undefined
+      }
       calc_display_price: { Args: { p_preco_custo: number }; Returns: number }
       get_category_colors: {
         Args: { p_category_slug: string }

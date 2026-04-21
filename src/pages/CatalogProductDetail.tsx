@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
-import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup, getCustomMultiplier } from "@/utils/price";
+import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup, getCustomMultiplier, getNormalizedPriceRows, getEffectiveUnitPrice, getEffectiveMinPrice } from "@/utils/price";
 import { getCorHex } from "@/utils/colorHex";
 import { WHATSAPP_NUMBER } from "@/config/site";
 import CatalogHeader from "@/components/catalog/CatalogHeader";
@@ -58,6 +58,7 @@ const CatalogProductDetail = () => {
       .single()
       .then(async ({ data, error }) => {
         if (error || !data) { navigate("/catalogo", { replace: true }); return; }
+        if (data.is_hidden) { navigate("/catalogo", { replace: true }); return; }
         setCurrentVariantData(data);
         let baseProduct = data;
         if (data.is_variante && data.produto_pai) {
@@ -66,7 +67,10 @@ const CatalogProductDetail = () => {
             .select("*")
             .eq("id", data.produto_pai)
             .single();
-          if (parentData) baseProduct = parentData;
+          if (parentData) {
+            if (parentData.is_hidden) { navigate("/catalogo", { replace: true }); return; }
+            baseProduct = parentData;
+          }
         }
         setProduct(baseProduct);
         setSelectedVariant({
@@ -195,28 +199,13 @@ const CatalogProductDetail = () => {
   const displayNome = product?.nome || '';
 
   const precoBase = displayPrecoCusto ? displayPrecoCusto * getMarkup(displayPrecoCusto) : 0;
-  const precoAtual = displayPrecoCusto ? calcularPreco(displayPrecoCusto, qty) : 0;
-  const precoMin = displayPrecoCusto ? getPrecoMinimo(displayPrecoCusto) : 0;
+  const precoAtual = displayPrecoCusto ? getEffectiveUnitPrice(product?.tabela_precos, displayPrecoCusto, qty) : 0;
+  const precoMin = displayPrecoCusto ? getEffectiveMinPrice(product?.tabela_precos, displayPrecoCusto) : 0;
 
   const tableRows = useMemo(() => {
     if (!displayPrecoCusto) return [];
-    const customTable = product?.tabela_precos;
-    const customRows = Array.isArray(customTable) ? (customTable as any[]) : null;
-    if (customRows && customRows.length > 0) {
-      const markup = getMarkup(displayPrecoCusto);
-      const rows = customRows
-        .map((r: any) => {
-          const qty = r?.qty ?? r?.quantidade;
-          if (!qty) return null;
-          const mult = getCustomMultiplier([r], displayPrecoCusto, qty);
-          if (mult == null || !isFinite(mult) || mult <= 0) return null;
-          const unit = displayPrecoCusto * mult;
-          const desc = Math.max(0, 1 - mult / markup);
-          return { qty, unit, base: precoBase, desc };
-        })
-        .filter(Boolean) as { qty: number; unit: number; base: number; desc: number }[];
-      if (rows.length) return rows;
-    }
+    const custom = getNormalizedPriceRows(product?.tabela_precos, displayPrecoCusto);
+    if (custom && custom.length) return custom;
     return QUANTITIES.map(q => ({
       qty: q,
       unit: calcularPreco(displayPrecoCusto, q),
@@ -249,7 +238,7 @@ const CatalogProductDetail = () => {
   };
 
   const handleSendWhatsApp = () => {
-    const price = displayPrecoCusto ? formatarBRL(calcularPreco(displayPrecoCusto, qty)) : "sob consulta";
+    const price = displayPrecoCusto ? formatarBRL(getEffectiveUnitPrice(product?.tabela_precos, displayPrecoCusto, qty)) : "sob consulta";
     const msg = `Olá! Gostaria de solicitar um orçamento:\n\n1. ${displayNome} (Cód: ${displayCodigo}) — Qtd: ${qty} — ${price}/un\n\nTotal de itens: ${qty}`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
