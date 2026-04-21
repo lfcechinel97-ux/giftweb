@@ -118,7 +118,13 @@ const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codi
   const allColorOptions = hasVariants
     ? [{ slug: slug || codigo_amigavel, cor: cor || '', image: image_url || '', estoque: estoque ?? 0, codigo_amigavel }, ...variantes]
     : [];
-  const isOutOfStock = !hasVariants && (estoque === 0 || estoque === null);
+  // Use estoque_total when available (sums variants); fallback to legacy logic
+  const aggregatedStock = estoque_total ?? (
+    hasVariants
+      ? (estoque ?? 0) + variantes.reduce((sum, v) => sum + (v.estoque ?? 0), 0)
+      : (estoque ?? 0)
+  );
+  const isOutOfStock = aggregatedStock === 0;
 
   const displayImage = images.current[activeIdx] || image_url;
 
