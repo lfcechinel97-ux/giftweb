@@ -87,6 +87,18 @@ export interface PriceRow {
   unit: number;
   base: number;
   desc: number;
+  /** Desconto fracional comparado ao preço unitário da primeira faixa (menor qty). 0 para a primeira faixa. */
+  descVsFirst: number;
+}
+
+/** Formata uma fração (0.0263) como percentual pt-BR com 2 casas decimais ("2,63%"). */
+export function formatPercent2(frac: number): string {
+  return (
+    (frac * 100).toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }) + '%'
+  );
 }
 
 export function getNormalizedPriceRows(
@@ -108,10 +120,14 @@ export function getNormalizedPriceRows(
     const unit = precoCusto * mult;
     if (!isFinite(unit) || unit <= 0) continue;
     const desc = Math.max(0, 1 - mult / markup);
-    rows.push({ qty, unit, base, desc });
+    rows.push({ qty, unit, base, desc, descVsFirst: 0 });
   }
   if (!rows.length) return null;
   rows.sort((a, b) => a.qty - b.qty);
+  const firstUnit = rows[0].unit;
+  for (const r of rows) {
+    r.descVsFirst = firstUnit > 0 ? Math.max(0, 1 - r.unit / firstUnit) : 0;
+  }
   return rows;
 }
 

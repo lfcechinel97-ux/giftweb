@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Save, Upload, GripVertical, X, Plus, ImageOff, Images, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { formatarBRL, getMarkup, VOLUME_TIERS, getMultiplierForQty } from '@/utils/price';
+import { formatarBRL, getMarkup, VOLUME_TIERS, getMultiplierForQty, formatPercent2 } from '@/utils/price';
 import { getCorHex } from '@/utils/colorHex';
 import type { Json } from '@/integrations/supabase/types';
 import { toast as sonnerToast } from 'sonner';
@@ -826,6 +826,9 @@ export default function AdminProductEdit() {
                       {precoCusto > 0 && (
                         <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Preço/un</th>
                       )}
+                      {precoCusto > 0 && (
+                        <th className="text-left px-3 py-2 text-xs font-medium text-muted-foreground">Desc. vs. 20</th>
+                      )}
                       <th className="w-8" />
                     </tr>
                   </thead>
@@ -867,6 +870,21 @@ export default function AdminProductEdit() {
                             {formatarBRL(precoCusto * row.multiplicador)}
                           </td>
                         )}
+                        {precoCusto > 0 && (() => {
+                          const firstMult = activeTabelaRows[0]?.multiplicador ?? row.multiplicador;
+                          const frac = idx === 0 || firstMult <= 0 ? 0 : Math.max(0, 1 - row.multiplicador / firstMult);
+                          return (
+                            <td className="px-3 py-1.5 text-xs tabular-nums">
+                              {idx === 0 ? (
+                                <span className="text-muted-foreground">—</span>
+                              ) : frac > 0 ? (
+                                <span className="px-1.5 py-0.5 rounded-full text-[11px] font-semibold bg-green-cta/15 text-green-cta">-{formatPercent2(frac)}</span>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
+                          );
+                        })()}
                         <td className="px-2 py-1.5">
                           <button
                             type="button"

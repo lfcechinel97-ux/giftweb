@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
-import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup, getCustomMultiplier, getNormalizedPriceRows, getEffectiveUnitPrice, getEffectiveMinPrice } from "@/utils/price";
+import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup, getCustomMultiplier, getNormalizedPriceRows, getEffectiveUnitPrice, getEffectiveMinPrice, formatPercent2 } from "@/utils/price";
 import { getCorHex } from "@/utils/colorHex";
 import { WHATSAPP_REDIRECT_URL, SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
@@ -249,11 +249,17 @@ const ProductDetail = () => {
     if (!displayPrecoCusto) return [];
     const custom = getNormalizedPriceRows(product?.tabela_precos, displayPrecoCusto);
     if (custom && custom.length) return custom;
-    return QUANTITIES.map(q => ({
+    const fallback = QUANTITIES.map(q => ({
       qty: q,
       unit: calcularPreco(displayPrecoCusto, q),
       base: precoBase,
       desc: getDesconto(q),
+      descVsFirst: 0,
+    }));
+    const firstUnit = fallback[0]?.unit ?? 0;
+    return fallback.map(r => ({
+      ...r,
+      descVsFirst: firstUnit > 0 ? Math.max(0, 1 - r.unit / firstUnit) : 0,
     }));
   }, [displayPrecoCusto, precoBase, product?.tabela_precos]);
 
@@ -616,8 +622,8 @@ const ProductDetail = () => {
                                 <span className="text-foreground font-medium">{formatarBRL(row.unit)}</span>
                               </td>
                               <td className="px-3 py-2 whitespace-nowrap">
-                                {row.desc > 0 ? (
-                                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-cta/15 text-green-cta">-{Math.round(row.desc * 100)}%</span>
+                                {i > 0 && row.descVsFirst > 0 ? (
+                                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-green-cta/15 text-green-cta">-{formatPercent2(row.descVsFirst)}</span>
                                 ) : <span className="text-muted-foreground">—</span>}
                               </td>
                             </tr>
