@@ -96,6 +96,9 @@ export default function AdminProducts() {
   const invalidateAll = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['admin-products'] });
     queryClient.invalidateQueries({ queryKey: ['homepage-data'] });
+    queryClient.invalidateQueries({ queryKey: ['catalog'] });
+    queryClient.invalidateQueries({ queryKey: ['search'] });
+    queryClient.invalidateQueries({ queryKey: ['category'] });
   }, [queryClient]);
 
   // Optimistic toggle for individual hide/feature
@@ -114,21 +117,32 @@ export default function AdminProducts() {
   };
 
   const toggleHidden = async (id: string, current: boolean) => {
-    optimisticPatch(id, { is_hidden: !current });
-    const { error } = await supabase.from('products_cache').update({ is_hidden: !current }).eq('id', id);
+    const next = !current;
+    optimisticPatch(id, { is_hidden: next });
+    const { error } = await supabase.rpc('admin_set_product_visibility' as any, {
+      p_product_id: id,
+      p_hidden: next,
+    });
     if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); invalidateAll(); return; }
-    toast({ title: !current ? 'Produto ocultado' : 'Produto visível', description: 'O site público atualiza em até 1 minuto.' });
-    queryClient.invalidateQueries({ queryKey: ['homepage-data'] });
+    toast({ title: next ? 'Produto e variantes ocultados' : 'Produto e variantes visíveis' });
+    invalidateAll();
   };
 
   const bulkToggleHidden = async (hidden: boolean) => {
     if (selectedIds.size === 0) return;
     setBulkLoading(true);
     const ids = [...selectedIds];
-    const { error } = await supabase.from('products_cache').update({ is_hidden: hidden }).in('id', ids);
+    let firstError: string | null = null;
+    for (const id of ids) {
+      const { error } = await supabase.rpc('admin_set_product_visibility' as any, {
+        p_product_id: id,
+        p_hidden: hidden,
+      });
+      if (error && !firstError) firstError = error.message;
+    }
     setBulkLoading(false);
-    if (error) { toast({ title: 'Erro', description: error.message, variant: 'destructive' }); return; }
-    toast({ title: hidden ? `${ids.length} produtos ocultados` : `${ids.length} produtos exibidos`, description: 'O site público atualiza em até 1 minuto.' });
+    if (firstError) { toast({ title: 'Erro', description: firstError, variant: 'destructive' }); invalidateAll(); return; }
+    toast({ title: hidden ? `${ids.length} produtos ocultados (com variantes)` : `${ids.length} produtos exibidos (com variantes)` });
     setSelectedIds(new Set());
     invalidateAll();
   };

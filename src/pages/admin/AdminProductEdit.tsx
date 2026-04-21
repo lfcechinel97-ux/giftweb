@@ -337,6 +337,8 @@ export default function AdminProductEdit() {
     setSaving(true);
     const currentMain = imageMainRef.current;
     const currentImgs = imageUrlsRef.current;
+
+    // 1) Update product fields (visibility goes through the RPC below)
     const { error } = await supabase
       .from('products_cache')
       .update({
@@ -347,19 +349,33 @@ export default function AdminProductEdit() {
         image_urls: currentImgs,
         has_image: !!currentMain,
         is_featured: form.is_featured,
-        is_hidden: form.is_hidden,
         featured_position: form.is_featured ? form.featured_position : null,
         tabela_precos: tabelaPrecos ?? null,
       } as Record<string, unknown>)
       .eq('id', id!);
+
+    // 2) Sync visibility to parent + variants
+    let visibilityError: string | null = null;
+    if (!error) {
+      const { error: vErr } = await supabase.rpc('admin_set_product_visibility' as any, {
+        p_product_id: id!,
+        p_hidden: form.is_hidden,
+      });
+      if (vErr) visibilityError = vErr.message;
+    }
+
     setSaving(false);
     if (error) {
       toast({ title: 'Erro ao salvar', description: error.message, variant: 'destructive' });
+    } else if (visibilityError) {
+      toast({ title: 'Erro ao atualizar visibilidade', description: visibilityError, variant: 'destructive' });
     } else {
       setDirty(false);
       toast({ title: '✅ Produto atualizado com sucesso!' });
       initialized.current = false;
       queryClient.invalidateQueries({ queryKey: ['admin-product', id] });
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      queryClient.invalidateQueries({ queryKey: ['homepage-data'] });
     }
   };
 
