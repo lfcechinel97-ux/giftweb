@@ -5,12 +5,11 @@ import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
 import { Slider } from "@/components/ui/slider";
 import { useMaxPrice } from "@/hooks/useMaxPrice";
+import heroBannerFallback from "@/assets/hero-banner.webp";
+import { buildVersionedCmsUrl, getVersionedRowValue } from "@/utils/siteContentImage";
 
 const PRICE_MIN_LIMIT = 0;
-const BANNER_DESK_BASE_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_desk.png";
-const BANNER_MOB_BASE_URL = "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/banners/banner_1_mob.png";
-const BANNER_DESK_VERSION = "20260321035400981";
-const BANNER_MOB_VERSION = "20260321035402834";
+const HERO_FALLBACK_VERSION = "local-hero";
 const swatchColors = [
   { bg: "#EF4444", name: "VERMELHO", values: ["VERMELHO"] },
   { bg: "#2563EB", name: "AZUL", values: ["AZUL"] },
@@ -47,13 +46,6 @@ const quickFilters: Array<{ label: string; min: number; max: number; highlight?:
   { label: "Até R$100", min: 50.01, max: 100 },
 ];
 
-const buildVersionedUrl = (url: string, version: string) => `${url}${url.includes("?") ? "&" : "?"}v=${version}`;
-
-const getVersionToken = (updatedAt: string | null | undefined, fallbackVersion: string) => {
-  if (!updatedAt) return fallbackVersion;
-  return updatedAt.replace(/\D/g, "") || fallbackVersion;
-};
-
 const getBannerSources = (
   index: number,
   bannerRows: ReturnType<typeof useSiteContentContext>["getBySection"] extends (...args: any[]) => infer R ? R : never,
@@ -61,15 +53,11 @@ const getBannerSources = (
   const deskRow = bannerRows.find(r => r.id === `banner_${index + 1}_desk`);
   const mobRow = bannerRows.find(r => r.id === `banner_${index + 1}_mob`);
 
-  const deskFallback = index === 0 ? buildVersionedUrl(BANNER_DESK_BASE_URL, BANNER_DESK_VERSION) : null;
-  const mobFallback = index === 0 ? buildVersionedUrl(BANNER_MOB_BASE_URL, BANNER_MOB_VERSION) : null;
+  const deskFallback = index === 0 ? buildVersionedCmsUrl(heroBannerFallback, HERO_FALLBACK_VERSION, HERO_FALLBACK_VERSION) : null;
+  const mobFallback = index === 0 ? buildVersionedCmsUrl(heroBannerFallback, HERO_FALLBACK_VERSION, HERO_FALLBACK_VERSION) : null;
 
-  const deskSrc = deskRow?.value
-    ? buildVersionedUrl(deskRow.value, getVersionToken(deskRow.updated_at, BANNER_DESK_VERSION))
-    : deskFallback;
-  const mobSrc = mobRow?.value
-    ? buildVersionedUrl(mobRow.value, getVersionToken(mobRow.updated_at, BANNER_MOB_VERSION))
-    : mobFallback;
+  const deskSrc = getVersionedRowValue(deskRow, HERO_FALLBACK_VERSION) || deskFallback;
+  const mobSrc = getVersionedRowValue(mobRow, HERO_FALLBACK_VERSION) || deskFallback || mobFallback;
 
   return { deskSrc, mobSrc };
 };
@@ -317,7 +305,7 @@ const HeroSection = () => {
 
         {/* Carousel */}
         <div
-          className="hero-carousel relative mx-auto mt-5 w-full min-w-0 max-w-full box-border overflow-hidden rounded-2xl border border-border lg:mt-0 lg:w-[64%]"
+          className="hero-carousel relative mx-auto mt-4 w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card lg:mt-0 lg:w-[64%]"
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
@@ -341,14 +329,19 @@ const HeroSection = () => {
               overflow: hidden;
             }
 
+            .hero-carousel-frame {
+              aspect-ratio: 305 / 258;
+              background: hsl(var(--card));
+            }
+
             .hero-carousel-media {
-              height: auto;
-              object-fit: contain;
+              height: 100%;
+              object-fit: cover;
             }
 
             @media (min-width: 1024px) {
               .hero-carousel-frame {
-                aspect-ratio: 16 / 9;
+                aspect-ratio: 853 / 608;
               }
 
               .hero-carousel-media {
@@ -376,16 +369,16 @@ const HeroSection = () => {
             )}
           </div>
 
-          <button onClick={prevSlide} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white transition-all duration-200 hover:bg-green-cta hover:border-green-cta" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <button onClick={prevSlide} className="absolute left-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 text-white transition-all duration-200 hover:border-green-cta hover:bg-green-cta md:left-4 md:h-10 md:w-10" style={{ background: "rgba(255,255,255,0.08)" }}>
             <ChevronLeft size={22} />
           </button>
-          <button onClick={nextSlide} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white transition-all duration-200 hover:bg-green-cta hover:border-green-cta" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <button onClick={nextSlide} className="absolute right-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 text-white transition-all duration-200 hover:border-green-cta hover:bg-green-cta md:right-4 md:h-10 md:w-10" style={{ background: "rgba(255,255,255,0.08)" }}>
             <ChevronRight size={22} />
           </button>
 
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-2 md:bottom-6">
             {slides.map((_, i) => (
-              <button key={i} onClick={() => setCurrentSlide(i)} className={`w-3 h-3 rounded-full transition-all duration-300 ${i === currentSlide ? "bg-green-cta w-6" : "bg-white/40 hover:bg-white/60"}`} />
+              <button key={i} onClick={() => setCurrentSlide(i)} className={`h-2.5 rounded-full transition-all duration-300 md:h-3 ${i === currentSlide ? "w-5 bg-green-cta md:w-6" : "w-2.5 bg-white/40 hover:bg-white/60 md:w-3"}`} />
             ))}
           </div>
         </div>
