@@ -19,6 +19,7 @@ interface SiteContentContextValue {
   loading: boolean;
   getBySection: (section: string) => SiteContentRow[];
   getValue: (id: string) => string | null;
+  refresh: () => Promise<void>;
 }
 
 const SiteContentContext = createContext<SiteContentContextValue | null>(null);
@@ -27,14 +28,29 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
   const [rows, setRows] = useState<SiteContentRow[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const refresh = async () => {
+    const { data } = await supabase.from("site_content").select("*");
+    setRows((data as SiteContentRow[] | null) ?? []);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    supabase
-      .from("site_content")
-      .select("*")
-      .then(({ data }) => {
-        setRows((data as SiteContentRow[] | null) ?? []);
-        setLoading(false);
-      });
+    refresh();
+
+    const channel = supabase
+      .channel("site-content-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "site_content" },
+        () => {
+          refresh();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const getBySection = (section: string) =>
@@ -44,7 +60,7 @@ export function SiteContentProvider({ children }: { children: ReactNode }) {
     rows.find((r) => r.id === id)?.value ?? null;
 
   return (
-    <SiteContentContext.Provider value={{ rows, loading, getBySection, getValue }}>
+    <SiteContentContext.Provider value={{ rows, loading, getBySection, getValue, refresh }}>
       {children}
     </SiteContentContext.Provider>
   );
