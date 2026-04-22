@@ -29,11 +29,30 @@ export function useSiteContent(section?: string) {
 
   useEffect(() => { fetch(); }, [section]);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel(`site-content-admin-${section ?? 'all'}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'site_content' },
+        () => {
+          fetch();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [section]);
+
   const updateValue = async (id: string, value: string) => {
     await supabase
       .from('site_content')
       .update({ value, updated_at: new Date().toISOString() } as any)
       .eq('id', id);
+
+    await fetch();
   };
 
   const upsertValue = async (id: string, value: string, section?: string) => {
@@ -46,6 +65,8 @@ export function useSiteContent(section?: string) {
         section: section || null,
         updated_at: new Date().toISOString(),
       } as any, { onConflict: 'id' });
+
+    await fetch();
   };
 
   const uploadImage = async (id: string, file: File): Promise<string> => {
