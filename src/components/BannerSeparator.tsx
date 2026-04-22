@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
 import bannerB2B from "@/assets/banner-b2b.webp";
+import { buildVersionedCmsUrl, getVersionedRowValue } from "@/utils/siteContentImage";
 
 const BannerSeparator = () => {
   const { getBySection } = useSiteContentContext();
@@ -15,17 +16,20 @@ const BannerSeparator = () => {
 
   const deskRow = rows.find((r) => r.id === "banner_marca_desk");
   const mobRow = rows.find((r) => r.id === "banner_marca_mob");
-  const src = (isMobile && mobRow?.value) ? mobRow.value : (deskRow?.value || bannerB2B);
+  const fallbackSrc = buildVersionedCmsUrl(bannerB2B, "local-banner", "local-banner") || bannerB2B;
+  const deskSrc = getVersionedRowValue(deskRow, "marca-desk") || fallbackSrc;
+  const mobSrc = getVersionedRowValue(mobRow, "marca-mob") || deskSrc;
+  const src = isMobile ? mobSrc : deskSrc;
 
   return (
-    <div className="mx-4 md:mx-8 rounded-2xl overflow-hidden">
+    <div className="mx-3 overflow-hidden rounded-xl border border-border bg-card md:mx-8">
       <img
         src={src}
         alt="Brindes que fortalecem sua marca — Gift Web"
         loading="lazy"
         width={1200}
         height={300}
-        className="w-full h-auto block md:object-contain md:object-center"
+        className="block h-auto w-full object-cover object-center"
       />
     </div>
   );
