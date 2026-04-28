@@ -9,6 +9,7 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { SiteContentProvider } from "@/contexts/SiteContentContext";
 import { QuotationProvider } from "@/contexts/QuotationContext";
+import { SistemaProvider } from "@/contexts/SistemaContext";
 
 // Lazy-loaded routes
 const AdminSync = lazy(() => import("./pages/AdminSync.tsx"));
@@ -35,6 +36,14 @@ const SecurityPage = lazy(() => import("./pages/SecurityPage.tsx"));
 const TrocasDevolucoesPage = lazy(() => import("./pages/TrocasDevolucoesPage.tsx"));
 const CatalogPage = lazy(() => import("./pages/CatalogPage.tsx"));
 const CatalogProductDetail = lazy(() => import("./pages/CatalogProductDetail.tsx"));
+const SistemaLayout = lazy(() => import("./pages/sistema/SistemaLayout.tsx"));
+const SistemaOrcamentos = lazy(() => import("./pages/sistema/Orcamentos.tsx"));
+const SistemaOrcamentoForm = lazy(() => import("./pages/sistema/OrcamentoForm.tsx"));
+const SistemaPedidos = lazy(() => import("./pages/sistema/Pedidos.tsx"));
+const SistemaEstoque = lazy(() => import("./pages/sistema/Estoque.tsx"));
+const SistemaProdutos = lazy(() => import("./pages/sistema/ProdutosCatalogo.tsx"));
+const SistemaClientes = lazy(() => import("./pages/sistema/Clientes.tsx"));
+const SistemaConfiguracoes = lazy(() => import("./pages/sistema/Configuracoes.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -57,6 +66,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <QuotationProvider>
+        <SistemaProvider>
         <SiteContentProvider>
         <BrowserRouter>
           <ScrollToTop />
@@ -97,12 +107,24 @@ const App = () => (
               <Route path="/termos-de-uso" element={<TermsPage />} />
               <Route path="/seguranca" element={<SecurityPage />} />
               <Route path="/politica-de-trocas-e-devolucoes" element={<TrocasDevolucoesPage />} />
+              <Route path="/sistema" element={<SistemaLayout />}>
+                <Route index element={<SistemaOrcamentos />} />
+                <Route path="orcamentos" element={<SistemaOrcamentos />} />
+                <Route path="orcamentos/novo" element={<SistemaOrcamentoForm />} />
+                <Route path="orcamentos/:id" element={<SistemaOrcamentoForm />} />
+                <Route path="pedidos" element={<SistemaPedidos />} />
+                <Route path="estoque" element={<SistemaEstoque />} />
+                <Route path="produtos" element={<SistemaProdutos />} />
+                <Route path="clientes" element={<SistemaClientes />} />
+                <Route path="configuracoes" element={<SistemaConfiguracoes />} />
+              </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </BrowserRouter>
         </SiteContentProvider>
+        </SistemaProvider>
         </QuotationProvider>
       </TooltipProvider>
     </HelmetProvider>
