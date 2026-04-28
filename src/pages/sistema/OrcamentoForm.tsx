@@ -831,9 +831,9 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
                 <div className="space-y-4">
                   <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                     <div className="w-16 h-16 bg-white rounded-lg overflow-hidden flex-shrink-0">
-                      {(mockupImagem || selectedVariant?.image || selectedProduct.image_url) ? (
+                      {(mockupImagem || selectedVariant?.image_url || selectedVariant?.image || selectedProduct.image_url) ? (
                         <img
-                          src={mockupImagem || selectedVariant?.image || selectedProduct.image_url}
+                          src={mockupImagem || selectedVariant?.image_url || selectedVariant?.image || selectedProduct.image_url}
                           alt=""
                           className="w-full h-full object-cover"
                         />
