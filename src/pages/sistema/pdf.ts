@@ -149,7 +149,7 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     doc.setFillColor(241, 243, 250);
     doc.roundedRect(30, y, W - 60, 118, 4, 4, "F");
 
-    const imgSrc = destaque.mockupImagem || destaque.imagem;
+    const imgSrc = destaque.mockupImagem;
     if (imgSrc) {
       const img = await loadImageAsDataURL(imgSrc);
       if (img) {
@@ -157,7 +157,7 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
       }
     }
 
-    const txtX = imgSrc ? 148 : 44;
+    const txtX = imgSrc ? 148 : 44; /* só avança se tiver mockup */
     doc.setFontSize(7); doc.setFont("helvetica", "normal"); doc.setTextColor(140, 140, 160);
     doc.text("PRODUTO EM DESTAQUE", txtX, y + 22);
 
@@ -282,10 +282,12 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   doc.setFontSize(7.5); doc.setFont("helvetica", "normal"); doc.setTextColor(160, 160, 180);
   doc.text("Gift Web Brindes Personalizados  ·  contato@giftweb.com.br  ·  giftweb.com.br", W / 2, ph - 12, { align: "center" });
 
-  const nomeCliente = clienteNome
-    ? clienteNome.replace(/[^a-zA-Z0-9\u00C0-\u024F\s]/g, "").trim().replace(/\s+/g, "_")
-    : "Cliente";
-  doc.save(`Orcamento_${nomeCliente}_${orc.numero}.pdf`);
+  const nomeClienteLimpo = (clienteNome || "Cliente")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9\s]/g, "")
+    .trim()
+    .replace(/\s+/g, " ");
+  doc.save(`Orcamento GiftWeb x ${nomeClienteLimpo} - ${orc.numero}.pdf`);
 }
 
 export async function gerarPDFPedido(pedido: any, sis?: Sis): Promise<void> {

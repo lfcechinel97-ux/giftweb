@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Check, Filter, Plus, Search, Trash2, ChevronDown, ChevronUp, FileText, Package, Printer
+  Check, Filter, Plus, Search, Trash2, ChevronDown, ChevronUp, FileText, Package, Printer, X
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,107 @@ const statusStyles: Record<OrcamentoStatus, { btn: string; dot: string; label: s
   "cancelado": { btn: "bg-red-600 hover:bg-red-700 text-white",   dot: "bg-red-400",   label: "Cancelado" },
 };
 
+/* ─── Modal de confirmação de aprovação ─────────────────────────────────── */
+
+interface AprovarModalProps {
+  orcamento: Orcamento;
+  onClose: () => void;
+  onConfirm: (orcId: string, itens: { itemId: string; quantidade: number }[]) => void;
+}
+
+function AprovarModal({ orcamento, onClose, onConfirm }: AprovarModalProps) {
+  const [selecionados, setSelecionados] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(orcamento.itens.map(it => [it.id, true]))
+  );
+  const [quantidades, setQuantidades] = useState<Record<string, number>>(
+    () => Object.fromEntries(orcamento.itens.map(it => [it.id, it.quantidade]))
+  );
+
+  const toggleItem = (id: string) =>
+    setSelecionados(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const setQtd = (id: string, val: number) =>
+    setQuantidades(prev => ({ ...prev, [id]: Math.max(1, val) }));
+
+  const itensSel = orcamento.itens.filter(it => selecionados[it.id]);
+  const podeConfirmar = itensSel.length > 0;
+
+  const handleConfirm = () => {
+    onConfirm(
+      orcamento.id,
+      itensSel.map(it => ({ itemId: it.id, quantidade: quantidades[it.id] }))
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between p-5 border-b">
+          <div>
+            <h2 className="text-lg font-semibold">Confirmar Aprovação</h2>
+            <p className="text-sm text-gray-500">Orçamento #{orcamento.numero} — selecione os itens e ajuste quantidades</p>
+          </div>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-auto p-4 space-y-2">
+          {orcamento.itens.map(it => (
+            <div
+              key={it.id}
+              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                selecionados[it.id] ? "border-green-400 bg-green-50" : "border-gray-200 bg-gray-50 opacity-60"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={!!selecionados[it.id]}
+                onChange={() => toggleItem(it.id)}
+                className="w-4 h-4 accent-green-600 cursor-pointer flex-shrink-0"
+              />
+              {(it.mockupImagem || it.imagem) ? (
+                <img src={it.mockupImagem || it.imagem} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+              ) : (
+                <Package className="w-10 h-10 p-2 text-gray-300 flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{it.nome}</p>
+                {it.codigoComposto && (
+                  <p className="text-xs text-gray-400 font-mono">{it.codigoComposto}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <button type="button" disabled={!selecionados[it.id]} onClick={() => setQtd(it.id, quantidades[it.id] - 1)}
+                  className="w-6 h-6 rounded border flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30">−</button>
+                <input
+                  type="number" min="1" disabled={!selecionados[it.id]}
+                  value={quantidades[it.id]}
+                  onChange={e => setQtd(it.id, parseInt(e.target.value) || 1)}
+                  className="w-14 text-center border rounded px-1 py-0.5 text-sm disabled:opacity-30"
+                />
+                <button type="button" disabled={!selecionados[it.id]} onClick={() => setQtd(it.id, quantidades[it.id] + 1)}
+                  className="w-6 h-6 rounded border flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-30">+</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between p-4 border-t bg-gray-50 rounded-b-xl">
+          <p className="text-sm text-gray-500">{itensSel.length} de {orcamento.itens.length} item(s) selecionado(s)</p>
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg text-sm">Cancelar</button>
+            <button type="button" disabled={!podeConfirmar} onClick={handleConfirm}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50">
+              <Check className="w-4 h-4 inline mr-1" /> Confirmar Aprovação
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Orcamentos() {
   const { orcamentos, removeOrcamento, aprovarOrcamento, clientes, vendedores, transportadoras, meiosPagamento, origens } = useSistema();
   const navigate = useNavigate();
@@ -35,6 +136,7 @@ export default function Orcamentos() {
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
 
   const filtered = useMemo(() => {
     return orcamentos.filter(o => {
@@ -60,8 +162,23 @@ export default function Orcamentos() {
   const valorTotalFiltrado = filtered.reduce((s, o) => s + calcTotal(o), 0);
 
   const handleAprovar = (id: string) => {
-    const p = aprovarOrcamento(id);
+    const orc = orcamentos.find(o => o.id === id);
+    if (orc) setAprovarOrc(orc);
+  };
+
+  const handleConfirmarAprovacao = (orcId: string, itensSelecionados: { itemId: string; quantidade: number }[]) => {
+    const orc = orcamentos.find(o => o.id === orcId);
+    if (!orc) return;
+    const itensAprovados = orc.itens
+      .filter(it => itensSelecionados.some(s => s.itemId === it.id))
+      .map(it => {
+        const sel = itensSelecionados.find(s => s.itemId === it.id)!;
+        return { ...it, quantidade: sel.quantidade };
+      });
+    const orcModificado = { ...orc, itens: itensAprovados };
+    const p = aprovarOrcamento(orcModificado.id);
     if (p) toast.success(`Orçamento aprovado! Pedido #${p.numero} criado.`);
+    setAprovarOrc(null);
   };
 
   const handleDelete = (id: string) => {
@@ -168,6 +285,7 @@ export default function Orcamentos() {
                     <Check className="h-3.5 w-3.5 mr-1" /> Aprovar
                   </Button>
                 )}
+
                 <Button size="icon" variant="ghost" className="text-red-600" onClick={(e) => { e.stopPropagation(); setDeleteId(o.id); }}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -249,6 +367,15 @@ export default function Orcamentos() {
         ))}
       </div>
 
+      {/* Modal Aprovação */}
+      {aprovarOrc && (
+        <AprovarModal
+          orcamento={aprovarOrc}
+          onClose={() => setAprovarOrc(null)}
+          onConfirm={handleConfirmarAprovacao}
+        />
+      )}
+
       {/* Delete Dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
@@ -267,3 +394,4 @@ export default function Orcamentos() {
     </div>
   );
 }
+

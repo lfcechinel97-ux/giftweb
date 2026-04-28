@@ -70,17 +70,20 @@ function SimpleCRUD({ titulo, items, onAdd, onUpdate, onRemove, onToggle }: Simp
 
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
-      <div className="p-4 border-b border-border flex items-center gap-2">
+      <form
+        onSubmit={e => { e.preventDefault(); handleAdd(); }}
+        className="p-4 border-b border-border flex items-center gap-2"
+      >
         <Input
           placeholder={`Adicionar ${titulo.toLowerCase()}...`}
           value={novo}
           onChange={e => setNovo(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && handleAdd()}
+          className="flex-1"
         />
-        <Button type="button" onClick={handleAdd} className="bg-blue-700 hover:bg-blue-800 text-white shrink-0">
+        <Button type="submit" className="bg-blue-700 hover:bg-blue-800 text-white shrink-0">
           <Plus className="h-4 w-4 mr-1" /> Adicionar
         </Button>
-      </div>
+      </form>
 
       <div className="divide-y divide-border">
         {items.length === 0 ? (
@@ -230,12 +233,14 @@ function TransportadorasCRUD() {
   return (
     <div className="bg-card rounded-lg border border-border overflow-hidden">
       {/* Linha de adição */}
-      <div className="p-4 border-b border-border flex flex-wrap items-center gap-2">
+      <form
+        onSubmit={e => { e.preventDefault(); handleAdd(); }}
+        className="p-4 border-b border-border flex flex-wrap items-center gap-2"
+      >
         <Input
           placeholder="Nome da transportadora..."
           value={novo.nome}
           onChange={e => setNovo(p => ({ ...p, nome: e.target.value }))}
-          onKeyDown={e => e.key === "Enter" && handleAdd()}
           className="flex-1 min-w-40"
         />
         <Input
@@ -246,10 +251,10 @@ function TransportadorasCRUD() {
           value={novo.prazo}
           onChange={e => setNovo(p => ({ ...p, prazo: e.target.value }))}
         />
-        <Button type="button" onClick={handleAdd} className="bg-blue-700 hover:bg-blue-800 text-white shrink-0">
+        <Button type="submit" className="bg-blue-700 hover:bg-blue-800 text-white shrink-0">
           <Plus className="h-4 w-4 mr-1" /> Adicionar
         </Button>
-      </div>
+      </form>
 
       {/* Lista */}
       <div className="divide-y divide-border">

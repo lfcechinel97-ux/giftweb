@@ -957,7 +957,7 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
                         min="0"
                         step="0.01"
                         className={`w-full pl-9 pr-3 py-2 border rounded-lg ${precoManual ? "border-amber-400 bg-amber-50" : ""}`}
-                        value={precoUnitario}
+                        value={precoUnitario === 0 ? "" : Number(precoUnitario).toFixed(2)}
                         onChange={(e) => handlePrecoChange(parseFloat(e.target.value) || 0)}
                       />
                     </div>
