@@ -19,7 +19,13 @@ const menu = [
 ];
 
 export default function SistemaLayout() {
-  const { vendedores, vendedorAtualId, setVendedorAtualId, vendedorAtualNome } = useSistema();
+  const { vendedores, currentVendedor, setCurrentVendedor } = useSistema();
+  const vendedorAtualId = currentVendedor?.id;
+  const vendedorAtualNome = currentVendedor?.nome ?? "Selecionar vendedor";
+  const setVendedorAtualId = (id: string) => {
+    const v = vendedores.find(x => x.id === id) ?? null;
+    setCurrentVendedor(v);
+  };
   const navigate = useNavigate();
   const loc = useLocation();
 
