@@ -70,18 +70,17 @@ export default function Clientes() {
                   <p className="text-muted-foreground">Nenhum cliente.</p>
                 </TableCell>
               </TableRow>
-            ) : filtered.map(c => (
+            ) : filtered.map(c => {
+              const contato = c.contatos?.[0];
+              return (
               <TableRow key={c.id}>
                 <TableCell><Badge variant="outline">{c.tipo}</Badge></TableCell>
                 <TableCell className="font-medium">
-                  {c.nome_fantasia || c.razao_social}
-                  {c.nome_fantasia && c.razao_social && (
-                    <span className="text-xs text-muted-foreground block">{c.razao_social}</span>
-                  )}
+                  {c.nome}
                 </TableCell>
-                <TableCell className="text-sm font-mono">{c.cnpj || c.cpf || "—"}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{c.telefone || "—"}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{c.email || "—"}</TableCell>
+                <TableCell className="text-sm font-mono">{c.documento || "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{contato?.telefone || "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{contato?.email || "—"}</TableCell>
                 <TableCell className="text-right">
                   <Button size="icon" variant="ghost" className="h-7 w-7 text-blue-600" onClick={() => startEdit(c)}>
                     <Pencil className="h-4 w-4" />
