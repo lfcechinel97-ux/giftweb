@@ -78,5 +78,21 @@
       ></iframe
     ></noscript>
     <!-- End Google Tag Manager (noscript) -->
+
+    <!-- CQC Pixel -->
+    <script>
+      (function(w,d,s){
+        if(!w.cqc){
+          w.cqc=w.cqc||{};
+          var c=d.getElementsByTagName('head')[0];
+          var k=d.createElement('script');
+          k.async=1;
+          k.src=s;
+          c.appendChild(k);
+        }
+        w.cqc.accountCode='';
+      })(window,document,'https://api.cqc.onpromedia.com.br/pixel/cqc.js');
+    </script>
+    <!-- End CQC Pixel -->
   </body>
 </html>
