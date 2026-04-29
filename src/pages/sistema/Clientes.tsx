@@ -14,7 +14,7 @@ import { useSistema, type Cliente } from "@/contexts/SistemaContext";
 import ClienteDialog from "./ClienteDialog";
 
 export default function Clientes() {
-  const { clientes, deleteCliente } = useSistema();
+  const { clientes, removeCliente } = useSistema();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Cliente | undefined>();
@@ -23,10 +23,8 @@ export default function Clientes() {
     const t = search.trim().toLowerCase();
     if (!t) return clientes;
     return clientes.filter(c =>
-      c.razao_social.toLowerCase().includes(t) ||
-      (c.nome_fantasia || "").toLowerCase().includes(t) ||
-      (c.cnpj || "").includes(t) ||
-      (c.cpf || "").includes(t)
+      c.nome.toLowerCase().includes(t) ||
+      (c.documento || "").includes(t)
     );
   }, [clientes, search]);
 
