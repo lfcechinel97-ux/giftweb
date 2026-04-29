@@ -14,7 +14,7 @@ import { useSistema, type Cliente } from "@/contexts/SistemaContext";
 import ClienteDialog from "./ClienteDialog";
 
 export default function Clientes() {
-  const { clientes, deleteCliente } = useSistema();
+  const { clientes, removeCliente } = useSistema();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Cliente | undefined>();
@@ -23,10 +23,8 @@ export default function Clientes() {
     const t = search.trim().toLowerCase();
     if (!t) return clientes;
     return clientes.filter(c =>
-      c.razao_social.toLowerCase().includes(t) ||
-      (c.nome_fantasia || "").toLowerCase().includes(t) ||
-      (c.cnpj || "").includes(t) ||
-      (c.cpf || "").includes(t)
+      c.nome.toLowerCase().includes(t) ||
+      (c.documento || "").includes(t)
     );
   }, [clientes, search]);
 
@@ -72,18 +70,17 @@ export default function Clientes() {
                   <p className="text-muted-foreground">Nenhum cliente.</p>
                 </TableCell>
               </TableRow>
-            ) : filtered.map(c => (
+            ) : filtered.map(c => {
+              const contato = c.contatos?.[0];
+              return (
               <TableRow key={c.id}>
                 <TableCell><Badge variant="outline">{c.tipo}</Badge></TableCell>
                 <TableCell className="font-medium">
-                  {c.nome_fantasia || c.razao_social}
-                  {c.nome_fantasia && c.razao_social && (
-                    <span className="text-xs text-muted-foreground block">{c.razao_social}</span>
-                  )}
+                  {c.nome}
                 </TableCell>
-                <TableCell className="text-sm font-mono">{c.cnpj || c.cpf || "—"}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{c.telefone || "—"}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{c.email || "—"}</TableCell>
+                <TableCell className="text-sm font-mono">{c.documento || "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{contato?.telefone || "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{contato?.email || "—"}</TableCell>
                 <TableCell className="text-right">
                   <Button size="icon" variant="ghost" className="h-7 w-7 text-blue-600" onClick={() => startEdit(c)}>
                     <Pencil className="h-4 w-4" />
@@ -101,13 +98,14 @@ export default function Clientes() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteCliente(c.id)} className="bg-red-600 hover:bg-red-700">Excluir</AlertDialogAction>
+                        <AlertDialogAction onClick={() => removeCliente(c.id)} className="bg-red-600 hover:bg-red-700">Excluir</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </div>
