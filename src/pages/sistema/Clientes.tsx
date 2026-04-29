@@ -98,13 +98,14 @@ export default function Clientes() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteCliente(c.id)} className="bg-red-600 hover:bg-red-700">Excluir</AlertDialogAction>
+                        <AlertDialogAction onClick={() => removeCliente(c.id)} className="bg-red-600 hover:bg-red-700">Excluir</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
           </TableBody>
         </Table>
       </div>
