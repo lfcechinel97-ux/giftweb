@@ -70,12 +70,9 @@ const WhatsAppModal = ({ open, onClose, useDirectMessage = false }: WhatsAppModa
     if (form.budget.trim()) lines.push(`Orçamento estimado: ${form.budget}`);
     if (form.details.trim()) lines.push(`Detalhes do pedido: ${form.details}`);
 
-    if (useDirectMessage) {
-      const msg = lines.join("\n");
-      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
-    } else {
-      window.open(WHATSAPP_REDIRECT_URL, "_blank");
-    }
+    // Always redirect to the central tracking URL, regardless of useDirectMessage
+    void lines;
+    window.open(WHATSAPP_REDIRECT_URL, "_blank");
     onClose();
   };
 
