@@ -1,5 +1,5 @@
-// Lookup de CNPJ via BrasilAPI (gratuito, sem key)
-// docs: https://brasilapi.com.br/docs#tag/CNPJ
+// Lookup de CNPJ via ReceitaWS (gratuito, sem key, aceita CORS)
+// docs: https://www.receitaws.com.br/
 
 export interface CnpjData {
   cnpj: string;
@@ -70,23 +70,51 @@ export async function fetchCEP(cep: string): Promise<CepData | null> {
 export async function fetchCNPJ(cnpj: string): Promise<CnpjData | null> {
   const digits = onlyDigits(cnpj);
   if (digits.length !== 14) return null;
+
+  // Tenta ReceitaWS primeiro (aceita CORS, gratuito)
+  try {
+    const res = await fetch(`https://receitaws.com.br/v1/cnpj/${digits}`, { headers: { Accept: "application/json" } });
+    if (res.ok) {
+      const j = await res.json();
+      if (j.status !== "ERROR") {
+        return {
+          cnpj: j.cnpj || digits,
+          razao_social: j.nome || "",
+          nome_fantasia: j.fantasia || "",
+          email: j.email || "",
+          ddd_telefone_1: j.telefone || "",
+          cep: j.cep || "",
+          logradouro: j.logradouro || "",
+          numero: j.numero || "",
+          complemento: j.complemento || "",
+          bairro: j.bairro || "",
+          municipio: j.municipio || "",
+          uf: j.uf || "",
+        };
+      }
+    }
+  } catch {
+    // fallback abaixo
+  }
+
+  // Fallback: BrasilAPI
   try {
     const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
     if (!res.ok) return null;
     const j = await res.json();
     return {
-      cnpj: j.cnpj,
+      cnpj: j.cnpj || digits,
       razao_social: j.razao_social || "",
       nome_fantasia: j.nome_fantasia || "",
-      email: j.email,
-      ddd_telefone_1: j.ddd_telefone_1,
-      cep: j.cep,
-      logradouro: j.logradouro,
-      numero: j.numero,
-      complemento: j.complemento,
-      bairro: j.bairro,
-      municipio: j.municipio,
-      uf: j.uf,
+      email: j.email || "",
+      ddd_telefone_1: j.ddd_telefone_1 || "",
+      cep: j.cep || "",
+      logradouro: j.logradouro || "",
+      numero: j.numero || "",
+      complemento: j.complemento || "",
+      bairro: j.bairro || "",
+      municipio: j.municipio || "",
+      uf: j.uf || "",
     };
   } catch {
     return null;
