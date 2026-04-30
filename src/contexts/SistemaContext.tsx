@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useMemo, useState, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useMemo, useState, useEffect, useCallback } from "react";
 import type { Tables } from "@/integrations/supabase/types";
-import { supabase } from "@/integrations/supabase/client";
 
 export const formatBRL = (valor: number | null | undefined): string => {
   if (valor == null || isNaN(valor)) return "—";
@@ -224,49 +223,27 @@ const initialData: SistemaData = {
   ajustesEstoque: [],
 };
 
-const SUPABASE_ROW_KEY = "giftweb_sistema_v1";
-
-function loadFromLocalStorage(): SistemaData {
+function loadFromStorage(): SistemaData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return { ...initialData, ...JSON.parse(raw) };
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { ...initialData, ...parsed };
+    }
   } catch {}
   return { ...initialData };
 }
 
-function saveToLocalStorage(data: SistemaData) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as any;
-
-async function loadFromSupabase(): Promise<SistemaData | null> {
+function saveToStorage(data: SistemaData) {
   try {
-    const { data, error } = await db
-      .from("sistema_data")
-      .select("data")
-      .eq("key", SUPABASE_ROW_KEY)
-      .maybeSingle();
-    if (error || !data) return null;
-    return { ...initialData, ...(data.data as Partial<SistemaData>) };
-  } catch {
-    return null;
-  }
-}
-
-async function saveToSupabase(sysData: SistemaData) {
-  try {
-    await db
-      .from("sistema_data")
-      .upsert({ key: SUPABASE_ROW_KEY, data: sysData, updated_at: new Date().toISOString() }, { onConflict: "key" });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch {}
 }
 
 const SistemaContext = createContext<SistemaContextType | null>(null);
 
 export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [data, setData] = useState<SistemaData>(() => loadFromLocalStorage());
+  const [data, setData] = useState<SistemaData>(() => loadFromStorage());
   const [currentVendedor, setCurrentVendedorState] = useState<LookupItem | null>(() => {
     try {
       const raw = localStorage.getItem(VENDEDOR_KEY);
@@ -276,24 +253,9 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   });
 
-  // On mount: sync with Supabase
-  const initialized = useRef(false);
   useEffect(() => {
-    if (initialized.current) return;
-    initialized.current = true;
-    loadFromSupabase().then((remote) => {
-      if (remote) {
-        // Supabase tem dados — usa como fonte da verdade
-        setData(remote);
-        saveToLocalStorage(remote);
-      } else {
-        // Supabase vazio — migra dados do localStorage para lá (primeira vez)
-        const local = loadFromLocalStorage();
-        const hasLocalData = local.orcamentos.length > 0 || local.clientes.length > 0 || local.pedidos.length > 0;
-        if (hasLocalData) saveToSupabase(local);
-      }
-    });
-  }, []);
+    saveToStorage(data);
+  }, [data]);
 
   useEffect(() => {
     try {
@@ -305,8 +267,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const persist = useCallback((updater: (prev: SistemaData) => SistemaData) => {
     setData((prev) => {
       const next = updater(prev);
-      saveToLocalStorage(next);
-      saveToSupabase(next); // fire-and-forget
+      saveToStorage(next);
       return next;
     });
   }, []);
