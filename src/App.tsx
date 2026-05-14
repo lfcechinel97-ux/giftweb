@@ -34,6 +34,9 @@ const PrivacyPage = lazy(() => import("./pages/PrivacyPage.tsx"));
 const TermsPage = lazy(() => import("./pages/TermsPage.tsx"));
 const SecurityPage = lazy(() => import("./pages/SecurityPage.tsx"));
 const TrocasDevolucoesPage = lazy(() => import("./pages/TrocasDevolucoesPage.tsx"));
+const WhatsAppPrivacyPage = lazy(() => import("./pages/WhatsAppPrivacyPage.tsx"));
+const WhatsAppTermsPage = lazy(() => import("./pages/WhatsAppTermsPage.tsx"));
+const DataDeletionPage = lazy(() => import("./pages/DataDeletionPage.tsx"));
 const CatalogPage = lazy(() => import("./pages/CatalogPage.tsx"));
 const CatalogProductDetail = lazy(() => import("./pages/CatalogProductDetail.tsx"));
 const SistemaLayout = lazy(() => import("./pages/sistema/SistemaLayout.tsx"));
@@ -107,6 +110,9 @@ const App = () => (
               <Route path="/termos-de-uso" element={<TermsPage />} />
               <Route path="/seguranca" element={<SecurityPage />} />
               <Route path="/politica-de-trocas-e-devolucoes" element={<TrocasDevolucoesPage />} />
+              <Route path="/politica-de-privacidade-whatsapp" element={<WhatsAppPrivacyPage />} />
+              <Route path="/termos-de-servico-whatsapp" element={<WhatsAppTermsPage />} />
+              <Route path="/exclusao-de-dados" element={<DataDeletionPage />} />
               <Route path="/sistema" element={<SistemaLayout />}>
                 <Route index element={<SistemaOrcamentos />} />
                 <Route path="orcamentos" element={<SistemaOrcamentos />} />
