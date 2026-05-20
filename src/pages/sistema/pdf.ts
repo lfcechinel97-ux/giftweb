@@ -9,16 +9,18 @@ interface Sis {
   origens: LookupItem[];
 }
 
-// ─── Paleta premium ────────────────────────────────────────────────────────
+// ─── Paleta premium (azul marinho + verde) ─────────────────────────────────
 const C = {
-  ink: [17, 24, 39] as [number, number, number],       // títulos
-  body: [55, 65, 81] as [number, number, number],      // texto
-  muted: [107, 114, 128] as [number, number, number],  // secundário
-  subtle: [156, 163, 175] as [number, number, number], // labels
-  line: [229, 231, 235] as [number, number, number],   // bordas
-  surface: [249, 250, 251] as [number, number, number],// cards claros
-  accent: [22, 163, 74] as [number, number, number],   // verde marca
-  accentSoft: [236, 253, 245] as [number, number, number],
+  ink: [7, 20, 38] as [number, number, number],         // #071426 navy
+  navy: [11, 31, 56] as [number, number, number],       // #0B1F38 navy alt
+  body: [37, 47, 64] as [number, number, number],
+  muted: [107, 114, 128] as [number, number, number],
+  subtle: [148, 163, 184] as [number, number, number],
+  line: [226, 232, 240] as [number, number, number],
+  surface: [245, 247, 250] as [number, number, number], // #F5F7FA
+  accent: [22, 196, 127] as [number, number, number],   // #16C47F verde
+  accentDark: [15, 169, 104] as [number, number, number], // #0FA968
+  accentSoft: [230, 252, 242] as [number, number, number],
   gold: [202, 138, 4] as [number, number, number],
   goldSoft: [254, 249, 195] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
