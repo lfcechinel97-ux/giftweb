@@ -663,6 +663,7 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
       setPrecoOriginal(item.precoOriginal);
       setPrecoManual(item.precoManual);
       setMockupImagem(item.mockupImagem);
+      setObservacao(item.observacao || "");
       if (item.produtoId) {
         const prod = getParentWithVariants(item.codigoComposto?.split("-")[0] || "");
         if (prod) {
