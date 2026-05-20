@@ -411,51 +411,61 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   doc.text(fmtBRL(subtotal), W - M, y, { align: "right" });
   y += 12;
 
-  // Box do total
+  // Box do total — branco com contorno navy premium
+  setFill(doc, C.white);
+  setDraw(doc, C.ink); doc.setLineWidth(1.4);
+  doc.roundedRect(M, y, W - M * 2, totalBoxH, 12, 12, "FD");
+  // Linha navy lateral fina
   setFill(doc, C.ink);
-  doc.roundedRect(M, y, W - M * 2, totalBoxH, 10, 10, "F");
+  doc.rect(M, y, 4, totalBoxH, "F");
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [180, 188, 200]);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
+  doc.setCharSpace(1.4);
   doc.text("VALOR TOTAL DA PROPOSTA", M + 22, y + 22);
+  doc.setCharSpace(0);
 
   if (economia > 0) {
-    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, [156, 163, 175]);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.subtle);
     const deStr = `de ${fmtBRL(totalOriginal)}`;
     doc.text(deStr, M + 22, y + 38);
     const deW = doc.getTextWidth(deStr);
-    setDraw(doc, [156, 163, 175]); doc.setLineWidth(0.6);
+    setDraw(doc, C.subtle); doc.setLineWidth(0.6);
     doc.line(M + 22, y + 35.5, M + 22 + deW, y + 35.5);
 
-    doc.setFont("helvetica", "bold"); doc.setFontSize(26); setText(doc, C.white);
-    doc.text(fmtBRL(total), M + 22, y + 68);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(28); setText(doc, C.ink);
+    doc.text(fmtBRL(total), M + 22, y + 70);
 
     const ecoLabel = `Você economiza ${fmtBRL(economia)}`;
-    doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8);
     const ecoW = doc.getTextWidth(ecoLabel) + 18;
-    setFill(doc, C.accent);
-    doc.roundedRect(M + 22, y + 80, ecoW, 20, 10, 10, "F");
-    setText(doc, C.white);
-    doc.text(ecoLabel, M + 22 + 9, y + 94);
+    setFill(doc, C.accentSoft);
+    doc.roundedRect(M + 22, y + 82, ecoW, 18, 9, 9, "F");
+    setText(doc, C.accentDark);
+    doc.text(ecoLabel, M + 22 + 9, y + 95);
   } else {
-    doc.setFont("helvetica", "bold"); doc.setFontSize(28); setText(doc, C.white);
-    doc.text(fmtBRL(total), M + 22, y + 60);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(30); setText(doc, C.ink);
+    doc.text(fmtBRL(total), M + 22, y + 62);
   }
 
-  // Lado direito: forma resumida
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, [156, 163, 175]);
+  // Lado direito: forma resumida (texto em navy)
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
+  doc.setCharSpace(1.2);
   doc.text("PAGAMENTO", W - M - 22, y + 22, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.white);
+  doc.setCharSpace(0);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.ink);
   doc.text(lookupName(sistema.meiosPagamento, orc.pagamentoId), W - M - 22, y + 36, { align: "right" });
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, [156, 163, 175]);
-  doc.text("VALIDADE DA PROPOSTA", W - M - 22, y + 56, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.white);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
+  doc.setCharSpace(1.2);
+  doc.text("VALIDADE", W - M - 22, y + 56, { align: "right" });
+  doc.setCharSpace(0);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.accentDark);
   doc.text(formatDate(dataValidade.toISOString()), W - M - 22, y + 70, { align: "right" });
 
-  y += totalBoxH + 16;
+  y += totalBoxH + 14;
 
-  // ── CONDIÇÕES (cards) ────────────────────────────────────────────────────
-  y = ensureSpace(doc, y, 70);
+  // ── CONDIÇÕES (linha discreta) ───────────────────────────────────────────
+  y = ensureSpace(doc, y, 50);
 
   const cards = [
     { label: "PRAZO DE ENTREGA", value: orc.prazoEntrega ? `${orc.prazoEntrega} dias úteis` : "À combinar" },
@@ -466,41 +476,54 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   const gap = 8;
   const cw = (W - M * 2 - gap * 3) / 4;
-  const ch = 46;
+  const ch = 38;
   cards.forEach((c, i) => {
     const cx = M + (cw + gap) * i;
-    setDraw(doc, C.line); doc.setLineWidth(0.8);
-    doc.roundedRect(cx, y, cw, ch, 8, 8, "S");
-    doc.setFont("helvetica", "normal"); doc.setFontSize(6.2); setText(doc, C.subtle);
-    doc.text(c.label, cx + 10, y + 14);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(9); setText(doc, C.ink);
+    setDraw(doc, C.line); doc.setLineWidth(0.6);
+    doc.roundedRect(cx, y, cw, ch, 6, 6, "S");
+    doc.setFont("helvetica", "normal"); doc.setFontSize(6); setText(doc, C.subtle);
+    doc.setCharSpace(0.8);
+    doc.text(c.label, cx + 10, y + 13);
+    doc.setCharSpace(0);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); setText(doc, C.ink);
     const lines = doc.splitTextToSize(c.value, cw - 20);
-    doc.text(lines.slice(0, 2), cx + 10, y + 28);
+    doc.text(lines.slice(0, 1), cx + 10, y + 26);
   });
-  y += ch + 16;
+  y += ch + 12;
 
   // ── OBSERVAÇÕES ──────────────────────────────────────────────────────────
   if (orc.observacoes) {
-    y = ensureSpace(doc, y, 60);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(8); setText(doc, C.subtle);
+    y = ensureSpace(doc, y, 50);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); setText(doc, C.subtle);
+    doc.setCharSpace(1);
     doc.text("OBSERVAÇÕES", M, y);
-    y += 12;
-    doc.setFont("helvetica", "normal"); doc.setFontSize(9); setText(doc, C.body);
+    doc.setCharSpace(0);
+    y += 11;
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.body);
     const lines = doc.splitTextToSize(orc.observacoes, W - M * 2);
     doc.text(lines, M, y);
-    y += lines.length * 12 + 8;
+    y += lines.length * 11 + 6;
   }
 
-  // ── FRASE FINAL ──────────────────────────────────────────────────────────
-  y = ensureSpace(doc, y, 50);
-  setDraw(doc, C.line); doc.setLineWidth(0.6);
+  // ── SELOS INSTITUCIONAIS (rodapé) ────────────────────────────────────────
+  y = ensureSpace(doc, y, 38);
+  setDraw(doc, C.line); doc.setLineWidth(0.5);
   doc.line(M, y, W - M, y);
-  y += 22;
-  doc.setFont("helvetica", "bold"); doc.setFontSize(11); setText(doc, C.ink);
-  doc.text("Estamos à disposição para tornar seu projeto ainda mais especial.", W / 2, y, { align: "center" });
   y += 14;
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.muted);
-  doc.text("Equipe Gift Web Brindes", W / 2, y, { align: "center" });
+  const seals = ["Produção em até 48h", "Nota Fiscal e Garantia", "Entrega para todo Brasil"];
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.muted);
+  doc.setCharSpace(0.6);
+  const segW = (W - M * 2) / seals.length;
+  seals.forEach((s, i) => {
+    const cx = M + segW * i + segW / 2;
+    // pequeno marcador verde
+    setFill(doc, C.accent);
+    doc.circle(cx - doc.getTextWidth(s) / 2 - 6, y - 2, 1.3, "F");
+    setText(doc, C.muted);
+    doc.text(s, cx, y, { align: "center" });
+  });
+  doc.setCharSpace(0);
+  y += 14;
 
   // ── RODAPÉ DE TODAS AS PÁGINAS ───────────────────────────────────────────
   drawFooterPagina(doc);
