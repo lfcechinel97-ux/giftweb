@@ -278,11 +278,11 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
     y = ensureSpace(doc, y, cardH + 8);
 
-    // Sombra simulada + card branco com borda navy fina
+    // Sombra simulada + card branco (sem borda azul)
     setFill(doc, [230, 234, 240]);
     doc.roundedRect(M + 1, y + 3, W - M * 2, cardH, 12, 12, "F");
     setFill(doc, C.white);
-    setDraw(doc, C.ink); doc.setLineWidth(0.5);
+    setDraw(doc, C.line); doc.setLineWidth(0.4);
     doc.roundedRect(M, y, W - M * 2, cardH, 12, 12, "FD");
 
     // Imagem com placeholder
@@ -408,32 +408,29 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   doc.text(fmtBRL(subtotal), W - M, y, { align: "right" });
   y += 12;
 
-  // Box do total — branco com contorno navy fino
+  // Box do total — branco, sem contorno azul (apenas linha cinza sutil)
   setFill(doc, C.white);
-  setDraw(doc, C.ink); doc.setLineWidth(0.5);
+  setDraw(doc, C.line); doc.setLineWidth(0.4);
   doc.roundedRect(M, y, W - M * 2, totalBoxH, 12, 12, "FD");
+
+  const padL = 24;
+  const padR = 24;
 
   // Lado ESQUERDO: pagamento + validade
   doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
-  doc.setCharSpace(1.2);
-  doc.text("PAGAMENTO", M + 22, y + 22);
-  doc.setCharSpace(0);
+  doc.text("PAGAMENTO", M + padL, y + 22);
   doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.ink);
-  doc.text(lookupName(sistema.meiosPagamento, orc.pagamentoId), M + 22, y + 36);
+  doc.text(lookupName(sistema.meiosPagamento, orc.pagamentoId), M + padL, y + 36);
 
   doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
-  doc.setCharSpace(1.2);
-  doc.text("VALIDADE", M + 22, y + 56);
-  doc.setCharSpace(0);
+  doc.text("VALIDADE", M + padL, y + 56);
   doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.accentDark);
-  doc.text(formatDate(dataValidade.toISOString()), M + 22, y + 70);
+  doc.text(formatDate(dataValidade.toISOString()), M + padL, y + 70);
 
-  // Lado DIREITO: VALOR TOTAL (destaque)
-  const totalRx = W - M - 22;
+  // Lado DIREITO: VALOR TOTAL (destaque) — sem charSpace para não estourar a borda
+  const totalRx = W - M - padR;
   doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
-  doc.setCharSpace(1.4);
   doc.text("VALOR TOTAL DA PROPOSTA", totalRx, y + 22, { align: "right" });
-  doc.setCharSpace(0);
 
   if (economia > 0) {
     doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.subtle);
