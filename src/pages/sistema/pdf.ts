@@ -408,56 +408,55 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   doc.text(fmtBRL(subtotal), W - M, y, { align: "right" });
   y += 12;
 
-  // Box do total — branco com contorno navy premium
+  // Box do total — branco com contorno navy fino
   setFill(doc, C.white);
-  setDraw(doc, C.ink); doc.setLineWidth(1.4);
+  setDraw(doc, C.ink); doc.setLineWidth(0.5);
   doc.roundedRect(M, y, W - M * 2, totalBoxH, 12, 12, "FD");
-  // Linha navy lateral fina
-  setFill(doc, C.ink);
-  doc.rect(M, y, 4, totalBoxH, "F");
+
+  // Lado ESQUERDO: pagamento + validade
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
+  doc.setCharSpace(1.2);
+  doc.text("PAGAMENTO", M + 22, y + 22);
+  doc.setCharSpace(0);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.ink);
+  doc.text(lookupName(sistema.meiosPagamento, orc.pagamentoId), M + 22, y + 36);
 
   doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
+  doc.setCharSpace(1.2);
+  doc.text("VALIDADE", M + 22, y + 56);
+  doc.setCharSpace(0);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.accentDark);
+  doc.text(formatDate(dataValidade.toISOString()), M + 22, y + 70);
+
+  // Lado DIREITO: VALOR TOTAL (destaque)
+  const rx = W - M - 22;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
   doc.setCharSpace(1.4);
-  doc.text("VALOR TOTAL DA PROPOSTA", M + 22, y + 22);
+  doc.text("VALOR TOTAL DA PROPOSTA", rx, y + 22, { align: "right" });
   doc.setCharSpace(0);
 
   if (economia > 0) {
     doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.subtle);
     const deStr = `de ${fmtBRL(totalOriginal)}`;
-    doc.text(deStr, M + 22, y + 38);
+    doc.text(deStr, rx, y + 38, { align: "right" });
     const deW = doc.getTextWidth(deStr);
     setDraw(doc, C.subtle); doc.setLineWidth(0.6);
-    doc.line(M + 22, y + 35.5, M + 22 + deW, y + 35.5);
+    doc.line(rx - deW, y + 35.5, rx, y + 35.5);
 
     doc.setFont("helvetica", "bold"); doc.setFontSize(28); setText(doc, C.ink);
-    doc.text(fmtBRL(total), M + 22, y + 70);
+    doc.text(fmtBRL(total), rx, y + 70, { align: "right" });
 
     const ecoLabel = `Você economiza ${fmtBRL(economia)}`;
     doc.setFont("helvetica", "bold"); doc.setFontSize(8);
     const ecoW = doc.getTextWidth(ecoLabel) + 18;
     setFill(doc, C.accentSoft);
-    doc.roundedRect(M + 22, y + 82, ecoW, 18, 9, 9, "F");
+    doc.roundedRect(rx - ecoW, y + 82, ecoW, 18, 9, 9, "F");
     setText(doc, C.accentDark);
-    doc.text(ecoLabel, M + 22 + 9, y + 95);
+    doc.text(ecoLabel, rx - 9, y + 95, { align: "right" });
   } else {
     doc.setFont("helvetica", "bold"); doc.setFontSize(30); setText(doc, C.ink);
-    doc.text(fmtBRL(total), M + 22, y + 62);
+    doc.text(fmtBRL(total), rx, y + 62, { align: "right" });
   }
-
-  // Lado direito: forma resumida (texto em navy)
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
-  doc.setCharSpace(1.2);
-  doc.text("PAGAMENTO", W - M - 22, y + 22, { align: "right" });
-  doc.setCharSpace(0);
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.ink);
-  doc.text(lookupName(sistema.meiosPagamento, orc.pagamentoId), W - M - 22, y + 36, { align: "right" });
-
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
-  doc.setCharSpace(1.2);
-  doc.text("VALIDADE", W - M - 22, y + 56, { align: "right" });
-  doc.setCharSpace(0);
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.accentDark);
-  doc.text(formatDate(dataValidade.toISOString()), W - M - 22, y + 70, { align: "right" });
 
   y += totalBoxH + 14;
 
