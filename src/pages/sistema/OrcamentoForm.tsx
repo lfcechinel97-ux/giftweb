@@ -718,15 +718,31 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
     }
   };
 
-  const handlePrecoChange = (valor: number) => {
-    setPrecoUnitario(valor);
-    setPrecoManual(true);
+  const handlePrecoChange = (raw: string) => {
+    // Aceita digitação livre (vírgula ou ponto) sem reformatar enquanto o usuário digita
+    const normalized = raw.replace(",", ".");
+    setPrecoInput(raw);
+    const num = parseFloat(normalized);
+    if (!isNaN(num) && num >= 0) {
+      setPrecoUnitario(num);
+      setPrecoManual(true);
+    } else if (raw.trim() === "") {
+      setPrecoUnitario(0);
+      setPrecoManual(true);
+    }
+  };
+
+  const handlePrecoBlur = () => {
+    // Ao sair do campo, normaliza para 2 casas
+    if (precoUnitario > 0) setPrecoInput(precoUnitario.toFixed(2));
+    else setPrecoInput("");
   };
 
   const handleResetPreco = () => {
     const preco = calcularPrecoAutomatico(quantidade);
     setPrecoOriginal(preco);
     setPrecoUnitario(preco);
+    setPrecoInput(preco > 0 ? preco.toFixed(2) : "");
     setPrecoManual(false);
   };
 
