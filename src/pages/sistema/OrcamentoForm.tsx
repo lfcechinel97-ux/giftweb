@@ -1031,6 +1031,21 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
                       <span className="text-primary">{formatCurrency(quantidade * precoUnitario)}</span>
                     </div>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Observação <span className="text-gray-400 font-normal">(opcional)</span>
+                    </label>
+                    <textarea
+                      value={observacao}
+                      onChange={(e) => setObservacao(e.target.value)}
+                      placeholder="Ex.: Personalização a laser 1 cor / Transfer silk frontal"
+                      rows={2}
+                      className="w-full px-3 py-2 border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      maxLength={140}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Aparecerá no PDF da proposta abaixo do produto.</p>
+                  </div>
                 </>
               )}
             </div>
