@@ -970,12 +970,13 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
                       <input
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
                         className={`w-full pl-9 pr-3 py-2 border rounded-lg ${precoManual ? "border-amber-400 bg-amber-50" : ""}`}
-                        value={precoUnitario === 0 ? "" : Number(precoUnitario).toFixed(2)}
-                        onChange={(e) => handlePrecoChange(parseFloat(e.target.value) || 0)}
+                        value={precoInput}
+                        onChange={(e) => handlePrecoChange(e.target.value)}
+                        onBlur={handlePrecoBlur}
+                        placeholder="0,00"
                       />
                     </div>
                     {precoManual && (
