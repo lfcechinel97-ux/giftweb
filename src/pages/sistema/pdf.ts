@@ -222,35 +222,35 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   doc.line(M + colW, y + 14, M + colW, y + cardClienteH - 14);
 
   // Coluna direita — Consultor + dados institucionais (compactado)
-  const totalRx = M + colW + padX;
+  const rx = M + colW + padX;
   let ry = y + 18;
   doc.setFont("helvetica", "bold"); doc.setFontSize(7); setText(doc, C.accentDark);
-  doc.text("SEU CONSULTOR", totalRx, ry);
+  doc.text("SEU CONSULTOR", rx, ry);
   ry += 13;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(12); setText(doc, C.ink);
-  doc.text(vendedorNome, totalRx, ry);
+  doc.text(vendedorNome, rx, ry);
   ry += 10;
 
   // Divisor sutil entre consultor e empresa
   setDraw(doc, C.line); doc.setLineWidth(0.5);
-  doc.line(totalRx, ry, totalRx + colW - padX * 2, ry);
+  doc.line(rx, ry, rx + colW - padX * 2, ry);
   ry += 11;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); setText(doc, C.ink);
-  doc.text("Comércio de Utilidades Lukati LTDA", totalRx, ry);
+  doc.text("Comércio de Utilidades Lukati LTDA", rx, ry);
   ry += 11;
 
   doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
-  doc.text("Matriz Içara/SC", totalRx, ry);
+  doc.text("Matriz Içara/SC", rx, ry);
   doc.setFont("helvetica", "bold"); setText(doc, C.body);
-  doc.text("CNPJ 43.956.926/0001-68", totalRx + colW - padX * 2, ry, { align: "right" });
+  doc.text("CNPJ 43.956.926/0001-68", rx + colW - padX * 2, ry, { align: "right" });
   ry += 10;
 
   doc.setFont("helvetica", "normal"); setText(doc, C.muted);
-  doc.text("Filial Guarulhos/SP", totalRx, ry);
+  doc.text("Filial Guarulhos/SP", rx, ry);
   doc.setFont("helvetica", "bold"); setText(doc, C.body);
-  doc.text("CNPJ 43.956.926/0002-49", totalRx + colW - padX * 2, ry, { align: "right" });
+  doc.text("CNPJ 43.956.926/0002-49", rx + colW - padX * 2, ry, { align: "right" });
 
   y += cardClienteH + 12;
 
