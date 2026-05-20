@@ -116,41 +116,55 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   const W = doc.internal.pageSize.getWidth();
   const M = 40; // margem lateral
 
-  // Fundo branco geral
-  setFill(doc, C.white);
+  // Fundo cinza claro geral (impacto visual)
+  setFill(doc, C.surface);
   doc.rect(0, 0, W, doc.internal.pageSize.getHeight(), "F");
 
-  // ── CABEÇALHO ────────────────────────────────────────────────────────────
-  // Selo PROPOSTA COMERCIAL
-  pill(doc, M, 48, "PROPOSTA COMERCIAL", { bg: C.accentSoft, fg: C.accent, padX: 10, fontSize: 7.5 });
+  // ── FAIXA SUPERIOR NAVY (HERO) ───────────────────────────────────────────
+  const heroH = 138;
+  setFill(doc, C.ink);
+  doc.rect(0, 0, W, heroH, "F");
+  // Faixa verde fina topo
+  setFill(doc, C.accent);
+  doc.rect(0, 0, W, 4, "F");
+  // Faixa navy secundária (profundidade)
+  setFill(doc, C.navy);
+  doc.rect(0, heroH - 8, W, 8, "F");
 
-  // Logotipo textual moderno
-  doc.setFont("helvetica", "bold"); doc.setFontSize(22); setText(doc, C.ink);
-  doc.text("Gift Web", M, 92);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.muted);
-  doc.text("Brindes corporativos personalizados", M, 106);
+  // Selo PROPOSTA COMERCIAL
+  pill(doc, M, 26, "PROPOSTA COMERCIAL", { bg: C.accent, fg: C.white, padX: 12, fontSize: 8 });
+
+  // Logotipo + tagline
+  doc.setFont("helvetica", "bold"); doc.setFontSize(26); setText(doc, C.white);
+  doc.text("Gift Web", M, 78);
+  // Detalhe verde sublinhando o logo
+  setFill(doc, C.accent);
+  doc.rect(M, 84, 36, 3, "F");
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9); setText(doc, [180, 200, 220]);
+  doc.text("Brindes corporativos personalizados", M, 102);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); setText(doc, C.accent);
+  doc.text("PREMIUM  ·  CONFIANÇA  ·  +10 ANOS DE MERCADO", M, 118);
 
   // Lado direito: Nº + data
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, C.subtle);
-  doc.text(`ORÇAMENTO Nº`, W - M, 52, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(26); setText(doc, C.ink);
-  doc.text(orc.numero, W - M, 80, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, [180, 200, 220]);
+  doc.text(`ORÇAMENTO Nº`, W - M, 34, { align: "right" });
+  doc.setFont("helvetica", "bold"); doc.setFontSize(30); setText(doc, C.white);
+  doc.text(orc.numero, W - M, 66, { align: "right" });
 
-  // Data com destaque
   const dataEmissao = formatDate(orc.createdAt);
   const dataValidade = new Date(orc.createdAt);
   dataValidade.setDate(dataValidade.getDate() + 15);
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.subtle);
-  doc.text("EMISSÃO", W - M, 96, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.body);
-  doc.text(dataEmissao, W - M, 108, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [180, 200, 220]);
+  doc.text("EMISSÃO", W - M, 88, { align: "right" });
+  doc.setFont("helvetica", "bold"); doc.setFontSize(10); setText(doc, C.white);
+  doc.text(dataEmissao, W - M, 102, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [180, 200, 220]);
+  doc.text("VÁLIDA ATÉ", W - M, 118, { align: "right" });
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9); setText(doc, C.accent);
+  doc.text(formatDate(dataValidade.toISOString()), W - M, 130, { align: "right" });
 
-  // Separador fino
-  setDraw(doc, C.line); doc.setLineWidth(0.6);
-  doc.line(M, 132, W - M, 132);
-
-  let y = 156;
+  let y = heroH + 22;
 
   // ── CARD DO CLIENTE ──────────────────────────────────────────────────────
   const cliente = sistema.clientes.find(c => c.id === orc.clienteId);
