@@ -278,15 +278,12 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
     y = ensureSpace(doc, y, cardH + 8);
 
-    // Sombra simulada + card branco com borda navy premium
+    // Sombra simulada + card branco com borda navy fina
     setFill(doc, [230, 234, 240]);
     doc.roundedRect(M + 1, y + 3, W - M * 2, cardH, 12, 12, "F");
     setFill(doc, C.white);
-    setDraw(doc, C.ink); doc.setLineWidth(1.2);
+    setDraw(doc, C.ink); doc.setLineWidth(0.5);
     doc.roundedRect(M, y, W - M * 2, cardH, 12, 12, "FD");
-    // Faixa lateral navy para destacar o produto
-    setFill(doc, C.ink);
-    doc.rect(M, y, 4, cardH, "F");
 
     // Imagem com placeholder
     const imgSrc = item.mockupImagem || item.imagem;
