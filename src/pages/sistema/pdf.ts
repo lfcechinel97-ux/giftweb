@@ -345,11 +345,15 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   // Cards mais compactos quando há até 2 itens (prioriza 1 página)
   const compact = orc.itens.length <= 2;
-  const cardH = compact ? 104 : 116;
-  const imgSize = compact ? 84 : 96;
+  const cardHBase = compact ? 96 : 108;
+  const imgSize = compact ? 78 : 92;
   const imgX = M + 12;
 
   for (const item of orc.itens) {
+    const obs = (item as any).observacao as string | undefined;
+    const hasObs = !!(obs && obs.trim());
+    const cardH = cardHBase + (hasObs ? 14 : 0);
+
     y = ensureSpace(doc, y, cardH + 8);
 
     // Sombra simulada + card branco
@@ -367,17 +371,17 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
       if (img) {
         try {
           setFill(doc, C.surface);
-          doc.roundedRect(imgX, y + 10, imgSize, imgSize, 6, 6, "F");
-          doc.addImage(img, "JPEG", imgX + 2, y + 12, imgSize - 4, imgSize - 4, undefined, "FAST");
+          doc.roundedRect(imgX, y + 9, imgSize, imgSize, 6, 6, "F");
+          doc.addImage(img, "JPEG", imgX + 2, y + 11, imgSize - 4, imgSize - 4, undefined, "FAST");
           hasImg = true;
         } catch { /* ignore */ }
       }
     }
     if (!hasImg) {
       setFill(doc, C.surface);
-      doc.roundedRect(imgX, y + 10, imgSize, imgSize, 6, 6, "F");
+      doc.roundedRect(imgX, y + 9, imgSize, imgSize, 6, 6, "F");
       doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.subtle);
-      doc.text("Sem imagem", imgX + imgSize / 2, y + 10 + imgSize / 2 + 2, { align: "center" });
+      doc.text("Sem imagem", imgX + imgSize / 2, y + 9 + imgSize / 2 + 2, { align: "center" });
     }
 
     const tx = imgX + imgSize + 16;
@@ -386,8 +390,8 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     // Nome
     doc.setFont("helvetica", "bold"); doc.setFontSize(11); setText(doc, C.ink);
     const nameLines = doc.splitTextToSize(item.nome, txW);
-    doc.text(nameLines.slice(0, 2), tx, y + 24);
-    const afterName = y + 24 + (nameLines.length > 1 ? 26 : 14);
+    doc.text(nameLines.slice(0, 2), tx, y + 22);
+    const afterName = y + 22 + (nameLines.length > 1 ? 24 : 13);
 
     // Código (chip discreto)
     if (item.codigoComposto) {
@@ -400,17 +404,28 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     }
 
     // Quantidade
+    const qtdY = afterName + 15;
     doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.muted);
-    doc.text(`Quantidade: `, tx, afterName + 16);
-    doc.setFont("helvetica", "bold"); setText(doc, C.body);
     const qLabel = `Quantidade: `;
-    doc.text(`${item.quantidade} un.`, tx + doc.getTextWidth(qLabel), afterName + 16);
+    doc.text(qLabel, tx, qtdY);
+    doc.setFont("helvetica", "bold"); setText(doc, C.body);
+    doc.text(`${item.quantidade} un.`, tx + doc.getTextWidth(qLabel), qtdY);
+
+    // OBS opcional (apenas se preenchido)
+    if (hasObs) {
+      const obsY = qtdY + 13;
+      doc.setFont("helvetica", "bold"); doc.setFontSize(6.8); setText(doc, C.accentDark);
+      doc.text("OBS:", tx, obsY);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(7.8); setText(doc, C.body);
+      const obsLines = doc.splitTextToSize(obs!.trim(), txW - 28);
+      doc.text(obsLines.slice(0, 1), tx + 22, obsY);
+    }
 
     // Unitário
     doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, C.muted);
-    doc.text("Valor unitário", tx, y + cardH - 16);
+    doc.text("Valor unitário", tx, y + cardH - 15);
     doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.body);
-    doc.text(fmtBRL(item.precoUnitario), tx, y + cardH - 6);
+    doc.text(fmtBRL(item.precoUnitario), tx, y + cardH - 5);
 
     // Total à direita
     const rows = (item as any).tabelaPrecos && (item as any).precoCusto
@@ -424,19 +439,19 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     const temDesconto = originalItem > totalItem + 0.01;
 
     doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.subtle);
-    doc.text("TOTAL DO ITEM", W - M - 14, y + 22, { align: "right" });
+    doc.text("TOTAL DO ITEM", W - M - 14, y + 20, { align: "right" });
 
     if (temDesconto) {
       doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, C.subtle);
       const origStr = fmtBRL(originalItem);
-      doc.text(origStr, W - M - 14, y + 36, { align: "right" });
+      doc.text(origStr, W - M - 14, y + 34, { align: "right" });
       const origW = doc.getTextWidth(origStr);
       setDraw(doc, C.subtle); doc.setLineWidth(0.6);
-      doc.line(W - M - 14 - origW, y + 33.5, W - M - 14, y + 33.5);
+      doc.line(W - M - 14 - origW, y + 31.5, W - M - 14, y + 31.5);
     }
 
     doc.setFont("helvetica", "bold"); doc.setFontSize(15); setText(doc, C.ink);
-    doc.text(fmtBRL(totalItem), W - M - 14, temDesconto ? y + 60 : y + 48, { align: "right" });
+    doc.text(fmtBRL(totalItem), W - M - 14, temDesconto ? y + 56 : y + 44, { align: "right" });
 
     y += cardH + 8;
   }
