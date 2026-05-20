@@ -699,7 +699,10 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
     setProdutoVariantes([]);
     const preco = calcularPrecoAutomatico(quantidade, prod);
     setPrecoOriginal(preco);
-    if (!precoManual) setPrecoUnitario(preco);
+    if (!precoManual) {
+      setPrecoUnitario(preco);
+      setPrecoInput(preco > 0 ? preco.toFixed(2) : "");
+    }
     setSearchTerm("");
   };
 
@@ -707,7 +710,10 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
     setSelectedVariant(variant);
     const preco = calcularPrecoAutomatico(quantidade);
     setPrecoOriginal(preco);
-    if (!precoManual) setPrecoUnitario(preco);
+    if (!precoManual) {
+      setPrecoUnitario(preco);
+      setPrecoInput(preco > 0 ? preco.toFixed(2) : "");
+    }
   };
 
   const handleQuantidadeChange = (qtd: number) => {
@@ -716,6 +722,7 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
       const preco = calcularPrecoAutomatico(qtd);
       setPrecoOriginal(preco);
       setPrecoUnitario(preco);
+      setPrecoInput(preco > 0 ? preco.toFixed(2) : "");
     }
   };
 
