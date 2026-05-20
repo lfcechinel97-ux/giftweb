@@ -180,8 +180,8 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   const vendedorNome = lookupName(sistema.vendedores, orc.vendedorId);
 
-  // Card cliente — altura fixa que comporta a coluna institucional do consultor
-  const cardClienteH = 138;
+  // Card cliente — altura compactada
+  const cardClienteH = 118;
 
   setFill(doc, C.white);
   setDraw(doc, C.line); doc.setLineWidth(0.8);
@@ -192,23 +192,23 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   // Coluna esquerda — Cliente
   const colW = (W - M * 2) / 2;
   const padX = 20;
-  let cy = y + 20;
+  let cy = y + 18;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(7); setText(doc, C.accentDark);
   doc.text("CLIENTE", M + padX, cy);
-  cy += 14;
+  cy += 13;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(12); setText(doc, C.ink);
   const nomeCliente = cliente?.nome || orc.contatoNome || clienteNome || "—";
   const nomeLines = doc.splitTextToSize(nomeCliente, colW - padX * 2);
   doc.text(nomeLines.slice(0, 2), M + padX, cy);
-  cy += nomeLines.length > 1 ? 24 : 14;
+  cy += nomeLines.length > 1 ? 22 : 13;
 
   const docLabel = isPJ ? "CNPJ" : "CPF";
   const docValue = cliente?.documento ? formatDocumento(cliente.documento, cliente.tipo) : "—";
   doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.body);
   doc.text(`${docLabel}: ${docValue}`, M + padX, cy);
-  cy += 12;
+  cy += 11;
 
   if (enderecoLinha1) {
     doc.setFontSize(7.5); setText(doc, C.muted);
@@ -229,24 +229,20 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   setDraw(doc, C.line); doc.setLineWidth(0.5);
   doc.line(M + colW, y + 14, M + colW, y + cardClienteH - 14);
 
-  // Coluna direita — Consultor + dados institucionais
+  // Coluna direita — Consultor + dados institucionais (compactado)
   const rx = M + colW + padX;
-  let ry = y + 20;
+  let ry = y + 18;
   doc.setFont("helvetica", "bold"); doc.setFontSize(7); setText(doc, C.accentDark);
   doc.text("SEU CONSULTOR", rx, ry);
-  ry += 14;
+  ry += 13;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(12); setText(doc, C.ink);
   doc.text(vendedorNome, rx, ry);
-  ry += 12;
+  ry += 10;
 
   // Divisor sutil entre consultor e empresa
   setDraw(doc, C.line); doc.setLineWidth(0.5);
   doc.line(rx, ry, rx + colW - padX * 2, ry);
-  ry += 12;
-
-  doc.setFont("helvetica", "bold"); doc.setFontSize(6.5); setText(doc, C.accentDark);
-  doc.text("EMPRESA", rx, ry);
   ry += 11;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); setText(doc, C.ink);
@@ -264,67 +260,61 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   doc.setFont("helvetica", "bold"); setText(doc, C.body);
   doc.text("CNPJ 43.956.926/0002-49", rx + colW - padX * 2, ry, { align: "right" });
 
-  y += cardClienteH + 14;
+  y += cardClienteH + 12;
 
-  // ── BARRA DE DIFERENCIAIS — ícones corporativos vetoriais ────────────────
-  const benefits: Array<{ label: string; icon: "truck" | "factory" | "invoice" }> = [
-    { label: "Produção em até 48h", icon: "factory" },
-    { label: "Nota Fiscal e Garantia", icon: "invoice" },
-    { label: "Entrega para todo Brasil", icon: "truck" },
+  // ── BARRA DE DIFERENCIAIS — branca com borda verde, minimalista ──────────
+  const benefits: Array<{ label: string; icon: "rocket" | "shield" | "delivery" }> = [
+    { label: "Produção em até 48h", icon: "rocket" },
+    { label: "Nota Fiscal e Garantia", icon: "shield" },
+    { label: "Entrega para todo Brasil", icon: "delivery" },
   ];
-  const barH = 46;
-  setFill(doc, C.accentSoft);
-  doc.roundedRect(M, y, W - M * 2, barH, 10, 10, "F");
-  setDraw(doc, [200, 240, 220]); doc.setLineWidth(0.6);
-  doc.roundedRect(M, y, W - M * 2, barH, 10, 10, "S");
+  const barH = 34;
+  setFill(doc, C.white);
+  doc.roundedRect(M, y, W - M * 2, barH, 8, 8, "F");
+  setDraw(doc, C.accent); doc.setLineWidth(1);
+  doc.roundedRect(M, y, W - M * 2, barH, 8, 8, "S");
 
-  const drawIcon = (kind: "truck" | "factory" | "invoice", cx: number, cy2: number) => {
+  const drawIcon = (kind: "rocket" | "shield" | "delivery", cx: number, cy2: number) => {
     setDraw(doc, C.accentDark); doc.setLineWidth(1.1);
     setFill(doc, C.white);
-    if (kind === "truck") {
-      // baú
-      doc.roundedRect(cx - 11, cy2 - 6, 12, 11, 1, 1, "FD");
-      // cabine
-      doc.roundedRect(cx + 1, cy2 - 3, 7, 8, 1, 1, "FD");
-      // rodas
-      setFill(doc, C.accentDark);
-      doc.circle(cx - 6, cy2 + 6, 1.8, "F");
-      doc.circle(cx + 5, cy2 + 6, 1.8, "F");
-    } else if (kind === "factory") {
-      // telhado serrilhado
-      const baseY = cy2 + 7;
+    if (kind === "rocket") {
+      // corpo do foguete (cápsula)
       doc.lines(
-        [[4, -4], [0, 4], [4, -4], [0, 4], [4, -4], [0, 4]],
-        cx - 10, baseY - 4, [1, 1], "FD", false
+        [[3, 3], [0, 6], [-3, 3], [-3, -3], [0, -6], [3, -3]],
+        cx - 3, cy2 - 7, [1, 1], "FD", true
       );
-      // base
-      doc.rect(cx - 10, baseY - 4, 20, 8, "FD");
-      // chaminé
-      setFill(doc, C.accentDark);
-      doc.rect(cx - 9, cy2 - 8, 2.5, 6, "F");
-      // janelas
-      doc.rect(cx - 6, baseY - 1, 2, 2, "F");
-      doc.rect(cx - 2, baseY - 1, 2, 2, "F");
-      doc.rect(cx + 2, baseY - 1, 2, 2, "F");
-      doc.rect(cx + 6, baseY - 1, 2, 2, "F");
-    } else {
-      // documento NF com canto dobrado
-      const w = 12, h = 14;
-      const x0 = cx - w / 2, y0 = cy2 - h / 2;
-      // corpo
-      setFill(doc, C.white);
-      doc.lines(
-        [[w - 3, 0], [3, 3], [0, h - 3], [-w, 0], [0, -h]],
-        x0, y0, [1, 1], "FD", true
-      );
-      // dobra
+      // janela
+      setFill(doc, C.accent);
+      doc.circle(cx, cy2 - 2, 1.3, "F");
+      // aletas
       setFill(doc, C.accentSoft);
-      doc.lines([[3, 0], [0, 3], [-3, -3]], x0 + w - 3, y0, [1, 1], "FD", true);
-      // linhas de texto
-      setDraw(doc, C.accentDark); doc.setLineWidth(0.7);
-      doc.line(x0 + 2, y0 + 6, x0 + w - 4, y0 + 6);
-      doc.line(x0 + 2, y0 + 9, x0 + w - 2, y0 + 9);
-      doc.line(x0 + 2, y0 + 12, x0 + w - 4, y0 + 12);
+      doc.lines([[-3, 3], [3, 0], [0, -3]], cx - 3, cy2 + 2, [1, 1], "FD", true);
+      doc.lines([[3, 3], [-3, 0], [0, -3]], cx + 3, cy2 + 2, [1, 1], "FD", true);
+      // chama
+      setFill(doc, C.accent); setDraw(doc, C.accent);
+      doc.lines([[-2, 0], [2, 4], [2, -4]], cx - 2, cy2 + 5, [1, 1], "F", true);
+    } else if (kind === "shield") {
+      // escudo
+      setFill(doc, C.white); setDraw(doc, C.accentDark); doc.setLineWidth(1.1);
+      doc.lines(
+        [[7, 0], [0, 6], [-7, 7], [-7, -7], [0, -6]],
+        cx - 7, cy2 - 7, [1, 1], "FD", true
+      );
+      // check
+      setDraw(doc, C.accentDark); doc.setLineWidth(1.6);
+      doc.line(cx - 3, cy2, cx - 1, cy2 + 2.5);
+      doc.line(cx - 1, cy2 + 2.5, cx + 3.5, cy2 - 2.5);
+    } else {
+      // aviãozinho (topo)
+      setFill(doc, C.accentDark); setDraw(doc, C.accentDark); doc.setLineWidth(0.8);
+      doc.lines([[10, -3], [-8, 0], [-2, 3], [2, 0], [8, 0]], cx - 5, cy2 - 5, [1, 1], "F", true);
+      // caminhão (baixo)
+      setFill(doc, C.white); setDraw(doc, C.accentDark); doc.setLineWidth(1);
+      doc.roundedRect(cx - 8, cy2 + 1, 9, 6, 1, 1, "FD");
+      doc.roundedRect(cx + 1, cy2 + 3, 5, 4, 1, 1, "FD");
+      setFill(doc, C.accentDark);
+      doc.circle(cx - 5, cy2 + 8, 1.2, "F");
+      doc.circle(cx + 3, cy2 + 8, 1.2, "F");
     }
   };
 
@@ -333,18 +323,18 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     const cx = M + segW * i + segW / 2;
     doc.setFont("helvetica", "bold"); doc.setFontSize(9);
     const tw2 = doc.getTextWidth(b.label);
-    const groupW = 22 + 10 + tw2;
+    const groupW = 22 + 8 + tw2;
     const startX = cx - groupW / 2;
     drawIcon(b.icon, startX + 11, y + barH / 2);
     setText(doc, C.ink);
-    doc.text(b.label, startX + 22 + 10, y + barH / 2 + 3);
+    doc.text(b.label, startX + 22 + 8, y + barH / 2 + 3);
     if (i < benefits.length - 1) {
-      setDraw(doc, [200, 235, 215]); doc.setLineWidth(0.6);
-      doc.line(M + segW * (i + 1), y + 10, M + segW * (i + 1), y + barH - 10);
+      setDraw(doc, [220, 240, 230]); doc.setLineWidth(0.6);
+      doc.line(M + segW * (i + 1), y + 8, M + segW * (i + 1), y + barH - 8);
     }
   });
 
-  y += barH + 14;
+  y += barH + 12;
 
   // ── PRODUTOS ─────────────────────────────────────────────────────────────
   doc.setFont("helvetica", "bold"); doc.setFontSize(10); setText(doc, C.ink);
@@ -355,11 +345,15 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   // Cards mais compactos quando há até 2 itens (prioriza 1 página)
   const compact = orc.itens.length <= 2;
-  const cardH = compact ? 104 : 116;
-  const imgSize = compact ? 84 : 96;
+  const cardHBase = compact ? 96 : 108;
+  const imgSize = compact ? 78 : 92;
   const imgX = M + 12;
 
   for (const item of orc.itens) {
+    const obs = (item as any).observacao as string | undefined;
+    const hasObs = !!(obs && obs.trim());
+    const cardH = cardHBase + (hasObs ? 14 : 0);
+
     y = ensureSpace(doc, y, cardH + 8);
 
     // Sombra simulada + card branco
@@ -377,17 +371,17 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
       if (img) {
         try {
           setFill(doc, C.surface);
-          doc.roundedRect(imgX, y + 10, imgSize, imgSize, 6, 6, "F");
-          doc.addImage(img, "JPEG", imgX + 2, y + 12, imgSize - 4, imgSize - 4, undefined, "FAST");
+          doc.roundedRect(imgX, y + 9, imgSize, imgSize, 6, 6, "F");
+          doc.addImage(img, "JPEG", imgX + 2, y + 11, imgSize - 4, imgSize - 4, undefined, "FAST");
           hasImg = true;
         } catch { /* ignore */ }
       }
     }
     if (!hasImg) {
       setFill(doc, C.surface);
-      doc.roundedRect(imgX, y + 10, imgSize, imgSize, 6, 6, "F");
+      doc.roundedRect(imgX, y + 9, imgSize, imgSize, 6, 6, "F");
       doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.subtle);
-      doc.text("Sem imagem", imgX + imgSize / 2, y + 10 + imgSize / 2 + 2, { align: "center" });
+      doc.text("Sem imagem", imgX + imgSize / 2, y + 9 + imgSize / 2 + 2, { align: "center" });
     }
 
     const tx = imgX + imgSize + 16;
@@ -396,8 +390,8 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     // Nome
     doc.setFont("helvetica", "bold"); doc.setFontSize(11); setText(doc, C.ink);
     const nameLines = doc.splitTextToSize(item.nome, txW);
-    doc.text(nameLines.slice(0, 2), tx, y + 24);
-    const afterName = y + 24 + (nameLines.length > 1 ? 26 : 14);
+    doc.text(nameLines.slice(0, 2), tx, y + 22);
+    const afterName = y + 22 + (nameLines.length > 1 ? 24 : 13);
 
     // Código (chip discreto)
     if (item.codigoComposto) {
@@ -410,17 +404,28 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     }
 
     // Quantidade
+    const qtdY = afterName + 15;
     doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.muted);
-    doc.text(`Quantidade: `, tx, afterName + 16);
-    doc.setFont("helvetica", "bold"); setText(doc, C.body);
     const qLabel = `Quantidade: `;
-    doc.text(`${item.quantidade} un.`, tx + doc.getTextWidth(qLabel), afterName + 16);
+    doc.text(qLabel, tx, qtdY);
+    doc.setFont("helvetica", "bold"); setText(doc, C.body);
+    doc.text(`${item.quantidade} un.`, tx + doc.getTextWidth(qLabel), qtdY);
+
+    // OBS opcional (apenas se preenchido)
+    if (hasObs) {
+      const obsY = qtdY + 13;
+      doc.setFont("helvetica", "bold"); doc.setFontSize(6.8); setText(doc, C.accentDark);
+      doc.text("OBS:", tx, obsY);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(7.8); setText(doc, C.body);
+      const obsLines = doc.splitTextToSize(obs!.trim(), txW - 28);
+      doc.text(obsLines.slice(0, 1), tx + 22, obsY);
+    }
 
     // Unitário
     doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, C.muted);
-    doc.text("Valor unitário", tx, y + cardH - 16);
+    doc.text("Valor unitário", tx, y + cardH - 15);
     doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.body);
-    doc.text(fmtBRL(item.precoUnitario), tx, y + cardH - 6);
+    doc.text(fmtBRL(item.precoUnitario), tx, y + cardH - 5);
 
     // Total à direita
     const rows = (item as any).tabelaPrecos && (item as any).precoCusto
@@ -434,19 +439,19 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     const temDesconto = originalItem > totalItem + 0.01;
 
     doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.subtle);
-    doc.text("TOTAL DO ITEM", W - M - 14, y + 22, { align: "right" });
+    doc.text("TOTAL DO ITEM", W - M - 14, y + 20, { align: "right" });
 
     if (temDesconto) {
       doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, C.subtle);
       const origStr = fmtBRL(originalItem);
-      doc.text(origStr, W - M - 14, y + 36, { align: "right" });
+      doc.text(origStr, W - M - 14, y + 34, { align: "right" });
       const origW = doc.getTextWidth(origStr);
       setDraw(doc, C.subtle); doc.setLineWidth(0.6);
-      doc.line(W - M - 14 - origW, y + 33.5, W - M - 14, y + 33.5);
+      doc.line(W - M - 14 - origW, y + 31.5, W - M - 14, y + 31.5);
     }
 
     doc.setFont("helvetica", "bold"); doc.setFontSize(15); setText(doc, C.ink);
-    doc.text(fmtBRL(totalItem), W - M - 14, temDesconto ? y + 60 : y + 48, { align: "right" });
+    doc.text(fmtBRL(totalItem), W - M - 14, temDesconto ? y + 56 : y + 44, { align: "right" });
 
     y += cardH + 8;
   }

@@ -63,6 +63,7 @@ export interface QuoteItem {
   mockupImagem?: string; // imagem mockup enviada pelo vendedor
   altura?: number;
   diametro?: number;
+  observacao?: string; // observação opcional por item (ex: "Personalização a laser 1 cor")
 }
 
 export type OrcamentoStatus = "aberto" | "aprovado" | "cancelado";
