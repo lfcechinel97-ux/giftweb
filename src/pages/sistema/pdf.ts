@@ -466,69 +466,66 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   const total = subtotal + (orc.freteValor || 0);
   const totalOriginal = subtotalOriginal + (orc.freteValor || 0);
 
-  const totalBoxH = economia > 0 ? 130 : 96;
-  y = ensureSpace(doc, y + 6, totalBoxH + 20);
+  const totalBoxH = economia > 0 ? 112 : 82;
+  y = ensureSpace(doc, y + 4, totalBoxH + 16);
 
   // Frete (linha discreta acima do total)
   if (orc.freteValor && orc.freteValor > 0) {
-    doc.setFont("helvetica", "normal"); doc.setFontSize(9); setText(doc, C.muted);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.muted);
     doc.text(`Frete (${orc.freteTipo || "—"})`, W - M - 200, y);
     doc.text(fmtBRL(orc.freteValor), W - M, y, { align: "right" });
-    y += 14;
+    y += 12;
   }
-  doc.setFont("helvetica", "normal"); doc.setFontSize(9); setText(doc, C.muted);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.muted);
   doc.text("Subtotal dos itens", W - M - 200, y);
   doc.text(fmtBRL(subtotal), W - M, y, { align: "right" });
-  y += 16;
+  y += 12;
 
   // Box do total
   setFill(doc, C.ink);
   doc.roundedRect(M, y, W - M * 2, totalBoxH, 10, 10, "F");
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, [180, 188, 200]);
-  doc.text("VALOR TOTAL DA PROPOSTA", M + 24, y + 26);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [180, 188, 200]);
+  doc.text("VALOR TOTAL DA PROPOSTA", M + 22, y + 22);
 
   if (economia > 0) {
-    // DE
-    doc.setFont("helvetica", "normal"); doc.setFontSize(9); setText(doc, [156, 163, 175]);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, [156, 163, 175]);
     const deStr = `de ${fmtBRL(totalOriginal)}`;
-    doc.text(deStr, M + 24, y + 44);
+    doc.text(deStr, M + 22, y + 38);
     const deW = doc.getTextWidth(deStr);
     setDraw(doc, [156, 163, 175]); doc.setLineWidth(0.6);
-    doc.line(M + 24, y + 41.5, M + 24 + deW, y + 41.5);
+    doc.line(M + 22, y + 35.5, M + 22 + deW, y + 35.5);
 
-    // POR
-    doc.setFont("helvetica", "bold"); doc.setFontSize(30); setText(doc, C.white);
-    doc.text(fmtBRL(total), M + 24, y + 78);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(26); setText(doc, C.white);
+    doc.text(fmtBRL(total), M + 22, y + 68);
 
-    // Selo de economia
     const ecoLabel = `Você economiza ${fmtBRL(economia)}`;
-    doc.setFont("helvetica", "bold"); doc.setFontSize(9);
-    const ecoW = doc.getTextWidth(ecoLabel) + 20;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
+    const ecoW = doc.getTextWidth(ecoLabel) + 18;
     setFill(doc, C.accent);
-    doc.roundedRect(M + 24, y + 92, ecoW, 22, 11, 11, "F");
+    doc.roundedRect(M + 22, y + 80, ecoW, 20, 10, 10, "F");
     setText(doc, C.white);
-    doc.text(ecoLabel, M + 24 + 10, y + 107);
+    doc.text(ecoLabel, M + 22 + 9, y + 94);
   } else {
-    doc.setFont("helvetica", "bold"); doc.setFontSize(32); setText(doc, C.white);
-    doc.text(fmtBRL(total), M + 24, y + 70);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(28); setText(doc, C.white);
+    doc.text(fmtBRL(total), M + 22, y + 60);
   }
 
   // Lado direito: forma resumida
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [156, 163, 175]);
-  doc.text("PAGAMENTO", W - M - 24, y + 26, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(10); setText(doc, C.white);
-  doc.text(lookupName(sistema.meiosPagamento, orc.pagamentoId), W - M - 24, y + 42, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, [156, 163, 175]);
+  doc.text("PAGAMENTO", W - M - 22, y + 22, { align: "right" });
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.white);
+  doc.text(lookupName(sistema.meiosPagamento, orc.pagamentoId), W - M - 22, y + 36, { align: "right" });
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [156, 163, 175]);
-  doc.text("VALIDADE DA PROPOSTA", W - M - 24, y + 64, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(10); setText(doc, C.white);
-  doc.text(formatDate(dataValidade.toISOString()), W - M - 24, y + 80, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, [156, 163, 175]);
+  doc.text("VALIDADE DA PROPOSTA", W - M - 22, y + 56, { align: "right" });
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.white);
+  doc.text(formatDate(dataValidade.toISOString()), W - M - 22, y + 70, { align: "right" });
 
-  y += totalBoxH + 24;
+  y += totalBoxH + 16;
 
   // ── CONDIÇÕES (cards) ────────────────────────────────────────────────────
-  y = ensureSpace(doc, y, 90);
+  y = ensureSpace(doc, y, 70);
 
   const cards = [
     { label: "PRAZO DE ENTREGA", value: orc.prazoEntrega ? `${orc.prazoEntrega} dias úteis` : "À combinar" },
@@ -537,20 +534,20 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     { label: "VALIDADE", value: formatDate(dataValidade.toISOString()) },
   ];
 
-  const gap = 10;
+  const gap = 8;
   const cw = (W - M * 2 - gap * 3) / 4;
-  const ch = 60;
+  const ch = 46;
   cards.forEach((c, i) => {
     const cx = M + (cw + gap) * i;
     setDraw(doc, C.line); doc.setLineWidth(0.8);
     doc.roundedRect(cx, y, cw, ch, 8, 8, "S");
-    doc.setFont("helvetica", "normal"); doc.setFontSize(6.5); setText(doc, C.subtle);
-    doc.text(c.label, cx + 12, y + 18);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.ink);
-    const lines = doc.splitTextToSize(c.value, cw - 24);
-    doc.text(lines.slice(0, 2), cx + 12, y + 34);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(6.2); setText(doc, C.subtle);
+    doc.text(c.label, cx + 10, y + 14);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9); setText(doc, C.ink);
+    const lines = doc.splitTextToSize(c.value, cw - 20);
+    doc.text(lines.slice(0, 2), cx + 10, y + 28);
   });
-  y += ch + 22;
+  y += ch + 16;
 
   // ── OBSERVAÇÕES ──────────────────────────────────────────────────────────
   if (orc.observacoes) {
