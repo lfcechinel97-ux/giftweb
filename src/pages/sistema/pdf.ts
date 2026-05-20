@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import type { Orcamento, Cliente, LookupItem } from "@/contexts/SistemaContext";
+import { getNormalizedPriceRows } from "@/utils/price";
 
 interface Sis {
   clientes: Cliente[];
@@ -9,16 +10,18 @@ interface Sis {
   origens: LookupItem[];
 }
 
-// ─── Paleta premium ────────────────────────────────────────────────────────
+// ─── Paleta premium (azul marinho + verde) ─────────────────────────────────
 const C = {
-  ink: [17, 24, 39] as [number, number, number],       // títulos
-  body: [55, 65, 81] as [number, number, number],      // texto
-  muted: [107, 114, 128] as [number, number, number],  // secundário
-  subtle: [156, 163, 175] as [number, number, number], // labels
-  line: [229, 231, 235] as [number, number, number],   // bordas
-  surface: [249, 250, 251] as [number, number, number],// cards claros
-  accent: [22, 163, 74] as [number, number, number],   // verde marca
-  accentSoft: [236, 253, 245] as [number, number, number],
+  ink: [7, 20, 38] as [number, number, number],         // #071426 navy
+  navy: [11, 31, 56] as [number, number, number],       // #0B1F38 navy alt
+  body: [37, 47, 64] as [number, number, number],
+  muted: [107, 114, 128] as [number, number, number],
+  subtle: [148, 163, 184] as [number, number, number],
+  line: [226, 232, 240] as [number, number, number],
+  surface: [245, 247, 250] as [number, number, number], // #F5F7FA
+  accent: [22, 196, 127] as [number, number, number],   // #16C47F verde
+  accentDark: [15, 169, 104] as [number, number, number], // #0FA968
+  accentSoft: [230, 252, 242] as [number, number, number],
   gold: [202, 138, 4] as [number, number, number],
   goldSoft: [254, 249, 195] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
@@ -113,41 +116,55 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   const W = doc.internal.pageSize.getWidth();
   const M = 40; // margem lateral
 
-  // Fundo branco geral
-  setFill(doc, C.white);
+  // Fundo cinza claro geral (impacto visual)
+  setFill(doc, C.surface);
   doc.rect(0, 0, W, doc.internal.pageSize.getHeight(), "F");
 
-  // ── CABEÇALHO ────────────────────────────────────────────────────────────
-  // Selo PROPOSTA COMERCIAL
-  pill(doc, M, 48, "PROPOSTA COMERCIAL", { bg: C.accentSoft, fg: C.accent, padX: 10, fontSize: 7.5 });
+  // ── FAIXA SUPERIOR NAVY (HERO) ───────────────────────────────────────────
+  const heroH = 138;
+  setFill(doc, C.ink);
+  doc.rect(0, 0, W, heroH, "F");
+  // Faixa verde fina topo
+  setFill(doc, C.accent);
+  doc.rect(0, 0, W, 4, "F");
+  // Faixa navy secundária (profundidade)
+  setFill(doc, C.navy);
+  doc.rect(0, heroH - 8, W, 8, "F");
 
-  // Logotipo textual moderno
-  doc.setFont("helvetica", "bold"); doc.setFontSize(22); setText(doc, C.ink);
-  doc.text("Gift Web", M, 92);
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.muted);
-  doc.text("Brindes corporativos personalizados", M, 106);
+  // Selo PROPOSTA COMERCIAL
+  pill(doc, M, 26, "PROPOSTA COMERCIAL", { bg: C.accent, fg: C.white, padX: 12, fontSize: 8 });
+
+  // Logotipo + tagline
+  doc.setFont("helvetica", "bold"); doc.setFontSize(26); setText(doc, C.white);
+  doc.text("Gift Web", M, 78);
+  // Detalhe verde sublinhando o logo
+  setFill(doc, C.accent);
+  doc.rect(M, 84, 36, 3, "F");
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9); setText(doc, [180, 200, 220]);
+  doc.text("Brindes corporativos personalizados", M, 102);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); setText(doc, C.accent);
+  doc.text("PREMIUM  ·  CONFIANÇA  ·  +10 ANOS DE MERCADO", M, 118);
 
   // Lado direito: Nº + data
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, C.subtle);
-  doc.text(`ORÇAMENTO Nº`, W - M, 52, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(26); setText(doc, C.ink);
-  doc.text(orc.numero, W - M, 80, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, [180, 200, 220]);
+  doc.text(`ORÇAMENTO Nº`, W - M, 34, { align: "right" });
+  doc.setFont("helvetica", "bold"); doc.setFontSize(30); setText(doc, C.white);
+  doc.text(orc.numero, W - M, 66, { align: "right" });
 
-  // Data com destaque
   const dataEmissao = formatDate(orc.createdAt);
   const dataValidade = new Date(orc.createdAt);
   dataValidade.setDate(dataValidade.getDate() + 15);
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.subtle);
-  doc.text("EMISSÃO", W - M, 96, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.body);
-  doc.text(dataEmissao, W - M, 108, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [180, 200, 220]);
+  doc.text("EMISSÃO", W - M, 88, { align: "right" });
+  doc.setFont("helvetica", "bold"); doc.setFontSize(10); setText(doc, C.white);
+  doc.text(dataEmissao, W - M, 102, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [180, 200, 220]);
+  doc.text("VÁLIDA ATÉ", W - M, 118, { align: "right" });
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9); setText(doc, C.accent);
+  doc.text(formatDate(dataValidade.toISOString()), W - M, 130, { align: "right" });
 
-  // Separador fino
-  setDraw(doc, C.line); doc.setLineWidth(0.6);
-  doc.line(M, 132, W - M, 132);
-
-  let y = 156;
+  let y = heroH + 22;
 
   // ── CARD DO CLIENTE ──────────────────────────────────────────────────────
   const cliente = sistema.clientes.find(c => c.id === orc.clienteId);
@@ -173,16 +190,20 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   const linhasContato = linhaContato ? 1 : 0;
   const cardClienteH = 90 + linhasEnd * 14 + linhasContato * 14;
 
-  // Card outline (sem fundo, estilo Apple/Stripe)
+  // Card branco com borda fina (sobressai sobre o fundo cinza)
+  setFill(doc, C.white);
   setDraw(doc, C.line); doc.setLineWidth(0.8);
-  doc.roundedRect(M, y, W - M * 2, cardClienteH, 8, 8, "S");
+  doc.roundedRect(M, y, W - M * 2, cardClienteH, 10, 10, "FD");
+  // Faixa verde lateral (acento premium)
+  setFill(doc, C.accent);
+  doc.rect(M, y, 4, cardClienteH, "F");
 
   // Coluna esquerda — Cliente
   const colW = (W - M * 2) / 2;
-  const padX = 20;
-  let cy = y + 22;
+  const padX = 24;
+  let cy = y + 24;
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.subtle);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(7); setText(doc, C.accentDark);
   doc.text("CLIENTE", M + padX, cy);
   cy += 16;
 
@@ -215,12 +236,12 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   // Divisor vertical interno
   setDraw(doc, C.line); doc.setLineWidth(0.5);
-  doc.line(M + colW, y + 14, M + colW, y + cardClienteH - 14);
+  doc.line(M + colW, y + 16, M + colW, y + cardClienteH - 16);
 
   // Coluna direita — Vendedor + selo
   const rx = M + colW + padX;
-  let ry = y + 22;
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.subtle);
+  let ry = y + 24;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(7); setText(doc, C.accentDark);
   doc.text("SEU CONSULTOR", rx, ry);
   ry += 16;
 
@@ -233,39 +254,48 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     bg: C.goldSoft, fg: C.gold, padX: 9, fontSize: 7,
   });
 
-  y += cardClienteH + 18;
+  y += cardClienteH + 20;
 
-  // ── BARRA DE DIFERENCIAIS ────────────────────────────────────────────────
+  // ── BARRA DE DIFERENCIAIS (3 itens, fundo verde suave, espaçada) ─────────
   const benefits = [
     "Produção em até 48h",
     "Nota Fiscal e Garantia",
     "Entrega para todo Brasil",
-    "Atendimento Especializado",
-    "Qualidade Premium",
   ];
-  const barH = 38;
-  setFill(doc, C.surface);
-  doc.roundedRect(M, y, W - M * 2, barH, 8, 8, "F");
+  const barH = 56;
+  setFill(doc, C.accentSoft);
+  doc.roundedRect(M, y, W - M * 2, barH, 12, 12, "F");
+  setDraw(doc, [200, 240, 220]); doc.setLineWidth(0.6);
+  doc.roundedRect(M, y, W - M * 2, barH, 12, 12, "S");
 
   const segW = (W - M * 2) / benefits.length;
   benefits.forEach((b, i) => {
     const cx = M + segW * i + segW / 2;
-    // Check mark verde
-    setDraw(doc, C.accent); doc.setLineWidth(1.4);
-    const cmX = cx - doc.getTextWidth(b) / 2 - 12;
-    doc.line(cmX, y + barH / 2, cmX + 3, y + barH / 2 + 3);
-    doc.line(cmX + 3, y + barH / 2 + 3, cmX + 8, y + barH / 2 - 3);
-    // Texto
-    doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); setText(doc, C.body);
-    doc.text(b, cx + 4, y + barH / 2 + 3, { align: "center" });
-    // Divisor entre itens
+    // Check circle verde sólido
+    const checkR = 9;
+    const tw = doc.getTextWidth(b);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5);
+    const tw2 = doc.getTextWidth(b);
+    const groupW = checkR * 2 + 10 + tw2;
+    const startX = cx - groupW / 2;
+    setFill(doc, C.accent);
+    doc.circle(startX + checkR, y + barH / 2, checkR, "F");
+    // Check mark
+    setDraw(doc, C.white); doc.setLineWidth(1.6);
+    doc.line(startX + checkR - 4, y + barH / 2 + 0.5, startX + checkR - 1, y + barH / 2 + 3.5);
+    doc.line(startX + checkR - 1, y + barH / 2 + 3.5, startX + checkR + 4, y + barH / 2 - 2.5);
+    // Texto maior, respirando
+    setText(doc, C.ink);
+    doc.text(b, startX + checkR * 2 + 10, y + barH / 2 + 3.5);
+    // Divisor sutil entre itens
     if (i < benefits.length - 1) {
-      setDraw(doc, C.line); doc.setLineWidth(0.4);
-      doc.line(M + segW * (i + 1), y + 10, M + segW * (i + 1), y + barH - 10);
+      setDraw(doc, [200, 235, 215]); doc.setLineWidth(0.6);
+      doc.line(M + segW * (i + 1), y + 14, M + segW * (i + 1), y + barH - 14);
     }
+    void tw;
   });
 
-  y += barH + 24;
+  y += barH + 26;
 
   // ── PRODUTOS ─────────────────────────────────────────────────────────────
   doc.setFont("helvetica", "bold"); doc.setFontSize(10); setText(doc, C.ink);
@@ -343,9 +373,17 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     doc.text(fmtBRL(item.precoUnitario), tx, y + cardH - 6);
 
     // Total à direita
-    const totalItem = item.precoUnitario * item.quantidade;
-    const originalItem = (item.precoOriginal ?? item.precoUnitario) * item.quantidade;
-    const temDesconto = originalItem > totalItem + 0.01;
+     // "Preço base" = unitário da menor faixa da tabela (ex.: 10 un.)
+     // Economia = (base - precoUnitario) * quantidade
+     const rows = (item as any).tabelaPrecos && (item as any).precoCusto
+       ? getNormalizedPriceRows((item as any).tabelaPrecos, (item as any).precoCusto)
+       : null;
+     const basePriceItem = rows && rows.length
+       ? rows[0].unit
+       : (item.precoOriginal ?? item.precoUnitario);
+     const totalItem = item.precoUnitario * item.quantidade;
+     const originalItem = basePriceItem * item.quantidade;
+     const temDesconto = originalItem > totalItem + 0.01;
 
     doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.subtle);
     doc.text("TOTAL DO ITEM", W - M - 14, y + 28, { align: "right" });
@@ -368,9 +406,15 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   // ── TOTAIS ───────────────────────────────────────────────────────────────
   const subtotal = orc.subtotal ?? orc.itens.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0);
-  const subtotalOriginal = orc.itens.reduce(
-    (s, i) => s + (i.precoOriginal ?? i.precoUnitario) * i.quantidade, 0
-  );
+  // Economia correta: compara contra o preço da menor faixa da tabela (qtd mínima),
+  // não contra o "precoOriginal" (que é o automático para a qtd atual).
+  const subtotalOriginal = orc.itens.reduce((s, i) => {
+    const rs = (i as any).tabelaPrecos && (i as any).precoCusto
+      ? getNormalizedPriceRows((i as any).tabelaPrecos, (i as any).precoCusto)
+      : null;
+    const base = rs && rs.length ? rs[0].unit : (i.precoOriginal ?? i.precoUnitario);
+    return s + base * i.quantidade;
+  }, 0);
   const economia = Math.max(0, subtotalOriginal - subtotal);
   const total = subtotal + (orc.freteValor || 0);
   const totalOriginal = subtotalOriginal + (orc.freteValor || 0);
@@ -442,7 +486,7 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   const cards = [
     { label: "PRAZO DE ENTREGA", value: orc.prazoEntrega ? `${orc.prazoEntrega} dias úteis` : "À combinar" },
     { label: "FORMA DE PAGAMENTO", value: lookupName(sistema.meiosPagamento, orc.pagamentoId) },
-    { label: "TRANSPORTE", value: orc.freteTipo === "FOB" ? "FOB · Cliente retira" : lookupName(sistema.transportadoras, orc.transportadoraId) },
+    { label: "TRANSPORTE", value: orc.freteTipo === "FOB" ? "FOB" : lookupName(sistema.transportadoras, orc.transportadoraId) },
     { label: "VALIDADE", value: formatDate(dataValidade.toISOString()) },
   ];
 

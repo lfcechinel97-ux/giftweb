@@ -13,7 +13,7 @@ import { gerarPDFOrcamento } from "./pdf";
 
 const FRETE_TIPOS = [
   { value: "CIF", label: "CIF (Frete incluso)" },
-  { value: "FOB", label: "FOB (Cliente pega)" },
+  { value: "FOB", label: "FOB" },
 ] as const;
 
 interface OrcamentoFormData {
@@ -641,6 +641,7 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [quantidade, setQuantidade] = useState(1);
   const [precoUnitario, setPrecoUnitario] = useState(0);
+  const [precoInput, setPrecoInput] = useState("");
   const [precoOriginal, setPrecoOriginal] = useState(0);
   const [precoManual, setPrecoManual] = useState(false);
   const [mockupImagem, setMockupImagem] = useState<string | undefined>(undefined);
@@ -657,6 +658,7 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
     if (item) {
       setQuantidade(item.quantidade);
       setPrecoUnitario(item.precoUnitario);
+      setPrecoInput(item.precoUnitario > 0 ? item.precoUnitario.toFixed(2) : "");
       setPrecoOriginal(item.precoOriginal);
       setPrecoManual(item.precoManual);
       setMockupImagem(item.mockupImagem);
@@ -697,7 +699,10 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
     setProdutoVariantes([]);
     const preco = calcularPrecoAutomatico(quantidade, prod);
     setPrecoOriginal(preco);
-    if (!precoManual) setPrecoUnitario(preco);
+    if (!precoManual) {
+      setPrecoUnitario(preco);
+      setPrecoInput(preco > 0 ? preco.toFixed(2) : "");
+    }
     setSearchTerm("");
   };
 
@@ -705,7 +710,10 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
     setSelectedVariant(variant);
     const preco = calcularPrecoAutomatico(quantidade);
     setPrecoOriginal(preco);
-    if (!precoManual) setPrecoUnitario(preco);
+    if (!precoManual) {
+      setPrecoUnitario(preco);
+      setPrecoInput(preco > 0 ? preco.toFixed(2) : "");
+    }
   };
 
   const handleQuantidadeChange = (qtd: number) => {
@@ -714,18 +722,35 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
       const preco = calcularPrecoAutomatico(qtd);
       setPrecoOriginal(preco);
       setPrecoUnitario(preco);
+      setPrecoInput(preco > 0 ? preco.toFixed(2) : "");
     }
   };
 
-  const handlePrecoChange = (valor: number) => {
-    setPrecoUnitario(valor);
-    setPrecoManual(true);
+  const handlePrecoChange = (raw: string) => {
+    // Aceita digitação livre (vírgula ou ponto) sem reformatar enquanto o usuário digita
+    const normalized = raw.replace(",", ".");
+    setPrecoInput(raw);
+    const num = parseFloat(normalized);
+    if (!isNaN(num) && num >= 0) {
+      setPrecoUnitario(num);
+      setPrecoManual(true);
+    } else if (raw.trim() === "") {
+      setPrecoUnitario(0);
+      setPrecoManual(true);
+    }
+  };
+
+  const handlePrecoBlur = () => {
+    // Ao sair do campo, normaliza para 2 casas
+    if (precoUnitario > 0) setPrecoInput(precoUnitario.toFixed(2));
+    else setPrecoInput("");
   };
 
   const handleResetPreco = () => {
     const preco = calcularPrecoAutomatico(quantidade);
     setPrecoOriginal(preco);
     setPrecoUnitario(preco);
+    setPrecoInput(preco > 0 ? preco.toFixed(2) : "");
     setPrecoManual(false);
   };
 
@@ -953,12 +978,13 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">R$</span>
                       <input
-                        type="number"
-                        min="0"
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
                         className={`w-full pl-9 pr-3 py-2 border rounded-lg ${precoManual ? "border-amber-400 bg-amber-50" : ""}`}
-                        value={precoUnitario === 0 ? "" : Number(precoUnitario).toFixed(2)}
-                        onChange={(e) => handlePrecoChange(parseFloat(e.target.value) || 0)}
+                        value={precoInput}
+                        onChange={(e) => handlePrecoChange(e.target.value)}
+                        onBlur={handlePrecoBlur}
+                        placeholder="0,00"
                       />
                     </div>
                     {precoManual && (
