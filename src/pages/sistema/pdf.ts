@@ -120,46 +120,38 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   setFill(doc, C.surface);
   doc.rect(0, 0, W, doc.internal.pageSize.getHeight(), "F");
 
-  // ── FAIXA SUPERIOR NAVY (HERO) — compactada ──────────────────────────────
-  const heroH = 118;
+  // ── HERO MINIMALISTA — apenas marca + nº/emissão ─────────────────────────
+  const heroH = 96;
   setFill(doc, C.ink);
   doc.rect(0, 0, W, heroH, "F");
   setFill(doc, C.accent);
-  doc.rect(0, 0, W, 4, "F");
-  setFill(doc, C.navy);
-  doc.rect(0, heroH - 6, W, 6, "F");
+  doc.rect(0, 0, W, 3, "F");
 
-  pill(doc, M, 22, "PROPOSTA COMERCIAL", { bg: C.accent, fg: C.white, padX: 12, fontSize: 8 });
-
-  doc.setFont("helvetica", "bold"); doc.setFontSize(24); setText(doc, C.white);
-  doc.text("Gift Web", M, 70);
-  setFill(doc, C.accent);
-  doc.rect(M, 76, 32, 3, "F");
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, [180, 200, 220]);
-  doc.text("Brindes corporativos personalizados", M, 92);
-  doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); setText(doc, C.accent);
-  doc.text("PREMIUM  ·  CONFIANÇA  ·  +5 ANOS DE MERCADO", M, 106);
-
-  // Lado direito: Nº + data
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [180, 200, 220]);
-  doc.text(`ORÇAMENTO Nº`, W - M, 30, { align: "right" });
+  // Lado esquerdo: marca elegante
   doc.setFont("helvetica", "bold"); doc.setFontSize(26); setText(doc, C.white);
-  doc.text(orc.numero, W - M, 58, { align: "right" });
+  doc.text("Gift Web", M, 50);
+  setFill(doc, C.accent);
+  doc.rect(M, 58, 28, 2.5, "F");
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, [180, 200, 220]);
+  doc.setCharSpace(1.5);
+  doc.text("BRINDES CORPORATIVOS", M, 74);
+  doc.setCharSpace(0);
 
+  // Lado direito: Nº + emissão
   const dataEmissao = formatDate(orc.createdAt);
   const dataValidade = new Date(orc.createdAt);
   dataValidade.setDate(dataValidade.getDate() + 7);
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, [180, 200, 220]);
-  doc.text("EMISSÃO", W - M, 76, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.white);
-  doc.text(dataEmissao, W - M, 88, { align: "right" });
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, [180, 200, 220]);
-  doc.text("VÁLIDA ATÉ", W - M, 100, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9); setText(doc, C.accent);
-  doc.text(formatDate(dataValidade.toISOString()), W - M, 112, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, [170, 188, 210]);
+  doc.setCharSpace(1.2);
+  doc.text("ORÇAMENTO Nº", W - M, 32, { align: "right" });
+  doc.setCharSpace(0);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(24); setText(doc, C.white);
+  doc.text(orc.numero, W - M, 58, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [180, 200, 220]);
+  doc.text(`Emissão  ${dataEmissao}`, W - M, 74, { align: "right" });
 
-  let y = heroH + 16;
+  let y = heroH + 18;
 
   // ── CARD DO CLIENTE ──────────────────────────────────────────────────────
   const cliente = sistema.clientes.find(c => c.id === orc.clienteId);
@@ -262,79 +254,9 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   y += cardClienteH + 12;
 
-  // ── BARRA DE DIFERENCIAIS — branca com borda verde, minimalista ──────────
-  const benefits: Array<{ label: string; icon: "rocket" | "shield" | "delivery" }> = [
-    { label: "Produção em até 48h", icon: "rocket" },
-    { label: "Nota Fiscal e Garantia", icon: "shield" },
-    { label: "Entrega para todo Brasil", icon: "delivery" },
-  ];
-  const barH = 34;
-  setFill(doc, C.white);
-  doc.roundedRect(M, y, W - M * 2, barH, 8, 8, "F");
-  setDraw(doc, C.accent); doc.setLineWidth(1);
-  doc.roundedRect(M, y, W - M * 2, barH, 8, 8, "S");
+  // (Diferenciais movidos para o rodapé como selos institucionais)
 
-  const drawIcon = (kind: "rocket" | "shield" | "delivery", cx: number, cy2: number) => {
-    setDraw(doc, C.accentDark); doc.setLineWidth(1.1);
-    setFill(doc, C.white);
-    if (kind === "rocket") {
-      // corpo do foguete (cápsula)
-      doc.lines(
-        [[3, 3], [0, 6], [-3, 3], [-3, -3], [0, -6], [3, -3]],
-        cx - 3, cy2 - 7, [1, 1], "FD", true
-      );
-      // janela
-      setFill(doc, C.accent);
-      doc.circle(cx, cy2 - 2, 1.3, "F");
-      // aletas
-      setFill(doc, C.accentSoft);
-      doc.lines([[-3, 3], [3, 0], [0, -3]], cx - 3, cy2 + 2, [1, 1], "FD", true);
-      doc.lines([[3, 3], [-3, 0], [0, -3]], cx + 3, cy2 + 2, [1, 1], "FD", true);
-      // chama
-      setFill(doc, C.accent); setDraw(doc, C.accent);
-      doc.lines([[-2, 0], [2, 4], [2, -4]], cx - 2, cy2 + 5, [1, 1], "F", true);
-    } else if (kind === "shield") {
-      // escudo
-      setFill(doc, C.white); setDraw(doc, C.accentDark); doc.setLineWidth(1.1);
-      doc.lines(
-        [[7, 0], [0, 6], [-7, 7], [-7, -7], [0, -6]],
-        cx - 7, cy2 - 7, [1, 1], "FD", true
-      );
-      // check
-      setDraw(doc, C.accentDark); doc.setLineWidth(1.6);
-      doc.line(cx - 3, cy2, cx - 1, cy2 + 2.5);
-      doc.line(cx - 1, cy2 + 2.5, cx + 3.5, cy2 - 2.5);
-    } else {
-      // aviãozinho (topo)
-      setFill(doc, C.accentDark); setDraw(doc, C.accentDark); doc.setLineWidth(0.8);
-      doc.lines([[10, -3], [-8, 0], [-2, 3], [2, 0], [8, 0]], cx - 5, cy2 - 5, [1, 1], "F", true);
-      // caminhão (baixo)
-      setFill(doc, C.white); setDraw(doc, C.accentDark); doc.setLineWidth(1);
-      doc.roundedRect(cx - 8, cy2 + 1, 9, 6, 1, 1, "FD");
-      doc.roundedRect(cx + 1, cy2 + 3, 5, 4, 1, 1, "FD");
-      setFill(doc, C.accentDark);
-      doc.circle(cx - 5, cy2 + 8, 1.2, "F");
-      doc.circle(cx + 3, cy2 + 8, 1.2, "F");
-    }
-  };
 
-  const segW = (W - M * 2) / benefits.length;
-  benefits.forEach((b, i) => {
-    const cx = M + segW * i + segW / 2;
-    doc.setFont("helvetica", "bold"); doc.setFontSize(9);
-    const tw2 = doc.getTextWidth(b.label);
-    const groupW = 22 + 8 + tw2;
-    const startX = cx - groupW / 2;
-    drawIcon(b.icon, startX + 11, y + barH / 2);
-    setText(doc, C.ink);
-    doc.text(b.label, startX + 22 + 8, y + barH / 2 + 3);
-    if (i < benefits.length - 1) {
-      setDraw(doc, [220, 240, 230]); doc.setLineWidth(0.6);
-      doc.line(M + segW * (i + 1), y + 8, M + segW * (i + 1), y + barH - 8);
-    }
-  });
-
-  y += barH + 12;
 
   // ── PRODUTOS ─────────────────────────────────────────────────────────────
   doc.setFont("helvetica", "bold"); doc.setFontSize(10); setText(doc, C.ink);
@@ -356,12 +278,15 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
     y = ensureSpace(doc, y, cardH + 8);
 
-    // Sombra simulada + card branco
-    setFill(doc, [243, 244, 246]);
-    doc.roundedRect(M + 1, y + 2, W - M * 2, cardH, 10, 10, "F");
+    // Sombra simulada + card branco com borda navy premium
+    setFill(doc, [230, 234, 240]);
+    doc.roundedRect(M + 1, y + 3, W - M * 2, cardH, 12, 12, "F");
     setFill(doc, C.white);
-    setDraw(doc, C.line); doc.setLineWidth(0.8);
-    doc.roundedRect(M, y, W - M * 2, cardH, 10, 10, "FD");
+    setDraw(doc, C.ink); doc.setLineWidth(1.2);
+    doc.roundedRect(M, y, W - M * 2, cardH, 12, 12, "FD");
+    // Faixa lateral navy para destacar o produto
+    setFill(doc, C.ink);
+    doc.rect(M, y, 4, cardH, "F");
 
     // Imagem com placeholder
     const imgSrc = item.mockupImagem || item.imagem;
@@ -486,51 +411,61 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   doc.text(fmtBRL(subtotal), W - M, y, { align: "right" });
   y += 12;
 
-  // Box do total
+  // Box do total — branco com contorno navy premium
+  setFill(doc, C.white);
+  setDraw(doc, C.ink); doc.setLineWidth(1.4);
+  doc.roundedRect(M, y, W - M * 2, totalBoxH, 12, 12, "FD");
+  // Linha navy lateral fina
   setFill(doc, C.ink);
-  doc.roundedRect(M, y, W - M * 2, totalBoxH, 10, 10, "F");
+  doc.rect(M, y, 4, totalBoxH, "F");
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [180, 188, 200]);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
+  doc.setCharSpace(1.4);
   doc.text("VALOR TOTAL DA PROPOSTA", M + 22, y + 22);
+  doc.setCharSpace(0);
 
   if (economia > 0) {
-    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, [156, 163, 175]);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.subtle);
     const deStr = `de ${fmtBRL(totalOriginal)}`;
     doc.text(deStr, M + 22, y + 38);
     const deW = doc.getTextWidth(deStr);
-    setDraw(doc, [156, 163, 175]); doc.setLineWidth(0.6);
+    setDraw(doc, C.subtle); doc.setLineWidth(0.6);
     doc.line(M + 22, y + 35.5, M + 22 + deW, y + 35.5);
 
-    doc.setFont("helvetica", "bold"); doc.setFontSize(26); setText(doc, C.white);
-    doc.text(fmtBRL(total), M + 22, y + 68);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(28); setText(doc, C.ink);
+    doc.text(fmtBRL(total), M + 22, y + 70);
 
     const ecoLabel = `Você economiza ${fmtBRL(economia)}`;
-    doc.setFont("helvetica", "bold"); doc.setFontSize(8.5);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8);
     const ecoW = doc.getTextWidth(ecoLabel) + 18;
-    setFill(doc, C.accent);
-    doc.roundedRect(M + 22, y + 80, ecoW, 20, 10, 10, "F");
-    setText(doc, C.white);
-    doc.text(ecoLabel, M + 22 + 9, y + 94);
+    setFill(doc, C.accentSoft);
+    doc.roundedRect(M + 22, y + 82, ecoW, 18, 9, 9, "F");
+    setText(doc, C.accentDark);
+    doc.text(ecoLabel, M + 22 + 9, y + 95);
   } else {
-    doc.setFont("helvetica", "bold"); doc.setFontSize(28); setText(doc, C.white);
-    doc.text(fmtBRL(total), M + 22, y + 60);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(30); setText(doc, C.ink);
+    doc.text(fmtBRL(total), M + 22, y + 62);
   }
 
-  // Lado direito: forma resumida
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, [156, 163, 175]);
+  // Lado direito: forma resumida (texto em navy)
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
+  doc.setCharSpace(1.2);
   doc.text("PAGAMENTO", W - M - 22, y + 22, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.white);
+  doc.setCharSpace(0);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.ink);
   doc.text(lookupName(sistema.meiosPagamento, orc.pagamentoId), W - M - 22, y + 36, { align: "right" });
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, [156, 163, 175]);
-  doc.text("VALIDADE DA PROPOSTA", W - M - 22, y + 56, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.white);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
+  doc.setCharSpace(1.2);
+  doc.text("VALIDADE", W - M - 22, y + 56, { align: "right" });
+  doc.setCharSpace(0);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.accentDark);
   doc.text(formatDate(dataValidade.toISOString()), W - M - 22, y + 70, { align: "right" });
 
-  y += totalBoxH + 16;
+  y += totalBoxH + 14;
 
-  // ── CONDIÇÕES (cards) ────────────────────────────────────────────────────
-  y = ensureSpace(doc, y, 70);
+  // ── CONDIÇÕES (linha discreta) ───────────────────────────────────────────
+  y = ensureSpace(doc, y, 50);
 
   const cards = [
     { label: "PRAZO DE ENTREGA", value: orc.prazoEntrega ? `${orc.prazoEntrega} dias úteis` : "À combinar" },
@@ -541,41 +476,54 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   const gap = 8;
   const cw = (W - M * 2 - gap * 3) / 4;
-  const ch = 46;
+  const ch = 38;
   cards.forEach((c, i) => {
     const cx = M + (cw + gap) * i;
-    setDraw(doc, C.line); doc.setLineWidth(0.8);
-    doc.roundedRect(cx, y, cw, ch, 8, 8, "S");
-    doc.setFont("helvetica", "normal"); doc.setFontSize(6.2); setText(doc, C.subtle);
-    doc.text(c.label, cx + 10, y + 14);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(9); setText(doc, C.ink);
+    setDraw(doc, C.line); doc.setLineWidth(0.6);
+    doc.roundedRect(cx, y, cw, ch, 6, 6, "S");
+    doc.setFont("helvetica", "normal"); doc.setFontSize(6); setText(doc, C.subtle);
+    doc.setCharSpace(0.8);
+    doc.text(c.label, cx + 10, y + 13);
+    doc.setCharSpace(0);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); setText(doc, C.ink);
     const lines = doc.splitTextToSize(c.value, cw - 20);
-    doc.text(lines.slice(0, 2), cx + 10, y + 28);
+    doc.text(lines.slice(0, 1), cx + 10, y + 26);
   });
-  y += ch + 16;
+  y += ch + 12;
 
   // ── OBSERVAÇÕES ──────────────────────────────────────────────────────────
   if (orc.observacoes) {
-    y = ensureSpace(doc, y, 60);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(8); setText(doc, C.subtle);
+    y = ensureSpace(doc, y, 50);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); setText(doc, C.subtle);
+    doc.setCharSpace(1);
     doc.text("OBSERVAÇÕES", M, y);
-    y += 12;
-    doc.setFont("helvetica", "normal"); doc.setFontSize(9); setText(doc, C.body);
+    doc.setCharSpace(0);
+    y += 11;
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.body);
     const lines = doc.splitTextToSize(orc.observacoes, W - M * 2);
     doc.text(lines, M, y);
-    y += lines.length * 12 + 8;
+    y += lines.length * 11 + 6;
   }
 
-  // ── FRASE FINAL ──────────────────────────────────────────────────────────
-  y = ensureSpace(doc, y, 50);
-  setDraw(doc, C.line); doc.setLineWidth(0.6);
+  // ── SELOS INSTITUCIONAIS (rodapé) ────────────────────────────────────────
+  y = ensureSpace(doc, y, 38);
+  setDraw(doc, C.line); doc.setLineWidth(0.5);
   doc.line(M, y, W - M, y);
-  y += 22;
-  doc.setFont("helvetica", "bold"); doc.setFontSize(11); setText(doc, C.ink);
-  doc.text("Estamos à disposição para tornar seu projeto ainda mais especial.", W / 2, y, { align: "center" });
   y += 14;
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.muted);
-  doc.text("Equipe Gift Web Brindes", W / 2, y, { align: "center" });
+  const seals = ["Produção em até 48h", "Nota Fiscal e Garantia", "Entrega para todo Brasil"];
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.muted);
+  doc.setCharSpace(0.6);
+  const segW = (W - M * 2) / seals.length;
+  seals.forEach((s, i) => {
+    const cx = M + segW * i + segW / 2;
+    // pequeno marcador verde
+    setFill(doc, C.accent);
+    doc.circle(cx - doc.getTextWidth(s) / 2 - 6, y - 2, 1.3, "F");
+    setText(doc, C.muted);
+    doc.text(s, cx, y, { align: "center" });
+  });
+  doc.setCharSpace(0);
+  y += 14;
 
   // ── RODAPÉ DE TODAS AS PÁGINAS ───────────────────────────────────────────
   drawFooterPagina(doc);
