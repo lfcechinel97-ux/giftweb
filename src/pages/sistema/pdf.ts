@@ -278,11 +278,11 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
     y = ensureSpace(doc, y, cardH + 8);
 
-    // Sombra simulada + card branco com borda navy fina
+    // Sombra simulada + card branco (sem borda azul)
     setFill(doc, [230, 234, 240]);
     doc.roundedRect(M + 1, y + 3, W - M * 2, cardH, 12, 12, "F");
     setFill(doc, C.white);
-    setDraw(doc, C.ink); doc.setLineWidth(0.5);
+    setDraw(doc, C.line); doc.setLineWidth(0.4);
     doc.roundedRect(M, y, W - M * 2, cardH, 12, 12, "FD");
 
     // Imagem com placeholder
