@@ -793,6 +793,7 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
       imagem,
       mockupImagem,
       altura: selectedProduct.altura,
+      observacao: observacao.trim() || undefined,
     };
     onSave(newItem);
   };
