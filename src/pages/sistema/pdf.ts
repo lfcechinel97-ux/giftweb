@@ -429,7 +429,7 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   doc.text(formatDate(dataValidade.toISOString()), M + 22, y + 70);
 
   // Lado DIREITO: VALOR TOTAL (destaque)
-  const rx = W - M - 22;
+  const totalRx = W - M - 22;
   doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
   doc.setCharSpace(1.4);
   doc.text("VALOR TOTAL DA PROPOSTA", rx, y + 22, { align: "right" });
