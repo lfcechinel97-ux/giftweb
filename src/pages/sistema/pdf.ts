@@ -373,9 +373,17 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     doc.text(fmtBRL(item.precoUnitario), tx, y + cardH - 6);
 
     // Total à direita
-    const totalItem = item.precoUnitario * item.quantidade;
-    const originalItem = (item.precoOriginal ?? item.precoUnitario) * item.quantidade;
-    const temDesconto = originalItem > totalItem + 0.01;
+     // "Preço base" = unitário da menor faixa da tabela (ex.: 10 un.)
+     // Economia = (base - precoUnitario) * quantidade
+     const rows = (item as any).tabelaPrecos && (item as any).precoCusto
+       ? getNormalizedPriceRows((item as any).tabelaPrecos, (item as any).precoCusto)
+       : null;
+     const basePriceItem = rows && rows.length
+       ? rows[0].unit
+       : (item.precoOriginal ?? item.precoUnitario);
+     const totalItem = item.precoUnitario * item.quantidade;
+     const originalItem = basePriceItem * item.quantidade;
+     const temDesconto = originalItem > totalItem + 0.01;
 
     doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.subtle);
     doc.text("TOTAL DO ITEM", W - M - 14, y + 28, { align: "right" });
@@ -398,9 +406,15 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   // ── TOTAIS ───────────────────────────────────────────────────────────────
   const subtotal = orc.subtotal ?? orc.itens.reduce((s, i) => s + i.precoUnitario * i.quantidade, 0);
-  const subtotalOriginal = orc.itens.reduce(
-    (s, i) => s + (i.precoOriginal ?? i.precoUnitario) * i.quantidade, 0
-  );
+  // Economia correta: compara contra o preço da menor faixa da tabela (qtd mínima),
+  // não contra o "precoOriginal" (que é o automático para a qtd atual).
+  const subtotalOriginal = orc.itens.reduce((s, i) => {
+    const rs = (i as any).tabelaPrecos && (i as any).precoCusto
+      ? getNormalizedPriceRows((i as any).tabelaPrecos, (i as any).precoCusto)
+      : null;
+    const base = rs && rs.length ? rs[0].unit : (i.precoOriginal ?? i.precoUnitario);
+    return s + base * i.quantidade;
+  }, 0);
   const economia = Math.max(0, subtotalOriginal - subtotal);
   const total = subtotal + (orc.freteValor || 0);
   const totalOriginal = subtotalOriginal + (orc.freteValor || 0);
