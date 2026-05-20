@@ -486,7 +486,7 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   const cards = [
     { label: "PRAZO DE ENTREGA", value: orc.prazoEntrega ? `${orc.prazoEntrega} dias úteis` : "À combinar" },
     { label: "FORMA DE PAGAMENTO", value: lookupName(sistema.meiosPagamento, orc.pagamentoId) },
-    { label: "TRANSPORTE", value: orc.freteTipo === "FOB" ? "FOB · Cliente retira" : lookupName(sistema.transportadoras, orc.transportadoraId) },
+    { label: "TRANSPORTE", value: orc.freteTipo === "FOB" ? "FOB" : lookupName(sistema.transportadoras, orc.transportadoraId) },
     { label: "VALIDADE", value: formatDate(dataValidade.toISOString()) },
   ];
 
