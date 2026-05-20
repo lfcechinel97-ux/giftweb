@@ -190,16 +190,20 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   const linhasContato = linhaContato ? 1 : 0;
   const cardClienteH = 90 + linhasEnd * 14 + linhasContato * 14;
 
-  // Card outline (sem fundo, estilo Apple/Stripe)
+  // Card branco com borda fina (sobressai sobre o fundo cinza)
+  setFill(doc, C.white);
   setDraw(doc, C.line); doc.setLineWidth(0.8);
-  doc.roundedRect(M, y, W - M * 2, cardClienteH, 8, 8, "S");
+  doc.roundedRect(M, y, W - M * 2, cardClienteH, 10, 10, "FD");
+  // Faixa verde lateral (acento premium)
+  setFill(doc, C.accent);
+  doc.rect(M, y, 4, cardClienteH, "F");
 
   // Coluna esquerda — Cliente
   const colW = (W - M * 2) / 2;
-  const padX = 20;
-  let cy = y + 22;
+  const padX = 24;
+  let cy = y + 24;
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.subtle);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(7); setText(doc, C.accentDark);
   doc.text("CLIENTE", M + padX, cy);
   cy += 16;
 
@@ -232,12 +236,12 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   // Divisor vertical interno
   setDraw(doc, C.line); doc.setLineWidth(0.5);
-  doc.line(M + colW, y + 14, M + colW, y + cardClienteH - 14);
+  doc.line(M + colW, y + 16, M + colW, y + cardClienteH - 16);
 
   // Coluna direita — Vendedor + selo
   const rx = M + colW + padX;
-  let ry = y + 22;
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.subtle);
+  let ry = y + 24;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(7); setText(doc, C.accentDark);
   doc.text("SEU CONSULTOR", rx, ry);
   ry += 16;
 
@@ -250,39 +254,48 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     bg: C.goldSoft, fg: C.gold, padX: 9, fontSize: 7,
   });
 
-  y += cardClienteH + 18;
+  y += cardClienteH + 20;
 
-  // ── BARRA DE DIFERENCIAIS ────────────────────────────────────────────────
+  // ── BARRA DE DIFERENCIAIS (3 itens, fundo verde suave, espaçada) ─────────
   const benefits = [
     "Produção em até 48h",
     "Nota Fiscal e Garantia",
     "Entrega para todo Brasil",
-    "Atendimento Especializado",
-    "Qualidade Premium",
   ];
-  const barH = 38;
-  setFill(doc, C.surface);
-  doc.roundedRect(M, y, W - M * 2, barH, 8, 8, "F");
+  const barH = 56;
+  setFill(doc, C.accentSoft);
+  doc.roundedRect(M, y, W - M * 2, barH, 12, 12, "F");
+  setDraw(doc, [200, 240, 220]); doc.setLineWidth(0.6);
+  doc.roundedRect(M, y, W - M * 2, barH, 12, 12, "S");
 
   const segW = (W - M * 2) / benefits.length;
   benefits.forEach((b, i) => {
     const cx = M + segW * i + segW / 2;
-    // Check mark verde
-    setDraw(doc, C.accent); doc.setLineWidth(1.4);
-    const cmX = cx - doc.getTextWidth(b) / 2 - 12;
-    doc.line(cmX, y + barH / 2, cmX + 3, y + barH / 2 + 3);
-    doc.line(cmX + 3, y + barH / 2 + 3, cmX + 8, y + barH / 2 - 3);
-    // Texto
-    doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); setText(doc, C.body);
-    doc.text(b, cx + 4, y + barH / 2 + 3, { align: "center" });
-    // Divisor entre itens
+    // Check circle verde sólido
+    const checkR = 9;
+    const tw = doc.getTextWidth(b);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5);
+    const tw2 = doc.getTextWidth(b);
+    const groupW = checkR * 2 + 10 + tw2;
+    const startX = cx - groupW / 2;
+    setFill(doc, C.accent);
+    doc.circle(startX + checkR, y + barH / 2, checkR, "F");
+    // Check mark
+    setDraw(doc, C.white); doc.setLineWidth(1.6);
+    doc.line(startX + checkR - 4, y + barH / 2 + 0.5, startX + checkR - 1, y + barH / 2 + 3.5);
+    doc.line(startX + checkR - 1, y + barH / 2 + 3.5, startX + checkR + 4, y + barH / 2 - 2.5);
+    // Texto maior, respirando
+    setText(doc, C.ink);
+    doc.text(b, startX + checkR * 2 + 10, y + barH / 2 + 3.5);
+    // Divisor sutil entre itens
     if (i < benefits.length - 1) {
-      setDraw(doc, C.line); doc.setLineWidth(0.4);
-      doc.line(M + segW * (i + 1), y + 10, M + segW * (i + 1), y + barH - 10);
+      setDraw(doc, [200, 235, 215]); doc.setLineWidth(0.6);
+      doc.line(M + segW * (i + 1), y + 14, M + segW * (i + 1), y + barH - 14);
     }
+    void tw;
   });
 
-  y += barH + 24;
+  y += barH + 26;
 
   // ── PRODUTOS ─────────────────────────────────────────────────────────────
   doc.setFont("helvetica", "bold"); doc.setFontSize(10); setText(doc, C.ink);
