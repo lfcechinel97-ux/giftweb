@@ -13,7 +13,7 @@ import { gerarPDFOrcamento } from "./pdf";
 
 const FRETE_TIPOS = [
   { value: "CIF", label: "CIF (Frete incluso)" },
-  { value: "FOB", label: "FOB (Cliente pega)" },
+  { value: "FOB", label: "FOB" },
 ] as const;
 
 interface OrcamentoFormData {
