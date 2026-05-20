@@ -120,46 +120,38 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   setFill(doc, C.surface);
   doc.rect(0, 0, W, doc.internal.pageSize.getHeight(), "F");
 
-  // ── FAIXA SUPERIOR NAVY (HERO) — compactada ──────────────────────────────
-  const heroH = 118;
+  // ── HERO MINIMALISTA — apenas marca + nº/emissão ─────────────────────────
+  const heroH = 96;
   setFill(doc, C.ink);
   doc.rect(0, 0, W, heroH, "F");
   setFill(doc, C.accent);
-  doc.rect(0, 0, W, 4, "F");
-  setFill(doc, C.navy);
-  doc.rect(0, heroH - 6, W, 6, "F");
+  doc.rect(0, 0, W, 3, "F");
 
-  pill(doc, M, 22, "PROPOSTA COMERCIAL", { bg: C.accent, fg: C.white, padX: 12, fontSize: 8 });
-
-  doc.setFont("helvetica", "bold"); doc.setFontSize(24); setText(doc, C.white);
-  doc.text("Gift Web", M, 70);
-  setFill(doc, C.accent);
-  doc.rect(M, 76, 32, 3, "F");
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, [180, 200, 220]);
-  doc.text("Brindes corporativos personalizados", M, 92);
-  doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); setText(doc, C.accent);
-  doc.text("PREMIUM  ·  CONFIANÇA  ·  +5 ANOS DE MERCADO", M, 106);
-
-  // Lado direito: Nº + data
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [180, 200, 220]);
-  doc.text(`ORÇAMENTO Nº`, W - M, 30, { align: "right" });
+  // Lado esquerdo: marca elegante
   doc.setFont("helvetica", "bold"); doc.setFontSize(26); setText(doc, C.white);
-  doc.text(orc.numero, W - M, 58, { align: "right" });
+  doc.text("Gift Web", M, 50);
+  setFill(doc, C.accent);
+  doc.rect(M, 58, 28, 2.5, "F");
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, [180, 200, 220]);
+  doc.setCharSpace(1.5);
+  doc.text("BRINDES CORPORATIVOS", M, 74);
+  doc.setCharSpace(0);
 
+  // Lado direito: Nº + emissão
   const dataEmissao = formatDate(orc.createdAt);
   const dataValidade = new Date(orc.createdAt);
   dataValidade.setDate(dataValidade.getDate() + 7);
 
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, [180, 200, 220]);
-  doc.text("EMISSÃO", W - M, 76, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.white);
-  doc.text(dataEmissao, W - M, 88, { align: "right" });
-  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, [180, 200, 220]);
-  doc.text("VÁLIDA ATÉ", W - M, 100, { align: "right" });
-  doc.setFont("helvetica", "bold"); doc.setFontSize(9); setText(doc, C.accent);
-  doc.text(formatDate(dataValidade.toISOString()), W - M, 112, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, [170, 188, 210]);
+  doc.setCharSpace(1.2);
+  doc.text("ORÇAMENTO Nº", W - M, 32, { align: "right" });
+  doc.setCharSpace(0);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(24); setText(doc, C.white);
+  doc.text(orc.numero, W - M, 58, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, [180, 200, 220]);
+  doc.text(`Emissão  ${dataEmissao}`, W - M, 74, { align: "right" });
 
-  let y = heroH + 16;
+  let y = heroH + 18;
 
   // ── CARD DO CLIENTE ──────────────────────────────────────────────────────
   const cliente = sistema.clientes.find(c => c.id === orc.clienteId);
