@@ -222,35 +222,35 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   doc.line(M + colW, y + 14, M + colW, y + cardClienteH - 14);
 
   // Coluna direita — Consultor + dados institucionais (compactado)
-  const rx = M + colW + padX;
+  const totalRx = M + colW + padX;
   let ry = y + 18;
   doc.setFont("helvetica", "bold"); doc.setFontSize(7); setText(doc, C.accentDark);
-  doc.text("SEU CONSULTOR", rx, ry);
+  doc.text("SEU CONSULTOR", totalRx, ry);
   ry += 13;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(12); setText(doc, C.ink);
-  doc.text(vendedorNome, rx, ry);
+  doc.text(vendedorNome, totalRx, ry);
   ry += 10;
 
   // Divisor sutil entre consultor e empresa
   setDraw(doc, C.line); doc.setLineWidth(0.5);
-  doc.line(rx, ry, rx + colW - padX * 2, ry);
+  doc.line(totalRx, ry, totalRx + colW - padX * 2, ry);
   ry += 11;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); setText(doc, C.ink);
-  doc.text("Comércio de Utilidades Lukati LTDA", rx, ry);
+  doc.text("Comércio de Utilidades Lukati LTDA", totalRx, ry);
   ry += 11;
 
   doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
-  doc.text("Matriz Içara/SC", rx, ry);
+  doc.text("Matriz Içara/SC", totalRx, ry);
   doc.setFont("helvetica", "bold"); setText(doc, C.body);
-  doc.text("CNPJ 43.956.926/0001-68", rx + colW - padX * 2, ry, { align: "right" });
+  doc.text("CNPJ 43.956.926/0001-68", totalRx + colW - padX * 2, ry, { align: "right" });
   ry += 10;
 
   doc.setFont("helvetica", "normal"); setText(doc, C.muted);
-  doc.text("Filial Guarulhos/SP", rx, ry);
+  doc.text("Filial Guarulhos/SP", totalRx, ry);
   doc.setFont("helvetica", "bold"); setText(doc, C.body);
-  doc.text("CNPJ 43.956.926/0002-49", rx + colW - padX * 2, ry, { align: "right" });
+  doc.text("CNPJ 43.956.926/0002-49", totalRx + colW - padX * 2, ry, { align: "right" });
 
   y += cardClienteH + 12;
 
@@ -432,30 +432,30 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   const totalRx = W - M - 22;
   doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.muted);
   doc.setCharSpace(1.4);
-  doc.text("VALOR TOTAL DA PROPOSTA", rx, y + 22, { align: "right" });
+  doc.text("VALOR TOTAL DA PROPOSTA", totalRx, y + 22, { align: "right" });
   doc.setCharSpace(0);
 
   if (economia > 0) {
     doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.subtle);
     const deStr = `de ${fmtBRL(totalOriginal)}`;
-    doc.text(deStr, rx, y + 38, { align: "right" });
+    doc.text(deStr, totalRx, y + 38, { align: "right" });
     const deW = doc.getTextWidth(deStr);
     setDraw(doc, C.subtle); doc.setLineWidth(0.6);
-    doc.line(rx - deW, y + 35.5, rx, y + 35.5);
+    doc.line(totalRx - deW, y + 35.5, totalRx, y + 35.5);
 
     doc.setFont("helvetica", "bold"); doc.setFontSize(28); setText(doc, C.ink);
-    doc.text(fmtBRL(total), rx, y + 70, { align: "right" });
+    doc.text(fmtBRL(total), totalRx, y + 70, { align: "right" });
 
     const ecoLabel = `Você economiza ${fmtBRL(economia)}`;
     doc.setFont("helvetica", "bold"); doc.setFontSize(8);
     const ecoW = doc.getTextWidth(ecoLabel) + 18;
     setFill(doc, C.accentSoft);
-    doc.roundedRect(rx - ecoW, y + 82, ecoW, 18, 9, 9, "F");
+    doc.roundedRect(totalRx - ecoW, y + 82, ecoW, 18, 9, 9, "F");
     setText(doc, C.accentDark);
-    doc.text(ecoLabel, rx - 9, y + 95, { align: "right" });
+    doc.text(ecoLabel, totalRx - 9, y + 95, { align: "right" });
   } else {
     doc.setFont("helvetica", "bold"); doc.setFontSize(30); setText(doc, C.ink);
-    doc.text(fmtBRL(total), rx, y + 62, { align: "right" });
+    doc.text(fmtBRL(total), totalRx, y + 62, { align: "right" });
   }
 
   y += totalBoxH + 14;
