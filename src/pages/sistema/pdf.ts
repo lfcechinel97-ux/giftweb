@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import type { Orcamento, Cliente, LookupItem } from "@/contexts/SistemaContext";
+import { getNormalizedPriceRows } from "@/utils/price";
 
 interface Sis {
   clientes: Cliente[];
