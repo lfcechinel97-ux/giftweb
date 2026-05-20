@@ -254,79 +254,9 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   y += cardClienteH + 12;
 
-  // ── BARRA DE DIFERENCIAIS — branca com borda verde, minimalista ──────────
-  const benefits: Array<{ label: string; icon: "rocket" | "shield" | "delivery" }> = [
-    { label: "Produção em até 48h", icon: "rocket" },
-    { label: "Nota Fiscal e Garantia", icon: "shield" },
-    { label: "Entrega para todo Brasil", icon: "delivery" },
-  ];
-  const barH = 34;
-  setFill(doc, C.white);
-  doc.roundedRect(M, y, W - M * 2, barH, 8, 8, "F");
-  setDraw(doc, C.accent); doc.setLineWidth(1);
-  doc.roundedRect(M, y, W - M * 2, barH, 8, 8, "S");
+  // (Diferenciais movidos para o rodapé como selos institucionais)
 
-  const drawIcon = (kind: "rocket" | "shield" | "delivery", cx: number, cy2: number) => {
-    setDraw(doc, C.accentDark); doc.setLineWidth(1.1);
-    setFill(doc, C.white);
-    if (kind === "rocket") {
-      // corpo do foguete (cápsula)
-      doc.lines(
-        [[3, 3], [0, 6], [-3, 3], [-3, -3], [0, -6], [3, -3]],
-        cx - 3, cy2 - 7, [1, 1], "FD", true
-      );
-      // janela
-      setFill(doc, C.accent);
-      doc.circle(cx, cy2 - 2, 1.3, "F");
-      // aletas
-      setFill(doc, C.accentSoft);
-      doc.lines([[-3, 3], [3, 0], [0, -3]], cx - 3, cy2 + 2, [1, 1], "FD", true);
-      doc.lines([[3, 3], [-3, 0], [0, -3]], cx + 3, cy2 + 2, [1, 1], "FD", true);
-      // chama
-      setFill(doc, C.accent); setDraw(doc, C.accent);
-      doc.lines([[-2, 0], [2, 4], [2, -4]], cx - 2, cy2 + 5, [1, 1], "F", true);
-    } else if (kind === "shield") {
-      // escudo
-      setFill(doc, C.white); setDraw(doc, C.accentDark); doc.setLineWidth(1.1);
-      doc.lines(
-        [[7, 0], [0, 6], [-7, 7], [-7, -7], [0, -6]],
-        cx - 7, cy2 - 7, [1, 1], "FD", true
-      );
-      // check
-      setDraw(doc, C.accentDark); doc.setLineWidth(1.6);
-      doc.line(cx - 3, cy2, cx - 1, cy2 + 2.5);
-      doc.line(cx - 1, cy2 + 2.5, cx + 3.5, cy2 - 2.5);
-    } else {
-      // aviãozinho (topo)
-      setFill(doc, C.accentDark); setDraw(doc, C.accentDark); doc.setLineWidth(0.8);
-      doc.lines([[10, -3], [-8, 0], [-2, 3], [2, 0], [8, 0]], cx - 5, cy2 - 5, [1, 1], "F", true);
-      // caminhão (baixo)
-      setFill(doc, C.white); setDraw(doc, C.accentDark); doc.setLineWidth(1);
-      doc.roundedRect(cx - 8, cy2 + 1, 9, 6, 1, 1, "FD");
-      doc.roundedRect(cx + 1, cy2 + 3, 5, 4, 1, 1, "FD");
-      setFill(doc, C.accentDark);
-      doc.circle(cx - 5, cy2 + 8, 1.2, "F");
-      doc.circle(cx + 3, cy2 + 8, 1.2, "F");
-    }
-  };
 
-  const segW = (W - M * 2) / benefits.length;
-  benefits.forEach((b, i) => {
-    const cx = M + segW * i + segW / 2;
-    doc.setFont("helvetica", "bold"); doc.setFontSize(9);
-    const tw2 = doc.getTextWidth(b.label);
-    const groupW = 22 + 8 + tw2;
-    const startX = cx - groupW / 2;
-    drawIcon(b.icon, startX + 11, y + barH / 2);
-    setText(doc, C.ink);
-    doc.text(b.label, startX + 22 + 8, y + barH / 2 + 3);
-    if (i < benefits.length - 1) {
-      setDraw(doc, [220, 240, 230]); doc.setLineWidth(0.6);
-      doc.line(M + segW * (i + 1), y + 8, M + segW * (i + 1), y + barH - 8);
-    }
-  });
-
-  y += barH + 12;
 
   // ── PRODUTOS ─────────────────────────────────────────────────────────────
   doc.setFont("helvetica", "bold"); doc.setFontSize(10); setText(doc, C.ink);
