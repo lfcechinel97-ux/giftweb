@@ -645,6 +645,7 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
   const [precoOriginal, setPrecoOriginal] = useState(0);
   const [precoManual, setPrecoManual] = useState(false);
   const [mockupImagem, setMockupImagem] = useState<string | undefined>(undefined);
+  const [observacao, setObservacao] = useState<string>("");
   const [showPriceRows, setShowPriceRows] = useState(false);
   const [produtoVariantes, setProdutoVariantes] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
