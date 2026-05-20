@@ -351,18 +351,20 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   doc.text("ITENS DA PROPOSTA", M, y);
   doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.muted);
   doc.text(`${orc.itens.length} ${orc.itens.length === 1 ? "item" : "itens"}`, W - M, y, { align: "right" });
-  y += 14;
+  y += 12;
 
-  const cardH = 124;
-  const imgSize = 100;
-  const imgX = M + 14;
+  // Cards mais compactos quando há até 2 itens (prioriza 1 página)
+  const compact = orc.itens.length <= 2;
+  const cardH = compact ? 104 : 116;
+  const imgSize = compact ? 84 : 96;
+  const imgX = M + 12;
 
   for (const item of orc.itens) {
-    y = ensureSpace(doc, y, cardH + 10);
+    y = ensureSpace(doc, y, cardH + 8);
 
-    // Card branco com borda fina + sombra simulada
+    // Sombra simulada + card branco
     setFill(doc, [243, 244, 246]);
-    doc.roundedRect(M + 1, y + 2, W - M * 2, cardH, 10, 10, "F"); // sombra
+    doc.roundedRect(M + 1, y + 2, W - M * 2, cardH, 10, 10, "F");
     setFill(doc, C.white);
     setDraw(doc, C.line); doc.setLineWidth(0.8);
     doc.roundedRect(M, y, W - M * 2, cardH, 10, 10, "FD");
@@ -374,29 +376,28 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
       const img = await loadImageAsDataURL(imgSrc);
       if (img) {
         try {
-          // Moldura
           setFill(doc, C.surface);
-          doc.roundedRect(imgX, y + 12, imgSize, imgSize, 6, 6, "F");
-          doc.addImage(img, "JPEG", imgX + 2, y + 14, imgSize - 4, imgSize - 4, undefined, "FAST");
+          doc.roundedRect(imgX, y + 10, imgSize, imgSize, 6, 6, "F");
+          doc.addImage(img, "JPEG", imgX + 2, y + 12, imgSize - 4, imgSize - 4, undefined, "FAST");
           hasImg = true;
         } catch { /* ignore */ }
       }
     }
     if (!hasImg) {
       setFill(doc, C.surface);
-      doc.roundedRect(imgX, y + 12, imgSize, imgSize, 6, 6, "F");
+      doc.roundedRect(imgX, y + 10, imgSize, imgSize, 6, 6, "F");
       doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.subtle);
-      doc.text("Sem imagem", imgX + imgSize / 2, y + 12 + imgSize / 2 + 2, { align: "center" });
+      doc.text("Sem imagem", imgX + imgSize / 2, y + 10 + imgSize / 2 + 2, { align: "center" });
     }
 
-    const tx = imgX + imgSize + 18;
+    const tx = imgX + imgSize + 16;
     const txW = W - M - tx - 14;
 
     // Nome
-    doc.setFont("helvetica", "bold"); doc.setFontSize(11.5); setText(doc, C.ink);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(11); setText(doc, C.ink);
     const nameLines = doc.splitTextToSize(item.nome, txW);
-    doc.text(nameLines.slice(0, 2), tx, y + 28);
-    const afterName = y + 28 + (nameLines.length > 1 ? 28 : 14);
+    doc.text(nameLines.slice(0, 2), tx, y + 24);
+    const afterName = y + 24 + (nameLines.length > 1 ? 26 : 14);
 
     // Código (chip discreto)
     if (item.codigoComposto) {
@@ -410,47 +411,44 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
     // Quantidade
     doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.muted);
-    doc.text(`Quantidade: `, tx, afterName + 18);
+    doc.text(`Quantidade: `, tx, afterName + 16);
     doc.setFont("helvetica", "bold"); setText(doc, C.body);
     const qLabel = `Quantidade: `;
-    doc.text(`${item.quantidade} un.`, tx + doc.getTextWidth(qLabel), afterName + 18);
+    doc.text(`${item.quantidade} un.`, tx + doc.getTextWidth(qLabel), afterName + 16);
 
     // Unitário
-    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.muted);
-    doc.text("Valor unitário", tx, y + cardH - 18);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(10); setText(doc, C.body);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, C.muted);
+    doc.text("Valor unitário", tx, y + cardH - 16);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); setText(doc, C.body);
     doc.text(fmtBRL(item.precoUnitario), tx, y + cardH - 6);
 
     // Total à direita
-     // "Preço base" = unitário da menor faixa da tabela (ex.: 10 un.)
-     // Economia = (base - precoUnitario) * quantidade
-     const rows = (item as any).tabelaPrecos && (item as any).precoCusto
-       ? getNormalizedPriceRows((item as any).tabelaPrecos, (item as any).precoCusto)
-       : null;
-     const basePriceItem = rows && rows.length
-       ? rows[0].unit
-       : (item.precoOriginal ?? item.precoUnitario);
-     const totalItem = item.precoUnitario * item.quantidade;
-     const originalItem = basePriceItem * item.quantidade;
-     const temDesconto = originalItem > totalItem + 0.01;
+    const rows = (item as any).tabelaPrecos && (item as any).precoCusto
+      ? getNormalizedPriceRows((item as any).tabelaPrecos, (item as any).precoCusto)
+      : null;
+    const basePriceItem = rows && rows.length
+      ? rows[0].unit
+      : (item.precoOriginal ?? item.precoUnitario);
+    const totalItem = item.precoUnitario * item.quantidade;
+    const originalItem = basePriceItem * item.quantidade;
+    const temDesconto = originalItem > totalItem + 0.01;
 
-    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.subtle);
-    doc.text("TOTAL DO ITEM", W - M - 14, y + 28, { align: "right" });
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7); setText(doc, C.subtle);
+    doc.text("TOTAL DO ITEM", W - M - 14, y + 22, { align: "right" });
 
     if (temDesconto) {
-      doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.subtle);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8); setText(doc, C.subtle);
       const origStr = fmtBRL(originalItem);
-      doc.text(origStr, W - M - 14, y + 44, { align: "right" });
-      // Linha riscada
+      doc.text(origStr, W - M - 14, y + 36, { align: "right" });
       const origW = doc.getTextWidth(origStr);
       setDraw(doc, C.subtle); doc.setLineWidth(0.6);
-      doc.line(W - M - 14 - origW, y + 41, W - M - 14, y + 41);
+      doc.line(W - M - 14 - origW, y + 33.5, W - M - 14, y + 33.5);
     }
 
-    doc.setFont("helvetica", "bold"); doc.setFontSize(16); setText(doc, C.ink);
-    doc.text(fmtBRL(totalItem), W - M - 14, temDesconto ? y + 70 : y + 56, { align: "right" });
+    doc.setFont("helvetica", "bold"); doc.setFontSize(15); setText(doc, C.ink);
+    doc.text(fmtBRL(totalItem), W - M - 14, temDesconto ? y + 60 : y + 48, { align: "right" });
 
-    y += cardH + 10;
+    y += cardH + 8;
   }
 
   // ── TOTAIS ───────────────────────────────────────────────────────────────
