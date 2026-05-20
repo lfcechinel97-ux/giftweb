@@ -658,6 +658,7 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
     if (item) {
       setQuantidade(item.quantidade);
       setPrecoUnitario(item.precoUnitario);
+      setPrecoInput(item.precoUnitario > 0 ? item.precoUnitario.toFixed(2) : "");
       setPrecoOriginal(item.precoOriginal);
       setPrecoManual(item.precoManual);
       setMockupImagem(item.mockupImagem);
