@@ -154,7 +154,7 @@ const Header = () => {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 overflow-x-hidden transition-transform duration-300 ${
+        className={`sticky top-0 z-50 transition-transform duration-300 ${
           hidden ? "-translate-y-full" : "translate-y-0"
         }`}
       >
