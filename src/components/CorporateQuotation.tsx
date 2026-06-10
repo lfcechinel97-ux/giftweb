@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useInView } from "@/hooks/useInView";
-import { WHATSAPP_REDIRECT_URL } from "@/config/site";
+import WhatsAppModal from "@/components/WhatsAppModal";
 
 const CorporateQuotation = () => {
   const { ref, inView } = useInView();
