@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 import { WHATSAPP_NUMBER } from "@/config/site";
+import { CATEGORY_GROUPS } from "@/config/categoryGroups";
 
 interface WhatsAppModalProps {
   open: boolean;
@@ -14,12 +15,23 @@ const BUDGET_OPTIONS = [
   "Acima de R$ 5.001,00",
 ];
 
+const ITEM_OPTIONS = ["Ainda não sei", ...CATEGORY_GROUPS.map((g) => g.title)];
+
+function formatPhone(value: string) {
+  const digits = value.replace(/\D/g, "").slice(0, 11);
+  if (digits.length === 0) return "";
+  if (digits.length <= 2) return `(${digits}`;
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10)
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
 const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
   const [form, setForm] = useState({
     name: "",
-    cpfCnpj: "",
     phone: "",
-    email: "",
+    item: ITEM_OPTIONS[0],
     budget: BUDGET_OPTIONS[0],
   });
 
@@ -39,24 +51,21 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
     e.preventDefault();
 
     const name = form.name.trim().slice(0, 100);
-    const cpfCnpj = form.cpfCnpj.trim().slice(0, 30);
     const phone = form.phone.trim().slice(0, 30);
-    const email = form.email.trim().slice(0, 120);
+    const item = form.item;
     const budget = form.budget;
 
     const lines = [
       "Olá, tudo bem? Vim pelo site Gift Web Brindes e gostaria de uma cotação.",
       "",
       `Nome: ${name}`,
-      `CPF/CNPJ: ${cpfCnpj}`,
       `Telefone: ${phone}`,
-      `Email: ${email}`,
+      `Item interessado: ${item}`,
       `Orçamento: ${budget}`,
     ];
     const text = lines.join("\n");
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
 
-    // Programmatic user-initiated navigation (avoids window.open popup blockers)
     const a = document.createElement("a");
     a.href = url;
     a.target = "_blank";
@@ -88,8 +97,8 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
               Tire suas dúvidas agora!
             </h3>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-              Irei fazer seu atendimento agora. Preencha os dados abaixo e nossa equipe
-              entrará em contato para ajudar com seu orçamento.
+              Preencha os dados abaixo e nossa equipe entrará em contato para ajudar
+              com seu orçamento.
             </p>
           </div>
           <button
@@ -102,60 +111,45 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-3">
-          <Field
+        <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-3.5">
+          <FieldText
             label="Nome"
             value={form.name}
             onChange={(v) => setField("name", v)}
             required
             maxLength={100}
             placeholder="Seu nome completo"
+            autoComplete="name"
           />
-          <Field
-            label="CPF / CNPJ"
-            value={form.cpfCnpj}
-            onChange={(v) => setField("cpfCnpj", v)}
-            maxLength={30}
-            placeholder="000.000.000-00"
-          />
-          <Field
+          <FieldText
             label="Telefone"
             value={form.phone}
-            onChange={(v) => setField("phone", v)}
+            onChange={(v) => setField("phone", formatPhone(v))}
             type="tel"
             required
-            maxLength={30}
+            maxLength={16}
             placeholder="(00) 00000-0000"
-          />
-          <Field
-            label="Email"
-            value={form.email}
-            onChange={(v) => setField("email", v)}
-            type="email"
-            maxLength={120}
-            placeholder="seu@email.com"
+            inputMode="tel"
+            autoComplete="tel"
           />
 
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-foreground">
-              Orçamento para seus brindes
-            </label>
-            <select
-              value={form.budget}
-              onChange={(e) => setField("budget", e.target.value)}
-              className="w-full rounded-lg border border-border bg-background py-2.5 px-3 text-sm text-foreground focus:border-green-cta focus:outline-none focus:ring-1 focus:ring-green-cta/30"
-            >
-              {BUDGET_OPTIONS.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FieldSelect
+            label="Item interessado"
+            value={form.item}
+            onChange={(v) => setField("item", v)}
+            options={ITEM_OPTIONS}
+          />
+
+          <FieldSelect
+            label="Orçamento para seus brindes"
+            value={form.budget}
+            onChange={(v) => setField("budget", v)}
+            options={BUDGET_OPTIONS}
+          />
 
           <button
             type="submit"
-            className="mt-2 w-full rounded-xl bg-green-cta py-3.5 font-bold text-white text-sm uppercase tracking-wide hover:brightness-110 active:scale-[0.99] transition-all"
+            className="mt-2 w-full rounded-full bg-green-cta py-3.5 font-bold text-white text-sm uppercase tracking-wide hover:brightness-110 active:scale-[0.99] transition-all"
             style={{ boxShadow: "0 6px 20px rgba(34,197,94,0.35)" }}
           >
             Enviar para o WhatsApp
@@ -169,7 +163,7 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
   );
 };
 
-interface FieldProps {
+interface FieldTextProps {
   label: string;
   value: string;
   onChange: (v: string) => void;
@@ -177,10 +171,22 @@ interface FieldProps {
   required?: boolean;
   maxLength?: number;
   placeholder?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  autoComplete?: string;
 }
 
-const Field = ({ label, value, onChange, type = "text", required, maxLength, placeholder }: FieldProps) => (
-  <div className="flex flex-col gap-1">
+const FieldText = ({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required,
+  maxLength,
+  placeholder,
+  inputMode,
+  autoComplete,
+}: FieldTextProps) => (
+  <div className="flex flex-col gap-1.5">
     <label className="text-xs font-semibold text-foreground">
       {label}
       {required && <span className="text-green-cta ml-0.5">*</span>}
@@ -192,8 +198,40 @@ const Field = ({ label, value, onChange, type = "text", required, maxLength, pla
       required={required}
       maxLength={maxLength}
       placeholder={placeholder}
-      className="w-full rounded-lg border border-border bg-background py-2.5 px-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-green-cta focus:outline-none focus:ring-1 focus:ring-green-cta/30"
+      inputMode={inputMode}
+      autoComplete={autoComplete}
+      className="w-full rounded-full border border-border bg-background py-2.5 px-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-green-cta focus:outline-none focus:ring-2 focus:ring-green-cta/20"
     />
+  </div>
+);
+
+interface FieldSelectProps {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+}
+
+const FieldSelect = ({ label, value, onChange, options }: FieldSelectProps) => (
+  <div className="flex flex-col gap-1.5">
+    <label className="text-xs font-semibold text-foreground">{label}</label>
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full appearance-none rounded-full border border-border bg-background py-2.5 pl-4 pr-10 text-sm text-foreground focus:border-green-cta focus:outline-none focus:ring-2 focus:ring-green-cta/20"
+      >
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {o}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        size={16}
+        className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-green-cta"
+      />
+    </div>
   </div>
 );
 
