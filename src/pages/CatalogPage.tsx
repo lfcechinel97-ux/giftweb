@@ -234,7 +234,7 @@ const CatalogPage = () => {
         </main>
 
         <CatalogFooter />
-        <FloatingWhatsApp useDirectMessage />
+        <FloatingWhatsApp />
         <QuotationBar />
         <QuotationDrawer />
       </div>
