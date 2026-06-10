@@ -7,6 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { useMaxPrice } from "@/hooks/useMaxPrice";
 import heroBannerFallback from "@/assets/hero-banner.webp";
 import { buildVersionedCmsUrl, getVersionedRowValue } from "@/utils/siteContentImage";
+import HeroCategoryPicker from "@/components/HeroCategoryPicker";
 
 const PRICE_MIN_LIMIT = 0;
 const HERO_FALLBACK_VERSION = "local-hero";
