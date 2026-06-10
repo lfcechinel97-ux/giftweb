@@ -5,60 +5,79 @@ import { WHATSAPP_REDIRECT_URL } from "@/config/site";
 
 const menuSections = [
   {
-    title: "Bebidas",
+    title: "Copos, Garrafas e Canecas",
     items: [
-      { name: "Garrafas e Squeezes", slug: "garrafas-e-squeezes" },
-      { name: "Copos e Canecas", slug: "copos-e-canecas" },
+      { name: "Copos", slug: "copos" },
+      { name: "Garrafas Térmicas / Squeezes", slug: "garrafas-termicas" },
+      { name: "Garrafas de Inox / Alumínio", slug: "garrafas-inox-aluminio" },
+      { name: "Canecas", slug: "canecas" },
     ],
   },
   {
-    title: "Transporte",
+    title: "Mochilas, Bolsas Térmicas e Malas",
     items: [
       { name: "Mochilas e Sacochilas", slug: "mochilas-e-sacochilas" },
-      { name: "Bolsas", slug: "bolsas" },
+      { name: "Bolsas Térmicas", slug: "bolsas" },
+      { name: "Malas de Viagem", slug: "malas" },
+    ],
+  },
+  {
+    title: "Necessaires, Porta Joias e Kit Manicure",
+    items: [
       { name: "Necessaires", slug: "necessaires" },
-      { name: "Sacolas", slug: "sacolas" },
-      { name: "Malas", slug: "malas" },
-      { name: "Pastas", slug: "pastas" },
-      { name: "Estojos", slug: "estojos" },
+      { name: "Porta Joias", slug: "porta-joias" },
+      { name: "Kit Manicure", slug: "kit-manicure" },
     ],
   },
   {
-    title: "Escritório",
+    title: "Cadernetas, Agendas, Blocos e Canetas",
     items: [
-      { name: "Canetas", slug: "canetas" },
       { name: "Cadernetas", slug: "cadernetas" },
-      { name: "Cadernos", slug: "cadernos" },
-      { name: "Blocos", slug: "blocos" },
       { name: "Agendas", slug: "agendas" },
+      { name: "Blocos de Anotações", slug: "blocos" },
+      { name: "Canetas", slug: "canetas" },
     ],
   },
   {
-    title: "Tecnologia",
+    title: "Chaveiros, Mouse Pad e Kit Executivo",
     items: [
-      { name: "Pen Drives", slug: "pen-drives" },
-      { name: "Power Banks", slug: "power-banks" },
-      { name: "Fones", slug: "fones" },
-      { name: "Mouse Pads", slug: "mouse-pads" },
-      { name: "Suportes", slug: "suportes" },
-    ],
-  },
-  {
-    title: "Diversos",
-    items: [
-      { name: "Kits", slug: "kits" },
       { name: "Chaveiros", slug: "chaveiros" },
-      { name: "Guarda-chuvas", slug: "guarda-chuvas" },
-      { name: "Espelhos", slug: "espelhos" },
-      { name: "Porta-retratos", slug: "porta-retratos" },
-      { name: "Porta-joias", slug: "porta-joias" },
-      { name: "Porta-objetos", slug: "porta-objetos" },
-      { name: "Cozinha e Mesa", slug: "cozinha-e-mesa" },
-      { name: "Marmitas", slug: "marmitas" },
-      { name: "Toalhas", slug: "toalhas" },
+      { name: "Mouse Pad", slug: "mouse-pads" },
+      { name: "Kit Executivo", slug: "kit-executivo" },
+    ],
+  },
+  {
+    title: "Caixas de Som, Fones e Power Bank",
+    items: [
       { name: "Caixas de Som", slug: "caixas-de-som" },
-      { name: "Caixas Organizadoras", slug: "caixas-organizadoras" },
-      { name: "Casa e Decoração", slug: "casa-e-decoracao" },
+      { name: "Fones de Ouvido", slug: "fones" },
+      { name: "Power Banks", slug: "power-banks" },
+    ],
+  },
+  {
+    title: "Sacola de Algodão e TNT",
+    items: [
+      { name: "Sacolas de Algodão e TNT", slug: "sacolas" },
+    ],
+  },
+  {
+    title: "Kit Churrasco e Kit Vinho",
+    items: [
+      { name: "Kit Churrasco", slug: "kit-churrasco" },
+      { name: "Kit Vinho", slug: "kit-vinho" },
+    ],
+  },
+  {
+    title: "Marmitas e Tábuas de Madeira",
+    items: [
+      { name: "Marmitas", slug: "marmitas" },
+      { name: "Tábuas e Petisqueiras", slug: "tabuas-petisqueiras" },
+    ],
+  },
+  {
+    title: "Guarda-Chuvas",
+    items: [
+      { name: "Guarda-Chuvas", slug: "guarda-chuvas" },
     ],
   },
 ];
