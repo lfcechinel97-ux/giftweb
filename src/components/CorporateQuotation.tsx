@@ -51,10 +51,9 @@ const CorporateQuotation = () => {
 
               {/* Right: CTA */}
               <div className="flex flex-col items-center gap-4 shrink-0">
-                <a
-                  href={WHATSAPP_REDIRECT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => setOpen(true)}
                   className="group inline-flex items-center justify-center gap-3 rounded-2xl bg-green-cta px-8 md:px-10 py-4 md:py-5 font-bold text-primary-foreground text-sm md:text-base uppercase tracking-wide transition-all duration-300 hover:brightness-110 hover:scale-[1.02] w-full md:w-auto"
                   style={{ animation: "pulse-whatsapp 3.5s ease-out infinite" }}
                 >
