@@ -54,11 +54,8 @@ const getBannerSources = (
   const deskRow = bannerRows.find(r => r.id === `banner_${index + 1}_desk`);
   const mobRow = bannerRows.find(r => r.id === `banner_${index + 1}_mob`);
 
-  const deskFallback = index === 0 ? buildVersionedCmsUrl(heroBannerFallback, HERO_FALLBACK_VERSION, HERO_FALLBACK_VERSION) : null;
-  const mobFallback = index === 0 ? buildVersionedCmsUrl(heroBannerFallback, HERO_FALLBACK_VERSION, HERO_FALLBACK_VERSION) : null;
-
-  const deskSrc = getVersionedRowValue(deskRow, HERO_FALLBACK_VERSION) || deskFallback;
-  const mobSrc = getVersionedRowValue(mobRow, HERO_FALLBACK_VERSION) || deskFallback || mobFallback;
+  const deskSrc = getVersionedRowValue(deskRow, HERO_FALLBACK_VERSION);
+  const mobSrc = getVersionedRowValue(mobRow, HERO_FALLBACK_VERSION) || deskSrc;
 
   return { deskSrc, mobSrc };
 };
