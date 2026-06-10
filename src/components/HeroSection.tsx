@@ -5,8 +5,7 @@ import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
 import { Slider } from "@/components/ui/slider";
 import { useMaxPrice } from "@/hooks/useMaxPrice";
-import heroBannerFallback from "@/assets/hero-banner.webp";
-import { buildVersionedCmsUrl, getVersionedRowValue } from "@/utils/siteContentImage";
+import { getVersionedRowValue } from "@/utils/siteContentImage";
 import HeroCategoryPicker from "@/components/HeroCategoryPicker";
 
 const PRICE_MIN_LIMIT = 0;
