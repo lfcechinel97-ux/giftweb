@@ -26,7 +26,7 @@ const SeoTextSection = () => (
           <a
             href={WHATSAPP_REDIRECT_URL}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="text-green-cta hover:underline font-medium"
           >
             Solicitar orçamento

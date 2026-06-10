@@ -149,7 +149,7 @@ const Header = () => {
             <a
               href={WHATSAPP_REDIRECT_URL}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="font-bold text-green-cta hover:underline"
             >
               Atendimento Comercial
@@ -191,7 +191,7 @@ const Header = () => {
             <a
               href={WHATSAPP_REDIRECT_URL}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="hidden sm:flex items-center gap-2 rounded-[10px] bg-green-cta px-5 py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110 transition-all duration-200 shrink-0"
               style={{ boxShadow: "0 0 20px rgba(34,197,94,0.3)" }}
             >
@@ -374,7 +374,7 @@ const Header = () => {
           <a
             href={WHATSAPP_REDIRECT_URL}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="mt-6 flex items-center justify-center gap-3 rounded-2xl bg-green-cta px-6 py-4 text-sm font-bold text-white"
             style={{ boxShadow: "0 0 24px rgba(34,197,94,0.35)" }}
           >
