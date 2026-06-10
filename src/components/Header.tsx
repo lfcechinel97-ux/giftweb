@@ -154,7 +154,7 @@ const Header = () => {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 overflow-x-hidden transition-transform duration-300 ${
+        className={`sticky top-0 z-50 transition-transform duration-300 ${
           hidden ? "-translate-y-full" : "translate-y-0"
         }`}
       >
@@ -287,17 +287,17 @@ const Header = () => {
               </div>
 
               {/* Quick links for top categories */}
-              <Link to="/categoria/garrafas-e-squeezes" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+              <Link to="/categoria/garrafas-termicas" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
                 Garrafas
               </Link>
-              <Link to="/categoria/copos-e-canecas" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+              <Link to="/categoria/copos" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
                 Copos
               </Link>
               <Link to="/categoria/mochilas-e-sacochilas" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
                 Mochilas
               </Link>
-              <Link to="/categoria/kits" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
-                Kits
+              <Link to="/categoria/kit-churrasco" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
+                Kit Churrasco
               </Link>
               <Link to="/catalogo" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
                 Catálogo
