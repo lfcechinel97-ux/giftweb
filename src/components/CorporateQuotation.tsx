@@ -4,8 +4,10 @@ import WhatsAppModal from "@/components/WhatsAppModal";
 
 const CorporateQuotation = () => {
   const { ref, inView } = useInView();
+  const [open, setOpen] = useState(false);
 
   return (
+    <>
       <section className="relative overflow-hidden bg-navy">
         <div
           className="absolute inset-0 pointer-events-none"
