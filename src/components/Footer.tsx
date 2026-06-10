@@ -37,7 +37,7 @@ const Footer = () => {
   const frase = get("footer_frase") || "Transforme cada brinde em uma lembrança da sua marca.";
   const linkInsta = get("footer_link_instagram") || "#";
   const linkFb = get("footer_link_facebook") || "#";
-  const linkWa = get("footer_link_whatsapp") || WHATSAPP_REDIRECT_URL;
+  const linkWa = WHATSAPP_REDIRECT_URL;
 
   return (
     <footer className="bg-[#0B0F1A] text-white">
@@ -76,7 +76,7 @@ const Footer = () => {
               <a href={linkFb} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#22C55E]/40 transition-colors">
                 <Facebook size={16} strokeWidth={1.5} />
               </a>
-              <a href={linkWa} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#22C55E]/40 transition-colors">
+              <a href={linkWa} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#22C55E]/40 transition-colors">
                 <WhatsAppIcon size={16} />
               </a>
             </div>
@@ -105,8 +105,8 @@ const Footer = () => {
           <div>
             <h4 className="text-[#22C55E] font-semibold text-xs uppercase tracking-wider mb-5">Institucional</h4>
             <ul className="space-y-3 text-sm">
-              <li><a href={WHATSAPP_REDIRECT_URL} target="_blank" rel="noreferrer" className="text-[#9CA3AF] hover:text-white transition-colors">Quem somos</a></li>
-              <li><a href={WHATSAPP_REDIRECT_URL} target="_blank" rel="noreferrer" className="text-[#9CA3AF] hover:text-white transition-colors">Fale conosco</a></li>
+              <li><a href={WHATSAPP_REDIRECT_URL} target="_blank" rel="noopener noreferrer" className="text-[#9CA3AF] hover:text-white transition-colors">Quem somos</a></li>
+              <li><a href={WHATSAPP_REDIRECT_URL} target="_blank" rel="noopener noreferrer" className="text-[#9CA3AF] hover:text-white transition-colors">Fale conosco</a></li>
               <li><Link to="/politica-de-trocas-e-devolucoes" className="text-[#9CA3AF] hover:text-white transition-colors">Política de troca e devolução</Link></li>
               <li><Link to="/politica-de-privacidade" className="text-[#9CA3AF] hover:text-white transition-colors">Política de Privacidade</Link></li>
               <li><Link to="/termos-de-uso" className="text-[#9CA3AF] hover:text-white transition-colors">Termos de Uso</Link></li>
