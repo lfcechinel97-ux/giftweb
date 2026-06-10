@@ -22,7 +22,7 @@ const SeoTextSection = () => (
           Solicite um orçamento pelo WhatsApp e receba atendimento
           personalizado.{" "}
           <a
-            href="https://api.cqc.onpromedia.com.br/t/041B48E9"
+            href="https://wa.me/5548996652844?text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20saber%20mais%20sobre%20os%20brindes%21%20Lovable"
             target="_blank"
             rel="noreferrer"
             className="text-green-cta hover:underline font-medium"
