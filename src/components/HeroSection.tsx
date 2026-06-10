@@ -167,18 +167,13 @@ const HeroSection = () => {
             <p className="text-muted-foreground text-xs mt-1.5 hidden lg:block">Filtre por categoria, preço e cor</p>
           </div>
 
-          <div className="relative">
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full appearance-none rounded-xl border border-border bg-card py-2.5 pl-4 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors duration-200"
-            >
-              <option value="">Escolha a categoria de brinde</option>
-              {categoriesLoading && <option disabled>Carregando...</option>}
-              {categories?.map((c) => <option key={c.slug} value={c.slug}>{c.label}</option>)}
-            </select>
-            <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-green-cta pointer-events-none" />
-          </div>
+          <HeroCategoryPicker
+            categories={categories}
+            loading={categoriesLoading}
+            value={selectedCategory}
+            onChange={setSelectedCategory}
+          />
+
 
           {/* Price range filter */}
           <div>
