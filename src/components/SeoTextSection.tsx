@@ -1,3 +1,5 @@
+import { WHATSAPP_REDIRECT_URL } from "@/config/site";
+
 const SeoTextSection = () => (
   <section className="py-[60px] bg-background">
     <div className="container max-w-[800px] mx-auto">
@@ -22,7 +24,7 @@ const SeoTextSection = () => (
           Solicite um orçamento pelo WhatsApp e receba atendimento
           personalizado.{" "}
           <a
-            href="https://wa.me/5548996652844?text=Ol%C3%A1%2C%20vim%20pelo%20site%20e%20gostaria%20de%20saber%20mais%20sobre%20os%20brindes%21%20Lovable"
+            href={WHATSAPP_REDIRECT_URL}
             target="_blank"
             rel="noreferrer"
             className="text-green-cta hover:underline font-medium"
