@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Check, Search, LayoutGrid } from "lucide-react";
+import { ChevronDown, Check, Search, LayoutGrid, ChevronRight } from "lucide-react";
+import { CATEGORY_GROUPS } from "@/config/categoryGroups";
 
 type Category = { slug: string; label: string };
 
@@ -13,6 +14,7 @@ interface Props {
 const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,16 +28,50 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
   }, []);
 
   useEffect(() => {
-    if (!open) setQuery("");
+    if (!open) {
+      setQuery("");
+      setOpenGroups(new Set());
+    }
   }, [open]);
 
-  const selected = categories?.find((c) => c.slug === value);
-  const filtered =
-    query.trim() === ""
-      ? categories ?? []
-      : (categories ?? []).filter((c) =>
-          c.label.toLowerCase().includes(query.trim().toLowerCase())
-        );
+  // Build a label map from the DB categories (fallback to group item name)
+  const labelBySlug = new Map<string, string>();
+  (categories ?? []).forEach((c) => labelBySlug.set(c.slug, c.label));
+
+  const selectedLabel = (() => {
+    if (!value) return null;
+    for (const g of CATEGORY_GROUPS) {
+      const it = g.items.find((i) => i.slug === value);
+      if (it) return labelBySlug.get(it.slug) || it.name;
+    }
+    return labelBySlug.get(value) || value;
+  })();
+
+  const q = query.trim().toLowerCase();
+  const isSearching = q !== "";
+
+  // Filtered flat items when searching
+  const flatMatches = isSearching
+    ? CATEGORY_GROUPS.flatMap((g) =>
+        g.items
+          .filter((it) => (labelBySlug.get(it.slug) || it.name).toLowerCase().includes(q))
+          .map((it) => ({ ...it, group: g.title }))
+      )
+    : [];
+
+  const toggleGroup = (title: string) => {
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(title)) next.delete(title);
+      else next.add(title);
+      return next;
+    });
+  };
+
+  const selectSlug = (slug: string) => {
+    onChange(slug);
+    setOpen(false);
+  };
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -50,17 +86,17 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
       >
         <span
           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${
-            selected ? "bg-green-cta/10 text-green-cta" : "bg-muted text-muted-foreground"
+            selectedLabel ? "bg-green-cta/10 text-green-cta" : "bg-muted text-muted-foreground"
           }`}
         >
           <LayoutGrid size={14} />
         </span>
         <span
           className={`flex-1 truncate ${
-            selected ? "font-semibold text-foreground" : "text-muted-foreground"
+            selectedLabel ? "font-semibold text-foreground" : "text-muted-foreground"
           }`}
         >
-          {loading ? "Carregando..." : selected ? selected.label : "Escolha a categoria de brinde"}
+          {loading ? "Carregando..." : selectedLabel ? selectedLabel : "Escolha a categoria de brinde"}
         </span>
         <ChevronDown
           size={16}
@@ -93,15 +129,12 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
           </div>
 
           {/* Options */}
-          <ul className="max-h-72 overflow-y-auto py-1" style={{ scrollbarWidth: "thin" }}>
+          <ul className="max-h-80 overflow-y-auto py-1" style={{ scrollbarWidth: "thin" }}>
             {/* "Todas" option */}
             <li>
               <button
                 type="button"
-                onClick={() => {
-                  onChange("");
-                  setOpen(false);
-                }}
+                onClick={() => selectSlug("")}
                 className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-green-cta/5 ${
                   value === "" ? "text-green-cta" : "text-muted-foreground"
                 }`}
@@ -119,35 +152,86 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
               </li>
             )}
 
-            {!loading &&
-              filtered.length === 0 && (
-                <li className="px-3 py-6 text-center text-xs text-muted-foreground">
-                  Nenhuma categoria encontrada
-                </li>
-              )}
+            {/* Search results (flat) */}
+            {!loading && isSearching && flatMatches.length === 0 && (
+              <li className="px-3 py-6 text-center text-xs text-muted-foreground">
+                Nenhuma categoria encontrada
+              </li>
+            )}
+            {!loading && isSearching &&
+              flatMatches.map((it) => {
+                const active = it.slug === value;
+                return (
+                  <li key={it.slug}>
+                    <button
+                      type="button"
+                      onClick={() => selectSlug(it.slug)}
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-green-cta/5 ${
+                        active ? "bg-green-cta/5 text-green-cta" : "text-foreground"
+                      }`}
+                    >
+                      <span className="flex h-4 w-4 items-center justify-center">
+                        {active && <Check size={14} className="text-green-cta" />}
+                      </span>
+                      <span className={active ? "font-semibold" : ""}>
+                        {labelBySlug.get(it.slug) || it.name}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
 
-            {filtered.map((c) => {
-              const active = c.slug === value;
-              return (
-                <li key={c.slug}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onChange(c.slug);
-                      setOpen(false);
-                    }}
-                    className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-green-cta/5 ${
-                      active ? "bg-green-cta/5 text-green-cta" : "text-foreground"
-                    }`}
-                  >
-                    <span className="flex h-4 w-4 items-center justify-center">
-                      {active && <Check size={14} className="text-green-cta" />}
-                    </span>
-                    <span className={active ? "font-semibold" : ""}>{c.label}</span>
-                  </button>
-                </li>
-              );
-            })}
+            {/* Grouped list */}
+            {!loading && !isSearching &&
+              CATEGORY_GROUPS.map((group) => {
+                const groupOpen = openGroups.has(group.title);
+                const hasActive = group.items.some((it) => it.slug === value);
+                return (
+                  <li key={group.title}>
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group.title)}
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-green-cta/5 ${
+                        hasActive ? "text-green-cta" : "text-foreground"
+                      }`}
+                    >
+                      <ChevronRight
+                        size={14}
+                        className={`shrink-0 text-muted-foreground transition-transform duration-200 ${
+                          groupOpen ? "rotate-90" : ""
+                        }`}
+                      />
+                      <span className="flex-1 font-semibold">{group.title}</span>
+                      <span className="text-xs text-muted-foreground">{group.items.length}</span>
+                    </button>
+                    {groupOpen && (
+                      <ul className="bg-muted/30">
+                        {group.items.map((it) => {
+                          const active = it.slug === value;
+                          return (
+                            <li key={it.slug}>
+                              <button
+                                type="button"
+                                onClick={() => selectSlug(it.slug)}
+                                className={`flex w-full items-center gap-2 py-1.5 pl-9 pr-3 text-left text-sm transition-colors hover:bg-green-cta/5 ${
+                                  active ? "text-green-cta" : "text-muted-foreground"
+                                }`}
+                              >
+                                <span className="flex h-4 w-4 items-center justify-center">
+                                  {active && <Check size={14} className="text-green-cta" />}
+                                </span>
+                                <span className={active ? "font-semibold" : ""}>
+                                  {labelBySlug.get(it.slug) || it.name}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
           </ul>
         </div>
       )}
