@@ -95,20 +95,43 @@ function extrairCor(p: any): string | null {
   return null;
 }
 
-// Expanded: 32 granular categories matching spotlight_categories slugs
+// Expanded categories matching spotlight_categories slugs
 function getCategoria(nome: string): string {
   const n = nome.toUpperCase();
 
-  // Specific matches first (order matters - more specific before generic)
+  // ── 01 · Tábuas / petisqueiras / kit queijo ─────────────────────────────
+  if (n.includes('TABUA') || n.includes('TÁBUA') || n.includes('PETISQUEIRA') || n.includes('KIT QUEIJO')) return 'tabuas-petisqueiras';
+
+  // ── 02 · Kits específicos (antes do KIT genérico) ───────────────────────
+  if (n.includes('KIT CHURRASCO') || n.includes('KIT CARNE')) return 'kit-churrasco';
+  if (n.includes('KIT VINHO') || n.includes('KIT SOMMELIER')) return 'kit-vinho';
+  if (n.includes('KIT VIAGEM') || n.includes('KIT DE VIAGEM')) return 'kit-viagem';
+  if (n.includes('KIT MANICURE') || n.includes('KIT UNHA')) return 'kit-manicure';
+  if (n.includes('KIT EXECUTIVO') || n.includes('KIT ESCRITORIO') || n.includes('KIT ESCRITÓRIO') || n.includes('KIT OFFICE')) return 'kit-executivo';
+
+  // ── 03 · Papelaria ──────────────────────────────────────────────────────
   if (n.includes('AGENDA')) return 'agendas';
   if (n.includes('CADERNETA')) return 'cadernetas';
   if (n.includes('CADERNO')) return 'cadernos';
   if (n.includes('BLOCO')) return 'blocos';
   if (n.includes('CANETA') || n.includes('LAPISEIRA') || n.includes('MARCA TEXTO') || n.includes('MARCA-TEXTO')) return 'canetas';
 
-  if (n.includes('CANECA') || n.includes('COPO') || n.includes('TACA') || n.includes('TAÇA') || n.includes('MUG')) return 'copos-e-canecas';
-  if (n.includes('GARRAFA') || n.includes('SQUEEZE') || n.includes('TERMICA') || n.includes('TÉRMICA')) return 'garrafas-e-squeezes';
+  // ── 04 · Bolsas térmicas (ANTES de garrafas — corrige bug TÉRMICA) ──────
+  if (n.includes('BOLSA TERMICA') || n.includes('BOLSA TÉRMICA')
+      || n.includes('LANCHEIRA') || n.includes('COOLER')
+      || n.includes('BAG TERMICA') || n.includes('BAG TÉRMICA')
+      || n.includes('BOLSA ISOTERMICA') || n.includes('BOLSA ISOTÉRMICA')) return 'bolsas';
 
+  // ── 05 · Garrafas/Squeezes ──────────────────────────────────────────────
+  const isTermica = n.includes('TERMICA') || n.includes('TÉRMICA') || n.includes('TERMICO') || n.includes('TÉRMICO');
+  if ((n.includes('GARRAFA') || n.includes('SQUEEZE') || n.includes('CHALEIRA')) && isTermica) return 'garrafas-termicas';
+  if (n.includes('GARRAFA') || n.includes('SQUEEZE')) return 'garrafas-inox-aluminio';
+
+  // ── 06 · Canecas e Copos (separados) ────────────────────────────────────
+  if (n.includes('CANECA') || n.includes('MUG')) return 'canecas';
+  if (n.includes('COPO') || n.includes('TACA') || n.includes('TAÇA') || n.includes('TUMBLER')) return 'copos';
+
+  // ── 07 · Resto ──────────────────────────────────────────────────────────
   if (n.includes('MOCHILA') || n.includes('SACOCHILA')) return 'mochilas-e-sacochilas';
   if (n.includes('NECESSAIRE')) return 'necessaires';
   if (n.includes('SACOLA')) return 'sacolas';
@@ -131,17 +154,14 @@ function getCategoria(nome: string): string {
   if (n.includes('PORTA-OBJETO') || n.includes('PORTA OBJETO') || n.includes('ORGANIZADOR')) return 'porta-objetos';
   if (n.includes('CAIXA DE SOM') || n.includes('CAIXA SOM') || n.includes('SPEAKER')) return 'caixas-de-som';
   if (n.includes('CAIXA ORGANIZADORA')) return 'caixas-organizadoras';
-  if (n.includes('MARMITA') || n.includes('LANCHEIRA') || n.includes('LUNCH')) return 'marmitas';
+  if (n.includes('MARMITA') || n.includes('LUNCH')) return 'marmitas';
   if (n.includes('TOALHA')) return 'toalhas';
-  if (n.includes('COZINHA') || n.includes('TABUA') || n.includes('TÁBUA') || n.includes('AVENTAL') || n.includes('ABRIDOR')) return 'cozinha-e-mesa';
   if (n.includes('KIT')) return 'kits';
 
-  // Generic fallback
   return 'outros';
 }
 
 // Map getCategoria values to spotlight_categories slugs
-// Most are already matching; this handles any discrepancies
 const CATEGORIA_TO_SLUG: Record<string, string> = {
   'agendas': 'agendas',
   'blocos': 'blocos',
@@ -150,16 +170,22 @@ const CATEGORIA_TO_SLUG: Record<string, string> = {
   'cadernos': 'cadernos',
   'caixas-de-som': 'caixas-de-som',
   'caixas-organizadoras': 'caixas-organizadoras',
+  'canecas': 'canecas',
   'canetas': 'canetas',
   'chaveiros': 'chaveiros',
-  'copos-e-canecas': 'copos-e-canecas',
-  'cozinha-e-mesa': 'cozinha-e-mesa',
+  'copos': 'copos',
   'espelhos': 'espelhos',
   'estojos': 'estojos',
   'fones': 'fones',
-  'garrafas-e-squeezes': 'garrafas-e-squeezes',
+  'garrafas-termicas': 'garrafas-termicas',
+  'garrafas-inox-aluminio': 'garrafas-inox-aluminio',
   'guarda-chuvas': 'guarda-chuvas',
   'kits': 'kits',
+  'kit-churrasco': 'kit-churrasco',
+  'kit-vinho': 'kit-vinho',
+  'kit-viagem': 'kit-viagem',
+  'kit-manicure': 'kit-manicure',
+  'kit-executivo': 'kit-executivo',
   'malas': 'malas',
   'marmitas': 'marmitas',
   'mochilas-e-sacochilas': 'mochilas-e-sacochilas',
@@ -173,6 +199,7 @@ const CATEGORIA_TO_SLUG: Record<string, string> = {
   'power-banks': 'power-banks',
   'sacolas': 'sacolas',
   'suportes': 'suportes',
+  'tabuas-petisqueiras': 'tabuas-petisqueiras',
   'toalhas': 'toalhas',
 };
 
