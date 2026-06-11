@@ -155,14 +155,17 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   // ── CARD DO CLIENTE ──────────────────────────────────────────────────────
   const cliente = sistema.clientes.find(c => c.id === orc.clienteId);
-  const isPJ = cliente?.tipo === "PJ";
+  const docDigits = (cliente?.documento || "").replace(/\D/g, "");
+  // Detecta PJ pelo tipo cadastrado OU pelo tamanho do documento (14 dígitos = CNPJ)
+  const isPJ = cliente?.tipo === "PJ" || docDigits.length === 14;
   const endereco = cliente?.enderecos?.[0];
   const enderecoLinha1 = endereco
     ? [endereco.logradouro, endereco.numero].filter(Boolean).join(", ") +
       (endereco.complemento ? ` — ${endereco.complemento}` : "")
     : "";
+  const cepFmt = endereco?.cep ? endereco.cep.replace(/\D/g, "").replace(/^(\d{5})(\d{3}).*/, "$1-$2") : "";
   const enderecoLinha2 = endereco
-    ? [endereco.bairro, [endereco.cidade, endereco.uf].filter(Boolean).join("/")].filter(Boolean).join(" · ")
+    ? [endereco.bairro, [endereco.cidade, endereco.uf].filter(Boolean).join("/"), cepFmt ? `CEP ${cepFmt}` : ""].filter(Boolean).join(" · ")
     : "";
 
   const contatoNome = orc.contatoNome || cliente?.contatos?.[0]?.nome || "";
