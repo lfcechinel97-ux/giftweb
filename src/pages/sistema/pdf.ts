@@ -155,14 +155,17 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
 
   // ── CARD DO CLIENTE ──────────────────────────────────────────────────────
   const cliente = sistema.clientes.find(c => c.id === orc.clienteId);
-  const isPJ = cliente?.tipo === "PJ";
+  const docDigits = (cliente?.documento || "").replace(/\D/g, "");
+  // Detecta PJ pelo tipo cadastrado OU pelo tamanho do documento (14 dígitos = CNPJ)
+  const isPJ = cliente?.tipo === "PJ" || docDigits.length === 14;
   const endereco = cliente?.enderecos?.[0];
   const enderecoLinha1 = endereco
     ? [endereco.logradouro, endereco.numero].filter(Boolean).join(", ") +
       (endereco.complemento ? ` — ${endereco.complemento}` : "")
     : "";
+  const cepFmt = endereco?.cep ? endereco.cep.replace(/\D/g, "").replace(/^(\d{5})(\d{3}).*/, "$1-$2") : "";
   const enderecoLinha2 = endereco
-    ? [endereco.bairro, [endereco.cidade, endereco.uf].filter(Boolean).join("/")].filter(Boolean).join(" · ")
+    ? [endereco.bairro, [endereco.cidade, endereco.uf].filter(Boolean).join("/"), cepFmt ? `CEP ${cepFmt}` : ""].filter(Boolean).join(" · ")
     : "";
 
   const contatoNome = orc.contatoNome || cliente?.contatos?.[0]?.nome || "";
@@ -173,7 +176,7 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   const vendedorNome = lookupName(sistema.vendedores, orc.vendedorId);
 
   // Card cliente — altura compactada
-  const cardClienteH = 118;
+  const cardClienteH = 132;
 
   setFill(doc, C.white);
   setDraw(doc, C.line); doc.setLineWidth(0.8);
@@ -197,10 +200,15 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   cy += nomeLines.length > 1 ? 22 : 13;
 
   const docLabel = isPJ ? "CNPJ" : "CPF";
-  const docValue = cliente?.documento ? formatDocumento(cliente.documento, cliente.tipo) : "—";
+  const docValue = cliente?.documento ? formatDocumento(cliente.documento, isPJ ? "PJ" : "PF") : "—";
   doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.body);
   doc.text(`${docLabel}: ${docValue}`, M + padX, cy);
   cy += 11;
+  if (isPJ && cliente?.ie) {
+    doc.setFontSize(7.5); setText(doc, C.muted);
+    doc.text(`IE: ${cliente.ie}`, M + padX, cy);
+    cy += 10;
+  }
 
   if (enderecoLinha1) {
     doc.setFontSize(7.5); setText(doc, C.muted);
