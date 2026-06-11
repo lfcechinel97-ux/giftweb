@@ -1,6 +1,15 @@
 import React, { createContext, useContext, useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
+
+// Helper: surface DB write errors to the user (otherwise inserts fail silently and data "disappears" on reload)
+const reportDbError = (label: string) => (res: any) => {
+  if (res?.error) {
+    console.error(`[Sistema] ${label} falhou:`, res.error);
+    toast.error(`Não foi possível salvar (${label}). ${res.error.message || ""}`);
+  }
+};
 
 export const formatBRL = (valor: number | null | undefined): string => {
   if (valor == null || isNaN(valor)) return "—";
@@ -69,10 +78,20 @@ export interface QuoteItem {
 
 export type OrcamentoStatus = "aberto" | "aprovado" | "cancelado";
 
+export interface ClienteSnapshot {
+  nome: string;
+  tipo: TipoPessoa;
+  documento: string;
+  ie?: string;
+  endereco?: Endereco;
+  contato?: { nome?: string; telefone?: string; email?: string };
+}
+
 export interface Orcamento {
   id: string;
   numero: string;
   clienteId: string;
+  clienteSnapshot?: ClienteSnapshot;
   contatoNome?: string;
   contatoTelefone?: string;
   contatoEmail?: string;
@@ -110,6 +129,7 @@ export interface Pedido {
   numero: string;
   orcamentoId: string;
   clienteId: string;
+  clienteSnapshot?: ClienteSnapshot;
   contatoNome?: string;
   contatoTelefone?: string;
   contatoEmail?: string;
@@ -211,6 +231,7 @@ const mapCliente = (r: any): Cliente => ({
 });
 const mapOrcamento = (r: any): Orcamento => ({
   id: r.id, numero: r.numero, clienteId: r.cliente_id ?? "",
+  clienteSnapshot: r.cliente_snapshot ?? undefined,
   contatoNome: r.contato_nome ?? undefined, contatoTelefone: r.contato_telefone ?? undefined,
   contatoEmail: r.contato_email ?? undefined, vendedorId: r.vendedor_id ?? undefined,
   origemId: r.origem_id ?? undefined, itens: r.itens ?? [], subtotal: Number(r.subtotal ?? 0),
@@ -225,6 +246,7 @@ const orcamentoToDb = (o: Partial<Orcamento>): any => {
   if (o.id !== undefined) out.id = o.id;
   if (o.numero !== undefined) out.numero = o.numero;
   if (o.clienteId !== undefined) out.cliente_id = o.clienteId || null;
+  if (o.clienteSnapshot !== undefined) out.cliente_snapshot = o.clienteSnapshot as any;
   if (o.contatoNome !== undefined) out.contato_nome = o.contatoNome ?? null;
   if (o.contatoTelefone !== undefined) out.contato_telefone = o.contatoTelefone ?? null;
   if (o.contatoEmail !== undefined) out.contato_email = o.contatoEmail ?? null;
@@ -246,7 +268,9 @@ const orcamentoToDb = (o: Partial<Orcamento>): any => {
 };
 const mapPedido = (r: any): Pedido => ({
   id: r.id, numero: r.numero, orcamentoId: r.orcamento_id ?? "",
-  clienteId: r.cliente_id ?? "", contatoNome: r.contato_nome ?? undefined,
+  clienteId: r.cliente_id ?? "",
+  clienteSnapshot: r.cliente_snapshot ?? undefined,
+  contatoNome: r.contato_nome ?? undefined,
   contatoTelefone: r.contato_telefone ?? undefined, contatoEmail: r.contato_email ?? undefined,
   vendedorId: r.vendedor_id ?? undefined, itens: r.itens ?? [],
   subtotal: Number(r.subtotal ?? 0), freteTipo: r.frete_tipo ?? null,
@@ -261,6 +285,7 @@ const pedidoToDb = (p: Partial<Pedido>): any => {
   if (p.numero !== undefined) out.numero = p.numero;
   if (p.orcamentoId !== undefined) out.orcamento_id = p.orcamentoId ?? null;
   if (p.clienteId !== undefined) out.cliente_id = p.clienteId || null;
+  if (p.clienteSnapshot !== undefined) out.cliente_snapshot = p.clienteSnapshot as any;
   if (p.contatoNome !== undefined) out.contato_nome = p.contatoNome ?? null;
   if (p.contatoTelefone !== undefined) out.contato_telefone = p.contatoTelefone ?? null;
   if (p.contatoEmail !== undefined) out.contato_email = p.contatoEmail ?? null;
@@ -351,7 +376,8 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const now = new Date().toISOString();
     const orcamento: Orcamento = { ...o, id, numero, createdAt: now, updatedAt: now };
     setData(prev => ({ ...prev, orcamentos: [orcamento, ...prev.orcamentos] }));
-    await supabase.from("sistema_orcamentos").insert({ ...orcamentoToDb(orcamento), created_at: now });
+    const res = await supabase.from("sistema_orcamentos").insert({ ...orcamentoToDb(orcamento), created_at: now });
+    reportDbError("orçamento")(res);
     return orcamento;
   }, []);
 
@@ -360,7 +386,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ...prev,
       orcamentos: prev.orcamentos.map(o => o.id === id ? { ...o, ...changes, updatedAt: new Date().toISOString() } : o),
     }));
-    supabase.from("sistema_orcamentos").update(orcamentoToDb(changes)).eq("id", id).then();
+    supabase.from("sistema_orcamentos").update(orcamentoToDb(changes)).eq("id", id).then(reportDbError("orçamento"));
   }, []);
 
   const removeOrcamento = useCallback((id: string) => {
@@ -447,7 +473,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     supabase.from("sistema_clientes").insert({
       id, nome: c.nome, tipo: c.tipo, documento: c.documento, ie: c.ie ?? null,
       contatos: c.contatos as any, enderecos: c.enderecos as any, observacoes: c.observacoes ?? null,
-    }).then();
+    }).then(reportDbError("cliente"));
     return cliente;
   }, []);
 
@@ -464,7 +490,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (changes.contatos !== undefined) dbc.contatos = changes.contatos as any;
     if (changes.enderecos !== undefined) dbc.enderecos = changes.enderecos as any;
     if (changes.observacoes !== undefined) dbc.observacoes = changes.observacoes ?? null;
-    supabase.from("sistema_clientes").update(dbc).eq("id", id).then();
+    supabase.from("sistema_clientes").update(dbc).eq("id", id).then(reportDbError("cliente"));
   }, []);
 
   const removeCliente = useCallback((id: string) => {
@@ -479,7 +505,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   ): LookupItem => {
     const item: LookupItem = { id: crypto.randomUUID(), nome, ativo: true };
     setData(prev => ({ ...prev, [key]: [...(prev[key] as any), item] } as any));
-    supabase.from(table).insert({ id: item.id, nome, ativo: true }).then();
+    supabase.from(table).insert({ id: item.id, nome, ativo: true }).then(reportDbError(`cadastro (${table})`));
     return item;
   }, []);
 
@@ -538,7 +564,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setData(prev => ({ ...prev, transportadoras: [...prev.transportadoras, item] }));
     supabase.from("sistema_transportadoras").insert({
       id: item.id, nome, ativo: true, tipo_frete: tipoFrete ?? null, prazo_entrega: prazoEntrega ?? null,
-    }).then();
+    }).then(reportDbError("transportadora"));
     return item;
   }, []);
 
@@ -549,7 +575,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }));
     supabase.from("sistema_transportadoras").update({
       nome, tipo_frete: tipoFrete ?? null, prazo_entrega: prazoEntrega ?? null, updated_at: new Date().toISOString(),
-    }).eq("id", id).then();
+    }).eq("id", id).then(reportDbError("transportadora"));
   }, []);
 
   const removeTransportadora = useCallback((id: string) => removeLookup("transportadoras", "sistema_transportadoras", id), [removeLookup]);

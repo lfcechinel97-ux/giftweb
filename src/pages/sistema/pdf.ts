@@ -154,11 +154,21 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   let y = heroH + 18;
 
   // ── CARD DO CLIENTE ──────────────────────────────────────────────────────
+  // Snapshot tem prioridade (preservado no momento da emissão).
+  // Fallback: busca pelo cliente atual na base.
+  const snap = (orc as any).clienteSnapshot as
+    | { nome: string; tipo: "PF" | "PJ"; documento?: string; ie?: string;
+        endereco?: any; contato?: { nome?: string; telefone?: string; email?: string } }
+    | undefined;
   const cliente = sistema.clientes.find(c => c.id === orc.clienteId);
-  const docDigits = (cliente?.documento || "").replace(/\D/g, "");
-  // Detecta PJ pelo tipo cadastrado OU pelo tamanho do documento (14 dígitos = CNPJ)
-  const isPJ = cliente?.tipo === "PJ" || docDigits.length === 14;
-  const endereco = cliente?.enderecos?.[0];
+
+  const nomeClienteFinal = snap?.nome || cliente?.nome || orc.contatoNome || clienteNome || "—";
+  const documentoFinal = snap?.documento ?? cliente?.documento ?? "";
+  const ieFinal = snap?.ie ?? cliente?.ie ?? "";
+  const docDigits = documentoFinal.replace(/\D/g, "");
+  // Detecta PJ pelo tipo cadastrado/snapshot OU pelo tamanho do documento (14 dígitos = CNPJ)
+  const isPJ = snap?.tipo === "PJ" || cliente?.tipo === "PJ" || docDigits.length === 14;
+  const endereco = snap?.endereco || cliente?.enderecos?.[0];
   const enderecoLinha1 = endereco
     ? [endereco.logradouro, endereco.numero].filter(Boolean).join(", ") +
       (endereco.complemento ? ` — ${endereco.complemento}` : "")
@@ -168,9 +178,9 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     ? [endereco.bairro, [endereco.cidade, endereco.uf].filter(Boolean).join("/"), cepFmt ? `CEP ${cepFmt}` : ""].filter(Boolean).join(" · ")
     : "";
 
-  const contatoNome = orc.contatoNome || cliente?.contatos?.[0]?.nome || "";
-  const contatoTel = orc.contatoTelefone || cliente?.contatos?.[0]?.telefone || "";
-  const contatoEmail = orc.contatoEmail || cliente?.contatos?.[0]?.email || "";
+  const contatoNome = orc.contatoNome || snap?.contato?.nome || cliente?.contatos?.[0]?.nome || "";
+  const contatoTel = orc.contatoTelefone || snap?.contato?.telefone || cliente?.contatos?.[0]?.telefone || "";
+  const contatoEmail = orc.contatoEmail || snap?.contato?.email || cliente?.contatos?.[0]?.email || "";
   const linhaContato = [contatoNome, contatoTel, contatoEmail].filter(Boolean).join("  ·  ");
 
   const vendedorNome = lookupName(sistema.vendedores, orc.vendedorId);
@@ -194,19 +204,18 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   cy += 13;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(12); setText(doc, C.ink);
-  const nomeCliente = cliente?.nome || orc.contatoNome || clienteNome || "—";
-  const nomeLines = doc.splitTextToSize(nomeCliente, colW - padX * 2);
+  const nomeLines = doc.splitTextToSize(nomeClienteFinal, colW - padX * 2);
   doc.text(nomeLines.slice(0, 2), M + padX, cy);
   cy += nomeLines.length > 1 ? 22 : 13;
 
   const docLabel = isPJ ? "CNPJ" : "CPF";
-  const docValue = cliente?.documento ? formatDocumento(cliente.documento, isPJ ? "PJ" : "PF") : "—";
+  const docValue = documentoFinal ? formatDocumento(documentoFinal, isPJ ? "PJ" : "PF") : "—";
   doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.body);
   doc.text(`${docLabel}: ${docValue}`, M + padX, cy);
   cy += 11;
-  if (isPJ && cliente?.ie) {
+  if (isPJ && ieFinal) {
     doc.setFontSize(7.5); setText(doc, C.muted);
-    doc.text(`IE: ${cliente.ie}`, M + padX, cy);
+    doc.text(`IE: ${ieFinal}`, M + padX, cy);
     cy += 10;
   }
 
@@ -529,7 +538,7 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   // ── RODAPÉ DE TODAS AS PÁGINAS ───────────────────────────────────────────
   drawFooterPagina(doc);
 
-  const nomeClienteLimpo = (clienteNome || cliente?.nome || "Cliente")
+  const nomeClienteLimpo = (clienteNome || snap?.nome || cliente?.nome || "Cliente")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9\s]/g, "")
     .trim()

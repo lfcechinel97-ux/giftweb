@@ -171,8 +171,29 @@ export const OrcamentoForm: React.FC = () => {
       alert("Selecione um cliente e adicione pelo menos um item.");
       return;
     }
+
+    // Snapshot do cliente: garante que o PDF sempre tenha os dados corretos
+    // (CNPJ/CPF, endereço, contato), mesmo se o cadastro for editado/removido
+    // ou ainda não tiver sincronizado com o banco.
+    const cli = clienteSelecionado || clientes.find((c) => c.id === formData.clienteId);
+    const clienteSnapshot = cli
+      ? {
+          nome: cli.nome,
+          tipo: cli.tipo,
+          documento: cli.documento || "",
+          ie: cli.ie || undefined,
+          endereco: cli.enderecos?.[0],
+          contato: {
+            nome: formData.contatoNome || cli.contatos?.[0]?.nome,
+            telefone: formData.contatoTelefone || cli.contatos?.[0]?.telefone,
+            email: formData.contatoEmail || cli.contatos?.[0]?.email,
+          },
+        }
+      : undefined;
+
     const orcData: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt" | "aprovadoEm"> = {
       clienteId: formData.clienteId,
+      clienteSnapshot,
       contatoNome: formData.contatoNome,
       contatoTelefone: formData.contatoTelefone,
       contatoEmail: formData.contatoEmail,

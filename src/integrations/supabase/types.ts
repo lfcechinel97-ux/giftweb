@@ -364,6 +364,7 @@ export type Database = {
           anexo_url: string | null
           aprovado_em: string | null
           cliente_id: string | null
+          cliente_snapshot: Json | null
           contato_email: string | null
           contato_nome: string | null
           contato_telefone: string | null
@@ -387,6 +388,7 @@ export type Database = {
           anexo_url?: string | null
           aprovado_em?: string | null
           cliente_id?: string | null
+          cliente_snapshot?: Json | null
           contato_email?: string | null
           contato_nome?: string | null
           contato_telefone?: string | null
@@ -410,6 +412,7 @@ export type Database = {
           anexo_url?: string | null
           aprovado_em?: string | null
           cliente_id?: string | null
+          cliente_snapshot?: Json | null
           contato_email?: string | null
           contato_nome?: string | null
           contato_telefone?: string | null
@@ -461,6 +464,7 @@ export type Database = {
       sistema_pedidos: {
         Row: {
           cliente_id: string | null
+          cliente_snapshot: Json | null
           contato_email: string | null
           contato_nome: string | null
           contato_telefone: string | null
@@ -483,6 +487,7 @@ export type Database = {
         }
         Insert: {
           cliente_id?: string | null
+          cliente_snapshot?: Json | null
           contato_email?: string | null
           contato_nome?: string | null
           contato_telefone?: string | null
@@ -505,6 +510,7 @@ export type Database = {
         }
         Update: {
           cliente_id?: string | null
+          cliente_snapshot?: Json | null
           contato_email?: string | null
           contato_nome?: string | null
           contato_telefone?: string | null
