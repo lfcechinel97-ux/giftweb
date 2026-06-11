@@ -229,17 +229,17 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   }
 
   if (enderecoLinha1) {
-    doc.setFontSize(7.5); setText(doc, C.muted);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.muted);
     doc.text(doc.splitTextToSize(enderecoLinha1, colW - padX * 2).slice(0, 1), M + padX, cy);
     cy += 10;
   }
   if (enderecoLinha2) {
-    doc.setFontSize(7.5); setText(doc, C.muted);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.muted);
     doc.text(enderecoLinha2, M + padX, cy);
     cy += 10;
   }
   if (linhaContato) {
-    doc.setFontSize(7.5); setText(doc, C.muted);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.muted);
     doc.text(doc.splitTextToSize(linhaContato, colW - padX * 2).slice(0, 1), M + padX, cy);
   }
 
