@@ -1,45 +1,35 @@
-# Sistema de Orçamentos: salvar tudo no banco de dados (compartilhado entre vendedores)
+## Diagnóstico
 
-## Por que os dados somem
+Pela imagem o PDF mostra "CPF: —" para a EASY IMPORTS (que é PJ). Combinando isso com o sintoma anterior ("toda vez que cadastro vendedor / cliente / etc, depois some"), o problema é o mesmo:
 
-Todo o Sistema do Vendedor (`/sistema`) hoje salva os dados **apenas no navegador** (localStorage). Isso explica os dois problemas:
+1. **O banco está vazio.** Consultei `sistema_clientes` e `sistema_orcamentos` e ambos têm 0 registros, embora você esteja cadastrando clientes e gerando orçamentos. Significa que os `insert` no Supabase estão falhando silenciosamente (os `.then()` ignoram erros). Sem `cliente` no banco, ao recarregar a página o contexto carrega lista vazia.
+2. **O PDF depende da busca do cliente em memória.** Quando o cliente não é encontrado, o PDF mostra `CPF: —` e sem endereço, mesmo que o cadastro original tivesse CNPJ e endereço completos. Foi isso que aconteceu no orçamento da EASY IMPORTS.
 
-- **Cada vendedor só vê os próprios orçamentos**: os dados ficam presos no navegador/computador de quem criou. Nenhum dado é enviado ao servidor.
-- **Cadastros somem**: ao limpar o cache do navegador, usar aba anônima, trocar de computador ou celular, tudo desaparece — vendedores, meios de pagamento, transportadoras, clientes, orçamentos e pedidos.
+## O que vou fazer
 
-A solução é migrar todos esses dados para o banco de dados na nuvem (Lovable Cloud), assim ficam permanentes e visíveis para todos.
+### 1. Gravar um "snapshot" do cliente no próprio orçamento
+Adicionar a coluna `cliente_snapshot` (JSONB) em `sistema_orcamentos`, contendo no momento do save:
+- `nome`, `tipo` (PJ/PF), `documento`, `ie`
+- `endereco` (logradouro, número, complemento, bairro, cidade, UF, CEP)
+- `contato` (nome, telefone, e-mail)
 
-## O que será feito
+O PDF passa a ler primeiro do snapshot e só usa a busca em memória como fallback. Vantagem: o orçamento mantém os dados corretos para sempre, mesmo se o cadastro do cliente for editado, removido ou ainda não tiver sincronizado.
 
-### 1. Criar tabelas no banco de dados
-- `sistema_vendedores`, `sistema_meios_pagamento`, `sistema_transportadoras`, `sistema_origens` (cadastros de configuração)
-- `sistema_clientes` (com contatos e endereços)
-- `sistema_orcamentos` (com itens, numeração sequencial, status, vendedor)
-- `sistema_pedidos` (gerados ao aprovar orçamento)
-- `sistema_ajustes_estoque` (reservas/ajustes)
+### 2. Corrigir o rótulo CNPJ/CPF e exibir endereço completo
+- Rótulo escolhido só por `tipo` ou pelo nº de dígitos do documento (14 = CNPJ).
+- Bloco do cliente no PDF mostra: CNPJ/CPF formatado, IE (quando PJ), endereço em até 2 linhas com CEP, e contato.
+- Quando o documento estiver realmente em branco, o rótulo continua sendo o correto (CNPJ para PJ) e o valor fica vazio em vez de "—".
 
-Com regras de acesso restritas a usuários logados como administradores (mesma proteção já usada no painel admin).
+### 3. Surface dos erros de gravação
+- Adicionar `console.error` + `toast.error("Não foi possível salvar no banco…")` em `addCliente`, `updateCliente`, `addVendedor`, `addMeioPagamento`, `addTransportadora`, `addOrigem`, `addOrcamento`, `updateOrcamento`, `aprovarOrcamento`.
+- Isso torna visível qualquer falha de RLS/permissão (é o motivo de "sumir" os cadastros).
+- Depois que você reproduzir e me mandar a mensagem do toast, eu corrijo a causa raiz (provavelmente quem está logado não está em `admin_users`, ou a sessão Supabase não está chegando até o cliente no momento do `insert`).
 
-### 2. Proteger a área /sistema com login
-Hoje qualquer pessoa que descobrir a URL `/sistema` consegue acessar. Com os dados indo para o banco, é obrigatório exigir login (será usado o mesmo login do admin que já existe). Quem acessar `/sistema` sem estar logado será redirecionado para a tela de login.
+### Arquivos afetados
+- Migração nova: `ALTER TABLE sistema_orcamentos ADD COLUMN cliente_snapshot JSONB`.
+- `src/contexts/SistemaContext.tsx` — escrever/ler `cliente_snapshot`, surface de erros.
+- `src/pages/sistema/OrcamentoForm.tsx` — montar e enviar o snapshot ao salvar.
+- `src/pages/sistema/pdf.ts` — usar o snapshot como fonte primária.
 
-### 3. Reescrever a camada de dados do sistema
-Trocar o armazenamento local pelo banco de dados em `SistemaContext`:
-- Carregar tudo do banco ao abrir o sistema
-- Criar/editar/excluir salvando direto no banco
-- A página `/sistema/orcamentos` passa a listar **todos os orçamentos de todos os vendedores**, com a coluna de vendedor visível
-
-### 4. Migração dos dados existentes
-Na primeira vez que o sistema abrir após a atualização, os dados que existirem no navegador (localStorage) serão enviados automaticamente para o banco, para não perder nada que já foi cadastrado naquele computador.
-
-## Detalhes técnicos
-
-- Migração SQL criando as tabelas com GRANTs + RLS restrito a `admin_users` (mesmo padrão das tabelas admin existentes)
-- Itens de orçamento/pedido, contatos e endereços armazenados como JSONB (mantém a estrutura atual sem mudar as telas)
-- Numeração de orçamento gerada no banco (sequence) para evitar números duplicados entre vendedores
-- `SistemaContext.tsx` reescrito para usar o cliente do backend com carregamento inicial + mutações; telas existentes (Orcamentos, Pedidos, Clientes, Configuracoes, OrcamentoForm) continuam funcionando com a mesma interface do contexto
-- Guard de rota em `/sistema` reaproveitando a checagem de sessão do admin
-
-## Importante
-
-Os dados que foram cadastrados em **outros computadores/navegadores** e já sumiram não podem ser recuperados — só os que ainda existirem no navegador atual serão migrados.
+### Fora do escopo deste passo
+- Re-popular orçamentos antigos com snapshot (não há como recuperar dados que nunca foram salvos no banco). Orçamentos novos passam a sair corretos.
