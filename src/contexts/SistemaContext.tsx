@@ -231,6 +231,7 @@ const mapCliente = (r: any): Cliente => ({
 });
 const mapOrcamento = (r: any): Orcamento => ({
   id: r.id, numero: r.numero, clienteId: r.cliente_id ?? "",
+  clienteSnapshot: r.cliente_snapshot ?? undefined,
   contatoNome: r.contato_nome ?? undefined, contatoTelefone: r.contato_telefone ?? undefined,
   contatoEmail: r.contato_email ?? undefined, vendedorId: r.vendedor_id ?? undefined,
   origemId: r.origem_id ?? undefined, itens: r.itens ?? [], subtotal: Number(r.subtotal ?? 0),
