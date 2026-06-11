@@ -166,7 +166,7 @@ export const OrcamentoForm: React.FC = () => {
     setShowItemDialog(false);
   };
 
-  const handleSalvar = () => {
+  const handleSalvar = async () => {
     if (!formData.clienteId || formData.itens.length === 0) {
       alert("Selecione um cliente e adicione pelo menos um item.");
       return;
@@ -196,7 +196,7 @@ export const OrcamentoForm: React.FC = () => {
       if (orc) gerarPDFOrcamento({ ...orc, ...orcData }, sis, clienteSelecionado?.nome);
       navigate("/sistema/orcamentos");
     } else {
-      const novo = addOrcamento(orcData);
+      const novo = await addOrcamento(orcData);
       gerarPDFOrcamento(novo, sis, clienteSelecionado?.nome);
       navigate("/sistema/orcamentos");
     }

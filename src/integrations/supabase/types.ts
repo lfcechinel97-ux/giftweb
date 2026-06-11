@@ -251,6 +251,342 @@ export type Database = {
         }
         Relationships: []
       }
+      sistema_ajustes_estoque: {
+        Row: {
+          codigo_composto: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          motivo: string | null
+          orcamento_id: string | null
+          pedido_id: string | null
+          produto_id: string | null
+          quantidade: number
+          tipo: string
+          variante_slug: string | null
+        }
+        Insert: {
+          codigo_composto?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          motivo?: string | null
+          orcamento_id?: string | null
+          pedido_id?: string | null
+          produto_id?: string | null
+          quantidade: number
+          tipo: string
+          variante_slug?: string | null
+        }
+        Update: {
+          codigo_composto?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          motivo?: string | null
+          orcamento_id?: string | null
+          pedido_id?: string | null
+          produto_id?: string | null
+          quantidade?: number
+          tipo?: string
+          variante_slug?: string | null
+        }
+        Relationships: []
+      }
+      sistema_clientes: {
+        Row: {
+          contatos: Json
+          created_at: string
+          documento: string
+          enderecos: Json
+          id: string
+          ie: string | null
+          nome: string
+          observacoes: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          contatos?: Json
+          created_at?: string
+          documento: string
+          enderecos?: Json
+          id?: string
+          ie?: string | null
+          nome: string
+          observacoes?: string | null
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          contatos?: Json
+          created_at?: string
+          documento?: string
+          enderecos?: Json
+          id?: string
+          ie?: string | null
+          nome?: string
+          observacoes?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sistema_meios_pagamento: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          meta: Json | null
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sistema_orcamentos: {
+        Row: {
+          anexo_url: string | null
+          aprovado_em: string | null
+          cliente_id: string | null
+          contato_email: string | null
+          contato_nome: string | null
+          contato_telefone: string | null
+          created_at: string
+          frete_tipo: string | null
+          frete_valor: number
+          id: string
+          itens: Json
+          numero: string
+          observacoes: string | null
+          origem_id: string | null
+          pagamento_id: string | null
+          prazo_entrega: number | null
+          status: string
+          subtotal: number
+          transportadora_id: string | null
+          updated_at: string
+          vendedor_id: string | null
+        }
+        Insert: {
+          anexo_url?: string | null
+          aprovado_em?: string | null
+          cliente_id?: string | null
+          contato_email?: string | null
+          contato_nome?: string | null
+          contato_telefone?: string | null
+          created_at?: string
+          frete_tipo?: string | null
+          frete_valor?: number
+          id?: string
+          itens?: Json
+          numero: string
+          observacoes?: string | null
+          origem_id?: string | null
+          pagamento_id?: string | null
+          prazo_entrega?: number | null
+          status?: string
+          subtotal?: number
+          transportadora_id?: string | null
+          updated_at?: string
+          vendedor_id?: string | null
+        }
+        Update: {
+          anexo_url?: string | null
+          aprovado_em?: string | null
+          cliente_id?: string | null
+          contato_email?: string | null
+          contato_nome?: string | null
+          contato_telefone?: string | null
+          created_at?: string
+          frete_tipo?: string | null
+          frete_valor?: number
+          id?: string
+          itens?: Json
+          numero?: string
+          observacoes?: string | null
+          origem_id?: string | null
+          pagamento_id?: string | null
+          prazo_entrega?: number | null
+          status?: string
+          subtotal?: number
+          transportadora_id?: string | null
+          updated_at?: string
+          vendedor_id?: string | null
+        }
+        Relationships: []
+      }
+      sistema_origens: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          meta: Json | null
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sistema_pedidos: {
+        Row: {
+          cliente_id: string | null
+          contato_email: string | null
+          contato_nome: string | null
+          contato_telefone: string | null
+          created_at: string
+          frete_tipo: string | null
+          frete_valor: number
+          id: string
+          itens: Json
+          numero: string
+          observacoes: string | null
+          orcamento_id: string | null
+          pagamento_id: string | null
+          prazo_entrega: number | null
+          status: string
+          subtotal: number
+          total: number
+          transportadora_id: string | null
+          updated_at: string
+          vendedor_id: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          contato_email?: string | null
+          contato_nome?: string | null
+          contato_telefone?: string | null
+          created_at?: string
+          frete_tipo?: string | null
+          frete_valor?: number
+          id?: string
+          itens?: Json
+          numero: string
+          observacoes?: string | null
+          orcamento_id?: string | null
+          pagamento_id?: string | null
+          prazo_entrega?: number | null
+          status?: string
+          subtotal?: number
+          total?: number
+          transportadora_id?: string | null
+          updated_at?: string
+          vendedor_id?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          contato_email?: string | null
+          contato_nome?: string | null
+          contato_telefone?: string | null
+          created_at?: string
+          frete_tipo?: string | null
+          frete_valor?: number
+          id?: string
+          itens?: Json
+          numero?: string
+          observacoes?: string | null
+          orcamento_id?: string | null
+          pagamento_id?: string | null
+          prazo_entrega?: number | null
+          status?: string
+          subtotal?: number
+          total?: number
+          transportadora_id?: string | null
+          updated_at?: string
+          vendedor_id?: string | null
+        }
+        Relationships: []
+      }
+      sistema_transportadoras: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          meta: Json | null
+          nome: string
+          prazo_entrega: number | null
+          tipo_frete: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          nome: string
+          prazo_entrega?: number | null
+          tipo_frete?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          nome?: string
+          prazo_entrega?: number | null
+          tipo_frete?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sistema_vendedores: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          meta: Json | null
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_content: {
         Row: {
           height_desk: number | null
@@ -414,6 +750,7 @@ export type Database = {
           total: number
         }[]
       }
+      is_admin_user: { Args: never; Returns: boolean }
       recalc_estoque_total: { Args: { p_id: string }; Returns: undefined }
       search_products_by_category:
         | {
@@ -468,6 +805,8 @@ export type Database = {
             Returns: Json
           }
       set_variantes_por_prefixo: { Args: never; Returns: undefined }
+      sistema_next_orcamento_numero: { Args: never; Returns: string }
+      sistema_next_pedido_numero: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
