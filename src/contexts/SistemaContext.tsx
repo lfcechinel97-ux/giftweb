@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useMemo, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useMemo, useState, useEffect, useCallback, useRef } from "react";
 import type { Tables } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
 
 export const formatBRL = (valor: number | null | undefined): string => {
   if (valor == null || isNaN(valor)) return "—";
@@ -24,8 +25,8 @@ export interface Cliente {
   id: string;
   nome: string;
   tipo: TipoPessoa;
-  documento: string; // CPF ou CNPJ
-  ie?: string; // Inscricao estadual (PJ)
+  documento: string;
+  ie?: string;
   contatos: { nome?: string; telefone: string; email?: string }[];
   enderecos: Endereco[];
   observacoes?: string;
@@ -42,28 +43,28 @@ export interface LookupItem {
 
 export interface Transportadora extends LookupItem {
   tipoFrete?: "CIF" | "FOB";
-  prazoEntrega?: number; // dias
+  prazoEntrega?: number;
 }
 
 export interface QuoteItem {
   id: string;
   tipo: "produto" | "manual";
   produtoId?: string;
-  codigoComposto?: string; // produto_pai + variante
-  varianteSlug?: string; // slug da variante selecionada
+  codigoComposto?: string;
+  varianteSlug?: string;
   nome: string;
   descricao?: string;
   quantidade: number;
-  precoUnitario: number; // preco final (pode ser manual)
-  precoOriginal: number; // preco calculado automatico
-  precoManual: boolean; // flag se foi alterado manualmente
-  precoCusto?: number; // custo do produto
-  tabelaPrecos?: any; // tabela de precos do produto
-  imagem?: string; // imagem do produto (mockup ou original)
-  mockupImagem?: string; // imagem mockup enviada pelo vendedor
+  precoUnitario: number;
+  precoOriginal: number;
+  precoManual: boolean;
+  precoCusto?: number;
+  tabelaPrecos?: any;
+  imagem?: string;
+  mockupImagem?: string;
   altura?: number;
   diametro?: number;
-  observacao?: string; // observação opcional por item (ex: "Personalização a laser 1 cor")
+  observacao?: string;
 }
 
 export type OrcamentoStatus = "aberto" | "aprovado" | "cancelado";
@@ -133,7 +134,7 @@ export interface StockAdjustment {
   codigoComposto: string;
   varianteSlug?: string;
   tipo: "reserva" | "ajuste";
-  quantidade: number; // positivo = entrada, negativo = saida
+  quantidade: number;
   motivo: string;
   orcamentoId?: string;
   pedidoId?: string;
@@ -153,38 +154,31 @@ export interface SistemaData {
 }
 
 interface SistemaContextType extends SistemaData {
-  // Orcamentos
-  addOrcamento: (o: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt">) => Orcamento;
+  loading: boolean;
+  addOrcamento: (o: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt">) => Promise<Orcamento>;
   updateOrcamento: (id: string, changes: Partial<Orcamento>) => void;
   removeOrcamento: (id: string) => void;
-  aprovarOrcamento: (id: string) => Pedido | null;
-  // Pedidos
+  aprovarOrcamento: (id: string) => Promise<Pedido | null>;
   updatePedido: (id: string, changes: Partial<Pedido>) => void;
-  // Clientes
   addCliente: (c: Omit<Cliente, "id" | "createdAt" | "updatedAt">) => Cliente;
   updateCliente: (id: string, changes: Partial<Cliente>) => void;
   removeCliente: (id: string) => void;
-  // Vendedores
   addVendedor: (nome: string) => LookupItem;
   updateVendedor: (id: string, nome: string) => void;
   removeVendedor: (id: string) => void;
   toggleVendedorAtivo: (id: string) => void;
-  // Meios de Pagamento
   addMeioPagamento: (nome: string) => LookupItem;
   updateMeioPagamento: (id: string, nome: string) => void;
   removeMeioPagamento: (id: string) => void;
   toggleMeioPagamentoAtivo: (id: string) => void;
-  // Transportadoras
   addTransportadora: (nome: string, tipoFrete?: "CIF" | "FOB", prazoEntrega?: number) => Transportadora;
   updateTransportadora: (id: string, nome: string, tipoFrete?: "CIF" | "FOB", prazoEntrega?: number) => void;
   removeTransportadora: (id: string) => void;
   toggleTransportadoraAtivo: (id: string) => void;
-  // Origens
   addOrigem: (nome: string) => LookupItem;
   updateOrigem: (id: string, nome: string) => void;
   removeOrigem: (id: string) => void;
   toggleOrigemAtivo: (id: string) => void;
-  // Utils
   currentVendedor: LookupItem | null;
   setCurrentVendedor: (v: LookupItem | null) => void;
   getEstoqueDisponivel: (produtoId: string, codigoComposto: string) => number;
@@ -192,71 +186,105 @@ interface SistemaContextType extends SistemaData {
   gerarNumeroPedido: () => string;
 }
 
-const STORAGE_VERSION = 1;
-const STORAGE_KEY = `sistema_data_v${STORAGE_VERSION}`;
-const VENDEDOR_KEY = `sistema_vendedor_v${STORAGE_VERSION}`;
+const VENDEDOR_KEY = `sistema_vendedor_v1`;
+const LEGACY_KEY = `sistema_data_v1`;
 
-const initialData: SistemaData = {
-  orcamentos: [],
-  pedidos: [],
-  clientes: [],
-  vendedores: [
-    { id: "v1", nome: "Vendedor 1", ativo: true },
-    { id: "v2", nome: "Vendedor 2", ativo: true },
-  ],
-  meiosPagamento: [
-    { id: "p1", nome: "Boleto 30 dias", ativo: true },
-    { id: "p2", nome: "Cartão de Crédito", ativo: true },
-    { id: "p3", nome: "PIX", ativo: true },
-    { id: "p4", nome: "Transferência", ativo: true },
-  ],
-  transportadoras: [
-    { id: "t1", nome: "Transportadora A", ativo: true, tipoFrete: "FOB", prazoEntrega: 5 },
-    { id: "t2", nome: "Transportadora B", ativo: true, tipoFrete: "CIF", prazoEntrega: 7 },
-  ],
-  origens: [
-    { id: "o1", nome: "Telefone", ativo: true },
-    { id: "o2", nome: "WhatsApp", ativo: true },
-    { id: "o3", nome: "E-mail", ativo: true },
-    { id: "o4", nome: "Indicação", ativo: true },
-    { id: "o5", nome: "Site", ativo: true },
-  ],
-  ajustesEstoque: [],
+const emptyData: SistemaData = {
+  orcamentos: [], pedidos: [], clientes: [], vendedores: [],
+  meiosPagamento: [], transportadoras: [], origens: [], ajustesEstoque: [],
 };
-
-function loadFromStorage(): SistemaData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return { ...initialData, ...parsed };
-    }
-  } catch {}
-  return { ...initialData };
-}
-
-function saveToStorage(data: SistemaData) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {}
-}
 
 const SistemaContext = createContext<SistemaContextType | null>(null);
 
-export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [data, setData] = useState<SistemaData>(() => loadFromStorage());
-  const [currentVendedor, setCurrentVendedorState] = useState<LookupItem | null>(() => {
-    try {
-      const raw = localStorage.getItem(VENDEDOR_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  });
+// ---------- mappers ----------
+const mapVendedor = (r: any): LookupItem => ({ id: r.id, nome: r.nome, ativo: r.ativo, meta: r.meta ?? undefined });
+const mapMeio = mapVendedor;
+const mapOrigem = mapVendedor;
+const mapTransp = (r: any): Transportadora => ({
+  id: r.id, nome: r.nome, ativo: r.ativo,
+  tipoFrete: r.tipo_frete ?? undefined, prazoEntrega: r.prazo_entrega ?? undefined,
+});
+const mapCliente = (r: any): Cliente => ({
+  id: r.id, nome: r.nome, tipo: r.tipo, documento: r.documento, ie: r.ie ?? undefined,
+  contatos: r.contatos ?? [], enderecos: r.enderecos ?? [], observacoes: r.observacoes ?? undefined,
+  createdAt: r.created_at, updatedAt: r.updated_at,
+});
+const mapOrcamento = (r: any): Orcamento => ({
+  id: r.id, numero: r.numero, clienteId: r.cliente_id ?? "",
+  contatoNome: r.contato_nome ?? undefined, contatoTelefone: r.contato_telefone ?? undefined,
+  contatoEmail: r.contato_email ?? undefined, vendedorId: r.vendedor_id ?? undefined,
+  origemId: r.origem_id ?? undefined, itens: r.itens ?? [], subtotal: Number(r.subtotal ?? 0),
+  freteTipo: r.frete_tipo ?? null, freteValor: Number(r.frete_valor ?? 0),
+  transportadoraId: r.transportadora_id ?? undefined, prazoEntrega: r.prazo_entrega ?? undefined,
+  pagamentoId: r.pagamento_id ?? undefined, observacoes: r.observacoes ?? undefined,
+  status: r.status, createdAt: r.created_at, updatedAt: r.updated_at,
+  aprovadoEm: r.aprovado_em ?? undefined, anexoUrl: r.anexo_url ?? undefined,
+});
+const orcamentoToDb = (o: Partial<Orcamento>): any => {
+  const out: any = {};
+  if (o.id !== undefined) out.id = o.id;
+  if (o.numero !== undefined) out.numero = o.numero;
+  if (o.clienteId !== undefined) out.cliente_id = o.clienteId || null;
+  if (o.contatoNome !== undefined) out.contato_nome = o.contatoNome ?? null;
+  if (o.contatoTelefone !== undefined) out.contato_telefone = o.contatoTelefone ?? null;
+  if (o.contatoEmail !== undefined) out.contato_email = o.contatoEmail ?? null;
+  if (o.vendedorId !== undefined) out.vendedor_id = o.vendedorId ?? null;
+  if (o.origemId !== undefined) out.origem_id = o.origemId ?? null;
+  if (o.itens !== undefined) out.itens = o.itens as any;
+  if (o.subtotal !== undefined) out.subtotal = o.subtotal;
+  if (o.freteTipo !== undefined) out.frete_tipo = o.freteTipo;
+  if (o.freteValor !== undefined) out.frete_valor = o.freteValor;
+  if (o.transportadoraId !== undefined) out.transportadora_id = o.transportadoraId ?? null;
+  if (o.prazoEntrega !== undefined) out.prazo_entrega = o.prazoEntrega ?? null;
+  if (o.pagamentoId !== undefined) out.pagamento_id = o.pagamentoId ?? null;
+  if (o.observacoes !== undefined) out.observacoes = o.observacoes ?? null;
+  if (o.status !== undefined) out.status = o.status;
+  if (o.aprovadoEm !== undefined) out.aprovado_em = o.aprovadoEm ?? null;
+  if (o.anexoUrl !== undefined) out.anexo_url = o.anexoUrl ?? null;
+  out.updated_at = new Date().toISOString();
+  return out;
+};
+const mapPedido = (r: any): Pedido => ({
+  id: r.id, numero: r.numero, orcamentoId: r.orcamento_id ?? "",
+  clienteId: r.cliente_id ?? "", contatoNome: r.contato_nome ?? undefined,
+  contatoTelefone: r.contato_telefone ?? undefined, contatoEmail: r.contato_email ?? undefined,
+  vendedorId: r.vendedor_id ?? undefined, itens: r.itens ?? [],
+  subtotal: Number(r.subtotal ?? 0), freteTipo: r.frete_tipo ?? null,
+  freteValor: Number(r.frete_valor ?? 0), total: Number(r.total ?? 0),
+  transportadoraId: r.transportadora_id ?? undefined, prazoEntrega: r.prazo_entrega ?? undefined,
+  pagamentoId: r.pagamento_id ?? undefined, observacoes: r.observacoes ?? undefined,
+  status: r.status, createdAt: r.created_at, updatedAt: r.updated_at,
+});
+const pedidoToDb = (p: Partial<Pedido>): any => {
+  const out: any = {};
+  if (p.id !== undefined) out.id = p.id;
+  if (p.numero !== undefined) out.numero = p.numero;
+  if (p.orcamentoId !== undefined) out.orcamento_id = p.orcamentoId ?? null;
+  if (p.clienteId !== undefined) out.cliente_id = p.clienteId || null;
+  if (p.contatoNome !== undefined) out.contato_nome = p.contatoNome ?? null;
+  if (p.contatoTelefone !== undefined) out.contato_telefone = p.contatoTelefone ?? null;
+  if (p.contatoEmail !== undefined) out.contato_email = p.contatoEmail ?? null;
+  if (p.vendedorId !== undefined) out.vendedor_id = p.vendedorId ?? null;
+  if (p.itens !== undefined) out.itens = p.itens as any;
+  if (p.subtotal !== undefined) out.subtotal = p.subtotal;
+  if (p.freteTipo !== undefined) out.frete_tipo = p.freteTipo;
+  if (p.freteValor !== undefined) out.frete_valor = p.freteValor;
+  if (p.total !== undefined) out.total = p.total;
+  if (p.transportadoraId !== undefined) out.transportadora_id = p.transportadoraId ?? null;
+  if (p.prazoEntrega !== undefined) out.prazo_entrega = p.prazoEntrega ?? null;
+  if (p.pagamentoId !== undefined) out.pagamento_id = p.pagamentoId ?? null;
+  if (p.observacoes !== undefined) out.observacoes = p.observacoes ?? null;
+  if (p.status !== undefined) out.status = p.status;
+  out.updated_at = new Date().toISOString();
+  return out;
+};
 
-  useEffect(() => {
-    saveToStorage(data);
-  }, [data]);
+export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [data, setData] = useState<SistemaData>(emptyData);
+  const [loading, setLoading] = useState(true);
+  const [currentVendedor, setCurrentVendedorState] = useState<LookupItem | null>(() => {
+    try { const raw = localStorage.getItem(VENDEDOR_KEY); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  });
 
   useEffect(() => {
     try {
@@ -265,383 +293,394 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch {}
   }, [currentVendedor]);
 
-  const persist = useCallback((updater: (prev: SistemaData) => SistemaData) => {
-    setData((prev) => {
-      const next = updater(prev);
-      saveToStorage(next);
-      return next;
+  const migratedRef = useRef(false);
+
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    const [v, m, t, og, c, o, p, ae] = await Promise.all([
+      supabase.from("sistema_vendedores").select("*").order("nome"),
+      supabase.from("sistema_meios_pagamento").select("*").order("nome"),
+      supabase.from("sistema_transportadoras").select("*").order("nome"),
+      supabase.from("sistema_origens").select("*").order("nome"),
+      supabase.from("sistema_clientes").select("*").order("nome"),
+      supabase.from("sistema_orcamentos").select("*").order("created_at", { ascending: false }),
+      supabase.from("sistema_pedidos").select("*").order("created_at", { ascending: false }),
+      supabase.from("sistema_ajustes_estoque").select("*").order("created_at", { ascending: false }),
+    ]);
+    setData({
+      vendedores: (v.data ?? []).map(mapVendedor),
+      meiosPagamento: (m.data ?? []).map(mapMeio),
+      transportadoras: (t.data ?? []).map(mapTransp),
+      origens: (og.data ?? []).map(mapOrigem),
+      clientes: (c.data ?? []).map(mapCliente),
+      orcamentos: (o.data ?? []).map(mapOrcamento),
+      pedidos: (p.data ?? []).map(mapPedido),
+      ajustesEstoque: (ae.data ?? []).map((r: any) => ({
+        id: r.id, produtoId: r.produto_id ?? "", codigoComposto: r.codigo_composto ?? "",
+        varianteSlug: r.variante_slug ?? undefined, tipo: r.tipo, quantidade: r.quantidade,
+        motivo: r.motivo ?? "", orcamentoId: r.orcamento_id ?? undefined,
+        pedidoId: r.pedido_id ?? undefined, createdAt: r.created_at, createdBy: r.created_by ?? undefined,
+      })),
     });
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      // One-time migration from legacy localStorage
+      if (!migratedRef.current) {
+        migratedRef.current = true;
+        try {
+          const raw = localStorage.getItem(LEGACY_KEY);
+          if (raw) {
+            const legacy = JSON.parse(raw);
+            await migrateLegacy(legacy);
+            localStorage.removeItem(LEGACY_KEY);
+          }
+        } catch (e) { console.warn("Legacy migration skipped", e); }
+      }
+      await loadAll();
+    })();
+  }, [loadAll]);
+
+  // ---------- Orcamentos ----------
+  const addOrcamento = useCallback(async (o: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt">): Promise<Orcamento> => {
+    const { data: numeroData } = await supabase.rpc("sistema_next_orcamento_numero");
+    const numero = (numeroData as any) ?? String(Date.now());
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const orcamento: Orcamento = { ...o, id, numero, createdAt: now, updatedAt: now };
+    setData(prev => ({ ...prev, orcamentos: [orcamento, ...prev.orcamentos] }));
+    await supabase.from("sistema_orcamentos").insert({ ...orcamentoToDb(orcamento), created_at: now });
+    return orcamento;
+  }, []);
+
+  const updateOrcamento = useCallback((id: string, changes: Partial<Orcamento>) => {
+    setData(prev => ({
+      ...prev,
+      orcamentos: prev.orcamentos.map(o => o.id === id ? { ...o, ...changes, updatedAt: new Date().toISOString() } : o),
+    }));
+    supabase.from("sistema_orcamentos").update(orcamentoToDb(changes)).eq("id", id).then();
+  }, []);
+
+  const removeOrcamento = useCallback((id: string) => {
+    setData(prev => ({ ...prev, orcamentos: prev.orcamentos.filter(o => o.id !== id) }));
+    supabase.from("sistema_orcamentos").delete().eq("id", id).then();
   }, []);
 
   const gerarNumeroOrcamento = useCallback(() => {
     const BASE = 125748;
-    const seq = BASE + data.orcamentos.length + 1;
-    return String(seq);
+    return String(BASE + data.orcamentos.length + 1);
   }, [data.orcamentos.length]);
 
   const gerarNumeroPedido = useCallback(() => {
     const seq = data.pedidos.length + 1;
-    const ano = new Date().getFullYear();
-    return `PED-${ano}-${String(seq).padStart(5, "0")}`;
+    return `PED-${new Date().getFullYear()}-${String(seq).padStart(5, "0")}`;
   }, [data.pedidos.length]);
 
-  const addOrcamento = useCallback(
-    (o: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt">): Orcamento => {
-      const id = crypto.randomUUID();
-      const numero = gerarNumeroOrcamento();
-      const now = new Date().toISOString();
-      const orcamento: Orcamento = { ...o, id, numero, createdAt: now, updatedAt: now };
-      persist((prev) => ({ ...prev, orcamentos: [...prev.orcamentos, orcamento] }));
-      return orcamento;
-    },
-    [gerarNumeroOrcamento, persist]
-  );
+  const aprovarOrcamento = useCallback(async (id: string): Promise<Pedido | null> => {
+    const orcamento = data.orcamentos.find(o => o.id === id);
+    if (!orcamento || orcamento.status !== "aberto") return null;
 
-  const updateOrcamento = useCallback((id: string, changes: Partial<Orcamento>) => {
-    persist((prev) => ({
-      ...prev,
-      orcamentos: prev.orcamentos.map((o) => (o.id === id ? { ...o, ...changes, updatedAt: new Date().toISOString() } : o)),
+    const now = new Date().toISOString();
+    const { data: nrData } = await supabase.rpc("sistema_next_pedido_numero");
+    const numero = (nrData as any) ?? `PED-${Date.now()}`;
+    const pedidoId = crypto.randomUUID();
+
+    const itensPedido: PedidoItem[] = orcamento.itens.map(item => ({
+      id: crypto.randomUUID(), produtoId: item.produtoId, codigoComposto: item.codigoComposto,
+      varianteSlug: item.varianteSlug, nome: item.nome, quantidade: item.quantidade,
+      precoUnitario: item.precoUnitario, total: item.quantidade * item.precoUnitario,
+      mockupImagem: item.mockupImagem,
     }));
-  }, [persist]);
 
-  const removeOrcamento = useCallback((id: string) => {
-    persist((prev) => ({ ...prev, orcamentos: prev.orcamentos.filter((o) => o.id !== id) }));
-  }, [persist]);
+    const pedido: Pedido = {
+      id: pedidoId, numero, orcamentoId: orcamento.id, clienteId: orcamento.clienteId,
+      contatoNome: orcamento.contatoNome, contatoTelefone: orcamento.contatoTelefone,
+      contatoEmail: orcamento.contatoEmail, vendedorId: orcamento.vendedorId, itens: itensPedido,
+      subtotal: orcamento.subtotal, freteTipo: orcamento.freteTipo, freteValor: orcamento.freteValor,
+      total: orcamento.subtotal + orcamento.freteValor, transportadoraId: orcamento.transportadoraId,
+      prazoEntrega: orcamento.prazoEntrega, pagamentoId: orcamento.pagamentoId,
+      observacoes: orcamento.observacoes, status: "novo", createdAt: now, updatedAt: now,
+    };
 
-  const aprovarOrcamento = useCallback(
-    (id: string): Pedido | null => {
-      const orcamento = data.orcamentos.find((o) => o.id === id);
-      if (!orcamento || orcamento.status !== "aberto") return null;
+    const reservas: StockAdjustment[] = itensPedido.map(item => ({
+      id: crypto.randomUUID(), produtoId: item.produtoId || "",
+      codigoComposto: item.codigoComposto || item.produtoId || "", varianteSlug: item.varianteSlug,
+      tipo: "reserva", quantidade: -item.quantidade, motivo: `Pedido ${numero}`,
+      orcamentoId: orcamento.id, pedidoId: pedido.id, createdAt: now,
+    }));
 
-      const now = new Date().toISOString();
-      const pedidoId = crypto.randomUUID();
-      const numero = gerarNumeroPedido();
+    setData(prev => ({
+      ...prev,
+      pedidos: [pedido, ...prev.pedidos],
+      orcamentos: prev.orcamentos.map(o => o.id === id ? { ...o, status: "aprovado" as const, aprovadoEm: now, updatedAt: now } : o),
+      ajustesEstoque: [...reservas, ...prev.ajustesEstoque],
+    }));
 
-      const itensPedido: PedidoItem[] = orcamento.itens.map((item) => ({
-        id: crypto.randomUUID(),
-        produtoId: item.produtoId,
-        codigoComposto: item.codigoComposto,
-        varianteSlug: item.varianteSlug,
-        nome: item.nome,
-        quantidade: item.quantidade,
-        precoUnitario: item.precoUnitario,
-        total: item.quantidade * item.precoUnitario,
-        mockupImagem: item.mockupImagem,
-      }));
+    await Promise.all([
+      supabase.from("sistema_pedidos").insert({ ...pedidoToDb(pedido), created_at: now }),
+      supabase.from("sistema_orcamentos").update({ status: "aprovado", aprovado_em: now, updated_at: now }).eq("id", id),
+      supabase.from("sistema_ajustes_estoque").insert(reservas.map(r => ({
+        id: r.id, produto_id: r.produtoId, codigo_composto: r.codigoComposto, variante_slug: r.varianteSlug,
+        tipo: r.tipo, quantidade: r.quantidade, motivo: r.motivo, orcamento_id: r.orcamentoId, pedido_id: r.pedidoId,
+      }))),
+    ]);
 
-      const pedido: Pedido = {
-        id: pedidoId,
-        numero,
-        orcamentoId: orcamento.id,
-        clienteId: orcamento.clienteId,
-        contatoNome: orcamento.contatoNome,
-        contatoTelefone: orcamento.contatoTelefone,
-        contatoEmail: orcamento.contatoEmail,
-        vendedorId: orcamento.vendedorId,
-        itens: itensPedido,
-        subtotal: orcamento.subtotal,
-        freteTipo: orcamento.freteTipo,
-        freteValor: orcamento.freteValor,
-        total: orcamento.subtotal + orcamento.freteValor,
-        transportadoraId: orcamento.transportadoraId,
-        prazoEntrega: orcamento.prazoEntrega,
-        pagamentoId: orcamento.pagamentoId,
-        observacoes: orcamento.observacoes,
-        status: "novo",
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      // Criar reservas de estoque
-      const reservas: StockAdjustment[] = itensPedido.map((item) => ({
-        id: crypto.randomUUID(),
-        produtoId: item.produtoId || "",
-        codigoComposto: item.codigoComposto || item.produtoId || "",
-        varianteSlug: item.varianteSlug,
-        tipo: "reserva",
-        quantidade: -item.quantidade,
-        motivo: `Pedido ${numero}`,
-        orcamentoId: orcamento.id,
-        pedidoId: pedido.id,
-        createdAt: now,
-      }));
-
-      persist((prev) => ({
-        ...prev,
-        pedidos: [...prev.pedidos, pedido],
-        orcamentos: prev.orcamentos.map((o) =>
-          o.id === id ? { ...o, status: "aprovado" as const, aprovadoEm: now, updatedAt: now } : o
-        ),
-        ajustesEstoque: [...prev.ajustesEstoque, ...reservas],
-      }));
-
-      return pedido;
-    },
-    [data.orcamentos, gerarNumeroPedido, persist]
-  );
+    return pedido;
+  }, [data.orcamentos]);
 
   const updatePedido = useCallback((id: string, changes: Partial<Pedido>) => {
-    persist((prev) => ({
+    setData(prev => ({
       ...prev,
-      pedidos: prev.pedidos.map((p) => (p.id === id ? { ...p, ...changes, updatedAt: new Date().toISOString() } : p)),
+      pedidos: prev.pedidos.map(p => p.id === id ? { ...p, ...changes, updatedAt: new Date().toISOString() } : p),
     }));
-  }, [persist]);
+    supabase.from("sistema_pedidos").update(pedidoToDb(changes)).eq("id", id).then();
+  }, []);
 
+  // ---------- Clientes ----------
   const addCliente = useCallback((c: Omit<Cliente, "id" | "createdAt" | "updatedAt">): Cliente => {
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     const cliente: Cliente = { ...c, id, createdAt: now, updatedAt: now };
-    persist((prev) => ({ ...prev, clientes: [...prev.clientes, cliente] }));
+    setData(prev => ({ ...prev, clientes: [...prev.clientes, cliente] }));
+    supabase.from("sistema_clientes").insert({
+      id, nome: c.nome, tipo: c.tipo, documento: c.documento, ie: c.ie ?? null,
+      contatos: c.contatos as any, enderecos: c.enderecos as any, observacoes: c.observacoes ?? null,
+    }).then();
     return cliente;
-  }, [persist]);
+  }, []);
 
   const updateCliente = useCallback((id: string, changes: Partial<Cliente>) => {
-    persist((prev) => ({
+    setData(prev => ({
       ...prev,
-      clientes: prev.clientes.map((c) => (c.id === id ? { ...c, ...changes, updatedAt: new Date().toISOString() } : c)),
+      clientes: prev.clientes.map(c => c.id === id ? { ...c, ...changes, updatedAt: new Date().toISOString() } : c),
     }));
-  }, [persist]);
+    const dbc: any = { updated_at: new Date().toISOString() };
+    if (changes.nome !== undefined) dbc.nome = changes.nome;
+    if (changes.tipo !== undefined) dbc.tipo = changes.tipo;
+    if (changes.documento !== undefined) dbc.documento = changes.documento;
+    if (changes.ie !== undefined) dbc.ie = changes.ie ?? null;
+    if (changes.contatos !== undefined) dbc.contatos = changes.contatos as any;
+    if (changes.enderecos !== undefined) dbc.enderecos = changes.enderecos as any;
+    if (changes.observacoes !== undefined) dbc.observacoes = changes.observacoes ?? null;
+    supabase.from("sistema_clientes").update(dbc).eq("id", id).then();
+  }, []);
 
   const removeCliente = useCallback((id: string) => {
-    persist((prev) => ({ ...prev, clientes: prev.clientes.filter((c) => c.id !== id) }));
-  }, [persist]);
+    setData(prev => ({ ...prev, clientes: prev.clientes.filter(c => c.id !== id) }));
+    supabase.from("sistema_clientes").delete().eq("id", id).then();
+  }, []);
 
-  const addVendedor = useCallback(
-    (nome: string): LookupItem => {
-      const item: LookupItem = { id: crypto.randomUUID(), nome, ativo: true };
-      persist((prev) => ({ ...prev, vendedores: [...prev.vendedores, item] }));
-      return item;
-    },
-    [persist]
-  );
+  // ---------- Generic lookup helpers ----------
+  const addLookup = useCallback(<K extends keyof SistemaData>(
+    key: K, table: "sistema_vendedores" | "sistema_meios_pagamento" | "sistema_origens",
+    nome: string,
+  ): LookupItem => {
+    const item: LookupItem = { id: crypto.randomUUID(), nome, ativo: true };
+    setData(prev => ({ ...prev, [key]: [...(prev[key] as any), item] } as any));
+    supabase.from(table).insert({ id: item.id, nome, ativo: true }).then();
+    return item;
+  }, []);
 
-  const updateVendedor = useCallback(
-    (id: string, nome: string) => {
-      persist((prev) => ({
-        ...prev,
-        vendedores: prev.vendedores.map((v) => (v.id === id ? { ...v, nome } : v)),
-      }));
-    },
-    [persist]
-  );
+  const updateLookup = useCallback((
+    key: keyof SistemaData, table: "sistema_vendedores" | "sistema_meios_pagamento" | "sistema_origens",
+    id: string, nome: string,
+  ) => {
+    setData(prev => ({ ...prev, [key]: (prev[key] as any[]).map(x => x.id === id ? { ...x, nome } : x) } as any));
+    supabase.from(table).update({ nome, updated_at: new Date().toISOString() }).eq("id", id).then();
+  }, []);
 
-  const removeVendedor = useCallback(
-    (id: string) => {
-      persist((prev) => ({ ...prev, vendedores: prev.vendedores.filter((v) => v.id !== id) }));
-    },
-    [persist]
-  );
+  const removeLookup = useCallback((
+    key: keyof SistemaData, table: "sistema_vendedores" | "sistema_meios_pagamento" | "sistema_origens" | "sistema_transportadoras",
+    id: string,
+  ) => {
+    setData(prev => ({ ...prev, [key]: (prev[key] as any[]).filter(x => x.id !== id) } as any));
+    supabase.from(table).delete().eq("id", id).then();
+  }, []);
 
-  const toggleVendedorAtivo = useCallback(
-    (id: string) => {
-      persist((prev) => ({
-        ...prev,
-        vendedores: prev.vendedores.map((v) => v.id === id ? { ...v, ativo: !v.ativo } : v),
-      }));
-    },
-    [persist]
-  );
+  const toggleLookupAtivo = useCallback((
+    key: keyof SistemaData, table: "sistema_vendedores" | "sistema_meios_pagamento" | "sistema_origens" | "sistema_transportadoras",
+    id: string,
+  ) => {
+    let novoAtivo = true;
+    setData(prev => {
+      const arr = (prev[key] as any[]).map(x => {
+        if (x.id === id) { novoAtivo = !x.ativo; return { ...x, ativo: novoAtivo }; }
+        return x;
+      });
+      return { ...prev, [key]: arr } as any;
+    });
+    // Need correct value - use a small delay through promise
+    setTimeout(() => {
+      supabase.from(table).update({ ativo: novoAtivo, updated_at: new Date().toISOString() }).eq("id", id).then();
+    }, 0);
+  }, []);
 
-  const addMeioPagamento = useCallback(
-    (nome: string): LookupItem => {
-      const item: LookupItem = { id: crypto.randomUUID(), nome, ativo: true };
-      persist((prev) => ({ ...prev, meiosPagamento: [...prev.meiosPagamento, item] }));
-      return item;
-    },
-    [persist]
-  );
+  const addVendedor = useCallback((nome: string) => addLookup("vendedores", "sistema_vendedores", nome), [addLookup]);
+  const updateVendedor = useCallback((id: string, nome: string) => updateLookup("vendedores", "sistema_vendedores", id, nome), [updateLookup]);
+  const removeVendedor = useCallback((id: string) => removeLookup("vendedores", "sistema_vendedores", id), [removeLookup]);
+  const toggleVendedorAtivo = useCallback((id: string) => toggleLookupAtivo("vendedores", "sistema_vendedores", id), [toggleLookupAtivo]);
 
-  const updateMeioPagamento = useCallback(
-    (id: string, nome: string) => {
-      persist((prev) => ({
-        ...prev,
-        meiosPagamento: prev.meiosPagamento.map((p) => (p.id === id ? { ...p, nome } : p)),
-      }));
-    },
-    [persist]
-  );
+  const addMeioPagamento = useCallback((nome: string) => addLookup("meiosPagamento", "sistema_meios_pagamento", nome), [addLookup]);
+  const updateMeioPagamento = useCallback((id: string, nome: string) => updateLookup("meiosPagamento", "sistema_meios_pagamento", id, nome), [updateLookup]);
+  const removeMeioPagamento = useCallback((id: string) => removeLookup("meiosPagamento", "sistema_meios_pagamento", id), [removeLookup]);
+  const toggleMeioPagamentoAtivo = useCallback((id: string) => toggleLookupAtivo("meiosPagamento", "sistema_meios_pagamento", id), [toggleLookupAtivo]);
 
-  const removeMeioPagamento = useCallback(
-    (id: string) => {
-      persist((prev) => ({ ...prev, meiosPagamento: prev.meiosPagamento.filter((p) => p.id !== id) }));
-    },
-    [persist]
-  );
+  const addOrigem = useCallback((nome: string) => addLookup("origens", "sistema_origens", nome), [addLookup]);
+  const updateOrigem = useCallback((id: string, nome: string) => updateLookup("origens", "sistema_origens", id, nome), [updateLookup]);
+  const removeOrigem = useCallback((id: string) => removeLookup("origens", "sistema_origens", id), [removeLookup]);
+  const toggleOrigemAtivo = useCallback((id: string) => toggleLookupAtivo("origens", "sistema_origens", id), [toggleLookupAtivo]);
 
-  const toggleMeioPagamentoAtivo = useCallback(
-    (id: string) => {
-      persist((prev) => ({
-        ...prev,
-        meiosPagamento: prev.meiosPagamento.map((p) => p.id === id ? { ...p, ativo: !p.ativo } : p),
-      }));
-    },
-    [persist]
-  );
+  // ---------- Transportadoras ----------
+  const addTransportadora = useCallback((nome: string, tipoFrete?: "CIF" | "FOB", prazoEntrega?: number): Transportadora => {
+    const item: Transportadora = { id: crypto.randomUUID(), nome, ativo: true, tipoFrete, prazoEntrega };
+    setData(prev => ({ ...prev, transportadoras: [...prev.transportadoras, item] }));
+    supabase.from("sistema_transportadoras").insert({
+      id: item.id, nome, ativo: true, tipo_frete: tipoFrete ?? null, prazo_entrega: prazoEntrega ?? null,
+    }).then();
+    return item;
+  }, []);
 
-  const addTransportadora = useCallback(
-    (nome: string, tipoFrete?: "CIF" | "FOB", prazoEntrega?: number): Transportadora => {
-      const item: Transportadora = { id: crypto.randomUUID(), nome, ativo: true, tipoFrete, prazoEntrega };
-      persist((prev) => ({ ...prev, transportadoras: [...prev.transportadoras, item] }));
-      return item;
-    },
-    [persist]
-  );
+  const updateTransportadora = useCallback((id: string, nome: string, tipoFrete?: "CIF" | "FOB", prazoEntrega?: number) => {
+    setData(prev => ({
+      ...prev,
+      transportadoras: prev.transportadoras.map(t => t.id === id ? { ...t, nome, tipoFrete, prazoEntrega } : t),
+    }));
+    supabase.from("sistema_transportadoras").update({
+      nome, tipo_frete: tipoFrete ?? null, prazo_entrega: prazoEntrega ?? null, updated_at: new Date().toISOString(),
+    }).eq("id", id).then();
+  }, []);
 
-  const updateTransportadora = useCallback(
-    (id: string, nome: string, tipoFrete?: "CIF" | "FOB", prazoEntrega?: number) => {
-      persist((prev) => ({
-        ...prev,
-        transportadoras: prev.transportadoras.map((t) =>
-          t.id === id ? { ...t, nome, tipoFrete, prazoEntrega } : t
-        ),
-      }));
-    },
-    [persist]
-  );
+  const removeTransportadora = useCallback((id: string) => removeLookup("transportadoras", "sistema_transportadoras", id), [removeLookup]);
+  const toggleTransportadoraAtivo = useCallback((id: string) => toggleLookupAtivo("transportadoras", "sistema_transportadoras", id), [toggleLookupAtivo]);
 
-  const removeTransportadora = useCallback(
-    (id: string) => {
-      persist((prev) => ({ ...prev, transportadoras: prev.transportadoras.filter((t) => t.id !== id) }));
-    },
-    [persist]
-  );
+  const getEstoqueDisponivel = useCallback((produtoId: string, codigoComposto: string) => {
+    const baseStock = 100;
+    const ajuste = data.ajustesEstoque
+      .filter(a => a.codigoComposto === codigoComposto || a.produtoId === produtoId)
+      .reduce((sum, a) => sum + a.quantidade, 0);
+    return Math.max(0, baseStock + ajuste);
+  }, [data.ajustesEstoque]);
 
-  const toggleTransportadoraAtivo = useCallback(
-    (id: string) => {
-      persist((prev) => ({
-        ...prev,
-        transportadoras: prev.transportadoras.map((t) => t.id === id ? { ...t, ativo: !t.ativo } : t),
-      }));
-    },
-    [persist]
-  );
-
-  const addOrigem = useCallback(
-    (nome: string): LookupItem => {
-      const item: LookupItem = { id: crypto.randomUUID(), nome, ativo: true };
-      persist((prev) => ({ ...prev, origens: [...prev.origens, item] }));
-      return item;
-    },
-    [persist]
-  );
-
-  const updateOrigem = useCallback(
-    (id: string, nome: string) => {
-      persist((prev) => ({
-        ...prev,
-        origens: prev.origens.map((o) => (o.id === id ? { ...o, nome } : o)),
-      }));
-    },
-    [persist]
-  );
-
-  const removeOrigem = useCallback(
-    (id: string) => {
-      persist((prev) => ({ ...prev, origens: prev.origens.filter((o) => o.id !== id) }));
-    },
-    [persist]
-  );
-
-  const toggleOrigemAtivo = useCallback(
-    (id: string) => {
-      persist((prev) => ({
-        ...prev,
-        origens: prev.origens.map((o) => o.id === id ? { ...o, ativo: !o.ativo } : o),
-      }));
-    },
-    [persist]
-  );
-
-  const getEstoqueDisponivel = useCallback(
-    (produtoId: string, codigoComposto: string) => {
-      // Base estoque do produto (mock - seria buscado do Supabase)
-      const baseStock = 100;
-      // Ajustes de reserva/ajuste
-      const ajuste = data.ajustesEstoque
-        .filter((a) => a.codigoComposto === codigoComposto || a.produtoId === produtoId)
-        .reduce((sum, a) => sum + a.quantidade, 0);
-      return Math.max(0, baseStock + ajuste);
-    },
-    [data.ajustesEstoque]
-  );
-
-  const value = useMemo<SistemaContextType>(
-    () => ({
-      ...data,
-      addOrcamento,
-      updateOrcamento,
-      removeOrcamento,
-      aprovarOrcamento,
-      updatePedido,
-      addCliente,
-      updateCliente,
-      removeCliente,
-      addVendedor,
-      updateVendedor,
-      removeVendedor,
-      toggleVendedorAtivo,
-      addMeioPagamento,
-      updateMeioPagamento,
-      removeMeioPagamento,
-      toggleMeioPagamentoAtivo,
-      addTransportadora,
-      updateTransportadora,
-      removeTransportadora,
-      toggleTransportadoraAtivo,
-      addOrigem,
-      updateOrigem,
-      removeOrigem,
-      toggleOrigemAtivo,
-      currentVendedor,
-      setCurrentVendedor: setCurrentVendedorState,
-      getEstoqueDisponivel,
-      gerarNumeroOrcamento,
-      gerarNumeroPedido,
-    }),
-    [
-      data,
-      addOrcamento,
-      updateOrcamento,
-      removeOrcamento,
-      aprovarOrcamento,
-      updatePedido,
-      addCliente,
-      updateCliente,
-      removeCliente,
-      addVendedor,
-      updateVendedor,
-      removeVendedor,
-      toggleVendedorAtivo,
-      addMeioPagamento,
-      updateMeioPagamento,
-      removeMeioPagamento,
-      toggleMeioPagamentoAtivo,
-      addTransportadora,
-      updateTransportadora,
-      removeTransportadora,
-      toggleTransportadoraAtivo,
-      addOrigem,
-      updateOrigem,
-      removeOrigem,
-      toggleOrigemAtivo,
-      currentVendedor,
-      getEstoqueDisponivel,
-      gerarNumeroOrcamento,
-      gerarNumeroPedido,
-    ]
-  );
+  const value = useMemo<SistemaContextType>(() => ({
+    ...data, loading,
+    addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
+    addCliente, updateCliente, removeCliente,
+    addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
+    addMeioPagamento, updateMeioPagamento, removeMeioPagamento, toggleMeioPagamentoAtivo,
+    addTransportadora, updateTransportadora, removeTransportadora, toggleTransportadoraAtivo,
+    addOrigem, updateOrigem, removeOrigem, toggleOrigemAtivo,
+    currentVendedor, setCurrentVendedor: setCurrentVendedorState,
+    getEstoqueDisponivel, gerarNumeroOrcamento, gerarNumeroPedido,
+  }), [
+    data, loading, addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
+    addCliente, updateCliente, removeCliente,
+    addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
+    addMeioPagamento, updateMeioPagamento, removeMeioPagamento, toggleMeioPagamentoAtivo,
+    addTransportadora, updateTransportadora, removeTransportadora, toggleTransportadoraAtivo,
+    addOrigem, updateOrigem, removeOrigem, toggleOrigemAtivo,
+    currentVendedor, getEstoqueDisponivel, gerarNumeroOrcamento, gerarNumeroPedido,
+  ]);
 
   return <SistemaContext.Provider value={value}>{children}</SistemaContext.Provider>;
 };
 
-// Helper functions
-export const calcSubtotal = (orcamento: Orcamento): number => {
-  return orcamento.itens.reduce((sum, item) => sum + (item.precoUnitario * item.quantidade), 0);
-};
+// One-time legacy migration helper
+async function migrateLegacy(legacy: any) {
+  if (!legacy || typeof legacy !== "object") return;
+  try {
+    if (Array.isArray(legacy.vendedores) && legacy.vendedores.length) {
+      await supabase.from("sistema_vendedores").upsert(
+        legacy.vendedores.filter((v: any) => !["v1","v2"].includes(v.id)).map((v: any) => ({
+          id: isUuid(v.id) ? v.id : crypto.randomUUID(), nome: v.nome, ativo: v.ativo ?? true,
+        })), { onConflict: "id" }
+      );
+    }
+    if (Array.isArray(legacy.meiosPagamento)) {
+      await supabase.from("sistema_meios_pagamento").upsert(
+        legacy.meiosPagamento.filter((x: any) => !/^p\d+$/.test(x.id)).map((x: any) => ({
+          id: isUuid(x.id) ? x.id : crypto.randomUUID(), nome: x.nome, ativo: x.ativo ?? true,
+        })), { onConflict: "id" }
+      );
+    }
+    if (Array.isArray(legacy.transportadoras)) {
+      await supabase.from("sistema_transportadoras").upsert(
+        legacy.transportadoras.filter((x: any) => !/^t\d+$/.test(x.id)).map((x: any) => ({
+          id: isUuid(x.id) ? x.id : crypto.randomUUID(), nome: x.nome, ativo: x.ativo ?? true,
+          tipo_frete: x.tipoFrete ?? null, prazo_entrega: x.prazoEntrega ?? null,
+        })), { onConflict: "id" }
+      );
+    }
+    if (Array.isArray(legacy.origens)) {
+      await supabase.from("sistema_origens").upsert(
+        legacy.origens.filter((x: any) => !/^o\d+$/.test(x.id)).map((x: any) => ({
+          id: isUuid(x.id) ? x.id : crypto.randomUUID(), nome: x.nome, ativo: x.ativo ?? true,
+        })), { onConflict: "id" }
+      );
+    }
+    if (Array.isArray(legacy.clientes)) {
+      await supabase.from("sistema_clientes").upsert(
+        legacy.clientes.map((c: any) => ({
+          id: isUuid(c.id) ? c.id : crypto.randomUUID(), nome: c.nome, tipo: c.tipo,
+          documento: c.documento, ie: c.ie ?? null, contatos: c.contatos ?? [],
+          enderecos: c.enderecos ?? [], observacoes: c.observacoes ?? null,
+        })), { onConflict: "id" }
+      );
+    }
+    if (Array.isArray(legacy.orcamentos)) {
+      for (const o of legacy.orcamentos) {
+        await supabase.from("sistema_orcamentos").upsert({
+          id: isUuid(o.id) ? o.id : crypto.randomUUID(),
+          numero: o.numero ?? String(Date.now()),
+          cliente_id: o.clienteId || null, contato_nome: o.contatoNome ?? null,
+          contato_telefone: o.contatoTelefone ?? null, contato_email: o.contatoEmail ?? null,
+          vendedor_id: isUuid(o.vendedorId) ? o.vendedorId : null,
+          origem_id: isUuid(o.origemId) ? o.origemId : null,
+          itens: o.itens ?? [], subtotal: o.subtotal ?? 0, frete_tipo: o.freteTipo ?? null,
+          frete_valor: o.freteValor ?? 0,
+          transportadora_id: isUuid(o.transportadoraId) ? o.transportadoraId : null,
+          prazo_entrega: o.prazoEntrega ?? null,
+          pagamento_id: isUuid(o.pagamentoId) ? o.pagamentoId : null,
+          observacoes: o.observacoes ?? null, status: o.status ?? "aberto",
+          aprovado_em: o.aprovadoEm ?? null, anexo_url: o.anexoUrl ?? null,
+        }, { onConflict: "id" });
+      }
+    }
+    if (Array.isArray(legacy.pedidos)) {
+      for (const p of legacy.pedidos) {
+        await supabase.from("sistema_pedidos").upsert({
+          id: isUuid(p.id) ? p.id : crypto.randomUUID(),
+          numero: p.numero ?? `PED-${Date.now()}`,
+          orcamento_id: isUuid(p.orcamentoId) ? p.orcamentoId : null,
+          cliente_id: p.clienteId || null,
+          contato_nome: p.contatoNome ?? null, contato_telefone: p.contatoTelefone ?? null,
+          contato_email: p.contatoEmail ?? null,
+          vendedor_id: isUuid(p.vendedorId) ? p.vendedorId : null,
+          itens: p.itens ?? [], subtotal: p.subtotal ?? 0, frete_tipo: p.freteTipo ?? null,
+          frete_valor: p.freteValor ?? 0, total: p.total ?? 0,
+          transportadora_id: isUuid(p.transportadoraId) ? p.transportadoraId : null,
+          prazo_entrega: p.prazoEntrega ?? null,
+          pagamento_id: isUuid(p.pagamentoId) ? p.pagamentoId : null,
+          observacoes: p.observacoes ?? null, status: p.status ?? "novo",
+        }, { onConflict: "id" });
+      }
+    }
+  } catch (e) {
+    console.warn("migrateLegacy error", e);
+  }
+}
 
-export const calcTotal = (orcamento: Orcamento): number => {
-  return calcSubtotal(orcamento) + (orcamento.freteValor || 0);
-};
+function isUuid(v: any): boolean {
+  return typeof v === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+}
+
+// Helper functions
+export const calcSubtotal = (orcamento: Orcamento): number =>
+  orcamento.itens.reduce((sum, item) => sum + (item.precoUnitario * item.quantidade), 0);
+
+export const calcTotal = (orcamento: Orcamento): number =>
+  calcSubtotal(orcamento) + (orcamento.freteValor || 0);
 
 export const clienteDisplay = (cliente: Cliente | null | undefined): string => {
   if (!cliente) return "—";
