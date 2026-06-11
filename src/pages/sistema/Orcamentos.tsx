@@ -143,7 +143,7 @@ export default function Orcamentos() {
       if (filtroStatus !== "todos" && o.status !== filtroStatus) return false;
       if (filtroCliente) {
         const c = clientes.find(cli => cli.id === o.clienteId);
-        const nome = clienteDisplay(c).toLowerCase();
+        const nome = (clienteDisplay(c) !== "—" ? clienteDisplay(c) : (o.clienteSnapshot?.nome || "")).toLowerCase();
         if (!nome.includes(filtroCliente.toLowerCase())) return false;
       }
       if (filtroBusca) {
@@ -193,9 +193,11 @@ export default function Orcamentos() {
     gerarPDFOrcamento(o, { clientes, vendedores, meiosPagamento, transportadoras, origens }, cliente?.nome);
   };
 
-  const getClienteNome = (clienteId: string) => {
-    const c = clientes.find(cli => cli.id === clienteId);
-    return clienteDisplay(c);
+  const getClienteNome = (o: Orcamento) => {
+    const c = clientes.find(cli => cli.id === o.clienteId);
+    const nome = clienteDisplay(c);
+    if (nome !== "—") return nome;
+    return o.clienteSnapshot?.nome || "—";
   };
 
   const getVendedorNome = (vendedorId?: string) => {
@@ -273,7 +275,7 @@ export default function Orcamentos() {
               onClick={() => setExpandedId(expandedId === o.id ? null : o.id)}
             >
               <span className="font-semibold text-foreground">#{o.numero}</span>
-              <span className="text-sm truncate">{getClienteNome(o.clienteId)}</span>
+              <span className="text-sm truncate">{getClienteNome(o)}</span>
               <span className="text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleDateString("pt-BR")}</span>
               <span className={`inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full w-fit ${statusStyles[o.status].dot.replace("bg-", "bg-opacity-20 ")}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${statusStyles[o.status].dot}`} />

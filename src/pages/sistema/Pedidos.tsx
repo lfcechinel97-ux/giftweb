@@ -51,8 +51,8 @@ export default function Pedidos() {
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const getClienteNome = (clienteId: string) =>
-    clientes.find(c => c.id === clienteId)?.nome || "—";
+  const getClienteNome = (clienteId: string, snapshot?: { nome?: string }) =>
+    clientes.find(c => c.id === clienteId)?.nome || snapshot?.nome || "—";
 
   const getVendedorNome = (id?: string) =>
     vendedores.find(v => v.id === id)?.nome || "—";
@@ -66,7 +66,7 @@ export default function Pedidos() {
         if (filtroStatus !== "todos" && p.status !== filtroStatus) return false;
         if (busca.trim()) {
           const t = busca.toLowerCase();
-          const nomeCliente = getClienteNome(p.clienteId).toLowerCase();
+          const nomeCliente = getClienteNome(p.clienteId, p.clienteSnapshot).toLowerCase();
           const matchNum = p.numero.includes(t);
           const matchCliente = nomeCliente.includes(t);
           const matchItem = p.itens.some(i =>
@@ -138,7 +138,7 @@ export default function Pedidos() {
           </div>
         ) : filtered.map(p => {
           const expanded = expandedId === p.id;
-          const clienteNome = getClienteNome(p.clienteId);
+          const clienteNome = getClienteNome(p.clienteId, p.clienteSnapshot);
           const primeiroProduto = p.itens[0];
 
           return (
