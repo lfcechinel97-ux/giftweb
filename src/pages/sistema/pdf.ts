@@ -160,11 +160,16 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     | { nome: string; tipo: "PF" | "PJ"; documento?: string; ie?: string;
         endereco?: any; contato?: { nome?: string; telefone?: string; email?: string } }
     | undefined;
-  const cliente = sistema.clientes.find(c => c.id === orc.clienteId);
+  const norm = (s: string) => s.trim().toLowerCase();
+  const cliente =
+    sistema.clientes.find(c => c.id === orc.clienteId) ||
+    (snap?.nome ? sistema.clientes.find(c => norm(c.nome) === norm(snap.nome)) : undefined) ||
+    (clienteNome ? sistema.clientes.find(c => norm(c.nome) === norm(clienteNome)) : undefined);
 
   const nomeClienteFinal = snap?.nome || cliente?.nome || orc.contatoNome || clienteNome || "—";
-  const documentoFinal = snap?.documento ?? cliente?.documento ?? "";
-  const ieFinal = snap?.ie ?? cliente?.ie ?? "";
+  // Snapshot primeiro; se o snapshot não tiver documento, usa o cadastro atual do cliente
+  const documentoFinal = ((snap?.documento || "").trim() || (cliente?.documento || "")).trim();
+  const ieFinal = ((snap?.ie || "").trim() || (cliente?.ie || "")).trim();
   const docDigits = documentoFinal.replace(/\D/g, "");
   // Detecta PJ pelo tipo cadastrado/snapshot OU pelo tamanho do documento (14 dígitos = CNPJ)
   const isPJ = snap?.tipo === "PJ" || cliente?.tipo === "PJ" || docDigits.length === 14;
@@ -208,29 +213,33 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   doc.text(nomeLines.slice(0, 2), M + padX, cy);
   cy += nomeLines.length > 1 ? 22 : 13;
 
-  const docLabel = isPJ ? "CNPJ" : "CPF";
-  const docValue = documentoFinal ? formatDocumento(documentoFinal, isPJ ? "PJ" : "PF") : "—";
-  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.body);
-  doc.text(`${docLabel}: ${docValue}`, M + padX, cy);
-  cy += 11;
+  // Só mostra a linha de documento quando há documento cadastrado.
+  // PJ (ou doc de 14 dígitos) => CNPJ; PF com CPF => CPF. Nunca "CPF: —".
+  if (docDigits) {
+    const docLabel = isPJ ? "CNPJ" : "CPF";
+    const docValue = formatDocumento(documentoFinal, isPJ ? "PJ" : "PF");
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.body);
+    doc.text(`${docLabel}: ${docValue}`, M + padX, cy);
+    cy += 11;
+  }
   if (isPJ && ieFinal) {
-    doc.setFontSize(7.5); setText(doc, C.muted);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.muted);
     doc.text(`IE: ${ieFinal}`, M + padX, cy);
     cy += 10;
   }
 
   if (enderecoLinha1) {
-    doc.setFontSize(7.5); setText(doc, C.muted);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.muted);
     doc.text(doc.splitTextToSize(enderecoLinha1, colW - padX * 2).slice(0, 1), M + padX, cy);
     cy += 10;
   }
   if (enderecoLinha2) {
-    doc.setFontSize(7.5); setText(doc, C.muted);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.muted);
     doc.text(enderecoLinha2, M + padX, cy);
     cy += 10;
   }
   if (linhaContato) {
-    doc.setFontSize(7.5); setText(doc, C.muted);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.muted);
     doc.text(doc.splitTextToSize(linhaContato, colW - padX * 2).slice(0, 1), M + padX, cy);
   }
 
