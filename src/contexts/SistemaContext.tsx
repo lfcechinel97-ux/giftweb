@@ -1,6 +1,15 @@
 import React, { createContext, useContext, useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
+
+// Helper: surface DB write errors to the user (otherwise inserts fail silently and data "disappears" on reload)
+const reportDbError = (label: string) => (res: any) => {
+  if (res?.error) {
+    console.error(`[Sistema] ${label} falhou:`, res.error);
+    toast.error(`Não foi possível salvar (${label}). ${res.error.message || ""}`);
+  }
+};
 
 export const formatBRL = (valor: number | null | undefined): string => {
   if (valor == null || isNaN(valor)) return "—";
