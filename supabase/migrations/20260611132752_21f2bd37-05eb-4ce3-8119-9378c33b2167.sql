@@ -1,0 +1,3 @@
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.sistema_clientes, public.sistema_orcamentos, public.sistema_pedidos, public.sistema_vendedores, public.sistema_meios_pagamento, public.sistema_transportadoras, public.sistema_origens, public.sistema_ajustes_estoque TO authenticated;
+GRANT ALL ON public.sistema_clientes, public.sistema_orcamentos, public.sistema_pedidos, public.sistema_vendedores, public.sistema_meios_pagamento, public.sistema_transportadoras, public.sistema_origens, public.sistema_ajustes_estoque TO service_role;
+GRANT USAGE ON SEQUENCE public.sistema_pedido_seq, public.sistema_orcamento_seq TO authenticated, service_role;
