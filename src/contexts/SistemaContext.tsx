@@ -473,7 +473,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     supabase.from("sistema_clientes").insert({
       id, nome: c.nome, tipo: c.tipo, documento: c.documento, ie: c.ie ?? null,
       contatos: c.contatos as any, enderecos: c.enderecos as any, observacoes: c.observacoes ?? null,
-    }).then();
+    }).then(reportDbError("cliente"));
     return cliente;
   }, []);
 
