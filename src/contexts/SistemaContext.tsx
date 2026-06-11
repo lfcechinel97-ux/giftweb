@@ -386,7 +386,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ...prev,
       orcamentos: prev.orcamentos.map(o => o.id === id ? { ...o, ...changes, updatedAt: new Date().toISOString() } : o),
     }));
-    supabase.from("sistema_orcamentos").update(orcamentoToDb(changes)).eq("id", id).then();
+    supabase.from("sistema_orcamentos").update(orcamentoToDb(changes)).eq("id", id).then(reportDbError("orçamento"));
   }, []);
 
   const removeOrcamento = useCallback((id: string) => {
