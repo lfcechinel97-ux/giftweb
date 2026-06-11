@@ -1,33 +1,34 @@
-## Liberar acesso ao painel admin
+# Plano: Picker de categorias agrupadas no /catalogo
 
-Os dois e-mails já estão cadastrados no Cloud (você fez certo!), mas falta um passo: marcá-los como administradores na tabela `admin_users`. É isso que controla o acesso ao `/admin` e ao `/sistema`.
+Hoje a página `/catalogo` lista as 32 categorias base em uma lista plana (longa e ocupa muita tela). Vou trocar essa lista pelo mesmo padrão usado na home — agrupada por seção (Copos/Garrafas/Canecas, Mochilas/Bolsas/Malas, etc.), com cada grupo expansível para mostrar as subcategorias, e busca por nome.
 
-### O que vou fazer
+## O que muda
 
-Inserir os dois usuários na tabela `admin_users`:
-- `biancagiftweb@gmail.com` (id já existe no Cloud)
-- `leandro.giftweb@gmail.com` (id já existe no Cloud)
+1. **Criar `CatalogGroupedCategoryPicker`** (`src/components/catalog/CatalogGroupedCategoryPicker.tsx`)
+   - Baseado no `HeroCategoryPicker` da home, mas com o visual do catálogo (fundo branco, borda `#E5E7EB`, acento verde `#22C55E`, tipografia menor/densa).
+   - Usa `CATEGORY_GROUPS` (já existe em `src/config/categoryGroups.ts`) para o agrupamento.
+   - Usa `useBaseCategories()` para pegar os labels reais do banco.
+   - Botão fechado mostra a categoria atual (ou "Todas as categorias").
+   - Aberto: campo de busca + lista de grupos expansíveis. Buscando, vira lista plana de resultados.
+   - "Todas as categorias" no topo para limpar.
 
-Depois disso, eles fazem login normalmente em `/admin/login` com a senha que você definiu no Cloud.
+2. **Desktop — `CatalogFilterBar.tsx`**
+   - Substituir o dropdown atual de categorias (linhas ~94–135, lista plana) pelo novo picker agrupado.
+   - Mantém o resto da barra (preço, cor, ordenação, busca) intacto.
 
-### Senhas
+3. **Mobile — `CatalogMobileFilters.tsx`**
+   - Trocar o dropdown plano de categorias (passo "1 Categoria") pelo mesmo picker agrupado.
+   - Mantém o "stepBadge" e o restante do fluxo (preço, cor) iguais.
 
-Não consigo definir/ver senhas pelo plano — quem define é você no Cloud. Como você disse que quer usar o nome deles:
-1. Abra **Cloud → Users**
-2. Clique em cada usuário → **Reset password** (ou "Send recovery") e coloque:
-   - Bianca: senha `bianca` (ou `Bianca123` se o Cloud exigir maiúscula/número)
-   - Leandro: senha `leandro` (idem)
+4. **Sidebar desktop antigo — `CatalogSidebar.tsx`**
+   - Esse componente não está sendo renderizado em `CatalogPage` (que usa `CatalogFilterBar`), então **não vou mexer** para não criar trabalho à toa.
 
-Se o Cloud reclamar de senha fraca, use `Bianca@2026` / `Leandro@2026`.
+## Fora de escopo
 
-### Como cadastrar novos admins no futuro (passo a passo)
+- Não altero `CatalogStoryCategories` (carrossel de "stories" do desktop) — continua mostrando as 32 base como atalho visual.
+- Não altero `HeroCategoryPicker` nem o agrupamento da home.
+- Sem mudanças em backend, filtros, ordenação ou produtos.
 
-1. **Cloud → Users → Add user** → preencha e-mail e senha → Create.
-2. Me peça aqui: *"adiciona fulano@email.com como admin"* — eu rodo o insert na `admin_users`.
-3. A pessoa entra em `seusite.com/admin/login`.
+## Resultado esperado
 
-> Apenas criar o usuário no Cloud **não** dá acesso ao painel — o `AdminGuard` checa se o id está em `admin_users`. Por isso parecia que "não deu certo".
-
-### (Opcional) Página de gestão de admins
-
-Se quiser, depois posso criar uma tela em `/admin` com lista + botão "Adicionar admin" para você não precisar mais me pedir. Me avise se quer que eu inclua isso.
+No `/catalogo`, tanto no desktop quanto no mobile, o seletor de categoria abre em grupos colapsados (ex.: "Copos, Garrafas e Canecas (4)") e o usuário expande só o grupo que interessa — ocupando muito menos espaço vertical, igual à referência da home enviada na imagem.

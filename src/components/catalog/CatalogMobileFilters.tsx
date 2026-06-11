@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { Search } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
-import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { CATALOG_SWATCH_COLORS } from "@/components/catalog/catalogSwatchColors";
+import CatalogGroupedCategoryPicker from "@/components/catalog/CatalogGroupedCategoryPicker";
 
 interface Filters {
   search: string;
@@ -34,8 +33,6 @@ const QUICK_PRICES = [
 ];
 
 const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogMobileFiltersProps) => {
-  const { data: categories = [] } = useBaseCategories();
-  const [catOpen, setCatOpen] = useState(false);
 
   const handleQuickPrice = (min: number, max: number) => {
     if (filters.precoMin === min && filters.precoMax === max) {
@@ -90,39 +87,10 @@ const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogM
           {stepBadge("1")}
           <span className="text-xs font-semibold text-[#0F172A]">Categoria</span>
         </div>
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setCatOpen(!catOpen)}
-            className={`w-full px-3 py-2 rounded-lg bg-white border text-left text-sm flex items-center justify-between transition-colors ${
-              filters.categoria ? "border-[#22C55E] text-[#0F172A]" : "border-[#E5E7EB] text-[#94A3B8]"
-            }`}
-          >
-            <span>{filters.categoria ? categories.find(c => c.slug === filters.categoria)?.label || filters.categoria : "Todas as categorias"}</span>
-            <svg className={`w-4 h-4 transition-transform ${catOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-          </button>
-          {catOpen && (
-            <div className="absolute z-20 mt-1 w-full bg-white border border-[#E5E7EB] rounded-lg shadow-lg max-h-52 overflow-y-auto">
-              <button
-                type="button"
-                onClick={() => { onChange({ categoria: null }); setCatOpen(false); }}
-                className={`w-full text-left px-3 py-2 text-sm hover:bg-[#F1F5F9] transition-colors ${!filters.categoria ? "text-[#22C55E] font-semibold" : "text-[#0F172A]"}`}
-              >
-                Todas as categorias
-              </button>
-              {categories.map(cat => (
-                <button
-                  key={cat.slug}
-                  type="button"
-                  onClick={() => { onChange({ categoria: cat.slug }); setCatOpen(false); }}
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-[#F1F5F9] transition-colors ${filters.categoria === cat.slug ? "text-[#22C55E] font-semibold" : "text-[#0F172A]"}`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <CatalogGroupedCategoryPicker
+          value={filters.categoria}
+          onChange={(slug) => onChange({ categoria: slug })}
+        />
       </div>
 
       {/* Price */}

@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { Search, X, ChevronDown } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { formatarBRL } from "@/utils/price";
 import { CATALOG_SWATCH_COLORS } from "@/components/catalog/catalogSwatchColors";
+import CatalogGroupedCategoryPicker from "@/components/catalog/CatalogGroupedCategoryPicker";
 
 interface Filters {
   search: string;
@@ -43,7 +43,6 @@ const QUICK_PRICES = [
 
 const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalProducts }: CatalogFilterBarProps) => {
   const { data: categories = [] } = useBaseCategories();
-  const [showCategories, setShowCategories] = useState(false);
 
   const hasFilters = !!(
     filters.search ||
@@ -95,43 +94,13 @@ const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalPr
           </div>
           <div className="flex gap-3">
             <div className="relative flex-[2] min-w-0">
-              <button
-                onClick={() => setShowCategories(!showCategories)}
-                className={`w-full flex items-center justify-between gap-1.5 px-3 py-2 rounded-lg border text-sm transition-colors ${
-                  filters.categoria
-                    ? "border-[#22C55E] text-[#22C55E] bg-[#22C55E]/5"
-                    : "border-[#E5E7EB] text-[#64748B] hover:text-[#0F172A] bg-white"
-                }`}
-              >
-                <span className="truncate">{activeCategory?.label || "Categoria"}</span>
-                <ChevronDown className="w-3.5 h-3.5 flex-shrink-0" />
-              </button>
-              {showCategories && (
-                <div className="absolute top-full left-0 mt-1 w-full max-h-64 overflow-y-auto rounded-lg bg-white border border-[#E5E7EB] shadow-lg z-30 py-1">
-                  <button
-                    onClick={() => { onChange({ categoria: null }); setShowCategories(false); }}
-                    className={`w-full text-left px-3 py-1.5 text-sm transition-colors ${
-                      !filters.categoria ? "text-[#22C55E] font-medium bg-[#22C55E]/5" : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]"
-                    }`}
-                  >
-                    Todas
-                  </button>
-                  {categories.map(cat => (
-                    <button
-                      key={cat.slug}
-                      onClick={() => { onChange({ categoria: cat.slug }); setShowCategories(false); }}
-                      className={`w-full text-left px-3 py-1.5 text-sm transition-colors ${
-                        filters.categoria === cat.slug
-                          ? "text-[#22C55E] font-medium bg-[#22C55E]/5"
-                          : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]"
-                      }`}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <CatalogGroupedCategoryPicker
+                value={filters.categoria}
+                onChange={(slug) => onChange({ categoria: slug })}
+              />
             </div>
+
+
 
             <div className="relative flex-[3] min-w-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94A3B8]" />
