@@ -538,7 +538,7 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   // ── RODAPÉ DE TODAS AS PÁGINAS ───────────────────────────────────────────
   drawFooterPagina(doc);
 
-  const nomeClienteLimpo = (clienteNome || cliente?.nome || "Cliente")
+  const nomeClienteLimpo = (clienteNome || snap?.nome || cliente?.nome || "Cliente")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-zA-Z0-9\s]/g, "")
     .trim()
