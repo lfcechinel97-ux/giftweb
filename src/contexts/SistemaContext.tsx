@@ -285,6 +285,7 @@ const pedidoToDb = (p: Partial<Pedido>): any => {
   if (p.numero !== undefined) out.numero = p.numero;
   if (p.orcamentoId !== undefined) out.orcamento_id = p.orcamentoId ?? null;
   if (p.clienteId !== undefined) out.cliente_id = p.clienteId || null;
+  if (p.clienteSnapshot !== undefined) out.cliente_snapshot = p.clienteSnapshot as any;
   if (p.contatoNome !== undefined) out.contato_nome = p.contatoNome ?? null;
   if (p.contatoTelefone !== undefined) out.contato_telefone = p.contatoTelefone ?? null;
   if (p.contatoEmail !== undefined) out.contato_email = p.contatoEmail ?? null;
