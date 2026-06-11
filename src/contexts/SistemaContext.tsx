@@ -376,7 +376,8 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const now = new Date().toISOString();
     const orcamento: Orcamento = { ...o, id, numero, createdAt: now, updatedAt: now };
     setData(prev => ({ ...prev, orcamentos: [orcamento, ...prev.orcamentos] }));
-    await supabase.from("sistema_orcamentos").insert({ ...orcamentoToDb(orcamento), created_at: now });
+    const res = await supabase.from("sistema_orcamentos").insert({ ...orcamentoToDb(orcamento), created_at: now });
+    reportDbError("orçamento")(res);
     return orcamento;
   }, []);
 
