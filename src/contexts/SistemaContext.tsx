@@ -371,7 +371,14 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
+      // Só carrega/migra dados com sessão autenticada — sem sessão, RLS devolve
+      // listas vazias e gravações falham (causa do "sumiço" dos orçamentos).
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (!session) { setLoading(false); return; }
+
       // One-time migration from legacy localStorage
       if (!migratedRef.current) {
         migratedRef.current = true;
@@ -386,6 +393,16 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       await loadAll();
     })();
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        setTimeout(() => { loadAll(); }, 0);
+      }
+      if (event === "SIGNED_OUT") {
+        setData(emptyData);
+      }
+    });
+    return () => { cancelled = true; sub.subscription.unsubscribe(); };
   }, [loadAll]);
 
   // ---------- Orcamentos ----------
@@ -396,8 +413,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const now = new Date().toISOString();
     const orcamento: Orcamento = { ...o, id, numero, createdAt: now, updatedAt: now };
     setData(prev => ({ ...prev, orcamentos: [orcamento, ...prev.orcamentos] }));
-    const res = await supabase.from("sistema_orcamentos").insert({ ...orcamentoToDb(orcamento), created_at: now });
-    reportDbError("orçamento")(res);
+    await dbWrite("orçamento", () => supabase.from("sistema_orcamentos").insert({ ...orcamentoToDb(orcamento), created_at: now }));
     return orcamento;
   }, []);
 
@@ -406,12 +422,12 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ...prev,
       orcamentos: prev.orcamentos.map(o => o.id === id ? { ...o, ...changes, updatedAt: new Date().toISOString() } : o),
     }));
-    supabase.from("sistema_orcamentos").update(orcamentoToDb(changes)).eq("id", id).then(reportDbError("orçamento"));
+    dbWrite("orçamento", () => supabase.from("sistema_orcamentos").update(orcamentoToDb(changes)).eq("id", id));
   }, []);
 
   const removeOrcamento = useCallback((id: string) => {
     setData(prev => ({ ...prev, orcamentos: prev.orcamentos.filter(o => o.id !== id) }));
-    supabase.from("sistema_orcamentos").delete().eq("id", id).then();
+    dbWrite("excluir orçamento", () => supabase.from("sistema_orcamentos").delete().eq("id", id));
   }, []);
 
   const gerarNumeroOrcamento = useCallback(() => {
