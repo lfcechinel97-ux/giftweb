@@ -1,26 +1,33 @@
-# Corrigir CPF no PDF + orçamentos sumindo
+## Liberar acesso ao painel admin
 
-## Diagnóstico (já feito)
+Os dois e-mails já estão cadastrados no Cloud (você fez certo!), mas falta um passo: marcá-los como administradores na tabela `admin_users`. É isso que controla o acesso ao `/admin` e ao `/sistema`.
 
-1. **Banco vazio**: as tabelas de clientes e orçamentos têm 0 registros. Tudo que você criou até agora ficou apenas na memória do navegador — por isso some ao atualizar a página. As permissões do banco foram corrigidas na última migração, mas as gravações ainda falham quando a sessão de login não está ativa na aba (detectei requisições saindo sem autenticação).
-2. **"CPF: —" no PDF**: como o orçamento não tem documento salvo, o PDF usa "CPF" como rótulo padrão. O CNPJ nunca chegou a ser gravado no banco.
+### O que vou fazer
 
-## O que será feito
+Inserir os dois usuários na tabela `admin_users`:
+- `biancagiftweb@gmail.com` (id já existe no Cloud)
+- `leandro.giftweb@gmail.com` (id já existe no Cloud)
 
-### 1. PDF do orçamento (`src/pages/sistema/pdf.ts`)
-- **Nunca mais mostrar "CPF: —"**: se não houver documento cadastrado, a linha some por completo.
-- Se o cliente for PJ (ou o documento tiver 14 dígitos), mostra **CNPJ** formatado.
-- Se for PF com CPF cadastrado, mostra CPF.
-- Se o snapshot do orçamento não tiver documento, busca o cadastro atual do cliente (por id e, como reserva, pelo nome) antes de desistir.
+Depois disso, eles fazem login normalmente em `/admin/login` com a senha que você definiu no Cloud.
 
-### 2. Parar a perda de dados (`src/contexts/SistemaContext.tsx`)
-- **Bloquear gravações sem login**: antes de qualquer salvamento, verificar a sessão. Se expirou, mostrar aviso claro "Sessão expirada — faça login novamente" e redirecionar, em vez de falhar em silêncio.
-- Só carregar/salvar dados do sistema quando houver sessão autenticada (hoje o app tenta carregar mesmo deslogado e recebe listas vazias).
-- Adicionar aviso de erro em TODAS as gravações que hoje falham caladas (exclusões, clientes, vendedores, etc.).
+### Senhas
 
-### 3. Verificação
-- Criar cliente PJ de teste com CNPJ e endereço, criar orçamento, atualizar a página e confirmar que os dados permanecem (conferindo direto no banco).
-- Gerar o PDF e confirmar que aparece apenas CNPJ + endereço.
+Não consigo definir/ver senhas pelo plano — quem define é você no Cloud. Como você disse que quer usar o nome deles:
+1. Abra **Cloud → Users**
+2. Clique em cada usuário → **Reset password** (ou "Send recovery") e coloque:
+   - Bianca: senha `bianca` (ou `Bianca123` se o Cloud exigir maiúscula/número)
+   - Leandro: senha `leandro` (idem)
 
-## Importante
-Os orçamentos e clientes antigos não podem ser recuperados — nunca chegaram a ser gravados. Após a correção, será preciso recadastrar o cliente CURY VENDAS com o CNPJ e refazer o orçamento uma única vez; daí em diante tudo persiste.
+Se o Cloud reclamar de senha fraca, use `Bianca@2026` / `Leandro@2026`.
+
+### Como cadastrar novos admins no futuro (passo a passo)
+
+1. **Cloud → Users → Add user** → preencha e-mail e senha → Create.
+2. Me peça aqui: *"adiciona fulano@email.com como admin"* — eu rodo o insert na `admin_users`.
+3. A pessoa entra em `seusite.com/admin/login`.
+
+> Apenas criar o usuário no Cloud **não** dá acesso ao painel — o `AdminGuard` checa se o id está em `admin_users`. Por isso parecia que "não deu certo".
+
+### (Opcional) Página de gestão de admins
+
+Se quiser, depois posso criar uma tela em `/admin` com lista + botão "Adicionar admin" para você não precisar mais me pedir. Me avise se quer que eu inclua isso.
