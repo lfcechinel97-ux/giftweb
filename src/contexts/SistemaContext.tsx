@@ -268,7 +268,9 @@ const orcamentoToDb = (o: Partial<Orcamento>): any => {
 };
 const mapPedido = (r: any): Pedido => ({
   id: r.id, numero: r.numero, orcamentoId: r.orcamento_id ?? "",
-  clienteId: r.cliente_id ?? "", contatoNome: r.contato_nome ?? undefined,
+  clienteId: r.cliente_id ?? "",
+  clienteSnapshot: r.cliente_snapshot ?? undefined,
+  contatoNome: r.contato_nome ?? undefined,
   contatoTelefone: r.contato_telefone ?? undefined, contatoEmail: r.contato_email ?? undefined,
   vendedorId: r.vendedor_id ?? undefined, itens: r.itens ?? [],
   subtotal: Number(r.subtotal ?? 0), freteTipo: r.frete_tipo ?? null,
