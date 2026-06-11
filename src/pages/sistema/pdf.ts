@@ -204,19 +204,18 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   cy += 13;
 
   doc.setFont("helvetica", "bold"); doc.setFontSize(12); setText(doc, C.ink);
-  const nomeCliente = cliente?.nome || orc.contatoNome || clienteNome || "—";
-  const nomeLines = doc.splitTextToSize(nomeCliente, colW - padX * 2);
+  const nomeLines = doc.splitTextToSize(nomeClienteFinal, colW - padX * 2);
   doc.text(nomeLines.slice(0, 2), M + padX, cy);
   cy += nomeLines.length > 1 ? 22 : 13;
 
   const docLabel = isPJ ? "CNPJ" : "CPF";
-  const docValue = cliente?.documento ? formatDocumento(cliente.documento, isPJ ? "PJ" : "PF") : "—";
+  const docValue = documentoFinal ? formatDocumento(documentoFinal, isPJ ? "PJ" : "PF") : "—";
   doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); setText(doc, C.body);
   doc.text(`${docLabel}: ${docValue}`, M + padX, cy);
   cy += 11;
-  if (isPJ && cliente?.ie) {
+  if (isPJ && ieFinal) {
     doc.setFontSize(7.5); setText(doc, C.muted);
-    doc.text(`IE: ${cliente.ie}`, M + padX, cy);
+    doc.text(`IE: ${ieFinal}`, M + padX, cy);
     cy += 10;
   }
 
