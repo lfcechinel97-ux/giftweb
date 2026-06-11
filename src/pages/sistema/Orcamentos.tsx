@@ -176,8 +176,9 @@ export default function Orcamentos() {
         return { ...it, quantidade: sel.quantidade };
       });
     const orcModificado = { ...orc, itens: itensAprovados };
-    const p = aprovarOrcamento(orcModificado.id);
-    if (p) toast.success(`Orçamento aprovado! Pedido #${p.numero} criado.`);
+    aprovarOrcamento(orcModificado.id).then((p) => {
+      if (p) toast.success(`Orçamento aprovado! Pedido #${p.numero} criado.`);
+    });
     setAprovarOrc(null);
   };
 

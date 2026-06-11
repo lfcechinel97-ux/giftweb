@@ -196,7 +196,7 @@ export const OrcamentoForm: React.FC = () => {
       if (orc) gerarPDFOrcamento({ ...orc, ...orcData }, sis, clienteSelecionado?.nome);
       navigate("/sistema/orcamentos");
     } else {
-      const novo = addOrcamento(orcData);
+      const novo = await addOrcamento(orcData);
       gerarPDFOrcamento(novo, sis, clienteSelecionado?.nome);
       navigate("/sistema/orcamentos");
     }
