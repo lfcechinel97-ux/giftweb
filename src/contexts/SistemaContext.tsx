@@ -246,6 +246,7 @@ const orcamentoToDb = (o: Partial<Orcamento>): any => {
   if (o.id !== undefined) out.id = o.id;
   if (o.numero !== undefined) out.numero = o.numero;
   if (o.clienteId !== undefined) out.cliente_id = o.clienteId || null;
+  if (o.clienteSnapshot !== undefined) out.cliente_snapshot = o.clienteSnapshot as any;
   if (o.contatoNome !== undefined) out.contato_nome = o.contatoNome ?? null;
   if (o.contatoTelefone !== undefined) out.contato_telefone = o.contatoTelefone ?? null;
   if (o.contatoEmail !== undefined) out.contato_email = o.contatoEmail ?? null;
