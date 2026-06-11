@@ -481,12 +481,12 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }));
 
     await Promise.all([
-      supabase.from("sistema_pedidos").insert({ ...pedidoToDb(pedido), created_at: now }),
-      supabase.from("sistema_orcamentos").update({ status: "aprovado", aprovado_em: now, updated_at: now }).eq("id", id),
-      supabase.from("sistema_ajustes_estoque").insert(reservas.map(r => ({
+      dbWrite("pedido", () => supabase.from("sistema_pedidos").insert({ ...pedidoToDb(pedido), created_at: now })),
+      dbWrite("orçamento", () => supabase.from("sistema_orcamentos").update({ status: "aprovado", aprovado_em: now, updated_at: now }).eq("id", id)),
+      dbWrite("reserva de estoque", () => supabase.from("sistema_ajustes_estoque").insert(reservas.map(r => ({
         id: r.id, produto_id: r.produtoId, codigo_composto: r.codigoComposto, variante_slug: r.varianteSlug,
         tipo: r.tipo, quantidade: r.quantidade, motivo: r.motivo, orcamento_id: r.orcamentoId, pedido_id: r.pedidoId,
-      }))),
+      })))),
     ]);
 
     return pedido;
@@ -497,7 +497,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ...prev,
       pedidos: prev.pedidos.map(p => p.id === id ? { ...p, ...changes, updatedAt: new Date().toISOString() } : p),
     }));
-    supabase.from("sistema_pedidos").update(pedidoToDb(changes)).eq("id", id).then();
+    dbWrite("pedido", () => supabase.from("sistema_pedidos").update(pedidoToDb(changes)).eq("id", id));
   }, []);
 
   // ---------- Clientes ----------
@@ -506,10 +506,10 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const now = new Date().toISOString();
     const cliente: Cliente = { ...c, id, createdAt: now, updatedAt: now };
     setData(prev => ({ ...prev, clientes: [...prev.clientes, cliente] }));
-    supabase.from("sistema_clientes").insert({
+    dbWrite("cliente", () => supabase.from("sistema_clientes").insert({
       id, nome: c.nome, tipo: c.tipo, documento: c.documento, ie: c.ie ?? null,
       contatos: c.contatos as any, enderecos: c.enderecos as any, observacoes: c.observacoes ?? null,
-    }).then(reportDbError("cliente"));
+    }));
     return cliente;
   }, []);
 
@@ -526,12 +526,12 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (changes.contatos !== undefined) dbc.contatos = changes.contatos as any;
     if (changes.enderecos !== undefined) dbc.enderecos = changes.enderecos as any;
     if (changes.observacoes !== undefined) dbc.observacoes = changes.observacoes ?? null;
-    supabase.from("sistema_clientes").update(dbc).eq("id", id).then(reportDbError("cliente"));
+    dbWrite("cliente", () => supabase.from("sistema_clientes").update(dbc).eq("id", id));
   }, []);
 
   const removeCliente = useCallback((id: string) => {
     setData(prev => ({ ...prev, clientes: prev.clientes.filter(c => c.id !== id) }));
-    supabase.from("sistema_clientes").delete().eq("id", id).then();
+    dbWrite("excluir cliente", () => supabase.from("sistema_clientes").delete().eq("id", id));
   }, []);
 
   // ---------- Generic lookup helpers ----------
@@ -541,7 +541,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   ): LookupItem => {
     const item: LookupItem = { id: crypto.randomUUID(), nome, ativo: true };
     setData(prev => ({ ...prev, [key]: [...(prev[key] as any), item] } as any));
-    supabase.from(table).insert({ id: item.id, nome, ativo: true }).then(reportDbError(`cadastro (${table})`));
+    dbWrite("cadastro", () => supabase.from(table).insert({ id: item.id, nome, ativo: true }));
     return item;
   }, []);
 
@@ -550,7 +550,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     id: string, nome: string,
   ) => {
     setData(prev => ({ ...prev, [key]: (prev[key] as any[]).map(x => x.id === id ? { ...x, nome } : x) } as any));
-    supabase.from(table).update({ nome, updated_at: new Date().toISOString() }).eq("id", id).then();
+    dbWrite("cadastro", () => supabase.from(table).update({ nome, updated_at: new Date().toISOString() }).eq("id", id));
   }, []);
 
   const removeLookup = useCallback((
@@ -558,7 +558,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     id: string,
   ) => {
     setData(prev => ({ ...prev, [key]: (prev[key] as any[]).filter(x => x.id !== id) } as any));
-    supabase.from(table).delete().eq("id", id).then();
+    dbWrite("excluir cadastro", () => supabase.from(table).delete().eq("id", id));
   }, []);
 
   const toggleLookupAtivo = useCallback((
@@ -575,7 +575,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
     // Need correct value - use a small delay through promise
     setTimeout(() => {
-      supabase.from(table).update({ ativo: novoAtivo, updated_at: new Date().toISOString() }).eq("id", id).then();
+      dbWrite("cadastro", () => supabase.from(table).update({ ativo: novoAtivo, updated_at: new Date().toISOString() }).eq("id", id));
     }, 0);
   }, []);
 
@@ -598,9 +598,9 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addTransportadora = useCallback((nome: string, tipoFrete?: "CIF" | "FOB", prazoEntrega?: number): Transportadora => {
     const item: Transportadora = { id: crypto.randomUUID(), nome, ativo: true, tipoFrete, prazoEntrega };
     setData(prev => ({ ...prev, transportadoras: [...prev.transportadoras, item] }));
-    supabase.from("sistema_transportadoras").insert({
+    dbWrite("transportadora", () => supabase.from("sistema_transportadoras").insert({
       id: item.id, nome, ativo: true, tipo_frete: tipoFrete ?? null, prazo_entrega: prazoEntrega ?? null,
-    }).then(reportDbError("transportadora"));
+    }));
     return item;
   }, []);
 
@@ -609,9 +609,9 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ...prev,
       transportadoras: prev.transportadoras.map(t => t.id === id ? { ...t, nome, tipoFrete, prazoEntrega } : t),
     }));
-    supabase.from("sistema_transportadoras").update({
+    dbWrite("transportadora", () => supabase.from("sistema_transportadoras").update({
       nome, tipo_frete: tipoFrete ?? null, prazo_entrega: prazoEntrega ?? null, updated_at: new Date().toISOString(),
-    }).eq("id", id).then(reportDbError("transportadora"));
+    }).eq("id", id));
   }, []);
 
   const removeTransportadora = useCallback((id: string) => removeLookup("transportadoras", "sistema_transportadoras", id), [removeLookup]);
