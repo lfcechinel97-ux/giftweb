@@ -490,7 +490,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (changes.contatos !== undefined) dbc.contatos = changes.contatos as any;
     if (changes.enderecos !== undefined) dbc.enderecos = changes.enderecos as any;
     if (changes.observacoes !== undefined) dbc.observacoes = changes.observacoes ?? null;
-    supabase.from("sistema_clientes").update(dbc).eq("id", id).then();
+    supabase.from("sistema_clientes").update(dbc).eq("id", id).then(reportDbError("cliente"));
   }, []);
 
   const removeCliente = useCallback((id: string) => {
