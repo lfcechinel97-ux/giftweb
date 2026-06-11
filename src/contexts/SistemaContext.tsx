@@ -505,7 +505,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   ): LookupItem => {
     const item: LookupItem = { id: crypto.randomUUID(), nome, ativo: true };
     setData(prev => ({ ...prev, [key]: [...(prev[key] as any), item] } as any));
-    supabase.from(table).insert({ id: item.id, nome, ativo: true }).then();
+    supabase.from(table).insert({ id: item.id, nome, ativo: true }).then(reportDbError(`cadastro (${table})`));
     return item;
   }, []);
 
