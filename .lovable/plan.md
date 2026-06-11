@@ -1,35 +1,29 @@
 ## Diagnóstico
 
-Pela imagem o PDF mostra "CPF: —" para a EASY IMPORTS (que é PJ). Combinando isso com o sintoma anterior ("toda vez que cadastro vendedor / cliente / etc, depois some"), o problema é o mesmo:
+Verifiquei o banco e encontrei a causa raiz de tudo (CPF no PDF + cadastros que somem):
 
-1. **O banco está vazio.** Consultei `sistema_clientes` e `sistema_orcamentos` e ambos têm 0 registros, embora você esteja cadastrando clientes e gerando orçamentos. Significa que os `insert` no Supabase estão falhando silenciosamente (os `.then()` ignoram erros). Sem `cliente` no banco, ao recarregar a página o contexto carrega lista vazia.
-2. **O PDF depende da busca do cliente em memória.** Quando o cliente não é encontrado, o PDF mostra `CPF: —` e sem endereço, mesmo que o cadastro original tivesse CNPJ e endereço completos. Foi isso que aconteceu no orçamento da EASY IMPORTS.
+- As 8 tabelas do sistema (`sistema_clientes`, `sistema_orcamentos`, `sistema_pedidos`, `sistema_vendedores`, `sistema_meios_pagamento`, `sistema_transportadoras`, `sistema_origens`, `sistema_ajustes_estoque`) têm políticas de acesso corretas (admin), **mas nenhuma permissão de acesso à API para usuários logados**. Isso provavelmente foi efeito colateral da correção de segurança anterior.
+- Consequência: **todo salvamento falha** com erro de permissão. Cliente, vendedor, meio de pagamento e orçamento nunca chegam ao banco — por isso somem ao recarregar a página.
+- O PDF mostra "CPF: —" porque o cadastro do cliente (com CNPJ e endereço) nunca foi salvo; na hora de gerar o PDF não há documento nenhum, e sem documento o sistema não consegue identificar que é CNPJ.
+
+A lógica do PDF (CNPJ vs CPF, endereço, IE, snapshot) já está correta — ela só não tem dados para mostrar.
 
 ## O que vou fazer
 
-### 1. Gravar um "snapshot" do cliente no próprio orçamento
-Adicionar a coluna `cliente_snapshot` (JSONB) em `sistema_orcamentos`, contendo no momento do save:
-- `nome`, `tipo` (PJ/PF), `documento`, `ie`
-- `endereco` (logradouro, número, complemento, bairro, cidade, UF, CEP)
-- `contato` (nome, telefone, e-mail)
+### 1. Restaurar as permissões das tabelas do sistema (migração)
+Conceder acesso de leitura/escrita para usuários autenticados (as políticas de admin continuam controlando quem pode de fato acessar) e acesso total para o serviço interno, nas 8 tabelas `sistema_*`.
 
-O PDF passa a ler primeiro do snapshot e só usa a busca em memória como fallback. Vantagem: o orçamento mantém os dados corretos para sempre, mesmo se o cadastro do cliente for editado, removido ou ainda não tiver sincronizado.
+### 2. Verificar
+Após a migração, testar um insert como usuário autenticado e confirmar que os dados persistem.
 
-### 2. Corrigir o rótulo CNPJ/CPF e exibir endereço completo
-- Rótulo escolhido só por `tipo` ou pelo nº de dígitos do documento (14 = CNPJ).
-- Bloco do cliente no PDF mostra: CNPJ/CPF formatado, IE (quando PJ), endereço em até 2 linhas com CEP, e contato.
-- Quando o documento estiver realmente em branco, o rótulo continua sendo o correto (CNPJ para PJ) e o valor fica vazio em vez de "—".
+## Resultado esperado
+- Clientes, vendedores, meios de pagamento e orçamentos passam a ser salvos de verdade.
+- Ao recadastrar o cliente CURY VENDAS com o CNPJ, o PDF mostrará "CNPJ: XX.XXX.XXX/XXXX-XX" com endereço e IE.
+- Os cadastros antigos não podem ser recuperados (nunca foram gravados) — será preciso recadastrar.
 
-### 3. Surface dos erros de gravação
-- Adicionar `console.error` + `toast.error("Não foi possível salvar no banco…")` em `addCliente`, `updateCliente`, `addVendedor`, `addMeioPagamento`, `addTransportadora`, `addOrigem`, `addOrcamento`, `updateOrcamento`, `aprovarOrcamento`.
-- Isso torna visível qualquer falha de RLS/permissão (é o motivo de "sumir" os cadastros).
-- Depois que você reproduzir e me mandar a mensagem do toast, eu corrijo a causa raiz (provavelmente quem está logado não está em `admin_users`, ou a sessão Supabase não está chegando até o cliente no momento do `insert`).
-
-### Arquivos afetados
-- Migração nova: `ALTER TABLE sistema_orcamentos ADD COLUMN cliente_snapshot JSONB`.
-- `src/contexts/SistemaContext.tsx` — escrever/ler `cliente_snapshot`, surface de erros.
-- `src/pages/sistema/OrcamentoForm.tsx` — montar e enviar o snapshot ao salvar.
-- `src/pages/sistema/pdf.ts` — usar o snapshot como fonte primária.
-
-### Fora do escopo deste passo
-- Re-popular orçamentos antigos com snapshot (não há como recuperar dados que nunca foram salvos no banco). Orçamentos novos passam a sair corretos.
+## Detalhes técnicos
+```sql
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.sistema_clientes, public.sistema_orcamentos, public.sistema_pedidos, public.sistema_vendedores, public.sistema_meios_pagamento, public.sistema_transportadoras, public.sistema_origens, public.sistema_ajustes_estoque TO authenticated;
+GRANT ALL ON (mesmas tabelas) TO service_role;
+```
+Nenhuma alteração de código é necessária — apenas a migração.
