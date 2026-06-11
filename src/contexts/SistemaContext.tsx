@@ -11,6 +11,26 @@ const reportDbError = (label: string) => (res: any) => {
   }
 };
 
+// Helper: every DB write goes through here — blocks writes without an authenticated
+// session (RLS would silently reject them) and always surfaces errors.
+const dbWrite = async (label: string, fn: () => PromiseLike<any>): Promise<any> => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.error(`[Sistema] ${label}: gravação bloqueada — sem sessão autenticada`);
+      toast.error(`Não foi possível salvar (${label}): sessão expirada. Faça login novamente em /admin/login.`);
+      return { error: { message: "Sessão expirada" } };
+    }
+    const res: any = await fn();
+    reportDbError(label)(res);
+    return res;
+  } catch (e: any) {
+    console.error(`[Sistema] ${label} falhou:`, e);
+    toast.error(`Não foi possível salvar (${label}). ${e?.message || ""}`);
+    return { error: e };
+  }
+};
+
 export const formatBRL = (valor: number | null | undefined): string => {
   if (valor == null || isNaN(valor)) return "—";
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor);
