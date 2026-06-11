@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { Search, X, ChevronDown } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useBaseCategories } from "@/hooks/useBaseCategories";
 import { formatarBRL } from "@/utils/price";
 import { CATALOG_SWATCH_COLORS } from "@/components/catalog/catalogSwatchColors";
+import CatalogGroupedCategoryPicker from "@/components/catalog/CatalogGroupedCategoryPicker";
 
 interface Filters {
   search: string;
