@@ -129,6 +129,7 @@ export interface Pedido {
   numero: string;
   orcamentoId: string;
   clienteId: string;
+  clienteSnapshot?: ClienteSnapshot;
   contatoNome?: string;
   contatoTelefone?: string;
   contatoEmail?: string;
