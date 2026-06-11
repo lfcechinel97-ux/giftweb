@@ -43,7 +43,6 @@ const QUICK_PRICES = [
 
 const CatalogFilterBar = ({ filters, onChange, onClear, cores, maxPreco, totalProducts }: CatalogFilterBarProps) => {
   const { data: categories = [] } = useBaseCategories();
-  const [showCategories, setShowCategories] = useState(false);
 
   const hasFilters = !!(
     filters.search ||
