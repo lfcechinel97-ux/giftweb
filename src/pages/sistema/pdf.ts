@@ -228,19 +228,24 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     cy += 10;
   }
 
+  const maxTextW = colW - padX * 2;
   if (enderecoLinha1) {
     doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.muted);
-    doc.text(doc.splitTextToSize(enderecoLinha1, colW - padX * 2).slice(0, 1), M + padX, cy);
-    cy += 10;
+    const lines = doc.splitTextToSize(enderecoLinha1, maxTextW).slice(0, 2);
+    doc.text(lines, M + padX, cy);
+    cy += 10 * lines.length;
   }
   if (enderecoLinha2) {
     doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.muted);
-    doc.text(enderecoLinha2, M + padX, cy);
-    cy += 10;
+    const lines = doc.splitTextToSize(enderecoLinha2, maxTextW).slice(0, 2);
+    doc.text(lines, M + padX, cy);
+    cy += 10 * lines.length;
   }
   if (linhaContato) {
     doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); setText(doc, C.muted);
-    doc.text(doc.splitTextToSize(linhaContato, colW - padX * 2).slice(0, 1), M + padX, cy);
+    const lines = doc.splitTextToSize(linhaContato, maxTextW).slice(0, 2);
+    doc.text(lines, M + padX, cy);
+    cy += 10 * lines.length;
   }
 
   // Divisor vertical interno
