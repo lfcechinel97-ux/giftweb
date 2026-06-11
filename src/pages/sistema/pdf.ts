@@ -176,7 +176,7 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   const vendedorNome = lookupName(sistema.vendedores, orc.vendedorId);
 
   // Card cliente — altura compactada
-  const cardClienteH = 118;
+  const cardClienteH = 132;
 
   setFill(doc, C.white);
   setDraw(doc, C.line); doc.setLineWidth(0.8);
