@@ -78,10 +78,20 @@ export interface QuoteItem {
 
 export type OrcamentoStatus = "aberto" | "aprovado" | "cancelado";
 
+export interface ClienteSnapshot {
+  nome: string;
+  tipo: TipoPessoa;
+  documento: string;
+  ie?: string;
+  endereco?: Endereco;
+  contato?: { nome?: string; telefone?: string; email?: string };
+}
+
 export interface Orcamento {
   id: string;
   numero: string;
   clienteId: string;
+  clienteSnapshot?: ClienteSnapshot;
   contatoNome?: string;
   contatoTelefone?: string;
   contatoEmail?: string;
