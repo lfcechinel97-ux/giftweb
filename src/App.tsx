@@ -113,7 +113,7 @@ const App = () => (
               <Route path="/politica-de-privacidade-whatsapp" element={<WhatsAppPrivacyPage />} />
               <Route path="/termos-de-servico-whatsapp" element={<WhatsAppTermsPage />} />
               <Route path="/exclusao-de-dados" element={<DataDeletionPage />} />
-              <Route path="/sistema" element={<SistemaLayout />}>
+              <Route path="/sistema" element={<AdminGuard><SistemaLayout /></AdminGuard>}>
                 <Route index element={<SistemaOrcamentos />} />
                 <Route path="orcamentos" element={<SistemaOrcamentos />} />
                 <Route path="orcamentos/novo" element={<SistemaOrcamentoForm />} />
