@@ -33,8 +33,6 @@ const QUICK_PRICES = [
 ];
 
 const CatalogMobileFilters = ({ filters, onChange, onClear, maxPreco }: CatalogMobileFiltersProps) => {
-  const { data: categories = [] } = useBaseCategories();
-  const [catOpen, setCatOpen] = useState(false);
 
   const handleQuickPrice = (min: number, max: number) => {
     if (filters.precoMin === min && filters.precoMax === max) {
