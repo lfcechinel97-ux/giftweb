@@ -575,7 +575,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }));
     supabase.from("sistema_transportadoras").update({
       nome, tipo_frete: tipoFrete ?? null, prazo_entrega: prazoEntrega ?? null, updated_at: new Date().toISOString(),
-    }).eq("id", id).then();
+    }).eq("id", id).then(reportDbError("transportadora"));
   }, []);
 
   const removeTransportadora = useCallback((id: string) => removeLookup("transportadoras", "sistema_transportadoras", id), [removeLookup]);
