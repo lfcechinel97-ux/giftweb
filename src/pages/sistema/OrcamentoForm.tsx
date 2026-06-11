@@ -166,7 +166,7 @@ export const OrcamentoForm: React.FC = () => {
     setShowItemDialog(false);
   };
 
-  const handleSalvar = () => {
+  const handleSalvar = async () => {
     if (!formData.clienteId || formData.itens.length === 0) {
       alert("Selecione um cliente e adicione pelo menos um item.");
       return;
