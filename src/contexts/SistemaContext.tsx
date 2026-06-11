@@ -564,7 +564,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setData(prev => ({ ...prev, transportadoras: [...prev.transportadoras, item] }));
     supabase.from("sistema_transportadoras").insert({
       id: item.id, nome, ativo: true, tipo_frete: tipoFrete ?? null, prazo_entrega: prazoEntrega ?? null,
-    }).then();
+    }).then(reportDbError("transportadora"));
     return item;
   }, []);
 
