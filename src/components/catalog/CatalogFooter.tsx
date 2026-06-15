@@ -36,14 +36,14 @@ const CatalogFooter = () => {
                 <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-white">Matriz</p>
-                  <p>R. Xavantes, 100 – Brás, São Paulo – SP</p>
+                  <p>Rua Cel Marcos Rovaris, 274 – Centro, Içara – SC</p>
                 </div>
               </div>
               <div className="flex gap-2">
                 <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-white">Filial</p>
-                  <p>R. Maria Marcolina, 280 – Brás, São Paulo – SP</p>
+                  <p>Rua do Rosário, Macedo, Guarulhos – SP</p>
                 </div>
               </div>
             </div>
