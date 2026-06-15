@@ -11,13 +11,13 @@ const CatalogFooter = () => {
               Contato
             </h4>
             <div className="space-y-2 text-sm">
-              <a href="tel:+551146739100" className="flex items-center gap-2 hover:text-white transition-colors">
+              <a href="tel:+5548996652844" className="flex items-center gap-2 hover:text-white transition-colors">
                 <Phone className="w-4 h-4 flex-shrink-0" />
-                (11) 4673-9100
+                (48) 99665-2844
               </a>
-              <a href="tel:+5511973498801" className="flex items-center gap-2 hover:text-white transition-colors">
+              <a href="tel:+5511970169697" className="flex items-center gap-2 hover:text-white transition-colors">
                 <Phone className="w-4 h-4 flex-shrink-0" />
-                (11) 97349-8801
+                (11) 97016-9697
               </a>
               <a href="mailto:contato@giftweb.com.br" className="flex items-center gap-2 hover:text-white transition-colors">
                 <Mail className="w-4 h-4 flex-shrink-0" />
@@ -36,14 +36,14 @@ const CatalogFooter = () => {
                 <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-white">Matriz</p>
-                  <p>R. Xavantes, 100 – Brás, São Paulo – SP</p>
+                  <p>Rua Cel Marcos Rovaris, 274 – Centro, Içara – SC</p>
                 </div>
               </div>
               <div className="flex gap-2">
                 <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-white">Filial</p>
-                  <p>R. Maria Marcolina, 280 – Brás, São Paulo – SP</p>
+                  <p>Rua do Rosário, Macedo, Guarulhos – SP</p>
                 </div>
               </div>
             </div>
