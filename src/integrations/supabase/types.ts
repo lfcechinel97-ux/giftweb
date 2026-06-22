@@ -811,6 +811,8 @@ export type Database = {
             Returns: Json
           }
       set_variantes_por_prefixo: { Args: never; Returns: undefined }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       sistema_next_orcamento_numero: { Args: never; Returns: string }
       sistema_next_pedido_numero: { Args: never; Returns: string }
     }
