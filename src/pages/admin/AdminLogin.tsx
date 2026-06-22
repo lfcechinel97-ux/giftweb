@@ -15,18 +15,29 @@ export default function AdminLogin() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
-    if (err || !data.user) { setError('Credenciais inválidas.'); setLoading(false); return; }
-    const { data: admin } = await supabase
-      .from('admin_users').select('id').eq('id', data.user.id).single();
-    if (!admin) {
-      await supabase.auth.signOut();
-      setError('Acesso não autorizado.');
+    try {
+      const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
+      if (err || !data.user) { setError('Credenciais inválidas.'); setLoading(false); return; }
+      const { data: admin, error: adminErr } = await supabase
+        .from('admin_users').select('id').eq('id', data.user.id).maybeSingle();
+      if (adminErr) {
+        setError('Erro ao verificar acesso. Tente novamente em instantes.');
+        setLoading(false);
+        return;
+      }
+      if (!admin) {
+        await supabase.auth.signOut();
+        setError('Acesso não autorizado.');
+        setLoading(false);
+        return;
+      }
+      navigate('/admin');
+    } catch (e) {
+      setError('Erro de conexão. Tente novamente.');
       setLoading(false);
-      return;
     }
-    navigate('/admin');
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
