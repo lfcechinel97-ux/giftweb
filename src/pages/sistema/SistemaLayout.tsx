@@ -19,7 +19,7 @@ const menu = [
 ];
 
 export default function SistemaLayout() {
-  const { vendedores, currentVendedor, setCurrentVendedor } = useSistema();
+  const { vendedores, currentVendedor, setCurrentVendedor, loading } = useSistema();
   const vendedorAtualId = currentVendedor?.id;
   const vendedorAtualNome = currentVendedor?.nome ?? "Selecionar vendedor";
   const setVendedorAtualId = (id: string) => {
@@ -89,7 +89,9 @@ export default function SistemaLayout() {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>Trocar vendedor</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {vendedores.length === 0 ? (
+              {loading && vendedores.length === 0 ? (
+                <DropdownMenuItem disabled>Carregando vendedores...</DropdownMenuItem>
+              ) : vendedores.length === 0 ? (
                 <DropdownMenuItem disabled>Nenhum cadastrado</DropdownMenuItem>
               ) : vendedores.map(v => (
                 <DropdownMenuItem

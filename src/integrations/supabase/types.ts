@@ -823,7 +823,19 @@ export type Database = {
       set_variantes_por_prefixo: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sistema_get_bootstrap: { Args: never; Returns: Json }
+      sistema_get_orcamento: { Args: { p_id: string }; Returns: Json }
       sistema_get_product_group: { Args: { p_codigo: string }; Returns: Json }
+      sistema_list_orcamentos: {
+        Args: {
+          p_cliente?: string
+          p_limit?: number
+          p_search?: string
+          p_status?: string
+          p_vendedor_id?: string
+        }
+        Returns: Json
+      }
       sistema_next_orcamento_numero: { Args: never; Returns: string }
       sistema_next_pedido_numero: { Args: never; Returns: string }
       sistema_search_products: {
