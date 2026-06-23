@@ -246,9 +246,18 @@ export default function Orcamentos() {
     setDeleteId(null);
   };
 
-  const handleImprimir = (o: Orcamento) => {
-    const cliente = clientes.find(c => c.id === o.clienteId);
-    gerarPDFOrcamento(o, { clientes, vendedores, meiosPagamento, transportadoras, origens }, cliente?.nome);
+  const handleImprimir = async (o: Orcamento) => {
+    const full = await ensureItens(o);
+    const cliente = clientes.find(c => c.id === full.clienteId);
+    gerarPDFOrcamento(full, { clientes, vendedores, meiosPagamento, transportadoras, origens }, cliente?.nome);
+  };
+
+  const handleExpand = async (o: Orcamento) => {
+    const next = expandedId === o.id ? null : o.id;
+    setExpandedId(next);
+    if (next && o.itens.length === 0) {
+      await fetchOrcamentoCompleto(o.id);
+    }
   };
 
   const getClienteNome = (o: Orcamento) => {
@@ -347,7 +356,7 @@ export default function Orcamentos() {
             {/* Header row */}
             <div 
               className="grid grid-cols-[100px_1fr_120px_140px_100px_140px_44px] items-center gap-3 px-4 py-3 bg-muted/30 cursor-pointer hover:bg-muted/50"
-              onClick={() => setExpandedId(expandedId === o.id ? null : o.id)}
+              onClick={() => handleExpand(o)}
             >
               <span className="font-semibold text-foreground">#{o.numero}</span>
               <span className="text-sm truncate">{getClienteNome(o)}</span>
