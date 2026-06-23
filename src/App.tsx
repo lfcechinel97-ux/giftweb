@@ -69,7 +69,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <QuotationProvider>
-        <SistemaProvider>
         <SiteContentProvider>
         <BrowserRouter>
           <ScrollToTop />
@@ -113,7 +112,7 @@ const App = () => (
               <Route path="/politica-de-privacidade-whatsapp" element={<WhatsAppPrivacyPage />} />
               <Route path="/termos-de-servico-whatsapp" element={<WhatsAppTermsPage />} />
               <Route path="/exclusao-de-dados" element={<DataDeletionPage />} />
-              <Route path="/sistema" element={<AdminGuard><SistemaLayout /></AdminGuard>}>
+              <Route path="/sistema" element={<AdminGuard><SistemaProvider><SistemaLayout /></SistemaProvider></AdminGuard>}>
                 <Route index element={<SistemaOrcamentos />} />
                 <Route path="orcamentos" element={<SistemaOrcamentos />} />
                 <Route path="orcamentos/novo" element={<SistemaOrcamentoForm />} />
@@ -130,7 +129,6 @@ const App = () => (
           </Suspense>
         </BrowserRouter>
         </SiteContentProvider>
-        </SistemaProvider>
         </QuotationProvider>
       </TooltipProvider>
     </HelmetProvider>
