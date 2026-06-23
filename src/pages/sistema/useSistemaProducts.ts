@@ -8,8 +8,7 @@ export type SistemaProduct = Tables<"products_cache">;
 const SELECT_COLS =
   "id,nome,slug,codigo_amigavel,codigo_prefixo,image_url,image_urls,preco_custo,estoque,estoque_total,categoria,tabela_precos,variantes,variantes_count,is_variante,is_hidden,produto_pai,ativo,has_image,cor,altura,largura";
 
-const CHUNK = 1000;
-const MAX_TOTAL = 20000;
+const DEFAULT_PAGE_SIZE = 80;
 
 /** Extrai o prefixo de um código: "02087-AZU" → "02087", "02087" → "02087" */
 function extractPrefixo(codigo: string): string {
@@ -18,27 +17,17 @@ function extractPrefixo(codigo: string): string {
   return idx > 0 ? codigo.slice(0, idx) : codigo;
 }
 
-/** Busca TODOS os produtos ativos — sem filtrar has_image, is_hidden, is_variante.
- *  Para uso interno do sistema de vendas. */
-async function fetchAllProducts(): Promise<SistemaProduct[]> {
-  const all: SistemaProduct[] = [];
-  let from = 0;
-  let to = CHUNK - 1;
-  while (all.length < MAX_TOTAL) {
-    const { data, error } = await supabase
-      .from("products_cache")
-      .select(SELECT_COLS)
-      .eq("ativo", true)
-      .order("codigo_amigavel", { ascending: true })
-      .range(from, to);
-    if (error) throw error;
-    if (!data || data.length === 0) break;
-    all.push(...(data as SistemaProduct[]));
-    if (data.length < CHUNK) break;
-    from += CHUNK;
-    to += CHUNK;
-  }
-  return all;
+interface SearchResponse { rows: SistemaProduct[]; total_count: number; }
+
+async function fetchSystemProducts(term = "", limit = DEFAULT_PAGE_SIZE): Promise<SistemaProduct[]> {
+  const { data, error } = await supabase.rpc("sistema_search_products" as any, {
+    p_search: term || null,
+    p_page: 1,
+    p_page_size: limit,
+  });
+  if (error) throw error;
+  const result = data as SearchResponse | null;
+  return (result?.rows ?? []) as SistemaProduct[];
 }
 
 export interface SistemaProductsResult {
@@ -51,11 +40,11 @@ export interface SistemaProductsResult {
   isLoading: boolean;
   error: Error | null;
   /** Busca representantes por texto — retorna até 30, um por grupo */
-  searchParents: (term: string) => SistemaProduct[];
+  searchParents: (term: string, limit?: number) => Promise<SistemaProduct[]>;
   /** Busca produto+variantes pelo codigo_amigavel (ou prefixo) */
-  getParentWithVariants: (codigoAmigavel: string) => { parent: SistemaProduct; variants: SistemaProduct[] } | null;
+  getParentWithVariants: (codigoAmigavel: string) => Promise<{ parent: SistemaProduct; variants: SistemaProduct[] } | null>;
   /** Dado um codigoComposto (ex: "08338-BCO"), separa pai e variante */
-  resolveCodigoComposto: (codigo: string) => { parent: SistemaProduct | null; variant: SistemaProduct | null };
+  resolveCodigoComposto: (codigo: string) => Promise<{ parent: SistemaProduct | null; variant: SistemaProduct | null }>;
 }
 
 export function useSistemaProducts(): SistemaProductsResult {
@@ -64,9 +53,10 @@ export function useSistemaProducts(): SistemaProductsResult {
     isLoading,
     error,
   } = useQuery<SistemaProduct[]>({
-    queryKey: ["sistema", "all-products"],
-    queryFn: fetchAllProducts,
-    staleTime: 5 * 60 * 1000,
+    queryKey: ["sistema", "products", "initial"],
+    queryFn: () => fetchSystemProducts("", DEFAULT_PAGE_SIZE),
+    staleTime: 15 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   const allProducts = data;
@@ -100,32 +90,7 @@ export function useSistemaProducts(): SistemaProductsResult {
    * Busca representantes por texto (nome ou código).
    * Retorna até 30, um por grupo de prefixo.
    */
-  const searchParents = useCallback(
-    (term: string): SistemaProduct[] => {
-      const t = term.trim().toLowerCase();
-
-      // Filtra todos os produtos pelo termo
-      const candidates = t
-        ? allProducts.filter((p) => p.nome.toLowerCase().includes(t) || p.codigo_amigavel.toLowerCase().includes(t))
-        : allProducts;
-
-      // Deduplica por prefixo — mostra só 1 representante por grupo
-      const seen = new Set<string>();
-      const result: SistemaProduct[] = [];
-      for (const p of candidates) {
-        const prefixo = extractPrefixo(p.codigo_amigavel);
-        if (!seen.has(prefixo)) {
-          seen.add(prefixo);
-          // Usa o representante canônico do grupo (pode ter is_variante=false)
-          const rep = parentProducts.find((pp) => extractPrefixo(pp.codigo_amigavel) === prefixo) ?? p;
-          result.push(rep);
-        }
-        if (result.length >= 30) break;
-      }
-      return result;
-    },
-    [allProducts, parentProducts],
-  );
+  const searchParents = useCallback((term: string, limit = 60) => fetchSystemProducts(term, limit), []);
 
   /**
    * Retorna { parent, variants } para um dado código.
@@ -137,76 +102,31 @@ export function useSistemaProducts(): SistemaProductsResult {
    * Aceita tanto o código completo ("02087-AZU") quanto só o prefixo ("02087").
    */
   const getParentWithVariants = useCallback(
-    (codigoAmigavel: string): { parent: SistemaProduct; variants: SistemaProduct[] } | null => {
+    async (codigoAmigavel: string): Promise<{ parent: SistemaProduct; variants: SistemaProduct[] } | null> => {
       if (!codigoAmigavel) return null;
-
+      const { data, error } = await supabase.rpc("sistema_get_product_group" as any, { p_codigo: codigoAmigavel });
+      if (error) throw error;
+      const grupo = ((data ?? []) as SistemaProduct[]).filter(Boolean);
+      if (grupo.length === 0) return null;
       const prefixo = extractPrefixo(codigoAmigavel);
-
-      // Tenta primeiro: produto pai real (is_variante = false) com esse prefixo
-      const realParent = allProducts.find((p) => !p.is_variante && extractPrefixo(p.codigo_amigavel) === prefixo);
-
-      if (realParent) {
-        // Caso com produto pai real no banco
-        const pvars = allProducts.filter(
-          (p) =>
-            p.id !== realParent.id &&
-            (p.produto_pai === realParent.id || extractPrefixo(p.codigo_amigavel) === prefixo),
-        );
-        return { parent: realParent, variants: pvars };
-      }
-
-      // Caso XBZ: sem produto pai real — agrupa todas as variantes pelo prefixo
-      const grupo = allProducts.filter((p) => extractPrefixo(p.codigo_amigavel) === prefixo);
-
-      if (grupo.length === 0) {
-        // Último recurso: match exato
-        const exact = allProducts.find((p) => p.codigo_amigavel === codigoAmigavel || p.id === codigoAmigavel);
-        if (!exact) return null;
-        return { parent: exact, variants: [] };
-      }
-
-      // O "pai" é o representante canônico do grupo (primeiro por ordem de código)
-      const parent = grupo[0];
-      // As variantes são todos os outros do grupo
-      const pvars = grupo.slice(1);
-
-      return { parent, variants: pvars };
+      const parent = grupo.find((p) => !p.is_variante && extractPrefixo(p.codigo_amigavel) === prefixo) ?? grupo[0];
+      return { parent, variants: grupo.filter((p) => p.id !== parent.id) };
     },
-    [allProducts],
+    [],
   );
 
   /** Resolve "08338-BCO" → busca produto com codigo_amigavel exato, ou
    *  tenta separar prefixo+sufixo para encontrar pai e variante. */
   const resolveCodigoComposto = useCallback(
-    (codigo: string): { parent: SistemaProduct | null; variant: SistemaProduct | null } => {
+    async (codigo: string): Promise<{ parent: SistemaProduct | null; variant: SistemaProduct | null }> => {
       const upper = codigo.toUpperCase().trim();
 
-      // 1. Correspondência exata em qualquer produto
-      const exact = allProducts.find((p) => p.codigo_amigavel.toUpperCase() === upper);
-      if (exact) {
-        const result = getParentWithVariants(exact.codigo_amigavel);
-        if (!result) return { parent: exact, variant: null };
-        const variant = result.variants.find((v) => v.id === exact.id) ?? null;
-        return { parent: result.parent, variant: exact.id === result.parent.id ? null : exact };
-      }
-
-      // 2. Tenta "PREFIXO-SUFIXO"
-      const lastDash = upper.lastIndexOf("-");
-      if (lastDash > 0) {
-        const prefixo = upper.slice(0, lastDash);
-        const sufixo = upper.slice(lastDash + 1);
-        const result = getParentWithVariants(prefixo);
-        if (result) {
-          const variant =
-            result.variants.find((v) => v.cor?.toUpperCase() === sufixo || v.codigo_amigavel.toUpperCase() === upper) ??
-            null;
-          return { parent: result.parent, variant };
-        }
-      }
-
-      return { parent: null, variant: null };
+      const result = await getParentWithVariants(upper);
+      if (!result) return { parent: null, variant: null };
+      const variant = result.variants.find((v) => v.codigo_amigavel.toUpperCase() === upper || v.cor?.toUpperCase() === upper.split("-").pop()) ?? null;
+      return { parent: result.parent, variant };
     },
-    [allProducts, getParentWithVariants],
+    [getParentWithVariants],
   );
 
   return {
@@ -224,17 +144,20 @@ export function useSistemaProducts(): SistemaProductsResult {
 // ─── Helpers standalone (para uso fora do hook) ──────────────────────────────
 
 export async function searchProductsParents(term: string, limit = 60): Promise<SistemaProduct[]> {
-  const t = (term || "").trim();
-  let query = supabase
-    .from("products_cache")
-    .select(SELECT_COLS)
-    .eq("ativo", true)
-    .order("codigo_amigavel", { ascending: true })
-    .limit(limit);
-  if (t) query = query.or(`nome.ilike.%${t}%,codigo_amigavel.ilike.%${t}%`);
-  const { data, error } = await query;
+  const { data, error } = await supabase.rpc("sistema_search_products" as any, {
+    p_search: (term || "").trim() || null,
+    p_page: 1,
+    p_page_size: limit,
+  });
   if (error) throw error;
-  return (data || []) as SistemaProduct[];
+  const result = data as SearchResponse | null;
+  return (result?.rows ?? []) as SistemaProduct[];
+}
+
+export async function fetchProductGroup(codigo: string): Promise<SistemaProduct[]> {
+  const { data, error } = await supabase.rpc("sistema_get_product_group" as any, { p_codigo: codigo });
+  if (error) throw error;
+  return ((data ?? []) as SistemaProduct[]).filter(Boolean);
 }
 
 export async function fetchProductById(id: string): Promise<SistemaProduct | null> {
@@ -244,14 +167,10 @@ export async function fetchProductById(id: string): Promise<SistemaProduct | nul
 }
 
 export async function fetchVariantsByParentId(parentId: string): Promise<SistemaProduct[]> {
-  const { data, error } = await supabase
-    .from("products_cache")
-    .select(SELECT_COLS)
-    .eq("produto_pai", parentId)
-    .eq("ativo", true)
-    .order("codigo_amigavel", { ascending: true });
+  const { data, error } = await supabase.rpc("sistema_get_product_group" as any, { p_codigo: parentId });
   if (error || !data) return [];
-  return data as SistemaProduct[];
+  const rows = data as SistemaProduct[];
+  return rows.filter((p) => p.id !== parentId);
 }
 
 export function stockLevel(estoque: number, ajusteReserva = 0): "alto" | "medio" | "baixo" | "zero" {

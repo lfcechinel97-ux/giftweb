@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { rememberAdminAccess } from '@/lib/adminAccessCache';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -31,6 +32,7 @@ export default function AdminLogin() {
         setLoading(false);
         return;
       }
+      rememberAdminAccess(data.user.id);
       navigate('/admin');
     } catch (e) {
       setError('Erro de conexão. Tente novamente.');

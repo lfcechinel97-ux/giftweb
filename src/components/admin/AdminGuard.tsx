@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { clearAdminAccess, hasFreshAdminAccess, rememberAdminAccess } from '@/lib/adminAccessCache';
 
 type State =
   | { status: 'loading' }
@@ -23,7 +24,13 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       const { data: sessionData } = await supabase.auth.getSession();
       const session = sessionData.session;
       if (!session) {
+        clearAdminAccess();
         if (!cancelled) navigate('/admin/login');
+        return;
+      }
+
+      if (attempt === 0 && hasFreshAdminAccess(session.user.id)) {
+        setState({ status: 'ok' });
         return;
       }
 
@@ -61,11 +68,13 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
         }
 
         if (!data) {
+          clearAdminAccess();
           await supabase.auth.signOut();
           navigate('/admin/login');
           return;
         }
 
+        rememberAdminAccess(session.user.id);
         setState({ status: 'ok' });
       } catch (e: any) {
         if (cancelled) return;
@@ -80,7 +89,10 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
 
     // React to sign-in/out events
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT') navigate('/admin/login');
+      if (event === 'SIGNED_OUT') {
+        clearAdminAccess();
+        navigate('/admin/login');
+      }
     });
 
     return () => {

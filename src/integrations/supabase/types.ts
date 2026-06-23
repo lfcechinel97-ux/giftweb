@@ -736,6 +736,16 @@ export type Database = {
         Returns: undefined
       }
       calc_display_price: { Args: { p_preco_custo: number }; Returns: number }
+      get_catalog_filter_colors: { Args: never; Returns: string[] }
+      get_catalog_story_categories: {
+        Args: never
+        Returns: {
+          category_position: number
+          image_url: string
+          label: string
+          slug: string
+        }[]
+      }
       get_category_colors: {
         Args: { p_category_slug: string }
         Returns: string[]
@@ -813,8 +823,13 @@ export type Database = {
       set_variantes_por_prefixo: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sistema_get_product_group: { Args: { p_codigo: string }; Returns: Json }
       sistema_next_orcamento_numero: { Args: never; Returns: string }
       sistema_next_pedido_numero: { Args: never; Returns: string }
+      sistema_search_products: {
+        Args: { p_page?: number; p_page_size?: number; p_search?: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

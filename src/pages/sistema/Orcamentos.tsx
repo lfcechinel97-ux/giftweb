@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Check, Filter, Plus, Search, Trash2, ChevronDown, ChevronUp, FileText, Package, Printer, X
@@ -129,17 +129,23 @@ function AprovarModal({ orcamento, onClose, onConfirm }: AprovarModalProps) {
 }
 
 export default function Orcamentos() {
-  const { orcamentos, removeOrcamento, aprovarOrcamento, clientes, vendedores, transportadoras, meiosPagamento, origens } = useSistema();
+  const { orcamentos, removeOrcamento, aprovarOrcamento, clientes, vendedores, transportadoras, meiosPagamento, origens, currentVendedor } = useSistema();
   const navigate = useNavigate();
   const [filtroCliente, setFiltroCliente] = useState("");
   const [filtroBusca, setFiltroBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
+  const [filtroVendedor, setFiltroVendedor] = useState<string>(() => currentVendedor?.id || "todos");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
 
+  useEffect(() => {
+    if (currentVendedor?.id) setFiltroVendedor(currentVendedor.id);
+  }, [currentVendedor?.id]);
+
   const filtered = useMemo(() => {
     return orcamentos.filter(o => {
+      if (filtroVendedor !== "todos" && o.vendedorId !== filtroVendedor) return false;
       if (filtroStatus !== "todos" && o.status !== filtroStatus) return false;
       if (filtroCliente) {
         const c = clientes.find(cli => cli.id === o.clienteId);
@@ -157,7 +163,7 @@ export default function Orcamentos() {
       }
       return true;
     });
-  }, [orcamentos, filtroCliente, filtroBusca, filtroStatus, clientes]);
+  }, [orcamentos, filtroCliente, filtroBusca, filtroStatus, filtroVendedor, clientes]);
 
   const valorTotalFiltrado = filtered.reduce((s, o) => s + calcTotal(o), 0);
 
@@ -250,6 +256,17 @@ export default function Orcamentos() {
             <SelectItem value="todos">Todos</SelectItem>
             {STATUS_OPTS.map(s => (
               <SelectItem key={s} value={s}>{statusStyles[s].label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filtroVendedor} onValueChange={setFiltroVendedor}>
+          <SelectTrigger className="w-full md:w-[220px]">
+            <SelectValue placeholder="Vendedor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos os vendedores</SelectItem>
+            {vendedores.map(v => (
+              <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
             ))}
           </SelectContent>
         </Select>
