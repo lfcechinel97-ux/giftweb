@@ -642,8 +642,8 @@ interface ItemDialogProps {
   item: QuoteItem | null;
   parentProducts: any[];
   isLoading: boolean;
-  searchParents: (term: string) => any[];
-  getParentWithVariants: (codigoAmigavel: string) => any;
+  searchParents: (term: string, limit?: number) => Promise<any[]>;
+  getParentWithVariants: (codigoAmigavel: string) => Promise<any>;
   onClose: () => void;
   onSave: (item: QuoteItem) => void;
 }
@@ -669,11 +669,37 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
   const [observacao, setObservacao] = useState<string>("");
   const [showPriceRows, setShowPriceRows] = useState(false);
   const [produtoVariantes, setProdutoVariantes] = useState<any[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<any[]>(() => parentProducts.slice(0, 10));
+  const [isSearchingProducts, setIsSearchingProducts] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredProducts = useMemo(() => {
-    if (!searchTerm.trim()) return parentProducts.slice(0, 10);
-    return searchParents(searchTerm).slice(0, 10);
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredProducts(parentProducts.slice(0, 10));
+      setIsSearchingProducts(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsSearchingProducts(true);
+    const timer = window.setTimeout(() => {
+      searchParents(searchTerm, 30)
+        .then((rows) => {
+          if (!cancelled) setFilteredProducts(rows.slice(0, 10));
+        })
+        .catch((error) => {
+          console.error("Erro ao buscar produtos", error);
+          if (!cancelled) setFilteredProducts([]);
+        })
+        .finally(() => {
+          if (!cancelled) setIsSearchingProducts(false);
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, [searchTerm, parentProducts, searchParents]);
 
   useEffect(() => {
@@ -686,12 +712,16 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
       setMockupImagem(item.mockupImagem);
       setObservacao(item.observacao || "");
       if (item.produtoId) {
-        const prod = getParentWithVariants(item.codigoComposto?.split("-")[0] || "");
-        if (prod) {
-          setSelectedProduct(prod.parent);
-          const v = prod.variants.find((vv: any) => vv.slug === item.varianteSlug || vv.codigo_amigavel === item.codigoComposto);
-          setSelectedVariant(v || null);
-        }
+        let cancelled = false;
+        getParentWithVariants(item.codigoComposto?.split("-")[0] || item.produtoId)
+          .then((prod) => {
+            if (cancelled || !prod) return;
+            setSelectedProduct(prod.parent);
+            const v = prod.variants.find((vv: any) => vv.slug === item.varianteSlug || vv.codigo_amigavel === item.codigoComposto);
+            setSelectedVariant(v || null);
+          })
+          .catch((error) => console.error("Erro ao carregar produto do item", error));
+        return () => { cancelled = true; };
       }
     }
   }, [item, getParentWithVariants]);
@@ -699,8 +729,16 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
   // Busca variantes reais do banco ao selecionar produto
   useEffect(() => {
     if (!selectedProduct) { setProdutoVariantes([]); return; }
-    const result = getParentWithVariants(selectedProduct.codigo_amigavel);
-    setProdutoVariantes(result?.variants ?? []);
+    let cancelled = false;
+    getParentWithVariants(selectedProduct.codigo_amigavel)
+      .then((result) => {
+        if (!cancelled) setProdutoVariantes(result?.variants ?? []);
+      })
+      .catch((error) => {
+        console.error("Erro ao carregar variantes", error);
+        if (!cancelled) setProdutoVariantes([]);
+      });
+    return () => { cancelled = true; };
   }, [selectedProduct, getParentWithVariants]);
 
   const variantes = produtoVariantes;
@@ -847,7 +885,7 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
                       autoFocus
                     />
                   </div>
-                  {isLoading ? (
+                  {isLoading || isSearchingProducts ? (
                     <div className="text-center py-8 text-gray-500">Carregando produtos...</div>
                   ) : filteredProducts.length > 0 ? (
                     <div className="border rounded-lg mt-2 max-h-64 overflow-auto">
