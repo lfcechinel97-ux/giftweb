@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, Package, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -101,7 +101,7 @@ export default function ProdutosCatalogo() {
   const [searching, setSearching] = useState(false);
   const [categoria, setCategoria] = useState("todas");
   const [mostrar, setMostrar] = useState<"todos" | "com_foto" | "sem_foto">("todos");
-  useMemo(() => {
+  useEffect(() => {
     const term = search.trim();
     if (!term) {
       setSearchResults(null);

@@ -154,6 +154,12 @@ export async function searchProductsParents(term: string, limit = 60): Promise<S
   return (result?.rows ?? []) as SistemaProduct[];
 }
 
+export async function fetchProductGroup(codigo: string): Promise<SistemaProduct[]> {
+  const { data, error } = await supabase.rpc("sistema_get_product_group" as any, { p_codigo: codigo });
+  if (error) throw error;
+  return ((data ?? []) as SistemaProduct[]).filter(Boolean);
+}
+
 export async function fetchProductById(id: string): Promise<SistemaProduct | null> {
   const { data, error } = await supabase.from("products_cache").select(SELECT_COLS).eq("id", id).single();
   if (error || !data) return null;
