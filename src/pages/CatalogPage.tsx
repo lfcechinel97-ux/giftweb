@@ -60,20 +60,18 @@ const CatalogPage = () => {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   useEffect(() => {
+    let cancelled = false;
     supabase
-      .from("products_cache")
-      .select("cor")
-      .eq("ativo", true)
-      .eq("has_image", true)
-      .not("cor", "is", null)
+      .rpc("get_catalog_filter_colors" as any)
       .then(({ data }) => {
-        const unique = [...new Set((data || []).map(d => d.cor).filter(Boolean))] as string[];
-        setCores(unique.sort());
+        if (!cancelled) setCores(((data as string[] | null) ?? []).sort());
       });
+    return () => { cancelled = true; };
   }, []);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
+    let cancelled = false;
     const corValues = filters.corValues.length > 0
       ? filters.corValues.map(v => v.trim().toUpperCase()).filter(Boolean)
       : null;
@@ -90,6 +88,7 @@ const CatalogPage = () => {
         p_preco_min: filters.precoMin > 0 ? filters.precoMin : null,
         p_preco_max: filters.precoMax < MAX_PRECO ? filters.precoMax : null,
       } as any);
+      if (cancelled) return;
       if (error) { console.error(error); setProducts([]); setTotal(0); }
       else if (data) {
         const result = data as unknown as { rows: any[]; total_count: number };
@@ -107,6 +106,7 @@ const CatalogPage = () => {
         p_preco_min: filters.precoMin > 0 ? filters.precoMin : null,
         p_preco_max: filters.precoMax < MAX_PRECO ? filters.precoMax : null,
       } as any);
+      if (cancelled) return;
       if (error) { console.error(error); setProducts([]); setTotal(0); }
       else if (data) {
         const result = data as unknown as { rows: any[]; total_count: number };
@@ -114,10 +114,17 @@ const CatalogPage = () => {
         setTotal(result.total_count || 0);
       }
     }
-    setLoading(false);
+    if (!cancelled) setLoading(false);
+    return () => { cancelled = true; };
   }, [page, filters]);
 
-  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+  useEffect(() => {
+    let active = true;
+    const timer = window.setTimeout(() => {
+      if (active) fetchProducts();
+    }, filters.search ? 250 : 0);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [fetchProducts, filters.search]);
 
   useEffect(() => {
     const params: Record<string, string> = {};

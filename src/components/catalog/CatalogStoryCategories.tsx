@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useBaseCategories } from "@/hooks/useBaseCategories";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
@@ -8,31 +7,15 @@ interface Props {
 }
 
 const CatalogStoryCategories = ({ selected, onSelect }: Props) => {
-  const { data: categories = [] } = useBaseCategories();
-  const [images, setImages] = useState<Record<string, string>>({});
-
-  // Fetch one product image per category
-  useEffect(() => {
-    if (categories.length === 0) return;
-    const fetchImages = async () => {
-      const map: Record<string, string> = {};
-      await Promise.all(
-        categories.map(async (cat) => {
-          const { data } = await supabase
-            .from("products_cache")
-            .select("image_url")
-            .eq("ativo", true)
-            .eq("has_image", true)
-            .or(`categoria.ilike.%${cat.slug}%,categoria_manual.ilike.%${cat.slug}%`)
-            .limit(1)
-            .single();
-          if (data?.image_url) map[cat.slug] = data.image_url;
-        })
-      );
-      setImages(map);
-    };
-    fetchImages();
-  }, [categories]);
+  const { data: categories = [] } = useQuery({
+    queryKey: ["catalog-story-categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_catalog_story_categories" as any);
+      if (error) throw error;
+      return (data ?? []) as Array<{ slug: string; label: string; category_position: number | null; image_url: string | null }>;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
 
   if (categories.length === 0) return null;
 
@@ -69,7 +52,7 @@ const CatalogStoryCategories = ({ selected, onSelect }: Props) => {
 
         {categories.map((cat) => {
           const isActive = selected === cat.slug;
-          const img = images[cat.slug];
+          const img = cat.image_url;
           return (
             <button
               key={cat.slug}

@@ -3,6 +3,33 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 
+const ADMIN_CACHE_KEY = 'giftweb_admin_access_v1';
+const ADMIN_CACHE_TTL = 30 * 60 * 1000;
+
+const readAdminCache = (userId: string) => {
+  try {
+    const raw = localStorage.getItem(ADMIN_CACHE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as { userId?: string; ok?: boolean; expiresAt?: number };
+    return parsed.ok === true && parsed.userId === userId && Number(parsed.expiresAt) > Date.now();
+  } catch {
+    return false;
+  }
+};
+
+const writeAdminCache = (userId: string) => {
+  try {
+    localStorage.setItem(
+      ADMIN_CACHE_KEY,
+      JSON.stringify({ userId, ok: true, expiresAt: Date.now() + ADMIN_CACHE_TTL }),
+    );
+  } catch {}
+};
+
+const clearAdminCache = () => {
+  try { localStorage.removeItem(ADMIN_CACHE_KEY); } catch {}
+};
+
 type State =
   | { status: 'loading' }
   | { status: 'ok' }
@@ -23,7 +50,13 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       const { data: sessionData } = await supabase.auth.getSession();
       const session = sessionData.session;
       if (!session) {
+        clearAdminCache();
         if (!cancelled) navigate('/admin/login');
+        return;
+      }
+
+      if (attempt === 0 && readAdminCache(session.user.id)) {
+        setState({ status: 'ok' });
         return;
       }
 
@@ -61,11 +94,13 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
         }
 
         if (!data) {
+          clearAdminCache();
           await supabase.auth.signOut();
           navigate('/admin/login');
           return;
         }
 
+        writeAdminCache(session.user.id);
         setState({ status: 'ok' });
       } catch (e: any) {
         if (cancelled) return;
@@ -80,7 +115,10 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
 
     // React to sign-in/out events
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT') navigate('/admin/login');
+      if (event === 'SIGNED_OUT') {
+        clearAdminCache();
+        navigate('/admin/login');
+      }
     });
 
     return () => {

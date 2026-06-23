@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
+const ADMIN_CACHE_KEY = 'giftweb_admin_access_v1';
+const ADMIN_CACHE_TTL = 30 * 60 * 1000;
+
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,6 +34,12 @@ export default function AdminLogin() {
         setLoading(false);
         return;
       }
+      try {
+        localStorage.setItem(
+          ADMIN_CACHE_KEY,
+          JSON.stringify({ userId: data.user.id, ok: true, expiresAt: Date.now() + ADMIN_CACHE_TTL }),
+        );
+      } catch {}
       navigate('/admin');
     } catch (e) {
       setError('Erro de conexão. Tente novamente.');
