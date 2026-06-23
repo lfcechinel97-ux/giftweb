@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useSistemaProducts, type SistemaProduct } from "./useSistemaProducts";
+import { fetchProductGroup, useSistemaProducts, type SistemaProduct } from "./useSistemaProducts";
 import { formatBRL } from "@/contexts/SistemaContext";
 
 function VarianteRow({ v }: { v: SistemaProduct }) {
@@ -31,8 +31,24 @@ function VarianteRow({ v }: { v: SistemaProduct }) {
 
 function ProdutoCard({ parent, pvariants }: { parent: SistemaProduct; pvariants: SistemaProduct[] }) {
   const [expanded, setExpanded] = useState(false);
-  const hasVariants = pvariants.length > 0;
+  const [loadedVariants, setLoadedVariants] = useState<SistemaProduct[]>(pvariants);
+  const [loadingVariants, setLoadingVariants] = useState(false);
+  const variantsToShow = loadedVariants.length ? loadedVariants : pvariants;
+  const variantCount = Math.max(parent.variantes_count ? parent.variantes_count - 1 : 0, variantsToShow.length);
+  const hasVariants = variantCount > 0;
   const totalStock = parent.estoque_total ?? parent.estoque ?? 0;
+
+  const toggleExpanded = () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && loadedVariants.length === 0 && hasVariants) {
+      setLoadingVariants(true);
+      fetchProductGroup(parent.codigo_amigavel)
+        .then((rows) => setLoadedVariants(rows.filter((p) => p.id !== parent.id)))
+        .catch((error) => console.error("Erro ao carregar variantes", error))
+        .finally(() => setLoadingVariants(false));
+    }
+  };
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
@@ -59,10 +75,10 @@ function ProdutoCard({ parent, pvariants }: { parent: SistemaProduct; pvariants:
           {hasVariants && (
             <button
               className="flex items-center gap-1 text-[10px] text-primary mt-1 ml-auto"
-              onClick={() => setExpanded(v => !v)}
+              onClick={toggleExpanded}
             >
               {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-              {pvariants.length} variante{pvariants.length !== 1 ? "s" : ""}
+              {variantCount} variante{variantCount !== 1 ? "s" : ""}
             </button>
           )}
         </div>
@@ -70,7 +86,8 @@ function ProdutoCard({ parent, pvariants }: { parent: SistemaProduct; pvariants:
 
       {expanded && hasVariants && (
         <div>
-          {pvariants.map(v => <VarianteRow key={v.id} v={v} />)}
+          {loadingVariants && <div className="px-3 py-2 text-xs text-muted-foreground">Carregando variantes...</div>}
+          {variantsToShow.map(v => <VarianteRow key={v.id} v={v} />)}
         </div>
       )}
     </div>
@@ -78,10 +95,36 @@ function ProdutoCard({ parent, pvariants }: { parent: SistemaProduct; pvariants:
 }
 
 export default function ProdutosCatalogo() {
-  const { parentProducts, variants, isLoading } = useSistemaProducts();
+  const { parentProducts, variants, isLoading, searchParents } = useSistemaProducts();
   const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<SistemaProduct[] | null>(null);
+  const [searching, setSearching] = useState(false);
   const [categoria, setCategoria] = useState("todas");
   const [mostrar, setMostrar] = useState<"todos" | "com_foto" | "sem_foto">("todos");
+  useMemo(() => {
+    const term = search.trim();
+    if (!term) {
+      setSearchResults(null);
+      setSearching(false);
+      return;
+    }
+    let cancelled = false;
+    setSearching(true);
+    const timer = window.setTimeout(() => {
+      searchParents(term, 80)
+        .then((rows) => { if (!cancelled) setSearchResults(rows); })
+        .catch((error) => {
+          console.error("Erro ao buscar produtos", error);
+          if (!cancelled) setSearchResults([]);
+        })
+        .finally(() => { if (!cancelled) setSearching(false); });
+    }, 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [search, searchParents]);
+
 
   const categorias = useMemo(() => {
     const s = new Set<string>();
@@ -102,7 +145,8 @@ export default function ProdutosCatalogo() {
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    return parentProducts.filter(p => {
+    const source = searchResults ?? parentProducts;
+    return source.filter(p => {
       if (categoria !== "todas" && p.categoria !== categoria) return false;
       if (mostrar === "com_foto" && !p.has_image) return false;
       if (mostrar === "sem_foto" && p.has_image) return false;
@@ -113,7 +157,7 @@ export default function ProdutosCatalogo() {
       const pvars = variantesByParent.get(p.id) ?? [];
       return pvars.some(v => v.codigo_amigavel.toLowerCase().includes(term));
     });
-  }, [parentProducts, variantesByParent, search, categoria, mostrar]);
+  }, [parentProducts, searchResults, variantesByParent, search, categoria, mostrar]);
 
   return (
     <div className="space-y-6">
@@ -144,7 +188,7 @@ export default function ProdutosCatalogo() {
         </Select>
       </div>
 
-      {isLoading ? (
+      {isLoading || searching ? (
         <div className="text-center py-16 text-muted-foreground">Carregando catálogo...</div>
       ) : (
         <>
