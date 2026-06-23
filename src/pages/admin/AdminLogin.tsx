@@ -3,9 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-
-const ADMIN_CACHE_KEY = 'giftweb_admin_access_v1';
-const ADMIN_CACHE_TTL = 30 * 60 * 1000;
+import { rememberAdminAccess } from '@/lib/adminAccessCache';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -34,12 +32,7 @@ export default function AdminLogin() {
         setLoading(false);
         return;
       }
-      try {
-        localStorage.setItem(
-          ADMIN_CACHE_KEY,
-          JSON.stringify({ userId: data.user.id, ok: true, expiresAt: Date.now() + ADMIN_CACHE_TTL }),
-        );
-      } catch {}
+      rememberAdminAccess(data.user.id);
       navigate('/admin');
     } catch (e) {
       setError('Erro de conexão. Tente novamente.');
