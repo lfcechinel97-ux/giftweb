@@ -141,6 +141,7 @@ export default function Orcamentos() {
     currentVendedor,
     loading,
     refreshOrcamentos,
+    fetchOrcamentoCompleto,
   } = useSistema();
   const navigate = useNavigate();
   const [filtroCliente, setFiltroCliente] = useState("");
@@ -193,21 +194,34 @@ export default function Orcamentos() {
       if (filtroBusca) {
         const term = filtroBusca.toLowerCase();
         const matchNumero = String(o.numero).includes(term);
-        const matchItem = o.itens.some(i => 
-          i.nome.toLowerCase().includes(term) || 
+        const matchCliente = (o.clienteSnapshot?.nome || "").toLowerCase().includes(term);
+        const matchItem = o.itens.some(i =>
+          i.nome.toLowerCase().includes(term) ||
           (i.codigoComposto || "").toLowerCase().includes(term)
         );
-        if (!matchNumero && !matchItem) return false;
+        if (!matchNumero && !matchCliente && !matchItem) return false;
       }
       return true;
     });
   }, [orcamentos, filtroCliente, filtroBusca, filtroStatus, filtroVendedor, clientes]);
 
-  const valorTotalFiltrado = filtered.reduce((s, o) => s + calcTotal(o), 0);
+  // Usa o subtotal armazenado (a listagem leve não traz os itens em detalhe)
+  const calcOrcTotal = (o: Orcamento) =>
+    (o.itens.length > 0 ? calcSubtotal(o) : Number(o.subtotal || 0)) + (Number(o.freteValor) || 0);
 
-  const handleAprovar = (id: string) => {
+  const valorTotalFiltrado = filtered.reduce((s, o) => s + calcOrcTotal(o), 0);
+
+  const ensureItens = async (o: Orcamento): Promise<Orcamento> => {
+    if (o.itens.length > 0) return o;
+    const full = await fetchOrcamentoCompleto(o.id);
+    return full ?? o;
+  };
+
+  const handleAprovar = async (id: string) => {
     const orc = orcamentos.find(o => o.id === id);
-    if (orc) setAprovarOrc(orc);
+    if (!orc) return;
+    const full = await ensureItens(orc);
+    setAprovarOrc(full);
   };
 
   const handleConfirmarAprovacao = (orcId: string, itensSelecionados: { itemId: string; quantidade: number }[]) => {
