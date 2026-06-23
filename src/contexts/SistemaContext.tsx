@@ -339,9 +339,11 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [currentVendedor]);
 
   const migratedRef = useRef(false);
+  const loadedRef = useRef(false);
 
-  const loadAll = useCallback(async () => {
-    setLoading(true);
+  const loadAll = useCallback(async (force = false) => {
+    if (loadedRef.current && !force) return;
+    setLoading(prev => (loadedRef.current ? prev : true));
     const [v, m, t, og, c, o, p, ae] = await Promise.all([
       supabase.from("sistema_vendedores").select("*").order("nome"),
       supabase.from("sistema_meios_pagamento").select("*").order("nome"),
@@ -352,8 +354,9 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       supabase.from("sistema_pedidos").select("*").order("created_at", { ascending: false }),
       supabase.from("sistema_ajustes_estoque").select("*").order("created_at", { ascending: false }),
     ]);
-    setData({
-      vendedores: (v.data ?? []).map(mapVendedor),
+    const vendedores = (v.data ?? []).map(mapVendedor);
+    setData(prev => ({
+      vendedores,
       meiosPagamento: (m.data ?? []).map(mapMeio),
       transportadoras: (t.data ?? []).map(mapTransp),
       origens: (og.data ?? []).map(mapOrigem),
@@ -366,7 +369,12 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         motivo: r.motivo ?? "", orcamentoId: r.orcamento_id ?? undefined,
         pedidoId: r.pedido_id ?? undefined, createdAt: r.created_at, createdBy: r.created_by ?? undefined,
       })),
+    }));
+    setCurrentVendedorState(prev => {
+      if (!prev) return null;
+      return vendedores.find(v => v.id === prev.id) ?? prev;
     });
+    loadedRef.current = true;
     setLoading(false);
   }, []);
 
@@ -396,9 +404,10 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
-        setTimeout(() => { loadAll(); }, 0);
+        setTimeout(() => { loadAll(true); }, 0);
       }
       if (event === "SIGNED_OUT") {
+        loadedRef.current = false;
         setData(emptyData);
       }
     });

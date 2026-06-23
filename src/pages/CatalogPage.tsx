@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +57,7 @@ const CatalogPage = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [cores, setCores] = useState<string[]>([]);
+  const requestSeq = useRef(0);
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   useEffect(() => {
@@ -70,8 +71,8 @@ const CatalogPage = () => {
   }, []);
 
   const fetchProducts = useCallback(async () => {
+    const requestId = ++requestSeq.current;
     setLoading(true);
-    let cancelled = false;
     const corValues = filters.corValues.length > 0
       ? filters.corValues.map(v => v.trim().toUpperCase()).filter(Boolean)
       : null;
@@ -88,7 +89,7 @@ const CatalogPage = () => {
         p_preco_min: filters.precoMin > 0 ? filters.precoMin : null,
         p_preco_max: filters.precoMax < MAX_PRECO ? filters.precoMax : null,
       } as any);
-      if (cancelled) return;
+      if (requestId !== requestSeq.current) return;
       if (error) { console.error(error); setProducts([]); setTotal(0); }
       else if (data) {
         const result = data as unknown as { rows: any[]; total_count: number };
@@ -106,7 +107,7 @@ const CatalogPage = () => {
         p_preco_min: filters.precoMin > 0 ? filters.precoMin : null,
         p_preco_max: filters.precoMax < MAX_PRECO ? filters.precoMax : null,
       } as any);
-      if (cancelled) return;
+      if (requestId !== requestSeq.current) return;
       if (error) { console.error(error); setProducts([]); setTotal(0); }
       else if (data) {
         const result = data as unknown as { rows: any[]; total_count: number };
@@ -114,8 +115,7 @@ const CatalogPage = () => {
         setTotal(result.total_count || 0);
       }
     }
-    if (!cancelled) setLoading(false);
-    return () => { cancelled = true; };
+    if (requestId === requestSeq.current) setLoading(false);
   }, [page, filters]);
 
   useEffect(() => {
