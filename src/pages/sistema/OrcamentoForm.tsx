@@ -49,6 +49,7 @@ export const OrcamentoForm: React.FC = () => {
     addOrcamento,
     updateOrcamento,
     currentVendedor,
+    fetchOrcamentoCompleto,
   } = useSistema();
 
   const sis = { clientes, vendedores, meiosPagamento, transportadoras, origens };
@@ -117,6 +118,14 @@ export const OrcamentoForm: React.FC = () => {
       setFormData(prev => prev.vendedorId ? prev : { ...prev, vendedorId: currentVendedor.id });
     }
   }, [isEdit, currentVendedor?.id]);
+
+  // Quando o orçamento existe na lista mas veio "leve" (sem itens), buscar a versão completa
+  useEffect(() => {
+    if (isEdit && id && orcamentoExistente && orcamentoExistente.itens.length === 0) {
+      fetchOrcamentoCompleto(id);
+    }
+  }, [isEdit, id, orcamentoExistente, fetchOrcamentoCompleto]);
+
 
   const subtotal = useMemo(() => formData.itens.reduce((sum, it) => sum + it.quantidade * it.precoUnitario, 0), [formData.itens]);
   const freteEfetivo = formData.freteTipo === "CIF" ? 0 : (formData.freteValor || 0);
