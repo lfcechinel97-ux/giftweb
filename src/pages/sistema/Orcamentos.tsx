@@ -365,7 +365,7 @@ export default function Orcamentos() {
                 <span className={`w-1.5 h-1.5 rounded-full ${statusStyles[o.status].dot}`} />
                 {statusStyles[o.status].label}
               </span>
-              <span className="text-right font-semibold">{formatBRL(calcTotal(o))}</span>
+              <span className="text-right font-semibold">{formatBRL(calcOrcTotal(o))}</span>
               <div className="flex gap-1">
                 {o.status === "aberto" && (
                   <Button size="sm" className={statusStyles["aprovado"].btn} onClick={(e) => { e.stopPropagation(); handleAprovar(o.id); }}>
@@ -377,7 +377,7 @@ export default function Orcamentos() {
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-              <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setExpandedId(expandedId === o.id ? null : o.id); }}>
+              <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleExpand(o); }}>
                 {expandedId === o.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
             </div>
@@ -389,6 +389,9 @@ export default function Orcamentos() {
                 <div className="grid grid-cols-[40px_1fr_80px_100px_120px] items-center gap-3 px-4 py-2 text-xs font-medium text-muted-foreground bg-muted/20">
                   <span /><span>Produto</span><span className="text-right">Qtd</span><span className="text-right">Unit.</span><span className="text-right">Total</span>
                 </div>
+                {o.itens.length === 0 && (
+                  <div className="px-4 py-6 text-center text-sm text-muted-foreground">Carregando itens...</div>
+                )}
                 {/* Items */}
                 {o.itens.map((item, idx) => (
                   <div key={idx} className="grid grid-cols-[40px_1fr_80px_100px_120px] items-center gap-3 px-4 py-2 text-sm border-b border-border last:border-0">
@@ -423,7 +426,7 @@ export default function Orcamentos() {
                 )}
                 <div className="grid grid-cols-[40px_1fr_80px_100px_120px] items-center gap-3 px-4 py-3 bg-muted/20 text-sm font-semibold">
                   <span /><span /><span /><span className="text-right">Total:</span>
-                  <span className="text-right text-green-600">{formatBRL(calcTotal(o))}</span>
+                  <span className="text-right text-green-600">{formatBRL(calcOrcTotal(o))}</span>
                 </div>
                 {/* Details */}
                 <div className="grid grid-cols-4 gap-4 px-4 py-3 text-xs text-muted-foreground border-t border-border">
