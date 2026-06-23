@@ -202,6 +202,7 @@ interface SistemaContextType extends SistemaData {
     cliente?: string | null;
     limit?: number;
   }) => Promise<Orcamento[]>;
+  fetchOrcamentoCompleto: (id: string) => Promise<Orcamento | null>;
   addOrcamento: (o: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt">) => Promise<Orcamento>;
   updateOrcamento: (id: string, changes: Partial<Orcamento>) => Promise<void>;
   removeOrcamento: (id: string) => void;
@@ -385,8 +386,32 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     const rows = arr<any>((payload as any)?.rows).map(mapOrcamento);
-    setData(prev => ({ ...prev, orcamentos: rows }));
+    setData(prev => {
+      // Preserva itens já carregados (a função leve devolve itens vazios)
+      const prevById = new Map(prev.orcamentos.map(o => [o.id, o]));
+      const merged = rows.map(r => {
+        const prevOrc = prevById.get(r.id);
+        return prevOrc && prevOrc.itens.length > 0 ? { ...r, itens: prevOrc.itens } : r;
+      });
+      return { ...prev, orcamentos: merged };
+    });
     return rows;
+  }, []);
+
+  const fetchOrcamentoCompleto = useCallback(async (id: string): Promise<Orcamento | null> => {
+    const { data, error } = await supabase.rpc("sistema_get_orcamento", { p_id: id });
+    if (error) {
+      console.error("[Sistema] carregar orçamento falhou:", error);
+      toast.error(`Não foi possível abrir o orçamento. ${error.message || ""}`);
+      return null;
+    }
+    if (!data) return null;
+    const full = mapOrcamento(data as any);
+    setData(prev => ({
+      ...prev,
+      orcamentos: prev.orcamentos.map(o => o.id === id ? { ...o, ...full } : o),
+    }));
+    return full;
   }, []);
 
   const loadAll = useCallback(async (force = false) => {
@@ -711,7 +736,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const value = useMemo<SistemaContextType>(() => ({
     ...data, loading,
-    refreshOrcamentos,
+    refreshOrcamentos, fetchOrcamentoCompleto,
     addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
     addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
@@ -721,7 +746,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     currentVendedor, setCurrentVendedor: setCurrentVendedorState,
     getEstoqueDisponivel, gerarNumeroOrcamento, gerarNumeroPedido,
   }), [
-    data, loading, refreshOrcamentos, addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
+    data, loading, refreshOrcamentos, fetchOrcamentoCompleto, addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
     addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
     addMeioPagamento, updateMeioPagamento, removeMeioPagamento, toggleMeioPagamentoAtivo,

@@ -141,6 +141,7 @@ export default function Orcamentos() {
     currentVendedor,
     loading,
     refreshOrcamentos,
+    fetchOrcamentoCompleto,
   } = useSistema();
   const navigate = useNavigate();
   const [filtroCliente, setFiltroCliente] = useState("");
@@ -193,21 +194,34 @@ export default function Orcamentos() {
       if (filtroBusca) {
         const term = filtroBusca.toLowerCase();
         const matchNumero = String(o.numero).includes(term);
-        const matchItem = o.itens.some(i => 
-          i.nome.toLowerCase().includes(term) || 
+        const matchCliente = (o.clienteSnapshot?.nome || "").toLowerCase().includes(term);
+        const matchItem = o.itens.some(i =>
+          i.nome.toLowerCase().includes(term) ||
           (i.codigoComposto || "").toLowerCase().includes(term)
         );
-        if (!matchNumero && !matchItem) return false;
+        if (!matchNumero && !matchCliente && !matchItem) return false;
       }
       return true;
     });
   }, [orcamentos, filtroCliente, filtroBusca, filtroStatus, filtroVendedor, clientes]);
 
-  const valorTotalFiltrado = filtered.reduce((s, o) => s + calcTotal(o), 0);
+  // Usa o subtotal armazenado (a listagem leve não traz os itens em detalhe)
+  const calcOrcTotal = (o: Orcamento) =>
+    (o.itens.length > 0 ? calcSubtotal(o) : Number(o.subtotal || 0)) + (Number(o.freteValor) || 0);
 
-  const handleAprovar = (id: string) => {
+  const valorTotalFiltrado = filtered.reduce((s, o) => s + calcOrcTotal(o), 0);
+
+  const ensureItens = async (o: Orcamento): Promise<Orcamento> => {
+    if (o.itens.length > 0) return o;
+    const full = await fetchOrcamentoCompleto(o.id);
+    return full ?? o;
+  };
+
+  const handleAprovar = async (id: string) => {
     const orc = orcamentos.find(o => o.id === id);
-    if (orc) setAprovarOrc(orc);
+    if (!orc) return;
+    const full = await ensureItens(orc);
+    setAprovarOrc(full);
   };
 
   const handleConfirmarAprovacao = (orcId: string, itensSelecionados: { itemId: string; quantidade: number }[]) => {
@@ -232,9 +246,18 @@ export default function Orcamentos() {
     setDeleteId(null);
   };
 
-  const handleImprimir = (o: Orcamento) => {
-    const cliente = clientes.find(c => c.id === o.clienteId);
-    gerarPDFOrcamento(o, { clientes, vendedores, meiosPagamento, transportadoras, origens }, cliente?.nome);
+  const handleImprimir = async (o: Orcamento) => {
+    const full = await ensureItens(o);
+    const cliente = clientes.find(c => c.id === full.clienteId);
+    gerarPDFOrcamento(full, { clientes, vendedores, meiosPagamento, transportadoras, origens }, cliente?.nome);
+  };
+
+  const handleExpand = async (o: Orcamento) => {
+    const next = expandedId === o.id ? null : o.id;
+    setExpandedId(next);
+    if (next && o.itens.length === 0) {
+      await fetchOrcamentoCompleto(o.id);
+    }
   };
 
   const getClienteNome = (o: Orcamento) => {
@@ -333,7 +356,7 @@ export default function Orcamentos() {
             {/* Header row */}
             <div 
               className="grid grid-cols-[100px_1fr_120px_140px_100px_140px_44px] items-center gap-3 px-4 py-3 bg-muted/30 cursor-pointer hover:bg-muted/50"
-              onClick={() => setExpandedId(expandedId === o.id ? null : o.id)}
+              onClick={() => handleExpand(o)}
             >
               <span className="font-semibold text-foreground">#{o.numero}</span>
               <span className="text-sm truncate">{getClienteNome(o)}</span>
@@ -342,7 +365,7 @@ export default function Orcamentos() {
                 <span className={`w-1.5 h-1.5 rounded-full ${statusStyles[o.status].dot}`} />
                 {statusStyles[o.status].label}
               </span>
-              <span className="text-right font-semibold">{formatBRL(calcTotal(o))}</span>
+              <span className="text-right font-semibold">{formatBRL(calcOrcTotal(o))}</span>
               <div className="flex gap-1">
                 {o.status === "aberto" && (
                   <Button size="sm" className={statusStyles["aprovado"].btn} onClick={(e) => { e.stopPropagation(); handleAprovar(o.id); }}>
@@ -354,7 +377,7 @@ export default function Orcamentos() {
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-              <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setExpandedId(expandedId === o.id ? null : o.id); }}>
+              <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleExpand(o); }}>
                 {expandedId === o.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
             </div>
@@ -366,6 +389,9 @@ export default function Orcamentos() {
                 <div className="grid grid-cols-[40px_1fr_80px_100px_120px] items-center gap-3 px-4 py-2 text-xs font-medium text-muted-foreground bg-muted/20">
                   <span /><span>Produto</span><span className="text-right">Qtd</span><span className="text-right">Unit.</span><span className="text-right">Total</span>
                 </div>
+                {o.itens.length === 0 && (
+                  <div className="px-4 py-6 text-center text-sm text-muted-foreground">Carregando itens...</div>
+                )}
                 {/* Items */}
                 {o.itens.map((item, idx) => (
                   <div key={idx} className="grid grid-cols-[40px_1fr_80px_100px_120px] items-center gap-3 px-4 py-2 text-sm border-b border-border last:border-0">
@@ -400,7 +426,7 @@ export default function Orcamentos() {
                 )}
                 <div className="grid grid-cols-[40px_1fr_80px_100px_120px] items-center gap-3 px-4 py-3 bg-muted/20 text-sm font-semibold">
                   <span /><span /><span /><span className="text-right">Total:</span>
-                  <span className="text-right text-green-600">{formatBRL(calcTotal(o))}</span>
+                  <span className="text-right text-green-600">{formatBRL(calcOrcTotal(o))}</span>
                 </div>
                 {/* Details */}
                 <div className="grid grid-cols-4 gap-4 px-4 py-3 text-xs text-muted-foreground border-t border-border">
