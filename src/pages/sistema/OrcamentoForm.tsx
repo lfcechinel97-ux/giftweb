@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, Plus, Trash2, Upload, X, Search, ImageIcon, Package, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 // Local formatCurrency helper
 const formatCurrency = (value: number) => 
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -86,6 +87,7 @@ export const OrcamentoForm: React.FC = () => {
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<QuoteItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -109,6 +111,12 @@ export const OrcamentoForm: React.FC = () => {
       setClienteSelecionado(clientes.find((c) => c.id === orcamentoExistente.clienteId) || null);
     }
   }, [orcamentoExistente, clientes, currentVendedor]);
+
+  useEffect(() => {
+    if (!isEdit && currentVendedor?.id) {
+      setFormData(prev => prev.vendedorId ? prev : { ...prev, vendedorId: currentVendedor.id });
+    }
+  }, [isEdit, currentVendedor?.id]);
 
   const subtotal = useMemo(() => formData.itens.reduce((sum, it) => sum + it.quantidade * it.precoUnitario, 0), [formData.itens]);
   const freteEfetivo = formData.freteTipo === "CIF" ? 0 : (formData.freteValor || 0);
@@ -167,6 +175,7 @@ export const OrcamentoForm: React.FC = () => {
   };
 
   const handleSalvar = async () => {
+    if (saving) return;
     if (!formData.clienteId || formData.itens.length === 0) {
       alert("Selecione um cliente e adicione pelo menos um item.");
       return;
@@ -211,15 +220,25 @@ export const OrcamentoForm: React.FC = () => {
       anexoUrl: formData.anexoUrl || undefined,
     };
 
-    if (isEdit && id) {
-      updateOrcamento(id, orcData);
-      const orc = orcamentos.find((o) => o.id === id);
-      if (orc) gerarPDFOrcamento({ ...orc, ...orcData }, sis, clienteSelecionado?.nome);
-      navigate("/sistema/orcamentos");
-    } else {
-      const novo = await addOrcamento(orcData);
-      gerarPDFOrcamento(novo, sis, clienteSelecionado?.nome);
-      navigate("/sistema/orcamentos");
+    setSaving(true);
+    try {
+      if (isEdit && id) {
+        await updateOrcamento(id, orcData);
+        const orc = orcamentos.find((o) => o.id === id);
+        if (orc) gerarPDFOrcamento({ ...orc, ...orcData }, sis, clienteSelecionado?.nome);
+        toast.success("Orçamento salvo com sucesso.");
+        navigate("/sistema/orcamentos");
+      } else {
+        const novo = await addOrcamento(orcData);
+        gerarPDFOrcamento(novo, sis, clienteSelecionado?.nome);
+        toast.success("Orçamento salvo com sucesso.");
+        navigate("/sistema/orcamentos");
+      }
+    } catch (e: any) {
+      console.error("[Sistema] salvar orçamento falhou:", e);
+      toast.error(`Não foi possível salvar o orçamento. ${e?.message || "Tente novamente."}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -253,8 +272,8 @@ export const OrcamentoForm: React.FC = () => {
           <button onClick={() => navigate("/sistema/orcamentos")} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
             Cancelar
           </button>
-          <button onClick={handleSalvar} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
-            Salvar Orçamento
+          <button disabled={saving} onClick={handleSalvar} className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-60">
+            {saving ? "Salvando..." : "Salvar Orçamento"}
           </button>
         </div>
       </div>

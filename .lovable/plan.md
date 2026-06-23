@@ -1,59 +1,44 @@
-Vou corrigir os pontos que estão causando o mau funcionamento do `/sistema`, `/sistema/orcamentos` e `/catalogo`.
+Vou corrigir o funcionamento do `/sistema` com foco no problema urgente mostrado no print: vendedor aparecendo como vazio por vários segundos e orçamentos sumindo após atualizar a página.
 
-Plano:
+Plano de execução:
 
-1. Parar a reverificação de acesso a cada troca de página
-- Criar/cachear o estado de admin em memória/localStorage com validade curta.
-- No `AdminGuard`, usar a sessão local e o cache primeiro, sem chamar o backend toda vez que navegar dentro de `/admin` ou `/sistema`.
-- Só revalidar acesso em login, expiração do cache, retry manual ou evento real de logout.
-- Evitar `signOut()` automático em erro temporário de rede/backend, para não derrubar o vendedor.
+1. Corrigir o carregamento inicial do sistema
+- Criar uma inicialização explícita de autenticação no `SistemaProvider` para só consultar dados depois que a sessão do usuário estiver realmente restaurada.
+- Evitar que a tela mostre “0 orçamentos” e “Nenhum cadastrado” enquanto ainda está carregando; exibir estado de carregamento real.
+- Preservar o vendedor salvo no navegador imediatamente no topo, mesmo antes da lista completa de vendedores terminar de carregar.
 
-2. Tornar o contexto do sistema mais estável
-- Ajustar o `SistemaProvider` para não ficar recarregando todos os cadastros e orçamentos de forma pesada.
-- Manter os dados carregados enquanto o usuário navega dentro do sistema.
-- Separar o carregamento inicial em partes: cadastros leves primeiro, histórico depois.
-- Garantir que o nome do vendedor não suma: se existir vendedor salvo, exibir imediatamente; quando os vendedores carregarem, reconciliar pelo id e manter o nome.
+2. Resolver o sumiço dos orçamentos após refresh
+- Fazer o salvamento de orçamento aguardar confirmação do backend antes de navegar de volta para a listagem.
+- Se o backend rejeitar ou der timeout, manter o orçamento na tela e mostrar erro claro, sem fingir que salvou.
+- Depois de salvar, recarregar/confirmar o orçamento gravado para garantir que ele continue aparecendo após atualizar a página.
 
-3. Corrigir histórico de orçamentos por vendedor
-- Adicionar filtro explícito por vendedor na tela de orçamentos, com padrão no vendedor atual selecionado.
-- Mostrar sempre os orçamentos daquele vendedor, sem depender de recarregamentos completos.
-- Permitir alternar para “Todos” quando necessário.
-- Ao criar orçamento novo, preencher vendedor automaticamente com o vendedor atual e preservar esse vínculo no histórico.
+3. Fazer o histórico de orçamentos sempre aparecer
+- Mudar a listagem de orçamentos para buscar os dados com uma função otimizada do backend, sem depender do carregamento pesado de todo o contexto.
+- Carregar os últimos orçamentos rapidamente, ordenados por data.
+- Manter filtro por vendedor, mas sem esconder tudo enquanto o vendedor ainda não terminou de carregar.
+- Permitir ver “Todos os vendedores” e também filtrar automaticamente pelo vendedor atual quando ele estiver definido.
 
-4. Acelerar produtos no `/sistema/orcamentos` e `/sistema/produtos`
-- Remover o carregamento de todos os ~10 mil produtos no início do formulário.
-- Trocar para busca sob demanda no banco, retornando apenas os primeiros resultados necessários enquanto o vendedor digita.
-- Buscar variantes apenas quando um produto for selecionado/expandido.
-- Manter cache no React Query para não repetir a mesma busca durante a sessão.
-- Para telas que precisam de listagem completa, usar carregamento paginado/limitado em vez de baixar tudo de uma vez.
+4. Corrigir o gargalo que está causando timeout
+- Adicionar uma função otimizada para listar orçamentos já com dados mínimos necessários para a tela.
+- Adicionar uma função otimizada para listar dados-base do sistema em uma única chamada leve: vendedores, pagamentos, transportadoras e origens.
+- Reduzir chamadas simultâneas pesadas no `SistemaProvider`, principalmente clientes/orçamentos/pedidos/estoque carregados todos juntos.
 
-5. Acelerar o `/catalogo`
-- Remover a consulta N+1 das categorias, que hoje faz uma consulta de imagem para cada categoria.
-- Criar/usar uma função única no banco para devolver as categorias com imagem de exemplo em uma chamada.
-- Trocar a consulta de cores do catálogo para uma função agregada (`distinct`) em vez de baixar todas as cores de todos os produtos.
-- Manter paginação de 24 produtos, mas reduzir payload e evitar chamadas redundantes quando filtros mudam rápido.
+5. Melhorar a seleção do vendedor
+- Se só existir um vendedor ativo, selecionar automaticamente esse vendedor.
+- Se o vendedor salvo existir no banco, atualizar o nome dele ao carregar.
+- Se o vendedor salvo não existir mais, limpar a seleção e mostrar a necessidade de selecionar outro.
 
-6. Ajustes no banco para sustentar performance
-- Adicionar índices direcionados para os gargalos medidos:
-  - produtos ativos ordenados por `codigo_amigavel` para o sistema;
-  - cores/catálogo;
-  - orçamentos por `vendedor_id` + `created_at`;
-  - clientes por nome;
-  - lookups por nome.
-- Criar funções seguras para:
-  - buscar produtos do sistema por termo/página;
-  - buscar produto + variantes por prefixo/código;
-  - listar cores disponíveis;
-  - listar categorias base com imagem.
+6. Garantir segurança e acesso
+- Manter os dados do sistema protegidos por autenticação/admin.
+- Não abrir os orçamentos publicamente.
+- Ajustar funções do backend para respeitarem o mesmo controle de acesso já usado no admin.
 
-7. Sobre “armazenar os produtos no cloud”
-- Isso já existe: os produtos estão armazenados no banco (`products_cache`) e a API de sincronização atualiza essa lista.
-- O problema principal não é falta de armazenamento, é que algumas telas estão baixando produtos demais ou fazendo consultas repetidas.
-- Vou manter esse modelo de cache no backend e otimizar a forma como o frontend lê dele.
+7. Verificação final
+- Conferir no banco que os orçamentos existem e que os vendedores existem.
+- Validar o fluxo: abrir `/sistema/orcamentos`, selecionar vendedor, criar orçamento, voltar para listagem, atualizar a página e confirmar que o orçamento continua visível.
 
-8. Verificação final
-- Testar navegação entre páginas do `/sistema` sem aparecer “Verificando acesso...” repetidamente.
-- Testar criação/edição de orçamento com vendedor atual preservado.
-- Conferir histórico filtrado por vendedor.
-- Conferir carregamento de produtos no formulário e no catálogo.
-- Rechecar consultas lentas depois dos ajustes.
+Detalhes técnicos:
+- A investigação já confirmou que os orçamentos estão gravados no backend: existem 70 orçamentos e 3 vendedores.
+- O problema visível agora não é ausência de dados; é carregamento instável/timeout na consulta do sistema.
+- A requisição de `sistema_orcamentos` chegou a retornar timeout (`canceling statement due to statement timeout`), por isso a tela cai em estado vazio.
+- Vou trocar o padrão atual de carregar tudo em paralelo por chamadas menores e mais previsíveis, com retry/erro visível e sem sobrescrever a UI com listas vazias durante falha temporária.

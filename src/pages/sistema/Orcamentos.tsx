@@ -129,12 +129,25 @@ function AprovarModal({ orcamento, onClose, onConfirm }: AprovarModalProps) {
 }
 
 export default function Orcamentos() {
-  const { orcamentos, removeOrcamento, aprovarOrcamento, clientes, vendedores, transportadoras, meiosPagamento, origens, currentVendedor } = useSistema();
+  const {
+    orcamentos,
+    removeOrcamento,
+    aprovarOrcamento,
+    clientes,
+    vendedores,
+    transportadoras,
+    meiosPagamento,
+    origens,
+    currentVendedor,
+    loading,
+    refreshOrcamentos,
+  } = useSistema();
   const navigate = useNavigate();
   const [filtroCliente, setFiltroCliente] = useState("");
   const [filtroBusca, setFiltroBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [filtroVendedor, setFiltroVendedor] = useState<string>(() => currentVendedor?.id || "todos");
+  const [listLoading, setListLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
@@ -142,6 +155,31 @@ export default function Orcamentos() {
   useEffect(() => {
     if (currentVendedor?.id) setFiltroVendedor(currentVendedor.id);
   }, [currentVendedor?.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setListLoading(true);
+      try {
+        await refreshOrcamentos({
+          vendedorId: filtroVendedor === "todos" ? null : filtroVendedor,
+          status: filtroStatus,
+          search: filtroBusca,
+          cliente: filtroCliente,
+          limit: 300,
+        });
+      } catch {
+        // Erro já exibido pelo contexto; mantém a lista anterior na tela.
+      } finally {
+        if (!cancelled) setListLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [filtroVendedor, filtroStatus, filtroBusca, filtroCliente, refreshOrcamentos]);
 
   const filtered = useMemo(() => {
     return orcamentos.filter(o => {
@@ -274,13 +312,19 @@ export default function Orcamentos() {
 
       {/* Total */}
       <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">{filtered.length} orçamento(s)</p>
+        <p className="text-sm text-muted-foreground">
+          {listLoading ? "Atualizando orçamentos..." : `${filtered.length} orçamento(s)`}
+        </p>
         <p className="text-sm font-medium">Total filtrado: <span className="text-green-600">{formatBRL(valorTotalFiltrado)}</span></p>
       </div>
 
       {/* Cards */}
       <div className="space-y-3">
-        {filtered.length === 0 ? (
+        {(loading || listLoading) && filtered.length === 0 ? (
+          <div className="bg-card border border-border rounded-lg p-12 text-center">
+            <p className="text-muted-foreground">Carregando histórico de orçamentos...</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="bg-card border border-border rounded-lg p-12 text-center">
             <p className="text-muted-foreground">Nenhum orçamento. Clique em "Novo Orçamento".</p>
           </div>

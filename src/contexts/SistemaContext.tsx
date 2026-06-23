@@ -195,8 +195,15 @@ export interface SistemaData {
 
 interface SistemaContextType extends SistemaData {
   loading: boolean;
+  refreshOrcamentos: (opts?: {
+    vendedorId?: string | null;
+    status?: string | null;
+    search?: string | null;
+    cliente?: string | null;
+    limit?: number;
+  }) => Promise<Orcamento[]>;
   addOrcamento: (o: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt">) => Promise<Orcamento>;
-  updateOrcamento: (id: string, changes: Partial<Orcamento>) => void;
+  updateOrcamento: (id: string, changes: Partial<Orcamento>) => Promise<void>;
   removeOrcamento: (id: string) => void;
   aprovarOrcamento: (id: string) => Promise<Pedido | null>;
   updatePedido: (id: string, changes: Partial<Pedido>) => void;
@@ -235,6 +242,8 @@ const emptyData: SistemaData = {
 };
 
 const SistemaContext = createContext<SistemaContextType | null>(null);
+
+const arr = <T,>(value: any): T[] => Array.isArray(value) ? value : [];
 
 // ---------- mappers ----------
 const mapVendedor = (r: any): LookupItem => ({ id: r.id, nome: r.nome, ativo: r.ativo, meta: r.meta ?? undefined });
@@ -341,42 +350,97 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const migratedRef = useRef(false);
   const loadedRef = useRef(false);
 
+  const reconcileCurrentVendedor = useCallback((vendedores: LookupItem[]) => {
+    setCurrentVendedorState(prev => {
+      if (prev) {
+        const fresh = vendedores.find(v => v.id === prev.id);
+        if (fresh) return fresh;
+        return vendedores.length > 0 ? null : prev;
+      }
+
+      const ativos = vendedores.filter(v => v.ativo !== false);
+      return ativos.length === 1 ? ativos[0] : null;
+    });
+  }, []);
+
+  const refreshOrcamentos = useCallback(async (opts?: {
+    vendedorId?: string | null;
+    status?: string | null;
+    search?: string | null;
+    cliente?: string | null;
+    limit?: number;
+  }): Promise<Orcamento[]> => {
+    const { data: payload, error } = await supabase.rpc("sistema_list_orcamentos", {
+      p_vendedor_id: opts?.vendedorId || null,
+      p_status: opts?.status && opts.status !== "todos" ? opts.status : null,
+      p_search: opts?.search || null,
+      p_cliente: opts?.cliente || null,
+      p_limit: opts?.limit ?? 300,
+    });
+
+    if (error) {
+      console.error("[Sistema] carregar orçamentos falhou:", error);
+      toast.error(`Não foi possível carregar os orçamentos. ${error.message || ""}`);
+      throw error;
+    }
+
+    const rows = arr<any>((payload as any)?.rows).map(mapOrcamento);
+    setData(prev => ({ ...prev, orcamentos: rows }));
+    return rows;
+  }, []);
+
   const loadAll = useCallback(async (force = false) => {
     if (loadedRef.current && !force) return;
     setLoading(prev => (loadedRef.current ? prev : true));
-    const [v, m, t, og, c, o, p, ae] = await Promise.all([
-      supabase.from("sistema_vendedores").select("*").order("nome"),
-      supabase.from("sistema_meios_pagamento").select("*").order("nome"),
-      supabase.from("sistema_transportadoras").select("*").order("nome"),
-      supabase.from("sistema_origens").select("*").order("nome"),
-      supabase.from("sistema_clientes").select("*").order("nome"),
-      supabase.from("sistema_orcamentos").select("*").order("created_at", { ascending: false }),
-      supabase.from("sistema_pedidos").select("*").order("created_at", { ascending: false }),
-      supabase.from("sistema_ajustes_estoque").select("*").order("created_at", { ascending: false }),
-    ]);
-    const vendedores = (v.data ?? []).map(mapVendedor);
-    setData(prev => ({
-      vendedores,
-      meiosPagamento: (m.data ?? []).map(mapMeio),
-      transportadoras: (t.data ?? []).map(mapTransp),
-      origens: (og.data ?? []).map(mapOrigem),
-      clientes: (c.data ?? []).map(mapCliente),
-      orcamentos: (o.data ?? []).map(mapOrcamento),
-      pedidos: (p.data ?? []).map(mapPedido),
-      ajustesEstoque: (ae.data ?? []).map((r: any) => ({
-        id: r.id, produtoId: r.produto_id ?? "", codigoComposto: r.codigo_composto ?? "",
-        varianteSlug: r.variante_slug ?? undefined, tipo: r.tipo, quantidade: r.quantidade,
-        motivo: r.motivo ?? "", orcamentoId: r.orcamento_id ?? undefined,
-        pedidoId: r.pedido_id ?? undefined, createdAt: r.created_at, createdBy: r.created_by ?? undefined,
-      })),
-    }));
-    setCurrentVendedorState(prev => {
-      if (!prev) return null;
-      return vendedores.find(v => v.id === prev.id) ?? prev;
-    });
-    loadedRef.current = true;
-    setLoading(false);
-  }, []);
+    try {
+      const [bootstrapRes, clientesRes, orcamentosRes] = await Promise.all([
+        supabase.rpc("sistema_get_bootstrap"),
+        supabase.from("sistema_clientes").select("*").order("nome"),
+        supabase.rpc("sistema_list_orcamentos", { p_limit: 300 }),
+      ]);
+
+      if (bootstrapRes.error) throw bootstrapRes.error;
+      if (clientesRes.error) throw clientesRes.error;
+      if (orcamentosRes.error) throw orcamentosRes.error;
+
+      const bootstrap = (bootstrapRes.data ?? {}) as any;
+      const vendedores = arr<any>(bootstrap.vendedores).map(mapVendedor);
+
+      setData(prev => ({
+        ...prev,
+        vendedores,
+        meiosPagamento: arr<any>(bootstrap.meios_pagamento).map(mapMeio),
+        transportadoras: arr<any>(bootstrap.transportadoras).map(mapTransp),
+        origens: arr<any>(bootstrap.origens).map(mapOrigem),
+        clientes: (clientesRes.data ?? []).map(mapCliente),
+        orcamentos: arr<any>((orcamentosRes.data as any)?.rows).map(mapOrcamento),
+      }));
+
+      reconcileCurrentVendedor(vendedores);
+      loadedRef.current = true;
+      setLoading(false);
+
+      Promise.all([
+        supabase.from("sistema_pedidos").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase.from("sistema_ajustes_estoque").select("*").order("created_at", { ascending: false }).limit(1000),
+      ]).then(([p, ae]) => {
+        setData(prev => ({
+          ...prev,
+          pedidos: (p.data ?? []).map(mapPedido),
+          ajustesEstoque: (ae.data ?? []).map((r: any) => ({
+            id: r.id, produtoId: r.produto_id ?? "", codigoComposto: r.codigo_composto ?? "",
+            varianteSlug: r.variante_slug ?? undefined, tipo: r.tipo, quantidade: r.quantidade,
+            motivo: r.motivo ?? "", orcamentoId: r.orcamento_id ?? undefined,
+            pedidoId: r.pedido_id ?? undefined, createdAt: r.created_at, createdBy: r.created_by ?? undefined,
+          })),
+        }));
+      }).catch(e => console.warn("[Sistema] carga secundária falhou", e));
+    } catch (e: any) {
+      console.error("[Sistema] carregamento inicial falhou:", e);
+      toast.error(`Não foi possível carregar o sistema. ${e?.message || "Tente novamente."}`);
+      if (!loadedRef.current) setLoading(false);
+    }
+  }, [reconcileCurrentVendedor]);
 
   useEffect(() => {
     let cancelled = false;
@@ -416,23 +480,34 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // ---------- Orcamentos ----------
   const addOrcamento = useCallback(async (o: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt">): Promise<Orcamento> => {
-    const { data: numeroData } = await supabase.rpc("sistema_next_orcamento_numero");
+    const { data: numeroData, error: numeroError } = await supabase.rpc("sistema_next_orcamento_numero");
+    if (numeroError) {
+      reportDbError("número do orçamento")({ error: numeroError });
+      throw numeroError;
+    }
     const numero = (numeroData as any) ?? String(Date.now());
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     const orcamento: Orcamento = { ...o, id, numero, createdAt: now, updatedAt: now };
     setData(prev => ({ ...prev, orcamentos: [orcamento, ...prev.orcamentos] }));
-    await dbWrite("orçamento", () => supabase.from("sistema_orcamentos").insert({ ...orcamentoToDb(orcamento), created_at: now }));
+    const res = await dbWrite("orçamento", () => supabase.from("sistema_orcamentos").insert({ ...orcamentoToDb(orcamento), created_at: now }));
+    if (res?.error) {
+      setData(prev => ({ ...prev, orcamentos: prev.orcamentos.filter(item => item.id !== id) }));
+      throw res.error;
+    }
+    await refreshOrcamentos({ limit: 300 }).catch(() => undefined);
     return orcamento;
-  }, []);
+  }, [refreshOrcamentos]);
 
-  const updateOrcamento = useCallback((id: string, changes: Partial<Orcamento>) => {
+  const updateOrcamento = useCallback(async (id: string, changes: Partial<Orcamento>) => {
     setData(prev => ({
       ...prev,
       orcamentos: prev.orcamentos.map(o => o.id === id ? { ...o, ...changes, updatedAt: new Date().toISOString() } : o),
     }));
-    dbWrite("orçamento", () => supabase.from("sistema_orcamentos").update(orcamentoToDb(changes)).eq("id", id));
-  }, []);
+    const res = await dbWrite("orçamento", () => supabase.from("sistema_orcamentos").update(orcamentoToDb(changes)).eq("id", id));
+    if (res?.error) throw res.error;
+    await refreshOrcamentos({ limit: 300 }).catch(() => undefined);
+  }, [refreshOrcamentos]);
 
   const removeOrcamento = useCallback((id: string) => {
     setData(prev => ({ ...prev, orcamentos: prev.orcamentos.filter(o => o.id !== id) }));
@@ -636,6 +711,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const value = useMemo<SistemaContextType>(() => ({
     ...data, loading,
+    refreshOrcamentos,
     addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
     addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
@@ -645,7 +721,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     currentVendedor, setCurrentVendedor: setCurrentVendedorState,
     getEstoqueDisponivel, gerarNumeroOrcamento, gerarNumeroPedido,
   }), [
-    data, loading, addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
+    data, loading, refreshOrcamentos, addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
     addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
     addMeioPagamento, updateMeioPagamento, removeMeioPagamento, toggleMeioPagamentoAtivo,
