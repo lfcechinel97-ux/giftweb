@@ -5,8 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { fetchProductGroup, useSistemaProducts, type SistemaProduct } from "./useSistemaProducts";
 import { formatBRL } from "@/contexts/SistemaContext";
+import CustomProdutosList from "./CustomProdutosList";
+
 
 function VarianteRow({ v }: { v: SistemaProduct }) {
   return (
