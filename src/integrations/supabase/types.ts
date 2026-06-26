@@ -533,6 +533,62 @@ export type Database = {
         }
         Relationships: []
       }
+      sistema_produtos_custom: {
+        Row: {
+          categoria: string | null
+          codigo: string
+          cor: string | null
+          created_at: string
+          created_by: string | null
+          estoque: number
+          id: string
+          image_url: string | null
+          nome: string
+          observacoes: string | null
+          parent_id: string | null
+          preco_custo: number
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string | null
+          codigo: string
+          cor?: string | null
+          created_at?: string
+          created_by?: string | null
+          estoque?: number
+          id?: string
+          image_url?: string | null
+          nome: string
+          observacoes?: string | null
+          parent_id?: string | null
+          preco_custo?: number
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string | null
+          codigo?: string
+          cor?: string | null
+          created_at?: string
+          created_by?: string | null
+          estoque?: number
+          id?: string
+          image_url?: string | null
+          nome?: string
+          observacoes?: string | null
+          parent_id?: string | null
+          preco_custo?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_produtos_custom_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_produtos_custom"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sistema_transportadoras: {
         Row: {
           ativo: boolean
@@ -824,8 +880,13 @@ export type Database = {
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       sistema_get_bootstrap: { Args: never; Returns: Json }
+      sistema_get_custom_product_variants: {
+        Args: { p_parent_id: string }
+        Returns: Json
+      }
       sistema_get_orcamento: { Args: { p_id: string }; Returns: Json }
       sistema_get_product_group: { Args: { p_codigo: string }; Returns: Json }
+      sistema_list_custom_products: { Args: never; Returns: Json }
       sistema_list_orcamentos: {
         Args: {
           p_cliente?: string
