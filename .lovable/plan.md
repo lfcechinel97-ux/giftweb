@@ -1,52 +1,33 @@
-## Problema
+## Cadastro de produtos customizados no sistema
 
-A busca de produtos no modal "Adicionar Item" usa `ILIKE '%termo inteiro%'`, então frases com mais de uma palavra (ex: "sacola em tnt", "garrafa led") só batem se a sequência exata existir no nome. Em produção isso significa:
+Permitir que vendedores criem produtos próprios (fora da XBZ) com imagem e variantes, e os utilizem no orçamento. Produtos customizados ficam isolados do site público.
 
-- "sacola em tnt" → 0 resultados (mas 155 produtos contêm "sacola" + "tnt")
-- "garrafa led" → não encontra "Garrafa Squeeze LED"
-- A demora vem do `ILIKE` em `nome`/`codigo_amigavel` sem índice trigram (índice trgm só existe em `busca`).
+### 1. Backend (Lovable Cloud)
 
-## Plano
+**Nova tabela `sistema_produtos_custom`** (separada de `products_cache` para não conflitar com sync XBZ):
+- `nome`, `codigo` (texto livre, único), `preco_custo`, `estoque`, `image_url`, `cor`, `categoria`, `observacoes`
+- `parent_id` (uuid, nullable) — se preenchido, é variante de outro produto custom
+- `created_by` (uuid, auth.users), timestamps
 
-### 1. Reescrever `sistema_search_products` (migration)
-- Quebrar o termo em palavras (split por espaços, ignorar tokens < 2 chars).
-- Aplicar **AND** entre os tokens, casando contra `busca` (que já concatena nome + código + cor + categoria + sinônimos e tem índice GIN trgm).
-- Para um único token curto/código, também testar `codigo_amigavel`.
-- Ordenar por relevância simples: produtos cujo `nome` começa com o termo primeiro, depois ordem alfabética.
-- Manter o agrupamento por `group_key` (1 representante por prefixo) e o limite/paginação existentes.
+RLS: qualquer admin logado (`is_admin_user()`) faz SELECT/INSERT/UPDATE/DELETE. GRANT para `authenticated` e `service_role`.
 
-### 2. Garantir velocidade
-- `idx_pc_sistema_busca_trgm` (já existe) cobre o ILIKE em `busca`. Confirmar que o plano usa GIN — sem novo índice necessário.
-- Remover o ILIKE em `nome` e `codigo_amigavel` quando houver mais de um token (já coberto via `busca`).
+**Bucket de Storage `sistema-produtos`** (público para leitura) com policy: admins fazem upload/delete.
 
-### 3. Frontend (`useSistemaProducts.ts` / modal de busca)
-- Aumentar debounce mínimo se necessário, mas manter UX rápida (300 ms).
-- Subir `p_page_size` default para 60 e remover o cap de 100 no RPC para 200, permitindo mais resultados quando o termo é genérico.
-- Mostrar "Nenhum produto encontrado" quando o RPC retorna 0 (já existe), mantendo "Carregando produtos..." apenas durante fetch.
+**Atualizar RPC `sistema_search_products`**: fazer UNION com `sistema_produtos_custom`, devolvendo no mesmo formato (rows), marcando origem com `is_custom = true` para diferenciar visualmente.
 
-### 4. Verificação
-- Rodar SQL: `sistema_search_products('sacola em tnt')` deve retornar > 0.
-- Testar no preview: "garrafa led", "sacola tnt", "caneta metal".
+### 2. Frontend
 
-## Detalhes técnicos
+**Nova aba "Meus Produtos" em `/sistema/produtos`** (mantém a aba atual "Catálogo XBZ"):
+- Lista os produtos customizados com busca, edição inline e exclusão
+- Botão "Novo produto" abre dialog com formulário: nome, código, preço de custo, estoque, cor, categoria, upload de imagem (drag-drop → bucket `sistema-produtos`)
+- Suporte a variantes: dentro do dialog do produto pai, botão "+ Adicionar variante" cria filhos com cor/código/estoque/imagem próprios
 
-Nova cláusula WHERE (resumida):
+**Busca de produtos no `OrcamentoForm`**: já usa `sistema_search_products`; passará a retornar XBZ + custom misturados, ordenados por relevância. Produto custom ganha badge sutil "Personalizado" no resultado.
 
-```sql
-WITH tokens AS (
-  SELECT array_agg(t) AS arr
-  FROM unnest(string_to_array(lower(v_term), ' ')) t
-  WHERE length(t) >= 2
-)
-... WHERE pc.ativo = true
-  AND (
-    v_term IS NULL
-    OR (
-      SELECT bool_and(pc.busca ILIKE '%' || tk || '%')
-      FROM unnest((SELECT arr FROM tokens)) tk
-    )
-    OR pc.codigo_amigavel ILIKE '%' || v_term || '%'
-  )
-```
+### 3. Detalhes técnicos
 
-Sem mudanças de RLS ou de outras tabelas.
+- Validação com Zod no dialog: nome 1-200, código 1-50, preço ≥ 0, estoque ≥ 0
+- Upload de imagem: limite 5MB, formatos jpg/png/webp; converte filename para slug
+- Código duplicado: constraint `UNIQUE(codigo)` + tratamento de erro amigável
+- Itens do orçamento já guardam snapshot (`nome`, `codigo`, `preco`, `image_url`), então funciona sem mudar schema de orçamento
+- Não toca em `products_cache` nem no catálogo público — total isolamento
