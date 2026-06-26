@@ -166,50 +166,64 @@ export default function ProdutosCatalogo() {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold">Produtos</h2>
-        <p className="text-sm text-muted-foreground">Catálogo completo — todos os produtos ativos da XBZ, incluindo variantes.</p>
+        <p className="text-sm text-muted-foreground">Catálogo da XBZ e produtos próprios criados pela equipe.</p>
       </div>
 
-      <div className="bg-card rounded-lg border p-4 flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nome ou código (ex: 08338-BCO)..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <Select value={categoria} onValueChange={setCategoria}>
-          <SelectTrigger className="md:w-[240px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todas">Todas as categorias</SelectItem>
-            {categorias.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={mostrar} onValueChange={v => setMostrar(v as any)}>
-          <SelectTrigger className="md:w-[160px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="com_foto">Com foto</SelectItem>
-            <SelectItem value="sem_foto">Sem foto</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Tabs defaultValue="xbz" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="xbz">Catálogo XBZ</TabsTrigger>
+          <TabsTrigger value="custom">Meus produtos</TabsTrigger>
+        </TabsList>
 
-      {isLoading || searching ? (
-        <div className="text-center py-16 text-muted-foreground">Carregando catálogo...</div>
-      ) : (
-        <>
-          <p className="text-sm text-muted-foreground">
-            {filtered.length} produto{filtered.length !== 1 ? "s" : ""} pai
-            {" "}· {variants.length} variante{variants.length !== 1 ? "s" : ""} no total
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {filtered.map(p => (
-              <ProdutoCard
-                key={p.id}
-                parent={p}
-                pvariants={variantesByParent.get(p.id) ?? []}
-              />
-            ))}
+        <TabsContent value="xbz" className="space-y-4">
+          <div className="bg-card rounded-lg border p-4 flex flex-col md:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Buscar por nome ou código (ex: 08338-BCO)..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+            </div>
+            <Select value={categoria} onValueChange={setCategoria}>
+              <SelectTrigger className="md:w-[240px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas as categorias</SelectItem>
+                {categorias.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={mostrar} onValueChange={v => setMostrar(v as any)}>
+              <SelectTrigger className="md:w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="com_foto">Com foto</SelectItem>
+                <SelectItem value="sem_foto">Sem foto</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </>
-      )}
+
+          {isLoading || searching ? (
+            <div className="text-center py-16 text-muted-foreground">Carregando catálogo...</div>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">
+                {filtered.length} produto{filtered.length !== 1 ? "s" : ""} pai
+                {" "}· {variants.length} variante{variants.length !== 1 ? "s" : ""} no total
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                {filtered.map(p => (
+                  <ProdutoCard
+                    key={p.id}
+                    parent={p}
+                    pvariants={variantesByParent.get(p.id) ?? []}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="custom">
+          <CustomProdutosList />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
+
