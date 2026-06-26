@@ -931,10 +931,14 @@ const ItemDialog: React.FC<ItemDialogProps> = ({
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{p.nome}</p>
+                            <p className="font-medium text-sm truncate">
+                              {p.nome}
+                              {p.is_custom && <span className="ml-2 inline-block text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-normal align-middle">Personalizado</span>}
+                            </p>
                             <p className="text-xs text-gray-500">{p.codigo_amigavel || p.slug}</p>
                             <p className="text-xs text-primary">{formatCurrency(p.preco_custo ? getEffectiveUnitPrice(p.tabela_precos, p.preco_custo, 1) : 0)}</p>
                           </div>
+
                         </button>
                       ))}
                     </div>
