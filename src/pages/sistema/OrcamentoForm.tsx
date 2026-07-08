@@ -89,29 +89,46 @@ export const OrcamentoForm: React.FC = () => {
   const [editingItem, setEditingItem] = useState<QuoteItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [saving, setSaving] = useState(false);
+  const [baixarPdf, setBaixarPdf] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hydratedRef = useRef<string | null>(null);
 
+  // Hidrata o formulário apenas quando o orçamento carregado muda de fato
+  // (id ou updatedAt do servidor) — evita que refreshes periódicos do contexto
+  // sobrescrevam alterações não salvas do vendedor.
   useEffect(() => {
-    if (orcamentoExistente) {
-      setFormData({
-        clienteId: orcamentoExistente.clienteId,
-        contatoNome: orcamentoExistente.contatoNome || "",
-        contatoTelefone: orcamentoExistente.contatoTelefone || "",
-        contatoEmail: orcamentoExistente.contatoEmail || "",
-        vendedorId: orcamentoExistente.vendedorId || currentVendedor?.id || "",
-        origemId: orcamentoExistente.origemId || "",
-        itens: orcamentoExistente.itens,
-        freteTipo: orcamentoExistente.freteTipo,
-        freteValor: orcamentoExistente.freteValor,
-        transportadoraId: orcamentoExistente.transportadoraId || "",
-        prazoEntrega: orcamentoExistente.prazoEntrega || 0,
-        pagamentoId: orcamentoExistente.pagamentoId || "",
-        observacoes: orcamentoExistente.observacoes || "",
-        anexoUrl: orcamentoExistente.anexoUrl || "",
-      });
-      setClienteSelecionado(clientes.find((c) => c.id === orcamentoExistente.clienteId) || null);
-    }
-  }, [orcamentoExistente, clientes, currentVendedor]);
+    if (!orcamentoExistente) return;
+    const hasItens = orcamentoExistente.itens && orcamentoExistente.itens.length > 0;
+    const key = `${orcamentoExistente.id}::${orcamentoExistente.updatedAt || ""}::${hasItens ? "full" : "light"}`;
+    if (hydratedRef.current === key) return;
+    // Não hidrata a partir da versão "leve" (sem itens) se já hidratamos a completa
+    if (!hasItens && hydratedRef.current?.startsWith(`${orcamentoExistente.id}::`)) return;
+    hydratedRef.current = key;
+    setFormData({
+      clienteId: orcamentoExistente.clienteId,
+      contatoNome: orcamentoExistente.contatoNome || "",
+      contatoTelefone: orcamentoExistente.contatoTelefone || "",
+      contatoEmail: orcamentoExistente.contatoEmail || "",
+      vendedorId: orcamentoExistente.vendedorId || currentVendedor?.id || "",
+      origemId: orcamentoExistente.origemId || "",
+      itens: orcamentoExistente.itens,
+      freteTipo: orcamentoExistente.freteTipo,
+      freteValor: orcamentoExistente.freteValor,
+      transportadoraId: orcamentoExistente.transportadoraId || "",
+      prazoEntrega: orcamentoExistente.prazoEntrega || 0,
+      pagamentoId: orcamentoExistente.pagamentoId || "",
+      observacoes: orcamentoExistente.observacoes || "",
+      anexoUrl: orcamentoExistente.anexoUrl || "",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orcamentoExistente?.id, orcamentoExistente?.updatedAt, orcamentoExistente?.itens?.length]);
+
+  // Mantém `clienteSelecionado` em sincronia sem tocar em `formData`
+  useEffect(() => {
+    if (!formData.clienteId) return;
+    const c = clientes.find((cli) => cli.id === formData.clienteId) || null;
+    setClienteSelecionado((prev) => (prev?.id === c?.id ? prev : c));
+  }, [formData.clienteId, clientes]);
 
   useEffect(() => {
     if (!isEdit && currentVendedor?.id) {
@@ -233,13 +250,15 @@ export const OrcamentoForm: React.FC = () => {
     try {
       if (isEdit && id) {
         await updateOrcamento(id, orcData);
-        const orc = orcamentos.find((o) => o.id === id);
-        if (orc) gerarPDFOrcamento({ ...orc, ...orcData }, sis, clienteSelecionado?.nome);
+        if (baixarPdf) {
+          const orc = orcamentos.find((o) => o.id === id);
+          if (orc) gerarPDFOrcamento({ ...orc, ...orcData }, sis, clienteSelecionado?.nome);
+        }
         toast.success("Orçamento salvo com sucesso.");
         navigate("/sistema/orcamentos");
       } else {
         const novo = await addOrcamento(orcData);
-        gerarPDFOrcamento(novo, sis, clienteSelecionado?.nome);
+        if (baixarPdf) gerarPDFOrcamento(novo, sis, clienteSelecionado?.nome);
         toast.success("Orçamento salvo com sucesso.");
         navigate("/sistema/orcamentos");
       }
@@ -277,7 +296,16 @@ export const OrcamentoForm: React.FC = () => {
           <h1 className="text-xl font-semibold">{isEdit ? `Orçamento ${orcamentoExistente?.numero}` : "Novo Orçamento"}</h1>
           <p className="text-sm text-gray-500">Preencha os dados do orçamento</p>
         </div>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={baixarPdf}
+              onChange={(e) => setBaixarPdf(e.target.checked)}
+              className="w-4 h-4 accent-primary cursor-pointer"
+            />
+            Baixar orçamento em PDF
+          </label>
           <button onClick={() => navigate("/sistema/orcamentos")} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
             Cancelar
           </button>
