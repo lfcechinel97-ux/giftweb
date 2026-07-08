@@ -250,13 +250,15 @@ export const OrcamentoForm: React.FC = () => {
     try {
       if (isEdit && id) {
         await updateOrcamento(id, orcData);
-        const orc = orcamentos.find((o) => o.id === id);
-        if (orc) gerarPDFOrcamento({ ...orc, ...orcData }, sis, clienteSelecionado?.nome);
+        if (baixarPdf) {
+          const orc = orcamentos.find((o) => o.id === id);
+          if (orc) gerarPDFOrcamento({ ...orc, ...orcData }, sis, clienteSelecionado?.nome);
+        }
         toast.success("Orçamento salvo com sucesso.");
         navigate("/sistema/orcamentos");
       } else {
         const novo = await addOrcamento(orcData);
-        gerarPDFOrcamento(novo, sis, clienteSelecionado?.nome);
+        if (baixarPdf) gerarPDFOrcamento(novo, sis, clienteSelecionado?.nome);
         toast.success("Orçamento salvo com sucesso.");
         navigate("/sistema/orcamentos");
       }
