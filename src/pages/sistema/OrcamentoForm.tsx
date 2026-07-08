@@ -296,7 +296,16 @@ export const OrcamentoForm: React.FC = () => {
           <h1 className="text-xl font-semibold">{isEdit ? `Orçamento ${orcamentoExistente?.numero}` : "Novo Orçamento"}</h1>
           <p className="text-sm text-gray-500">Preencha os dados do orçamento</p>
         </div>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={baixarPdf}
+              onChange={(e) => setBaixarPdf(e.target.checked)}
+              className="w-4 h-4 accent-primary cursor-pointer"
+            />
+            Baixar orçamento em PDF
+          </label>
           <button onClick={() => navigate("/sistema/orcamentos")} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
             Cancelar
           </button>
