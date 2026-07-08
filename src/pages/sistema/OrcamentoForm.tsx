@@ -89,29 +89,46 @@ export const OrcamentoForm: React.FC = () => {
   const [editingItem, setEditingItem] = useState<QuoteItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [saving, setSaving] = useState(false);
+  const [baixarPdf, setBaixarPdf] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hydratedRef = useRef<string | null>(null);
 
+  // Hidrata o formulário apenas quando o orçamento carregado muda de fato
+  // (id ou updatedAt do servidor) — evita que refreshes periódicos do contexto
+  // sobrescrevam alterações não salvas do vendedor.
   useEffect(() => {
-    if (orcamentoExistente) {
-      setFormData({
-        clienteId: orcamentoExistente.clienteId,
-        contatoNome: orcamentoExistente.contatoNome || "",
-        contatoTelefone: orcamentoExistente.contatoTelefone || "",
-        contatoEmail: orcamentoExistente.contatoEmail || "",
-        vendedorId: orcamentoExistente.vendedorId || currentVendedor?.id || "",
-        origemId: orcamentoExistente.origemId || "",
-        itens: orcamentoExistente.itens,
-        freteTipo: orcamentoExistente.freteTipo,
-        freteValor: orcamentoExistente.freteValor,
-        transportadoraId: orcamentoExistente.transportadoraId || "",
-        prazoEntrega: orcamentoExistente.prazoEntrega || 0,
-        pagamentoId: orcamentoExistente.pagamentoId || "",
-        observacoes: orcamentoExistente.observacoes || "",
-        anexoUrl: orcamentoExistente.anexoUrl || "",
-      });
-      setClienteSelecionado(clientes.find((c) => c.id === orcamentoExistente.clienteId) || null);
-    }
-  }, [orcamentoExistente, clientes, currentVendedor]);
+    if (!orcamentoExistente) return;
+    const hasItens = orcamentoExistente.itens && orcamentoExistente.itens.length > 0;
+    const key = `${orcamentoExistente.id}::${orcamentoExistente.updatedAt || ""}::${hasItens ? "full" : "light"}`;
+    if (hydratedRef.current === key) return;
+    // Não hidrata a partir da versão "leve" (sem itens) se já hidratamos a completa
+    if (!hasItens && hydratedRef.current?.startsWith(`${orcamentoExistente.id}::`)) return;
+    hydratedRef.current = key;
+    setFormData({
+      clienteId: orcamentoExistente.clienteId,
+      contatoNome: orcamentoExistente.contatoNome || "",
+      contatoTelefone: orcamentoExistente.contatoTelefone || "",
+      contatoEmail: orcamentoExistente.contatoEmail || "",
+      vendedorId: orcamentoExistente.vendedorId || currentVendedor?.id || "",
+      origemId: orcamentoExistente.origemId || "",
+      itens: orcamentoExistente.itens,
+      freteTipo: orcamentoExistente.freteTipo,
+      freteValor: orcamentoExistente.freteValor,
+      transportadoraId: orcamentoExistente.transportadoraId || "",
+      prazoEntrega: orcamentoExistente.prazoEntrega || 0,
+      pagamentoId: orcamentoExistente.pagamentoId || "",
+      observacoes: orcamentoExistente.observacoes || "",
+      anexoUrl: orcamentoExistente.anexoUrl || "",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orcamentoExistente?.id, orcamentoExistente?.updatedAt, orcamentoExistente?.itens?.length]);
+
+  // Mantém `clienteSelecionado` em sincronia sem tocar em `formData`
+  useEffect(() => {
+    if (!formData.clienteId) return;
+    const c = clientes.find((cli) => cli.id === formData.clienteId) || null;
+    setClienteSelecionado((prev) => (prev?.id === c?.id ? prev : c));
+  }, [formData.clienteId, clientes]);
 
   useEffect(() => {
     if (!isEdit && currentVendedor?.id) {

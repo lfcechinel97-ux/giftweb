@@ -1,33 +1,45 @@
-## Cadastro de produtos customizados no sistema
 
-Permitir que vendedores criem produtos próprios (fora da XBZ) com imagem e variantes, e os utilizem no orçamento. Produtos customizados ficam isolados do site público.
+## Problemas
 
-### 1. Backend (Lovable Cloud)
+1. **Formulário reseta sozinho a cada ~10s** quando o vendedor está editando um orçamento — perde todas as alterações não salvas.
+2. **Salvar sempre baixa o PDF automaticamente** — o vendedor quer decidir se quer baixar ou não.
 
-**Nova tabela `sistema_produtos_custom`** (separada de `products_cache` para não conflitar com sync XBZ):
-- `nome`, `codigo` (texto livre, único), `preco_custo`, `estoque`, `image_url`, `cor`, `categoria`, `observacoes`
-- `parent_id` (uuid, nullable) — se preenchido, é variante de outro produto custom
-- `created_by` (uuid, auth.users), timestamps
+## Causa raiz (problema 1)
 
-RLS: qualquer admin logado (`is_admin_user()`) faz SELECT/INSERT/UPDATE/DELETE. GRANT para `authenticated` e `service_role`.
+Em `src/pages/sistema/OrcamentoForm.tsx` (linhas 94-114) existe um `useEffect` que reescreve `formData` sempre que `orcamentoExistente`, `clientes` ou `currentVendedor` mudam:
 
-**Bucket de Storage `sistema-produtos`** (público para leitura) com policy: admins fazem upload/delete.
+```ts
+useEffect(() => {
+  if (orcamentoExistente) {
+    setFormData({ ...orcamentoExistente ... });
+  }
+}, [orcamentoExistente, clientes, currentVendedor]);
+```
 
-**Atualizar RPC `sistema_search_products`**: fazer UNION com `sistema_produtos_custom`, devolvendo no mesmo formato (rows), marcando origem com `is_custom = true` para diferenciar visualmente.
+`orcamentoExistente` vem de `orcamentos.find(o => o.id === id)` no `SistemaContext`. Como o contexto atualiza a lista de orçamentos/clientes periodicamente (refresh na volta de foco / após ações), a referência do objeto muda e o `useEffect` sobrescreve tudo que o vendedor digitou.
 
-### 2. Frontend
+## Correções
 
-**Nova aba "Meus Produtos" em `/sistema/produtos`** (mantém a aba atual "Catálogo XBZ"):
-- Lista os produtos customizados com busca, edição inline e exclusão
-- Botão "Novo produto" abre dialog com formulário: nome, código, preço de custo, estoque, cor, categoria, upload de imagem (drag-drop → bucket `sistema-produtos`)
-- Suporte a variantes: dentro do dialog do produto pai, botão "+ Adicionar variante" cria filhos com cor/código/estoque/imagem próprios
+### 1. `src/pages/sistema/OrcamentoForm.tsx` — proteger o estado do formulário
 
-**Busca de produtos no `OrcamentoForm`**: já usa `sistema_search_products`; passará a retornar XBZ + custom misturados, ordenados por relevância. Produto custom ganha badge sutil "Personalizado" no resultado.
+- Alterar o `useEffect` de hidratação para rodar **apenas uma vez por orçamento carregado**, usando uma `ref` que guarda o `id` já hidratado (e o `updatedAt`, para permitir re-hidratar só quando o próprio orçamento realmente muda no servidor).
+- Remover `clientes` e `currentVendedor` das dependências desse effect. A seleção de cliente selecionada continua sendo derivada, mas em um effect separado que só ajusta `clienteSelecionado` sem tocar em `formData`.
+- Não mexer no restante da lógica (validação, cálculo de total, itens, etc.).
 
-### 3. Detalhes técnicos
+### 2. Checkbox "Baixar orçamento em PDF" ao lado do botão Salvar
 
-- Validação com Zod no dialog: nome 1-200, código 1-50, preço ≥ 0, estoque ≥ 0
-- Upload de imagem: limite 5MB, formatos jpg/png/webp; converte filename para slug
-- Código duplicado: constraint `UNIQUE(codigo)` + tratamento de erro amigável
-- Itens do orçamento já guardam snapshot (`nome`, `codigo`, `preco`, `image_url`), então funciona sem mudar schema de orçamento
-- Não toca em `products_cache` nem no catálogo público — total isolamento
+- Adicionar `const [baixarPdf, setBaixarPdf] = useState(false)` no `OrcamentoForm`.
+- No cabeçalho (linhas 280-287), inserir à esquerda do botão "Salvar Orçamento" um checkbox rotulado **"Baixar orçamento em PDF"**.
+- Em `handleSalvar` (linhas 232-251), chamar `gerarPDFOrcamento(...)` **somente se `baixarPdf === true`**, tanto no ramo `isEdit` quanto no ramo de novo orçamento. O `navigate("/sistema/orcamentos")` e o `toast.success` continuam ocorrendo normalmente.
+
+## Fora de escopo (não mexer)
+
+- `SistemaContext` (refreshes automáticos continuam existindo — servem para outras telas).
+- Lógica de PDF, aprovação, itens, cálculo de preços, busca de produtos.
+- Tela de listagem `/sistema/orcamentos`.
+
+## Verificação
+
+- Abrir um orçamento existente, começar a editar, aguardar >15s → alterações permanecem intactas.
+- Salvar sem marcar o checkbox → volta para lista, sem download.
+- Salvar com checkbox marcado → volta para lista e o PDF é baixado.
