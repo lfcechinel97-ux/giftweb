@@ -290,6 +290,11 @@ export default function AdminBanners() {
                     frameClassName="mx-auto w-full max-w-[320px] lg:max-w-none"
                   />
                 </div>
+
+                <LinkField
+                  value={links[`banner_${slideIdx}_link`] ?? ''}
+                  onChange={(v) => handleLinkChange(`banner_${slideIdx}_link`, v)}
+                />
               </section>
             );
           })}
