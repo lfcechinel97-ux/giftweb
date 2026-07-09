@@ -140,10 +140,11 @@ const CategoryPage = () => {
   return (
     <>
       <Helmet>
-        <title>{categoryLabel} Personalizados | Gift Web Brindes</title>
-        <meta name="description" content={`${categoryLabel} personalizados para empresas. Catálogo com preços para atacado.`} />
+        <title>{collection ? `Brindes para ${collection.nome} | Gift Web Brindes` : `${categoryLabel} Personalizados | Gift Web Brindes`}</title>
+        <meta name="description" content={collection ? (collection.descricao ?? `Presentes e brindes personalizados selecionados para ${collection.nome}.`) : `${categoryLabel} personalizados para empresas. Catálogo com preços para atacado.`} />
         <link rel="canonical" href={canonicalUrl} />
       </Helmet>
+
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1">
