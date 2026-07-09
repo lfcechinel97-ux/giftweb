@@ -46,23 +46,28 @@ const FADE_DURATION = 200;   // ms for fade transition
 const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes, estoque, estoque_total }: ProductCardProps) => {
   const navigate = useNavigate();
 
-  // Build image list once — primary image + extra image_urls + variant images
+  // Determine display image: prefer an in-stock variant if the primary is out
+  const primaryOutOfStock = (estoque ?? 0) === 0;
+  const firstInStockVariant = variantes?.find(v => (v.estoque ?? 0) > 0);
+  const preferredImage = (primaryOutOfStock && firstInStockVariant?.image) ? firstInStockVariant.image : image_url;
+
+  // Build image list once — preferred image first, then rest
   const images = useRef<string[]>([]);
-  if (images.current.length === 0 && image_url) {
-    images.current = [image_url];
-    // Add extra images from image_urls array
+  if (images.current.length === 0 && preferredImage) {
+    images.current = [preferredImage];
+    if (image_url && !images.current.includes(image_url)) images.current.push(image_url);
     if (image_urls && image_urls.length > 0) {
       image_urls.forEach(img => {
         if (img && !images.current.includes(img)) images.current.push(img);
       });
     }
-    // Add variant images
     if (variantes && variantes.length > 0) {
       variantes.forEach(v => {
         if (v.image && !images.current.includes(v.image)) images.current.push(v.image);
       });
     }
   }
+
 
   const [activeIdx, setActiveIdx] = useState(0);
   const [fading, setFading] = useState(false);
