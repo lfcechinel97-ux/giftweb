@@ -14,7 +14,7 @@ import TrustSection from "@/components/TrustSection";
 import Footer from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import CorporateQuotation from "@/components/CorporateQuotation";
-import SeoTextSection from "@/components/SeoTextSection";
+
 import FAQSection from "@/components/FAQSection";
 
 
@@ -97,9 +97,6 @@ const Index = () => {
           </LazySection>
           <LazySection minHeight={300}>
             <FAQSection />
-          </LazySection>
-          <LazySection minHeight={200}>
-            <SeoTextSection />
           </LazySection>
         </main>
         <Footer />
