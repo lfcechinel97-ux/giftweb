@@ -191,8 +191,15 @@ export default function AdminBanners() {
         await updateValue('banner_marca_mob', url);
       }
 
+      for (const id of LINK_IDS) {
+        if (!linksDirty[id]) continue;
+        const value = (links[id] ?? '').trim();
+        await upsertValue(id, value, 'banners');
+      }
+
       clearLocalPreviews();
       setSlides({});
+      setLinksDirty({});
       await refetch();
       toast.success('Banners atualizados com sucesso!');
     } catch (err: any) {
@@ -202,7 +209,9 @@ export default function AdminBanners() {
     }
   };
 
-  const hasChanges = Object.values(slides).some((state) => state?.deskFile || state?.mobFile);
+  const hasChanges =
+    Object.values(slides).some((state) => state?.deskFile || state?.mobFile) ||
+    Object.values(linksDirty).some(Boolean);
 
   if (loading) {
     return (
