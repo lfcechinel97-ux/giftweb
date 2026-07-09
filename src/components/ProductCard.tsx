@@ -120,9 +120,15 @@ const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codi
   const href = slug ? `/produto/${slug}` : `/produto/${codigo_amigavel}`;
 
   const hasVariants = variantes && variantes.length > 0;
-  const allColorOptions = hasVariants
+  const rawColorOptions = hasVariants
     ? [{ slug: slug || codigo_amigavel, cor: cor || '', image: image_url || '', estoque: estoque ?? 0, codigo_amigavel }, ...variantes]
     : [];
+  // Sort: in-stock first, keeping relative order
+  const allColorOptions = [...rawColorOptions].sort((a, b) => {
+    const aIn = (a.estoque ?? 0) > 0 ? 1 : 0;
+    const bIn = (b.estoque ?? 0) > 0 ? 1 : 0;
+    return bIn - aIn;
+  });
   // Use estoque_total when available (sums variants); fallback to legacy logic
   const aggregatedStock = estoque_total ?? (
     hasVariants
@@ -131,7 +137,8 @@ const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codi
   );
   const isOutOfStock = aggregatedStock === 0;
 
-  const displayImage = images.current[activeIdx] || image_url;
+  const displayImage = images.current[activeIdx] || preferredImage || image_url;
+
 
   return (
     <div
