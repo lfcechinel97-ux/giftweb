@@ -356,7 +356,14 @@ const HeroSection = () => {
 
           <div className="hero-carousel-viewport relative w-full max-w-full overflow-hidden">
             {hasActiveBanner && (
-              <div key={currentSlide} className="hero-carousel-frame w-full max-w-full overflow-hidden">
+              <div
+                key={currentSlide}
+                className={`hero-carousel-frame w-full max-w-full overflow-hidden ${bannerLink ? "cursor-pointer" : ""}`}
+                onClick={bannerLink ? handleBannerClick : undefined}
+                role={bannerLink ? "link" : undefined}
+                tabIndex={bannerLink ? 0 : undefined}
+                onKeyDown={bannerLink ? (e) => { if (e.key === "Enter") handleBannerClick(); } : undefined}
+              >
                 <picture>
                   {mobSrc && <source media="(max-width: 767px)" srcSet={mobSrc} />}
                   <img
