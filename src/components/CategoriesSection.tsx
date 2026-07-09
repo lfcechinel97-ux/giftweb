@@ -20,8 +20,8 @@ const defaultImages: Record<string, string> = {
 };
 
 const topSlugs = [
-  "garrafas-e-squeezes",
-  "copos-e-canecas",
+  "garrafas-termicas",
+  "copos",
   "mochilas-e-sacochilas",
   "kits",
   "bolsas",
@@ -39,9 +39,10 @@ const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
   const siteRows = getBySection("categorias");
   const { data: dbCategories } = useBaseCategories();
 
+  // Map current slugs to legacy site_content ids (for images uploaded previously)
   const legacyMap: Record<string, string> = {
-    "garrafas-e-squeezes": "garrafas",
-    "copos-e-canecas": "canecas",
+    "garrafas-termicas": "garrafas",
+    "copos": "canecas",
     "mochilas-e-sacochilas": "mochilas",
     "canetas": "escritorio",
   };
