@@ -64,7 +64,7 @@ const TestimonialsSection = () => {
           <h2 className="text-foreground font-extrabold text-[28px] md:text-[32px]">
             O que nossos <span className="text-highlight">clientes</span> dizem
           </h2>
-          <p className="text-muted-foreground text-sm mt-1.5">Mais de 500 empresas atendidas em todo o Brasil</p>
+          <p className="text-muted-foreground text-sm mt-1.5">Mais de 50.000 empresas atendidas em todo o Brasil</p>
         </div>
 
         {/* Desktop */}
