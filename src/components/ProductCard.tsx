@@ -180,19 +180,18 @@ const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codi
               {allColorOptions.slice(0, MAX_DOTS).map((v, i) => {
                 const hex = getCorHex(v.cor);
                 const needsBorder = isLightColor(hex);
+                const dotOutOfStock = (v.estoque ?? 0) === 0;
                 return (
                   <Tooltip key={v.codigo_amigavel || i}>
                     <TooltipTrigger asChild>
                       <span
                         onMouseEnter={() => {
-                          // pause cycle and show this variant's image
                           clearTimers();
                           isHovering.current = false;
                           const imgIdx = images.current.indexOf(v.image);
                           goToIndex(imgIdx >= 0 ? imgIdx : 0);
                         }}
                         onMouseLeave={() => {
-                          // resume cycling
                           isHovering.current = true;
                           startCycle();
                         }}
@@ -209,15 +208,17 @@ const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codi
                           border: needsBorder ? '1px solid #9CA3AF' : 'none',
                           cursor: 'pointer',
                           flexShrink: 0,
+                          opacity: dotOutOfStock ? 0.35 : 1,
                         }}
                       />
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs">
-                      {v.cor || 'Cor'}
+                      {v.cor || 'Cor'}{dotOutOfStock ? ' — sem estoque' : ''}
                     </TooltipContent>
                   </Tooltip>
                 );
               })}
+
               {allColorOptions.length > MAX_DOTS && (
                 <span className="text-[11px] text-muted-foreground">+{allColorOptions.length - MAX_DOTS}</span>
               )}
