@@ -46,23 +46,28 @@ const FADE_DURATION = 200;   // ms for fade transition
 const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes, estoque, estoque_total }: ProductCardProps) => {
   const navigate = useNavigate();
 
-  // Build image list once — primary image + extra image_urls + variant images
+  // Determine display image: prefer an in-stock variant if the primary is out
+  const primaryOutOfStock = (estoque ?? 0) === 0;
+  const firstInStockVariant = variantes?.find(v => (v.estoque ?? 0) > 0);
+  const preferredImage = (primaryOutOfStock && firstInStockVariant?.image) ? firstInStockVariant.image : image_url;
+
+  // Build image list once — preferred image first, then rest
   const images = useRef<string[]>([]);
-  if (images.current.length === 0 && image_url) {
-    images.current = [image_url];
-    // Add extra images from image_urls array
+  if (images.current.length === 0 && preferredImage) {
+    images.current = [preferredImage];
+    if (image_url && !images.current.includes(image_url)) images.current.push(image_url);
     if (image_urls && image_urls.length > 0) {
       image_urls.forEach(img => {
         if (img && !images.current.includes(img)) images.current.push(img);
       });
     }
-    // Add variant images
     if (variantes && variantes.length > 0) {
       variantes.forEach(v => {
         if (v.image && !images.current.includes(v.image)) images.current.push(v.image);
       });
     }
   }
+
 
   const [activeIdx, setActiveIdx] = useState(0);
   const [fading, setFading] = useState(false);
@@ -115,9 +120,15 @@ const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codi
   const href = slug ? `/produto/${slug}` : `/produto/${codigo_amigavel}`;
 
   const hasVariants = variantes && variantes.length > 0;
-  const allColorOptions = hasVariants
+  const rawColorOptions = hasVariants
     ? [{ slug: slug || codigo_amigavel, cor: cor || '', image: image_url || '', estoque: estoque ?? 0, codigo_amigavel }, ...variantes]
     : [];
+  // Sort: in-stock first, keeping relative order
+  const allColorOptions = [...rawColorOptions].sort((a, b) => {
+    const aIn = (a.estoque ?? 0) > 0 ? 1 : 0;
+    const bIn = (b.estoque ?? 0) > 0 ? 1 : 0;
+    return bIn - aIn;
+  });
   // Use estoque_total when available (sums variants); fallback to legacy logic
   const aggregatedStock = estoque_total ?? (
     hasVariants
@@ -126,7 +137,8 @@ const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codi
   );
   const isOutOfStock = aggregatedStock === 0;
 
-  const displayImage = images.current[activeIdx] || image_url;
+  const displayImage = images.current[activeIdx] || preferredImage || image_url;
+
 
   return (
     <div
@@ -168,19 +180,18 @@ const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codi
               {allColorOptions.slice(0, MAX_DOTS).map((v, i) => {
                 const hex = getCorHex(v.cor);
                 const needsBorder = isLightColor(hex);
+                const dotOutOfStock = (v.estoque ?? 0) === 0;
                 return (
                   <Tooltip key={v.codigo_amigavel || i}>
                     <TooltipTrigger asChild>
                       <span
                         onMouseEnter={() => {
-                          // pause cycle and show this variant's image
                           clearTimers();
                           isHovering.current = false;
                           const imgIdx = images.current.indexOf(v.image);
                           goToIndex(imgIdx >= 0 ? imgIdx : 0);
                         }}
                         onMouseLeave={() => {
-                          // resume cycling
                           isHovering.current = true;
                           startCycle();
                         }}
@@ -197,15 +208,17 @@ const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codi
                           border: needsBorder ? '1px solid #9CA3AF' : 'none',
                           cursor: 'pointer',
                           flexShrink: 0,
+                          opacity: dotOutOfStock ? 0.35 : 1,
                         }}
                       />
                     </TooltipTrigger>
                     <TooltipContent side="top" className="text-xs">
-                      {v.cor || 'Cor'}
+                      {v.cor || 'Cor'}{dotOutOfStock ? ' — sem estoque' : ''}
                     </TooltipContent>
                   </Tooltip>
                 );
               })}
+
               {allColorOptions.length > MAX_DOTS && (
                 <span className="text-[11px] text-muted-foreground">+{allColorOptions.length - MAX_DOTS}</span>
               )}

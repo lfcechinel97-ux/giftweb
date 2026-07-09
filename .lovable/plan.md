@@ -1,59 +1,36 @@
+## Problema
+
+No card de produto (listagens do site), quando a variante "principal" está sem estoque, o card mostra a imagem dela + badge "Fora de Estoque", mesmo quando outras cores do mesmo produto têm estoque. Isso desestimula o clique.
 
 ## Objetivo
 
-Criar uma coleção temática "Dia dos Pais" que agrupa produtos existentes por prefixo de código. O produto continua aparecendo nas suas categorias normais e passa a aparecer também nessa coleção. Link em destaque azul no topo do site e da navegação do catálogo B2B.
+Só marcar "Fora de Estoque" quando TODAS as variantes estiverem zeradas. Caso contrário, mostrar a imagem e as cores das variantes que **têm estoque**.
 
-## Escopo
+## Mudanças (somente `src/components/ProductCard.tsx`)
 
-### 1. Backend (banco de dados)
+1. **Selecionar variante de exibição em estoque**
+   - Montar `allColorOptions` como já é feito (pai + variantes).
+   - Se a opção principal (`image_url`/cor atual) estiver com `estoque === 0` e existir outra opção com `estoque > 0`, usar a primeira variante em estoque como imagem/base do card (imagem inicial, título permanece o mesmo).
+   - Se tudo estiver zerado, manter comportamento atual + badge "Fora de Estoque".
 
-Criar tabela `public.product_collections` para armazenar coleções temáticas reutilizáveis (Dia dos Pais agora, Natal / Dia das Mães depois):
+2. **Ordenar/filtrar bolinhas de cor**
+   - Exibir primeiro as cores com `estoque > 0`.
+   - Cores com `estoque === 0` ficam depois, com opacidade reduzida (~40%) e tooltip "Sem estoque" para deixar claro.
+   - Manter limite `MAX_DOTS = 6` e o `+N` restante.
 
-- `slug` (único), `nome`, `titulo_destaque`, `descricao`, `cor_destaque` (hsl/hex), `ativo`, `ordem`
-- Tabela filha `public.product_collection_items` com `collection_id` + `codigo_prefixo`
+3. **Cycle de imagens no hover**
+   - Continuar cycling, mas começar pela imagem da variante em estoque escolhida (nova ordem do array `images.current`).
 
-RLS: leitura pública (`anon`, `authenticated`); escrita apenas para admins via `has_role`.
+4. **Badge "Fora de Estoque"**
+   - Mostrar somente quando `aggregatedStock === 0` (já é a regra, mas confirmar) OU quando não existir nenhuma variante com estoque. Sem mudança na lógica de `estoque_total`.
 
-Popular via seed a coleção `dia-dos-pais` com os 60 prefixos enviados (normalizando: `18645l` → `18645L`, `kit18639` → `KIT18639`, remover `(inicio)`).
+## Fora do escopo
 
-Criar RPC `search_products_by_collection(p_slug, p_cor, p_search, p_apenas_estoque, p_sort, p_page, p_page_size, p_preco_min, p_preco_max)` — mesma assinatura de `search_products_by_category`, mas filtrando `products_cache` por `codigo_prefixo IN (...)` da coleção. Retorna um representante por prefixo (produto pai), respeitando as regras existentes de estoque/preço.
-
-### 2. Site público (giftwebbrindes.com.br)
-
-- Rota: `/categoria/dia-dos-pais` funciona automaticamente. `CategoryPage.tsx` detecta se o slug pertence a uma coleção; se sim, chama `search_products_by_collection` em vez de `search_products_by_category`. Clique no produto continua indo para o PDP normal (com variantes).
-- Header (`src/components/Header.tsx` + menu mobile): adicionar item **"Dia dos Pais"** com destaque azul (cor primary/blue) ao lado dos atalhos "Garrafas / Copos / Mochilas / Kit Churrasco / Catálogo".
-- Hero da página da coleção: título "Presentes para o **Dia dos Pais**" com "Dia dos Pais" em azul, subtítulo curto ("Selecionamos os brindes ideais…"), sem quebrar SEO da página de categoria (title/description próprios).
-
-### 3. Catálogo B2B (/catalogo)
-
-- Adicionar a coleção "Dia dos Pais" como opção na barra de categorias/stories (`CatalogHeroCategories` / `CatalogStoryCategories`) com badge/cor azul.
-- Ao clicar, aplica filtro `?colecao=dia-dos-pais` e `CatalogPage` chama a mesma RPC de coleção. Demais filtros (cor, preço, busca) seguem funcionando.
-
-### 4. Admin (edição futura, mínimo agora)
-
-Não construir painel completo neste ciclo. Deixar o CRUD acessível apenas via SQL/migração. A estrutura já permite adicionar futuramente uma tela em `/admin` para gerenciar coleções e itens (fora do escopo desta entrega).
-
-## Fora de escopo
-
-- Painel admin visual para coleções (fica para depois, conforme escolhido)
-- Alterações em preços, sync XBZ, PDP, orçamentos
-- Novas categorias fixas ou remapeamento das existentes
+- Não mudar página de detalhe do produto, catálogo B2B (`CatalogProductCard`), filtros ou RPC.
+- Não mudar backend / cache.
 
 ## Detalhes técnicos
 
-**Prefixos normalizados** (60): `9353, 9237, 9250, 9251, 9305, 19119, 19145, 2093, 9190, 9238, 9240, 9282, 9286, 9288, 19076, 19082, 01336, 9054, 19057, 1320, 3040, 3493, 4052, 4070, 5013, 7392, 7447, 8227, 12926, 18539, 18601, 18645L, KIT18639, 5036, 18623, 19022, 7020, 11870, 14046, 18673, 19013, 19039, 6040B, 10071G, 13474, 8124, 6093, 10385, 10889, 18894, 1495, 6757, 7032, 8130, 8298, 10124, 10127, 10390, 18599, 18895`.
-
-`search_products_by_collection` reaproveita o CTE de `search_products_by_category`, trocando o filtro por:
-```sql
-WHERE upper(codigo_prefixo) IN (SELECT upper(codigo_prefixo) FROM product_collection_items WHERE collection_id = ...)
-```
-
-Destaque azul: usar token `--primary` (navy) ou nova var `--collection-blue: 217 91% 60%` para ficar vibrante sem quebrar o design system.
-
-## Verificação
-
-1. Acessar `/categoria/dia-dos-pais` → lista os produtos dos prefixos, com filtros funcionando.
-2. Clicar em um produto → abre PDP com variantes normais.
-3. Header desktop e mobile mostram "Dia dos Pais" em azul.
-4. `/catalogo?colecao=dia-dos-pais` no B2B filtra corretamente e permite adicionar ao orçamento.
-5. Produtos continuam aparecendo nas categorias originais (garrafas, kits etc.).
+- Ajustar `images.current` para começar pela imagem da variante em estoque quando o "principal" está zerado.
+- Reordenar `allColorOptions` por `estoque` desc antes de fatiar para `MAX_DOTS`.
+- Aplicar `opacity: 0.4` no dot quando `v.estoque === 0`; tooltip mostra `${v.cor} — sem estoque`.
