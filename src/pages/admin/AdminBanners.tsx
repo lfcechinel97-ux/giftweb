@@ -89,6 +89,26 @@ function BannerUploadField({
   );
 }
 
+function LinkField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-2 rounded-lg border border-dashed border-border bg-background/50 p-3">
+      <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+        <LinkIcon className="h-4 w-4 text-muted-foreground" />
+        Link ao clicar no banner
+      </label>
+      <Input
+        type="url"
+        placeholder="https://... (opcional — deixe vazio para desativar o clique)"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <p className="text-xs text-muted-foreground">
+        Se preenchido, ao clicar no banner o cliente é direcionado para essa URL. Se ficar em branco, o clique não faz nada.
+      </p>
+    </div>
+  );
+}
+
 export default function AdminBanners() {
   const { rows, loading, updateValue, upsertValue, uploadImage, refetch } = useSiteContent('banners');
   const [slides, setSlides] = useState<Record<number, SlideState>>({});
