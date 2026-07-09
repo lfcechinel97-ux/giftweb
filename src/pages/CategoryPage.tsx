@@ -90,8 +90,11 @@ const CategoryPage = () => {
       ? selectedCor.split(",").map((v) => v.trim().toUpperCase()).filter(Boolean)
       : null;
 
-    const { data, error } = await supabase.rpc("search_products_by_category", {
-      p_category_slug: category,
+    const rpcName = collection ? "search_products_by_collection" : "search_products_by_category";
+    const params: any = collection
+      ? { p_collection_slug: category }
+      : { p_category_slug: category };
+    Object.assign(params, {
       p_cor: corValues,
       p_search: searchTerm || null,
       p_apenas_estoque: apenasEstoque,
@@ -100,7 +103,8 @@ const CategoryPage = () => {
       p_page_size: PAGE_SIZE,
       p_preco_min: urlPrecoMin ? Number(urlPrecoMin) : null,
       p_preco_max: urlPrecoMax ? Number(urlPrecoMax) : null,
-    } as any);
+    });
+    const { data, error } = await supabase.rpc(rpcName as any, params);
 
     if (error) {
       console.error("RPC error:", error);
@@ -112,7 +116,8 @@ const CategoryPage = () => {
       setTotal(result.total_count || 0);
     }
     setLoading(false);
-  }, [category, page, searchTerm, selectedCor, apenasEstoque, sortBy, urlPrecoMin, urlPrecoMax]);
+  }, [category, collection, page, searchTerm, selectedCor, apenasEstoque, sortBy, urlPrecoMin, urlPrecoMax]);
+
 
   useEffect(() => {
     fetchProducts();
