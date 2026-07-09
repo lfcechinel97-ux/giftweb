@@ -155,6 +155,8 @@ const CatalogPage = () => {
     if (page > 1) params.page = page.toString();
     if (filters.search) params.q = filters.search;
     if (filters.categoria) params.categoria = filters.categoria;
+    if (filters.colecao) params.colecao = filters.colecao;
+
     if (filters.corValues.length) params.cor = filters.corValues.join(",");
     if (filters.precoMin > 0) params.preco_min = filters.precoMin.toString();
     if (filters.precoMax < MAX_PRECO) params.preco_max = filters.precoMax.toString();
