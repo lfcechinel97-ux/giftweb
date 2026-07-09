@@ -362,9 +362,16 @@ const ProductDetail = () => {
                     className="absolute bottom-3 left-3 w-8 h-8 rounded-lg bg-white/90 border border-border flex items-center justify-center shadow-sm hover:bg-white transition-colors"
                     title="Ampliar imagem"
                   >
-                    <ZoomIn className="w-4 h-4 text-muted-foreground" />
+                  <ZoomIn className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </div>
+
+                {/* SKU — minimalista */}
+                {displayCodigo && (
+                  <p className="text-xs text-muted-foreground font-mono -mt-1.5">
+                    Código: {displayCodigo}
+                  </p>
+                )}
 
                 {/* Thumbnail row — all images (API + admin), excluding the currently displayed main */}
                 {allImages.length > 1 && (
