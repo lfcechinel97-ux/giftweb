@@ -317,6 +317,13 @@ const CatalogProductDetail = () => {
                   </button>
                 </div>
 
+                {/* SKU — minimalista */}
+                {displayCodigo && (
+                  <p className="text-xs text-[#94A3B8] font-mono -mt-1.5">
+                    Código: {displayCodigo}
+                  </p>
+                )}
+
                 {allImages.length > 1 && (
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                     {allImages.map((src, i) => (
