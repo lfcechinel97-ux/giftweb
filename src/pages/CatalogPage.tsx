@@ -22,6 +22,7 @@ const MAX_PRECO = 400;
 interface Filters {
   search: string;
   categoria: string | null;
+  colecao: string | null;
   corValues: string[];
   precoMin: number;
   precoMax: number;
@@ -32,6 +33,7 @@ interface Filters {
 const defaultFilters: Filters = {
   search: "",
   categoria: null,
+  colecao: null,
   corValues: [],
   precoMin: 0,
   precoMax: MAX_PRECO,
@@ -46,12 +48,14 @@ const CatalogPage = () => {
   const [filters, setFilters] = useState<Filters>(() => ({
     search: searchParams.get("q") || "",
     categoria: searchParams.get("categoria") || null,
+    colecao: searchParams.get("colecao") || null,
     corValues: searchParams.get("cor") ? searchParams.get("cor")!.split(",") : [],
     precoMin: Number(searchParams.get("preco_min") || 0),
     precoMax: Number(searchParams.get("preco_max") || MAX_PRECO),
     apenasEstoque: false,
     sort: searchParams.get("sort") || "relevancia",
   }));
+
 
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
