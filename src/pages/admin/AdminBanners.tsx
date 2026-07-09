@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSiteContent } from '@/hooks/useSiteContent';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Upload, Save, Loader2, Monitor, Smartphone } from 'lucide-react';
+import { Upload, Save, Loader2, Monitor, Smartphone, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { getVersionedRowValue } from '@/utils/siteContentImage';
 
