@@ -31,12 +31,32 @@ const CategoryPage = () => {
   const [selectedCor, setSelectedCor] = useState<string | null>(urlCor || null);
   const [apenasEstoque, setApenasEstoque] = useState(false);
   const [sortBy, setSortBy] = useState("relevancia");
+  const [collection, setCollection] = useState<{ id: string; nome: string; titulo_destaque: string | null; descricao: string | null; cor_destaque: string | null } | null>(null);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  // Fetch label from spotlight_categories
+  // Detect if slug is a themed collection
   useEffect(() => {
     if (!category) return;
+    supabase
+      .from("product_collections")
+      .select("id,nome,titulo_destaque,descricao,cor_destaque")
+      .eq("slug", category)
+      .eq("ativo", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setCollection(data as any);
+          setCategoryLabel((data as any).nome);
+        } else {
+          setCollection(null);
+        }
+      });
+  }, [category]);
+
+  // Fetch label from spotlight_categories (only if not a collection)
+  useEffect(() => {
+    if (!category || collection) return;
     supabase
       .from("spotlight_categories")
       .select("label")
@@ -45,19 +65,20 @@ const CategoryPage = () => {
       .then(({ data }) => {
         if (data) setCategoryLabel(data.label);
       });
-  }, [category]);
+  }, [category, collection]);
 
   useEffect(() => {
     if (urlCor) setSelectedCor(urlCor);
   }, [urlCor]);
 
-  // Fetch available colors via RPC
+  // Fetch available colors via RPC (skip for collections — they are cross-category)
   useEffect(() => {
-    if (!category) return;
+    if (!category || collection) { return; }
     supabase.rpc("get_category_colors", { p_category_slug: category }).then(({ data }) => {
       if (data && Array.isArray(data)) {
         setCores(data.filter(Boolean).sort());
       }
+
     });
   }, [category]);
 
