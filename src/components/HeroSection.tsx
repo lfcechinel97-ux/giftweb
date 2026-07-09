@@ -52,11 +52,13 @@ const getBannerSources = (
 ) => {
   const deskRow = bannerRows.find(r => r.id === `banner_${index + 1}_desk`);
   const mobRow = bannerRows.find(r => r.id === `banner_${index + 1}_mob`);
+  const linkRow = bannerRows.find(r => r.id === `banner_${index + 1}_link`);
 
   const deskSrc = getVersionedRowValue(deskRow, HERO_FALLBACK_VERSION);
   const mobSrc = getVersionedRowValue(mobRow, HERO_FALLBACK_VERSION) || deskSrc;
+  const link = (linkRow?.value || "").trim() || null;
 
-  return { deskSrc, mobSrc };
+  return { deskSrc, mobSrc, link };
 };
 
 const HeroSection = () => {
@@ -93,8 +95,17 @@ const HeroSection = () => {
     if (Math.abs(dx) > 50) { if (dx > 0) prevSlide(); else nextSlide(); }
   };
 
-  const { deskSrc, mobSrc } = getBannerSources(currentSlide, bannerRows);
+  const { deskSrc, mobSrc, link: bannerLink } = getBannerSources(currentSlide, bannerRows);
   const hasActiveBanner = deskSrc || mobSrc;
+  const isExternalLink = !!bannerLink && /^https?:\/\//i.test(bannerLink);
+  const handleBannerClick = () => {
+    if (!bannerLink) return;
+    if (isExternalLink) {
+      window.open(bannerLink, "_blank", "noopener,noreferrer");
+    } else {
+      navigate(bannerLink);
+    }
+  };
 
   const applyPrices = useCallback((minP: number, maxP: number) => {
     const em = Math.min(maxPriceLimit, FIXED_MAX);
@@ -345,7 +356,14 @@ const HeroSection = () => {
 
           <div className="hero-carousel-viewport relative w-full max-w-full overflow-hidden">
             {hasActiveBanner && (
-              <div key={currentSlide} className="hero-carousel-frame w-full max-w-full overflow-hidden">
+              <div
+                key={currentSlide}
+                className={`hero-carousel-frame w-full max-w-full overflow-hidden ${bannerLink ? "cursor-pointer" : ""}`}
+                onClick={bannerLink ? handleBannerClick : undefined}
+                role={bannerLink ? "link" : undefined}
+                tabIndex={bannerLink ? 0 : undefined}
+                onKeyDown={bannerLink ? (e) => { if (e.key === "Enter") handleBannerClick(); } : undefined}
+              >
                 <picture>
                   {mobSrc && <source media="(max-width: 767px)" srcSet={mobSrc} />}
                   <img

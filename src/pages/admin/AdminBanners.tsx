@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSiteContent } from '@/hooks/useSiteContent';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Upload, Save, Loader2, Monitor, Smartphone } from 'lucide-react';
+import { Upload, Save, Loader2, Monitor, Smartphone, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { getVersionedRowValue } from '@/utils/siteContentImage';
 
@@ -88,14 +89,56 @@ function BannerUploadField({
   );
 }
 
+function LinkField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-2 rounded-lg border border-dashed border-border bg-background/50 p-3">
+      <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+        <LinkIcon className="h-4 w-4 text-muted-foreground" />
+        Link ao clicar no banner
+      </label>
+      <Input
+        type="url"
+        placeholder="https://... (opcional — deixe vazio para desativar o clique)"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <p className="text-xs text-muted-foreground">
+        Se preenchido, ao clicar no banner o cliente é direcionado para essa URL. Se ficar em branco, o clique não faz nada.
+      </p>
+    </div>
+  );
+}
+
 export default function AdminBanners() {
-  const { rows, loading, updateValue, uploadImage, refetch } = useSiteContent('banners');
+  const { rows, loading, updateValue, upsertValue, uploadImage, refetch } = useSiteContent('banners');
   const [slides, setSlides] = useState<Record<number, SlideState>>({});
+  const [links, setLinks] = useState<Record<string, string>>({});
+  const [linksDirty, setLinksDirty] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const previewUrlsRef = useRef<string[]>([]);
 
   const getRow = (id: string) => rows.find((row) => row.id === id);
+
+  const LINK_IDS = useMemo(
+    () => ['banner_1_link', 'banner_2_link', 'banner_3_link', 'banner_marca_link'],
+    [],
+  );
+
+  useEffect(() => {
+    const next: Record<string, string> = {};
+    for (const id of LINK_IDS) {
+      if (linksDirty[id]) continue;
+      next[id] = getRow(id)?.value ?? '';
+    }
+    setLinks((prev) => ({ ...prev, ...next }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
+
+  const handleLinkChange = (id: string, value: string) => {
+    setLinks((prev) => ({ ...prev, [id]: value }));
+    setLinksDirty((prev) => ({ ...prev, [id]: true }));
+  };
 
   const revokePreviewUrl = (url?: string | null) => {
     if (!url?.startsWith('blob:')) return;
@@ -168,8 +211,15 @@ export default function AdminBanners() {
         await updateValue('banner_marca_mob', url);
       }
 
+      for (const id of LINK_IDS) {
+        if (!linksDirty[id]) continue;
+        const value = (links[id] ?? '').trim();
+        await upsertValue(id, value, 'banners');
+      }
+
       clearLocalPreviews();
       setSlides({});
+      setLinksDirty({});
       await refetch();
       toast.success('Banners atualizados com sucesso!');
     } catch (err: any) {
@@ -179,7 +229,9 @@ export default function AdminBanners() {
     }
   };
 
-  const hasChanges = Object.values(slides).some((state) => state?.deskFile || state?.mobFile);
+  const hasChanges =
+    Object.values(slides).some((state) => state?.deskFile || state?.mobFile) ||
+    Object.values(linksDirty).some(Boolean);
 
   if (loading) {
     return (
@@ -258,6 +310,11 @@ export default function AdminBanners() {
                     frameClassName="mx-auto w-full max-w-[320px] lg:max-w-none"
                   />
                 </div>
+
+                <LinkField
+                  value={links[`banner_${slideIdx}_link`] ?? ''}
+                  onChange={(v) => handleLinkChange(`banner_${slideIdx}_link`, v)}
+                />
               </section>
             );
           })}
@@ -304,6 +361,11 @@ export default function AdminBanners() {
                 }}
                 onChange={(file) => handleFile(BANNER_SEPARATOR_KEY, 'mob', file)}
                 aspectRatio={390 / 140}
+              />
+
+              <LinkField
+                value={links['banner_marca_link'] ?? ''}
+                onChange={(v) => handleLinkChange('banner_marca_link', v)}
               />
             </aside>
           );
