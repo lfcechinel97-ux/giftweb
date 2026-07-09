@@ -52,11 +52,13 @@ const getBannerSources = (
 ) => {
   const deskRow = bannerRows.find(r => r.id === `banner_${index + 1}_desk`);
   const mobRow = bannerRows.find(r => r.id === `banner_${index + 1}_mob`);
+  const linkRow = bannerRows.find(r => r.id === `banner_${index + 1}_link`);
 
   const deskSrc = getVersionedRowValue(deskRow, HERO_FALLBACK_VERSION);
   const mobSrc = getVersionedRowValue(mobRow, HERO_FALLBACK_VERSION) || deskSrc;
+  const link = (linkRow?.value || "").trim() || null;
 
-  return { deskSrc, mobSrc };
+  return { deskSrc, mobSrc, link };
 };
 
 const HeroSection = () => {
