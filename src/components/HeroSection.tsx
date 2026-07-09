@@ -95,8 +95,17 @@ const HeroSection = () => {
     if (Math.abs(dx) > 50) { if (dx > 0) prevSlide(); else nextSlide(); }
   };
 
-  const { deskSrc, mobSrc } = getBannerSources(currentSlide, bannerRows);
+  const { deskSrc, mobSrc, link: bannerLink } = getBannerSources(currentSlide, bannerRows);
   const hasActiveBanner = deskSrc || mobSrc;
+  const isExternalLink = !!bannerLink && /^https?:\/\//i.test(bannerLink);
+  const handleBannerClick = () => {
+    if (!bannerLink) return;
+    if (isExternalLink) {
+      window.open(bannerLink, "_blank", "noopener,noreferrer");
+    } else {
+      navigate(bannerLink);
+    }
+  };
 
   const applyPrices = useCallback((minP: number, maxP: number) => {
     const em = Math.min(maxPriceLimit, FIXED_MAX);
