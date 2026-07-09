@@ -31,12 +31,32 @@ const CategoryPage = () => {
   const [selectedCor, setSelectedCor] = useState<string | null>(urlCor || null);
   const [apenasEstoque, setApenasEstoque] = useState(false);
   const [sortBy, setSortBy] = useState("relevancia");
+  const [collection, setCollection] = useState<{ id: string; nome: string; titulo_destaque: string | null; descricao: string | null; cor_destaque: string | null } | null>(null);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  // Fetch label from spotlight_categories
+  // Detect if slug is a themed collection
   useEffect(() => {
     if (!category) return;
+    supabase
+      .from("product_collections")
+      .select("id,nome,titulo_destaque,descricao,cor_destaque")
+      .eq("slug", category)
+      .eq("ativo", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setCollection(data as any);
+          setCategoryLabel((data as any).nome);
+        } else {
+          setCollection(null);
+        }
+      });
+  }, [category]);
+
+  // Fetch label from spotlight_categories (only if not a collection)
+  useEffect(() => {
+    if (!category || collection) return;
     supabase
       .from("spotlight_categories")
       .select("label")
@@ -45,19 +65,20 @@ const CategoryPage = () => {
       .then(({ data }) => {
         if (data) setCategoryLabel(data.label);
       });
-  }, [category]);
+  }, [category, collection]);
 
   useEffect(() => {
     if (urlCor) setSelectedCor(urlCor);
   }, [urlCor]);
 
-  // Fetch available colors via RPC
+  // Fetch available colors via RPC (skip for collections — they are cross-category)
   useEffect(() => {
-    if (!category) return;
+    if (!category || collection) { return; }
     supabase.rpc("get_category_colors", { p_category_slug: category }).then(({ data }) => {
       if (data && Array.isArray(data)) {
         setCores(data.filter(Boolean).sort());
       }
+
     });
   }, [category]);
 
@@ -69,8 +90,11 @@ const CategoryPage = () => {
       ? selectedCor.split(",").map((v) => v.trim().toUpperCase()).filter(Boolean)
       : null;
 
-    const { data, error } = await supabase.rpc("search_products_by_category", {
-      p_category_slug: category,
+    const rpcName = collection ? "search_products_by_collection" : "search_products_by_category";
+    const params: any = collection
+      ? { p_collection_slug: category }
+      : { p_category_slug: category };
+    Object.assign(params, {
       p_cor: corValues,
       p_search: searchTerm || null,
       p_apenas_estoque: apenasEstoque,
@@ -79,7 +103,8 @@ const CategoryPage = () => {
       p_page_size: PAGE_SIZE,
       p_preco_min: urlPrecoMin ? Number(urlPrecoMin) : null,
       p_preco_max: urlPrecoMax ? Number(urlPrecoMax) : null,
-    } as any);
+    });
+    const { data, error } = await supabase.rpc(rpcName as any, params);
 
     if (error) {
       console.error("RPC error:", error);
@@ -91,7 +116,8 @@ const CategoryPage = () => {
       setTotal(result.total_count || 0);
     }
     setLoading(false);
-  }, [category, page, searchTerm, selectedCor, apenasEstoque, sortBy, urlPrecoMin, urlPrecoMax]);
+  }, [category, collection, page, searchTerm, selectedCor, apenasEstoque, sortBy, urlPrecoMin, urlPrecoMax]);
+
 
   useEffect(() => {
     fetchProducts();
@@ -114,18 +140,34 @@ const CategoryPage = () => {
   return (
     <>
       <Helmet>
-        <title>{categoryLabel} Personalizados | Gift Web Brindes</title>
-        <meta name="description" content={`${categoryLabel} personalizados para empresas. Catálogo com preços para atacado.`} />
+        <title>{collection ? `Brindes para ${collection.nome} | Gift Web Brindes` : `${categoryLabel} Personalizados | Gift Web Brindes`}</title>
+        <meta name="description" content={collection ? (collection.descricao ?? `Presentes e brindes personalizados selecionados para ${collection.nome}.`) : `${categoryLabel} personalizados para empresas. Catálogo com preços para atacado.`} />
         <link rel="canonical" href={canonicalUrl} />
       </Helmet>
+
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1">
           <div className="container py-6 md:py-8">
             <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: categoryLabel }]} />
-            <h1 className="font-black text-[36px] md:text-[48px] leading-tight text-foreground mb-6">
-              <span className="text-highlight">{categoryLabel}</span> Personalizados
-            </h1>
+            {collection ? (
+              <div className="mb-6">
+                <h1 className="font-black text-[36px] md:text-[52px] leading-tight text-foreground">
+                  Presentes para o{" "}
+                  <span style={{ color: `hsl(${collection.cor_destaque ?? "217 91% 60%"})` }}>
+                    {collection.titulo_destaque ?? collection.nome}
+                  </span>
+                </h1>
+                {collection.descricao && (
+                  <p className="text-muted-foreground mt-2 max-w-2xl">{collection.descricao}</p>
+                )}
+              </div>
+            ) : (
+              <h1 className="font-black text-[36px] md:text-[48px] leading-tight text-foreground mb-6">
+                <span className="text-highlight">{categoryLabel}</span> Personalizados
+              </h1>
+            )}
+
 
             <CatalogFilters
               searchTerm={searchTerm}

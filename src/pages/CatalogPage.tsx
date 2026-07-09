@@ -22,6 +22,7 @@ const MAX_PRECO = 400;
 interface Filters {
   search: string;
   categoria: string | null;
+  colecao: string | null;
   corValues: string[];
   precoMin: number;
   precoMax: number;
@@ -32,6 +33,7 @@ interface Filters {
 const defaultFilters: Filters = {
   search: "",
   categoria: null,
+  colecao: null,
   corValues: [],
   precoMin: 0,
   precoMax: MAX_PRECO,
@@ -46,12 +48,14 @@ const CatalogPage = () => {
   const [filters, setFilters] = useState<Filters>(() => ({
     search: searchParams.get("q") || "",
     categoria: searchParams.get("categoria") || null,
+    colecao: searchParams.get("colecao") || null,
     corValues: searchParams.get("cor") ? searchParams.get("cor")!.split(",") : [],
     precoMin: Number(searchParams.get("preco_min") || 0),
     precoMax: Number(searchParams.get("preco_max") || MAX_PRECO),
     apenasEstoque: false,
     sort: searchParams.get("sort") || "relevancia",
   }));
+
 
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
@@ -77,7 +81,26 @@ const CatalogPage = () => {
       ? filters.corValues.map(v => v.trim().toUpperCase()).filter(Boolean)
       : null;
 
-    if (filters.categoria) {
+    if (filters.colecao) {
+      const { data, error } = await supabase.rpc("search_products_by_collection" as any, {
+        p_collection_slug: filters.colecao,
+        p_cor: corValues,
+        p_search: filters.search || null,
+        p_apenas_estoque: filters.apenasEstoque,
+        p_sort: filters.sort,
+        p_page: page,
+        p_page_size: PAGE_SIZE,
+        p_preco_min: filters.precoMin > 0 ? filters.precoMin : null,
+        p_preco_max: filters.precoMax < MAX_PRECO ? filters.precoMax : null,
+      } as any);
+      if (requestId !== requestSeq.current) return;
+      if (error) { console.error(error); setProducts([]); setTotal(0); }
+      else if (data) {
+        const result = data as unknown as { rows: any[]; total_count: number };
+        setProducts((result.rows || []) as Product[]);
+        setTotal(result.total_count || 0);
+      }
+    } else if (filters.categoria) {
       const { data, error } = await supabase.rpc("search_products_by_category", {
         p_category_slug: filters.categoria,
         p_cor: corValues,
@@ -115,6 +138,7 @@ const CatalogPage = () => {
         setTotal(result.total_count || 0);
       }
     }
+
     if (requestId === requestSeq.current) setLoading(false);
   }, [page, filters]);
 
@@ -131,6 +155,8 @@ const CatalogPage = () => {
     if (page > 1) params.page = page.toString();
     if (filters.search) params.q = filters.search;
     if (filters.categoria) params.categoria = filters.categoria;
+    if (filters.colecao) params.colecao = filters.colecao;
+
     if (filters.corValues.length) params.cor = filters.corValues.join(",");
     if (filters.precoMin > 0) params.preco_min = filters.precoMin.toString();
     if (filters.precoMax < MAX_PRECO) params.preco_max = filters.precoMax.toString();
@@ -180,8 +206,26 @@ const CatalogPage = () => {
               <p className="text-[11px] md:text-xs text-white/60 italic mt-1.5">
                 Valores de referência. Melhores condições pelo WhatsApp
               </p>
+              <button
+                type="button"
+                onClick={() =>
+                  handleFilterChange({
+                    colecao: filters.colecao === "dia-dos-pais" ? null : "dia-dos-pais",
+                    categoria: null,
+                  })
+                }
+                className="mt-3 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wide transition-all"
+                style={{
+                  backgroundColor: filters.colecao === "dia-dos-pais" ? "hsl(217 91% 60%)" : "rgba(59,130,246,0.15)",
+                  color: filters.colecao === "dia-dos-pais" ? "#fff" : "hsl(217 91% 70%)",
+                  border: "1px solid hsl(217 91% 60% / 0.4)",
+                }}
+              >
+                <span>★</span> Coleção Dia dos Pais
+              </button>
             </div>
           </section>
+
 
           {/* MOBILE: filters inline → products (no stories) */}
           <div className="lg:hidden container py-3 space-y-3">
