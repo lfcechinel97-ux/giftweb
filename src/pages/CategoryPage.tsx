@@ -149,9 +149,24 @@ const CategoryPage = () => {
         <main className="flex-1">
           <div className="container py-6 md:py-8">
             <Breadcrumbs items={[{ label: "Início", href: "/" }, { label: categoryLabel }]} />
-            <h1 className="font-black text-[36px] md:text-[48px] leading-tight text-foreground mb-6">
-              <span className="text-highlight">{categoryLabel}</span> Personalizados
-            </h1>
+            {collection ? (
+              <div className="mb-6">
+                <h1 className="font-black text-[36px] md:text-[52px] leading-tight text-foreground">
+                  Presentes para o{" "}
+                  <span style={{ color: `hsl(${collection.cor_destaque ?? "217 91% 60%"})` }}>
+                    {collection.titulo_destaque ?? collection.nome}
+                  </span>
+                </h1>
+                {collection.descricao && (
+                  <p className="text-muted-foreground mt-2 max-w-2xl">{collection.descricao}</p>
+                )}
+              </div>
+            ) : (
+              <h1 className="font-black text-[36px] md:text-[48px] leading-tight text-foreground mb-6">
+                <span className="text-highlight">{categoryLabel}</span> Personalizados
+              </h1>
+            )}
+
 
             <CatalogFilters
               searchTerm={searchTerm}
