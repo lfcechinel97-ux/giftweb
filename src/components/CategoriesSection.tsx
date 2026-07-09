@@ -46,9 +46,10 @@ const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
     "mochilas-e-sacochilas": "mochilas",
     "canetas": "escritorio",
   };
-  const getContentValue = (id: string) => {
+  const getContentValue = (id: string, { allowLegacy = true }: { allowLegacy?: boolean } = {}) => {
     const val = siteRows.find((r) => r.id === id)?.value;
     if (val) return val;
+    if (!allowLegacy) return null;
     const slug = id.replace(/^cat_(img|link)_/, "");
     const legacySlug = legacyMap[slug];
     if (legacySlug) {
@@ -62,7 +63,8 @@ const CategoriesSection = ({ categoryCounts: _categoryCounts }: Props) => {
     const dbCat = dbCategories?.find((c) => c.slug === slug);
     const label = dbCat?.label || slug;
     const customImg = getContentValue(`cat_img_${slug}`);
-    const customLink = getContentValue(`cat_link_${slug}`);
+    // Do NOT fall back to legacy links — old link rows point to broken URLs.
+    const customLink = getContentValue(`cat_link_${slug}`, { allowLegacy: false });
     const defaultImg = Object.entries(defaultImages).find(([k]) => slug.includes(k))?.[1] || catBrindes;
 
     return {
