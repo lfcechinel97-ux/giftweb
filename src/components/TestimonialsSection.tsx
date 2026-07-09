@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useInView } from "@/hooks/useInView";
 import { Star } from "lucide-react";
+import photoMariana from "@/assets/testimonial-mariana.jpg";
+import photoRicardo from "@/assets/testimonial-ricardo.jpg";
+import photoFernanda from "@/assets/testimonial-fernanda.jpg";
+import photoLucas from "@/assets/testimonial-lucas.jpg";
 
 const testimonials = [
   {
@@ -8,28 +12,28 @@ const testimonials = [
     name: "Mariana Costa",
     company: "Embraer",
     role: "Marketing",
-    photo: "",
+    photo: photoMariana,
   },
   {
     text: "Qualidade excelente e atendimento diferenciado. Já fizemos mais de 10 pedidos e todos foram perfeitos.",
-    name: "Ricardo Almeida",
-    company: "Grupo XYZ",
+    name: "Ricardo Taufemback",
+    company: "Grupo Madero",
     role: "Compras",
-    photo: "",
+    photo: photoRicardo,
   },
   {
     text: "Nosso evento corporativo foi um sucesso graças aos kits personalizados. Recomendo demais!",
     name: "Fernanda Oliveira",
     company: "Tech Corp Coach",
     role: "Eventos",
-    photo: "",
+    photo: photoFernanda,
   },
   {
     text: "Parceiros de confiança. Sempre entregam com qualidade e pontualidade, mesmo em grandes volumes.",
-    name: "Lucas Santos",
-    company: "StartUp Inc",
-    role: "Diretoria",
-    photo: "",
+    name: "Lucas Bianchi",
+    company: "iFood",
+    role: "RH",
+    photo: photoLucas,
   },
 ];
 
