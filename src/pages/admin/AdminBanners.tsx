@@ -100,6 +100,26 @@ export default function AdminBanners() {
 
   const getRow = (id: string) => rows.find((row) => row.id === id);
 
+  const LINK_IDS = useMemo(
+    () => ['banner_1_link', 'banner_2_link', 'banner_3_link', 'banner_marca_link'],
+    [],
+  );
+
+  useEffect(() => {
+    const next: Record<string, string> = {};
+    for (const id of LINK_IDS) {
+      if (linksDirty[id]) continue;
+      next[id] = getRow(id)?.value ?? '';
+    }
+    setLinks((prev) => ({ ...prev, ...next }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
+
+  const handleLinkChange = (id: string, value: string) => {
+    setLinks((prev) => ({ ...prev, [id]: value }));
+    setLinksDirty((prev) => ({ ...prev, [id]: true }));
+  };
+
   const revokePreviewUrl = (url?: string | null) => {
     if (!url?.startsWith('blob:')) return;
     URL.revokeObjectURL(url);
