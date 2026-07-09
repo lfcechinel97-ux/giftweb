@@ -342,6 +342,11 @@ export default function AdminBanners() {
                 onChange={(file) => handleFile(BANNER_SEPARATOR_KEY, 'mob', file)}
                 aspectRatio={390 / 140}
               />
+
+              <LinkField
+                value={links['banner_marca_link'] ?? ''}
+                onChange={(v) => handleLinkChange('banner_marca_link', v)}
+              />
             </aside>
           );
         })()}
