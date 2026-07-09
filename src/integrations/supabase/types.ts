@@ -95,6 +95,77 @@ export type Database = {
         }
         Relationships: []
       }
+      product_collection_items: {
+        Row: {
+          codigo_prefixo: string
+          collection_id: string
+          created_at: string
+          id: string
+          ordem: number
+        }
+        Insert: {
+          codigo_prefixo: string
+          collection_id: string
+          created_at?: string
+          id?: string
+          ordem?: number
+        }
+        Update: {
+          codigo_prefixo?: string
+          collection_id?: string
+          created_at?: string
+          id?: string
+          ordem?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "product_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_collections: {
+        Row: {
+          ativo: boolean
+          cor_destaque: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+          ordem: number
+          slug: string
+          titulo_destaque: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          cor_destaque?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          slug: string
+          titulo_destaque?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          cor_destaque?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          slug?: string
+          titulo_destaque?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_spotlight_categories: {
         Row: {
           category_id: string
@@ -851,6 +922,20 @@ export type Database = {
             }
             Returns: Json
           }
+      search_products_by_collection: {
+        Args: {
+          p_apenas_estoque?: boolean
+          p_collection_slug: string
+          p_cor?: string[]
+          p_page?: number
+          p_page_size?: number
+          p_preco_max?: number
+          p_preco_min?: number
+          p_search?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
       search_products_global:
         | {
             Args: {
