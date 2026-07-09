@@ -1,36 +1,25 @@
-## Problema
+## SKU do produto na página de detalhe
 
-No card de produto (listagens do site), quando a variante "principal" está sem estoque, o card mostra a imagem dela + badge "Fora de Estoque", mesmo quando outras cores do mesmo produto têm estoque. Isso desestimula o clique.
+### Objetivo
+Exibir o código SKU do produto na página de detalhe (`/produto/:slug`) de forma discreta e minimalista.
 
-## Objetivo
+### O que será feito
+1. **Adicionar o SKU abaixo da galeria de imagens** (coluna da esquerda), logo após a fila de thumbnails e antes da seção "Descrição".
+2. **Mostrar o código da variante ativa** quando o usuário seleciona uma cor diferente; caso contrário, mostra o código do produto base.
+3. **Aplicar estilo minimalista**: texto em `text-muted-foreground`, tamanho `text-xs` (ou `text-[11px]`), usando uma fonte monoespaçada (`font-mono`) para reforçar o caráter técnico/corporativo. Exemplo visual:
+   ```
+   Código: 18637-BRA
+   ```
+   ou simplesmente:
+   ```
+   SKU: 18637-BRA
+   ```
+4. **Ajustar o espaçamento** com `mt-1` e `mb-2` para manter o fluxo visual limpo entre a galeria e a descrição.
 
-Só marcar "Fora de Estoque" quando TODAS as variantes estiverem zeradas. Caso contrário, mostrar a imagem e as cores das variantes que **têm estoque**.
+### Arquivos alterados
+- `src/pages/ProductDetail.tsx` — inserir o elemento do SKU na coluna da galeria.
 
-## Mudanças (somente `src/components/ProductCard.tsx`)
-
-1. **Selecionar variante de exibição em estoque**
-   - Montar `allColorOptions` como já é feito (pai + variantes).
-   - Se a opção principal (`image_url`/cor atual) estiver com `estoque === 0` e existir outra opção com `estoque > 0`, usar a primeira variante em estoque como imagem/base do card (imagem inicial, título permanece o mesmo).
-   - Se tudo estiver zerado, manter comportamento atual + badge "Fora de Estoque".
-
-2. **Ordenar/filtrar bolinhas de cor**
-   - Exibir primeiro as cores com `estoque > 0`.
-   - Cores com `estoque === 0` ficam depois, com opacidade reduzida (~40%) e tooltip "Sem estoque" para deixar claro.
-   - Manter limite `MAX_DOTS = 6` e o `+N` restante.
-
-3. **Cycle de imagens no hover**
-   - Continuar cycling, mas começar pela imagem da variante em estoque escolhida (nova ordem do array `images.current`).
-
-4. **Badge "Fora de Estoque"**
-   - Mostrar somente quando `aggregatedStock === 0` (já é a regra, mas confirmar) OU quando não existir nenhuma variante com estoque. Sem mudança na lógica de `estoque_total`.
-
-## Fora do escopo
-
-- Não mudar página de detalhe do produto, catálogo B2B (`CatalogProductCard`), filtros ou RPC.
-- Não mudar backend / cache.
-
-## Detalhes técnicos
-
-- Ajustar `images.current` para começar pela imagem da variante em estoque quando o "principal" está zerado.
-- Reordenar `allColorOptions` por `estoque` desc antes de fatiar para `MAX_DOTS`.
-- Aplicar `opacity: 0.4` no dot quando `v.estoque === 0`; tooltip mostra `${v.cor} — sem estoque`.
+### Não está no escopo
+- Card de produto no catálogo.
+- Páginas do sistema B2B.
+- Alterações no banco de dados ou na API.
