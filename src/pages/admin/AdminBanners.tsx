@@ -90,8 +90,10 @@ function BannerUploadField({
 }
 
 export default function AdminBanners() {
-  const { rows, loading, updateValue, uploadImage, refetch } = useSiteContent('banners');
+  const { rows, loading, updateValue, upsertValue, uploadImage, refetch } = useSiteContent('banners');
   const [slides, setSlides] = useState<Record<number, SlideState>>({});
+  const [links, setLinks] = useState<Record<string, string>>({});
+  const [linksDirty, setLinksDirty] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const previewUrlsRef = useRef<string[]>([]);
