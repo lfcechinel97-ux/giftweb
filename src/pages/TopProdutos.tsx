@@ -8,9 +8,9 @@ const TopProdutos = () => {
   const [cartCount, setCartCount] = useState(0);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#f8fafc]">
       <header className="fixed top-0 left-0 right-0 z-50 bg-navy border-b border-white/5">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-12">
           <div className="flex items-center justify-between h-14 sm:h-16">
             <a href="/" className="flex items-baseline gap-1 select-none" aria-label="Gift Web Brindes">
               <span
@@ -45,11 +45,11 @@ const TopProdutos = () => {
       </header>
 
       <main className="pt-14 sm:pt-16">
-        <section className="pt-8 sm:pt-12 lg:pt-16 pb-12 sm:pb-16">
+        <section className="pt-16 md:pt-24 pb-24 md:pb-32">
           <MaisVendidosSection onAdd={() => setCartCount((c) => c + 1)} />
         </section>
 
-        <section className="pb-16 sm:pb-24">
+        <section className="pb-24 md:pb-32">
           <CategoriasGrid onAdd={() => setCartCount((c) => c + 1)} />
         </section>
       </main>
