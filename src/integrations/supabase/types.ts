@@ -843,6 +843,60 @@ export type Database = {
         }
         Relationships: []
       }
+      topprodutos_curadoria: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          created_at: string
+          descricao_curta: string | null
+          descricao_longa: string | null
+          galeria: Json
+          id: string
+          imagem_hover: string | null
+          imagem_principal: string | null
+          mais_vendido: boolean
+          moq: number
+          nome: string
+          ordem: number
+          preco_exibicao: number | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria: string
+          created_at?: string
+          descricao_curta?: string | null
+          descricao_longa?: string | null
+          galeria?: Json
+          id?: string
+          imagem_hover?: string | null
+          imagem_principal?: string | null
+          mais_vendido?: boolean
+          moq?: number
+          nome: string
+          ordem?: number
+          preco_exibicao?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          created_at?: string
+          descricao_curta?: string | null
+          descricao_longa?: string | null
+          galeria?: Json
+          id?: string
+          imagem_hover?: string | null
+          imagem_principal?: string | null
+          mais_vendido?: boolean
+          moq?: number
+          nome?: string
+          ordem?: number
+          preco_exibicao?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
