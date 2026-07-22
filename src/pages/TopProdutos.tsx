@@ -1,16 +1,13 @@
 import { useState } from "react";
 import { ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
-import TopProductCard from "@/components/topprodutos/TopProductCard";
-import { useTopProdutos } from "@/hooks/useTopProdutos";
+import MaisVendidosSection from "@/components/topprodutos/MaisVendidosSection";
 
 const TopProdutos = () => {
   const [cartCount, setCartCount] = useState(0);
-  const { data: produtos, isLoading } = useTopProdutos(3);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header fixo simples */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-navy border-b border-white/5">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
@@ -51,34 +48,9 @@ const TopProdutos = () => {
       </header>
 
       <main className="pt-14 sm:pt-16">
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-foreground tracking-tight">
-              Top Produtos
-            </h1>
-            <p className="mt-4 text-base sm:text-lg text-muted-foreground">
-              Os brindes corporativos mais pedidos, prontos pra você adicionar.
-            </p>
-          </div>
-
-          <div className="mt-12 sm:mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 max-w-5xl mx-auto">
-            {isLoading &&
-              Array.from({ length: 3 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="aspect-[4/5] rounded-[12px] bg-muted/40 animate-pulse"
-                />
-              ))}
-
-            {!isLoading &&
-              produtos?.map((p) => (
-                <TopProductCard
-                  key={p.id}
-                  product={p}
-                  onAdd={() => setCartCount((c) => c + 1)}
-                />
-              ))}
-          </div>
+        {/* Seção destaque — Mais vendidos */}
+        <section className="pt-8 sm:pt-12 lg:pt-16 pb-12 sm:pb-16">
+          <MaisVendidosSection onAdd={() => setCartCount((c) => c + 1)} />
         </section>
       </main>
     </div>
