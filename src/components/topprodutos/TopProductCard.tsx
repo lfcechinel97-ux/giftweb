@@ -95,14 +95,13 @@ const TopProductCard = ({ product, minQuantidade, onAdd }: Props) => {
           {nome}
         </h3>
 
-        {precoUnit != null && (
-          <div className="flex items-baseline gap-1">
-            <span className="text-lg font-bold text-navy">
-              {formatarBRL(precoUnit)}
-            </span>
-            <span className="text-[11px] text-muted-foreground">/un</span>
-          </div>
-        )}
+        <div className="flex items-baseline gap-1">
+          <span className="text-lg font-bold text-navy">
+            {precoUnit != null ? formatarBRL(precoUnit) : "R$ --,--"}
+          </span>
+          <span className="text-[11px] text-muted-foreground">/un</span>
+        </div>
+
 
         <p className="text-[11px] text-muted-foreground">
           Pedido mínimo: {min} un
