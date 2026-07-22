@@ -15,15 +15,26 @@ export interface TopProduct {
   descricao_curta?: string | null;
 }
 
+export type TopProductVariant = "hero" | "side" | "grid";
+
 interface Props {
   product: TopProduct;
   minQuantidade?: number;
   onAdd?: (product: TopProduct, quantidade: number) => void;
+  variant?: TopProductVariant;
+  eyebrow?: string;
+  badge?: string;
 }
 
 const DEFAULT_MIN = 20;
 
-const TopProductCard = ({ product, minQuantidade, onAdd }: Props) => {
+const ASPECT: Record<TopProductVariant, string> = {
+  hero: "aspect-[16/9]",
+  side: "aspect-square",
+  grid: "aspect-[3/4]",
+};
+
+const TopProductCard = ({ product, minQuantidade, onAdd, variant = "grid", eyebrow, badge }: Props) => {
   const { nome, image_url, image_urls, preco_custo, quantidade_minima, preco_final } = product;
   const min = quantidade_minima ?? minQuantidade ?? DEFAULT_MIN;
 
@@ -36,39 +47,32 @@ const TopProductCard = ({ product, minQuantidade, onAdd }: Props) => {
   const [adding, setAdding] = useState(false);
   const [qtd, setQtd] = useState(min);
 
-  const precoUnit = preco_final != null ? preco_final : (preco_custo != null ? calcularPreco(preco_custo, min) : null);
-
+  const precoUnit =
+    preco_final != null ? preco_final : preco_custo != null ? calcularPreco(preco_custo, min) : null;
+  const precoFmt = precoUnit != null ? formatarBRL(precoUnit) : "R$ --,--";
 
   const handleAdd = () => {
     setAdding(true);
     onAdd?.(product, qtd);
   };
-
   const dec = () => setQtd((q) => Math.max(min, q - 1));
   const inc = () => setQtd((q) => q + 1);
 
   return (
     <article
-      className={cn(
-        "group flex flex-col rounded-[12px] bg-card overflow-hidden",
-        "shadow-[0_1px_2px_rgba(15,23,42,0.04),0_1px_3px_rgba(15,23,42,0.06)]",
-        "hover:shadow-[0_4px_12px_rgba(15,23,42,0.08),0_2px_4px_rgba(15,23,42,0.06)]",
-        "transition-shadow duration-200"
-      )}
+      className="group flex flex-col animate-fade-in"
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {/* Imagem */}
-      <div className="relative aspect-square w-full bg-muted/30 overflow-hidden">
+      {/* Imagem — sem moldura, apenas base sutil */}
+      <div className={cn("relative w-full overflow-hidden bg-slate-100", ASPECT[variant])}>
         {primary && (
           <img
             src={primary}
             alt={nome}
             loading="lazy"
-            width={600}
-            height={600}
             className={cn(
-              "absolute inset-0 w-full h-full object-contain p-4 transition-opacity duration-200",
+              "absolute inset-0 w-full h-full object-contain p-6 transition-opacity duration-500",
               hovering && secondary ? "opacity-0" : "opacity-100"
             )}
           />
@@ -78,73 +82,108 @@ const TopProductCard = ({ product, minQuantidade, onAdd }: Props) => {
             src={secondary}
             alt={nome}
             loading="lazy"
-            width={600}
-            height={600}
             aria-hidden="true"
             className={cn(
-              "absolute inset-0 w-full h-full object-contain p-4 transition-opacity duration-200 hidden md:block",
+              "absolute inset-0 w-full h-full object-contain p-6 transition-opacity duration-500 hidden md:block",
               hovering ? "opacity-100" : "opacity-0"
             )}
           />
         )}
+        {badge && (
+          <div className="absolute top-6 left-6">
+            <span className="bg-navy text-white text-[10px] font-bold px-4 py-1.5 uppercase tracking-widest">
+              {badge}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Info */}
-      <div className="flex flex-col gap-1.5 p-4">
-        <h3 className="text-sm font-semibold text-foreground line-clamp-2 min-h-[2.5rem] leading-tight">
-          {nome}
-        </h3>
-
-        <div className="flex items-baseline gap-1">
-          <span className="text-lg font-bold text-navy">
-            {precoUnit != null ? formatarBRL(precoUnit) : "R$ --,--"}
-          </span>
-          <span className="text-[11px] text-muted-foreground">/un</span>
+      {variant === "hero" && (
+        <div className="mt-8 flex flex-col md:flex-row justify-between items-start gap-6">
+          <div className="min-w-0">
+            <h3 className="text-2xl md:text-3xl font-bold text-navy leading-tight tracking-tight">{nome}</h3>
+            {product.descricao_curta && (
+              <p className="text-slate-500 mt-2 text-base md:text-lg leading-relaxed max-w-md">
+                {product.descricao_curta}
+              </p>
+            )}
+          </div>
+          <div className="md:text-right shrink-0">
+            <span className="block text-2xl md:text-3xl font-light text-navy">{precoFmt}</span>
+            <span className="block text-green-cta text-xs font-bold mt-2 uppercase tracking-widest">
+              MOQ: {min} Unidades
+            </span>
+          </div>
         </div>
+      )}
 
+      {variant === "side" && (
+        <div className="mt-4">
+          <h4 className="text-lg md:text-xl font-bold text-navy leading-tight">{nome}</h4>
+          <div className="flex justify-between items-center mt-2 border-t border-slate-200 pt-3">
+            <span className="text-slate-500 text-sm">{precoFmt}</span>
+            <span className="text-green-cta text-[10px] font-bold uppercase tracking-widest">
+              MOQ: {min}un
+            </span>
+          </div>
+        </div>
+      )}
 
-        <p className="text-[11px] text-muted-foreground">
-          Pedido mínimo: {min} un
-        </p>
+      {variant === "grid" && (
+        <div className="mt-6 space-y-1">
+          <div className="flex justify-between gap-3">
+            <h5 className="text-navy font-bold text-base md:text-lg leading-tight">{nome}</h5>
+            <span className="text-navy font-medium text-sm md:text-base shrink-0">{precoFmt}</span>
+          </div>
+          {eyebrow && (
+            <p className="text-slate-400 text-[10px] uppercase tracking-widest">{eyebrow}</p>
+          )}
+          <div className="pt-4 border-t border-slate-100">
+            <span className="text-green-cta text-[10px] font-black uppercase tracking-widest">
+              MOQ: {min} un
+            </span>
+          </div>
+        </div>
+      )}
 
-        {/* Botão / seletor */}
-        <div className="mt-3">
-          {!adding ? (
+      {/* Ação — discreta, sem moldura de card */}
+      <div className="mt-4">
+        {!adding ? (
+          <button
+            type="button"
+            onClick={handleAdd}
+            className={cn(
+              "inline-flex items-center gap-2 text-navy text-xs font-bold uppercase tracking-widest",
+              "border-b border-navy/30 hover:border-green-cta hover:text-green-cta pb-1 transition-colors"
+            )}
+          >
+            Adicionar ao pedido
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+        ) : (
+          <div className="inline-flex items-center gap-3 h-9 px-1 border-b border-navy/30">
             <button
               type="button"
-              onClick={handleAdd}
-              className={cn(
-                "w-full h-10 rounded-[10px] bg-green-cta text-white text-sm font-semibold",
-                "hover:brightness-110 active:scale-[0.98] transition-all duration-150",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-green-cta/60"
-              )}
+              onClick={dec}
+              aria-label="Diminuir"
+              className="w-7 h-7 flex items-center justify-center text-navy hover:text-green-cta transition-colors"
             >
-              Adicionar
+              <Minus className="w-3.5 h-3.5" />
             </button>
-          ) : (
-            <div className="flex items-center justify-between h-10 rounded-[10px] border border-border bg-background overflow-hidden">
-              <button
-                type="button"
-                onClick={dec}
-                aria-label="Diminuir"
-                className="w-10 h-full flex items-center justify-center text-foreground hover:bg-muted transition-colors"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <span className="text-sm font-semibold text-foreground tabular-nums">
-                {qtd}
-              </span>
-              <button
-                type="button"
-                onClick={inc}
-                aria-label="Aumentar"
-                className="w-10 h-full flex items-center justify-center text-green-cta hover:bg-muted transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-        </div>
+            <span className="text-sm font-bold text-navy tabular-nums min-w-[2ch] text-center">
+              {qtd}
+            </span>
+            <button
+              type="button"
+              onClick={inc}
+              aria-label="Aumentar"
+              className="w-7 h-7 flex items-center justify-center text-green-cta hover:brightness-110 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </div>
     </article>
   );
