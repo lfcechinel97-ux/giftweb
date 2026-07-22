@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MaisVendidosSection from "@/components/topprodutos/MaisVendidosSection";
+import CategoriasGrid from "@/components/topprodutos/CategoriasGrid";
 
 const TopProdutos = () => {
   const [cartCount, setCartCount] = useState(0);
@@ -11,11 +12,7 @@ const TopProdutos = () => {
       <header className="fixed top-0 left-0 right-0 z-50 bg-navy border-b border-white/5">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
-            <a
-              href="/"
-              className="flex items-baseline gap-1 select-none"
-              aria-label="Gift Web Brindes"
-            >
+            <a href="/" className="flex items-baseline gap-1 select-none" aria-label="Gift Web Brindes">
               <span
                 className="text-xl sm:text-2xl font-black italic text-white tracking-tight"
                 style={{ fontFamily: "'Georgia', serif" }}
@@ -48,9 +45,12 @@ const TopProdutos = () => {
       </header>
 
       <main className="pt-14 sm:pt-16">
-        {/* Seção destaque — Mais vendidos */}
         <section className="pt-8 sm:pt-12 lg:pt-16 pb-12 sm:pb-16">
           <MaisVendidosSection onAdd={() => setCartCount((c) => c + 1)} />
+        </section>
+
+        <section className="pb-16 sm:pb-24">
+          <CategoriasGrid onAdd={() => setCartCount((c) => c + 1)} />
         </section>
       </main>
     </div>
