@@ -29,6 +29,7 @@ const AdminVitrine = lazy(() => import("./pages/admin/AdminVitrine.tsx"));
 const AdminCatalogs = lazy(() => import("./pages/admin/AdminCatalogs.tsx"));
 const AdminClientes = lazy(() => import("./pages/admin/AdminClientes.tsx"));
 const AdminFooter = lazy(() => import("./pages/admin/AdminFooter.tsx"));
+const AdminTopProdutos = lazy(() => import("./pages/admin/AdminTopProdutos.tsx"));
 const AdminGuard = lazy(() => import("./components/admin/AdminGuard.tsx"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage.tsx"));
 const TermsPage = lazy(() => import("./pages/TermsPage.tsx"));
