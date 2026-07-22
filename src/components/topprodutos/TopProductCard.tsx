@@ -11,6 +11,8 @@ export interface TopProduct {
   preco_custo: number | null;
   codigo_amigavel: string;
   quantidade_minima?: number | null;
+  preco_final?: number | null;
+  descricao_curta?: string | null;
 }
 
 interface Props {
@@ -22,7 +24,7 @@ interface Props {
 const DEFAULT_MIN = 20;
 
 const TopProductCard = ({ product, minQuantidade, onAdd }: Props) => {
-  const { nome, image_url, image_urls, preco_custo, quantidade_minima } = product;
+  const { nome, image_url, image_urls, preco_custo, quantidade_minima, preco_final } = product;
   const min = quantidade_minima ?? minQuantidade ?? DEFAULT_MIN;
 
   const primary = image_url || (image_urls && image_urls[0]) || null;
@@ -34,7 +36,8 @@ const TopProductCard = ({ product, minQuantidade, onAdd }: Props) => {
   const [adding, setAdding] = useState(false);
   const [qtd, setQtd] = useState(min);
 
-  const precoUnit = preco_custo != null ? calcularPreco(preco_custo, min) : null;
+  const precoUnit = preco_final != null ? preco_final : (preco_custo != null ? calcularPreco(preco_custo, min) : null);
+
 
   const handleAdd = () => {
     setAdding(true);
