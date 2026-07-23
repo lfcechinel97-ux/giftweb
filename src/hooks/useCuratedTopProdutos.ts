@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { TopProduct } from "@/components/topprodutos/TopProductCard";
 
+export type DestaqueLevel = "padrao" | "medio" | "grande";
+
 export interface CuratedProduct extends TopProduct {
   categoria: string;
   descricao_curta: string | null;
@@ -9,6 +11,14 @@ export interface CuratedProduct extends TopProduct {
   mais_vendido: boolean;
   ordem: number;
   galeria: string[];
+  destaque: DestaqueLevel;
+  imagem_editorial: string | null;
+}
+
+export interface CategoriaMeta {
+  slug: string;
+  imagem_capa: string | null;
+  eyebrow: string | null;
 }
 
 export const TOPPRODUTOS_CATEGORIAS: Array<{ slug: string; label: string }> = [
@@ -40,6 +50,8 @@ function mapRow(r: any): CuratedProduct {
     mais_vendido: !!r.mais_vendido,
     ordem: r.ordem ?? 0,
     galeria,
+    destaque: (r.destaque as DestaqueLevel) ?? "padrao",
+    imagem_editorial: r.imagem_editorial ?? null,
   };
 }
 
@@ -55,6 +67,22 @@ export function useCuratedTopProdutos() {
         .order("created_at", { ascending: true });
       if (error) throw error;
       return (data as any[]).map(mapRow);
+    },
+    staleTime: 60_000,
+  });
+}
+
+export function useCategoriasMeta() {
+  return useQuery({
+    queryKey: ["topprodutos-categorias-meta"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("topprodutos_categorias_meta" as any)
+        .select("slug, imagem_capa, eyebrow");
+      if (error) throw error;
+      const map = new Map<string, CategoriaMeta>();
+      (data as any[]).forEach((r) => map.set(r.slug, r as CategoriaMeta));
+      return map;
     },
     staleTime: 60_000,
   });

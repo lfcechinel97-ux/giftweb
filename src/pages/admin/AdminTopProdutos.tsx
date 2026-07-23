@@ -25,6 +25,8 @@ type Row = {
   imagem_hover: string | null;
   galeria: string[];
   ativo: boolean;
+  destaque: "padrao" | "medio" | "grande";
+  imagem_editorial: string | null;
 };
 
 const empty: Omit<Row, "id"> = {
@@ -40,6 +42,8 @@ const empty: Omit<Row, "id"> = {
   imagem_hover: null,
   galeria: [],
   ativo: true,
+  destaque: "padrao",
+  imagem_editorial: null,
 };
 
 async function uploadImage(file: File): Promise<string> {
@@ -215,6 +219,8 @@ export default function AdminTopProdutos() {
       imagem_hover: editing.imagem_hover,
       galeria: editing.galeria,
       ativo: editing.ativo,
+      destaque: editing.destaque,
+      imagem_editorial: editing.imagem_editorial,
     };
     const q =
       "id" in editing && editing.id
@@ -253,6 +259,9 @@ export default function AdminTopProdutos() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <a href="/admin/topprodutos/categorias">Capas de categoria</a>
+          </Button>
           <Select value={filter} onValueChange={setFilter}>
             <SelectTrigger className="w-[240px]">
               <SelectValue />
@@ -441,6 +450,37 @@ export default function AdminTopProdutos() {
                 value={editing.galeria}
                 onChange={(v) => setEditing({ ...editing, galeria: v })}
               />
+
+              <div className="rounded-lg border bg-muted/20 p-3 flex flex-col gap-3">
+                <div>
+                  <Label>Destaque no grid da categoria</Label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Controla o tamanho do card no mosaico editorial da página /topprodutos.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {(["padrao", "medio", "grande"] as const).map((lvl) => (
+                      <button
+                        key={lvl}
+                        type="button"
+                        onClick={() => setEditing({ ...editing, destaque: lvl })}
+                        className={
+                          "px-3 py-1.5 rounded-md border text-sm capitalize transition-colors " +
+                          (editing.destaque === lvl
+                            ? "bg-navy text-white border-navy"
+                            : "bg-background hover:bg-muted")
+                        }
+                      >
+                        {lvl === "padrao" ? "Padrão" : lvl === "medio" ? "Destaque médio" : "Destaque grande"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <ImageField
+                  label="Imagem editorial (usada quando destaque = médio ou grande)"
+                  value={editing.imagem_editorial}
+                  onChange={(v) => setEditing({ ...editing, imagem_editorial: v })}
+                />
+              </div>
             </div>
           )}
           <DialogFooter>
