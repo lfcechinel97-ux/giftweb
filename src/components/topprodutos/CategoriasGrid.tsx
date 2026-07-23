@@ -159,15 +159,15 @@ const Mosaic = ({
         className="top-mosaic grid gap-4 md:gap-6"
         style={{
           gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-          gridAutoRows: "minmax(240px, auto)",
+          gridAutoRows: "minmax(200px, auto)",
           gridAutoFlow: "dense",
         }}
       >
         {items.map((p, i) => {
           const size = destaqueToSize(p.destaque);
           return (
-            <div key={p.id} className={cn(spanClass(size), "flex")}>
-              <div className="flex flex-col w-full">
+            <div key={p.id} className={cn(spanClass(size), "flex h-full")}>
+              <div className="flex flex-col w-full h-full">
                 <TopProductCard
                   product={p}
                   onAdd={onAdd}
@@ -185,7 +185,7 @@ const Mosaic = ({
         @media (min-width: 768px) {
           .top-mosaic {
             grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-            grid-auto-rows: minmax(300px, auto) !important;
+            grid-auto-rows: minmax(280px, auto) !important;
           }
         }
       `}</style>
