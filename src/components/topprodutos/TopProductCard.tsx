@@ -4,6 +4,12 @@ import { cn } from "@/lib/utils";
 import { calcularPreco, formatarBRL } from "@/utils/price";
 import type { Tile } from "./categoryPalettes";
 
+export interface TopProductCor {
+  nome: string;
+  imagem: string;
+  referencia?: string | null;
+}
+
 export interface TopProduct {
   id: string;
   nome: string;
@@ -15,6 +21,7 @@ export interface TopProduct {
   preco_final?: number | null;
   descricao_curta?: string | null;
   imagem_editorial?: string | null;
+  cores?: TopProductCor[];
 }
 
 export type TopProductVariant = "hero" | "side" | "grid";
