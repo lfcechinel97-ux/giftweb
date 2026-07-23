@@ -53,6 +53,7 @@ const MaisVendidosSection = ({ onAdd, onOpen }: Props) => {
                 <TopProductCard
                   product={featured}
                   onAdd={onAdd}
+                  onOpen={onOpen}
                   variant="hero"
                   badge="Destaque do Mês"
                 />
@@ -61,7 +62,7 @@ const MaisVendidosSection = ({ onAdd, onOpen }: Props) => {
             {sideItems.length > 0 && (
               <div className="md:col-span-4 space-y-12 md:space-y-16">
                 {sideItems.map((p) => (
-                  <TopProductCard key={p.id} product={p} onAdd={onAdd} variant="side" />
+                  <TopProductCard key={p.id} product={p} onAdd={onAdd} onOpen={onOpen} variant="side" />
                 ))}
               </div>
             )}
@@ -71,10 +72,11 @@ const MaisVendidosSection = ({ onAdd, onOpen }: Props) => {
           {tailItems.length > 0 && (
             <div className="mt-20 grid grid-cols-2 lg:grid-cols-4 gap-x-8 md:gap-x-12 gap-y-16">
               {tailItems.map((p) => (
-                <TopProductCard key={p.id} product={p} onAdd={onAdd} variant="grid" />
+                <TopProductCard key={p.id} product={p} onAdd={onAdd} onOpen={onOpen} variant="grid" />
               ))}
             </div>
           )}
+
         </>
       )}
     </section>
