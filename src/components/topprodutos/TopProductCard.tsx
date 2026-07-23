@@ -211,6 +211,42 @@ const TopProductCard = ({
           )}
         </button>
 
+        {/* Swatches de cor — usam a miniatura de cada variação */}
+        {coresList.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mt-3 px-1">
+            {coresList.map((c, i) => {
+              const active = selectedCorIdx === i;
+              return (
+                <button
+                  key={`${c.referencia ?? c.nome}-${i}`}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedCorIdx(active ? null : i);
+                  }}
+                  title={c.nome}
+                  aria-label={`Cor ${c.nome}`}
+                  aria-pressed={active}
+                  className={cn(
+                    "relative w-8 h-8 rounded-full overflow-hidden border transition-all",
+                    active
+                      ? "border-navy ring-2 ring-navy/30 scale-110"
+                      : "border-slate-200 hover:border-slate-400"
+                  )}
+                >
+                  <img
+                    src={c.imagem}
+                    alt={c.nome}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+
         {/* Info fora do tile — SÓ para tamanho S (mantém tile puramente visual) */}
         {isS && (
           <div className="mt-4 px-1">
