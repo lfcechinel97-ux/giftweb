@@ -70,17 +70,22 @@ async function uploadImage(file: File): Promise<string> {
 
 function ImageField({
   label,
+  hint,
   value,
   onChange,
 }: {
   label: string;
+  hint?: string;
   value: string | null;
   onChange: (v: string | null) => void;
 }) {
   const [busy, setBusy] = useState(false);
   return (
     <div className="flex flex-col gap-2">
-      <Label>{label}</Label>
+      <div>
+        <Label>{label}</Label>
+        {hint && <p className="text-[11px] text-muted-foreground mt-0.5">{hint}</p>}
+      </div>
       <div className="flex items-center gap-3">
         {value ? (
           <div className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted/30">
