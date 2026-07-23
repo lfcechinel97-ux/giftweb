@@ -4,10 +4,12 @@ import { useCuratedTopProdutos } from "@/hooks/useCuratedTopProdutos";
 
 interface Props {
   onAdd?: (product: TopProduct, quantidade: number) => void;
+  onOpen?: (product: TopProduct) => void;
 }
 
-const MaisVendidosSection = ({ onAdd }: Props) => {
+const MaisVendidosSection = ({ onAdd, onOpen }: Props) => {
   const { data, isLoading } = useCuratedTopProdutos();
+
 
   const items = (data ?? []).filter((p) => p.mais_vendido).slice(0, 10);
 
