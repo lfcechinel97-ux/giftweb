@@ -91,6 +91,7 @@ const App = () => (
                 <Route path="clientes" element={<AdminClientes />} />
                 <Route path="rodape" element={<AdminFooter />} />
                 <Route path="topprodutos" element={<AdminTopProdutos />} />
+                <Route path="topprodutos/categorias" element={<AdminTopProdutosCategorias />} />
                 <Route path="destaques" element={<div className="text-muted-foreground">Página de Destaques (em breve)</div>} />
               </Route>
               <Route path="/categoria/:slug" element={<CategoryPage />} />
