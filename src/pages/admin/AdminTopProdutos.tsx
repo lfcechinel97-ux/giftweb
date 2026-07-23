@@ -11,6 +11,8 @@ import { toast } from "@/hooks/use-toast";
 import { Pencil, Trash2, Plus, Upload, X } from "lucide-react";
 import { TOPPRODUTOS_CATEGORIAS } from "@/hooks/useCuratedTopProdutos";
 
+type Cor = { nome: string; imagem: string; referencia?: string | null };
+
 type Row = {
   id: string;
   nome: string;
@@ -27,6 +29,7 @@ type Row = {
   ativo: boolean;
   destaque: "padrao" | "medio" | "grande";
   imagem_editorial: string | null;
+  cores: Cor[];
 };
 
 const empty: Omit<Row, "id"> = {
@@ -44,6 +47,13 @@ const empty: Omit<Row, "id"> = {
   ativo: true,
   destaque: "padrao",
   imagem_editorial: null,
+  cores: [],
+};
+
+const DESTAQUE_HINTS: Record<"padrao" | "medio" | "grande", string> = {
+  padrao: "Ideal: 600×600px (quadrada)",
+  medio: "Ideal: 900×900px (quadrada)",
+  grande: "Ideal: 1200×1200px (quadrada)",
 };
 
 async function uploadImage(file: File): Promise<string> {
@@ -60,17 +70,22 @@ async function uploadImage(file: File): Promise<string> {
 
 function ImageField({
   label,
+  hint,
   value,
   onChange,
 }: {
   label: string;
+  hint?: string;
   value: string | null;
   onChange: (v: string | null) => void;
 }) {
   const [busy, setBusy] = useState(false);
   return (
     <div className="flex flex-col gap-2">
-      <Label>{label}</Label>
+      <div>
+        <Label>{label}</Label>
+        {hint && <p className="text-[11px] text-muted-foreground mt-0.5">{hint}</p>}
+      </div>
       <div className="flex items-center gap-3">
         {value ? (
           <div className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted/30">
@@ -122,7 +137,10 @@ function GaleriaField({ value, onChange }: { value: string[]; onChange: (v: stri
   const [busy, setBusy] = useState(false);
   return (
     <div className="flex flex-col gap-2">
-      <Label>Galeria (fotos adicionais)</Label>
+      <div>
+        <Label>Galeria (fotos adicionais)</Label>
+        <p className="text-[11px] text-muted-foreground mt-0.5">Ideal: 600×600px por imagem</p>
+      </div>
       <div className="flex flex-wrap items-center gap-3">
         {value.map((url, i) => (
           <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted/30">
@@ -168,6 +186,93 @@ function GaleriaField({ value, onChange }: { value: string[]; onChange: (v: stri
   );
 }
 
+function CoresField({ value, onChange }: { value: Cor[]; onChange: (v: Cor[]) => void }) {
+  const [busy, setBusy] = useState(false);
+  const update = (i: number, patch: Partial<Cor>) =>
+    onChange(value.map((c, j) => (j === i ? { ...c, ...patch } : c)));
+  return (
+    <div className="flex flex-col gap-2">
+      <div>
+        <Label>Variações de cor</Label>
+        <p className="text-[11px] text-muted-foreground mt-0.5">
+          Cada cor exibida como bolinha no card. Ideal da imagem: 600×600px.
+        </p>
+      </div>
+      <div className="flex flex-col gap-2">
+        {value.length === 0 && (
+          <p className="text-xs text-muted-foreground italic">Nenhuma variação cadastrada.</p>
+        )}
+        {value.map((c, i) => (
+          <div key={i} className="flex items-center gap-3 border rounded-md p-2 bg-background">
+            <div className="w-14 h-14 rounded-md overflow-hidden border bg-muted/30 shrink-0">
+              {c.imagem ? (
+                <img src={c.imagem} alt="" className="w-full h-full object-contain" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                  <Upload className="w-4 h-4" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 grid grid-cols-2 gap-2">
+              <Input
+                placeholder="Nome (ex: Azul)"
+                value={c.nome}
+                onChange={(e) => update(i, { nome: e.target.value })}
+              />
+              <Input
+                placeholder="Referência (opcional)"
+                value={c.referencia ?? ""}
+                onChange={(e) => update(i, { referencia: e.target.value || null })}
+              />
+            </div>
+            <label className="inline-flex items-center gap-1 px-2 py-1.5 text-xs border rounded-md cursor-pointer hover:bg-muted shrink-0">
+              <Upload className="w-3 h-3" />
+              {busy ? "..." : "Foto"}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={busy}
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  setBusy(true);
+                  try {
+                    const url = await uploadImage(f);
+                    update(i, { imagem: url });
+                  } catch (err: any) {
+                    toast({ title: "Erro no upload", description: err.message, variant: "destructive" });
+                  } finally {
+                    setBusy(false);
+                    e.target.value = "";
+                  }
+                }}
+              />
+            </label>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onChange(value.filter((_, j) => j !== i))}
+              aria-label="Remover cor"
+            >
+              <Trash2 className="w-4 h-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+      </div>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="self-start"
+        onClick={() => onChange([...value, { nome: "", imagem: "", referencia: null }])}
+      >
+        <Plus className="w-4 h-4 mr-1" /> Adicionar cor
+      </Button>
+    </div>
+  );
+}
+
 export default function AdminTopProdutos() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
@@ -189,10 +294,20 @@ export default function AdminTopProdutos() {
         (data as any[]).map((r) => ({
           ...r,
           galeria: Array.isArray(r.galeria) ? r.galeria : [],
+          cores: Array.isArray(r.cores) ? r.cores : [],
         }))
       );
     }
     setLoading(false);
+  };
+
+  const patchRow = async (id: string, patch: Partial<Row>) => {
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+    const { error } = await supabase.from("topprodutos_curadoria" as any).update(patch).eq("id", id);
+    if (error) {
+      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+      load();
+    }
   };
 
   useEffect(() => {
@@ -221,6 +336,7 @@ export default function AdminTopProdutos() {
       ativo: editing.ativo,
       destaque: editing.destaque,
       imagem_editorial: editing.imagem_editorial,
+      cores: editing.cores ?? [],
     };
     const q =
       "id" in editing && editing.id
@@ -323,11 +439,42 @@ export default function AdminTopProdutos() {
                   <td className="px-3 py-2 text-muted-foreground">
                     {TOPPRODUTOS_CATEGORIAS.find((c) => c.slug === r.categoria)?.label ?? r.categoria}
                   </td>
-                  <td className="px-3 py-2">{r.preco_exibicao != null ? `R$ ${Number(r.preco_exibicao).toFixed(2)}` : "—"}</td>
+                  <td className="px-3 py-2">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      defaultValue={r.preco_exibicao ?? ""}
+                      className="h-8 w-24"
+                      onBlur={(e) => {
+                        const v = e.target.value === "" ? null : Number(e.target.value);
+                        if (v !== r.preco_exibicao) patchRow(r.id, { preco_exibicao: v });
+                      }}
+                    />
+                  </td>
                   <td className="px-3 py-2">{r.moq}</td>
-                  <td className="px-3 py-2">{r.ordem}</td>
-                  <td className="px-3 py-2">{r.mais_vendido ? "Sim" : "—"}</td>
-                  <td className="px-3 py-2">{r.ativo ? "Sim" : "Não"}</td>
+                  <td className="px-3 py-2">
+                    <Input
+                      type="number"
+                      defaultValue={r.ordem}
+                      className="h-8 w-16"
+                      onBlur={(e) => {
+                        const v = Number(e.target.value || 0);
+                        if (v !== r.ordem) patchRow(r.id, { ordem: v });
+                      }}
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <Checkbox
+                      checked={r.mais_vendido}
+                      onCheckedChange={(v) => patchRow(r.id, { mais_vendido: !!v })}
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <Checkbox
+                      checked={r.ativo}
+                      onCheckedChange={(v) => patchRow(r.id, { ativo: !!v })}
+                    />
+                  </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1">
                       <Button size="sm" variant="ghost" onClick={() => setEditing(r)}>
@@ -437,11 +584,13 @@ export default function AdminTopProdutos() {
               <div className="grid grid-cols-2 gap-3">
                 <ImageField
                   label="Imagem principal"
+                  hint="Ideal: 600×600px (fundo branco, formato quadrado)"
                   value={editing.imagem_principal}
                   onChange={(v) => setEditing({ ...editing, imagem_principal: v })}
                 />
                 <ImageField
                   label="Imagem hover"
+                  hint="Ideal: 600×600px — exibida ao passar o mouse"
                   value={editing.imagem_hover}
                   onChange={(v) => setEditing({ ...editing, imagem_hover: v })}
                 />
@@ -451,11 +600,18 @@ export default function AdminTopProdutos() {
                 onChange={(v) => setEditing({ ...editing, galeria: v })}
               />
 
+              <CoresField
+                value={editing.cores ?? []}
+                onChange={(v) => setEditing({ ...editing, cores: v })}
+              />
+
               <div className="rounded-lg border bg-muted/20 p-3 flex flex-col gap-3">
                 <div>
                   <Label>Destaque no grid da categoria</Label>
                   <p className="text-xs text-muted-foreground mb-2">
-                    Controla o tamanho do card no mosaico editorial da página /topprodutos.
+                    Controla o tamanho que o card ocupa no mosaico da página /topprodutos.
+                    <br />
+                    <strong>Padrão:</strong> 1×1 · <strong>Médio:</strong> 2×1 · <strong>Grande:</strong> 2×2.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {(["padrao", "medio", "grande"] as const).map((lvl) => (
@@ -464,19 +620,25 @@ export default function AdminTopProdutos() {
                         type="button"
                         onClick={() => setEditing({ ...editing, destaque: lvl })}
                         className={
-                          "px-3 py-1.5 rounded-md border text-sm capitalize transition-colors " +
+                          "flex flex-col items-start px-3 py-2 rounded-md border text-sm transition-colors " +
                           (editing.destaque === lvl
                             ? "bg-navy text-white border-navy"
                             : "bg-background hover:bg-muted")
                         }
                       >
-                        {lvl === "padrao" ? "Padrão" : lvl === "medio" ? "Destaque médio" : "Destaque grande"}
+                        <span className="capitalize font-medium">
+                          {lvl === "padrao" ? "Padrão" : lvl === "medio" ? "Destaque médio" : "Destaque grande"}
+                        </span>
+                        <span className={"text-[10px] " + (editing.destaque === lvl ? "text-white/70" : "text-muted-foreground")}>
+                          {DESTAQUE_HINTS[lvl]}
+                        </span>
                       </button>
                     ))}
                   </div>
                 </div>
                 <ImageField
-                  label="Imagem editorial (usada quando destaque = médio ou grande)"
+                  label="Imagem editorial (opcional — usada apenas em destaque médio/grande)"
+                  hint="Foto lifestyle/ambientada para preencher tiles grandes. Ideal: 1200×1200px. Se vazio, usa a imagem principal."
                   value={editing.imagem_editorial}
                   onChange={(v) => setEditing({ ...editing, imagem_editorial: v })}
                 />
