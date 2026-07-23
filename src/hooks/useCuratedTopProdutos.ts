@@ -59,6 +59,7 @@ function mapRow(r: any): CuratedProduct {
     galeria,
     destaque: (r.destaque as DestaqueLevel) ?? "padrao",
     imagem_editorial: r.imagem_editorial ?? null,
+    cores: Array.isArray(r.cores) ? r.cores : [],
   };
 }
 
