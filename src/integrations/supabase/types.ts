@@ -871,6 +871,7 @@ export type Database = {
         Row: {
           ativo: boolean
           categoria: string
+          cores: Json
           created_at: string
           descricao_curta: string | null
           descricao_longa: string | null
@@ -890,6 +891,7 @@ export type Database = {
         Insert: {
           ativo?: boolean
           categoria: string
+          cores?: Json
           created_at?: string
           descricao_curta?: string | null
           descricao_longa?: string | null
@@ -909,6 +911,7 @@ export type Database = {
         Update: {
           ativo?: boolean
           categoria?: string
+          cores?: Json
           created_at?: string
           descricao_curta?: string | null
           descricao_longa?: string | null

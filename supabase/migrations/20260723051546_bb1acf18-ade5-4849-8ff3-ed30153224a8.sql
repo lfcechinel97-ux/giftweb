@@ -1,0 +1,1 @@
+ALTER TABLE public.topprodutos_curadoria ADD COLUMN IF NOT EXISTS cores jsonb NOT NULL DEFAULT '[]'::jsonb;
