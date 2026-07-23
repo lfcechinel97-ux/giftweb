@@ -11,6 +11,8 @@ import { toast } from "@/hooks/use-toast";
 import { Pencil, Trash2, Plus, Upload, X } from "lucide-react";
 import { TOPPRODUTOS_CATEGORIAS } from "@/hooks/useCuratedTopProdutos";
 
+type Cor = { nome: string; imagem: string; referencia?: string | null };
+
 type Row = {
   id: string;
   nome: string;
@@ -27,6 +29,7 @@ type Row = {
   ativo: boolean;
   destaque: "padrao" | "medio" | "grande";
   imagem_editorial: string | null;
+  cores: Cor[];
 };
 
 const empty: Omit<Row, "id"> = {
@@ -44,6 +47,13 @@ const empty: Omit<Row, "id"> = {
   ativo: true,
   destaque: "padrao",
   imagem_editorial: null,
+  cores: [],
+};
+
+const DESTAQUE_HINTS: Record<"padrao" | "medio" | "grande", string> = {
+  padrao: "Ideal: 600×600px (quadrada)",
+  medio: "Ideal: 900×900px (quadrada)",
+  grande: "Ideal: 1200×1200px (quadrada)",
 };
 
 async function uploadImage(file: File): Promise<string> {
