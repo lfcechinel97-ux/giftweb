@@ -4,6 +4,12 @@ import { cn } from "@/lib/utils";
 import { calcularPreco, formatarBRL } from "@/utils/price";
 import type { Tile } from "./categoryPalettes";
 
+export interface TopProductCor {
+  nome: string;
+  imagem: string;
+  referencia?: string | null;
+}
+
 export interface TopProduct {
   id: string;
   nome: string;
@@ -15,6 +21,7 @@ export interface TopProduct {
   preco_final?: number | null;
   descricao_curta?: string | null;
   imagem_editorial?: string | null;
+  cores?: TopProductCor[];
 }
 
 export type TopProductVariant = "hero" | "side" | "grid";
@@ -58,15 +65,19 @@ const TopProductCard = ({
   badge,
   tile: tileProp,
 }: Props) => {
-  const { nome, image_url, image_urls, preco_custo, quantidade_minima, preco_final, imagem_editorial } = product;
+  const { nome, image_url, image_urls, preco_custo, quantidade_minima, preco_final, imagem_editorial, cores } = product;
   const min = quantidade_minima ?? minQuantidade ?? DEFAULT_MIN;
   const tile = tileProp ?? DEFAULT_TILE;
 
   const editorial = !!size;
 
+  const coresList = (cores ?? []).filter((c) => c && c.imagem);
+  const [selectedCorIdx, setSelectedCorIdx] = useState<number | null>(null);
+  const selectedCor = selectedCorIdx != null ? coresList[selectedCorIdx] : null;
+
   // Modo editorial: sempre PNG/produto flutuando (não a foto lifestyle "cropada").
-  // Preferimos a foto de fundo transparente/estúdio do catálogo — imagem_editorial só entra para L com opção.
-  const primary = image_url || (image_urls && image_urls[0]) || null;
+  const basePrimary = image_url || (image_urls && image_urls[0]) || null;
+  const primary = selectedCor?.imagem || basePrimary;
   const secondary =
     image_urls?.find((u) => u && u !== primary) ||
     (image_urls && image_urls.length > 1 ? image_urls[1] : null);
@@ -199,6 +210,42 @@ const TopProductCard = ({
             </div>
           )}
         </button>
+
+        {/* Swatches de cor — usam a miniatura de cada variação */}
+        {coresList.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mt-3 px-1">
+            {coresList.map((c, i) => {
+              const active = selectedCorIdx === i;
+              return (
+                <button
+                  key={`${c.referencia ?? c.nome}-${i}`}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedCorIdx(active ? null : i);
+                  }}
+                  title={c.nome}
+                  aria-label={`Cor ${c.nome}`}
+                  aria-pressed={active}
+                  className={cn(
+                    "relative w-8 h-8 rounded-full overflow-hidden border transition-all",
+                    active
+                      ? "border-navy ring-2 ring-navy/30 scale-110"
+                      : "border-slate-200 hover:border-slate-400"
+                  )}
+                >
+                  <img
+                    src={c.imagem}
+                    alt={c.nome}
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
+
 
         {/* Info fora do tile — SÓ para tamanho S (mantém tile puramente visual) */}
         {isS && (
