@@ -116,10 +116,12 @@ const CategoriasGrid = ({ onAdd, onOpen }: Props) => {
                 key={p.id}
                 product={p}
                 onAdd={onAdd}
+                onOpen={onOpen}
                 variant="grid"
                 eyebrow={catLabel(active)}
               />
             ))}
+
           </div>
         </div>
       )}
