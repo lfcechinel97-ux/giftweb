@@ -271,7 +271,7 @@ const CategoriasGrid = ({ onAdd, onOpen }: Props) => {
                   count={items.length}
                   onSeeAll={() => setActive(cat.slug)}
                 />
-                <Mosaic items={items} eyebrow={cat.label} onAdd={onAdd} onOpen={onOpen} />
+                <Mosaic items={items} eyebrow={cat.label} categoria={cat.slug} onAdd={onAdd} onOpen={onOpen} />
               </section>
             );
           })}
