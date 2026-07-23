@@ -25,6 +25,8 @@ type Row = {
   imagem_hover: string | null;
   galeria: string[];
   ativo: boolean;
+  destaque: "padrao" | "medio" | "grande";
+  imagem_editorial: string | null;
 };
 
 const empty: Omit<Row, "id"> = {
@@ -40,6 +42,8 @@ const empty: Omit<Row, "id"> = {
   imagem_hover: null,
   galeria: [],
   ativo: true,
+  destaque: "padrao",
+  imagem_editorial: null,
 };
 
 async function uploadImage(file: File): Promise<string> {
