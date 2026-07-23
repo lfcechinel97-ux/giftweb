@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { X, Minus, Plus, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatarBRL } from "@/utils/price";
@@ -12,16 +12,37 @@ interface Props {
   onClose: () => void;
 }
 
+const ACCENT = "#2563EB";
+
+// Detecta linhas "Rótulo: valor" para exibir em lista de duas colunas.
+// Também quebra linhas separadas por "|" em itens independentes.
+function parseSpecs(text: string): { label: string; value: string }[] | null {
+  const parts = text
+    .split(/\r?\n|\s*\|\s*/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const specs = parts
+    .map((p) => {
+      const idx = p.indexOf(":");
+      if (idx <= 0) return null;
+      return { label: p.slice(0, idx).trim(), value: p.slice(idx + 1).trim() };
+    })
+    .filter((x): x is { label: string; value: string } => !!x && !!x.value);
+  return specs.length >= 2 ? specs : null;
+}
+
 const TopProductModal = ({ product, onClose }: Props) => {
   const isMobile = useIsMobile();
   const { addItem, getQty } = useTopCart();
   const [activeImg, setActiveImg] = useState(0);
+  const [selectedCorIdx, setSelectedCorIdx] = useState<number | null>(null);
   const [qtd, setQtd] = useState(20);
   const [added, setAdded] = useState(false);
 
   useEffect(() => {
     if (!product) return;
     setActiveImg(0);
+    setSelectedCorIdx(null);
     const existing = getQty(product.id);
     setQtd(existing > 0 ? existing : product.quantidade_minima ?? 20);
     setAdded(false);
@@ -38,12 +59,26 @@ const TopProductModal = ({ product, onClose }: Props) => {
     };
   }, [product, onClose]);
 
+  const coresList = useMemo(
+    () => (product?.cores ?? []).filter((c) => c && c.imagem),
+    [product?.id]
+  );
+
+  const specs = useMemo(
+    () => (product?.descricao_longa ? parseSpecs(product.descricao_longa) : null),
+    [product?.descricao_longa]
+  );
+
   if (!product) return null;
 
   const gallery = (product.image_urls?.filter(Boolean) as string[]) ?? [];
   const min = product.quantidade_minima ?? 20;
-  const catLabel = TOPPRODUTOS_CATEGORIAS.find((c) => c.slug === product.categoria)?.label ?? product.categoria;
+  const catLabel =
+    TOPPRODUTOS_CATEGORIAS.find((c) => c.slug === product.categoria)?.label ?? product.categoria;
   const price = product.preco_final != null ? formatarBRL(product.preco_final) : "R$ --,--";
+
+  const selectedCor = selectedCorIdx != null ? coresList[selectedCorIdx] : null;
+  const mainImg = selectedCor?.imagem || gallery[activeImg] || product.image_url;
 
   const handleAdd = () => {
     addItem(
@@ -83,13 +118,13 @@ const TopProductModal = ({ product, onClose }: Props) => {
         </button>
 
         {/* Galeria */}
-        <div className="md:w-3/5 bg-slate-50 flex flex-col">
+        <div className="md:w-3/5 bg-white flex flex-col">
           <div className="relative flex-1 aspect-square md:aspect-auto md:min-h-[500px] flex items-center justify-center">
-            {gallery[activeImg] ? (
+            {mainImg ? (
               <img
-                src={gallery[activeImg]}
+                src={mainImg}
                 alt={product.nome}
-                className="max-w-full max-h-full object-contain p-8"
+                className="max-w-full max-h-full object-contain p-4 md:p-6"
               />
             ) : (
               <div className="text-slate-300 text-sm">Sem imagem</div>
@@ -101,11 +136,17 @@ const TopProductModal = ({ product, onClose }: Props) => {
                 <button
                   key={src + i}
                   type="button"
-                  onClick={() => setActiveImg(i)}
+                  onClick={() => {
+                    setActiveImg(i);
+                    setSelectedCorIdx(null);
+                  }}
                   className={cn(
                     "w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-white border-2 transition",
-                    i === activeImg ? "border-green-cta" : "border-transparent hover:border-slate-200"
+                    i === activeImg && !selectedCor
+                      ? "border-[color:var(--acc)]"
+                      : "border-transparent hover:border-slate-200"
                   )}
+                  style={{ ["--acc" as any]: ACCENT }}
                 >
                   <img src={src} alt="" className="w-full h-full object-contain p-1" />
                 </button>
@@ -118,11 +159,14 @@ const TopProductModal = ({ product, onClose }: Props) => {
                 <button
                   key={i}
                   type="button"
-                  onClick={() => setActiveImg(i)}
+                  onClick={() => {
+                    setActiveImg(i);
+                    setSelectedCorIdx(null);
+                  }}
                   aria-label={`Imagem ${i + 1}`}
                   className={cn(
                     "w-2 h-2 rounded-full transition",
-                    i === activeImg ? "bg-navy w-6" : "bg-slate-300"
+                    i === activeImg && !selectedCor ? "bg-navy w-6" : "bg-slate-300"
                   )}
                 />
               ))}
@@ -132,23 +176,97 @@ const TopProductModal = ({ product, onClose }: Props) => {
 
         {/* Info */}
         <div className="md:w-2/5 flex flex-col p-6 md:p-8 overflow-y-auto">
-          <span className="text-[10px] font-bold text-green-cta uppercase tracking-widest mb-3">
+          <span
+            className="text-[10px] font-bold uppercase tracking-widest mb-3"
+            style={{ color: ACCENT }}
+          >
             {catLabel}
           </span>
           <h2 className="text-2xl md:text-3xl font-bold text-navy leading-tight tracking-tight">
             {product.nome}
           </h2>
-          <div className="mt-4 flex items-baseline gap-3">
-            <span className="text-3xl font-light text-navy">{price}</span>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              MOQ: {min} un
+          <div className="mt-4 flex items-end gap-3">
+            <div className="flex flex-col leading-tight">
+              <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-medium">
+                A partir de
+              </span>
+              <span className="text-3xl font-semibold text-navy tabular-nums">{price}</span>
+            </div>
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest pb-1">
+              Mínimo {min} un
             </span>
           </div>
 
-          {product.descricao_longa && (
-            <p className="mt-6 text-slate-600 leading-relaxed text-sm md:text-base whitespace-pre-line">
-              {product.descricao_longa}
-            </p>
+          {/* Seletor de cor */}
+          {coresList.length > 0 && (
+            <div className="mt-6">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[11px] font-bold text-navy uppercase tracking-[0.18em]">
+                  Cor:
+                </span>
+                <span className="text-xs text-slate-500">
+                  {selectedCor?.nome ?? "Selecione uma cor"}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2.5">
+                {coresList.map((c, i) => {
+                  const active = selectedCorIdx === i;
+                  return (
+                    <button
+                      key={`${c.referencia ?? c.nome}-${i}`}
+                      type="button"
+                      onClick={() => setSelectedCorIdx(active ? null : i)}
+                      title={c.nome}
+                      aria-label={`Cor ${c.nome}`}
+                      aria-pressed={active}
+                      className={cn(
+                        "relative w-10 h-10 rounded-full overflow-hidden transition-all",
+                        active
+                          ? "ring-2 ring-offset-2 scale-105"
+                          : "ring-1 ring-slate-200 hover:ring-slate-400"
+                      )}
+                      style={
+                        active
+                          ? ({ ["--tw-ring-color" as any]: ACCENT } as React.CSSProperties)
+                          : undefined
+                      }
+                    >
+                      <img
+                        src={c.imagem}
+                        alt={c.nome}
+                        loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Especificações / Descrição */}
+          {specs ? (
+            <div className="mt-6 border-t border-slate-100 pt-5">
+              <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">
+                Especificações
+              </span>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                {specs.map((s, i) => (
+                  <div key={i} className="flex flex-col">
+                    <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">
+                      {s.label}
+                    </dt>
+                    <dd className="text-sm text-navy leading-snug">{s.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ) : (
+            product.descricao_longa && (
+              <p className="mt-6 text-slate-600 leading-relaxed text-sm md:text-base whitespace-pre-line">
+                {product.descricao_longa}
+              </p>
+            )
           )}
 
           <div className="mt-auto pt-8 space-y-4">
@@ -159,7 +277,7 @@ const TopProductModal = ({ product, onClose }: Props) => {
                   type="button"
                   onClick={() => setQtd((q) => Math.max(min, q - 1))}
                   aria-label="Diminuir"
-                  className="w-8 h-8 flex items-center justify-center text-navy hover:text-green-cta"
+                  className="w-8 h-8 flex items-center justify-center text-navy"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
@@ -170,7 +288,8 @@ const TopProductModal = ({ product, onClose }: Props) => {
                   type="button"
                   onClick={() => setQtd((q) => q + 1)}
                   aria-label="Aumentar"
-                  className="w-8 h-8 flex items-center justify-center text-green-cta"
+                  className="w-8 h-8 flex items-center justify-center"
+                  style={{ color: ACCENT }}
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -181,11 +300,10 @@ const TopProductModal = ({ product, onClose }: Props) => {
               type="button"
               onClick={handleAdd}
               className={cn(
-                "w-full h-12 rounded-full text-sm font-bold uppercase tracking-widest transition-all",
-                added
-                  ? "bg-green-cta text-white"
-                  : "bg-navy text-white hover:bg-navy/90"
+                "w-full h-12 rounded-full text-sm font-bold uppercase tracking-widest transition-all text-white",
+                added ? "bg-green-cta" : "hover:opacity-90"
               )}
+              style={added ? undefined : { backgroundColor: ACCENT }}
             >
               {added ? (
                 <span className="inline-flex items-center gap-2">
