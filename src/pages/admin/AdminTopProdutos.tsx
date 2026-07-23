@@ -439,11 +439,42 @@ export default function AdminTopProdutos() {
                   <td className="px-3 py-2 text-muted-foreground">
                     {TOPPRODUTOS_CATEGORIAS.find((c) => c.slug === r.categoria)?.label ?? r.categoria}
                   </td>
-                  <td className="px-3 py-2">{r.preco_exibicao != null ? `R$ ${Number(r.preco_exibicao).toFixed(2)}` : "—"}</td>
+                  <td className="px-3 py-2">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      defaultValue={r.preco_exibicao ?? ""}
+                      className="h-8 w-24"
+                      onBlur={(e) => {
+                        const v = e.target.value === "" ? null : Number(e.target.value);
+                        if (v !== r.preco_exibicao) patchRow(r.id, { preco_exibicao: v });
+                      }}
+                    />
+                  </td>
                   <td className="px-3 py-2">{r.moq}</td>
-                  <td className="px-3 py-2">{r.ordem}</td>
-                  <td className="px-3 py-2">{r.mais_vendido ? "Sim" : "—"}</td>
-                  <td className="px-3 py-2">{r.ativo ? "Sim" : "Não"}</td>
+                  <td className="px-3 py-2">
+                    <Input
+                      type="number"
+                      defaultValue={r.ordem}
+                      className="h-8 w-16"
+                      onBlur={(e) => {
+                        const v = Number(e.target.value || 0);
+                        if (v !== r.ordem) patchRow(r.id, { ordem: v });
+                      }}
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <Checkbox
+                      checked={r.mais_vendido}
+                      onCheckedChange={(v) => patchRow(r.id, { mais_vendido: !!v })}
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <Checkbox
+                      checked={r.ativo}
+                      onCheckedChange={(v) => patchRow(r.id, { ativo: !!v })}
+                    />
+                  </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-1">
                       <Button size="sm" variant="ghost" onClick={() => setEditing(r)}>
