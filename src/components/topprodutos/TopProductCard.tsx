@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { calcularPreco, formatarBRL } from "@/utils/price";
+import type { Tile } from "./categoryPalettes";
 
 export interface TopProduct {
   id: string;
@@ -28,6 +29,7 @@ interface Props {
   size?: TopProductSize;
   eyebrow?: string;
   badge?: string;
+  tile?: Tile; // paleta do tile (cores por categoria)
 }
 
 const DEFAULT_MIN = 20;
@@ -36,6 +38,13 @@ const ASPECT_LEGACY: Record<TopProductVariant, string> = {
   hero: "aspect-[16/9]",
   side: "aspect-square",
   grid: "aspect-[3/4]",
+};
+
+const DEFAULT_TILE: Tile = {
+  bg: "#F1E9DE",
+  ink: "#0B1F3A",
+  accent: "#0B1F3A",
+  accentInk: "#FFFFFF",
 };
 
 const TopProductCard = ({
@@ -47,17 +56,17 @@ const TopProductCard = ({
   size,
   eyebrow,
   badge,
+  tile: tileProp,
 }: Props) => {
   const { nome, image_url, image_urls, preco_custo, quantidade_minima, preco_final, imagem_editorial } = product;
   const min = quantidade_minima ?? minQuantidade ?? DEFAULT_MIN;
+  const tile = tileProp ?? DEFAULT_TILE;
 
-  // Editorial mode: when a size is provided, use mosaic layout with lifestyle-first imagery.
   const editorial = !!size;
 
-  const preferEditorial = editorial && size !== "S" && !!imagem_editorial;
-  const primary = preferEditorial
-    ? imagem_editorial!
-    : image_url || (image_urls && image_urls[0]) || null;
+  // Modo editorial: sempre PNG/produto flutuando (não a foto lifestyle "cropada").
+  // Preferimos a foto de fundo transparente/estúdio do catálogo — imagem_editorial só entra para L com opção.
+  const primary = image_url || (image_urls && image_urls[0]) || null;
   const secondary =
     image_urls?.find((u) => u && u !== primary) ||
     (image_urls && image_urls.length > 1 ? image_urls[1] : null);
@@ -75,21 +84,27 @@ const TopProductCard = ({
   };
   const open = () => onOpen?.(product);
 
-  // ─── Editorial mosaic sizes ─────────────────────────────────────
+  // ─── Modo Editorial: tile colorido + produto flutuando ────────────────
   if (editorial) {
     const isL = size === "L";
     const isM = size === "M";
+    const isS = size === "S";
 
-    const imgFit = preferEditorial ? "object-cover" : "object-contain";
-    const padding = preferEditorial ? "p-0" : isL ? "p-10 md:p-14" : isM ? "p-6 md:p-10" : "p-4 md:p-6";
-    const bg = preferEditorial ? "bg-slate-100" : "bg-[#f4f2ed]";
-    const aspect = isL ? "h-full min-h-[520px]" : isM ? "h-full min-h-[340px]" : "aspect-[4/5]";
-
-    const titleClass = isL
-      ? "text-2xl md:text-4xl font-bold text-navy leading-tight tracking-tight"
+    // Escala dramática do produto dentro do tile — S bem pequeno, L bem grande.
+    const imgScale = isL
+      ? "w-[78%] h-[78%]"
       : isM
-      ? "text-lg md:text-2xl font-bold text-navy leading-tight"
-      : "text-sm md:text-base font-semibold text-navy leading-snug";
+      ? "w-[65%] h-[65%]"
+      : "w-[42%] h-[42%]";
+
+    // Posição do produto no tile: L centralizado empurrado pra cima; M centralizado; S centralizado.
+    const imgAnchor = isL ? "items-start pt-10 md:pt-14" : "items-center";
+
+    const minHeight = isL
+      ? "min-h-[440px] md:min-h-[560px]"
+      : isM
+      ? "min-h-[300px] md:min-h-[360px]"
+      : "min-h-[220px] md:min-h-[260px]";
 
     return (
       <article
@@ -100,96 +115,138 @@ const TopProductCard = ({
         <button
           type="button"
           onClick={open}
-          className={cn("relative w-full overflow-hidden cursor-pointer text-left flex-1", bg, aspect)}
+          className={cn(
+            "relative w-full flex-1 overflow-hidden text-left rounded-[28px] md:rounded-[36px]",
+            "transition-shadow duration-500",
+            minHeight
+          )}
+          style={{ backgroundColor: tile.bg }}
           aria-label={`Ver detalhes de ${nome}`}
         >
-          {primary && (
-            <img
-              src={primary}
-              alt={nome}
-              loading="lazy"
-              className={cn(
-                "absolute inset-0 w-full h-full transition-all duration-500 group-hover:scale-[1.03]",
-                imgFit,
-                padding,
-                hovering && secondary ? "opacity-0" : "opacity-100"
-              )}
-            />
-          )}
-          {secondary && (
-            <img
-              src={secondary}
-              alt={nome}
-              loading="lazy"
-              aria-hidden="true"
-              className={cn(
-                "absolute inset-0 w-full h-full transition-opacity duration-500 hidden md:block",
-                imgFit,
-                padding,
-                hovering ? "opacity-100" : "opacity-0"
-              )}
-            />
-          )}
-          {badge && (
-            <div className={cn("absolute", isL ? "top-6 left-6" : "top-4 left-4")}>
-              <span className="bg-navy text-white text-[10px] font-bold px-3 py-1.5 uppercase tracking-widest">
-                {badge}
+          {/* Rótulo DESTAQUE (só L e M) */}
+          {(isL || (isM && badge)) && (
+            <div className="absolute top-5 left-5 md:top-6 md:left-6 z-10">
+              <span
+                className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.25em] px-3 py-1.5 rounded-full"
+                style={{ backgroundColor: tile.accent, color: tile.accentInk }}
+              >
+                {badge ?? (isL ? "Destaque" : "Novo")}
               </span>
             </div>
           )}
-          {isL && preferEditorial && (
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent" />
+
+          {/* Produto flutuando */}
+          <div className={cn("absolute inset-0 flex justify-center px-6", imgAnchor)}>
+            {primary && (
+              <img
+                src={primary}
+                alt={nome}
+                loading="lazy"
+                className={cn(
+                  "object-contain transition-all duration-500 group-hover:scale-[1.05] drop-shadow-[0_20px_30px_rgba(0,0,0,0.12)]",
+                  imgScale,
+                  hovering && secondary ? "opacity-0" : "opacity-100"
+                )}
+              />
+            )}
+            {secondary && (
+              <img
+                src={secondary}
+                alt={nome}
+                loading="lazy"
+                aria-hidden="true"
+                className={cn(
+                  "absolute object-contain transition-opacity duration-500 hidden md:block drop-shadow-[0_20px_30px_rgba(0,0,0,0.12)]",
+                  imgScale,
+                  isL ? "top-14 md:top-14" : "top-1/2 -translate-y-1/2",
+                  hovering ? "opacity-100" : "opacity-0"
+                )}
+              />
+            )}
+          </div>
+
+          {/* Info dentro do tile — só L e M (S mantém fora, minimalíssimo) */}
+          {(isL || isM) && (
+            <div
+              className={cn(
+                "absolute inset-x-0 bottom-0 px-6 md:px-8 pb-6 md:pb-8 pt-16",
+                "bg-gradient-to-t from-black/5 to-transparent"
+              )}
+            >
+              <h3
+                className={cn(
+                  "font-bold leading-tight tracking-tight",
+                  isL ? "text-2xl md:text-4xl" : "text-lg md:text-2xl"
+                )}
+                style={{ color: tile.ink }}
+              >
+                {nome}
+              </h3>
+              <div className="flex items-baseline gap-3 mt-2 md:mt-3">
+                <span
+                  className={cn("font-medium tabular-nums", isL ? "text-lg md:text-xl" : "text-base")}
+                  style={{ color: tile.ink }}
+                >
+                  {precoFmt}
+                </span>
+                <span
+                  className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-70"
+                  style={{ color: tile.ink }}
+                >
+                  · MOQ {min}
+                </span>
+              </div>
+            </div>
           )}
         </button>
 
-        {/* Info */}
-        <div className={cn("mt-4", isL ? "md:mt-6" : "mt-3")}>
-          {eyebrow && (
-            <p className={cn(
-              "text-slate-400 uppercase tracking-widest mb-1",
-              isL ? "text-xs" : "text-[10px]"
-            )}>
-              {eyebrow}
-            </p>
-          )}
-          <div className="flex justify-between items-start gap-3">
-            <button type="button" onClick={open} className="text-left min-w-0 flex-1">
-              <h3 className={cn(titleClass, "hover:text-green-cta transition-colors")}>{nome}</h3>
-            </button>
-            <span className={cn(
-              "shrink-0 text-navy font-medium tabular-nums",
-              isL ? "text-lg md:text-xl" : isM ? "text-base" : "text-sm"
-            )}>
-              {precoFmt}
-            </span>
+        {/* Info fora do tile — SÓ para tamanho S (mantém tile puramente visual) */}
+        {isS && (
+          <div className="mt-4 px-1">
+            <div className="flex justify-between items-start gap-3">
+              <button type="button" onClick={open} className="text-left min-w-0 flex-1">
+                <h3 className="text-sm md:text-[15px] font-semibold text-navy leading-snug hover:text-green-cta transition-colors line-clamp-2">
+                  {nome}
+                </h3>
+              </button>
+            </div>
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-navy font-medium text-sm tabular-nums">{precoFmt}</span>
+              <button
+                type="button"
+                onClick={handleAdd}
+                aria-label="Adicionar ao pedido"
+                className="w-7 h-7 rounded-full bg-navy text-white flex items-center justify-center hover:bg-green-cta transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
-          {isL && product.descricao_curta && (
-            <p className="text-slate-500 mt-3 text-base leading-relaxed max-w-md">
-              {product.descricao_curta}
-            </p>
-          )}
-          <div className={cn(
-            "flex items-center justify-between gap-3 mt-4 pt-3 border-t",
-            isL ? "border-slate-200" : "border-slate-100"
-          )}>
-            <span className="text-green-cta text-[10px] font-bold uppercase tracking-widest">
-              MOQ: {min} un
-            </span>
+        )}
+
+        {/* CTA "Adicionar" para L/M — abaixo do tile, minimalista */}
+        {(isL || isM) && (
+          <div className={cn("flex items-center justify-between gap-3 mt-4 md:mt-5 px-1")}>
+            {eyebrow && (
+              <span className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.25em]">
+                {eyebrow}
+              </span>
+            )}
             <button
               type="button"
               onClick={handleAdd}
-              className="inline-flex items-center gap-1.5 text-navy text-[11px] font-bold uppercase tracking-widest hover:text-green-cta transition-colors"
+              className="inline-flex items-center gap-1.5 text-navy text-[11px] font-bold uppercase tracking-[0.2em] hover:text-green-cta transition-colors ml-auto"
             >
               Adicionar
               <Plus className="w-3.5 h-3.5" />
             </button>
           </div>
-        </div>
+        )}
       </article>
     );
   }
 
-  // ─── Legacy variants (hero/side/grid) for MaisVendidosSection ────────
+  // ─── Legacy variants (hero/side/grid) — usados em MaisVendidosSection ────
   return (
     <article
       className="group flex flex-col animate-fade-in"
@@ -199,7 +256,11 @@ const TopProductCard = ({
       <button
         type="button"
         onClick={open}
-        className={cn("relative w-full overflow-hidden bg-slate-100 cursor-pointer text-left", ASPECT_LEGACY[variant])}
+        className={cn(
+          "relative w-full overflow-hidden cursor-pointer text-left rounded-[28px] md:rounded-[36px]",
+          ASPECT_LEGACY[variant]
+        )}
+        style={{ backgroundColor: tile.bg }}
         aria-label={`Ver detalhes de ${nome}`}
       >
         {primary && (
@@ -208,7 +269,8 @@ const TopProductCard = ({
             alt={nome}
             loading="lazy"
             className={cn(
-              "absolute inset-0 w-full h-full object-contain p-6 transition-all duration-500 group-hover:scale-[1.02]",
+              "absolute inset-0 w-full h-full object-contain transition-all duration-500 group-hover:scale-[1.04] drop-shadow-[0_20px_30px_rgba(0,0,0,0.12)]",
+              variant === "hero" ? "p-16 md:p-24" : "p-10 md:p-14",
               hovering && secondary ? "opacity-0" : "opacity-100"
             )}
           />
@@ -220,14 +282,18 @@ const TopProductCard = ({
             loading="lazy"
             aria-hidden="true"
             className={cn(
-              "absolute inset-0 w-full h-full object-contain p-6 transition-opacity duration-500 hidden md:block",
+              "absolute inset-0 w-full h-full object-contain transition-opacity duration-500 hidden md:block drop-shadow-[0_20px_30px_rgba(0,0,0,0.12)]",
+              variant === "hero" ? "p-16 md:p-24" : "p-10 md:p-14",
               hovering ? "opacity-100" : "opacity-0"
             )}
           />
         )}
         {badge && (
           <div className="absolute top-6 left-6">
-            <span className="bg-navy text-white text-[10px] font-bold px-4 py-1.5 uppercase tracking-widest">
+            <span
+              className="text-[10px] font-bold px-3 py-1.5 uppercase tracking-[0.25em] rounded-full"
+              style={{ backgroundColor: tile.accent, color: tile.accentInk }}
+            >
               {badge}
             </span>
           </div>
@@ -288,7 +354,6 @@ const TopProductCard = ({
         </div>
       )}
 
-      {/* Ação legada */}
       <div className="mt-4">
         <button
           type="button"
