@@ -294,10 +294,20 @@ export default function AdminTopProdutos() {
         (data as any[]).map((r) => ({
           ...r,
           galeria: Array.isArray(r.galeria) ? r.galeria : [],
+          cores: Array.isArray(r.cores) ? r.cores : [],
         }))
       );
     }
     setLoading(false);
+  };
+
+  const patchRow = async (id: string, patch: Partial<Row>) => {
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+    const { error } = await supabase.from("topprodutos_curadoria" as any).update(patch).eq("id", id);
+    if (error) {
+      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+      load();
+    }
   };
 
   useEffect(() => {
