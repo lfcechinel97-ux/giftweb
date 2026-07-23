@@ -450,6 +450,37 @@ export default function AdminTopProdutos() {
                 value={editing.galeria}
                 onChange={(v) => setEditing({ ...editing, galeria: v })}
               />
+
+              <div className="rounded-lg border bg-muted/20 p-3 flex flex-col gap-3">
+                <div>
+                  <Label>Destaque no grid da categoria</Label>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Controla o tamanho do card no mosaico editorial da página /topprodutos.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {(["padrao", "medio", "grande"] as const).map((lvl) => (
+                      <button
+                        key={lvl}
+                        type="button"
+                        onClick={() => setEditing({ ...editing, destaque: lvl })}
+                        className={
+                          "px-3 py-1.5 rounded-md border text-sm capitalize transition-colors " +
+                          (editing.destaque === lvl
+                            ? "bg-navy text-white border-navy"
+                            : "bg-background hover:bg-muted")
+                        }
+                      >
+                        {lvl === "padrao" ? "Padrão" : lvl === "medio" ? "Destaque médio" : "Destaque grande"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <ImageField
+                  label="Imagem editorial (usada quando destaque = médio ou grande)"
+                  value={editing.imagem_editorial}
+                  onChange={(v) => setEditing({ ...editing, imagem_editorial: v })}
+                />
+              </div>
             </div>
           )}
           <DialogFooter>
