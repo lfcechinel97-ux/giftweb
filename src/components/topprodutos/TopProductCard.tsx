@@ -21,6 +21,7 @@ interface Props {
   product: TopProduct;
   minQuantidade?: number;
   onAdd?: (product: TopProduct, quantidade: number) => void;
+  onOpen?: (product: TopProduct) => void;
   variant?: TopProductVariant;
   eyebrow?: string;
   badge?: string;
@@ -34,7 +35,7 @@ const ASPECT: Record<TopProductVariant, string> = {
   grid: "aspect-[3/4]",
 };
 
-const TopProductCard = ({ product, minQuantidade, onAdd, variant = "grid", eyebrow, badge }: Props) => {
+const TopProductCard = ({ product, minQuantidade, onAdd, onOpen, variant = "grid", eyebrow, badge }: Props) => {
   const { nome, image_url, image_urls, preco_custo, quantidade_minima, preco_final } = product;
   const min = quantidade_minima ?? minQuantidade ?? DEFAULT_MIN;
 
@@ -51,12 +52,14 @@ const TopProductCard = ({ product, minQuantidade, onAdd, variant = "grid", eyebr
     preco_final != null ? preco_final : preco_custo != null ? calcularPreco(preco_custo, min) : null;
   const precoFmt = precoUnit != null ? formatarBRL(precoUnit) : "R$ --,--";
 
-  const handleAdd = () => {
+  const handleAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setAdding(true);
     onAdd?.(product, qtd);
   };
-  const dec = () => setQtd((q) => Math.max(min, q - 1));
-  const inc = () => setQtd((q) => q + 1);
+  const dec = (e: React.MouseEvent) => { e.stopPropagation(); setQtd((q) => Math.max(min, q - 1)); };
+  const inc = (e: React.MouseEvent) => { e.stopPropagation(); setQtd((q) => q + 1); };
+  const open = () => onOpen?.(product);
 
   return (
     <article
@@ -64,15 +67,20 @@ const TopProductCard = ({ product, minQuantidade, onAdd, variant = "grid", eyebr
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {/* Imagem — sem moldura, apenas base sutil */}
-      <div className={cn("relative w-full overflow-hidden bg-slate-100", ASPECT[variant])}>
+      {/* Imagem — clicável para abrir detalhes */}
+      <button
+        type="button"
+        onClick={open}
+        className={cn("relative w-full overflow-hidden bg-slate-100 cursor-pointer text-left", ASPECT[variant])}
+        aria-label={`Ver detalhes de ${nome}`}
+      >
         {primary && (
           <img
             src={primary}
             alt={nome}
             loading="lazy"
             className={cn(
-              "absolute inset-0 w-full h-full object-contain p-6 transition-opacity duration-500",
+              "absolute inset-0 w-full h-full object-contain p-6 transition-all duration-500 group-hover:scale-[1.02]",
               hovering && secondary ? "opacity-0" : "opacity-100"
             )}
           />
@@ -96,13 +104,15 @@ const TopProductCard = ({ product, minQuantidade, onAdd, variant = "grid", eyebr
             </span>
           </div>
         )}
-      </div>
+      </button>
 
       {/* Info */}
       {variant === "hero" && (
         <div className="mt-8 flex flex-col md:flex-row justify-between items-start gap-6">
           <div className="min-w-0">
-            <h3 className="text-2xl md:text-3xl font-bold text-navy leading-tight tracking-tight">{nome}</h3>
+            <button type="button" onClick={open} className="text-left">
+              <h3 className="text-2xl md:text-3xl font-bold text-navy leading-tight tracking-tight hover:text-green-cta transition-colors">{nome}</h3>
+            </button>
             {product.descricao_curta && (
               <p className="text-slate-500 mt-2 text-base md:text-lg leading-relaxed max-w-md">
                 {product.descricao_curta}
@@ -120,7 +130,9 @@ const TopProductCard = ({ product, minQuantidade, onAdd, variant = "grid", eyebr
 
       {variant === "side" && (
         <div className="mt-4">
-          <h4 className="text-lg md:text-xl font-bold text-navy leading-tight">{nome}</h4>
+          <button type="button" onClick={open} className="text-left w-full">
+            <h4 className="text-lg md:text-xl font-bold text-navy leading-tight hover:text-green-cta transition-colors">{nome}</h4>
+          </button>
           <div className="flex justify-between items-center mt-2 border-t border-slate-200 pt-3">
             <span className="text-slate-500 text-sm">{precoFmt}</span>
             <span className="text-green-cta text-[10px] font-bold uppercase tracking-widest">
@@ -133,7 +145,9 @@ const TopProductCard = ({ product, minQuantidade, onAdd, variant = "grid", eyebr
       {variant === "grid" && (
         <div className="mt-6 space-y-1">
           <div className="flex justify-between gap-3">
-            <h5 className="text-navy font-bold text-base md:text-lg leading-tight">{nome}</h5>
+            <button type="button" onClick={open} className="text-left min-w-0">
+              <h5 className="text-navy font-bold text-base md:text-lg leading-tight hover:text-green-cta transition-colors">{nome}</h5>
+            </button>
             <span className="text-navy font-medium text-sm md:text-base shrink-0">{precoFmt}</span>
           </div>
           {eyebrow && (
@@ -147,7 +161,7 @@ const TopProductCard = ({ product, minQuantidade, onAdd, variant = "grid", eyebr
         </div>
       )}
 
-      {/* Ação — discreta, sem moldura de card */}
+      {/* Ação */}
       <div className="mt-4">
         {!adding ? (
           <button
