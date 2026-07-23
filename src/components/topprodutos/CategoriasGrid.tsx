@@ -6,9 +6,11 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   onAdd?: (product: TopProduct, quantidade: number) => void;
+  onOpen?: (product: TopProduct) => void;
 }
 
-const CategoriasGrid = ({ onAdd }: Props) => {
+const CategoriasGrid = ({ onAdd, onOpen }: Props) => {
+
   const { data, isLoading } = useCuratedTopProdutos();
   const [active, setActive] = useState<string>("__all__");
 
@@ -92,10 +94,12 @@ const CategoriasGrid = ({ onAdd }: Props) => {
                       key={p.id}
                       product={p}
                       onAdd={onAdd}
+                      onOpen={onOpen}
                       variant="grid"
                       eyebrow={cat.label}
                     />
                   ))}
+
                 </div>
               </section>
             );
@@ -112,10 +116,12 @@ const CategoriasGrid = ({ onAdd }: Props) => {
                 key={p.id}
                 product={p}
                 onAdd={onAdd}
+                onOpen={onOpen}
                 variant="grid"
                 eyebrow={catLabel(active)}
               />
             ))}
+
           </div>
         </div>
       )}
