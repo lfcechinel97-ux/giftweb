@@ -36,10 +36,11 @@ interface Props {
   size?: TopProductSize;
   eyebrow?: string;
   badge?: string;
-  tile?: Tile; // paleta do tile (cores por categoria)
+  tile?: Tile;
 }
 
 const DEFAULT_MIN = 20;
+const ACCENT = "#2563EB"; // azul de destaque
 
 const ASPECT_LEGACY: Record<TopProductVariant, string> = {
   hero: "aspect-[16/9]",
@@ -48,9 +49,9 @@ const ASPECT_LEGACY: Record<TopProductVariant, string> = {
 };
 
 const DEFAULT_TILE: Tile = {
-  bg: "#F1E9DE",
+  bg: "#FFFFFF",
   ink: "#0B1F3A",
-  accent: "#0B1F3A",
+  accent: ACCENT,
   accentInk: "#FFFFFF",
 };
 
@@ -65,7 +66,7 @@ const TopProductCard = ({
   badge,
   tile: tileProp,
 }: Props) => {
-  const { nome, image_url, image_urls, preco_custo, quantidade_minima, preco_final, imagem_editorial, cores } = product;
+  const { nome, image_url, image_urls, preco_custo, quantidade_minima, preco_final, cores } = product;
   const min = quantidade_minima ?? minQuantidade ?? DEFAULT_MIN;
   const tile = tileProp ?? DEFAULT_TILE;
 
@@ -75,7 +76,6 @@ const TopProductCard = ({
   const [selectedCorIdx, setSelectedCorIdx] = useState<number | null>(null);
   const selectedCor = selectedCorIdx != null ? coresList[selectedCorIdx] : null;
 
-  // Modo editorial: sempre PNG/produto flutuando (não a foto lifestyle "cropada").
   const basePrimary = image_url || (image_urls && image_urls[0]) || null;
   const primary = selectedCor?.imagem || basePrimary;
   const secondary =
@@ -83,7 +83,7 @@ const TopProductCard = ({
     (image_urls && image_urls.length > 1 ? image_urls[1] : null);
 
   const [hovering, setHovering] = useState(false);
-  const [qtd, setQtd] = useState(min);
+  const [qtd] = useState(min);
 
   const precoUnit =
     preco_final != null ? preco_final : preco_custo != null ? calcularPreco(preco_custo, min) : null;
@@ -95,26 +95,79 @@ const TopProductCard = ({
   };
   const open = () => onOpen?.(product);
 
-  // ─── Modo Editorial: tile colorido + produto flutuando ────────────────
+  // Bloco de preço reutilizado — "A partir de" + valor
+  const PriceBlock = ({ large = false }: { large?: boolean }) => (
+    <div className="flex flex-col leading-tight">
+      <span className="text-[10px] md:text-[11px] uppercase tracking-[0.18em] text-slate-400 font-medium">
+        A partir de
+      </span>
+      <span
+        className={cn(
+          "font-semibold tabular-nums text-navy",
+          large ? "text-xl md:text-2xl" : "text-base md:text-lg"
+        )}
+      >
+        {precoFmt}
+      </span>
+    </div>
+  );
+
+  // Swatches de cor reutilizáveis
+  const ColorSwatches = () =>
+    coresList.length > 0 ? (
+      <div className="flex flex-wrap items-center gap-2.5 mt-3 px-1">
+        {coresList.map((c, i) => {
+          const active = selectedCorIdx === i;
+          return (
+            <button
+              key={`${c.referencia ?? c.nome}-${i}`}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedCorIdx(active ? null : i);
+              }}
+              title={c.nome}
+              aria-label={`Cor ${c.nome}`}
+              aria-pressed={active}
+              className={cn(
+                "relative w-9 h-9 rounded-full overflow-hidden transition-all",
+                active
+                  ? "ring-2 ring-offset-2 ring-[color:var(--sw-accent)] scale-105"
+                  : "ring-1 ring-slate-200 hover:ring-slate-400"
+              )}
+              style={{ ["--sw-accent" as any]: ACCENT }}
+            >
+              <img
+                src={c.imagem}
+                alt={c.nome}
+                loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            </button>
+          );
+        })}
+      </div>
+    ) : null;
+
+  // ─── Modo Editorial ────────────────────────────────────────────────────
   if (editorial) {
     const isL = size === "L";
     const isM = size === "M";
     const isS = size === "S";
 
-    // Escala dramática do produto dentro do tile — S bem pequeno, L bem grande.
+    // Imagem ocupa mais espaço, menos padding vazio
     const imgScale = isL
-      ? "w-[78%] h-[78%]"
+      ? "w-[92%] h-[86%]"
       : isM
-      ? "w-[65%] h-[65%]"
-      : "w-[42%] h-[42%]";
+      ? "w-[85%] h-[80%]"
+      : "w-[80%] h-[78%]";
 
-    // Posição do produto no tile: L centralizado empurrado pra cima; M centralizado; S centralizado.
-    const imgAnchor = isL ? "items-start pt-10 md:pt-14" : "items-center";
+    const imgAnchor = isL ? "items-start pt-6 md:pt-10" : "items-center";
 
     const minHeight = isL
-      ? "min-h-[440px] md:min-h-[560px]"
+      ? "min-h-[420px] md:min-h-[520px]"
       : isM
-      ? "min-h-[300px] md:min-h-[360px]"
+      ? "min-h-[280px] md:min-h-[340px]"
       : "min-h-[220px] md:min-h-[260px]";
 
     return (
@@ -127,34 +180,33 @@ const TopProductCard = ({
           type="button"
           onClick={open}
           className={cn(
-            "relative w-full flex-1 overflow-hidden text-left rounded-[28px] md:rounded-[36px]",
-            "transition-shadow duration-500",
+            "relative w-full flex-1 overflow-hidden text-left rounded-2xl md:rounded-3xl",
+            "border border-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.04)]",
+            "hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)] transition-shadow duration-300",
             minHeight
           )}
           style={{ backgroundColor: tile.bg }}
           aria-label={`Ver detalhes de ${nome}`}
         >
-          {/* Rótulo DESTAQUE (só L e M) */}
           {(isL || (isM && badge)) && (
-            <div className="absolute top-5 left-5 md:top-6 md:left-6 z-10">
+            <div className="absolute top-4 left-4 md:top-5 md:left-5 z-10">
               <span
-                className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.25em] px-3 py-1.5 rounded-full"
-                style={{ backgroundColor: tile.accent, color: tile.accentInk }}
+                className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.22em] px-2.5 py-1 rounded-full"
+                style={{ backgroundColor: ACCENT, color: "#FFFFFF" }}
               >
                 {badge ?? (isL ? "Destaque" : "Novo")}
               </span>
             </div>
           )}
 
-          {/* Produto flutuando */}
-          <div className={cn("absolute inset-0 flex justify-center px-6", imgAnchor)}>
+          <div className={cn("absolute inset-0 flex justify-center px-3 md:px-4", imgAnchor)}>
             {primary && (
               <img
                 src={primary}
                 alt={nome}
                 loading="lazy"
                 className={cn(
-                  "object-contain transition-all duration-500 group-hover:scale-[1.05] drop-shadow-[0_20px_30px_rgba(0,0,0,0.12)]",
+                  "object-contain transition-all duration-500 group-hover:scale-[1.03]",
                   imgScale,
                   hovering && secondary ? "opacity-0" : "opacity-100"
                 )}
@@ -167,133 +219,63 @@ const TopProductCard = ({
                 loading="lazy"
                 aria-hidden="true"
                 className={cn(
-                  "absolute object-contain transition-opacity duration-500 hidden md:block drop-shadow-[0_20px_30px_rgba(0,0,0,0.12)]",
+                  "absolute object-contain transition-opacity duration-500 hidden md:block",
                   imgScale,
-                  isL ? "top-14 md:top-14" : "top-1/2 -translate-y-1/2",
+                  isL ? "top-10" : "top-1/2 -translate-y-1/2",
                   hovering ? "opacity-100" : "opacity-0"
                 )}
               />
             )}
           </div>
-
-          {/* Info dentro do tile — só L e M (S mantém fora, minimalíssimo) */}
-          {(isL || isM) && (
-            <div
-              className={cn(
-                "absolute inset-x-0 bottom-0 px-6 md:px-8 pb-6 md:pb-8 pt-16",
-                "bg-gradient-to-t from-black/5 to-transparent"
-              )}
-            >
-              <h3
-                className={cn(
-                  "font-bold leading-tight tracking-tight",
-                  isL ? "text-2xl md:text-4xl" : "text-lg md:text-2xl"
-                )}
-                style={{ color: tile.ink }}
-              >
-                {nome}
-              </h3>
-              <div className="flex items-baseline gap-3 mt-2 md:mt-3">
-                <span
-                  className={cn("font-medium tabular-nums", isL ? "text-lg md:text-xl" : "text-base")}
-                  style={{ color: tile.ink }}
-                >
-                  {precoFmt}
-                </span>
-                <span
-                  className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-70"
-                  style={{ color: tile.ink }}
-                >
-                  · MOQ {min}
-                </span>
-              </div>
-            </div>
-          )}
         </button>
 
-        {/* Swatches de cor — usam a miniatura de cada variação */}
-        {coresList.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mt-3 px-1">
-            {coresList.map((c, i) => {
-              const active = selectedCorIdx === i;
-              return (
-                <button
-                  key={`${c.referencia ?? c.nome}-${i}`}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedCorIdx(active ? null : i);
-                  }}
-                  title={c.nome}
-                  aria-label={`Cor ${c.nome}`}
-                  aria-pressed={active}
-                  className={cn(
-                    "relative w-8 h-8 rounded-full overflow-hidden border transition-all",
-                    active
-                      ? "border-navy ring-2 ring-navy/30 scale-110"
-                      : "border-slate-200 hover:border-slate-400"
-                  )}
-                >
-                  <img
-                    src={c.imagem}
-                    alt={c.nome}
-                    loading="lazy"
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                </button>
-              );
-            })}
-          </div>
-        )}
+        <ColorSwatches />
 
-
-        {/* Info fora do tile — SÓ para tamanho S (mantém tile puramente visual) */}
-        {isS && (
-          <div className="mt-4 px-1">
-            <div className="flex justify-between items-start gap-3">
-              <button type="button" onClick={open} className="text-left min-w-0 flex-1">
-                <h3 className="text-sm md:text-[15px] font-semibold text-navy leading-snug hover:text-green-cta transition-colors line-clamp-2">
-                  {nome}
-                </h3>
-              </button>
-            </div>
-            <div className="flex items-center justify-between mt-2">
-              <span className="text-navy font-medium text-sm tabular-nums">{precoFmt}</span>
-              <button
-                type="button"
-                onClick={handleAdd}
-                aria-label="Adicionar ao pedido"
-                className="w-7 h-7 rounded-full bg-navy text-white flex items-center justify-center hover:bg-green-cta transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* CTA "Adicionar" para L/M — abaixo do tile, minimalista */}
-        {(isL || isM) && (
-          <div className={cn("flex items-center justify-between gap-3 mt-4 md:mt-5 px-1")}>
-            {eyebrow && (
-              <span className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.25em]">
-                {eyebrow}
+        {/* Info abaixo do tile — padrão consistente para S/M/L */}
+        <div className="mt-4 px-1">
+          <button type="button" onClick={open} className="text-left w-full">
+            <h3
+              className={cn(
+                "font-semibold text-navy leading-snug tracking-tight hover:text-[color:var(--acc)] transition-colors line-clamp-2",
+                isL ? "text-lg md:text-xl" : "text-sm md:text-base"
+              )}
+              style={{ ["--acc" as any]: ACCENT }}
+            >
+              {nome}
+            </h3>
+          </button>
+          <div className="flex items-end justify-between gap-3 mt-3">
+            <div className="flex flex-col leading-tight">
+              <PriceBlock large={isL} />
+              <span className="text-[10px] uppercase tracking-[0.18em] text-slate-400 mt-1">
+                Mínimo {min} un
               </span>
-            )}
+            </div>
             <button
               type="button"
               onClick={handleAdd}
-              className="inline-flex items-center gap-1.5 text-navy text-[11px] font-bold uppercase tracking-[0.2em] hover:text-green-cta transition-colors ml-auto"
+              aria-label="Adicionar ao pedido"
+              className={cn(
+                "shrink-0 inline-flex items-center gap-1.5 rounded-full text-white text-xs font-bold uppercase tracking-[0.12em] transition-transform hover:scale-[1.03]",
+                isL ? "px-4 py-2.5" : "px-3 py-2"
+              )}
+              style={{ backgroundColor: ACCENT }}
             >
-              Adicionar
               <Plus className="w-3.5 h-3.5" />
+              Adicionar
             </button>
           </div>
-        )}
+          {eyebrow && isS && (
+            <span className="block text-[10px] text-slate-400 uppercase tracking-[0.18em] mt-2">
+              {eyebrow}
+            </span>
+          )}
+        </div>
       </article>
     );
   }
 
-  // ─── Legacy variants (hero/side/grid) — usados em MaisVendidosSection ────
+  // ─── Legacy variants ────────────────────────────────────────────────────
   return (
     <article
       className="group flex flex-col animate-fade-in"
@@ -304,10 +286,10 @@ const TopProductCard = ({
         type="button"
         onClick={open}
         className={cn(
-          "relative w-full overflow-hidden cursor-pointer text-left rounded-[28px] md:rounded-[36px]",
+          "relative w-full overflow-hidden cursor-pointer text-left rounded-2xl border border-slate-200 bg-white",
+          "hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)] transition-shadow",
           ASPECT_LEGACY[variant]
         )}
-        style={{ backgroundColor: tile.bg }}
         aria-label={`Ver detalhes de ${nome}`}
       >
         {primary && (
@@ -316,8 +298,8 @@ const TopProductCard = ({
             alt={nome}
             loading="lazy"
             className={cn(
-              "absolute inset-0 w-full h-full object-contain transition-all duration-500 group-hover:scale-[1.04] drop-shadow-[0_20px_30px_rgba(0,0,0,0.12)]",
-              variant === "hero" ? "p-16 md:p-24" : "p-10 md:p-14",
+              "absolute inset-0 w-full h-full object-contain transition-all duration-500 group-hover:scale-[1.04]",
+              variant === "hero" ? "p-6 md:p-10" : "p-3 md:p-4",
               hovering && secondary ? "opacity-0" : "opacity-100"
             )}
           />
@@ -329,17 +311,17 @@ const TopProductCard = ({
             loading="lazy"
             aria-hidden="true"
             className={cn(
-              "absolute inset-0 w-full h-full object-contain transition-opacity duration-500 hidden md:block drop-shadow-[0_20px_30px_rgba(0,0,0,0.12)]",
-              variant === "hero" ? "p-16 md:p-24" : "p-10 md:p-14",
+              "absolute inset-0 w-full h-full object-contain transition-opacity duration-500 hidden md:block",
+              variant === "hero" ? "p-6 md:p-10" : "p-3 md:p-4",
               hovering ? "opacity-100" : "opacity-0"
             )}
           />
         )}
         {badge && (
-          <div className="absolute top-6 left-6">
+          <div className="absolute top-4 left-4">
             <span
-              className="text-[10px] font-bold px-3 py-1.5 uppercase tracking-[0.25em] rounded-full"
-              style={{ backgroundColor: tile.accent, color: tile.accentInk }}
+              className="text-[10px] font-bold px-2.5 py-1 uppercase tracking-[0.22em] rounded-full text-white"
+              style={{ backgroundColor: ACCENT }}
             >
               {badge}
             </span>
@@ -347,72 +329,38 @@ const TopProductCard = ({
         )}
       </button>
 
-      {variant === "hero" && (
-        <div className="mt-8 flex flex-col md:flex-row justify-between items-start gap-6">
-          <div className="min-w-0">
-            <button type="button" onClick={open} className="text-left">
-              <h3 className="text-2xl md:text-3xl font-bold text-navy leading-tight tracking-tight hover:text-green-cta transition-colors">{nome}</h3>
-            </button>
-            {product.descricao_curta && (
-              <p className="text-slate-500 mt-2 text-base md:text-lg leading-relaxed max-w-md">
-                {product.descricao_curta}
-              </p>
+      <ColorSwatches />
+
+      <div className="mt-4 px-1">
+        <button type="button" onClick={open} className="text-left w-full">
+          <h3
+            className={cn(
+              "font-semibold text-navy leading-snug tracking-tight hover:text-[color:var(--acc)] transition-colors line-clamp-2",
+              variant === "hero" ? "text-xl md:text-2xl" : "text-sm md:text-base"
             )}
-          </div>
-          <div className="md:text-right shrink-0">
-            <span className="block text-2xl md:text-3xl font-light text-navy">{precoFmt}</span>
-            <span className="block text-green-cta text-xs font-bold mt-2 uppercase tracking-widest">
-              MOQ: {min} Unidades
-            </span>
-          </div>
-        </div>
-      )}
-
-      {variant === "side" && (
-        <div className="mt-4">
-          <button type="button" onClick={open} className="text-left w-full">
-            <h4 className="text-lg md:text-xl font-bold text-navy leading-tight hover:text-green-cta transition-colors">{nome}</h4>
-          </button>
-          <div className="flex justify-between items-center mt-2 border-t border-slate-200 pt-3">
-            <span className="text-slate-500 text-sm">{precoFmt}</span>
-            <span className="text-green-cta text-[10px] font-bold uppercase tracking-widest">
-              MOQ: {min}un
-            </span>
-          </div>
-        </div>
-      )}
-
-      {variant === "grid" && (
-        <div className="mt-6 space-y-1">
-          <div className="flex justify-between gap-3">
-            <button type="button" onClick={open} className="text-left min-w-0">
-              <h5 className="text-navy font-bold text-base md:text-lg leading-tight hover:text-green-cta transition-colors">{nome}</h5>
-            </button>
-            <span className="text-navy font-medium text-sm md:text-base shrink-0">{precoFmt}</span>
-          </div>
-          {eyebrow && (
-            <p className="text-slate-400 text-[10px] uppercase tracking-widest">{eyebrow}</p>
-          )}
-          <div className="pt-4 border-t border-slate-100">
-            <span className="text-green-cta text-[10px] font-black uppercase tracking-widest">
-              MOQ: {min} un
-            </span>
-          </div>
-        </div>
-      )}
-
-      <div className="mt-4">
-        <button
-          type="button"
-          onClick={handleAdd}
-          className={cn(
-            "inline-flex items-center gap-2 text-navy text-xs font-bold uppercase tracking-widest",
-            "border-b border-navy/30 hover:border-green-cta hover:text-green-cta pb-1 transition-colors"
-          )}
-        >
-          Adicionar ao pedido
-          <Plus className="w-3.5 h-3.5" />
+            style={{ ["--acc" as any]: ACCENT }}
+          >
+            {nome}
+          </h3>
         </button>
+        <div className="flex items-end justify-between gap-3 mt-3">
+          <div className="flex flex-col leading-tight">
+            <PriceBlock large={variant === "hero"} />
+            <span className="text-[10px] uppercase tracking-[0.18em] text-slate-400 mt-1">
+              Mínimo {min} un
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleAdd}
+            aria-label="Adicionar ao pedido"
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-full text-white text-xs font-bold uppercase tracking-[0.12em] px-3 py-2 transition-transform hover:scale-[1.03]"
+            style={{ backgroundColor: ACCENT }}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Adicionar
+          </button>
+        </div>
       </div>
     </article>
   );
