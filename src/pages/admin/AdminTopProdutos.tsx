@@ -336,6 +336,7 @@ export default function AdminTopProdutos() {
       ativo: editing.ativo,
       destaque: editing.destaque,
       imagem_editorial: editing.imagem_editorial,
+      cores: editing.cores ?? [],
     };
     const q =
       "id" in editing && editing.id
