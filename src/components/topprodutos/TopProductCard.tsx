@@ -65,15 +65,19 @@ const TopProductCard = ({
   badge,
   tile: tileProp,
 }: Props) => {
-  const { nome, image_url, image_urls, preco_custo, quantidade_minima, preco_final, imagem_editorial } = product;
+  const { nome, image_url, image_urls, preco_custo, quantidade_minima, preco_final, imagem_editorial, cores } = product;
   const min = quantidade_minima ?? minQuantidade ?? DEFAULT_MIN;
   const tile = tileProp ?? DEFAULT_TILE;
 
   const editorial = !!size;
 
+  const coresList = (cores ?? []).filter((c) => c && c.imagem);
+  const [selectedCorIdx, setSelectedCorIdx] = useState<number | null>(null);
+  const selectedCor = selectedCorIdx != null ? coresList[selectedCorIdx] : null;
+
   // Modo editorial: sempre PNG/produto flutuando (não a foto lifestyle "cropada").
-  // Preferimos a foto de fundo transparente/estúdio do catálogo — imagem_editorial só entra para L com opção.
-  const primary = image_url || (image_urls && image_urls[0]) || null;
+  const basePrimary = image_url || (image_urls && image_urls[0]) || null;
+  const primary = selectedCor?.imagem || basePrimary;
   const secondary =
     image_urls?.find((u) => u && u !== primary) ||
     (image_urls && image_urls.length > 1 ? image_urls[1] : null);
