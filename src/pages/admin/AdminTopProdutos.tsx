@@ -584,11 +584,13 @@ export default function AdminTopProdutos() {
               <div className="grid grid-cols-2 gap-3">
                 <ImageField
                   label="Imagem principal"
+                  hint="Ideal: 600×600px (fundo branco, formato quadrado)"
                   value={editing.imagem_principal}
                   onChange={(v) => setEditing({ ...editing, imagem_principal: v })}
                 />
                 <ImageField
                   label="Imagem hover"
+                  hint="Ideal: 600×600px — exibida ao passar o mouse"
                   value={editing.imagem_hover}
                   onChange={(v) => setEditing({ ...editing, imagem_hover: v })}
                 />
@@ -598,11 +600,18 @@ export default function AdminTopProdutos() {
                 onChange={(v) => setEditing({ ...editing, galeria: v })}
               />
 
+              <CoresField
+                value={editing.cores ?? []}
+                onChange={(v) => setEditing({ ...editing, cores: v })}
+              />
+
               <div className="rounded-lg border bg-muted/20 p-3 flex flex-col gap-3">
                 <div>
                   <Label>Destaque no grid da categoria</Label>
                   <p className="text-xs text-muted-foreground mb-2">
-                    Controla o tamanho do card no mosaico editorial da página /topprodutos.
+                    Controla o tamanho que o card ocupa no mosaico da página /topprodutos.
+                    <br />
+                    <strong>Padrão:</strong> 1×1 · <strong>Médio:</strong> 2×1 · <strong>Grande:</strong> 2×2.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {(["padrao", "medio", "grande"] as const).map((lvl) => (
@@ -611,19 +620,25 @@ export default function AdminTopProdutos() {
                         type="button"
                         onClick={() => setEditing({ ...editing, destaque: lvl })}
                         className={
-                          "px-3 py-1.5 rounded-md border text-sm capitalize transition-colors " +
+                          "flex flex-col items-start px-3 py-2 rounded-md border text-sm transition-colors " +
                           (editing.destaque === lvl
                             ? "bg-navy text-white border-navy"
                             : "bg-background hover:bg-muted")
                         }
                       >
-                        {lvl === "padrao" ? "Padrão" : lvl === "medio" ? "Destaque médio" : "Destaque grande"}
+                        <span className="capitalize font-medium">
+                          {lvl === "padrao" ? "Padrão" : lvl === "medio" ? "Destaque médio" : "Destaque grande"}
+                        </span>
+                        <span className={"text-[10px] " + (editing.destaque === lvl ? "text-white/70" : "text-muted-foreground")}>
+                          {DESTAQUE_HINTS[lvl]}
+                        </span>
                       </button>
                     ))}
                   </div>
                 </div>
                 <ImageField
-                  label="Imagem editorial (usada quando destaque = médio ou grande)"
+                  label="Imagem editorial (opcional — usada apenas em destaque médio/grande)"
+                  hint="Foto lifestyle/ambientada para preencher tiles grandes. Ideal: 1200×1200px. Se vazio, usa a imagem principal."
                   value={editing.imagem_editorial}
                   onChange={(v) => setEditing({ ...editing, imagem_editorial: v })}
                 />
