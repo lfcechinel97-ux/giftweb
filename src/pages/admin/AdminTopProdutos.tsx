@@ -219,6 +219,8 @@ export default function AdminTopProdutos() {
       imagem_hover: editing.imagem_hover,
       galeria: editing.galeria,
       ativo: editing.ativo,
+      destaque: editing.destaque,
+      imagem_editorial: editing.imagem_editorial,
     };
     const q =
       "id" in editing && editing.id
@@ -257,6 +259,9 @@ export default function AdminTopProdutos() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <a href="/admin/topprodutos/categorias">Capas de categoria</a>
+          </Button>
           <Select value={filter} onValueChange={setFilter}>
             <SelectTrigger className="w-[240px]">
               <SelectValue />
