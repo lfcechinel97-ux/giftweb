@@ -843,6 +843,30 @@ export type Database = {
         }
         Relationships: []
       }
+      topprodutos_categorias_meta: {
+        Row: {
+          created_at: string
+          eyebrow: string | null
+          imagem_capa: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          eyebrow?: string | null
+          imagem_capa?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          eyebrow?: string | null
+          imagem_capa?: string | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       topprodutos_curadoria: {
         Row: {
           ativo: boolean
@@ -850,8 +874,10 @@ export type Database = {
           created_at: string
           descricao_curta: string | null
           descricao_longa: string | null
+          destaque: string
           galeria: Json
           id: string
+          imagem_editorial: string | null
           imagem_hover: string | null
           imagem_principal: string | null
           mais_vendido: boolean
@@ -867,8 +893,10 @@ export type Database = {
           created_at?: string
           descricao_curta?: string | null
           descricao_longa?: string | null
+          destaque?: string
           galeria?: Json
           id?: string
+          imagem_editorial?: string | null
           imagem_hover?: string | null
           imagem_principal?: string | null
           mais_vendido?: boolean
@@ -884,8 +912,10 @@ export type Database = {
           created_at?: string
           descricao_curta?: string | null
           descricao_longa?: string | null
+          destaque?: string
           galeria?: Json
           id?: string
+          imagem_editorial?: string | null
           imagem_hover?: string | null
           imagem_principal?: string | null
           mais_vendido?: boolean
