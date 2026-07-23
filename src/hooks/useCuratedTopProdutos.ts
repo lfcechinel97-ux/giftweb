@@ -4,6 +4,12 @@ import type { TopProduct } from "@/components/topprodutos/TopProductCard";
 
 export type DestaqueLevel = "padrao" | "medio" | "grande";
 
+export interface CorVariacao {
+  nome: string;
+  imagem: string;
+  referencia?: string | null;
+}
+
 export interface CuratedProduct extends TopProduct {
   categoria: string;
   descricao_curta: string | null;
@@ -13,6 +19,7 @@ export interface CuratedProduct extends TopProduct {
   galeria: string[];
   destaque: DestaqueLevel;
   imagem_editorial: string | null;
+  cores: CorVariacao[];
 }
 
 export interface CategoriaMeta {
