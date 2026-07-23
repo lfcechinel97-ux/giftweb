@@ -186,6 +186,93 @@ function GaleriaField({ value, onChange }: { value: string[]; onChange: (v: stri
   );
 }
 
+function CoresField({ value, onChange }: { value: Cor[]; onChange: (v: Cor[]) => void }) {
+  const [busy, setBusy] = useState(false);
+  const update = (i: number, patch: Partial<Cor>) =>
+    onChange(value.map((c, j) => (j === i ? { ...c, ...patch } : c)));
+  return (
+    <div className="flex flex-col gap-2">
+      <div>
+        <Label>Variações de cor</Label>
+        <p className="text-[11px] text-muted-foreground mt-0.5">
+          Cada cor exibida como bolinha no card. Ideal da imagem: 600×600px.
+        </p>
+      </div>
+      <div className="flex flex-col gap-2">
+        {value.length === 0 && (
+          <p className="text-xs text-muted-foreground italic">Nenhuma variação cadastrada.</p>
+        )}
+        {value.map((c, i) => (
+          <div key={i} className="flex items-center gap-3 border rounded-md p-2 bg-background">
+            <div className="w-14 h-14 rounded-md overflow-hidden border bg-muted/30 shrink-0">
+              {c.imagem ? (
+                <img src={c.imagem} alt="" className="w-full h-full object-contain" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                  <Upload className="w-4 h-4" />
+                </div>
+              )}
+            </div>
+            <div className="flex-1 grid grid-cols-2 gap-2">
+              <Input
+                placeholder="Nome (ex: Azul)"
+                value={c.nome}
+                onChange={(e) => update(i, { nome: e.target.value })}
+              />
+              <Input
+                placeholder="Referência (opcional)"
+                value={c.referencia ?? ""}
+                onChange={(e) => update(i, { referencia: e.target.value || null })}
+              />
+            </div>
+            <label className="inline-flex items-center gap-1 px-2 py-1.5 text-xs border rounded-md cursor-pointer hover:bg-muted shrink-0">
+              <Upload className="w-3 h-3" />
+              {busy ? "..." : "Foto"}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={busy}
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  setBusy(true);
+                  try {
+                    const url = await uploadImage(f);
+                    update(i, { imagem: url });
+                  } catch (err: any) {
+                    toast({ title: "Erro no upload", description: err.message, variant: "destructive" });
+                  } finally {
+                    setBusy(false);
+                    e.target.value = "";
+                  }
+                }}
+              />
+            </label>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onChange(value.filter((_, j) => j !== i))}
+              aria-label="Remover cor"
+            >
+              <Trash2 className="w-4 h-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+      </div>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="self-start"
+        onClick={() => onChange([...value, { nome: "", imagem: "", referencia: null }])}
+      >
+        <Plus className="w-4 h-4 mr-1" /> Adicionar cor
+      </Button>
+    </div>
+  );
+}
+
 export default function AdminTopProdutos() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
