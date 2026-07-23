@@ -159,15 +159,15 @@ const Mosaic = ({
         className="top-mosaic grid gap-4 md:gap-6"
         style={{
           gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-          gridAutoRows: "minmax(240px, auto)",
+          gridAutoRows: "minmax(200px, auto)",
           gridAutoFlow: "dense",
         }}
       >
         {items.map((p, i) => {
           const size = destaqueToSize(p.destaque);
           return (
-            <div key={p.id} className={cn(spanClass(size), "flex")}>
-              <div className="flex flex-col w-full">
+            <div key={p.id} className={cn(spanClass(size), "flex h-full")}>
+              <div className="flex flex-col w-full h-full">
                 <TopProductCard
                   product={p}
                   onAdd={onAdd}
@@ -185,7 +185,7 @@ const Mosaic = ({
         @media (min-width: 768px) {
           .top-mosaic {
             grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-            grid-auto-rows: minmax(300px, auto) !important;
+            grid-auto-rows: minmax(280px, auto) !important;
           }
         }
       `}</style>
@@ -217,16 +217,16 @@ const CategoriasGrid = ({ onAdd, onOpen }: Props) => {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-12">
-      {/* Chips de categoria */}
-      <div className="mb-12 md:mb-16 overflow-x-auto pb-3 -mx-4 px-4 sm:mx-0 sm:px-0">
-        <div className="flex gap-3 min-w-max">
+      {/* Chips de categoria — quebram em várias linhas no mobile para mostrar tudo de cara */}
+      <div className="mb-12 md:mb-16">
+        <div className="flex flex-wrap gap-2 md:gap-3">
           <button
             type="button"
             onClick={() => setActive("__all__")}
             className={cn(
-              "px-6 md:px-8 py-2.5 md:py-3 rounded-full text-xs md:text-sm font-bold transition-all",
+              "px-4 md:px-8 py-2 md:py-3 rounded-full text-[11px] md:text-sm font-bold transition-all",
               active === "__all__"
-                ? "bg-navy text-white scale-100"
+                ? "bg-navy text-white"
                 : "border border-slate-200 bg-white text-slate-600 hover:border-navy hover:text-navy"
             )}
           >
@@ -238,7 +238,7 @@ const CategoriasGrid = ({ onAdd, onOpen }: Props) => {
               type="button"
               onClick={() => setActive(cat.slug)}
               className={cn(
-                "px-6 md:px-8 py-2.5 md:py-3 rounded-full text-xs md:text-sm font-medium transition-all",
+                "px-4 md:px-8 py-2 md:py-3 rounded-full text-[11px] md:text-sm font-medium transition-all",
                 active === cat.slug
                   ? "bg-navy text-white font-bold"
                   : "border border-slate-200 bg-white text-slate-600 hover:border-navy hover:text-navy"
