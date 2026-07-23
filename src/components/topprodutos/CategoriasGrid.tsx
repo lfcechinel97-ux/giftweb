@@ -9,6 +9,7 @@ import {
   type DestaqueLevel,
 } from "@/hooks/useCuratedTopProdutos";
 import { cn } from "@/lib/utils";
+import { getPalette } from "./categoryPalettes";
 
 interface Props {
   onAdd?: (product: TopProduct, quantidade: number) => void;
