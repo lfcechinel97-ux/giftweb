@@ -198,10 +198,9 @@ const Mosaic = ({
   );
 };
 
-const CategoriasGrid = ({ onAdd, onOpen }: Props) => {
+const CategoriasGrid = ({ onAdd, onOpen, active, onBack }: Props) => {
   const { data, isLoading } = useCuratedTopProdutos();
   const { data: metaMap } = useCategoriasMeta();
-  const [active, setActive] = useState<string>("__all__");
 
   const byCat = useMemo(() => {
     const m = new Map<string, CuratedProduct[]>();
@@ -222,37 +221,16 @@ const CategoriasGrid = ({ onAdd, onOpen }: Props) => {
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-12">
-      {/* Chips de categoria — quebram em várias linhas no mobile para mostrar tudo de cara */}
-      <div className="mb-12 md:mb-16">
-        <div className="flex flex-wrap gap-2 md:gap-3">
-          <button
-            type="button"
-            onClick={() => setActive("__all__")}
-            className={cn(
-              "px-4 md:px-8 py-2 md:py-3 rounded-full text-[11px] md:text-sm font-bold transition-all",
-              active === "__all__"
-                ? "bg-navy text-white"
-                : "border border-slate-200 bg-white text-slate-600 hover:border-navy hover:text-navy"
-            )}
-          >
-            Tudo
-          </button>
-          {availableCats.map((cat) => (
-            <button
-              key={cat.slug}
-              type="button"
-              onClick={() => setActive(cat.slug)}
-              className={cn(
-                "px-4 md:px-8 py-2 md:py-3 rounded-full text-[11px] md:text-sm font-medium transition-all",
-                active === cat.slug
-                  ? "bg-navy text-white font-bold"
-                  : "border border-slate-200 bg-white text-slate-600 hover:border-navy hover:text-navy"
-              )}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
+      {/* Voltar para a grade de categorias */}
+      <div className="mb-6 md:mb-8">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-xs md:text-sm font-bold text-navy/70 hover:text-navy uppercase tracking-[0.15em] transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Voltar às categorias
+        </button>
       </div>
 
       {isLoading ? (
@@ -274,7 +252,7 @@ const CategoriasGrid = ({ onAdd, onOpen }: Props) => {
                   eyebrow={meta?.eyebrow}
                   imagemCapa={meta?.imagem_capa}
                   count={items.length}
-                  onSeeAll={() => setActive(cat.slug)}
+                  onSeeAll={onBack}
                 />
                 <Mosaic items={items} eyebrow={cat.label} categoria={cat.slug} onAdd={onAdd} onOpen={onOpen} />
               </section>
@@ -295,7 +273,7 @@ const CategoriasGrid = ({ onAdd, onOpen }: Props) => {
                   eyebrow={meta?.eyebrow}
                   imagemCapa={meta?.imagem_capa}
                   count={items.length}
-                  onSeeAll={() => setActive(active)}
+                  onSeeAll={onBack}
                 />
                 <Mosaic items={items} eyebrow={catLabel(active)} categoria={active} onAdd={onAdd} onOpen={onOpen} />
               </>
@@ -306,5 +284,6 @@ const CategoriasGrid = ({ onAdd, onOpen }: Props) => {
     </div>
   );
 };
+
 
 export default CategoriasGrid;
