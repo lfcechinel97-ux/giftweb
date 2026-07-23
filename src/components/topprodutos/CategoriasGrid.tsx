@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { ArrowLeft } from "lucide-react";
 import TopProductCard, { TopProductSize } from "./TopProductCard";
 import type { TopProduct } from "./TopProductCard";
 import {
@@ -14,7 +15,11 @@ import { getPalette } from "./categoryPalettes";
 interface Props {
   onAdd?: (product: TopProduct, quantidade: number) => void;
   onOpen?: (product: TopProduct) => void;
+  /** "__all__" mostra todas as categorias, um slug mostra apenas uma. */
+  active: string;
+  onBack: () => void;
 }
+
 
 const destaqueToSize = (d: DestaqueLevel): TopProductSize =>
   d === "grande" ? "L" : d === "medio" ? "M" : "S";
