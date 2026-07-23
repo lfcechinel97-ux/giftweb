@@ -9,6 +9,7 @@ import {
   type DestaqueLevel,
 } from "@/hooks/useCuratedTopProdutos";
 import { cn } from "@/lib/utils";
+import { getPalette } from "./categoryPalettes";
 
 interface Props {
   onAdd?: (product: TopProduct, quantidade: number) => void;
@@ -115,27 +116,29 @@ const CategoryHeader = ({
   );
 };
 
-const MosaicSection = ({
+// Wrapper com media query embutida para virar 4 colunas no desktop.
+const Mosaic = ({
   items,
   eyebrow,
+  categoria,
   onAdd,
   onOpen,
 }: {
   items: CuratedProduct[];
   eyebrow: string;
+  categoria: string;
   onAdd?: Props["onAdd"];
   onOpen?: Props["onOpen"];
 }) => {
-  // Nothing to render.
   if (items.length === 0) return null;
-
-  // If no product has been marked as destaque, fall back to a clean uniform grid.
+  const palette = getPalette(categoria);
   const hasHighlight = items.some((p) => p.destaque !== "padrao");
 
   if (!hasHighlight) {
+    // Sem destaques: grid uniforme, mas cada tile já rotaciona cor da categoria.
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 md:gap-x-10 gap-y-12 md:gap-y-16">
-        {items.map((p) => (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        {items.map((p, i) => (
           <TopProductCard
             key={p.id}
             product={p}
@@ -143,6 +146,7 @@ const MosaicSection = ({
             onOpen={onOpen}
             size="S"
             eyebrow={eyebrow}
+            tile={palette[i % palette.length]}
           />
         ))}
       </div>
@@ -150,66 +154,27 @@ const MosaicSection = ({
   }
 
   return (
-    <div
-      className="grid gap-6 md:gap-8"
-      style={{
-        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-        gridAutoRows: "minmax(260px, auto)",
-        gridAutoFlow: "dense",
-      }}
-    >
-      {/* Media query with inline style isn't possible; use responsive utility for md+. */}
-      <style>{`
-        @media (min-width: 768px) {
-          .top-mosaic { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; grid-auto-rows: minmax(300px, auto) !important; }
-        }
-      `}</style>
-      <div className="contents top-mosaic-inner" />
-      {items.map((p) => {
-        const size = destaqueToSize(p.destaque);
-        return (
-          <div key={p.id} className={cn(spanClass(size), "flex")}>
-            <div className="flex flex-col w-full">
-              <TopProductCard
-                product={p}
-                onAdd={onAdd}
-                onOpen={onOpen}
-                size={size}
-                eyebrow={eyebrow}
-              />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-// Wrapper that applies the media-query class for desktop grid.
-const Mosaic = (props: React.ComponentProps<typeof MosaicSection>) => {
-  const hasHighlight = props.items.some((p) => p.destaque !== "padrao");
-  if (!hasHighlight) return <MosaicSection {...props} />;
-  return (
     <div className="top-mosaic-wrapper">
       <div
-        className="top-mosaic grid gap-6 md:gap-8"
+        className="top-mosaic grid gap-4 md:gap-6"
         style={{
           gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-          gridAutoRows: "minmax(260px, auto)",
+          gridAutoRows: "minmax(240px, auto)",
           gridAutoFlow: "dense",
         }}
       >
-        {props.items.map((p) => {
+        {items.map((p, i) => {
           const size = destaqueToSize(p.destaque);
           return (
             <div key={p.id} className={cn(spanClass(size), "flex")}>
               <div className="flex flex-col w-full">
                 <TopProductCard
                   product={p}
-                  onAdd={props.onAdd}
-                  onOpen={props.onOpen}
+                  onAdd={onAdd}
+                  onOpen={onOpen}
                   size={size}
-                  eyebrow={props.eyebrow}
+                  eyebrow={eyebrow}
+                  tile={palette[i % palette.length]}
                 />
               </div>
             </div>
@@ -220,7 +185,7 @@ const Mosaic = (props: React.ComponentProps<typeof MosaicSection>) => {
         @media (min-width: 768px) {
           .top-mosaic {
             grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-            grid-auto-rows: minmax(320px, auto) !important;
+            grid-auto-rows: minmax(300px, auto) !important;
           }
         }
       `}</style>
@@ -306,7 +271,7 @@ const CategoriasGrid = ({ onAdd, onOpen }: Props) => {
                   count={items.length}
                   onSeeAll={() => setActive(cat.slug)}
                 />
-                <Mosaic items={items} eyebrow={cat.label} onAdd={onAdd} onOpen={onOpen} />
+                <Mosaic items={items} eyebrow={cat.label} categoria={cat.slug} onAdd={onAdd} onOpen={onOpen} />
               </section>
             );
           })}
@@ -327,7 +292,7 @@ const CategoriasGrid = ({ onAdd, onOpen }: Props) => {
                   count={items.length}
                   onSeeAll={() => setActive(active)}
                 />
-                <Mosaic items={items} eyebrow={catLabel(active)} onAdd={onAdd} onOpen={onOpen} />
+                <Mosaic items={items} eyebrow={catLabel(active)} categoria={active} onAdd={onAdd} onOpen={onOpen} />
               </>
             );
           })()}
