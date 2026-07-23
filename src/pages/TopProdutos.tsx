@@ -1,22 +1,40 @@
 import { useState } from "react";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MaisVendidosSection from "@/components/topprodutos/MaisVendidosSection";
 import CategoriasGrid from "@/components/topprodutos/CategoriasGrid";
+import CategoriasHomeGrid from "@/components/topprodutos/CategoriasHomeGrid";
 import TopProductModal from "@/components/topprodutos/TopProductModal";
 import TopCartBar from "@/components/topprodutos/TopCartBar";
+import { TutorialModal, TutorialHelpButton } from "@/components/topprodutos/TutorialModal";
 import { TopProdutosCartProvider, useTopCart } from "@/contexts/TopProdutosCart";
 import { useCuratedTopProdutos, TOPPRODUTOS_CATEGORIAS } from "@/hooks/useCuratedTopProdutos";
 import type { CuratedProduct } from "@/hooks/useCuratedTopProdutos";
 import type { TopProduct } from "@/components/topprodutos/TopProductCard";
 
+type View = { kind: "home" } | { kind: "all" } | { kind: "category"; slug: string };
+
 const TopProdutosInner = () => {
   const { data } = useCuratedTopProdutos();
   const { addItem, totalItems } = useTopCart();
   const [openId, setOpenId] = useState<string | null>(null);
+  const [view, setView] = useState<View>({ kind: "home" });
 
   const openProduct: CuratedProduct | null =
     (data ?? []).find((p) => p.id === openId) ?? null;
+
+  const goHome = () => {
+    setView({ kind: "home" });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const goAll = () => {
+    setView({ kind: "all" });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const goCategory = (slug: string) => {
+    setView({ kind: "category", slug });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleAdd = (product: TopProduct, quantidade: number) => {
     const full = (data ?? []).find((p) => p.id === product.id);
@@ -40,17 +58,29 @@ const TopProdutosInner = () => {
       <header className="fixed top-0 left-0 right-0 z-50 bg-navy border-b border-white/5">
         <div className="container mx-auto px-4 sm:px-6 lg:px-12">
           <div className="flex items-center justify-between h-14 sm:h-16">
-            <a href="/" className="flex items-baseline gap-1 select-none" aria-label="Gift Web Brindes">
-              <span
-                className="text-xl sm:text-2xl font-black italic text-white tracking-tight"
-                style={{ fontFamily: "'Georgia', serif" }}
-              >
-                Gift Web
-              </span>
-              <span className="text-[10px] sm:text-xs font-semibold text-green-cta tracking-[0.15em] uppercase">
-                BRINDES
-              </span>
-            </a>
+            <div className="flex items-center gap-3 min-w-0">
+              {view.kind !== "home" && (
+                <button
+                  type="button"
+                  onClick={goHome}
+                  aria-label="Voltar às categorias"
+                  className="flex items-center justify-center w-9 h-9 rounded-xl bg-white/[0.06] text-white/90 hover:bg-white/[0.10] hover:text-white transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              )}
+              <a href="/" className="flex items-baseline gap-1 select-none min-w-0" aria-label="Gift Web Brindes">
+                <span
+                  className="text-xl sm:text-2xl font-black italic text-white tracking-tight truncate"
+                  style={{ fontFamily: "'Georgia', serif" }}
+                >
+                  Gift Web
+                </span>
+                <span className="text-[10px] sm:text-xs font-semibold text-green-cta tracking-[0.15em] uppercase">
+                  BRINDES
+                </span>
+              </a>
+            </div>
 
             <button
               type="button"
@@ -73,17 +103,44 @@ const TopProdutosInner = () => {
       </header>
 
       <main className="pt-14 sm:pt-16 pb-32">
-        <section className="pt-16 md:pt-24 pb-24 md:pb-32">
-          <MaisVendidosSection onAdd={handleAdd} onOpen={(p) => setOpenId(p.id)} />
-        </section>
+        {view.kind === "home" && (
+          <section className="pt-10 md:pt-20 pb-24 md:pb-32">
+            <CategoriasHomeGrid onSelectCategory={goCategory} onSelectAll={goAll} />
+          </section>
+        )}
 
-        <section className="pb-24 md:pb-32">
-          <CategoriasGrid onAdd={handleAdd} onOpen={(p) => setOpenId(p.id)} />
-        </section>
+        {view.kind === "all" && (
+          <>
+            <section className="pt-10 md:pt-16 pb-16 md:pb-24">
+              <MaisVendidosSection onAdd={handleAdd} onOpen={(p) => setOpenId(p.id)} />
+            </section>
+            <section className="pb-24 md:pb-32">
+              <CategoriasGrid
+                active="__all__"
+                onBack={goHome}
+                onAdd={handleAdd}
+                onOpen={(p) => setOpenId(p.id)}
+              />
+            </section>
+          </>
+        )}
+
+        {view.kind === "category" && (
+          <section className="pt-8 md:pt-14 pb-24 md:pb-32">
+            <CategoriasGrid
+              active={view.slug}
+              onBack={goHome}
+              onAdd={handleAdd}
+              onOpen={(p) => setOpenId(p.id)}
+            />
+          </section>
+        )}
       </main>
 
       <TopProductModal product={openProduct} onClose={() => setOpenId(null)} />
       <TopCartBar />
+      <TutorialHelpButton />
+      <TutorialModal />
     </div>
   );
 };
