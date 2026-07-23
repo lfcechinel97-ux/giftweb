@@ -137,7 +137,10 @@ function GaleriaField({ value, onChange }: { value: string[]; onChange: (v: stri
   const [busy, setBusy] = useState(false);
   return (
     <div className="flex flex-col gap-2">
-      <Label>Galeria (fotos adicionais)</Label>
+      <div>
+        <Label>Galeria (fotos adicionais)</Label>
+        <p className="text-[11px] text-muted-foreground mt-0.5">Ideal: 600×600px por imagem</p>
+      </div>
       <div className="flex flex-wrap items-center gap-3">
         {value.map((url, i) => (
           <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border bg-muted/30">
