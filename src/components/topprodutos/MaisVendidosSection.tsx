@@ -24,14 +24,14 @@ const MaisVendidosSection = ({ onAdd, onOpen }: Props) => {
       {/* Cabeçalho editorial */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 md:mb-16">
         <div className="space-y-3">
-          <span className="text-green-cta font-bold tracking-[0.2em] text-xs uppercase">
+          <span className="text-green-cta font-medium tracking-[0.2em] text-xs uppercase">
             Curadoria Premium
           </span>
-          <h2 className="text-5xl md:text-6xl lg:text-7xl font-black text-navy tracking-tighter leading-none">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-light text-navy tracking-tight leading-[1.05]">
             Mais vendidos
           </h2>
         </div>
-        <div className="max-w-xs text-slate-500 text-sm leading-relaxed border-l-2 border-green-cta pl-6">
+        <div className="max-w-xs text-slate-500 text-sm leading-relaxed border-l border-green-cta pl-6 font-light">
           A excelência em brindes corporativos. Produtos selecionados por performance e design exclusivo.
         </div>
       </div>
