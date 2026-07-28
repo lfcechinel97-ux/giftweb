@@ -15,10 +15,6 @@ const MaisVendidosSection = ({ onAdd, onOpen }: Props) => {
 
   if (!isLoading && items.length === 0) return null;
 
-  const [featured, ...rest] = items;
-  const sideItems = rest.slice(0, 2);
-  const tailItems = rest.slice(2);
-
   return (
     <section className="container mx-auto px-4 sm:px-6 lg:px-12">
       {/* Cabeçalho editorial */}
@@ -37,47 +33,17 @@ const MaisVendidosSection = ({ onAdd, onOpen }: Props) => {
       </div>
 
       {isLoading && items.length === 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
-          <div className="md:col-span-8 aspect-[16/9] bg-slate-100 animate-pulse" />
-          <div className="md:col-span-4 space-y-16">
-            <div className="aspect-square bg-slate-100 animate-pulse" />
-            <div className="aspect-square bg-slate-100 animate-pulse" />
-          </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 md:gap-x-12 gap-y-16">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="aspect-[4/5] bg-slate-100 animate-pulse rounded-2xl" />
+          ))}
         </div>
       ) : (
-        <>
-          {/* Composição editorial: destaque + 2 laterais */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12">
-            {featured && (
-              <div className="md:col-span-8">
-                <TopProductCard
-                  product={featured}
-                  onAdd={onAdd}
-                  onOpen={onOpen}
-                  variant="hero"
-                  badge="Destaque do Mês"
-                />
-              </div>
-            )}
-            {sideItems.length > 0 && (
-              <div className="md:col-span-4 space-y-12 md:space-y-16">
-                {sideItems.map((p) => (
-                  <TopProductCard key={p.id} product={p} onAdd={onAdd} onOpen={onOpen} variant="side" />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Restante dos mais vendidos em grid respiro */}
-          {tailItems.length > 0 && (
-            <div className="mt-20 grid grid-cols-2 lg:grid-cols-4 gap-x-8 md:gap-x-12 gap-y-16">
-              {tailItems.map((p) => (
-                <TopProductCard key={p.id} product={p} onAdd={onAdd} onOpen={onOpen} variant="grid" />
-              ))}
-            </div>
-          )}
-
-        </>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 md:gap-x-12 gap-y-16">
+          {items.map((p) => (
+            <TopProductCard key={p.id} product={p} onAdd={onAdd} onOpen={onOpen} />
+          ))}
+        </div>
       )}
     </section>
   );

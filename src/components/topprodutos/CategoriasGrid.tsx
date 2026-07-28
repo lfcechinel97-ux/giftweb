@@ -121,11 +121,8 @@ const CategoryHeader = ({
   );
 };
 
-// Wrapper com media query embutida para virar 4 colunas no desktop.
 const Mosaic = ({
   items,
-  eyebrow,
-  categoria,
   onAdd,
   onOpen,
 }: {
@@ -136,64 +133,11 @@ const Mosaic = ({
   onOpen?: Props["onOpen"];
 }) => {
   if (items.length === 0) return null;
-  const palette = getPalette(categoria);
-  const hasHighlight = items.some((p) => p.destaque !== "padrao");
-
-  if (!hasHighlight) {
-    // Sem destaques: grid uniforme, mas cada tile já rotaciona cor da categoria.
-    return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {items.map((p, i) => (
-          <TopProductCard
-            key={p.id}
-            product={p}
-            onAdd={onAdd}
-            onOpen={onOpen}
-            size="S"
-            eyebrow={eyebrow}
-            tile={palette[i % palette.length]}
-          />
-        ))}
-      </div>
-    );
-  }
-
   return (
-    <div className="top-mosaic-wrapper">
-      <div
-        className="top-mosaic grid gap-4 md:gap-6"
-        style={{
-          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-          gridAutoRows: "minmax(200px, auto)",
-          gridAutoFlow: "dense",
-        }}
-      >
-        {items.map((p, i) => {
-          const size = destaqueToSize(p.destaque);
-          return (
-            <div key={p.id} className={cn(spanClass(size), "flex h-full")}>
-              <div className="flex flex-col w-full h-full">
-                <TopProductCard
-                  product={p}
-                  onAdd={onAdd}
-                  onOpen={onOpen}
-                  size={size}
-                  eyebrow={eyebrow}
-                  tile={palette[i % palette.length]}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <style>{`
-        @media (min-width: 768px) {
-          .top-mosaic {
-            grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-            grid-auto-rows: minmax(280px, auto) !important;
-          }
-        }
-      `}</style>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 md:gap-x-6 gap-y-12 md:gap-y-16">
+      {items.map((p) => (
+        <TopProductCard key={p.id} product={p} onAdd={onAdd} onOpen={onOpen} />
+      ))}
     </div>
   );
 };
