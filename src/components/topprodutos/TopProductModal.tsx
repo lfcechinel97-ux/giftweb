@@ -71,9 +71,11 @@ const TopProductModal = ({ product, onClose }: Props) => {
   }, [product, onClose]);
 
   const coresList = useMemo(
-    () => (product?.cores ?? []).filter((c) => c && c.imagem),
+    () => (product?.cores ?? []).filter((c) => c && (c.nome || c.referencia)),
     [product?.id]
   );
+  const swatchColor = (c: { nome?: string; referencia?: string | null }) =>
+    isValidHex(c.referencia) ? normalizeHex(c.referencia!) : getCorHex(c.nome ?? "");
 
   const specs = useMemo(
     () => (product?.descricao_longa ? parseSpecs(product.descricao_longa) : null),
