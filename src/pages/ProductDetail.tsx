@@ -730,6 +730,9 @@ const ProductDetail = () => {
                       preco_custo={p.preco_custo}
                       codigo_amigavel={p.codigo_amigavel}
                       variantes={p.variantes as any}
+                      estoque={p.estoque}
+                      estoque_total={p.estoque_total}
+                      tabela_precos={p.tabela_precos}
                     />
                   ))}
                 </div>
