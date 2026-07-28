@@ -12,7 +12,7 @@ interface Props {
   onClose: () => void;
 }
 
-const ACCENT = "#2563EB";
+const ACCENT = "hsl(var(--green-cta))"; // verde CTA — sem azul de destaque
 
 // Detecta linhas "Rótulo: valor" para exibir em lista de duas colunas.
 // Também quebra linhas separadas por "|" em itens independentes.
@@ -177,22 +177,21 @@ const TopProductModal = ({ product, onClose }: Props) => {
         {/* Info */}
         <div className="md:w-2/5 flex flex-col p-6 md:p-8 overflow-y-auto">
           <span
-            className="text-[10px] font-bold uppercase tracking-widest mb-3"
-            style={{ color: ACCENT }}
+            className="text-[10px] font-medium uppercase tracking-widest mb-3 text-green-cta"
           >
             {catLabel}
           </span>
-          <h2 className="text-2xl md:text-3xl font-bold text-navy leading-tight tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-light text-navy leading-tight tracking-tight">
             {product.nome}
           </h2>
           <div className="mt-4 flex items-end gap-3">
             <div className="flex flex-col leading-tight">
-              <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-medium">
+              <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-light">
                 A partir de
               </span>
-              <span className="text-3xl font-semibold text-navy tabular-nums">{price}</span>
+              <span className="text-3xl font-light text-navy tabular-nums">{price}</span>
             </div>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest pb-1">
+            <span className="text-xs font-light text-slate-400 uppercase tracking-widest pb-1">
               Mínimo {min} un
             </span>
           </div>
@@ -271,25 +270,24 @@ const TopProductModal = ({ product, onClose }: Props) => {
 
           <div className="mt-auto pt-8 space-y-4">
             <div className="flex items-center gap-4">
-              <span className="text-xs font-bold text-navy uppercase tracking-widest">Qtd:</span>
+              <span className="text-xs font-medium text-navy uppercase tracking-widest">Qtd:</span>
               <div className="flex items-center gap-3 border border-slate-200 rounded-full px-2 h-11">
                 <button
                   type="button"
-                  onClick={() => setQtd((q) => Math.max(min, q - 1))}
-                  aria-label="Diminuir"
+                  onClick={() => setQtd((q) => Math.max(min, q - 5))}
+                  aria-label="Diminuir 5"
                   className="w-8 h-8 flex items-center justify-center text-navy"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
-                <span className="text-sm font-bold text-navy tabular-nums min-w-[3ch] text-center">
+                <span className="text-sm font-medium text-navy tabular-nums min-w-[3ch] text-center">
                   {qtd}
                 </span>
                 <button
                   type="button"
-                  onClick={() => setQtd((q) => q + 1)}
-                  aria-label="Aumentar"
-                  className="w-8 h-8 flex items-center justify-center"
-                  style={{ color: ACCENT }}
+                  onClick={() => setQtd((q) => q + 5)}
+                  aria-label="Aumentar 5"
+                  className="w-8 h-8 flex items-center justify-center text-green-cta"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
@@ -300,19 +298,18 @@ const TopProductModal = ({ product, onClose }: Props) => {
               type="button"
               onClick={handleAdd}
               className={cn(
-                "w-full h-12 rounded-full text-sm font-bold uppercase tracking-widest transition-all text-white",
-                added ? "bg-green-cta" : "hover:opacity-90"
+                "w-full h-12 rounded-full text-sm font-medium uppercase tracking-widest transition-all text-white bg-green-cta",
+                added ? "brightness-95" : "hover:brightness-110"
               )}
-              style={added ? undefined : { backgroundColor: ACCENT }}
             >
               {added ? (
                 <span className="inline-flex items-center gap-2">
-                  <Check className="w-4 h-4" /> Adicionado
+                  <Check className="w-4 h-4" /> Adicionado ao orçamento
                 </span>
               ) : getQty(product.id) > 0 ? (
-                "Atualizar no pedido"
+                "Atualizar no orçamento"
               ) : (
-                "Adicionar ao pedido"
+                "Adicionar ao orçamento"
               )}
             </button>
           </div>

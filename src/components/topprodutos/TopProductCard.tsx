@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { calcularPreco, formatarBRL } from "@/utils/price";
+import { formatarBRL } from "@/utils/price";
 import type { Tile } from "./categoryPalettes";
 
 export interface TopProductCor {
@@ -40,19 +40,20 @@ interface Props {
 }
 
 const DEFAULT_MIN = 20;
-const ACCENT = "#2563EB"; // azul de destaque
+const STEP = 5;
+
+// Faixas de preço apresentadas no card. Descontos ilustrativos aplicados
+// sobre o preco_final (0% / 3% / 6%).
+const TIERS: Array<{ qty: number; discount: number }> = [
+  { qty: 20, discount: 0 },
+  { qty: 50, discount: 0.03 },
+  { qty: 100, discount: 0.06 },
+];
 
 const ASPECT_LEGACY: Record<TopProductVariant, string> = {
   hero: "aspect-[16/9]",
   side: "aspect-square",
   grid: "aspect-[3/4]",
-};
-
-const DEFAULT_TILE: Tile = {
-  bg: "#FFFFFF",
-  ink: "#0B1F3A",
-  accent: ACCENT,
-  accentInk: "#FFFFFF",
 };
 
 const TopProductCard = ({
@@ -62,60 +63,65 @@ const TopProductCard = ({
   onOpen,
   variant = "grid",
   size,
-  eyebrow,
   badge,
-  tile: tileProp,
 }: Props) => {
-  const { nome, image_url, image_urls, preco_custo, quantidade_minima, preco_final, cores } = product;
-  const min = quantidade_minima ?? minQuantidade ?? DEFAULT_MIN;
-  const tile = tileProp ?? DEFAULT_TILE;
+  const { nome, image_url, image_urls, preco_final, cores } = product;
+  const min = product.quantidade_minima ?? minQuantidade ?? DEFAULT_MIN;
 
   const editorial = !!size;
 
   const coresList = (cores ?? []).filter((c) => c && c.imagem);
   const [selectedCorIdx, setSelectedCorIdx] = useState<number | null>(null);
-  const selectedCor = selectedCorIdx != null ? coresList[selectedCorIdx] : null;
 
-  const basePrimary = image_url || (image_urls && image_urls[0]) || null;
-  const primary = selectedCor?.imagem || basePrimary;
+  // Imagem principal — NUNCA troca ao selecionar cor (regra de negócio).
+  const primary = image_url || (image_urls && image_urls[0]) || null;
   const secondary =
     image_urls?.find((u) => u && u !== primary) ||
     (image_urls && image_urls.length > 1 ? image_urls[1] : null);
 
   const [hovering, setHovering] = useState(false);
-  const [qtd] = useState(min);
+  const [qtd, setQtd] = useState(min);
 
-  const precoUnit =
-    preco_final != null ? preco_final : preco_custo != null ? calcularPreco(preco_custo, min) : null;
-  const precoFmt = precoUnit != null ? formatarBRL(precoUnit) : "R$ --,--";
-
+  const dec = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setQtd((q) => Math.max(min, q - STEP));
+  };
+  const inc = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setQtd((q) => q + STEP);
+  };
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
     onAdd?.(product, qtd);
   };
   const open = () => onOpen?.(product);
 
-  // Bloco de preço reutilizado — "A partir de" + valor
-  const PriceBlock = ({ large = false }: { large?: boolean }) => (
-    <div className="flex flex-col leading-tight">
-      <span className="text-[10px] md:text-[11px] uppercase tracking-[0.18em] text-slate-400 font-medium">
-        A partir de
-      </span>
-      <span
-        className={cn(
-          "font-semibold tabular-nums text-navy",
-          large ? "text-xl md:text-2xl" : "text-base md:text-lg"
-        )}
-      >
-        {precoFmt}
-      </span>
+  // Bloco de 3 faixas de preço
+  const PriceTiers = () => (
+    <div className="grid grid-cols-3 gap-2 mt-3">
+      {TIERS.map((t) => {
+        const unit = preco_final != null ? preco_final * (1 - t.discount) : null;
+        return (
+          <div
+            key={t.qty}
+            className="rounded-lg border border-slate-200 px-2 py-1.5 text-center"
+          >
+            <div className="text-[10px] font-normal text-slate-400 tracking-wider">
+              {t.qty} un
+            </div>
+            <div className="text-[13px] font-medium text-navy tabular-nums leading-tight">
+              {unit != null ? formatarBRL(unit) : "—"}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 
-  // Swatches de cor reutilizáveis
+  // Swatches de cor (não trocam a imagem)
   const ColorSwatches = () =>
     coresList.length > 0 ? (
-      <div className="flex flex-wrap items-center gap-2.5 mt-3 px-1">
+      <div className="flex flex-wrap items-center gap-2 mt-3">
         {coresList.map((c, i) => {
           const active = selectedCorIdx === i;
           return (
@@ -130,12 +136,11 @@ const TopProductCard = ({
               aria-label={`Cor ${c.nome}`}
               aria-pressed={active}
               className={cn(
-                "relative w-9 h-9 rounded-full overflow-hidden transition-all",
+                "relative w-8 h-8 rounded-full overflow-hidden transition-all",
                 active
-                  ? "ring-2 ring-offset-2 ring-[color:var(--sw-accent)] scale-105"
-                  : "ring-1 ring-slate-200 hover:ring-slate-400"
+                  ? "ring-2 ring-offset-2 ring-green-cta scale-105"
+                  : "ring-1 ring-slate-200 hover:ring-navy/40"
               )}
-              style={{ ["--sw-accent" as any]: ACCENT }}
             >
               <img
                 src={c.imagem}
@@ -149,13 +154,48 @@ const TopProductCard = ({
       </div>
     ) : null;
 
+  // Bloco de ação — qty selector + botão "Adicionar ao orçamento"
+  const ActionRow = ({ full = false }: { full?: boolean }) => (
+    <div className="flex items-stretch gap-2 mt-4">
+      <div className="flex items-center border border-slate-200 rounded-full h-10 px-1 shrink-0">
+        <button
+          type="button"
+          onClick={dec}
+          aria-label={`Diminuir ${STEP}`}
+          className="w-8 h-8 flex items-center justify-center text-navy/70 hover:text-navy"
+        >
+          <Minus className="w-3.5 h-3.5" />
+        </button>
+        <span className="text-xs font-medium text-navy tabular-nums min-w-[3ch] text-center">
+          {qtd}
+        </span>
+        <button
+          type="button"
+          onClick={inc}
+          aria-label={`Aumentar ${STEP}`}
+          className="w-8 h-8 flex items-center justify-center text-green-cta hover:brightness-110"
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </button>
+      </div>
+      <button
+        type="button"
+        onClick={handleAdd}
+        className={cn(
+          "flex-1 h-10 rounded-full bg-green-cta text-white text-[11px] font-medium tracking-[0.12em] uppercase transition-transform hover:scale-[1.02] hover:brightness-110",
+          full ? "px-4" : "px-3"
+        )}
+      >
+        Adicionar ao orçamento
+      </button>
+    </div>
+  );
+
   // ─── Modo Editorial ────────────────────────────────────────────────────
   if (editorial) {
     const isL = size === "L";
     const isM = size === "M";
-    const isS = size === "S";
 
-    // Imagem ocupa mais espaço, menos padding vazio
     const imgScale = isL
       ? "w-[92%] h-[86%]"
       : isM
@@ -180,21 +220,17 @@ const TopProductCard = ({
           type="button"
           onClick={open}
           className={cn(
-            "relative w-full flex-1 overflow-hidden text-left rounded-2xl md:rounded-3xl",
+            "relative w-full flex-1 overflow-hidden text-left rounded-2xl md:rounded-3xl bg-white",
             "border border-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.04)]",
-            "hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)] transition-shadow duration-300",
+            "hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)] hover:border-green-cta/40 transition-all duration-300",
             minHeight
           )}
-          style={{ backgroundColor: tile.bg }}
           aria-label={`Ver detalhes de ${nome}`}
         >
-          {(isL || (isM && badge)) && (
+          {badge && (
             <div className="absolute top-4 left-4 md:top-5 md:left-5 z-10">
-              <span
-                className="text-[10px] md:text-[11px] font-bold uppercase tracking-[0.22em] px-2.5 py-1 rounded-full"
-                style={{ backgroundColor: ACCENT, color: "#FFFFFF" }}
-              >
-                {badge ?? (isL ? "Destaque" : "Novo")}
+              <span className="text-[10px] md:text-[11px] font-medium uppercase tracking-[0.22em] px-2.5 py-1 rounded-full bg-navy text-white">
+                {badge}
               </span>
             </div>
           )}
@@ -229,47 +265,21 @@ const TopProductCard = ({
           </div>
         </button>
 
-        <ColorSwatches />
-
-        {/* Info abaixo do tile — padrão consistente para S/M/L */}
         <div className="mt-4 px-1">
           <button type="button" onClick={open} className="text-left w-full">
             <h3
               className={cn(
-                "font-semibold text-navy leading-snug tracking-tight hover:text-[color:var(--acc)] transition-colors line-clamp-2",
+                "font-normal text-navy leading-snug tracking-tight hover:text-green-cta transition-colors line-clamp-2",
                 isL ? "text-lg md:text-xl" : "text-sm md:text-base"
               )}
-              style={{ ["--acc" as any]: ACCENT }}
             >
               {nome}
             </h3>
           </button>
-          <div className="flex items-end justify-between gap-3 mt-3">
-            <div className="flex flex-col leading-tight">
-              <PriceBlock large={isL} />
-              <span className="text-[10px] uppercase tracking-[0.18em] text-slate-400 mt-1">
-                Mínimo {min} un
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleAdd}
-              aria-label="Adicionar ao pedido"
-              className={cn(
-                "shrink-0 inline-flex items-center gap-1.5 rounded-full text-white text-xs font-bold uppercase tracking-[0.12em] transition-transform hover:scale-[1.03]",
-                isL ? "px-4 py-2.5" : "px-3 py-2"
-              )}
-              style={{ backgroundColor: ACCENT }}
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Adicionar
-            </button>
-          </div>
-          {eyebrow && isS && (
-            <span className="block text-[10px] text-slate-400 uppercase tracking-[0.18em] mt-2">
-              {eyebrow}
-            </span>
-          )}
+
+          <ColorSwatches />
+          <PriceTiers />
+          <ActionRow full={isL} />
         </div>
       </article>
     );
@@ -287,7 +297,7 @@ const TopProductCard = ({
         onClick={open}
         className={cn(
           "relative w-full overflow-hidden cursor-pointer text-left rounded-2xl border border-slate-200 bg-white",
-          "hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)] transition-shadow",
+          "hover:shadow-[0_8px_24px_rgba(15,23,42,0.08)] hover:border-green-cta/40 transition-all",
           ASPECT_LEGACY[variant]
         )}
         aria-label={`Ver detalhes de ${nome}`}
@@ -319,48 +329,28 @@ const TopProductCard = ({
         )}
         {badge && (
           <div className="absolute top-4 left-4">
-            <span
-              className="text-[10px] font-bold px-2.5 py-1 uppercase tracking-[0.22em] rounded-full text-white"
-              style={{ backgroundColor: ACCENT }}
-            >
+            <span className="text-[10px] font-medium px-2.5 py-1 uppercase tracking-[0.22em] rounded-full text-white bg-navy">
               {badge}
             </span>
           </div>
         )}
       </button>
 
-      <ColorSwatches />
-
       <div className="mt-4 px-1">
         <button type="button" onClick={open} className="text-left w-full">
           <h3
             className={cn(
-              "font-semibold text-navy leading-snug tracking-tight hover:text-[color:var(--acc)] transition-colors line-clamp-2",
+              "font-normal text-navy leading-snug tracking-tight hover:text-green-cta transition-colors line-clamp-2",
               variant === "hero" ? "text-xl md:text-2xl" : "text-sm md:text-base"
             )}
-            style={{ ["--acc" as any]: ACCENT }}
           >
             {nome}
           </h3>
         </button>
-        <div className="flex items-end justify-between gap-3 mt-3">
-          <div className="flex flex-col leading-tight">
-            <PriceBlock large={variant === "hero"} />
-            <span className="text-[10px] uppercase tracking-[0.18em] text-slate-400 mt-1">
-              Mínimo {min} un
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={handleAdd}
-            aria-label="Adicionar ao pedido"
-            className="shrink-0 inline-flex items-center gap-1.5 rounded-full text-white text-xs font-bold uppercase tracking-[0.12em] px-3 py-2 transition-transform hover:scale-[1.03]"
-            style={{ backgroundColor: ACCENT }}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Adicionar
-          </button>
-        </div>
+
+        <ColorSwatches />
+        <PriceTiers />
+        <ActionRow full={variant === "hero"} />
       </div>
     </article>
   );
