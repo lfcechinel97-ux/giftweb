@@ -6,6 +6,17 @@ import { useTopCart } from "@/contexts/TopProdutosCart";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TOPPRODUTOS_CATEGORIAS } from "@/hooks/useCuratedTopProdutos";
 import type { CuratedProduct } from "@/hooks/useCuratedTopProdutos";
+import { getCorHex } from "@/utils/colorHex";
+
+const TIERS: Array<{ qty: number; discount: number }> = [
+  { qty: 20, discount: 0 },
+  { qty: 50, discount: 0.03 },
+  { qty: 100, discount: 0.06 },
+];
+
+const isValidHex = (v?: string | null) =>
+  !!v && /^#?[0-9a-fA-F]{3,8}$/.test(v.trim());
+const normalizeHex = (v: string) => (v.trim().startsWith("#") ? v.trim() : `#${v.trim()}`);
 
 interface Props {
   product: CuratedProduct | null;
