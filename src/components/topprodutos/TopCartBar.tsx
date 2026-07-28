@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ShoppingBag, ChevronUp, ChevronDown, Minus, Plus, X, MessageCircle, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ShoppingBag, ChevronUp, ChevronDown, Minus, Plus, X, MessageCircle, Trash2, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatarBRL } from "@/utils/price";
 import { useTopCart } from "@/contexts/TopProdutosCart";
@@ -10,9 +10,16 @@ const TopCartBar = () => {
   const [expanded, setExpanded] = useState(false);
   const [obs, setObs] = useState("");
 
+  useEffect(() => {
+    const handler = () => setExpanded(true);
+    window.addEventListener("topprodutos:open-cart", handler);
+    return () => window.removeEventListener("topprodutos:open-cart", handler);
+  }, []);
+
   if (totalItems === 0) return null;
 
   const total = items.reduce((s, i) => s + (i.preco ?? 0) * i.quantidade, 0);
+
 
   const enviarWhatsApp = () => {
     const linhas = items.map(
