@@ -159,21 +159,24 @@ const TopProductModal = ({ product, onClose }: Props) => {
             </div>
           )}
           {gallery.length > 1 && (
-            <div className="md:hidden flex gap-2 justify-center p-3 border-t border-slate-100">
-              {gallery.map((_, i) => (
+            <div className="md:hidden flex gap-2 p-3 border-t border-slate-100 overflow-x-auto">
+              {gallery.map((src, i) => (
                 <button
-                  key={i}
+                  key={src + i}
                   type="button"
                   onClick={() => {
                     setActiveImg(i);
                     setSelectedCorIdx(null);
                   }}
-                  aria-label={`Imagem ${i + 1}`}
                   className={cn(
-                    "w-2 h-2 rounded-full transition",
-                    i === activeImg && !selectedCor ? "bg-navy w-6" : "bg-slate-300"
+                    "w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-white border-2 transition",
+                    i === activeImg && !selectedCor
+                      ? "border-green-cta"
+                      : "border-slate-200"
                   )}
-                />
+                >
+                  <img src={src} alt="" className="w-full h-full object-contain p-1" />
+                </button>
               ))}
             </div>
           )}
@@ -202,7 +205,7 @@ const TopProductModal = ({ product, onClose }: Props) => {
           </div>
 
           {/* Seletor de cor */}
-          {coresList.length > 0 && (
+          {coresList.length > 1 && (
             <div className="mt-6">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[11px] font-bold text-navy uppercase tracking-[0.18em]">
@@ -248,32 +251,8 @@ const TopProductModal = ({ product, onClose }: Props) => {
             </div>
           )}
 
-          {/* Especificações / Descrição */}
-          {specs ? (
-            <div className="mt-6 border-t border-slate-100 pt-5">
-              <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">
-                Especificações
-              </span>
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                {specs.map((s, i) => (
-                  <div key={i} className="flex flex-col">
-                    <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">
-                      {s.label}
-                    </dt>
-                    <dd className="text-sm text-navy leading-snug">{s.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          ) : (
-            product.descricao_longa && (
-              <p className="mt-6 text-slate-600 leading-relaxed text-sm md:text-base whitespace-pre-line">
-                {product.descricao_longa}
-              </p>
-            )
-          )}
-
-          <div className="mt-auto pt-8 space-y-4">
+          {/* Qtd + Adicionar — logo após as variações */}
+          <div className="mt-6 space-y-3">
             <div className="flex items-center gap-4">
               <span className="text-xs font-medium text-navy uppercase tracking-widest">Qtd:</span>
               <div className="flex items-center gap-3 border border-slate-200 rounded-full px-2 h-11">
@@ -318,6 +297,31 @@ const TopProductModal = ({ product, onClose }: Props) => {
               )}
             </button>
           </div>
+
+          {/* Especificações / Descrição — por último */}
+          {specs ? (
+            <div className="mt-6 border-t border-slate-100 pt-5">
+              <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3">
+                Especificações
+              </span>
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                {specs.map((s, i) => (
+                  <div key={i} className="flex flex-col">
+                    <dt className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em]">
+                      {s.label}
+                    </dt>
+                    <dd className="text-sm text-navy leading-snug">{s.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ) : (
+            product.descricao_longa && (
+              <p className="mt-6 text-slate-600 leading-relaxed text-sm md:text-base whitespace-pre-line">
+                {product.descricao_longa}
+              </p>
+            )
+          )}
         </div>
       </div>
     </div>

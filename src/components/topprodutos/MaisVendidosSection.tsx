@@ -33,13 +33,13 @@ const MaisVendidosSection = ({ onAdd, onOpen }: Props) => {
       </div>
 
       {isLoading && items.length === 0 ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 md:gap-x-8 gap-y-6 md:gap-y-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 md:gap-x-8 gap-y-4 md:gap-y-8">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="aspect-[4/5] bg-slate-100 animate-pulse rounded-2xl" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 md:gap-x-8 gap-y-6 md:gap-y-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 md:gap-x-8 gap-y-4 md:gap-y-8">
           {items.map((p) => (
             <TopProductCard key={p.id} product={p} onAdd={onAdd} onOpen={onOpen} />
           ))}
