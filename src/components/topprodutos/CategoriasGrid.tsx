@@ -134,7 +134,7 @@ const Mosaic = ({
 }) => {
   if (items.length === 0) return null;
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 md:gap-x-6 gap-y-12 md:gap-y-16">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 md:gap-x-6 gap-y-6 md:gap-y-10">
       {items.map((p) => (
         <TopProductCard key={p.id} product={p} onAdd={onAdd} onOpen={onOpen} />
       ))}

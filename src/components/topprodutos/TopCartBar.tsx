@@ -50,23 +50,26 @@ const TopCartBar = () => {
 
   return (
     <>
-      {/* Botão flutuante — só o ícone, grande e clean */}
-      {totalItems > 0 && !open && (
+      {/* Botão flutuante — sempre visível no canto inferior direito */}
+      {!open && (
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label={`Ver carrinho com ${totalItems} ${totalItems === 1 ? "item" : "itens"}`}
+          aria-label={`Ver carrinho${totalItems > 0 ? ` com ${totalItems} ${totalItems === 1 ? "item" : "itens"}` : ""}`}
           className={cn(
-            "fixed z-[92] right-5 sm:right-8 bottom-24 sm:bottom-28",
-            "relative flex items-center justify-center w-16 h-16 sm:w-[68px] sm:h-[68px] rounded-full",
-            "bg-green-cta text-white hover:brightness-110 active:scale-95 transition-all animate-fade-in"
+            "fixed z-[92] right-4 sm:right-6 bottom-4 sm:bottom-6",
+            "flex items-center justify-center w-[62px] h-[62px] sm:w-[72px] sm:h-[72px] rounded-full",
+            "bg-green-cta text-white hover:brightness-110 active:scale-95 transition-all",
+            "ring-4 ring-green-cta/20 hover:ring-green-cta/30"
           )}
-          style={{ boxShadow: "0 16px 40px -10px rgba(34,197,94,0.75)" }}
+          style={{ boxShadow: "0 18px 44px -10px rgba(34,197,94,0.75)" }}
         >
           <ShoppingCart className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2} />
-          <span className="absolute -top-1 -right-1 min-w-[24px] h-[24px] px-1 rounded-full bg-white text-navy text-xs font-black flex items-center justify-center ring-2 ring-white">
-            {totalItems}
-          </span>
+          {totalItems > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[26px] h-[26px] px-1.5 rounded-full bg-white text-navy text-xs font-black flex items-center justify-center ring-2 ring-white">
+              {totalItems}
+            </span>
+          )}
         </button>
       )}
 
