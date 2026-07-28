@@ -44,7 +44,7 @@ const MAX_DOTS = 6;
 const CYCLE_INTERVAL = 1500; // 1.5s between image switches
 const FADE_DURATION = 200;   // ms for fade transition
 
-const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes, estoque, estoque_total }: ProductCardProps) => {
+const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes, estoque, estoque_total, tabela_precos }: ProductCardProps) => {
   const navigate = useNavigate();
 
   // Determine display image: prefer an in-stock variant if the primary is out
