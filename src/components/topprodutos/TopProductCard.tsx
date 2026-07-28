@@ -105,7 +105,7 @@ const TopProductCard = ({
   const open = () => onOpen?.(product);
 
   const PriceTiers = () => (
-    <div className="grid grid-cols-3 gap-2 mt-3">
+    <div className="grid grid-cols-3 gap-1.5 md:gap-2 mt-2.5">
       {TIERS.map((t) => {
         const unit = preco_final != null ? preco_final * (1 - t.discount) : null;
         const active = qtd === t.qty;
@@ -118,16 +118,16 @@ const TopProductCard = ({
               setQtd(Math.max(min, t.qty));
             }}
             className={cn(
-              "rounded-lg border px-2 py-1.5 text-center transition-colors",
+              "rounded-md md:rounded-lg border px-1 md:px-2 py-1 md:py-1.5 text-center transition-colors",
               active
                 ? "border-green-cta bg-green-cta/5"
                 : "border-slate-200 hover:border-navy/30"
             )}
           >
-            <div className="text-[10px] font-normal text-slate-400 tracking-wider">
+            <div className="text-[9px] md:text-[10px] font-normal text-slate-400 tracking-wider leading-tight">
               {t.qty} un
             </div>
-            <div className="text-[13px] font-medium text-navy tabular-nums leading-tight">
+            <div className="text-[11px] md:text-[13px] font-medium text-navy tabular-nums leading-tight">
               {unit != null ? formatarBRL(unit) : "—"}
             </div>
           </button>
@@ -138,7 +138,7 @@ const TopProductCard = ({
 
   const ColorSwatches = () =>
     coresList.length > 0 ? (
-      <div className="flex flex-wrap items-center gap-2 mt-3">
+      <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mt-2.5">
         {coresList.map((c, i) => {
           const active = selectedCorIdx === i;
           return (
@@ -154,7 +154,7 @@ const TopProductCard = ({
               aria-pressed={active}
               style={{ background: swatchColor(c) }}
               className={cn(
-                "w-6 h-6 rounded-full transition-all",
+                "w-5 h-5 md:w-6 md:h-6 rounded-full transition-all",
                 active
                   ? "ring-2 ring-offset-2 ring-green-cta scale-110"
                   : "ring-1 ring-slate-200 hover:ring-navy/40"
@@ -166,8 +166,8 @@ const TopProductCard = ({
     ) : null;
 
   const ActionRow = () => (
-    <div className="flex items-stretch gap-2 mt-4">
-      <div className="flex items-center border border-slate-200 rounded-full h-10 px-1 shrink-0">
+    <div className="flex flex-col md:flex-row items-stretch gap-2 mt-3 md:mt-4">
+      <div className="flex items-center justify-between md:justify-start border border-slate-200 rounded-full h-9 md:h-10 px-1 shrink-0 self-stretch md:self-auto">
         <button
           type="button"
           onClick={dec}
@@ -191,28 +191,25 @@ const TopProductCard = ({
       <button
         type="button"
         onClick={handleAdd}
-        className="flex-1 h-10 rounded-full bg-green-cta text-white text-sm font-medium transition-colors hover:brightness-105 px-3"
+        className="flex-1 h-9 md:h-10 rounded-full bg-green-cta text-white text-xs md:text-sm font-medium transition-colors hover:brightness-105 px-3 whitespace-nowrap"
       >
-        Adicionar ao orçamento
+        <span className="md:hidden">Adicionar</span>
+        <span className="hidden md:inline">Adicionar ao orçamento</span>
       </button>
     </div>
   );
 
   return (
-    <article
-      className="group flex flex-col h-full animate-fade-in"
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
-    >
+    <article className="group flex flex-col h-full animate-fade-in">
       <button
         type="button"
         onClick={open}
-        className="relative w-full aspect-[4/5] overflow-hidden text-left rounded-2xl bg-white"
+        className="relative w-full aspect-[4/5] overflow-hidden text-left rounded-xl md:rounded-2xl bg-white"
         aria-label={`Ver detalhes de ${nome}`}
       >
         {badge && (
-          <div className="absolute top-3 left-3 z-10">
-            <span className="text-[10px] font-medium uppercase tracking-[0.22em] px-2.5 py-1 rounded-full bg-navy text-white">
+          <div className="absolute top-2 left-2 md:top-3 md:left-3 z-10">
+            <span className="text-[9px] md:text-[10px] font-medium uppercase tracking-[0.22em] px-2 py-0.5 md:px-2.5 md:py-1 rounded-full bg-navy text-white">
               {badge}
             </span>
           </div>
@@ -224,8 +221,8 @@ const TopProductCard = ({
             loading="lazy"
             decoding="async"
             className={cn(
-              "absolute inset-0 w-full h-full object-contain p-4 sm:p-6 transition-opacity duration-500",
-              hovering && secondary && !selectedCor ? "opacity-0" : "opacity-100"
+              "absolute inset-0 w-full h-full object-contain p-3 sm:p-6 transition-opacity duration-500",
+              secondary && !selectedCor ? "md:group-hover:opacity-0" : ""
             )}
           />
         )}
@@ -236,17 +233,14 @@ const TopProductCard = ({
             loading="lazy"
             decoding="async"
             aria-hidden="true"
-            className={cn(
-              "absolute inset-0 w-full h-full object-contain p-4 sm:p-6 transition-opacity duration-500 hidden md:block",
-              hovering ? "opacity-100" : "opacity-0"
-            )}
+            className="absolute inset-0 w-full h-full object-contain p-3 sm:p-6 transition-opacity duration-500 hidden md:block opacity-0 md:group-hover:opacity-100"
           />
         )}
       </button>
 
-      <div className="mt-4 px-1">
+      <div className="mt-3 md:mt-4 px-0.5 md:px-1">
         <button type="button" onClick={open} className="text-left w-full">
-          <h3 className="font-normal text-navy leading-snug tracking-tight hover:text-green-cta transition-colors line-clamp-2 text-sm md:text-base">
+          <h3 className="font-normal text-navy leading-snug tracking-tight hover:text-green-cta transition-colors line-clamp-2 text-[13px] md:text-base">
             {nome}
           </h3>
         </button>
