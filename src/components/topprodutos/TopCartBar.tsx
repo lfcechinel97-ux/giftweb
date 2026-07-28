@@ -201,8 +201,8 @@ const TopCartBar = () => {
               className="inline-flex items-center gap-2 h-11 md:h-12 px-5 md:px-7 rounded-full bg-green-cta text-white text-xs md:text-sm font-bold uppercase tracking-widest hover:brightness-110 transition shrink-0"
             >
               <MessageCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">Pedir orçamento</span>
-              <span className="sm:hidden">Orçamento</span>
+              <span className="hidden sm:inline">Enviar para o WhatsApp</span>
+              <span className="sm:hidden">WhatsApp</span>
             </button>
           </div>
         </div>
