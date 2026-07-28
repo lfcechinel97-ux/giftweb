@@ -84,7 +84,6 @@ const TopProductCard = ({
     image_urls?.find((u) => u && u !== primary) ||
     (image_urls && image_urls.length > 1 ? image_urls[1] : null);
 
-  const [hovering, setHovering] = useState(false);
   const [qtd, setQtd] = useState(min);
 
   const dec = (e: React.MouseEvent) => {
