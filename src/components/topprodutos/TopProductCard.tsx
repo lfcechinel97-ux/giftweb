@@ -28,10 +28,16 @@ export interface TopProduct {
 export type TopProductVariant = "hero" | "side" | "grid";
 export type TopProductSize = "S" | "M" | "L";
 
+export interface TopProductAddExtras {
+  sku?: string;
+  cor?: string;
+  image?: string | null;
+}
+
 interface Props {
   product: TopProduct;
   minQuantidade?: number;
-  onAdd?: (product: TopProduct, quantidade: number) => void;
+  onAdd?: (product: TopProduct, quantidade: number, extras?: TopProductAddExtras) => void;
   onOpen?: (product: TopProduct) => void;
   variant?: TopProductVariant;
   size?: TopProductSize;
