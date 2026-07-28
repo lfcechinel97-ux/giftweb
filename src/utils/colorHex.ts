@@ -49,9 +49,13 @@ export function getCorHex(cor: string | null | undefined): string {
   const normalized = cor.toLowerCase().trim();
   // Direct match
   if (COLOR_MAP[normalized]) return COLOR_MAP[normalized];
-  // Partial match
-  for (const [key, hex] of Object.entries(COLOR_MAP)) {
-    if (normalized.includes(key) || key.includes(normalized)) return hex;
+  // Partial match — try longer keys first to prefer "azul escuro" over "azul".
+  const keys = Object.keys(COLOR_MAP).sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    if (normalized.includes(key)) return COLOR_MAP[key];
+  }
+  for (const key of keys) {
+    if (key.includes(normalized)) return COLOR_MAP[key];
   }
   return '#94A3B8';
 }
