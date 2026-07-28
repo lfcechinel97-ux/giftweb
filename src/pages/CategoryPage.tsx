@@ -211,6 +211,8 @@ const CategoryPage = () => {
                     image_urls={p.image_urls}
                     variantes={p.variantes}
                     estoque={p.estoque}
+                    estoque_total={p.estoque_total}
+                    tabela_precos={p.tabela_precos}
                   />
                 ))}
               </div>

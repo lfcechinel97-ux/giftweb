@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { calcularPreco, formatarBRL } from "@/utils/price";
+import { formatarBRL, getEffectiveMinPrice, getEffectiveUnitPrice } from "@/utils/price";
 import { getCorHex, isLightColor } from "@/utils/colorHex";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -26,6 +26,7 @@ interface ProductCardProps {
   variantes?: VariantJson[] | null;
   estoque?: number | null;
   estoque_total?: number | null;
+  tabela_precos?: any;
 }
 
 export const ProductCardSkeleton = () => (
@@ -43,7 +44,7 @@ const MAX_DOTS = 6;
 const CYCLE_INTERVAL = 1500; // 1.5s between image switches
 const FADE_DURATION = 200;   // ms for fade transition
 
-const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes, estoque, estoque_total }: ProductCardProps) => {
+const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes, estoque, estoque_total, tabela_precos }: ProductCardProps) => {
   const navigate = useNavigate();
 
   // Determine display image: prefer an in-stock variant if the primary is out
@@ -115,8 +116,8 @@ const ProductCard = ({ nome, slug, image_url, image_urls, cor, preco_custo, codi
 
   if (!image_url || image_url.includes("placehold.co")) return null;
 
-  const precoMin = preco_custo ? calcularPreco(preco_custo, 1000) : null;
-  const preco20 = preco_custo ? calcularPreco(preco_custo, 20) : null;
+  const precoMin = preco_custo ? getEffectiveMinPrice(tabela_precos, preco_custo) : null;
+  const preco20 = preco_custo ? getEffectiveUnitPrice(tabela_precos, preco_custo, 20) : null;
   const href = slug ? `/produto/${slug}` : `/produto/${codigo_amigavel}`;
 
   const hasVariants = variantes && variantes.length > 0;
