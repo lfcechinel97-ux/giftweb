@@ -159,21 +159,24 @@ const TopProductModal = ({ product, onClose }: Props) => {
             </div>
           )}
           {gallery.length > 1 && (
-            <div className="md:hidden flex gap-2 justify-center p-3 border-t border-slate-100">
-              {gallery.map((_, i) => (
+            <div className="md:hidden flex gap-2 p-3 border-t border-slate-100 overflow-x-auto">
+              {gallery.map((src, i) => (
                 <button
-                  key={i}
+                  key={src + i}
                   type="button"
                   onClick={() => {
                     setActiveImg(i);
                     setSelectedCorIdx(null);
                   }}
-                  aria-label={`Imagem ${i + 1}`}
                   className={cn(
-                    "w-2 h-2 rounded-full transition",
-                    i === activeImg && !selectedCor ? "bg-navy w-6" : "bg-slate-300"
+                    "w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-white border-2 transition",
+                    i === activeImg && !selectedCor
+                      ? "border-green-cta"
+                      : "border-slate-200"
                   )}
-                />
+                >
+                  <img src={src} alt="" className="w-full h-full object-contain p-1" />
+                </button>
               ))}
             </div>
           )}
