@@ -171,7 +171,7 @@ const TopProductModal = ({ product, onClose }: Props) => {
             </div>
           )}
           {gallery.length > 1 && (
-            <div className="md:hidden flex gap-2 p-3 border-t border-slate-100 overflow-x-auto">
+            <div className="md:hidden flex gap-2 p-3 border-t border-slate-100 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {gallery.map((src, i) => (
                 <button
                   key={src + i}
