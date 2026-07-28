@@ -106,8 +106,8 @@ const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
 
   if (!image_url || image_url.includes("placehold.co")) return null;
 
-  const precoMin = preco_custo ? calcularPreco(preco_custo, 1000) : null;
-  const preco20 = preco_custo ? calcularPreco(preco_custo, 20) : null;
+  const precoMin = preco_custo ? getEffectiveMinPrice(product.tabela_precos, preco_custo) : null;
+  const preco20 = preco_custo ? getEffectiveUnitPrice(product.tabela_precos, preco_custo, 20) : null;
   const href = slug ? `/catalogo/produto/${slug}` : `/catalogo/produto/${codigo_amigavel}`;
 
   const hasVariants = variantes && variantes.length > 0;
