@@ -6,13 +6,24 @@ import { useTopCart } from "@/contexts/TopProdutosCart";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TOPPRODUTOS_CATEGORIAS } from "@/hooks/useCuratedTopProdutos";
 import type { CuratedProduct } from "@/hooks/useCuratedTopProdutos";
+import { getCorHex } from "@/utils/colorHex";
+
+const TIERS: Array<{ qty: number; discount: number }> = [
+  { qty: 20, discount: 0 },
+  { qty: 50, discount: 0.03 },
+  { qty: 100, discount: 0.06 },
+];
+
+const isValidHex = (v?: string | null) =>
+  !!v && /^#?[0-9a-fA-F]{3,8}$/.test(v.trim());
+const normalizeHex = (v: string) => (v.trim().startsWith("#") ? v.trim() : `#${v.trim()}`);
 
 interface Props {
   product: CuratedProduct | null;
   onClose: () => void;
 }
 
-const ACCENT = "hsl(var(--green-cta))"; // verde CTA — sem azul de destaque
+
 
 // Detecta linhas "Rótulo: valor" para exibir em lista de duas colunas.
 // Também quebra linhas separadas por "|" em itens independentes.
@@ -60,9 +71,11 @@ const TopProductModal = ({ product, onClose }: Props) => {
   }, [product, onClose]);
 
   const coresList = useMemo(
-    () => (product?.cores ?? []).filter((c) => c && c.imagem),
+    () => (product?.cores ?? []).filter((c) => c && (c.nome || c.referencia)),
     [product?.id]
   );
+  const swatchColor = (c: { nome?: string; referencia?: string | null }) =>
+    isValidHex(c.referencia) ? normalizeHex(c.referencia!) : getCorHex(c.nome ?? "");
 
   const specs = useMemo(
     () => (product?.descricao_longa ? parseSpecs(product.descricao_longa) : null),
@@ -136,7 +149,7 @@ const TopProductModal = ({ product, onClose }: Props) => {
             )}
           </div>
           {gallery.length > 1 && (
-            <div className="hidden md:flex gap-3 p-4 border-t border-slate-100 overflow-x-auto">
+            <div className="hidden md:flex gap-3 p-4 border-t border-slate-100 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {gallery.map((src, i) => (
                 <button
                   key={src + i}
@@ -148,10 +161,9 @@ const TopProductModal = ({ product, onClose }: Props) => {
                   className={cn(
                     "w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-white border-2 transition",
                     i === activeImg && !selectedCor
-                      ? "border-[color:var(--acc)]"
+                      ? "border-green-cta"
                       : "border-transparent hover:border-slate-200"
                   )}
-                  style={{ ["--acc" as any]: ACCENT }}
                 >
                   <img src={src} alt="" className="w-full h-full object-contain p-1" />
                 </button>
@@ -159,7 +171,7 @@ const TopProductModal = ({ product, onClose }: Props) => {
             </div>
           )}
           {gallery.length > 1 && (
-            <div className="md:hidden flex gap-2 p-3 border-t border-slate-100 overflow-x-auto">
+            <div className="md:hidden flex gap-2 p-3 border-t border-slate-100 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {gallery.map((src, i) => (
                 <button
                   key={src + i}
@@ -184,27 +196,42 @@ const TopProductModal = ({ product, onClose }: Props) => {
 
         {/* Info */}
         <div className="md:w-2/5 flex flex-col p-6 md:p-8 overflow-y-auto">
-          <span
-            className="text-[10px] font-medium uppercase tracking-widest mb-3 text-green-cta"
-          >
-            {catLabel}
-          </span>
           <h2 className="text-2xl md:text-3xl font-light text-navy leading-tight tracking-tight">
             {product.nome}
           </h2>
-          <div className="mt-4 flex items-end gap-3">
-            <div className="flex flex-col leading-tight">
-              <span className="text-[11px] uppercase tracking-[0.18em] text-slate-400 font-light">
-                A partir de
-              </span>
-              <span className="text-3xl font-light text-navy tabular-nums">{price}</span>
-            </div>
-            <span className="text-xs font-light text-slate-400 uppercase tracking-widest pb-1">
-              Mínimo {min} un
-            </span>
-          </div>
 
-          {/* Seletor de cor */}
+          {/* Tabela de preços por faixa */}
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            {TIERS.map((t) => {
+              const unit = product.preco_final != null ? product.preco_final * (1 - t.discount) : null;
+              const active = qtd === t.qty;
+              return (
+                <button
+                  key={t.qty}
+                  type="button"
+                  onClick={() => setQtd(Math.max(min, t.qty))}
+                  className={cn(
+                    "rounded-lg border px-2 py-2 text-center transition-colors",
+                    active
+                      ? "border-green-cta bg-green-cta/5"
+                      : "border-slate-200 hover:border-navy/30"
+                  )}
+                >
+                  <div className="text-[10px] font-normal text-slate-400 tracking-wide leading-tight">
+                    {t.qty}+ un
+                  </div>
+                  <div className="text-[13px] md:text-sm font-medium text-navy tabular-nums leading-tight whitespace-nowrap">
+                    {unit != null ? formatarBRL(unit) : "—"}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          <span className="mt-2 text-[11px] uppercase tracking-[0.18em] text-slate-400 font-light">
+            Mínimo {min} un
+          </span>
+
+          {/* Seletor de cor — bolinhas com hex */}
           {coresList.length > 1 && (
             <div className="mt-6">
               <div className="flex items-center gap-2 mb-2">
@@ -226,30 +253,20 @@ const TopProductModal = ({ product, onClose }: Props) => {
                       title={c.nome}
                       aria-label={`Cor ${c.nome}`}
                       aria-pressed={active}
+                      style={{ background: swatchColor(c) }}
                       className={cn(
-                        "relative w-10 h-10 rounded-full overflow-hidden transition-all",
+                        "w-8 h-8 rounded-full transition-all",
                         active
-                          ? "ring-2 ring-offset-2 scale-105"
-                          : "ring-1 ring-slate-200 hover:ring-slate-400"
+                          ? "ring-2 ring-offset-2 ring-green-cta scale-110"
+                          : "ring-1 ring-slate-200 hover:ring-navy/40"
                       )}
-                      style={
-                        active
-                          ? ({ ["--tw-ring-color" as any]: ACCENT } as React.CSSProperties)
-                          : undefined
-                      }
-                    >
-                      <img
-                        src={c.imagem}
-                        alt={c.nome}
-                        loading="lazy"
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    </button>
+                    />
                   );
                 })}
               </div>
             </div>
           )}
+
 
           {/* Qtd + Adicionar — logo após as variações */}
           <div className="mt-6 space-y-3">
