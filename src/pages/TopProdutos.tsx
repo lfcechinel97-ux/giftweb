@@ -36,18 +36,27 @@ const TopProdutosInner = () => {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleAdd = (product: TopProduct, quantidade: number) => {
+  const handleAdd = (
+    product: TopProduct,
+    quantidade: number,
+    extras?: { sku?: string; cor?: string; image?: string | null }
+  ) => {
     const full = (data ?? []).find((p) => p.id === product.id);
     const catLabel = full
       ? TOPPRODUTOS_CATEGORIAS.find((c) => c.slug === full.categoria)?.label ?? full.categoria
       : undefined;
+    const cor = extras?.cor;
+    const cartId = cor ? `${product.id}::${cor}` : product.id;
     addItem(
       {
-        id: product.id,
+        id: cartId,
+        produtoId: product.id,
         nome: product.nome,
-        image: product.image_url,
+        image: extras?.image ?? product.image_url,
         preco: product.preco_final ?? null,
         categoria: catLabel,
+        sku: extras?.sku ?? product.codigo_amigavel,
+        cor,
       },
       quantidade
     );
