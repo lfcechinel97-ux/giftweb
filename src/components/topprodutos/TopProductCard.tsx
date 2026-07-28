@@ -143,7 +143,7 @@ const TopProductCard = ({
               title={c.nome}
               aria-label={`Cor ${c.nome}`}
               aria-pressed={active}
-              style={{ background: normalizeHex(c.referencia!) }}
+              style={{ background: swatchColor(c) }}
               className={cn(
                 "w-6 h-6 rounded-full transition-all",
                 active
