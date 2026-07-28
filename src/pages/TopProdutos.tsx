@@ -166,7 +166,7 @@ const TopProdutosInner = () => {
       </header>
 
 
-      <main className="pt-[96px] sm:pt-[116px] pb-32">
+      <main className="pt-[120px] sm:pt-[140px] pb-32">
         {view.kind === "home" && (
           <section className="pt-10 md:pt-20 pb-24 md:pb-32">
             <CategoriasHomeGrid onSelectCategory={goCategory} onSelectAll={goAll} />
