@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { calcularPreco, formatarBRL } from "@/utils/price";
+import { formatarBRL, getEffectiveMinPrice, getEffectiveUnitPrice } from "@/utils/price";
 import { getCorHex, isLightColor } from "@/utils/colorHex";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
