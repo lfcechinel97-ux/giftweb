@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ShoppingBag, ChevronUp, ChevronDown, Minus, Plus, X, MessageCircle, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ShoppingBag, ChevronUp, ChevronDown, Minus, Plus, X, MessageCircle, Trash2, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatarBRL } from "@/utils/price";
 import { useTopCart } from "@/contexts/TopProdutosCart";
@@ -10,9 +10,16 @@ const TopCartBar = () => {
   const [expanded, setExpanded] = useState(false);
   const [obs, setObs] = useState("");
 
+  useEffect(() => {
+    const handler = () => setExpanded(true);
+    window.addEventListener("topprodutos:open-cart", handler);
+    return () => window.removeEventListener("topprodutos:open-cart", handler);
+  }, []);
+
   if (totalItems === 0) return null;
 
   const total = items.reduce((s, i) => s + (i.preco ?? 0) * i.quantidade, 0);
+
 
   const enviarWhatsApp = () => {
     const linhas = items.map(
@@ -34,12 +41,41 @@ const TopCartBar = () => {
 
   return (
     <>
+      {/* Botão flutuante lateral direito (aparece quando o carrinho está fechado) */}
+      {!expanded && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          aria-label={`Ver carrinho com ${totalItems} ${totalItems === 1 ? "item" : "itens"}`}
+          className={cn(
+            "fixed z-[92] right-4 sm:right-6 bottom-28 sm:bottom-32",
+            "inline-flex items-center gap-2.5 pl-3 pr-4 py-3 rounded-full",
+            "bg-green-cta text-white font-semibold text-sm",
+            "shadow-[0_12px_32px_-8px_rgba(34,197,94,0.7)] hover:brightness-110",
+            "transition-all animate-fade-in"
+          )}
+          style={{ boxShadow: "0 12px 32px -8px rgba(34,197,94,0.7)" }}
+        >
+          <span className="relative flex items-center justify-center w-9 h-9 rounded-full bg-white/15">
+            <ShoppingCart className="w-[18px] h-[18px]" strokeWidth={2} />
+            <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full bg-white text-navy text-[11px] font-black flex items-center justify-center ring-2 ring-green-cta">
+              {totalItems}
+            </span>
+          </span>
+          <span className="hidden sm:flex flex-col items-start leading-tight">
+            <span className="text-[10px] font-medium uppercase tracking-widest text-white/80">Carrinho</span>
+            <span className="text-sm font-bold">{total > 0 ? formatarBRL(total) : `${totalItems} ${totalItems === 1 ? "item" : "itens"}`}</span>
+          </span>
+        </button>
+      )}
+
       {expanded && (
         <div
           className="fixed inset-0 z-[90] bg-black/40 backdrop-blur-sm animate-fade-in"
           onClick={() => setExpanded(false)}
         />
       )}
+
 
       <div
         className={cn(
@@ -165,8 +201,8 @@ const TopCartBar = () => {
               className="inline-flex items-center gap-2 h-11 md:h-12 px-5 md:px-7 rounded-full bg-green-cta text-white text-xs md:text-sm font-bold uppercase tracking-widest hover:brightness-110 transition shrink-0"
             >
               <MessageCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">Pedir orçamento</span>
-              <span className="sm:hidden">Orçamento</span>
+              <span className="hidden sm:inline">Enviar para o WhatsApp</span>
+              <span className="sm:hidden">WhatsApp</span>
             </button>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatarBRL } from "@/utils/price";
+import { getCorHex } from "@/utils/colorHex";
 import type { Tile } from "./categoryPalettes";
 
 export interface TopProductCor {
@@ -63,8 +64,11 @@ const TopProductCard = ({
   const { nome, image_url, image_urls, preco_final, cores } = product;
   const min = product.quantidade_minima ?? minQuantidade ?? DEFAULT_MIN;
 
-  // Apenas cores com hex válido em `referencia` viram bolinha
-  const coresList = (cores ?? []).filter((c) => c && isValidHex(c.referencia));
+  // Todas as cores viram bolinha: usa hex de `referencia` quando válido,
+  // ou mapeia pelo nome (ex.: "AZUL", "VERDE ESCURO") em fallback.
+  const coresList = (cores ?? []).filter((c) => c && (c.nome || c.referencia));
+  const swatchColor = (c: TopProductCor) =>
+    isValidHex(c.referencia) ? normalizeHex(c.referencia!) : getCorHex(c.nome);
   const [selectedCorIdx, setSelectedCorIdx] = useState<number | null>(null);
 
   const baseImage = image_url || (image_urls && image_urls[0]) || null;
@@ -139,7 +143,7 @@ const TopProductCard = ({
               title={c.nome}
               aria-label={`Cor ${c.nome}`}
               aria-pressed={active}
-              style={{ background: normalizeHex(c.referencia!) }}
+              style={{ background: swatchColor(c) }}
               className={cn(
                 "w-6 h-6 rounded-full transition-all",
                 active
