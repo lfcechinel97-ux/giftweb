@@ -23,7 +23,7 @@ interface Props {
   onClose: () => void;
 }
 
-const ACCENT = "hsl(var(--green-cta))"; // verde CTA — sem azul de destaque
+
 
 // Detecta linhas "Rótulo: valor" para exibir em lista de duas colunas.
 // Também quebra linhas separadas por "|" em itens independentes.
