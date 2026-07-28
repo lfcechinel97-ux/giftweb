@@ -161,10 +161,9 @@ const TopProductModal = ({ product, onClose }: Props) => {
                   className={cn(
                     "w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-white border-2 transition",
                     i === activeImg && !selectedCor
-                      ? "border-[color:var(--acc)]"
+                      ? "border-green-cta"
                       : "border-transparent hover:border-slate-200"
                   )}
-                  style={{ ["--acc" as any]: ACCENT }}
                 >
                   <img src={src} alt="" className="w-full h-full object-contain p-1" />
                 </button>
