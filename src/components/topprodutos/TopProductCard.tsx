@@ -97,7 +97,11 @@ const TopProductCard = ({
   };
   const handleAdd = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onAdd?.(product, qtd);
+    onAdd?.(product, qtd, {
+      sku: product.codigo_amigavel,
+      cor: selectedCor?.nome,
+      image: selectedCor?.imagem || product.image_url,
+    });
   };
   const open = () => onOpen?.(product);
 
