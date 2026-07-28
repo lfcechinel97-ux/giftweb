@@ -56,11 +56,11 @@ const CategoryHeader = ({
         <div className="absolute inset-0 bg-gradient-to-r from-navy/80 via-navy/40 to-transparent" />
         <div className="relative h-full flex flex-col justify-end p-6 md:p-10">
           {eyebrow && (
-            <span className="text-green-cta text-[10px] md:text-xs font-bold uppercase tracking-[0.25em] mb-2">
+            <span className="text-green-cta text-[10px] md:text-xs font-medium uppercase tracking-[0.25em] mb-2">
               {eyebrow}
             </span>
           )}
-          <h3 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-none">
+          <h3 className="text-3xl md:text-5xl font-light text-white tracking-tight leading-none">
             {label}
           </h3>
         </div>
@@ -73,16 +73,16 @@ const CategoryHeader = ({
       <div className="flex items-end justify-between mb-8 md:mb-10 border-b border-slate-200 pb-4">
         <div>
           {eyebrow && (
-            <span className="block text-green-cta text-[10px] font-bold uppercase tracking-[0.25em] mb-2">
+            <span className="block text-green-cta text-[10px] font-medium uppercase tracking-[0.25em] mb-2">
               {eyebrow}
             </span>
           )}
-          <h3 className="text-3xl md:text-4xl font-bold text-navy tracking-tight">{label}</h3>
+          <h3 className="text-3xl md:text-4xl font-light text-navy tracking-tight">{label}</h3>
         </div>
         <button
           type="button"
           onClick={onSeeAll}
-          className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hover:text-navy transition-colors"
+          className="text-[10px] font-medium text-slate-400 uppercase tracking-widest hover:text-navy transition-colors"
         >
           Ver categoria →
         </button>
@@ -93,19 +93,19 @@ const CategoryHeader = ({
   if (style === 1) {
     return (
       <div className="flex items-center gap-6 md:gap-8 mb-8 md:mb-12">
-        <span className="text-6xl md:text-8xl font-black text-slate-100 tabular-nums leading-none select-none">
+        <span className="text-6xl md:text-8xl font-light text-slate-100 tabular-nums leading-none select-none">
           {String(index + 1).padStart(2, "0")}
         </span>
         <div className="flex-1 min-w-0">
           {eyebrow && (
-            <span className="block text-green-cta text-[10px] font-bold uppercase tracking-[0.25em] mb-2">
+            <span className="block text-green-cta text-[10px] font-medium uppercase tracking-[0.25em] mb-2">
               {eyebrow}
             </span>
           )}
-          <h3 className="text-2xl md:text-4xl font-bold text-navy tracking-tight leading-tight">
+          <h3 className="text-2xl md:text-4xl font-light text-navy tracking-tight leading-tight">
             {label}
           </h3>
-          <p className="text-slate-400 text-xs uppercase tracking-widest mt-2">{count} modelos</p>
+          <p className="text-slate-400 text-xs uppercase tracking-widest mt-2 font-light">{count} modelos</p>
         </div>
       </div>
     );
@@ -113,10 +113,10 @@ const CategoryHeader = ({
 
   return (
     <div className="text-center mb-10 md:mb-14">
-      <span className="inline-block text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] mb-4 border-b border-slate-200 pb-2">
+      <span className="inline-block text-slate-400 text-[10px] font-medium uppercase tracking-[0.3em] mb-4 border-b border-slate-200 pb-2">
         {eyebrow || `Categoria · ${String(index + 1).padStart(2, "0")}`}
       </span>
-      <h3 className="text-3xl md:text-5xl font-black text-navy tracking-tighter">{label}</h3>
+      <h3 className="text-3xl md:text-5xl font-light text-navy tracking-tight">{label}</h3>
     </div>
   );
 };
@@ -226,7 +226,7 @@ const CategoriasGrid = ({ onAdd, onOpen, active, onBack }: Props) => {
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 text-xs md:text-sm font-bold text-navy/70 hover:text-navy uppercase tracking-[0.15em] transition-colors"
+          className="inline-flex items-center gap-2 text-xs md:text-sm font-medium text-navy/70 hover:text-navy uppercase tracking-[0.15em] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Voltar às categorias
