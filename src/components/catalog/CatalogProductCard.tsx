@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Minus, Check, ShoppingBag } from "lucide-react";
-import { calcularPreco, formatarBRL } from "@/utils/price";
+import { formatarBRL, getEffectiveMinPrice, getEffectiveUnitPrice } from "@/utils/price";
 import { getCorHex, isLightColor } from "@/utils/colorHex";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuotation } from "@/contexts/QuotationContext";
