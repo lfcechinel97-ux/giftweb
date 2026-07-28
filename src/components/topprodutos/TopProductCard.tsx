@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatarBRL } from "@/utils/price";
+import { getCorHex } from "@/utils/colorHex";
 import type { Tile } from "./categoryPalettes";
 
 export interface TopProductCor {
