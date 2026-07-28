@@ -26,6 +26,7 @@ interface ProductCardProps {
   variantes?: VariantJson[] | null;
   estoque?: number | null;
   estoque_total?: number | null;
+  tabela_precos?: any;
 }
 
 export const ProductCardSkeleton = () => (
