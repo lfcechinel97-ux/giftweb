@@ -105,7 +105,7 @@ const TopProductCard = ({
   const open = () => onOpen?.(product);
 
   const PriceTiers = () => (
-    <div className="grid grid-cols-3 gap-1.5 md:gap-2 mt-2.5">
+    <div className="grid grid-cols-3 gap-1 md:gap-2 mt-2 md:mt-2.5">
       {TIERS.map((t) => {
         const unit = preco_final != null ? preco_final * (1 - t.discount) : null;
         const active = qtd === t.qty;
@@ -118,16 +118,16 @@ const TopProductCard = ({
               setQtd(Math.max(min, t.qty));
             }}
             className={cn(
-              "rounded-md md:rounded-lg border px-1 md:px-2 py-1 md:py-1.5 text-center transition-colors",
+              "rounded md:rounded-lg border px-0.5 md:px-2 py-0.5 md:py-1.5 text-center transition-colors min-w-0",
               active
                 ? "border-green-cta bg-green-cta/5"
                 : "border-slate-200 hover:border-navy/30"
             )}
           >
-            <div className="text-[9px] md:text-[10px] font-normal text-slate-400 tracking-wider leading-tight">
+            <div className="text-[8px] md:text-[10px] font-normal text-slate-400 tracking-wide leading-tight">
               {t.qty} un
             </div>
-            <div className="text-[11px] md:text-[13px] font-medium text-navy tabular-nums leading-tight">
+            <div className="text-[10px] md:text-[13px] font-medium text-navy tabular-nums leading-tight whitespace-nowrap">
               {unit != null ? formatarBRL(unit) : "—"}
             </div>
           </button>
@@ -137,8 +137,8 @@ const TopProductCard = ({
   );
 
   const ColorSwatches = () =>
-    coresList.length > 0 ? (
-      <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mt-2.5">
+    coresList.length > 1 ? (
+      <div className="flex flex-wrap items-center gap-1 md:gap-2 mt-2 md:mt-2.5">
         {coresList.map((c, i) => {
           const active = selectedCorIdx === i;
           return (
@@ -154,9 +154,9 @@ const TopProductCard = ({
               aria-pressed={active}
               style={{ background: swatchColor(c) }}
               className={cn(
-                "w-5 h-5 md:w-6 md:h-6 rounded-full transition-all",
+                "w-4 h-4 md:w-6 md:h-6 rounded-full transition-all",
                 active
-                  ? "ring-2 ring-offset-2 ring-green-cta scale-110"
+                  ? "ring-2 ring-offset-1 md:ring-offset-2 ring-green-cta scale-110"
                   : "ring-1 ring-slate-200 hover:ring-navy/40"
               )}
             />
