@@ -223,8 +223,9 @@ const TopProductCard = ({
             src={primary}
             alt={nome}
             loading="lazy"
+            decoding="async"
             className={cn(
-              "absolute inset-0 w-full h-full object-cover transition-opacity duration-500",
+              "absolute inset-0 w-full h-full object-contain p-4 sm:p-6 transition-opacity duration-500",
               hovering && secondary && !selectedCor ? "opacity-0" : "opacity-100"
             )}
           />
@@ -234,9 +235,10 @@ const TopProductCard = ({
             src={secondary}
             alt={nome}
             loading="lazy"
+            decoding="async"
             aria-hidden="true"
             className={cn(
-              "absolute inset-0 w-full h-full object-cover transition-opacity duration-500 hidden md:block",
+              "absolute inset-0 w-full h-full object-contain p-4 sm:p-6 transition-opacity duration-500 hidden md:block",
               hovering ? "opacity-100" : "opacity-0"
             )}
           />
