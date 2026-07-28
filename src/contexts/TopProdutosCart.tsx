@@ -2,11 +2,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 
 export interface TopCartItem {
   id: string;
+  produtoId: string;
   nome: string;
   image: string | null;
   preco: number | null;
   quantidade: number;
   categoria?: string;
+  sku?: string;
+  cor?: string;
 }
 
 interface Ctx {
@@ -20,7 +23,7 @@ interface Ctx {
 }
 
 const TopCartContext = createContext<Ctx | null>(null);
-const KEY = "topprodutos_cart_v1";
+const KEY = "topprodutos_cart_v2";
 
 function load(): TopCartItem[] {
   try {

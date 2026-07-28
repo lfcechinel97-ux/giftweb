@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ShoppingBag, ChevronUp, ChevronDown, Minus, Plus, X, MessageCircle, Trash2, ShoppingCart } from "lucide-react";
+import { ShoppingBag, Minus, Plus, X, MessageCircle, Trash2, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatarBRL } from "@/utils/price";
 import { useTopCart } from "@/contexts/TopProdutosCart";
@@ -7,25 +7,35 @@ import { WHATSAPP_NUMBER } from "@/config/site";
 
 const TopCartBar = () => {
   const { items, totalItems, setQty, removeItem, clearAll } = useTopCart();
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
   const [obs, setObs] = useState("");
 
   useEffect(() => {
-    const handler = () => setExpanded(true);
+    const handler = () => setOpen(true);
     window.addEventListener("topprodutos:open-cart", handler);
     return () => window.removeEventListener("topprodutos:open-cart", handler);
   }, []);
 
-  if (totalItems === 0) return null;
-
-  const total = items.reduce((s, i) => s + (i.preco ?? 0) * i.quantidade, 0);
-
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   const enviarWhatsApp = () => {
-    const linhas = items.map(
-      (i, idx) =>
-        `${idx + 1}. ${i.nome}\n   Qtd: ${i.quantidade}${i.preco ? ` — ${formatarBRL(i.preco)}/un` : ""}`
-    );
+    const linhas = items.map((i, idx) => {
+      const chunks = [
+        `${idx + 1}. ${i.nome}`,
+        i.sku ? `   SKU: ${i.sku}` : null,
+        i.cor ? `   Cor: ${i.cor}` : null,
+        `   Quantidade: ${i.quantidade} un`,
+        i.preco != null ? `   Valor: ${formatarBRL(i.preco)}/un` : null,
+      ].filter(Boolean);
+      return chunks.join("\n");
+    });
     const partes = [
       "Olá! Gostaria de solicitar um orçamento dos seguintes produtos:",
       "",
@@ -34,179 +44,206 @@ const TopCartBar = () => {
     if (obs.trim()) {
       partes.push("", `Observações: ${obs.trim()}`);
     }
-    partes.push("", `Total de itens: ${totalItems}`);
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(partes.join("\n"))}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
     <>
-      {/* Botão flutuante lateral direito (aparece quando o carrinho está fechado) */}
-      {!expanded && (
+      {/* Botão flutuante — só o ícone, grande e clean */}
+      {totalItems > 0 && !open && (
         <button
           type="button"
-          onClick={() => setExpanded(true)}
+          onClick={() => setOpen(true)}
           aria-label={`Ver carrinho com ${totalItems} ${totalItems === 1 ? "item" : "itens"}`}
           className={cn(
-            "fixed z-[92] right-4 sm:right-6 bottom-28 sm:bottom-32",
-            "inline-flex items-center gap-2.5 pl-3 pr-4 py-3 rounded-full",
-            "bg-green-cta text-white font-semibold text-sm",
-            "shadow-[0_12px_32px_-8px_rgba(34,197,94,0.7)] hover:brightness-110",
-            "transition-all animate-fade-in"
+            "fixed z-[92] right-5 sm:right-8 bottom-24 sm:bottom-28",
+            "relative flex items-center justify-center w-16 h-16 sm:w-[68px] sm:h-[68px] rounded-full",
+            "bg-green-cta text-white hover:brightness-110 active:scale-95 transition-all animate-fade-in"
           )}
-          style={{ boxShadow: "0 12px 32px -8px rgba(34,197,94,0.7)" }}
+          style={{ boxShadow: "0 16px 40px -10px rgba(34,197,94,0.75)" }}
         >
-          <span className="relative flex items-center justify-center w-9 h-9 rounded-full bg-white/15">
-            <ShoppingCart className="w-[18px] h-[18px]" strokeWidth={2} />
-            <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] px-1 rounded-full bg-white text-navy text-[11px] font-black flex items-center justify-center ring-2 ring-green-cta">
-              {totalItems}
-            </span>
-          </span>
-          <span className="hidden sm:flex flex-col items-start leading-tight">
-            <span className="text-[10px] font-medium uppercase tracking-widest text-white/80">Carrinho</span>
-            <span className="text-sm font-bold">{total > 0 ? formatarBRL(total) : `${totalItems} ${totalItems === 1 ? "item" : "itens"}`}</span>
+          <ShoppingCart className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2} />
+          <span className="absolute -top-1 -right-1 min-w-[24px] h-[24px] px-1 rounded-full bg-white text-navy text-xs font-black flex items-center justify-center ring-2 ring-white">
+            {totalItems}
           </span>
         </button>
       )}
 
-      {expanded && (
+      {/* Overlay */}
+      {open && (
         <div
-          className="fixed inset-0 z-[90] bg-black/40 backdrop-blur-sm animate-fade-in"
-          onClick={() => setExpanded(false)}
+          className="fixed inset-0 z-[95] bg-navy/50 backdrop-blur-sm animate-fade-in"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
         />
       )}
 
-
-      <div
+      {/* Drawer lateral direito */}
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Seu orçamento"
         className={cn(
-          "fixed left-0 right-0 bottom-0 z-[95] bg-white border-t border-slate-200 shadow-[0_-4px_24px_rgba(0,0,0,0.08)]",
-          "transition-all duration-300"
+          "fixed top-0 right-0 z-[96] h-full w-full sm:w-[440px] md:w-[480px] bg-white shadow-2xl",
+          "flex flex-col transition-transform duration-300 ease-out",
+          open ? "translate-x-0" : "translate-x-full pointer-events-none"
         )}
       >
-        {/* Painel expandido */}
-        {expanded && (
-          <div className="max-h-[70vh] overflow-y-auto border-b border-slate-100 animate-slide-up">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-12 py-6 space-y-5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg md:text-xl font-bold text-navy">
-                  Seu pedido ({totalItems} {totalItems === 1 ? "item" : "itens"})
-                </h3>
-                <button
-                  onClick={clearAll}
-                  className="text-xs text-slate-400 hover:text-red-500 uppercase tracking-widest font-bold inline-flex items-center gap-1.5"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Limpar
-                </button>
-              </div>
+        {/* Header do drawer */}
+        <header className="shrink-0 px-6 sm:px-7 pt-7 pb-5 border-b border-slate-100">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <span className="inline-flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-green-cta">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-cta" />
+                Seu orçamento
+              </span>
+              <h2
+                className="mt-2 text-2xl sm:text-3xl font-light text-navy tracking-tight leading-tight"
+                style={{ fontFamily: "'Georgia', serif" }}
+              >
+                {totalItems === 0
+                  ? "Carrinho vazio"
+                  : `${totalItems} ${totalItems === 1 ? "item" : "itens"} selecionados`}
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Fechar carrinho"
+              className="shrink-0 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-navy flex items-center justify-center transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {items.length > 0 && (
+            <button
+              onClick={clearAll}
+              className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-red-500 uppercase tracking-widest font-semibold transition-colors"
+            >
+              <Trash2 className="w-3 h-3" /> Limpar tudo
+            </button>
+          )}
+        </header>
 
-              <ul className="divide-y divide-slate-100">
-                {items.map((i) => (
-                  <li key={i.id} className="py-4 flex items-center gap-4">
-                    <div className="w-16 h-16 shrink-0 bg-slate-50 rounded-lg overflow-hidden flex items-center justify-center">
-                      {i.image ? (
-                        <img src={i.image} alt={i.nome} className="w-full h-full object-contain p-1" />
-                      ) : (
-                        <ShoppingBag className="w-6 h-6 text-slate-300" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-navy truncate">{i.nome}</p>
-                      {i.categoria && (
-                        <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-0.5">
-                          {i.categoria}
-                        </p>
-                      )}
-                      <p className="text-xs text-slate-500 mt-1">
-                        {i.preco ? `${formatarBRL(i.preco)} / un` : "Preço sob consulta"}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 border border-slate-200 rounded-full px-1 h-9">
+        {/* Lista */}
+        <div className="flex-1 overflow-y-auto px-6 sm:px-7 py-5">
+          {items.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center text-slate-400 py-16">
+              <ShoppingBag className="w-10 h-10 mb-3 text-slate-300" />
+              <p className="text-sm font-light">
+                Escolha produtos para montar seu orçamento.
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-5">
+              {items.map((i) => (
+                <li key={i.id} className="flex gap-4 pb-5 border-b border-slate-100 last:border-b-0 last:pb-0">
+                  <div className="w-20 h-24 sm:w-24 sm:h-28 shrink-0 bg-slate-50 rounded-xl overflow-hidden flex items-center justify-center">
+                    {i.image ? (
+                      <img
+                        src={i.image}
+                        alt={i.nome}
+                        className="w-full h-full object-contain p-2"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <ShoppingBag className="w-6 h-6 text-slate-300" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3
+                          className="text-[15px] font-normal text-navy leading-snug tracking-tight line-clamp-2"
+                          style={{ fontFamily: "'Georgia', serif" }}
+                        >
+                          {i.nome}
+                        </h3>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500 font-light">
+                          {i.sku && (
+                            <span>
+                              SKU <span className="text-navy font-medium tabular-nums">{i.sku}</span>
+                            </span>
+                          )}
+                          {i.cor && (
+                            <span>
+                              Cor <span className="text-navy font-medium">{i.cor}</span>
+                            </span>
+                          )}
+                        </div>
+                        {i.preco != null && (
+                          <p className="mt-1.5 text-sm text-navy font-medium tabular-nums">
+                            {formatarBRL(i.preco)}
+                            <span className="text-slate-400 font-light"> / un</span>
+                          </p>
+                        )}
+                      </div>
                       <button
-                        onClick={() => setQty(i.id, i.quantidade - 1)}
+                        onClick={() => removeItem(i.id)}
+                        aria-label="Remover"
+                        className="shrink-0 w-7 h-7 flex items-center justify-center text-slate-300 hover:text-red-500 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="mt-3 inline-flex items-center gap-1 border border-slate-200 rounded-full h-9 px-1">
+                      <button
+                        onClick={() => setQty(i.id, Math.max(1, i.quantidade - 5))}
                         aria-label="Diminuir"
-                        className="w-7 h-7 flex items-center justify-center text-navy"
+                        className="w-7 h-7 flex items-center justify-center text-navy/70 hover:text-navy"
                       >
                         <Minus className="w-3.5 h-3.5" />
                       </button>
-                      <span className="text-sm font-bold text-navy tabular-nums min-w-[2ch] text-center">
+                      <span className="text-sm font-medium text-navy tabular-nums min-w-[3ch] text-center">
                         {i.quantidade}
                       </span>
                       <button
-                        onClick={() => setQty(i.id, i.quantidade + 1)}
+                        onClick={() => setQty(i.id, i.quantidade + 5)}
                         aria-label="Aumentar"
-                        className="w-7 h-7 flex items-center justify-center text-green-cta"
+                        className="w-7 h-7 flex items-center justify-center text-green-cta hover:brightness-110"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <button
-                      onClick={() => removeItem(i.id)}
-                      aria-label="Remover"
-                      className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-red-500"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                  </div>
+                </li>
+              ))}
 
-              <div>
-                <label className="block text-xs font-bold text-navy uppercase tracking-widest mb-2">
-                  Observação (cor, prazo, personalização…)
+              <li>
+                <label
+                  className="block text-[10px] font-semibold text-navy uppercase tracking-[0.22em] mb-2"
+                >
+                  Observações
                 </label>
                 <textarea
                   value={obs}
                   onChange={(e) => setObs(e.target.value)}
                   placeholder="Ex.: preciso em 15 dias, com logo em 1 cor"
-                  rows={2}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy placeholder:text-slate-400 focus:outline-none focus:border-navy resize-none"
+                  rows={3}
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-navy placeholder:text-slate-400 focus:outline-none focus:border-navy resize-none font-light"
                 />
-              </div>
-            </div>
-          </div>
-        )}
+              </li>
+            </ul>
+          )}
+        </div>
 
-        {/* Barra base */}
-        <div className="container mx-auto px-4 sm:px-6 lg:px-12">
-          <div className="flex items-center justify-between gap-3 h-16 md:h-20">
-            <button
-              onClick={() => setExpanded((e) => !e)}
-              className="flex items-center gap-3 text-left flex-1 min-w-0"
-            >
-              <div className="relative w-11 h-11 rounded-full bg-navy flex items-center justify-center shrink-0">
-                <ShoppingBag className="w-5 h-5 text-white" />
-                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-green-cta text-white text-[10px] font-bold flex items-center justify-center">
-                  {totalItems}
-                </span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm md:text-base font-bold text-navy leading-tight">
-                  {totalItems} {totalItems === 1 ? "item selecionado" : "itens selecionados"}
-                </p>
-                {total > 0 && (
-                  <p className="text-xs text-slate-500 hidden sm:block">
-                    Estimativa: {formatarBRL(total)}
-                  </p>
-                )}
-              </div>
-              {expanded ? (
-                <ChevronDown className="w-4 h-4 text-slate-400 hidden sm:block ml-2" />
-              ) : (
-                <ChevronUp className="w-4 h-4 text-slate-400 hidden sm:block ml-2" />
-              )}
-            </button>
-
+        {/* Footer */}
+        {items.length > 0 && (
+          <footer className="shrink-0 px-6 sm:px-7 py-5 border-t border-slate-100 bg-white">
             <button
               onClick={enviarWhatsApp}
-              className="inline-flex items-center gap-2 h-11 md:h-12 px-5 md:px-7 rounded-full bg-green-cta text-white text-xs md:text-sm font-bold uppercase tracking-widest hover:brightness-110 transition shrink-0"
+              className="w-full h-14 rounded-full bg-green-cta text-white font-semibold text-sm tracking-wide hover:brightness-110 active:scale-[0.99] transition inline-flex items-center justify-center gap-2.5 shadow-[0_10px_28px_-8px_rgba(34,197,94,0.6)]"
             >
-              <MessageCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">Enviar para o WhatsApp</span>
-              <span className="sm:hidden">WhatsApp</span>
+              <MessageCircle className="w-5 h-5" strokeWidth={2} />
+              Enviar para o WhatsApp
             </button>
-          </div>
-        </div>
-      </div>
+            <p className="mt-3 text-center text-[11px] text-slate-400 font-light">
+              Nosso time responde com o orçamento final em minutos.
+            </p>
+          </footer>
+        )}
+      </aside>
     </>
   );
 };

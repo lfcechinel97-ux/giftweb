@@ -36,18 +36,27 @@ const TopProdutosInner = () => {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleAdd = (product: TopProduct, quantidade: number) => {
+  const handleAdd = (
+    product: TopProduct,
+    quantidade: number,
+    extras?: { sku?: string; cor?: string; image?: string | null }
+  ) => {
     const full = (data ?? []).find((p) => p.id === product.id);
     const catLabel = full
       ? TOPPRODUTOS_CATEGORIAS.find((c) => c.slug === full.categoria)?.label ?? full.categoria
       : undefined;
+    const cor = extras?.cor;
+    const cartId = cor ? `${product.id}::${cor}` : product.id;
     addItem(
       {
-        id: product.id,
+        id: cartId,
+        produtoId: product.id,
         nome: product.nome,
-        image: product.image_url,
+        image: extras?.image ?? product.image_url,
         preco: product.preco_final ?? null,
         categoria: catLabel,
+        sku: extras?.sku ?? product.codigo_amigavel,
+        cor,
       },
       quantidade
     );
@@ -121,27 +130,24 @@ const TopProdutosInner = () => {
                 </div>
               </div>
 
-              {/* Direita: carrinho em destaque */}
+              {/* Direita: carrinho — apenas ícone, maior e mais clean */}
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new Event("topprodutos:open-cart"))}
                 className={cn(
-                  "relative inline-flex items-center gap-2 h-11 sm:h-12 pl-3 pr-4 sm:pl-4 sm:pr-5 rounded-full",
-                  "bg-green-cta text-white font-semibold text-xs sm:text-sm tracking-wide",
-                  "shadow-[0_8px_24px_-8px_rgba(34,197,94,0.65)] hover:brightness-110",
+                  "relative inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full",
+                  "bg-green-cta text-white",
+                  "shadow-[0_8px_24px_-8px_rgba(34,197,94,0.7)] hover:brightness-110 active:scale-95",
                   "transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-green-cta/60"
                 )}
-                aria-label="Ver carrinho"
+                aria-label={`Ver carrinho${totalItems > 0 ? ` com ${totalItems} ${totalItems === 1 ? "item" : "itens"}` : ""}`}
               >
-                <span className="relative flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/15">
-                  <ShoppingCart className="w-4 h-4 sm:w-[18px] sm:h-[18px]" strokeWidth={2} />
-                  {totalItems > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-white text-navy text-[10px] font-black flex items-center justify-center ring-2 ring-green-cta">
-                      {totalItems}
-                    </span>
-                  )}
-                </span>
-                <span className="hidden sm:inline">Carrinho</span>
+                <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" strokeWidth={2} />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1 rounded-full bg-white text-navy text-[11px] font-black flex items-center justify-center ring-2 ring-navy">
+                    {totalItems}
+                  </span>
+                )}
               </button>
             </div>
           </div>
