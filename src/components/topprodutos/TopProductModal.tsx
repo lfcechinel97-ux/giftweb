@@ -81,13 +81,18 @@ const TopProductModal = ({ product, onClose }: Props) => {
   const mainImg = selectedCor?.imagem || gallery[activeImg] || product.image_url;
 
   const handleAdd = () => {
+    const corNome = selectedCor?.nome;
+    const cartId = corNome ? `${product.id}::${corNome}` : product.id;
     addItem(
       {
-        id: product.id,
+        id: cartId,
+        produtoId: product.id,
         nome: product.nome,
-        image: product.image_url,
+        image: selectedCor?.imagem || product.image_url,
         preco: product.preco_final,
         categoria: catLabel,
+        sku: product.codigo_amigavel,
+        cor: corNome,
       },
       qtd
     );
