@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShoppingCart, ArrowLeft, Zap, Package } from "lucide-react";
+import { ShoppingCart, ArrowLeft, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import MaisVendidosSection from "@/components/topprodutos/MaisVendidosSection";
 import CategoriasGrid from "@/components/topprodutos/CategoriasGrid";
