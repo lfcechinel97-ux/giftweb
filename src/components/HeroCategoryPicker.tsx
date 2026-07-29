@@ -1,6 +1,31 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Check, Search, LayoutGrid, ChevronRight } from "lucide-react";
+import { ChevronDown, Check, Search, LayoutGrid, Plus, Minus } from "lucide-react";
 import { CATEGORY_GROUPS } from "@/config/categoryGroups";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+import imgCopos from "@/assets/cat-copos.jpg";
+import imgMochilas from "@/assets/cat-mochilas.jpg";
+import imgNecessaires from "@/assets/cat-necessaires.jpg";
+import imgCadernetas from "@/assets/cat-cadernetas.jpg";
+import imgChaveiros from "@/assets/cat-chaveiros.jpg";
+import imgEletronicos from "@/assets/cat-eletronicos.jpg";
+import imgSacolas from "@/assets/cat-sacolas.jpg";
+import imgChurrasco from "@/assets/cat-churrasco.jpg";
+import imgMarmitas from "@/assets/cat-marmitas.jpg";
+import imgGuardaChuvas from "@/assets/cat-guarda-chuvas.jpg";
+
+const GROUP_IMAGES: Record<string, string> = {
+  "Copos, Garrafas e Canecas": imgCopos,
+  "Mochilas, Bolsas Térmicas e Malas": imgMochilas,
+  "Necessaires, Porta Joias e Kit Manicure": imgNecessaires,
+  "Cadernetas, Agendas, Blocos e Canetas": imgCadernetas,
+  "Chaveiros, Mouse Pad e Kit Executivo": imgChaveiros,
+  "Caixas de Som, Fones e Power Bank": imgEletronicos,
+  "Sacola de Algodão e TNT": imgSacolas,
+  "Kit Churrasco e Kit Vinho": imgChurrasco,
+  "Marmitas e Tábuas de Madeira": imgMarmitas,
+  "Guarda-Chuvas": imgGuardaChuvas,
+};
 
 type Category = { slug: string; label: string };
 
@@ -16,6 +41,8 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
   const [query, setQuery] = useState("");
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -31,8 +58,11 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
     if (!open) {
       setQuery("");
       setOpenGroups(new Set());
+    } else if (!isMobile) {
+      // Foco automático apenas no desktop (no mobile abriria o teclado)
+      inputRef.current?.focus();
     }
-  }, [open]);
+  }, [open, isMobile]);
 
   // Build a label map from the DB categories (fallback to group item name)
   const labelBySlug = new Map<string, string>();
@@ -93,7 +123,7 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
         </span>
         <span
           className={`flex-1 truncate ${
-            selectedLabel ? "font-semibold text-foreground" : "text-muted-foreground"
+            selectedLabel ? "text-foreground" : "text-muted-foreground"
           }`}
         >
           {loading ? "Carregando..." : selectedLabel ? selectedLabel : "Escolha a categoria de brinde"}
@@ -108,7 +138,7 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
 
       {open && (
         <div
-          className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-xl border border-border bg-card"
+          className="absolute left-0 right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-border bg-card"
           style={{ boxShadow: "0 12px 32px rgba(15,23,42,0.12)" }}
         >
           {/* Search */}
@@ -119,42 +149,43 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
                 className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
               />
               <input
-                autoFocus
+                ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Buscar categoria..."
-                className="w-full rounded-lg border border-border bg-background py-2 pl-8 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-green-cta focus:outline-none focus:ring-1 focus:ring-green-cta/30"
+                className="w-full rounded-lg border border-border bg-background py-2 pl-8 pr-2 text-sm font-light text-foreground placeholder:text-muted-foreground focus:border-green-cta focus:outline-none focus:ring-1 focus:ring-green-cta/30"
               />
             </div>
           </div>
 
           {/* Options */}
-          <ul className="max-h-80 overflow-y-auto py-1" style={{ scrollbarWidth: "thin" }}>
+          <ul className="max-h-[22rem] overflow-y-auto py-1" style={{ scrollbarWidth: "thin" }}>
             {/* "Todas" option */}
             <li>
               <button
                 type="button"
                 onClick={() => selectSlug("")}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-green-cta/5 ${
+                className={`flex w-full items-center gap-3 px-3 py-3 text-left text-sm transition-colors hover:bg-muted/40 ${
                   value === "" ? "text-green-cta" : "text-muted-foreground"
                 }`}
               >
-                <span className="flex h-4 w-4 items-center justify-center">
-                  {value === "" && <Check size={14} className="text-green-cta" />}
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground">
+                  <LayoutGrid size={16} />
                 </span>
-                <span className="font-medium">Todas as categorias</span>
+                <span className="flex-1 font-light tracking-tight">Todas as categorias</span>
+                {value === "" && <Check size={15} className="shrink-0 text-green-cta" />}
               </button>
             </li>
 
             {loading && (
-              <li className="px-3 py-3 text-center text-xs text-muted-foreground">
+              <li className="px-3 py-3 text-center text-xs font-light text-muted-foreground">
                 Carregando...
               </li>
             )}
 
             {/* Search results (flat) */}
             {!loading && isSearching && flatMatches.length === 0 && (
-              <li className="px-3 py-6 text-center text-xs text-muted-foreground">
+              <li className="px-3 py-6 text-center text-xs font-light text-muted-foreground">
                 Nenhuma categoria encontrada
               </li>
             )}
@@ -162,20 +193,26 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
               flatMatches.map((it) => {
                 const active = it.slug === value;
                 return (
-                  <li key={it.slug}>
+                  <li key={it.slug} className="border-t border-border/50 first:border-t-0">
                     <button
                       type="button"
                       onClick={() => selectSlug(it.slug)}
-                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-green-cta/5 ${
-                        active ? "bg-green-cta/5 text-green-cta" : "text-foreground"
+                      className={`flex w-full items-center gap-3 px-3 py-3 text-left text-sm transition-colors hover:bg-muted/40 ${
+                        active ? "text-green-cta" : "text-foreground"
                       }`}
                     >
-                      <span className="flex h-4 w-4 items-center justify-center">
-                        {active && <Check size={14} className="text-green-cta" />}
-                      </span>
-                      <span className={active ? "font-semibold" : ""}>
+                      <img
+                        src={GROUP_IMAGES[it.group]}
+                        alt=""
+                        loading="lazy"
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 shrink-0 rounded-xl object-cover"
+                      />
+                      <span className="flex-1 font-light tracking-tight">
                         {labelBySlug.get(it.slug) || it.name}
                       </span>
+                      {active && <Check size={15} className="shrink-0 text-green-cta" />}
                     </button>
                   </li>
                 );
@@ -187,25 +224,33 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
                 const groupOpen = openGroups.has(group.title);
                 const hasActive = group.items.some((it) => it.slug === value);
                 return (
-                  <li key={group.title}>
+                  <li key={group.title} className="border-t border-border/50">
                     <button
                       type="button"
                       onClick={() => toggleGroup(group.title)}
-                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-green-cta/5 ${
+                      className={`flex w-full items-center gap-3 px-3 py-3 text-left text-sm transition-colors hover:bg-muted/40 ${
                         hasActive ? "text-green-cta" : "text-foreground"
                       }`}
                     >
-                      <ChevronRight
-                        size={14}
-                        className={`shrink-0 text-muted-foreground transition-transform duration-200 ${
-                          groupOpen ? "rotate-90" : ""
-                        }`}
+                      <img
+                        src={GROUP_IMAGES[group.title]}
+                        alt=""
+                        loading="lazy"
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 shrink-0 rounded-xl object-cover"
                       />
-                      <span className="flex-1 font-semibold">{group.title}</span>
-                      <span className="text-xs text-muted-foreground">{group.items.length}</span>
+                      <span className="flex-1 font-light leading-snug tracking-tight">
+                        {group.title}
+                      </span>
+                      {groupOpen ? (
+                        <Minus size={14} className="shrink-0 text-muted-foreground" />
+                      ) : (
+                        <Plus size={14} className="shrink-0 text-muted-foreground" />
+                      )}
                     </button>
                     {groupOpen && (
-                      <ul className="bg-muted/30">
+                      <ul className="pb-1">
                         {group.items.map((it) => {
                           const active = it.slug === value;
                           return (
@@ -213,16 +258,14 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
                               <button
                                 type="button"
                                 onClick={() => selectSlug(it.slug)}
-                                className={`flex w-full items-center gap-2 py-1.5 pl-9 pr-3 text-left text-sm transition-colors hover:bg-green-cta/5 ${
+                                className={`flex w-full items-center gap-2 py-2 pl-16 pr-3 text-left text-[13px] transition-colors hover:bg-muted/40 ${
                                   active ? "text-green-cta" : "text-muted-foreground"
                                 }`}
                               >
-                                <span className="flex h-4 w-4 items-center justify-center">
-                                  {active && <Check size={14} className="text-green-cta" />}
-                                </span>
-                                <span className={active ? "font-semibold" : ""}>
+                                <span className="flex-1 font-light tracking-tight">
                                   {labelBySlug.get(it.slug) || it.name}
                                 </span>
+                                {active && <Check size={14} className="shrink-0 text-green-cta" />}
                               </button>
                             </li>
                           );
