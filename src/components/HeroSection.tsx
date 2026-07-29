@@ -166,14 +166,15 @@ const HeroSection = () => {
     <section className="py-8 md:py-10 relative overflow-hidden bg-background">
       <div className="container relative z-10 flex max-w-full flex-col gap-5 overflow-hidden lg:flex-row" style={{ minHeight: 270 }}>
         {/* Filter panel */}
-        <div className="w-full shrink-0 box-border rounded-2xl border border-border bg-card px-4 py-5 lg:w-[36%] lg:p-10 flex flex-col gap-4 lg:gap-5" style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}>
+        <div className="order-2 w-full shrink-0 box-border rounded-2xl border border-border bg-card px-4 py-5 lg:order-1 lg:w-[36%] lg:p-10 flex flex-col gap-4 lg:gap-5" style={{ boxShadow: "0 2px 20px rgba(0,0,0,0.07)" }}>
           <div>
-            <h1 className="font-black text-[24px] lg:text-[36px] leading-tight text-foreground">
+            <h1 className="text-[26px] lg:text-[38px] font-light leading-[1.1] tracking-[-0.02em] text-foreground">
               Explore nosso catálogo de<br />
-              <span className="text-highlight">brindes:</span>
+              <span className="text-highlight font-normal">brindes</span>
             </h1>
-            <p className="text-muted-foreground text-xs mt-1.5 hidden lg:block">Filtre por categoria, preço e cor</p>
+            <p className="text-muted-foreground text-xs font-light mt-2 hidden lg:block">Filtre por categoria, preço e cor</p>
           </div>
+
 
           <HeroCategoryPicker
             categories={categories}
