@@ -201,14 +201,16 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
                         active ? "text-green-cta" : "text-foreground"
                       }`}
                     >
-                      <img
-                        src={GROUP_IMAGES[it.group]}
-                        alt=""
-                        loading="lazy"
-                        width={40}
-                        height={40}
-                        className="h-10 w-10 shrink-0 rounded-xl object-cover"
-                      />
+                      <span className="h-12 w-12 shrink-0 overflow-hidden rounded-xl">
+                        <img
+                          src={GROUP_IMAGES[it.group]}
+                          alt=""
+                          loading="lazy"
+                          width={56}
+                          height={56}
+                          className="h-full w-full object-cover scale-[1.35]"
+                        />
+                      </span>
                       <span className="flex-1 font-light tracking-tight">
                         {labelBySlug.get(it.slug) || it.name}
                       </span>
@@ -232,14 +234,16 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
                         hasActive ? "text-green-cta" : "text-foreground"
                       }`}
                     >
-                      <img
-                        src={GROUP_IMAGES[group.title]}
-                        alt=""
-                        loading="lazy"
-                        width={40}
-                        height={40}
-                        className="h-10 w-10 shrink-0 rounded-xl object-cover"
-                      />
+                      <span className="h-12 w-12 shrink-0 overflow-hidden rounded-xl">
+                        <img
+                          src={GROUP_IMAGES[group.title]}
+                          alt=""
+                          loading="lazy"
+                          width={56}
+                          height={56}
+                          className="h-full w-full object-cover scale-[1.35]"
+                        />
+                      </span>
                       <span className="flex-1 font-light leading-snug tracking-tight">
                         {group.title}
                       </span>
