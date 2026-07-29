@@ -201,14 +201,14 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
                         active ? "text-green-cta" : "text-foreground"
                       }`}
                     >
-                      <span className="h-12 w-12 shrink-0 overflow-hidden rounded-xl">
+                      <span className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white">
                         <img
                           src={GROUP_IMAGES[it.group]}
                           alt=""
                           loading="lazy"
                           width={56}
                           height={56}
-                          className="h-full w-full object-cover scale-[1.35]"
+                          className="h-full w-full object-contain p-1"
                         />
                       </span>
                       <span className="flex-1 font-light tracking-tight">
@@ -234,14 +234,14 @@ const HeroCategoryPicker = ({ categories, loading, value, onChange }: Props) => 
                         hasActive ? "text-green-cta" : "text-foreground"
                       }`}
                     >
-                      <span className="h-12 w-12 shrink-0 overflow-hidden rounded-xl">
+                      <span className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white">
                         <img
                           src={GROUP_IMAGES[group.title]}
                           alt=""
                           loading="lazy"
                           width={56}
                           height={56}
-                          className="h-full w-full object-cover scale-[1.35]"
+                          className="h-full w-full object-contain p-1"
                         />
                       </span>
                       <span className="flex-1 font-light leading-snug tracking-tight">
