@@ -309,7 +309,8 @@ const HeroSection = () => {
 
         {/* Carousel */}
         <div
-          className="hero-carousel relative mx-auto mt-4 w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card lg:mt-0 lg:w-[64%]"
+          className="hero-carousel relative order-1 mx-auto w-full min-w-0 max-w-full overflow-hidden rounded-xl border border-border bg-card lg:order-2 lg:mt-0 lg:w-[64%]"
+
           onTouchStart={onTouchStart}
           onTouchEnd={onTouchEnd}
         >
