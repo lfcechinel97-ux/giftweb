@@ -65,6 +65,12 @@ const Index = () => {
           <meta property="og:title" content="Gift Web Brindes | Brindes Corporativos Personalizados" />
           <meta property="og:description" content="Mais de 3.000 brindes corporativos personalizados para empresas. Garrafas, copos, mochilas, kits e muito mais." />
           <meta property="og:url" content={SITE_URL} />
+          <meta property="og:image" content={`${SITE_URL}/og-cover.jpg`} />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:image" content={`${SITE_URL}/og-cover.jpg`} />
+
           <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
           {localBusinessSchema.map((s, i) => (
             <script key={i} type="application/ld+json">{JSON.stringify(s)}</script>

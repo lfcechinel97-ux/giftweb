@@ -1,36 +1,35 @@
-## Problema
+## 1. Prévia bonita no WhatsApp (og:image)
 
-O detalhe do produto (site e /catalogo) já respeita a `tabela_precos` customizada de cada produto — por isso mostra "A partir de R$ 4,94" e "20 un: R$ 9,10" na caneta metal touch.
+Hoje o `index.html` usa um screenshot automático do preview do Lovable (URL `pub-...r2.dev`), que é a imagem feia que aparece.
 
-Mas os cards da grade calculam o preço com `calcularPreco(preco_custo, qtd)` — a fórmula padrão de markup — ignorando `tabela_precos`. Por isso a mesma caneta aparece bem mais cara em `/categoria/canetas` e em `/catalogo`.
+- Gerar uma imagem de capa própria 1200x630 com identidade Gift Web (navy + verde, logo, "Brindes Corporativos Personalizados", mockups de brindes) e publicá-la em `public/og-cover.jpg`.
+- Trocar `og:image` e `twitter:image` no `index.html` para `https://www.giftwebbrindes.com.br/og-cover.jpg`, com `og:image:width/height` e `og:image:alt`.
+- Adicionar as mesmas tags og no Helmet da home (`src/pages/Index.tsx`).
+- Observação: o WhatsApp guarda cache da prévia por vários dias; links já enviados podem continuar mostrando a imagem antiga por um tempo.
 
-O RPC `search_products_by_category` (e o do catálogo) já retorna `tabela_precos` via `pc.*`, então o dado está disponível — só não está sendo consumido nos cards.
+## 2. Teclado abrindo sozinho no mobile
 
-## Correção
+Em `src/components/HeroCategoryPicker.tsx` o input de busca tem `autoFocus`, o que abre o teclado assim que a lista é aberta.
 
-Trocar o cálculo nos dois cards para os helpers que já respeitam a tabela customizada:
+- Remover o `autoFocus` (foco só quando o cliente tocar no campo "Buscar categoria...").
+- Manter foco automático apenas no desktop (via `useIsMobile`), onde não atrapalha.
 
-- `calcularPreco(preco_custo, 1000)` → `getEffectiveMinPrice(tabela_precos, preco_custo)`
-- `calcularPreco(preco_custo, 20)` → `getEffectiveUnitPrice(tabela_precos, preco_custo, 20)`
+## 3. Lista de categorias estilo Apple (com imagem)
 
-Produtos sem `tabela_precos` continuam usando a fórmula padrão (o próprio helper faz o fallback), então nada muda para eles.
+Ainda no `HeroCategoryPicker`:
 
-### Site — `/categoria/*`, busca, todos os produtos
+- Substituir a setinha (`ChevronRight`) por uma miniatura quadrada arredondada (40px) com a imagem da categoria; um pequeno indicador de aberto/fechado discreto fica à direita.
+- Remover a contagem de subcategorias no fim de cada linha.
+- Tirar o negrito: títulos de grupo em peso normal/medium, subitens em peso leve, mais respiro entre linhas, divisórias sutis — visual clean tipo Apple.
+- Gerar 1 imagem por grupo de categoria (os grupos de `src/config/categoryGroups.ts`: Copos/Garrafas/Canecas, Mochilas/Bolsas, Necessaires, Cadernetas/Canetas, Chaveiros/Kit Executivo, Caixas de Som/Fones, Sacolas, Kit Churrasco/Vinho, Térmicas/Madeira, etc.), em estilo consistente (produto sobre fundo claro neutro), salvas em `src/assets` e mapeadas por título do grupo.
 
-- `src/components/ProductCard.tsx`
-  - Adicionar `tabela_precos?: any` nos props.
-  - Importar `getEffectiveMinPrice`, `getEffectiveUnitPrice`.
-  - Substituir os dois cálculos de `precoMin` e `preco20`.
-- `src/pages/CategoryPage.tsx`, `src/pages/AllProducts.tsx`, `src/pages/SearchPage.tsx`, e qualquer outra página que renderize `<ProductCard />`: passar `tabela_precos={p.tabela_precos}`. Confirmar por busca (`rg "<ProductCard"`) e garantir que o objeto do produto vem de `products_cache` (via `pc.*`) — se algum select limitar colunas sem `tabela_precos`, incluir a coluna.
+## 4. Ordem e tipografia na home mobile
 
-### Catálogo — `/catalogo`
+Em `src/pages/Index.tsx` / `HeroSection.tsx`:
 
-- `src/components/catalog/CatalogProductCard.tsx`
-  - Importar `getEffectiveMinPrice`, `getEffectiveUnitPrice`.
-  - Substituir os dois cálculos de `precoMin` e `preco20` usando `product.tabela_precos`.
-  - `product` já é um registro de `products_cache`, então `tabela_precos` já está disponível — sem mudanças no fetch.
+- No mobile, o banner (carrossel) passa a aparecer **primeiro**, depois o card "Explore nosso catálogo", e depois "Solicite uma cotação para sua empresa" (`CorporateQuotation` desce para depois do Hero no mobile). No desktop a disposição atual (filtro à esquerda, banner à direita) é mantida — feito com `order` responsivo, sem duplicar componentes.
+- Tipografia do título "Explore nosso catálogo de brindes:" trocada de `font-black` para um estilo mais elegante: peso leve/medium, tracking negativo, tamanho ligeiramente maior, com "brindes" em destaque verde — mesma linguagem usada em /topprodutos.
 
-## Fora de escopo
+## Detalhes técnicos
 
-- **`/topprodutos`**: intencionalmente não linkado ao `products_cache`. Continua com preço editável manualmente na `topprodutos_curadoria`, sem nenhum vínculo automático.
-- Não alterar `calc_display_price` no banco.
+Arquivos afetados: `index.html`, `src/pages/Index.tsx`, `src/components/HeroSection.tsx`, `src/components/HeroCategoryPicker.tsx`, novos assets de imagem em `src/assets` e `public/og-cover.jpg`. Nenhuma mudança de dados/backend; lógica de busca e filtros permanece intacta.
