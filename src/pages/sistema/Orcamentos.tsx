@@ -148,6 +148,8 @@ export default function Orcamentos() {
   const [filtroBusca, setFiltroBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [filtroVendedor, setFiltroVendedor] = useState<string>(() => currentVendedor?.id || "todos");
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
   const [listLoading, setListLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -191,6 +193,11 @@ export default function Orcamentos() {
         const nome = (clienteDisplay(c) !== "—" ? clienteDisplay(c) : (o.clienteSnapshot?.nome || "")).toLowerCase();
         if (!nome.includes(filtroCliente.toLowerCase())) return false;
       }
+      if (dataInicio || dataFim) {
+        const d = new Date(o.createdAt);
+        if (dataInicio && d < new Date(`${dataInicio}T00:00:00`)) return false;
+        if (dataFim && d > new Date(`${dataFim}T23:59:59`)) return false;
+      }
       if (filtroBusca) {
         const term = filtroBusca.toLowerCase();
         const matchNumero = String(o.numero).includes(term);
@@ -203,7 +210,7 @@ export default function Orcamentos() {
       }
       return true;
     });
-  }, [orcamentos, filtroCliente, filtroBusca, filtroStatus, filtroVendedor, clientes]);
+  }, [orcamentos, filtroCliente, filtroBusca, filtroStatus, filtroVendedor, clientes, dataInicio, dataFim]);
 
   // Usa o subtotal armazenado (a listagem leve não traz os itens em detalhe)
   const calcOrcTotal = (o: Orcamento) =>
@@ -331,6 +338,28 @@ export default function Orcamentos() {
             ))}
           </SelectContent>
         </Select>
+        <div className="flex items-center gap-2">
+          <Input
+            type="date"
+            aria-label="Data inicial"
+            value={dataInicio}
+            onChange={e => setDataInicio(e.target.value)}
+            className="w-full md:w-[150px]"
+          />
+          <span className="text-muted-foreground text-sm">até</span>
+          <Input
+            type="date"
+            aria-label="Data final"
+            value={dataFim}
+            onChange={e => setDataFim(e.target.value)}
+            className="w-full md:w-[150px]"
+          />
+          {(dataInicio || dataFim) && (
+            <Button variant="ghost" size="icon" onClick={() => { setDataInicio(""); setDataFim(""); }}>
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Total */}
