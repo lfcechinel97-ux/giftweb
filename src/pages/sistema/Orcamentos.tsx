@@ -210,7 +210,7 @@ export default function Orcamentos() {
       }
       return true;
     });
-  }, [orcamentos, filtroCliente, filtroBusca, filtroStatus, filtroVendedor, clientes]);
+  }, [orcamentos, filtroCliente, filtroBusca, filtroStatus, filtroVendedor, clientes, dataInicio, dataFim]);
 
   // Usa o subtotal armazenado (a listagem leve não traz os itens em detalhe)
   const calcOrcTotal = (o: Orcamento) =>
@@ -338,6 +338,28 @@ export default function Orcamentos() {
             ))}
           </SelectContent>
         </Select>
+        <div className="flex items-center gap-2">
+          <Input
+            type="date"
+            aria-label="Data inicial"
+            value={dataInicio}
+            onChange={e => setDataInicio(e.target.value)}
+            className="w-full md:w-[150px]"
+          />
+          <span className="text-muted-foreground text-sm">até</span>
+          <Input
+            type="date"
+            aria-label="Data final"
+            value={dataFim}
+            onChange={e => setDataFim(e.target.value)}
+            className="w-full md:w-[150px]"
+          />
+          {(dataInicio || dataFim) && (
+            <Button variant="ghost" size="icon" onClick={() => { setDataInicio(""); setDataFim(""); }}>
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Total */}
