@@ -148,6 +148,8 @@ export default function Orcamentos() {
   const [filtroBusca, setFiltroBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [filtroVendedor, setFiltroVendedor] = useState<string>(() => currentVendedor?.id || "todos");
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
   const [listLoading, setListLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -190,6 +192,11 @@ export default function Orcamentos() {
         const c = clientes.find(cli => cli.id === o.clienteId);
         const nome = (clienteDisplay(c) !== "—" ? clienteDisplay(c) : (o.clienteSnapshot?.nome || "")).toLowerCase();
         if (!nome.includes(filtroCliente.toLowerCase())) return false;
+      }
+      if (dataInicio || dataFim) {
+        const d = new Date(o.createdAt);
+        if (dataInicio && d < new Date(`${dataInicio}T00:00:00`)) return false;
+        if (dataFim && d > new Date(`${dataFim}T23:59:59`)) return false;
       }
       if (filtroBusca) {
         const term = filtroBusca.toLowerCase();
