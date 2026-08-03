@@ -144,7 +144,7 @@ const Top10ProductCard = ({ product, rank, onAdd, onOpen }: Props) => {
           })}
         </div>
 
-        <div className="flex flex-col md:flex-row items-stretch gap-2 mt-3 md:mt-4">
+        <div className="flex flex-col xl:flex-row items-stretch gap-2 mt-3 md:mt-4">
           <div className="flex items-center justify-between md:justify-start border border-slate-200 rounded-full h-9 md:h-10 px-1 shrink-0">
             <button
               type="button"
