@@ -162,7 +162,7 @@ const Header = () => {
         <div className="bg-navy-dark text-muted-foreground" style={{ fontSize: 13 }}>
           <div className="container flex flex-col sm:flex-row items-center justify-center py-2 gap-0 sm:gap-1">
             <span className="text-primary-foreground text-center leading-snug">
-              ⚡ Atendimento rápido via WhatsApp&nbsp;&nbsp;&nbsp;💳 Pagamento Facilitado
+              Atendimento rápido via WhatsApp
             </span>
             <span className="hidden sm:inline mx-1">|</span>
             <a
