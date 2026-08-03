@@ -68,7 +68,7 @@ const TrocasDevolucoesPage = () => (
           </Section>
 
           <Section title="6. Endereços e Identificação">
-            <p><strong className="text-foreground">Gift Web Brindes</strong><br />CNPJ: 29.391.838/0001-97</p>
+            <p><strong className="text-foreground">Gift Web Brindes</strong><br />CNPJ SC: 43.956.926/0001-68<br />CNPJ SP: 43.956.926/0002-49</p>
             <ul className="list-disc pl-5 space-y-2">
               <li><strong className="text-foreground">Matriz (SC):</strong> Rua Cel Marcos Rovaris, 274 – Centro, Içara – SC, CEP: 88820-000.</li>
               <li><strong className="text-foreground">Filial (SP):</strong> Av. Monteiro Lobato, 4550 – Galpão 6 – Setor 7 – Cidade Jardim Cumbica, Guarulhos – SP, CEP: 07180-000.</li>
