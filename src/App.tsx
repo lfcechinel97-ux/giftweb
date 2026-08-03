@@ -42,6 +42,7 @@ const DataDeletionPage = lazy(() => import("./pages/DataDeletionPage.tsx"));
 const CatalogPage = lazy(() => import("./pages/CatalogPage.tsx"));
 const CatalogProductDetail = lazy(() => import("./pages/CatalogProductDetail.tsx"));
 const TopProdutos = lazy(() => import("./pages/TopProdutos.tsx"));
+const Top10Produtos = lazy(() => import("./pages/Top10Produtos.tsx"));
 const SistemaLayout = lazy(() => import("./pages/sistema/SistemaLayout.tsx"));
 const SistemaOrcamentos = lazy(() => import("./pages/sistema/Orcamentos.tsx"));
 const SistemaOrcamentoForm = lazy(() => import("./pages/sistema/OrcamentoForm.tsx"));
