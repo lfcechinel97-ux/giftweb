@@ -166,7 +166,7 @@ export function useTop10Xbz() {
             produtos: lista,
           };
         }).filter((c) => c.produtos.length > 0),
-      })).filter((s) => s.categorias.length > 0),
+      })).filter((s) => s.categorias.length > 0);
     },
     staleTime: 60_000,
   });
