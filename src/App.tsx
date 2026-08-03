@@ -102,6 +102,7 @@ const App = () => (
               <Route path="/catalogo" element={<CatalogPage />} />
               <Route path="/catalogo/produto/:slug" element={<CatalogProductDetail />} />
               <Route path="/topprodutos" element={<TopProdutos />} />
+              <Route path="/top10produtos" element={<Top10Produtos />} />
               <Route path="/busca" element={<SearchPage />} />
               {/* Legacy redirects */}
               <Route path="/garrafas" element={<Navigate to="/categoria/garrafas-e-squeezes" replace />} />
