@@ -843,6 +843,27 @@ export type Database = {
         }
         Relationships: []
       }
+      top10_xbz_ajustes: {
+        Row: {
+          ativo: boolean
+          codigo_prefixo: string
+          ordem_override: number | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo_prefixo: string
+          ordem_override?: number | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo_prefixo?: string
+          ordem_override?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       topprodutos_categorias_meta: {
         Row: {
           created_at: string

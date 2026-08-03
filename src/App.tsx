@@ -42,6 +42,7 @@ const DataDeletionPage = lazy(() => import("./pages/DataDeletionPage.tsx"));
 const CatalogPage = lazy(() => import("./pages/CatalogPage.tsx"));
 const CatalogProductDetail = lazy(() => import("./pages/CatalogProductDetail.tsx"));
 const TopProdutos = lazy(() => import("./pages/TopProdutos.tsx"));
+const Top10Produtos = lazy(() => import("./pages/Top10Produtos.tsx"));
 const SistemaLayout = lazy(() => import("./pages/sistema/SistemaLayout.tsx"));
 const SistemaOrcamentos = lazy(() => import("./pages/sistema/Orcamentos.tsx"));
 const SistemaOrcamentoForm = lazy(() => import("./pages/sistema/OrcamentoForm.tsx"));
@@ -101,6 +102,7 @@ const App = () => (
               <Route path="/catalogo" element={<CatalogPage />} />
               <Route path="/catalogo/produto/:slug" element={<CatalogProductDetail />} />
               <Route path="/topprodutos" element={<TopProdutos />} />
+              <Route path="/top10produtos" element={<Top10Produtos />} />
               <Route path="/busca" element={<SearchPage />} />
               {/* Legacy redirects */}
               <Route path="/garrafas" element={<Navigate to="/categoria/garrafas-e-squeezes" replace />} />
