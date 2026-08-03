@@ -67,8 +67,16 @@ const Top10Inner = () => {
                   <ArrowLeft className="w-4 h-4" />
                 </button>
               )}
-              <Link to="/" className="shrink-0">
-                <img src={logo} alt="Gift Web Brindes" className="h-7 sm:h-9 w-auto object-contain" />
+              <Link to="/" className="shrink-0 flex items-baseline gap-1.5">
+                <span
+                  className="text-lg sm:text-2xl font-black italic text-white tracking-tight"
+                  style={{ fontFamily: "'Georgia', serif" }}
+                >
+                  Gift Web
+                </span>
+                <span className="hidden sm:inline text-[10px] font-semibold text-green-cta tracking-[0.28em] uppercase">
+                  Brindes
+                </span>
               </Link>
             </div>
             <button
