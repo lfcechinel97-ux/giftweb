@@ -168,7 +168,7 @@ const Footer = () => {
       <div className="border-t border-[rgba(34,197,94,0.15)]">
         <div className="container py-5 flex flex-col items-center gap-2 text-center">
           <p className="text-xs text-[#9CA3AF]">
-            © {new Date().getFullYear()} Gift Web Brindes – CNPJ: 29.391.838/0001-97 – Todos os direitos reservados
+            © {new Date().getFullYear()} Gift Web Brindes – CNPJ SC: 43.956.926/0001-68 – CNPJ SP: 43.956.926/0002-49 – Todos os direitos reservados
           </p>
           <p className="text-[#22C55E] font-semibold text-sm italic">
             "{frase}"
