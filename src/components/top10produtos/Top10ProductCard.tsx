@@ -144,7 +144,7 @@ const Top10ProductCard = ({ product, rank, onAdd, onOpen }: Props) => {
           })}
         </div>
 
-        <div className="flex flex-col xl:flex-row items-stretch gap-2 mt-3 md:mt-4">
+        <div className="flex flex-col items-stretch gap-2 mt-3 md:mt-4">
           <div className="flex items-center justify-between md:justify-start border border-slate-200 rounded-full h-9 md:h-10 px-1 shrink-0">
             <button
               type="button"
@@ -169,8 +169,8 @@ const Top10ProductCard = ({ product, rank, onAdd, onOpen }: Props) => {
             onClick={handleAdd}
             className="flex-1 h-9 md:h-10 rounded-full bg-green-cta text-white text-xs md:text-sm font-medium transition-colors hover:brightness-105 px-3 whitespace-nowrap"
           >
-            <span className="xl:hidden">Adicionar</span>
-            <span className="hidden xl:inline">Adicionar ao orçamento</span>
+            <span className="sm:hidden">Adicionar</span>
+            <span className="hidden sm:inline">Adicionar ao orçamento</span>
           </button>
         </div>
       </div>
