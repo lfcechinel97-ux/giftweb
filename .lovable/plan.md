@@ -1,30 +1,38 @@
-# Itens mais vendidos: o que dá e o que não dá hoje
+# Nova página /top10produtos (TOP 10 XBZ por categoria)
 
-## Resposta curta
-Pelo histórico da API da XBZ, **não**. A sincronização diária sobrescreve o campo de estoque de cada produto — não existe nenhuma tabela guardando o estoque de ontem, da semana passada ou de março. O log de sincronização (579 execuções desde 11/03/2026) grava só data, total de produtos e status, sem os números por item. Então não há como reconstruir retroativamente o que baixou de estoque.
+Cópia da experiência da `/topprodutos`, alimentada pela planilha TOP10_XBZ_por_Categoria.xlsx. A `/topprodutos` atual não é tocada — nem página, nem componentes, nem tabela.
 
-Duas ressalvas importantes mesmo se houvesse histórico: o estoque da XBZ é do fornecedor, então a queda reflete as vendas de **todos** os clientes dela, não as suas; e reposições mascaram as saídas.
+## O que a planilha traz
+- 260 produtos, ordenados por unidades vendidas na XBZ
+- 26 categorias agrupadas em 10 seções:
+  - Copos, Garrafas e Canecas (Copos, Garrafas Térmicas/Squeezes, Garrafas de Inox/Alumínio, Canecas)
+  - Mochilas, Bolsas Térmicas e Malas
+  - Necessaires, Porta Joias e Kit Manicure
+  - Cadernetas, Agendas, Blocos e Canetas
+  - Chaveiros, Mouse Pad e Kit Executivo
+  - Caixas de Som, Fones e Power Bank
+  - Sacolas de Algodão e TNT
+  - Kit Churrasco e Kit Vinho
+  - Marmitas e Tábuas de Madeira
+  - Guarda-Chuvas
 
-**O que existe de verdade hoje:** 308 orçamentos no sistema interno, cada um com os itens em detalhe. Essa é a fonte real do que a Gift Web vendeu/cotou.
+## De onde vêm as informações dos produtos
+Do catálogo do próprio site (`products_cache`, sincronizado com a XBZ): nome, imagem principal, galeria, variações de cor, estoque e preço — o mesmo preço calculado que já aparece nas outras páginas, respeitando tabela de preços customizada quando existir.
 
-## Proposta
+O código da planilha nem sempre bate literalmente com o do site (a planilha traz `3006`, o site guarda `03006`; a planilha traz `O@08141`, o site usa outro formato). A busca será feita em cascata: código exato → código com zeros à esquerda (5 dígitos) → sem o prefixo `X@` → por nome do produto. Um teste de amostra confirmou que a maioria resolve já no segundo passo.
 
-### Parte 1 — Ranking real, a partir dos orçamentos (dado que já existe)
-Nova página `/sistema/relatorios` mostrando:
-- Ranking de produtos por quantidade e por faturamento, extraído dos itens dos orçamentos.
-- Filtro por período (de/até) e por status (todos / só aprovados).
-- Separação entre "cotado" (todos os orçamentos) e "vendido" (aprovados), para ver o que gera interesse mas não fecha.
-- Ranking por cliente e por vendedor.
-- Exportar CSV.
-
-### Parte 2 — Começar a registrar o histórico de estoque (daqui pra frente)
-- Nova tabela `estoque_historico` (produto, SKU, estoque, data), gravada a cada sincronização.
-- Snapshot diário: um registro por produto por dia, sem apagar nada do que já existe.
-- Nova aba na página de relatórios: "Demanda XBZ", mostrando os produtos com maior queda acumulada de estoque no período — um termômetro de demanda do mercado, marcado claramente como estimativa do fornecedor, não venda sua.
-- Os primeiros números úteis aparecem depois de ~7 dias de coleta; a tendência fica sólida em ~30 dias.
+## Estrutura da página
+- Rota `/top10produtos`, mobile-first, mesma identidade da `/topprodutos` (azul marinho + verde, tipografia leve, cards brancos)
+- Topo com as 10 seções; dentro de cada seção, as categorias com seu TOP 10 numerado (1 a 10, posição visível no card)
+- Card reaproveitando o visual atual: imagem, nome, faixas de preço 20/50/100 un., seletor de cor, troca de imagem no hover (desktop), seletor de quantidade ±5 e "Adicionar ao orçamento"
+- Modal de detalhe e carrinho/orçamento via WhatsApp iguais aos da `/topprodutos`
+- Navegação rápida por categoria (chips no topo, rolagem até a seção)
+- Produtos sem correspondência no catálogo não aparecem na página (ficam listados no admin para você resolver depois)
 
 ## Detalhes técnicos
-- Ranking dos orçamentos: função no banco que expande o JSONB `itens` de `sistema_orcamentos`, agrupando por SKU/nome, com filtros de período e status.
-- Histórico: tabela nova com índice por (produto, data) e chave única por dia para não duplicar. A função de sincronização passa a inserir o snapshot ao final do processamento, dentro de um try/catch — se o snapshot falhar, a sincronização continua normal.
-- A tabela nova é só de leitura para o admin autenticado (RLS + GRANT), escrita apenas pela função de sincronização.
-- Nada é alterado em `products_cache`, no fluxo de sincronização existente, nos preços ou nos orçamentos.
+- Nova tabela `top10_xbz` (secao, categoria, ordem_secao, ordem_categoria, posicao, codigo_planilha, nome_planilha, unid_vend, produto_id resolvido, ativo) com RLS: leitura pública, escrita só para admin; GRANTs para anon/authenticated/service_role
+- Migração popula as 260 linhas da planilha e roda a cascata de matching para preencher `produto_id`
+- Nova página `src/pages/Top10Produtos.tsx` + componentes próprios em `src/components/top10produtos/` (cópias adaptadas de `TopProductCard`, `TopProductModal`, `TopCartBar`), sem importar nem alterar os arquivos de `topprodutos/`
+- Preço via `getEffectiveMinPrice`/`getEffectiveUnitPrice` de `@/utils/price.ts`, como no restante do site
+- Página admin `/admin/top10produtos`: ativar/desativar item, reordenar, e corrigir manualmente o produto vinculado nos casos sem match
+- Rota adicionada em `App.tsx`; nenhuma rota ou componente existente é modificado
