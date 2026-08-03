@@ -7,7 +7,7 @@ import TopCartBar from "@/components/topprodutos/TopCartBar";
 import Top10ProductCard, { type Top10AddExtras } from "@/components/top10produtos/Top10ProductCard";
 import Top10ProductModal from "@/components/top10produtos/Top10ProductModal";
 import { useTop10Xbz, type Top10Produto } from "@/hooks/useTop10Xbz";
-import logo from "@/assets/logo-giftweb.png";
+
 
 const Top10Inner = () => {
   const { data, isLoading } = useTop10Xbz();
