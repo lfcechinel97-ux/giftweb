@@ -431,6 +431,28 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return full;
   }, []);
 
+  // Busca em LOTE os itens de vários orçamentos (1 requisição em vez de N)
+  const fetchOrcamentosItens = useCallback(async (ids: string[]): Promise<void> => {
+    if (ids.length === 0) return;
+    const { data, error } = await supabase
+      .from("sistema_orcamentos")
+      .select("id,itens")
+      .in("id", ids);
+    if (error || !data) {
+      if (error) console.error("[Sistema] carregar itens dos orçamentos falhou:", error);
+      return;
+    }
+    const byId = new Map(data.map((r: any) => [r.id, arr<QuoteItem>(r.itens)]));
+    setData(prev => ({
+      ...prev,
+      orcamentos: prev.orcamentos.map(o => {
+        const itens = byId.get(o.id);
+        return itens && itens.length > 0 && o.itens.length === 0 ? { ...o, itens } : o;
+      }),
+    }));
+  }, []);
+
+
   const loadAll = useCallback(async (force = false) => {
     if (loadedRef.current && !force) return;
     setLoading(prev => (loadedRef.current ? prev : true));
