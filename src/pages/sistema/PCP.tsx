@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag, Clock, History,
@@ -246,7 +247,7 @@ function PcpCard({
       {/* Camada 1 — foto */}
       <div className="relative h-[168px] w-full">
         {foto ? (
-          <img src={foto} alt="" className="w-full h-full object-cover bg-white" />
+          <img src={foto} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-white" />
         ) : (
           <div className="w-full h-full bg-[var(--gw-surface-alt)] flex items-center justify-center">
             <Package className="h-8 w-8 text-[var(--gw-text-muted)]" />
@@ -333,8 +334,6 @@ function PcpCard({
 
 export default function PCP() {
   const [rows, setRows] = useState<PcpRow[]>([]);
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
-  const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<PcpStatus | null>(null);
@@ -393,39 +392,52 @@ export default function PCP() {
   const [gateModal, setGateModal] = useState<{ row: PcpRow; target: PcpStatus; tipo: "cartao" | "pix" } | null>(null);
   const [gateSaving, setGateSaving] = useState(false);
 
-  const loadItems = async () => {
-    const { data, error } = await supabase
-      .from("vw_pcp" as any)
-      .select("*")
-      .order("data_entrega_item", { ascending: true, nullsFirst: false });
-    if (error) {
-      console.error("[PCP] carregar itens falhou:", error);
-      toast.error(`Não foi possível carregar o PCP. ${error.message || ""}`);
-      return;
-    }
-    setRows((data as any as PcpRow[]) ?? []);
-  };
+  /* Dados cacheados (60s): voltar ao PCP mostra o quadro na hora e revalida em 2º plano */
+  const pcpQuery = useQuery<PcpRow[]>({
+    queryKey: ["sistema", "pcp", "rows"],
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vw_pcp" as any)
+        .select("*")
+        .order("data_entrega_item", { ascending: true, nullsFirst: false });
+      if (error) {
+        console.error("[PCP] carregar itens falhou:", error);
+        toast.error(`Não foi possível carregar o PCP. ${error.message || ""}`);
+        throw error;
+      }
+      return (data as any as PcpRow[]) ?? [];
+    },
+  });
 
-  const loadFornecedores = async () => {
-    const { data, error } = await supabase
-      .from("sistema_fornecedores")
-      .select("id, nome, tipo, telefone")
-      .eq("ativo", true)
-      .order("nome");
-    if (error) {
-      console.error("[PCP] carregar fornecedores falhou:", error);
-      return;
-    }
-    setFornecedores(data ?? []);
-  };
+  const { data: fornecedores = [] } = useQuery<Fornecedor[]>({
+    queryKey: ["sistema", "pcp", "fornecedores"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sistema_fornecedores")
+        .select("id, nome, tipo, telefone")
+        .eq("ativo", true)
+        .order("nome");
+      if (error) {
+        console.error("[PCP] carregar fornecedores falhou:", error);
+        return [];
+      }
+      return (data ?? []) as Fornecedor[];
+    },
+  });
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      await Promise.all([loadItems(), loadFornecedores()]);
-      setLoading(false);
-    })();
-  }, []);
+    if (pcpQuery.data) setRows(pcpQuery.data);
+  }, [pcpQuery.data]);
+
+  const loadItems = async () => {
+    const res = await pcpQuery.refetch();
+    if (res.data) setRows(res.data);
+  };
+
+  // Loading só quando não há nada em cache para mostrar
+  const loading = pcpQuery.isLoading && rows.length === 0;
 
   const byStatus = useMemo(() => {
     const map: Record<string, PcpRow[]> = {};
@@ -687,6 +699,8 @@ export default function PCP() {
                     <img
                       src={detalhe.mockup_url || detalhe.imagem_catalogo_url!}
                       alt={detalhe.produto_nome || ""}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-[360px] object-contain bg-white rounded-lg border border-[var(--gw-border)]"
                     />
                     <a
@@ -713,6 +727,10 @@ export default function PCP() {
                       <img
                         src={detalhe.imagem_catalogo_url}
                         alt=""
+                        width={96}
+                        height={96}
+                        loading="lazy"
+                        decoding="async"
                         className="w-[96px] h-[96px] object-contain bg-white rounded-lg border border-[var(--gw-border)]"
                       />
                     </div>
