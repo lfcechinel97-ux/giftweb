@@ -38,6 +38,12 @@ const STATUS_STAGE: Record<OrcamentoStatus, GwStage> = {
   "cancelado": "cancelado",
 };
 
+const STATUS_SOLID: Record<OrcamentoStatus, string> = {
+  "aberto": "var(--gw-primary)",
+  "aprovado": "var(--gw-success)",
+  "cancelado": "var(--gw-danger)",
+};
+
 
 
 /* ─── Modal de confirmação de aprovação ─────────────────────────────────── */
