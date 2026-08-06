@@ -291,6 +291,48 @@ export default function PCP() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<PcpStatus | null>(null);
+  const [hoverPedido, setHoverPedido] = useState<string | null>(null);
+  const boardRef = useRef<HTMLDivElement | null>(null);
+
+  /* Shift+scroll e arrastar-para-rolar (botão do meio) no quadro */
+  useEffect(() => {
+    const el = boardRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.shiftKey && e.deltaY !== 0) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+    let panning = false;
+    let startX = 0;
+    let startScroll = 0;
+    const onDown = (e: MouseEvent) => {
+      if (e.button !== 1) return;
+      e.preventDefault();
+      panning = true;
+      startX = e.clientX;
+      startScroll = el.scrollLeft;
+      el.style.cursor = "grabbing";
+    };
+    const onMove = (e: MouseEvent) => {
+      if (!panning) return;
+      el.scrollLeft = startScroll - (e.clientX - startX);
+    };
+    const onUp = () => { panning = false; el.style.cursor = ""; };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("mousedown", onDown);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("mousedown", onDown);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [loading]);
+
+
 
   const [detalheId, setDetalheId] = useState<string | null>(null);
   const [historico, setHistorico] = useState<HistoricoRow[]>([]);
