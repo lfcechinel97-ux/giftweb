@@ -468,8 +468,7 @@ export default function Pedidos() {
                       )}
                     </div>
                   </div>
-                </div>
-              )}
+              </div>
             </div>
           );
         })}
