@@ -2,7 +2,7 @@ import { OrderNumber, StatusPill, MetaField, Thumb, Money, type GwStage } from "
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Check, Filter, Plus, Search, Trash2, FileText, Package, Printer, X, MoreHorizontal,
@@ -171,7 +171,6 @@ export default function Orcamentos() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [listLoading, setListLoading] = useState(false);
-  const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
   const [page, setPage] = useState(1);
@@ -313,14 +312,6 @@ export default function Orcamentos() {
     const full = await ensureItens(o);
     const cliente = clientes.find(c => c.id === full.clienteId);
     gerarPDFOrcamento(full, { clientes, vendedores, meiosPagamento, transportadoras, origens }, cliente?.nome);
-  };
-
-  const handleExpand = async (o: Orcamento) => {
-    const isOpen = expandedIds.includes(o.id);
-    setExpandedIds(prev => (isOpen ? prev.filter(id => id !== o.id) : [...prev, o.id]));
-    if (!isOpen && o.itens.length === 0) {
-      await fetchOrcamentoCompleto(o.id);
-    }
   };
 
   const getClienteNome = (o: Orcamento) => {
