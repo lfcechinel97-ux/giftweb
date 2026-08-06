@@ -243,7 +243,7 @@ export default function Orcamentos() {
       });
     const orcModificado = { ...orc, itens: itensAprovados };
     aprovarOrcamento(orcModificado.id).then((p) => {
-      if (p) toast.success(`Orçamento aprovado! Pedido #${p.numero} criado.`);
+      if (p) toast.success(`Orçamento aprovado! Pedido ${p.numero} criado.`);
     });
     setAprovarOrc(null);
   };
