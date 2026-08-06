@@ -495,10 +495,11 @@ export default function PCP() {
   /* Grava o gate de pagamento para todos os itens do pedido */
   const gravarGatePedido = async (pedidoId: string, campo: "pagamento_cartao_conferido_em" | "pix_recebido_integral_em") => {
     const agora = new Date().toISOString();
-    setRows(prev => prev.map(r => (r.pedido_id === pedidoId ? { ...r, [campo]: agora } : r)));
+    const patch = { [campo]: agora, pagamento_ok: true };
+    setRows(prev => prev.map(r => (r.pedido_id === pedidoId ? { ...r, ...patch } : r)));
     const { error } = await supabase
       .from("sistema_producao_itens" as any)
-      .update({ [campo]: agora })
+      .update(patch)
       .eq("pedido_id", pedidoId);
     if (error) {
       console.error("[PCP] gravar gate de pagamento falhou:", error);
