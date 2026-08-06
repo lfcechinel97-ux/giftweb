@@ -259,3 +259,64 @@ input[type="range"]::-moz-range-thumb {
 .sistema-theme .pcp-scroll::-webkit-scrollbar-track { background: #E8EDF7; border-radius: 999px; }
 .sistema-theme .pcp-scroll::-webkit-scrollbar-thumb { background: #93A6C8; border-radius: 999px; }
 .sistema-theme .pcp-scroll::-webkit-scrollbar-thumb:hover { background: #2563EB; }
+
+/* ===== Design System /sistema — tokens (não aplicados às telas ainda) ===== */
+:root {
+  /* Superfícies e estrutura */
+  --gw-bg: #F7F8FA;
+  --gw-surface: #FFFFFF;
+  --gw-surface-alt: #F2F4F7;
+  --gw-border: #E3E8EF;
+  --gw-border-strong: #CDD5E0;
+  --gw-sidebar: #0D2340;
+  --gw-sidebar-hover: #16345C;
+  --gw-sidebar-active: #1E4A80;
+
+  /* Texto */
+  --gw-text: #0B1220;
+  --gw-text-secondary: #5B6779;
+  --gw-text-muted: #8A96A6;
+
+  /* Ação e feedback */
+  --gw-primary: #2C5FF6;
+  --gw-primary-hover: #1E4BD8;
+  --gw-primary-soft: #EDF2FF;
+  --gw-success: #0EA36B;
+  --gw-success-soft: #E3F7EF;
+  --gw-warning: #F5A524;
+  --gw-warning-soft: #FEF5E3;
+  --gw-danger: #E5484D;
+  --gw-danger-soft: #FDEDEE;
+
+  /* Etapas */
+  --gw-stage-organizando: #6B7A8F;
+  --gw-stage-pronto: #2C5FF6;
+  --gw-stage-teste: #F5A524;
+  --gw-stage-preparacao: #8B5CF6;
+  --gw-stage-producao: #F76B15;
+  --gw-stage-embalagem: #0EA5A5;
+  --gw-stage-coleta: #D946A0;
+  --gw-stage-enviado: #0EA36B;
+  --gw-stage-cancelado: #E5484D;
+
+  /* Sombras */
+  --gw-shadow-sm: 0 1px 2px rgba(11,18,32,.06);
+  --gw-shadow-md: 0 4px 12px rgba(11,18,32,.08);
+  --gw-shadow-lg: 0 16px 48px rgba(11,18,32,.16);
+
+  /* Raio e densidade */
+  --gw-radius-sm: 6px;
+  --gw-radius-md: 10px;
+  --gw-radius-pill: 999px;
+  --gw-row-h: 56px;
+  --gw-control-h: 36px;
+}
+
+/* Escala tipográfica */
+.gw-display { font-family: 'Inter', system-ui, sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: var(--gw-text); }
+.gw-title { font-family: 'Inter', system-ui, sans-serif; font-size: 18px; font-weight: 650; letter-spacing: -0.015em; color: var(--gw-text); }
+.gw-body { font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 400; letter-spacing: 0; color: var(--gw-text); }
+.gw-body-strong { font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 600; color: var(--gw-text); }
+.gw-label { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gw-text-secondary); }
+.gw-meta { font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 400; color: var(--gw-text-secondary); }
+.gw-num { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 600; font-variant-numeric: tabular-nums; }
