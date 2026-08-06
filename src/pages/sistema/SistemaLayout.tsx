@@ -1,5 +1,7 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { Suspense, useCallback, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   FileText, ShoppingCart, Boxes, Package, Globe, User, Users, Settings, ChevronDown, Kanban,
 } from "lucide-react";
@@ -10,14 +12,24 @@ import {
 import { useSistema } from "@/contexts/SistemaContext";
 
 const menu = [
-  { icon: FileText, label: "Orçamentos", path: "/sistema/orcamentos" },
-  { icon: ShoppingCart, label: "Pedidos", path: "/sistema/pedidos" },
-  { icon: Kanban, label: "PCP", path: "/sistema/pcp" },
-  { icon: Boxes, label: "Estoque", path: "/sistema/estoque" },
-  { icon: Package, label: "Produtos", path: "/sistema/produtos" },
-  { icon: Users, label: "Clientes", path: "/sistema/clientes" },
-  { icon: Settings, label: "Configurações", path: "/sistema/configuracoes" },
+  { icon: FileText, label: "Orçamentos", path: "/sistema/orcamentos", chunk: () => import("./Orcamentos.tsx") },
+  { icon: ShoppingCart, label: "Pedidos", path: "/sistema/pedidos", chunk: () => import("./Pedidos.tsx") },
+  { icon: Kanban, label: "PCP", path: "/sistema/pcp", chunk: () => import("./PCP.tsx") },
+  { icon: Boxes, label: "Estoque", path: "/sistema/estoque", chunk: () => import("./Estoque.tsx") },
+  { icon: Package, label: "Produtos", path: "/sistema/produtos", chunk: () => import("./ProdutosCatalogo.tsx") },
+  { icon: Users, label: "Clientes", path: "/sistema/clientes", chunk: () => import("./Clientes.tsx") },
+  { icon: Settings, label: "Configurações", path: "/sistema/configuracoes", chunk: () => import("./Configuracoes.tsx") },
 ];
+
+/* Esqueleto de transição de rota — mantém o layout, sem tela branca */
+const RouteSkeleton = () => (
+  <div className="space-y-4">
+    <div className="animate-pulse h-8 w-64 rounded bg-muted" />
+    {[0, 1, 2].map(i => (
+      <div key={i} className="animate-pulse h-24 rounded-xl bg-muted" />
+    ))}
+  </div>
+);
 
 export default function SistemaLayout() {
   const { vendedores, currentVendedor, setCurrentVendedor, loading } = useSistema();
@@ -29,6 +41,42 @@ export default function SistemaLayout() {
   };
   const navigate = useNavigate();
   const loc = useLocation();
+  const queryClient = useQueryClient();
+
+  /* Pré-carregamento no hover do menu: chunk da rota + dados dela */
+  const prefetch = useCallback((item: typeof menu[number]) => {
+    item.chunk().catch(() => undefined);
+    if (item.path === "/sistema/pcp") {
+      queryClient.prefetchQuery({
+        queryKey: ["sistema", "pcp", "rows"],
+        staleTime: 60 * 1000,
+        queryFn: async () => {
+          const { data } = await supabase
+            .from("vw_pcp" as any)
+            .select("*")
+            .order("data_entrega_item", { ascending: true, nullsFirst: false });
+          return (data as any) ?? [];
+        },
+      });
+    }
+    if (item.path === "/sistema/pedidos") {
+      queryClient.prefetchQuery({
+        queryKey: ["sistema", "pedidos", "progresso"],
+        staleTime: 60 * 1000,
+        queryFn: async () => {
+          const { data } = await supabase.from("sistema_producao_itens").select("pedido_id,status");
+          const acc: Record<string, { enviados: number; total: number }> = {};
+          for (const r of (data ?? []) as { pedido_id: string; status: string }[]) {
+            const e = acc[r.pedido_id] ?? { enviados: 0, total: 0 };
+            e.total += 1;
+            if (r.status === "expedido" || r.status === "enviado_terceiro") e.enviados += 1;
+            acc[r.pedido_id] = e;
+          }
+          return acc;
+        },
+      });
+    }
+  }, [queryClient]);
 
   useEffect(() => {
     if (loc.pathname === "/sistema" || loc.pathname === "/sistema/") {
@@ -52,6 +100,8 @@ export default function SistemaLayout() {
             <NavLink
               key={item.path}
               to={item.path}
+              onMouseEnter={() => prefetch(item)}
+              onFocus={() => prefetch(item)}
               className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/65 hover:bg-white/[0.06] hover:text-white transition-colors"
               activeClassName="!text-white !bg-white/[0.08] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-[#2563EB]"
             >
@@ -114,7 +164,9 @@ export default function SistemaLayout() {
         </header>
 
         <main className="p-6 flex-1">
-          <Outlet />
+          <Suspense fallback={<RouteSkeleton />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>
