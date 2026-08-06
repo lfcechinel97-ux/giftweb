@@ -5,7 +5,8 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Check, Filter, Plus, Search, Trash2, FileText, Package, Printer, X, MoreHorizontal
+  Check, Filter, Plus, Search, Trash2, FileText, Package, Printer, X, MoreHorizontal,
+  Pencil, ChevronDown, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
