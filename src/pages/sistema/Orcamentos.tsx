@@ -525,9 +525,9 @@ export default function Orcamentos() {
                       type="button"
                       onClick={() => handleAprovar(o.id)}
                       className="inline-flex items-center h-8 px-3 rounded-md text-[13px] font-semibold text-white transition-colors"
-                      style={{ background: "var(--gw-primary)" }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "var(--gw-primary-hover)")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "var(--gw-primary)")}
+                      style={{ background: "var(--gw-success)" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "#0C8D5C")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "var(--gw-success)")}
                     >
                       <Check className="h-3.5 w-3.5 mr-1" /> Aprovar
                     </button>
