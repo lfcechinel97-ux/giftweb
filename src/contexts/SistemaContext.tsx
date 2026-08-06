@@ -437,15 +437,24 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const bootstrap = (bootstrapRes.data ?? {}) as any;
       const vendedores = arr<any>(bootstrap.vendedores).map(mapVendedor);
 
-      setData(prev => ({
-        ...prev,
-        vendedores,
-        meiosPagamento: arr<any>(bootstrap.meios_pagamento).map(mapMeio),
-        transportadoras: arr<any>(bootstrap.transportadoras).map(mapTransp),
-        origens: arr<any>(bootstrap.origens).map(mapOrigem),
-        clientes: (clientesRes.data ?? []).map(mapCliente),
-        orcamentos: arr<any>((orcamentosRes.data as any)?.rows).map(mapOrcamento),
-      }));
+      setData(prev => {
+        // Preserva itens já carregados: a listagem leve devolve itens vazios e
+        // não pode "zerar" o que já está visível na tela.
+        const prevById = new Map(prev.orcamentos.map(o => [o.id, o]));
+        const orcamentos = arr<any>((orcamentosRes.data as any)?.rows).map(mapOrcamento).map(r => {
+          const prevOrc = prevById.get(r.id);
+          return prevOrc && prevOrc.itens.length > 0 ? { ...r, itens: prevOrc.itens } : r;
+        });
+        return {
+          ...prev,
+          vendedores,
+          meiosPagamento: arr<any>(bootstrap.meios_pagamento).map(mapMeio),
+          transportadoras: arr<any>(bootstrap.transportadoras).map(mapTransp),
+          origens: arr<any>(bootstrap.origens).map(mapOrigem),
+          clientes: (clientesRes.data ?? []).map(mapCliente),
+          orcamentos,
+        };
+      });
 
       reconcileCurrentVendedor(vendedores);
       loadedRef.current = true;
