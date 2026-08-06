@@ -12,9 +12,9 @@ const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" 
 export function Money({ value, emphasis = false, className }: MoneyProps) {
   return (
     <span
-      className={cn("gw-num", emphasis ? "text-[16px]" : "text-[14px]", className)}
+      className={cn("gw-tnum", emphasis ? "text-[16px]" : "text-[14px]", className)}
       style={{
-        fontWeight: emphasis ? 700 : 500,
+        fontWeight: emphasis ? 600 : 500,
         color: emphasis ? "var(--gw-text)" : "var(--gw-text-secondary)",
       }}
     >

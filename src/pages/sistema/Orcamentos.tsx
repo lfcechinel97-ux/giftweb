@@ -421,7 +421,7 @@ export default function Orcamentos() {
         </p>
         <p className="flex items-center gap-2">
           <span className="gw-label">Total filtrado</span>
-          <span className="gw-num text-[16px]" style={{ fontWeight: 700, color: "var(--gw-text)" }}>
+          <span className="gw-tnum text-[16px]" style={{ fontWeight: 700, color: "var(--gw-text)" }}>
             {formatBRL(valorTotalFiltrado)}
           </span>
         </p>
@@ -466,7 +466,7 @@ export default function Orcamentos() {
                   ))}
                   {extras > 0 && (
                     <span
-                      className="inline-flex items-center justify-center gw-num text-[11px]"
+                      className="inline-flex items-center justify-center gw-tnum text-[11px]"
                       style={{
                         marginLeft: -8, width: 40, height: 40, borderRadius: 8,
                         background: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)",
@@ -548,10 +548,10 @@ export default function Orcamentos() {
                         <span className="flex flex-col min-w-0">
                           <span className="gw-body-strong truncate">{item.nome}</span>
                           {item.codigoComposto && (
-                            <span className="gw-num text-[11px]" style={{ color: "var(--gw-text-muted)" }}>{item.codigoComposto}</span>
+                            <span className="gw-tnum text-[11px]" style={{ color: "var(--gw-text-muted)" }}>{item.codigoComposto}</span>
                           )}
                         </span>
-                        <span className="text-right gw-num text-[13px]" style={{ color: "var(--gw-text)" }}>{item.quantidade}</span>
+                        <span className="text-right gw-tnum text-[13px]" style={{ color: "var(--gw-text)" }}>{item.quantidade}</span>
                         <span className="text-right"><Money value={item.precoUnitario} /></span>
                         <span className="text-right"><Money value={item.precoUnitario * item.quantidade} emphasis /></span>
                       </div>

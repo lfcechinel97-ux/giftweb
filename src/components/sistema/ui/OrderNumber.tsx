@@ -10,7 +10,7 @@ export function OrderNumber({ value, className }: OrderNumberProps) {
   return (
     <span
       className={cn("gw-num text-[15px]", className)}
-      style={{ color: "var(--gw-text)" }}
+      style={{ color: "var(--gw-text)", fontWeight: 600 }}
     >
       {String(value).replace(/^[#\s]*(PED-)?/i, "")}
     </span>

@@ -220,13 +220,14 @@ input[type="range"]::-moz-range-thumb {
 .sistema-theme h1,
 .sistema-theme h2,
 .sistema-theme h3,
-.sistema-theme .font-title { font-family: 'Manrope', 'Inter', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.015em; }
+.sistema-theme .font-title { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-weight: 700; letter-spacing: -0.015em; }
 .sistema-theme h1 { font-size: 1.35rem; line-height: 1.35; }
 .sistema-theme h2 { font-size: 1.1rem; line-height: 1.4; }
 .sistema-theme h3 { font-size: 0.95rem; }
 .sistema-theme .font-mono-num {
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   color: #0F172A;
 }
 .sistema-theme label { font-weight: 500; }
@@ -313,10 +314,13 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Escala tipográfica */
-.gw-display { font-family: 'Inter', system-ui, sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: var(--gw-text); }
-.gw-title { font-family: 'Inter', system-ui, sans-serif; font-size: 18px; font-weight: 650; letter-spacing: -0.015em; color: var(--gw-text); }
+.gw-display { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: var(--gw-text); }
+.gw-title { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-size: 18px; font-weight: 600; letter-spacing: -0.015em; color: var(--gw-text); }
 .gw-body { font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 400; letter-spacing: 0; color: var(--gw-text); }
-.gw-body-strong { font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 600; color: var(--gw-text); }
-.gw-label { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gw-text-secondary); }
+.gw-body-strong { font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 500; color: var(--gw-text); }
+.gw-label { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gw-text-secondary); }
 .gw-meta { font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 400; color: var(--gw-text-secondary); }
-.gw-num { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Números de pedido/orçamento e nomes: display font */
+.gw-num { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* Valores/números tabulares em Inter */
+.gw-tnum { font-family: 'Inter', system-ui, sans-serif; font-weight: 500; font-variant-numeric: tabular-nums; }
