@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-  Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag, Clock, X, History,
+  Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag, Clock, History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -122,7 +122,7 @@ const formatDateTime = (d: string | null) => d ? new Date(d).toLocaleString("pt-
 
 const tempoNaEtapa = (horas: number | null) => {
   if (horas == null) return null;
-  if (horas < 1) return "há менos de 1h".replace("менos", "menos");
+  if (horas < 1) return "menos de 1h nesta etapa";
   if (horas < 24) return `${Math.floor(horas)}h nesta etapa`;
   return `${Math.floor(horas / 24)}d nesta etapa`;
 };

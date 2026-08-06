@@ -252,3 +252,10 @@ input[type="range"]::-moz-range-thumb {
 
 /* Sem gradientes e sem preto puro */
 .sistema-theme [class*="bg-gradient"] { background-image: none !important; }
+
+/* PCP: scrollbar horizontal sempre visível no quadro kanban */
+.sistema-theme .pcp-scroll { scrollbar-width: auto; }
+.sistema-theme .pcp-scroll::-webkit-scrollbar { height: 12px; }
+.sistema-theme .pcp-scroll::-webkit-scrollbar-track { background: #E8EDF7; border-radius: 999px; }
+.sistema-theme .pcp-scroll::-webkit-scrollbar-thumb { background: #93A6C8; border-radius: 999px; }
+.sistema-theme .pcp-scroll::-webkit-scrollbar-thumb:hover { background: #2563EB; }
