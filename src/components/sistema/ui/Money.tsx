@@ -14,7 +14,7 @@ export function Money({ value, emphasis = false, className }: MoneyProps) {
     <span
       className={cn("gw-tnum", emphasis ? "text-[16px]" : "text-[14px]", className)}
       style={{
-        fontWeight: emphasis ? 700 : 500,
+        fontWeight: emphasis ? 600 : 500,
         color: emphasis ? "var(--gw-text)" : "var(--gw-text-secondary)",
       }}
     >
