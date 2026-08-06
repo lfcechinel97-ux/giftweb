@@ -149,8 +149,8 @@ export default function Pedidos() {
                 onClick={() => setExpandedId(expanded ? null : p.id)}
               >
                 {/* Nº */}
-                <span className="font-mono text-sm font-semibold text-foreground w-20 shrink-0">
-                  #{p.numero}
+                <span className="w-20 shrink-0">
+                  <OrderNumber value={p.numero} />
                 </span>
 
                 {/* Cliente */}
