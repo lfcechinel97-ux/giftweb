@@ -190,3 +190,54 @@ input[type="range"]::-moz-range-thumb {
 .catalog-slider [data-orientation="horizontal"] > span:first-child {
   height: 3px !important;
 }
+
+/* ===== Sistema (painel do vendedor) — tema visual isolado ===== */
+.sistema-theme {
+  --background: 220 20% 97%;      /* #F7F8FA */
+  --foreground: 220 11% 12%;      /* #1A1D23 */
+  --card: 0 0% 100%;
+  --card-foreground: 220 11% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 11% 12%;
+  --primary: 142 72% 36%;         /* #16A34A */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 14% 96%;
+  --secondary-foreground: 220 11% 12%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%; /* #6B7280 */
+  --accent: 220 14% 96%;
+  --accent-foreground: 220 11% 12%;
+  --border: 220 13% 91%;          /* #E5E7EB */
+  --input: 220 13% 91%;
+  --ring: 217 91% 60%;            /* #2563EB */
+  --radius: 0.5rem;               /* 8px */
+  font-family: 'Inter', system-ui, sans-serif;
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
+}
+
+.sistema-theme h1 { font-size: 1.25rem; font-weight: 600; line-height: 1.4; letter-spacing: -0.01em; }
+.sistema-theme h2 { font-size: 1.05rem; font-weight: 600; line-height: 1.4; }
+.sistema-theme h3 { font-size: 0.95rem; font-weight: 600; }
+.sistema-theme label { font-weight: 500; }
+.sistema-theme p, .sistema-theme span, .sistema-theme td, .sistema-theme input, .sistema-theme textarea { font-weight: 400; }
+.sistema-theme a:not([class*="bg-"]) { color: #2563EB; }
+
+/* Cards brancos, borda cinza, sombra sutil */
+.sistema-theme .bg-card,
+.sistema-theme [class*="rounded-lg"].border.bg-card {
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+/* Normaliza verdes para #16A34A */
+.sistema-theme .bg-green-500,
+.sistema-theme .bg-green-600 { background-color: #16A34A !important; }
+.sistema-theme .hover\:bg-green-700:hover { background-color: #128139 !important; }
+.sistema-theme .text-green-600,
+.sistema-theme .text-green-700 { color: #16A34A !important; }
+.sistema-theme .accent-green-600 { accent-color: #16A34A; }
+.sistema-theme .bg-green-100 { background-color: #DCFCE7 !important; }
+.sistema-theme .bg-green-50 { background-color: #F0FDF4 !important; }
+
+/* Sem gradientes e sem preto puro */
+.sistema-theme [class*="bg-gradient"] { background-image: none !important; }
