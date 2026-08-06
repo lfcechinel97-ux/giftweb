@@ -507,7 +507,9 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     })();
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
+      // SIGNED_IN também é emitido em refresh de token / retorno de foco.
+      // Recarregar tudo nesses casos causava piscar/sumiço dos itens.
+      if (event === "SIGNED_IN" && session && !loadedRef.current) {
         setTimeout(() => { loadAll(true); }, 0);
       }
       if (event === "SIGNED_OUT") {
