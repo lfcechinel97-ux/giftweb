@@ -806,17 +806,21 @@ export default function PCP() {
                         ["medidas_ok", "Medidas"],
                         ["pagamento_ok", "Pagamento"],
                         ["etiqueta_ok", "Etiqueta"],
-                      ] as const).map(([key, label]) => (
-                        <label key={key} className="flex items-center gap-2 text-[13px]">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 accent-[#2563EB]"
-                            checked={!!detalhe[key]}
-                            onChange={e => applyUpdate(detalhe.producao_id, { [key]: e.target.checked })}
-                          />
-                          {label}
-                        </label>
-                      ))}
+                      ] as const).map(([key, label]) => {
+                        const auto = key === "pagamento_ok" && pagamentoGateOk(detalhe);
+                        return (
+                          <label key={key} className="flex items-center gap-2 text-[13px]">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-[#2563EB]"
+                              checked={!!detalhe[key] || auto}
+                              disabled={auto}
+                              onChange={e => applyUpdate(detalhe.producao_id, { [key]: e.target.checked })}
+                            />
+                            {label}
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
