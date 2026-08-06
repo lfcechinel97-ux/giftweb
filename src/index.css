@@ -282,6 +282,8 @@ input[type="range"]::-moz-range-thumb {
   --gw-primary: #2C5FF6;
   --gw-primary-hover: #1E4BD8;
   --gw-primary-soft: #EDF2FF;
+  --gw-violet: #7C5CFF;
+  --gw-violet-soft: #F1EDFF;
   --gw-success: #0EA36B;
   --gw-success-soft: #E3F7EF;
   --gw-warning: #F5A524;
