@@ -488,6 +488,31 @@ export default function PCP() {
     setModalPrevisao(row.previsao_retorno || "");
   };
 
+  /* Grava o gate de pagamento para todos os itens do pedido */
+  const gravarGatePedido = async (pedidoId: string, campo: "pagamento_cartao_conferido_em" | "pix_recebido_integral_em") => {
+    const agora = new Date().toISOString();
+    setRows(prev => prev.map(r => (r.pedido_id === pedidoId ? { ...r, [campo]: agora } : r)));
+    const { error } = await supabase
+      .from("sistema_producao_itens" as any)
+      .update({ [campo]: agora })
+      .eq("pedido_id", pedidoId);
+    if (error) {
+      console.error("[PCP] gravar gate de pagamento falhou:", error);
+      toast.error(`Não foi possível registrar a confirmação. ${error.message || ""}`);
+      await loadItems();
+      return false;
+    }
+    return true;
+  };
+
+  const moverItem = (row: PcpRow, targetStatus: PcpStatus) => {
+    if (targetStatus === "preparacao" && TERCEIRIZADA_TRIGGER.includes(row.local_producao)) {
+      openTerceiroModal(row);
+      return;
+    }
+    applyUpdate(row.producao_id, { status: targetStatus });
+  };
+
   const handleDrop = (targetStatus: PcpStatus, id: string) => {
     setDragOverStatus(null);
     setDraggingId(null);
@@ -495,15 +520,37 @@ export default function PCP() {
     const row = rows.find(r => r.producao_id === id);
     if (!row || row.status === targetStatus) return;
 
-    // Preparação: se a etapa é feita por terceirizada (ou fornecedor->terceirizada),
-    // pede os dados do envio antes de mover. Se for interna, entra direto (vetorização própria).
-    if (targetStatus === "preparacao" && TERCEIRIZADA_TRIGGER.includes(row.local_producao)) {
-      openTerceiroModal(row);
+    // Gate de cartão: sair de "Pronto p/ Produção" para qualquer etapa seguinte
+    if (
+      row.status === "pronto_producao" &&
+      idxStatus(targetStatus) > idxStatus("pronto_producao") &&
+      precisaGateCartao(row)
+    ) {
+      setGateModal({ row, target: targetStatus, tipo: "cartao" });
       return;
     }
 
-    applyUpdate(id, { status: targetStatus });
+    // Gate de PIX: entrar em "Aguardando Coleta"
+    if (targetStatus === "aguardando_coleta" && precisaGatePix(row)) {
+      setGateModal({ row, target: targetStatus, tipo: "pix" });
+      return;
+    }
+
+    moverItem(row, targetStatus);
   };
+
+  const confirmarGate = async () => {
+    if (!gateModal) return;
+    setGateSaving(true);
+    const campo = gateModal.tipo === "cartao" ? "pagamento_cartao_conferido_em" : "pix_recebido_integral_em";
+    const ok = await gravarGatePedido(gateModal.row.pedido_id, campo);
+    setGateSaving(false);
+    if (!ok) { setGateModal(null); return; }
+    const alvo = gateModal;
+    setGateModal(null);
+    moverItem(alvo.row, alvo.target);
+  };
+
 
   const confirmEnvioTerceiro = async () => {
     if (!terceiroModal) return;
