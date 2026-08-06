@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const SIZES = { sm: 40, md: 56, lg: 88 } as const;
+const SIZES = { sm: 40, md: 56, lg: 88, xl: 160 } as const;
 
 interface ThumbProps {
   src?: string | null;
@@ -17,7 +17,7 @@ export function Thumb({ src, alt = "", size = "md", className }: ThumbProps) {
   const base: React.CSSProperties = {
     width: px,
     height: px,
-    borderRadius: 8,
+    borderRadius: px >= 160 ? 12 : 8,
     border: "1px solid var(--gw-border)",
   };
 

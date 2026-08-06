@@ -2,7 +2,7 @@ import { OrderNumber, StatusPill, MetaField, Thumb, Money, type GwStage } from "
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Check, Filter, Plus, Search, Trash2, FileText, Package, Printer, X, MoreHorizontal,
@@ -171,7 +171,6 @@ export default function Orcamentos() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [listLoading, setListLoading] = useState(false);
-  const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
   const [page, setPage] = useState(1);
@@ -244,6 +243,18 @@ export default function Orcamentos() {
   useEffect(() => { setPage(1); }, [filtroBusca, filtroCliente, filtroStatus, filtroVendedor, dataInicio, dataFim, pageSize]);
   const currentPage = Math.min(page, totalPages);
   const pageItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  /* Todos os orçamentos ficam abertos: carrega itens dos que estão na página */
+  const fetchedItensRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    pageItems.forEach(o => {
+      if (o.itens.length === 0 && !fetchedItensRef.current.has(o.id)) {
+        fetchedItensRef.current.add(o.id);
+        fetchOrcamentoCompleto(o.id);
+      }
+    });
+  }, [pageItems]);
+
   const pageNumbers: (number | null)[] = (() => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
     const set = new Set<number>([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
@@ -301,14 +312,6 @@ export default function Orcamentos() {
     const full = await ensureItens(o);
     const cliente = clientes.find(c => c.id === full.clienteId);
     gerarPDFOrcamento(full, { clientes, vendedores, meiosPagamento, transportadoras, origens }, cliente?.nome);
-  };
-
-  const handleExpand = async (o: Orcamento) => {
-    const isOpen = expandedIds.includes(o.id);
-    setExpandedIds(prev => (isOpen ? prev.filter(id => id !== o.id) : [...prev, o.id]));
-    if (!isOpen && o.itens.length === 0) {
-      await fetchOrcamentoCompleto(o.id);
-    }
   };
 
   const getClienteNome = (o: Orcamento) => {
@@ -446,7 +449,7 @@ export default function Orcamentos() {
         </div>
       )}
       {/* Lista */}
-      <div className="space-y-2">
+      <div className="space-y-5">
         {(loading || listLoading) && filtered.length === 0 ? (
           <div className="rounded-[10px] p-12 text-center gw-meta" style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)" }}>
             Carregando histórico de orçamentos...
@@ -456,42 +459,19 @@ export default function Orcamentos() {
             Nenhum orçamento. Clique em "Novo Orçamento".
           </div>
         ) : pageItems.map(o => {
-          const thumbs = o.itens.slice(0, 3);
-          const extras = Math.max(0, o.itens.length - 3);
           return (
             <div
               key={o.id}
-              className="rounded-[10px] overflow-hidden"
-              style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)", boxShadow: "var(--gw-shadow-sm)" }}
+              className="rounded-[12px] overflow-hidden"
+              style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border-strong)", boxShadow: "var(--gw-shadow-sm)" }}
             >
-              {/* Linha colapsada */}
+              {/* Cabeçalho do orçamento */}
               <div
-                className="grid grid-cols-[88px_1fr_132px_100px_140px_120px_140px] items-center gap-3 px-4 h-[56px] cursor-pointer transition-colors"
-                onClick={() => handleExpand(o)}
-                onMouseEnter={e => (e.currentTarget.style.background = "var(--gw-surface-alt)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                className="grid grid-cols-[88px_1fr_100px_140px_120px_140px] items-center gap-3 px-4 h-[56px]"
+                style={{ background: "var(--gw-surface-alt)", borderBottom: "1px solid var(--gw-border)" }}
               >
                 <OrderNumber value={o.numero} />
                 <span className="gw-title truncate text-[15px]" style={{ fontWeight: 700 }}>{getClienteNome(o)}</span>
-                <div className="flex items-center">
-                  {thumbs.map((it, i) => (
-                    <span key={i} style={{ marginLeft: i === 0 ? 0 : -8, borderRadius: 8, border: "2px solid var(--gw-surface)" }}>
-                      <Thumb size="sm" src={it.mockupImagem || it.imagem} alt={it.nome} />
-                    </span>
-                  ))}
-                  {extras > 0 && (
-                    <span
-                      className="inline-flex items-center justify-center gw-tnum text-[11px]"
-                      style={{
-                        marginLeft: -8, width: 40, height: 40, borderRadius: 8,
-                        background: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)",
-                        border: "2px solid var(--gw-surface)",
-                      }}
-                    >
-                      +{extras}
-                    </span>
-                  )}
-                </div>
                 <span className="gw-meta">{new Date(o.createdAt).toLocaleDateString("pt-BR")}</span>
                 <div onClick={e => e.stopPropagation()}>
                   <DropdownMenu>
@@ -572,13 +552,13 @@ export default function Orcamentos() {
                 </div>
               </div>
 
-              {/* Linha expandida */}
-              {expandedIds.includes(o.id) && (
-                <div className="px-4 pb-4 pt-1 space-y-3" style={{ borderTop: "1px solid var(--gw-border)" }}>
+              {/* Conteúdo do orçamento (sempre visível) */}
+              <div className="px-4 pb-4 pt-3 space-y-3" style={{ background: "var(--gw-surface)" }}>
                   {/* Itens */}
-                  <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--gw-border)" }}>
+                  <div className="rounded-lg overflow-x-auto" style={{ border: "1px solid var(--gw-border)" }}>
+                    <div className="min-w-[760px]">
                     <div
-                      className="grid grid-cols-[72px_1fr_80px_110px_130px] items-center gap-3 px-3 h-9"
+                      className="grid grid-cols-[176px_1fr_80px_110px_130px] items-center gap-3 px-3 h-9"
                       style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
                     >
                       <span />
@@ -592,10 +572,10 @@ export default function Orcamentos() {
                     ) : o.itens.map((item, idx) => (
                       <div
                         key={idx}
-                        className="grid grid-cols-[72px_1fr_80px_110px_130px] items-center gap-3 px-3 h-[72px]"
+                        className="grid grid-cols-[176px_1fr_80px_110px_130px] items-center gap-3 px-3 py-4"
                         style={{ background: idx % 2 === 1 ? "color-mix(in srgb, var(--gw-surface-alt) 40%, var(--gw-surface))" : "var(--gw-surface)" }}
                       >
-                        <Thumb size="md" src={item.mockupImagem || item.imagem} alt={item.nome} />
+                        <Thumb size="xl" src={item.mockupImagem || item.imagem} alt={item.nome} />
                         <span className="flex flex-col min-w-0 leading-tight">
                           <span className="gw-title text-[12.5px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
                           {item.observacao && (
@@ -610,6 +590,7 @@ export default function Orcamentos() {
                         <span className="text-right"><Money value={item.precoUnitario * item.quantidade} emphasis /></span>
                       </div>
                     ))}
+                    </div>
                   </div>
 
                   {/* Totais */}
@@ -638,8 +619,7 @@ export default function Orcamentos() {
                     <MetaField label="Criado em" value={new Date(o.createdAt).toLocaleDateString("pt-BR")} />
                     <MetaField label="Contato" value={o.contatoNome || o.contatoTelefone || "—"} />
                   </div>
-                </div>
-              )}
+              </div>
             </div>
           );
         })}

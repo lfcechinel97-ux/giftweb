@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Search, Filter, Printer, Pencil, Trash2, Copy, MoreHorizontal, ChevronDown,
+  Search, Filter, Printer, Trash2, Copy, MoreHorizontal, ChevronDown,
   ChevronLeft, ChevronRight, X, ShoppingCart,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -73,7 +73,6 @@ export default function Pedidos() {
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
-  const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [prazoDraft, setPrazoDraft] = useState<Record<string, string>>({});
@@ -149,8 +148,6 @@ export default function Pedidos() {
     return out;
   })();
 
-  const toggleExpand = (id: string) =>
-    setExpandedIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
 
   const handlePrintPDF = async (p: Pedido) => {
     await gerarOrdemProducaoPDF(p, { clientes, vendedores, transportadoras });
@@ -262,7 +259,7 @@ export default function Pedidos() {
       )}
 
       {/* Lista */}
-      <div className="space-y-2">
+      <div className="space-y-5">
         {filtered.length === 0 ? (
           <div className="rounded-[10px] p-12 text-center gw-meta" style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)" }}>
             <ShoppingCart className="h-10 w-10 mx-auto mb-3" style={{ color: "var(--gw-text-muted)" }} />
@@ -271,10 +268,7 @@ export default function Pedidos() {
               : "Nenhum pedido encontrado para o filtro atual."}
           </div>
         ) : pageItems.map(p => {
-          const expanded = expandedIds.includes(p.id);
           const itens = Array.isArray(p.itens) ? p.itens : [];
-          const capa = itens.find(i => i.mockupImagem)?.mockupImagem || itens.find(i => i.imagem)?.imagem;
-          const extras = Math.max(0, itens.length - 1);
           const prog = progresso[p.id];
           const { prazo, despachar, produzir } = getDatas(p);
           const subtotal = itens.length > 0
@@ -285,15 +279,13 @@ export default function Pedidos() {
           return (
             <div
               key={p.id}
-              className="rounded-[10px] overflow-hidden"
-              style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)", boxShadow: "var(--gw-shadow-sm)" }}
+              className="rounded-[12px] overflow-hidden"
+              style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border-strong)", boxShadow: "var(--gw-shadow-sm)" }}
             >
-              {/* Linha colapsada */}
+              {/* Cabeçalho do pedido */}
               <div
-                className="grid grid-cols-[88px_1fr_120px_100px_150px_120px_120px] items-center gap-3 px-4 h-[104px] cursor-pointer transition-colors"
-                onClick={() => toggleExpand(p.id)}
-                onMouseEnter={e => (e.currentTarget.style.background = "var(--gw-surface-alt)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                className="grid grid-cols-[88px_1fr_100px_150px_120px_120px] items-center gap-3 px-4 h-[56px]"
+                style={{ background: "var(--gw-surface-alt)", borderBottom: "1px solid var(--gw-border)" }}
               >
                 <OrderNumber value={p.numero} />
 
@@ -305,14 +297,6 @@ export default function Pedidos() {
                     <span className="gw-meta">{prog.enviados}/{prog.total} itens enviados</span>
                   )}
                 </span>
-
-                {/* Miniatura grande — prioriza o mockup */}
-                <div className="flex items-center gap-2">
-                  <Thumb size="lg" src={capa} alt={itens[0]?.nome || ""} />
-                  {extras > 0 && (
-                    <span className="gw-meta whitespace-nowrap">+{extras}</span>
-                  )}
-                </div>
 
                 <span className="gw-meta">{new Date(p.createdAt).toLocaleDateString("pt-BR")}</span>
 
@@ -366,9 +350,6 @@ export default function Pedidos() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => toggleExpand(p.id)} style={{ color: "var(--gw-primary)" }}>
-                        <Pencil className="h-3.5 w-3.5 mr-2" /> {expanded ? "Fechar detalhes" : "Ver detalhes"}
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleCopiarNumero(p)} style={{ color: "var(--gw-violet)" }}>
                         <Copy className="h-3.5 w-3.5 mr-2" /> Copiar número
                       </DropdownMenuItem>
@@ -380,12 +361,12 @@ export default function Pedidos() {
                 </div>
               </div>
 
-              {/* Linha expandida */}
-              {expanded && (
-                <div className="px-4 pb-4 pt-1 space-y-3" style={{ borderTop: "1px solid var(--gw-border)" }}>
-                  <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--gw-border)" }}>
+              {/* Conteúdo do pedido (sempre visível) */}
+              <div className="px-4 pb-4 pt-3 space-y-3" style={{ background: "var(--gw-surface)" }}>
+                  <div className="rounded-lg overflow-x-auto" style={{ border: "1px solid var(--gw-border)" }}>
+                    <div className="min-w-[760px]">
                     <div
-                      className="grid grid-cols-[72px_1fr_80px_110px_130px] items-center gap-3 px-3 h-9"
+                      className="grid grid-cols-[176px_1fr_80px_110px_130px] items-center gap-3 px-3 h-9"
                       style={{ background: "var(--gw-primary-soft)" }}
                     >
                       <span />
@@ -399,10 +380,10 @@ export default function Pedidos() {
                     ) : itens.map((item, idx) => (
                       <div
                         key={item.id || idx}
-                        className="grid grid-cols-[72px_1fr_80px_110px_130px] items-center gap-3 px-3 h-[72px]"
+                        className="grid grid-cols-[176px_1fr_80px_110px_130px] items-center gap-3 px-3 py-4"
                         style={{ background: idx % 2 === 1 ? "color-mix(in srgb, var(--gw-surface-alt) 40%, var(--gw-surface))" : "var(--gw-surface)" }}
                       >
-                        <Thumb size="md" src={item.mockupImagem || item.imagem} alt={item.nome} />
+                        <Thumb size="xl" src={item.mockupImagem || item.imagem} alt={item.nome} />
                         <span className="flex flex-col min-w-0 leading-tight">
                           <span className="gw-title text-[13px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
                           {item.observacao && (
@@ -417,6 +398,7 @@ export default function Pedidos() {
                         <span className="text-right"><Money value={itemTotal(item)} emphasis /></span>
                       </div>
                     ))}
+                    </div>
                   </div>
 
                   {/* Totais */}
@@ -483,8 +465,7 @@ export default function Pedidos() {
                       )}
                     </div>
                   </div>
-                </div>
-              )}
+              </div>
             </div>
           );
         })}
