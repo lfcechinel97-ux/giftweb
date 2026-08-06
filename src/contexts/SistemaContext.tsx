@@ -169,6 +169,9 @@ export interface Pedido {
   status: "novo" | "producao" | "pronto" | "enviado" | "entregue" | "cancelado";
   createdAt: string;
   updatedAt: string;
+  prazoProducaoDias?: number;
+  dataProduzirAte?: string;
+  dataDespacharAte?: string;
 }
 
 export interface StockAdjustment {
