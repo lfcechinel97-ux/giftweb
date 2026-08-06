@@ -287,38 +287,81 @@ export default function Orcamentos() {
     return t?.nome || "—";
   };
 
+  const dateBR = (v?: string | null) => (v ? new Date(`${String(v).slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR") : "—");
+
+  const addDays = (iso: string, days: number) => {
+    const d = new Date(iso);
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const getDatas = (o: Orcamento) => {
+    const prazo = o.prazoProducaoDias ?? 15;
+    const despachar = o.dataDespacharAte ?? addDays(o.createdAt, prazo);
+    const produzir = o.dataProduzirAte ?? addDays(despachar, -2);
+    return { produzir, despachar };
+  };
+
+  const dateTone = (iso: string, status: OrcamentoStatus): "default" | "warning" | "danger" => {
+    if (status === "aprovado" || status === "cancelado") return "default";
+    const target = new Date(`${iso.slice(0, 10)}T23:59:59`).getTime();
+    const diff = Math.ceil((target - Date.now()) / 86400000);
+    if (diff < 0) return "danger";
+    if (diff <= 2) return "warning";
+    return "default";
+  };
+
+  const chips: { key: string; label: string; clear: () => void }[] = [
+    filtroBusca ? { key: "busca", label: `Busca: ${filtroBusca}`, clear: () => setFiltroBusca("") } : null,
+    filtroCliente ? { key: "cliente", label: `Cliente: ${filtroCliente}`, clear: () => setFiltroCliente("") } : null,
+    filtroStatus !== "todos" ? { key: "status", label: `Status: ${statusStyles[filtroStatus as OrcamentoStatus].label}`, clear: () => setFiltroStatus("todos") } : null,
+    filtroVendedor !== "todos" ? { key: "vendedor", label: `Vendedor: ${getVendedorNome(filtroVendedor)}`, clear: () => setFiltroVendedor("todos") } : null,
+    dataInicio ? { key: "de", label: `De: ${dateBR(dataInicio)}`, clear: () => setDataInicio("") } : null,
+    dataFim ? { key: "ate", label: `Até: ${dateBR(dataFim)}`, clear: () => setDataFim("") } : null,
+  ].filter(Boolean) as { key: string; label: string; clear: () => void }[];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Orçamentos</h2>
-          <p className="text-sm text-muted-foreground">Gerencie orçamentos e aprovações.</p>
+          <h2 className="gw-display">Orçamentos</h2>
+          <p className="gw-meta">Gerencie orçamentos e aprovações.</p>
         </div>
-        <Button className="bg-green-600 hover:bg-green-700" onClick={() => navigate("/sistema/orcamentos/novo")}>
+        <button
+          type="button"
+          onClick={() => navigate("/sistema/orcamentos/novo")}
+          className="inline-flex items-center h-9 px-4 rounded-md text-sm font-semibold text-white transition-colors"
+          style={{ background: "var(--gw-primary)" }}
+          onMouseEnter={e => (e.currentTarget.style.background = "var(--gw-primary-hover)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "var(--gw-primary)")}
+        >
           <Plus className="h-4 w-4 mr-2" /> Novo Orçamento
-        </Button>
+        </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-card rounded-lg border border-border p-4 flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Buscar orçamento..." 
-            value={filtroBusca} 
-            onChange={e => setFiltroBusca(e.target.value)} 
-            className="pl-9" 
+      {/* Filtros */}
+      <div
+        className="rounded-[10px] p-3 flex flex-wrap items-center gap-2"
+        style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)", boxShadow: "var(--gw-shadow-sm)" }}
+      >
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--gw-text-muted)" }} />
+          <Input
+            placeholder="Buscar orçamento..."
+            value={filtroBusca}
+            onChange={e => setFiltroBusca(e.target.value)}
+            className="pl-9 h-9"
           />
         </div>
-        <Input 
-          placeholder="Filtrar por cliente..." 
-          value={filtroCliente} 
-          onChange={e => setFiltroCliente(e.target.value)} 
-          className="md:w-[240px]"
+        <Input
+          placeholder="Cliente..."
+          value={filtroCliente}
+          onChange={e => setFiltroCliente(e.target.value)}
+          className="h-9 w-[200px]"
         />
         <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+          <SelectTrigger className="h-9 w-[150px]">
+            <Filter className="h-4 w-4 mr-2" style={{ color: "var(--gw-text-muted)" }} />
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -329,7 +372,7 @@ export default function Orcamentos() {
           </SelectContent>
         </Select>
         <Select value={filtroVendedor} onValueChange={setFiltroVendedor}>
-          <SelectTrigger className="w-full md:w-[220px]">
+          <SelectTrigger className="h-9 w-[190px]">
             <SelectValue placeholder="Vendedor" />
           </SelectTrigger>
           <SelectContent>
@@ -339,153 +382,206 @@ export default function Orcamentos() {
             ))}
           </SelectContent>
         </Select>
-        <div className="flex items-center gap-2">
-          <Input
-            type="date"
-            aria-label="Data inicial"
-            value={dataInicio}
-            onChange={e => setDataInicio(e.target.value)}
-            className="w-full md:w-[150px]"
-          />
-          <span className="text-muted-foreground text-sm">até</span>
-          <Input
-            type="date"
-            aria-label="Data final"
-            value={dataFim}
-            onChange={e => setDataFim(e.target.value)}
-            className="w-full md:w-[150px]"
-          />
-          {(dataInicio || dataFim) && (
-            <Button variant="ghost" size="icon" onClick={() => { setDataInicio(""); setDataFim(""); }}>
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+        <Input type="date" aria-label="Data inicial" value={dataInicio} onChange={e => setDataInicio(e.target.value)} className="h-9 w-[140px]" />
+        <Input type="date" aria-label="Data final" value={dataFim} onChange={e => setDataFim(e.target.value)} className="h-9 w-[140px]" />
       </div>
 
-      {/* Total */}
+      {chips.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {chips.map(c => (
+            <button
+              key={c.key}
+              type="button"
+              onClick={c.clear}
+              className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-xs font-medium"
+              style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
+            >
+              {c.label}
+              <X className="h-3 w-3" />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Contador + total */}
       <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">
+        <p className="gw-meta">
           {listLoading ? "Atualizando orçamentos..." : `${filtered.length} orçamento(s)`}
         </p>
-        <p className="text-sm font-medium">Total filtrado: <span className="text-green-600">{formatBRL(valorTotalFiltrado)}</span></p>
+        <p className="flex items-center gap-2">
+          <span className="gw-label">Total filtrado</span>
+          <span className="gw-num text-[16px]" style={{ fontWeight: 700, color: "var(--gw-text)" }}>
+            {formatBRL(valorTotalFiltrado)}
+          </span>
+        </p>
       </div>
 
-      {/* Cards */}
-      <div className="space-y-3">
+      {/* Lista */}
+      <div className="space-y-2">
         {(loading || listLoading) && filtered.length === 0 ? (
-          <div className="bg-card border border-border rounded-lg p-12 text-center">
-            <p className="text-muted-foreground">Carregando histórico de orçamentos...</p>
+          <div className="rounded-[10px] p-12 text-center gw-meta" style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)" }}>
+            Carregando histórico de orçamentos...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-card border border-border rounded-lg p-12 text-center">
-            <p className="text-muted-foreground">Nenhum orçamento. Clique em "Novo Orçamento".</p>
+          <div className="rounded-[10px] p-12 text-center gw-meta" style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)" }}>
+            Nenhum orçamento. Clique em "Novo Orçamento".
           </div>
-        ) : filtered.map(o => (
-          <div key={o.id} className="bg-card border border-border rounded-lg overflow-hidden">
-            {/* Header row */}
-            <div 
-              className="grid grid-cols-[100px_1fr_120px_140px_100px_140px_44px] items-center gap-3 px-4 py-3 bg-muted/30 cursor-pointer hover:bg-muted/50"
-              onClick={() => handleExpand(o)}
+        ) : filtered.map(o => {
+          const datas = getDatas(o);
+          const thumbs = o.itens.slice(0, 3);
+          const extras = Math.max(0, o.itens.length - 3);
+          return (
+            <div
+              key={o.id}
+              className="rounded-[10px] overflow-hidden"
+              style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)", boxShadow: "var(--gw-shadow-sm)" }}
             >
-              <OrderNumber value={o.numero} />
-              <span className="text-sm truncate">{getClienteNome(o)}</span>
-              <span className="text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleDateString("pt-BR")}</span>
-              <span className={`inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full w-fit ${statusStyles[o.status].dot.replace("bg-", "bg-opacity-20 ")}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${statusStyles[o.status].dot}`} />
-                {statusStyles[o.status].label}
-              </span>
-              <span className="text-right font-semibold">{formatBRL(calcOrcTotal(o))}</span>
-              <div className="flex gap-1">
-                {o.status === "aberto" && (
-                  <Button size="sm" className={statusStyles["aprovado"].btn} onClick={(e) => { e.stopPropagation(); handleAprovar(o.id); }}>
-                    <Check className="h-3.5 w-3.5 mr-1" /> Aprovar
-                  </Button>
-                )}
-
-                <Button size="icon" variant="ghost" className="text-red-600" onClick={(e) => { e.stopPropagation(); setDeleteId(o.id); }}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+              {/* Linha colapsada */}
+              <div
+                className="grid grid-cols-[88px_1fr_132px_100px_110px_120px_140px] items-center gap-3 px-4 h-[56px] cursor-pointer transition-colors"
+                onClick={() => handleExpand(o)}
+                onMouseEnter={e => (e.currentTarget.style.background = "var(--gw-surface-alt)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              >
+                <OrderNumber value={o.numero} />
+                <span className="gw-title truncate">{getClienteNome(o)}</span>
+                <div className="flex items-center">
+                  {thumbs.length === 0 ? (
+                    <Thumb size="sm" />
+                  ) : thumbs.map((it, i) => (
+                    <span key={i} style={{ marginLeft: i === 0 ? 0 : -8, borderRadius: 8, border: "2px solid var(--gw-surface)" }}>
+                      <Thumb size="sm" src={it.mockupImagem || it.imagem} alt={it.nome} />
+                    </span>
+                  ))}
+                  {extras > 0 && (
+                    <span
+                      className="inline-flex items-center justify-center gw-num text-[11px]"
+                      style={{
+                        marginLeft: -8, width: 40, height: 40, borderRadius: 8,
+                        background: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)",
+                        border: "2px solid var(--gw-surface)",
+                      }}
+                    >
+                      +{extras}
+                    </span>
+                  )}
+                </div>
+                <span className="gw-meta">{new Date(o.createdAt).toLocaleDateString("pt-BR")}</span>
+                <StatusPill status={STATUS_STAGE[o.status]} label={statusStyles[o.status].label} variant="soft" />
+                <span className="text-right">
+                  <Money value={calcOrcTotal(o)} emphasis />
+                </span>
+                <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
+                  {o.status === "aberto" && (
+                    <button
+                      type="button"
+                      onClick={() => handleAprovar(o.id)}
+                      className="inline-flex items-center h-8 px-3 rounded-md text-sm font-semibold text-white transition-colors"
+                      style={{ background: "var(--gw-primary)" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "var(--gw-primary-hover)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "var(--gw-primary)")}
+                    >
+                      <Check className="h-3.5 w-3.5 mr-1" /> Aprovar
+                    </button>
+                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Mais ações"
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-md"
+                        style={{ border: "1px solid var(--gw-border)", color: "var(--gw-text-secondary)", background: "var(--gw-surface)" }}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40">
+                      <DropdownMenuItem onClick={() => navigate(`/sistema/orcamentos/${o.id}`)}>
+                        <FileText className="h-3.5 w-3.5 mr-2" /> Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleImprimir(o)}>
+                        <Printer className="h-3.5 w-3.5 mr-2" /> Imprimir
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDeleteId(o.id)} style={{ color: "var(--gw-danger)" }}>
+                        <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
-              <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); handleExpand(o); }}>
-                {expandedId === o.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-              </Button>
+
+              {/* Linha expandida */}
+              {expandedId === o.id && (
+                <div className="px-4 pb-4 pt-1 space-y-3" style={{ borderTop: "1px solid var(--gw-border)" }}>
+                  {/* Itens */}
+                  <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--gw-border)" }}>
+                    <div
+                      className="grid grid-cols-[56px_1fr_80px_110px_130px] items-center gap-3 px-3 h-9"
+                      style={{ background: "var(--gw-surface-alt)" }}
+                    >
+                      <span />
+                      <span className="gw-label">Produto</span>
+                      <span className="gw-label text-right">Qtd</span>
+                      <span className="gw-label text-right">Unit.</span>
+                      <span className="gw-label text-right">Total</span>
+                    </div>
+                    {o.itens.length === 0 ? (
+                      <div className="px-3 py-6 text-center gw-meta">Carregando itens...</div>
+                    ) : o.itens.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="grid grid-cols-[56px_1fr_80px_110px_130px] items-center gap-3 px-3 h-[52px]"
+                        style={{ background: idx % 2 === 1 ? "color-mix(in srgb, var(--gw-surface-alt) 40%, var(--gw-surface))" : "var(--gw-surface)" }}
+                      >
+                        <Thumb size="sm" src={item.mockupImagem || item.imagem} alt={item.nome} />
+                        <span className="flex flex-col min-w-0">
+                          <span className="gw-body-strong truncate">{item.nome}</span>
+                          {item.codigoComposto && (
+                            <span className="gw-num text-[11px]" style={{ color: "var(--gw-text-muted)" }}>{item.codigoComposto}</span>
+                          )}
+                        </span>
+                        <span className="text-right gw-num text-[13px]" style={{ color: "var(--gw-text)" }}>{item.quantidade}</span>
+                        <span className="text-right"><Money value={item.precoUnitario} /></span>
+                        <span className="text-right"><Money value={item.precoUnitario * item.quantidade} emphasis /></span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Totais */}
+                  <div
+                    className="h-11 rounded-lg px-4 flex items-center justify-end gap-6"
+                    style={{ background: "var(--gw-surface-alt)" }}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="gw-label">Subtotal</span>
+                      <Money value={o.itens.length > 0 ? calcSubtotal(o) : Number(o.subtotal || 0)} />
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className="gw-label">Frete{o.freteTipo ? ` (${o.freteTipo})` : ""}</span>
+                      <Money value={Number(o.freteValor) || 0} />
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className="gw-label">Total</span>
+                      <Money value={calcOrcTotal(o)} emphasis />
+                    </span>
+                  </div>
+
+                  {/* Metadados */}
+                  <div className="h-14 grid grid-cols-6 gap-4 items-center">
+                    <MetaField label="Vendedor" value={getVendedorNome(o.vendedorId)} />
+                    <MetaField label="Transportadora" value={getTransportadoraNome(o.transportadoraId)} />
+                    <MetaField label="Criado em" value={new Date(o.createdAt).toLocaleDateString("pt-BR")} />
+                    <MetaField label="Produzir até" value={dateBR(datas.produzir)} tone={dateTone(datas.produzir, o.status)} />
+                    <MetaField label="Despachar até" value={dateBR(datas.despachar)} tone={dateTone(datas.despachar, o.status)} />
+                    <MetaField label="Contato" value={o.contatoNome || o.contatoTelefone || "—"} />
+                  </div>
+                </div>
+              )}
             </div>
-
-            {/* Expanded content */}
-            {expandedId === o.id && (
-              <div className="border-t border-border">
-                {/* Items header */}
-                <div className="grid grid-cols-[40px_1fr_80px_100px_120px] items-center gap-3 px-4 py-2 text-xs font-medium text-muted-foreground bg-muted/20">
-                  <span /><span>Produto</span><span className="text-right">Qtd</span><span className="text-right">Unit.</span><span className="text-right">Total</span>
-                </div>
-                {o.itens.length === 0 && (
-                  <div className="px-4 py-6 text-center text-sm text-muted-foreground">Carregando itens...</div>
-                )}
-                {/* Items */}
-                {o.itens.map((item, idx) => (
-                  <div key={idx} className="grid grid-cols-[40px_1fr_80px_100px_120px] items-center gap-3 px-4 py-2 text-sm border-b border-border last:border-0">
-                    <span>
-                      {item.imagem ? (
-                        <img src={item.imagem} alt="" className="w-8 h-8 rounded object-cover" />
-                      ) : (
-                        <Package className="h-5 w-5 text-muted-foreground" />
-                      )}
-                    </span>
-                    <span className="flex flex-col">
-                      <span className="text-foreground truncate">{item.nome}</span>
-                      {item.codigoComposto && (
-                        <span className="text-[10px] text-muted-foreground font-mono">{item.codigoComposto}</span>
-                      )}
-                    </span>
-                    <span className="text-right text-foreground">{item.quantidade}</span>
-                    <span className="text-right text-muted-foreground">{formatBRL(item.precoUnitario)}</span>
-                    <span className="text-right font-medium">{formatBRL(item.precoUnitario * item.quantidade)}</span>
-                  </div>
-                ))}
-                {/* Totals */}
-                <div className="grid grid-cols-[40px_1fr_80px_100px_120px] items-center gap-3 px-4 py-3 bg-muted/10 text-sm">
-                  <span /><span /><span /><span className="text-right text-muted-foreground">Subtotal:</span>
-                  <span className="text-right font-semibold">{formatBRL(calcSubtotal(o))}</span>
-                </div>
-                {o.freteValor > 0 && (
-                  <div className="grid grid-cols-[40px_1fr_80px_100px_120px] items-center gap-3 px-4 py-2 bg-muted/10 text-sm">
-                    <span /><span /><span /><span className="text-right text-muted-foreground">Frete ({o.freteTipo}):</span>
-                    <span className="text-right">{formatBRL(o.freteValor)}</span>
-                  </div>
-                )}
-                <div className="grid grid-cols-[40px_1fr_80px_100px_120px] items-center gap-3 px-4 py-3 bg-muted/20 text-sm font-semibold">
-                  <span /><span /><span /><span className="text-right">Total:</span>
-                  <span className="text-right text-green-600">{formatBRL(calcOrcTotal(o))}</span>
-                </div>
-                {/* Details */}
-                <div className="grid grid-cols-4 gap-4 px-4 py-3 text-xs text-muted-foreground border-t border-border">
-                  <div>
-                    <span className="block font-medium">Vendedor</span>
-                    {getVendedorNome(o.vendedorId)}
-                  </div>
-                  <div>
-                    <span className="block font-medium">Prazo de Entrega</span>
-                    {o.prazoEntrega ? `${o.prazoEntrega} dias úteis` : "À combinar"}
-                  </div>
-                  <div>
-                    <span className="block font-medium">Transportadora</span>
-                    {getTransportadoraNome(o.transportadoraId)}
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button size="sm" variant="outline" onClick={() => handleImprimir(o)}>
-                      <Printer className="h-3.5 w-3.5 mr-1" /> Imprimir
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => navigate(`/sistema/orcamentos/${o.id}`)}>
-                      <FileText className="h-3.5 w-3.5 mr-1" /> Editar
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
+
 
       {/* Modal Aprovação */}
       {aprovarOrc && (
