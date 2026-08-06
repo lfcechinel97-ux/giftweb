@@ -1,3 +1,4 @@
+import { OrderNumber } from "@/components/sistema/ui";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -65,7 +66,7 @@ function AprovarModal({ orcamento, onClose, onConfirm }: AprovarModalProps) {
         <div className="flex items-center justify-between p-5 border-b">
           <div>
             <h2 className="text-lg font-semibold">Confirmar Aprovação</h2>
-            <p className="text-sm text-gray-500">Orçamento #{orcamento.numero} — selecione os itens e ajuste quantidades</p>
+            <p className="text-sm text-gray-500">Orçamento {orcamento.numero} — selecione os itens e ajuste quantidades</p>
           </div>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
             <X className="w-5 h-5" />
@@ -242,7 +243,7 @@ export default function Orcamentos() {
       });
     const orcModificado = { ...orc, itens: itensAprovados };
     aprovarOrcamento(orcModificado.id).then((p) => {
-      if (p) toast.success(`Orçamento aprovado! Pedido #${p.numero} criado.`);
+      if (p) toast.success(`Orçamento aprovado! Pedido ${p.numero} criado.`);
     });
     setAprovarOrc(null);
   };
@@ -387,7 +388,7 @@ export default function Orcamentos() {
               className="grid grid-cols-[100px_1fr_120px_140px_100px_140px_44px] items-center gap-3 px-4 py-3 bg-muted/30 cursor-pointer hover:bg-muted/50"
               onClick={() => handleExpand(o)}
             >
-              <span className="font-semibold text-foreground">#{o.numero}</span>
+              <OrderNumber value={o.numero} />
               <span className="text-sm truncate">{getClienteNome(o)}</span>
               <span className="text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleDateString("pt-BR")}</span>
               <span className={`inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full w-fit ${statusStyles[o.status].dot.replace("bg-", "bg-opacity-20 ")}`}>

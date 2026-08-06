@@ -630,6 +630,8 @@ export type Database = {
           contato_nome: string | null
           contato_telefone: string | null
           created_at: string
+          data_despachar_ate: string | null
+          data_produzir_ate: string | null
           frete_tipo: string | null
           frete_valor: number
           id: string
@@ -639,6 +641,7 @@ export type Database = {
           origem_id: string | null
           pagamento_id: string | null
           prazo_entrega: number | null
+          prazo_producao_dias: number
           status: string
           subtotal: number
           transportadora_id: string | null
@@ -654,6 +657,8 @@ export type Database = {
           contato_nome?: string | null
           contato_telefone?: string | null
           created_at?: string
+          data_despachar_ate?: string | null
+          data_produzir_ate?: string | null
           frete_tipo?: string | null
           frete_valor?: number
           id?: string
@@ -663,6 +668,7 @@ export type Database = {
           origem_id?: string | null
           pagamento_id?: string | null
           prazo_entrega?: number | null
+          prazo_producao_dias?: number
           status?: string
           subtotal?: number
           transportadora_id?: string | null
@@ -678,6 +684,8 @@ export type Database = {
           contato_nome?: string | null
           contato_telefone?: string | null
           created_at?: string
+          data_despachar_ate?: string | null
+          data_produzir_ate?: string | null
           frete_tipo?: string | null
           frete_valor?: number
           id?: string
@@ -687,6 +695,7 @@ export type Database = {
           origem_id?: string | null
           pagamento_id?: string | null
           prazo_entrega?: number | null
+          prazo_producao_dias?: number
           status?: string
           subtotal?: number
           transportadora_id?: string | null
@@ -882,6 +891,8 @@ export type Database = {
           contato_nome: string | null
           contato_telefone: string | null
           created_at: string
+          data_despachar_ate: string | null
+          data_produzir_ate: string | null
           frete_tipo: string | null
           frete_valor: number
           id: string
@@ -891,6 +902,7 @@ export type Database = {
           orcamento_id: string | null
           pagamento_id: string | null
           prazo_entrega: number | null
+          prazo_producao_dias: number
           status: string
           subtotal: number
           total: number
@@ -905,6 +917,8 @@ export type Database = {
           contato_nome?: string | null
           contato_telefone?: string | null
           created_at?: string
+          data_despachar_ate?: string | null
+          data_produzir_ate?: string | null
           frete_tipo?: string | null
           frete_valor?: number
           id?: string
@@ -914,6 +928,7 @@ export type Database = {
           orcamento_id?: string | null
           pagamento_id?: string | null
           prazo_entrega?: number | null
+          prazo_producao_dias?: number
           status?: string
           subtotal?: number
           total?: number
@@ -928,6 +943,8 @@ export type Database = {
           contato_nome?: string | null
           contato_telefone?: string | null
           created_at?: string
+          data_despachar_ate?: string | null
+          data_produzir_ate?: string | null
           frete_tipo?: string | null
           frete_valor?: number
           id?: string
@@ -937,6 +954,7 @@ export type Database = {
           orcamento_id?: string | null
           pagamento_id?: string | null
           prazo_entrega?: number | null
+          prazo_producao_dias?: number
           status?: string
           subtotal?: number
           total?: number
