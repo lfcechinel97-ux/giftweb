@@ -36,12 +36,12 @@ export default function SistemaLayout() {
   }, [loc.pathname, navigate]);
 
   return (
-    <div className="flex min-h-screen bg-muted/40">
-      <aside className="w-[230px] min-h-screen bg-[hsl(228,40%,8%)] text-white fixed left-0 top-0 flex flex-col z-50">
+    <div className="sistema-theme flex min-h-screen bg-background">
+      <aside className="w-[230px] min-h-screen bg-[#1C2430] text-white fixed left-0 top-0 flex flex-col z-50">
         <div className="px-5 py-6 border-b border-white/10">
-          <h2 className="text-xl font-black tracking-tight" style={{ fontFamily: "inherit", letterSpacing: "-0.02em" }}>
-            <span style={{ color: "hsl(142,71%,45%)" }}>Gift</span>
-            <span style={{ color: "#fff" }}> Web</span>
+          <h2 className="text-xl tracking-tight" style={{ fontFamily: "inherit", fontWeight: 600, letterSpacing: "-0.02em" }}>
+            <span style={{ color: "#fff" }}>Gift</span>
+            <span style={{ color: "#9CA3AF" }}> Web</span>
           </h2>
           <p className="text-xs text-white/40 mt-0.5">Sistema do Vendedor</p>
         </div>
@@ -51,13 +51,14 @@ export default function SistemaLayout() {
             <NavLink
               key={item.path}
               to={item.path}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/70 hover:bg-white/[0.08] transition-colors"
-              activeClassName="!bg-green-500 !text-white font-medium"
+              className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/65 hover:bg-white/[0.06] hover:text-white transition-colors"
+              activeClassName="!text-white !bg-white/[0.08] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-[#16A34A]"
             >
               <item.icon className="h-4 w-4 shrink-0" />
               <span>{item.label}</span>
             </NavLink>
           ))}
+
 
           <a
             href="/"
