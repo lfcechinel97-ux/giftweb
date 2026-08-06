@@ -130,6 +130,9 @@ export interface Orcamento {
   updatedAt: string;
   aprovadoEm?: string;
   anexoUrl?: string;
+  prazoProducaoDias?: number;
+  dataProduzirAte?: string;
+  dataDespacharAte?: string;
 }
 
 export interface PedidoItem {
@@ -270,6 +273,9 @@ const mapOrcamento = (r: any): Orcamento => ({
   pagamentoId: r.pagamento_id ?? undefined, observacoes: r.observacoes ?? undefined,
   status: r.status, createdAt: r.created_at, updatedAt: r.updated_at,
   aprovadoEm: r.aprovado_em ?? undefined, anexoUrl: r.anexo_url ?? undefined,
+  prazoProducaoDias: r.prazo_producao_dias ?? undefined,
+  dataProduzirAte: r.data_produzir_ate ?? undefined,
+  dataDespacharAte: r.data_despachar_ate ?? undefined,
 });
 const orcamentoToDb = (o: Partial<Orcamento>): any => {
   const out: any = {};
