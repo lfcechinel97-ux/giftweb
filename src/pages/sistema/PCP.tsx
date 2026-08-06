@@ -467,8 +467,12 @@ export default function PCP() {
           <p className="text-muted-foreground">Nenhum item de produção encontrado.</p>
         </div>
       ) : (
-        <div className="w-full overflow-x-scroll overflow-y-hidden pb-3 pcp-scroll">
-          <div className="flex gap-3 items-start w-max pb-2">
+        <div
+          ref={boardRef}
+          className="w-full overflow-x-auto overflow-y-hidden pcp-scroll"
+          style={{ scrollbarGutter: "stable" }}
+        >
+          <div className="flex gap-4 items-start w-max pb-2">
             {STATUS_COLS.map(col => {
               const items = byStatus[col.value] || [];
               const somaQtd = items.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
@@ -483,22 +487,27 @@ export default function PCP() {
                     handleDrop(col.value, e.dataTransfer.getData("text/plain"));
                   }}
                   className={cn(
-                    "w-[280px] shrink-0 rounded-xl border bg-white/60 transition-colors max-h-[calc(100vh-230px)] flex flex-col",
-                    isOver ? "border-[#2563EB] bg-[#2563EB]/5" : "border-border"
+                    "w-[300px] shrink-0 rounded-xl border transition-colors h-[calc(100vh-250px)] flex flex-col overflow-hidden",
+                    isOver ? "border-[#2563EB] bg-[#2563EB]/5" : "border-[var(--gw-border)] bg-white/60"
                   )}
                 >
                   <div
-                    className="flex items-center justify-between px-3 py-2.5 rounded-t-xl text-white sticky top-0 z-10"
+                    className="flex items-center justify-between px-3 py-2.5 text-white sticky top-0 z-10 shrink-0"
                     style={{ backgroundColor: col.color }}
                   >
-                    <span className="text-xs font-title truncate">{col.label}</span>
-                    <span className="text-[10px] font-semibold bg-white/25 rounded-full px-2 py-0.5 shrink-0">
-                      {items.length} · {somaQtd} un
+                    <span className="text-[13px] font-bold truncate">{col.label}</span>
+                    <span
+                      className="text-[11px] font-semibold text-white rounded-full px-2 py-0.5 shrink-0"
+                      style={{ backgroundColor: "rgba(255,255,255,.22)" }}
+                    >
+                      {items.length} · {somaQtd}un
                     </span>
                   </div>
-                  <div className="p-2 space-y-2 min-h-[120px] overflow-y-auto">
+                  <div className="p-2 space-y-2 flex-1 overflow-y-auto pcp-col-scroll">
                     {items.length === 0 ? (
-                      <div className="text-center text-[11px] text-muted-foreground/60 py-6">Vazio</div>
+                      <div className="h-[96px] rounded-lg border border-dashed border-[var(--gw-border)] flex items-center justify-center gw-meta text-[11px] text-[var(--gw-text-muted)]">
+                        Sem itens nesta etapa
+                      </div>
                     ) : items.map(row => (
                       <PcpCard
                         key={row.producao_id}
@@ -507,6 +516,9 @@ export default function PCP() {
                         total={indices[row.producao_id]?.total ?? 1}
                         dragging={draggingId === row.producao_id}
                         saving={savingId === row.producao_id}
+                        atrasado={(row.horas_na_etapa ?? 0) > (LIMITE_ETAPA[row.status] ?? 9999)}
+                        highlight={!!hoverPedido && hoverPedido === row.pedido_id}
+                        onHover={setHoverPedido}
                         onDragStart={() => setDraggingId(row.producao_id)}
                         onDragEnd={() => setDraggingId(null)}
                         onOpen={() => setDetalheId(row.producao_id)}
