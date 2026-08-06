@@ -1,8 +1,11 @@
-import { OrderNumber } from "@/components/sistema/ui";
+import { OrderNumber, StatusPill, MetaField, Thumb, Money, type GwStage } from "@/components/sistema/ui";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Check, Filter, Plus, Search, Trash2, ChevronDown, ChevronUp, FileText, Package, Printer, X
+  Check, Filter, Plus, Search, Trash2, FileText, Package, Printer, X, MoreHorizontal
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
