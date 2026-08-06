@@ -647,8 +647,8 @@ export default function Orcamentos() {
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page <= 1}
+              onClick={() => setPage(p => Math.max(1, currentPage - 1))}
+              disabled={currentPage <= 1}
               className="inline-flex items-center justify-center h-8 w-8 rounded-md disabled:opacity-40"
               style={{ border: "1px solid var(--gw-border)", color: "var(--gw-primary)" }}
               aria-label="Página anterior"
@@ -665,7 +665,7 @@ export default function Orcamentos() {
                   onClick={() => setPage(n)}
                   className="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-md text-[13px] font-semibold"
                   style={
-                    n === page
+                    n === currentPage
                       ? { background: "var(--gw-primary)", color: "#fff" }
                       : { border: "1px solid var(--gw-border)", color: "var(--gw-text-secondary)" }
                   }
@@ -676,8 +676,8 @@ export default function Orcamentos() {
             )}
             <button
               type="button"
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
+              onClick={() => setPage(p => Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage >= totalPages}
               className="inline-flex items-center justify-center h-8 w-8 rounded-md disabled:opacity-40"
               style={{ border: "1px solid var(--gw-border)", color: "var(--gw-primary)" }}
               aria-label="Próxima página"
