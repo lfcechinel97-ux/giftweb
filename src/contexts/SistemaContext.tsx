@@ -145,6 +145,8 @@ export interface PedidoItem {
   precoUnitario: number;
   total: number;
   mockupImagem?: string;
+  imagem?: string;
+  observacao?: string;
 }
 
 export interface Pedido {
@@ -169,6 +171,9 @@ export interface Pedido {
   status: "novo" | "producao" | "pronto" | "enviado" | "entregue" | "cancelado";
   createdAt: string;
   updatedAt: string;
+  prazoProducaoDias?: number;
+  dataProduzirAte?: string;
+  dataDespacharAte?: string;
 }
 
 export interface StockAdjustment {
@@ -314,6 +319,9 @@ const mapPedido = (r: any): Pedido => ({
   transportadoraId: r.transportadora_id ?? undefined, prazoEntrega: r.prazo_entrega ?? undefined,
   pagamentoId: r.pagamento_id ?? undefined, observacoes: r.observacoes ?? undefined,
   status: r.status, createdAt: r.created_at, updatedAt: r.updated_at,
+  prazoProducaoDias: r.prazo_producao_dias ?? undefined,
+  dataProduzirAte: r.data_produzir_ate ?? undefined,
+  dataDespacharAte: r.data_despachar_ate ?? undefined,
 });
 const pedidoToDb = (p: Partial<Pedido>): any => {
   const out: any = {};
@@ -336,6 +344,9 @@ const pedidoToDb = (p: Partial<Pedido>): any => {
   if (p.pagamentoId !== undefined) out.pagamento_id = p.pagamentoId ?? null;
   if (p.observacoes !== undefined) out.observacoes = p.observacoes ?? null;
   if (p.status !== undefined) out.status = p.status;
+  if (p.prazoProducaoDias !== undefined) out.prazo_producao_dias = p.prazoProducaoDias;
+  if (p.dataProduzirAte !== undefined) out.data_produzir_ate = p.dataProduzirAte ?? null;
+  if (p.dataDespacharAte !== undefined) out.data_despachar_ate = p.dataDespacharAte ?? null;
   out.updated_at = new Date().toISOString();
   return out;
 };
@@ -567,8 +578,16 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [data.pedidos.length]);
 
   const aprovarOrcamento = useCallback(async (id: string): Promise<Pedido | null> => {
-    const orcamento = data.orcamentos.find(o => o.id === id);
+    let orcamento = data.orcamentos.find(o => o.id === id);
     if (!orcamento || orcamento.status !== "aberto") return null;
+
+    // A listagem é "leve" (itens vazios). Sem recarregar o orçamento completo,
+    // o pedido seria criado com itens: [] — causa da tabela vazia em /sistema/pedidos.
+    if (orcamento.itens.length === 0) {
+      const { data: full } = await supabase.rpc("sistema_get_orcamento", { p_id: id });
+      const mapped = full ? mapOrcamento(full as any) : null;
+      if (mapped && mapped.itens.length > 0) orcamento = { ...orcamento, itens: mapped.itens };
+    }
 
     const now = new Date().toISOString();
     const { data: nrData } = await supabase.rpc("sistema_next_pedido_numero");
@@ -579,7 +598,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: crypto.randomUUID(), produtoId: item.produtoId, codigoComposto: item.codigoComposto,
       varianteSlug: item.varianteSlug, nome: item.nome, quantidade: item.quantidade,
       precoUnitario: item.precoUnitario, total: item.quantidade * item.precoUnitario,
-      mockupImagem: item.mockupImagem,
+      mockupImagem: item.mockupImagem, imagem: item.imagem, observacao: (item as any).observacao,
     }));
 
     const pedido: Pedido = {
