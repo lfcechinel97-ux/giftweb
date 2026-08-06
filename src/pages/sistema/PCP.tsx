@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { Money } from "@/components/sistema/ui/Money";
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
