@@ -403,6 +403,189 @@ export type Database = {
         }
         Relationships: []
       }
+      sistema_cotacoes_frete: {
+        Row: {
+          cotado_em: string
+          cotado_por: string | null
+          escolhida: boolean
+          id: string
+          link_cotacao: string | null
+          observacoes: string | null
+          orcamento_id: string | null
+          pedido_id: string | null
+          prazo_dias: number | null
+          print_url: string | null
+          transportadora_id: string | null
+          transportadora_nome: string | null
+          valido_ate: string | null
+          valor: number
+        }
+        Insert: {
+          cotado_em?: string
+          cotado_por?: string | null
+          escolhida?: boolean
+          id?: string
+          link_cotacao?: string | null
+          observacoes?: string | null
+          orcamento_id?: string | null
+          pedido_id?: string | null
+          prazo_dias?: number | null
+          print_url?: string | null
+          transportadora_id?: string | null
+          transportadora_nome?: string | null
+          valido_ate?: string | null
+          valor: number
+        }
+        Update: {
+          cotado_em?: string
+          cotado_por?: string | null
+          escolhida?: boolean
+          id?: string
+          link_cotacao?: string | null
+          observacoes?: string | null
+          orcamento_id?: string | null
+          pedido_id?: string | null
+          prazo_dias?: number | null
+          print_url?: string | null
+          transportadora_id?: string | null
+          transportadora_nome?: string | null
+          valido_ate?: string | null
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_cotacoes_frete_cotado_por_fkey"
+            columns: ["cotado_por"]
+            isOneToOne: false
+            referencedRelation: "sistema_vendedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_cotacoes_frete_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_orcamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_cotacoes_frete_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_cotacoes_frete_transportadora_id_fkey"
+            columns: ["transportadora_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_transportadoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sistema_fornecedores: {
+        Row: {
+          ativo: boolean
+          cidade: string | null
+          contato: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          prazo_padrao_dias: number | null
+          telefone: string | null
+          tipo: string
+          uf: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          cidade?: string | null
+          contato?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          prazo_padrao_dias?: number | null
+          telefone?: string | null
+          tipo?: string
+          uf?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          cidade?: string | null
+          contato?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          prazo_padrao_dias?: number | null
+          telefone?: string | null
+          tipo?: string
+          uf?: string | null
+        }
+        Relationships: []
+      }
+      sistema_item_historico: {
+        Row: {
+          created_at: string
+          id: string
+          observacao: string | null
+          pedido_item_id: string
+          status_anterior:
+            | Database["public"]["Enums"]["status_item_producao"]
+            | null
+          status_novo: Database["public"]["Enums"]["status_item_producao"]
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          pedido_item_id: string
+          status_anterior?:
+            | Database["public"]["Enums"]["status_item_producao"]
+            | null
+          status_novo: Database["public"]["Enums"]["status_item_producao"]
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          observacao?: string | null
+          pedido_item_id?: string
+          status_anterior?:
+            | Database["public"]["Enums"]["status_item_producao"]
+            | null
+          status_novo?: Database["public"]["Enums"]["status_item_producao"]
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_item_historico_pedido_item_id_fkey"
+            columns: ["pedido_item_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_pedido_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_item_historico_pedido_item_id_fkey"
+            columns: ["pedido_item_id"]
+            isOneToOne: false
+            referencedRelation: "vw_fora_de_casa"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_item_historico_pedido_item_id_fkey"
+            columns: ["pedido_item_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pendentes_compra"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sistema_meios_pagamento: {
         Row: {
           ativo: boolean
@@ -532,6 +715,151 @@ export type Database = {
         }
         Relationships: []
       }
+      sistema_pedido_itens: {
+        Row: {
+          arte_aprovada_em: string | null
+          codigo_composto: string | null
+          compra_confirmada_em: string | null
+          created_at: string
+          data_entrega_item: string | null
+          descricao_personalizacao: string | null
+          enviado_terceiro_em: string | null
+          fornecedor_compra_id: string | null
+          id: string
+          imagem_catalogo_url: string | null
+          local_producao: Database["public"]["Enums"]["local_producao_tipo"]
+          mockup_url: string | null
+          nome: string
+          nota_fiscal_compra: string | null
+          observacoes: string | null
+          ordem: number
+          origem_estoque: string
+          pedido_id: string
+          previsao_retorno: string | null
+          produto_cache_id: string | null
+          produto_custom_id: string | null
+          qtd_enviada: number | null
+          qtd_retornada: number | null
+          quantidade: number
+          retornado_terceiro_em: string | null
+          status: Database["public"]["Enums"]["status_item_producao"]
+          tecnica_id: string | null
+          terceirizada_id: string | null
+          updated_at: string
+          valor_total: number | null
+          valor_unitario: number
+        }
+        Insert: {
+          arte_aprovada_em?: string | null
+          codigo_composto?: string | null
+          compra_confirmada_em?: string | null
+          created_at?: string
+          data_entrega_item?: string | null
+          descricao_personalizacao?: string | null
+          enviado_terceiro_em?: string | null
+          fornecedor_compra_id?: string | null
+          id?: string
+          imagem_catalogo_url?: string | null
+          local_producao?: Database["public"]["Enums"]["local_producao_tipo"]
+          mockup_url?: string | null
+          nome: string
+          nota_fiscal_compra?: string | null
+          observacoes?: string | null
+          ordem?: number
+          origem_estoque?: string
+          pedido_id: string
+          previsao_retorno?: string | null
+          produto_cache_id?: string | null
+          produto_custom_id?: string | null
+          qtd_enviada?: number | null
+          qtd_retornada?: number | null
+          quantidade: number
+          retornado_terceiro_em?: string | null
+          status?: Database["public"]["Enums"]["status_item_producao"]
+          tecnica_id?: string | null
+          terceirizada_id?: string | null
+          updated_at?: string
+          valor_total?: number | null
+          valor_unitario?: number
+        }
+        Update: {
+          arte_aprovada_em?: string | null
+          codigo_composto?: string | null
+          compra_confirmada_em?: string | null
+          created_at?: string
+          data_entrega_item?: string | null
+          descricao_personalizacao?: string | null
+          enviado_terceiro_em?: string | null
+          fornecedor_compra_id?: string | null
+          id?: string
+          imagem_catalogo_url?: string | null
+          local_producao?: Database["public"]["Enums"]["local_producao_tipo"]
+          mockup_url?: string | null
+          nome?: string
+          nota_fiscal_compra?: string | null
+          observacoes?: string | null
+          ordem?: number
+          origem_estoque?: string
+          pedido_id?: string
+          previsao_retorno?: string | null
+          produto_cache_id?: string | null
+          produto_custom_id?: string | null
+          qtd_enviada?: number | null
+          qtd_retornada?: number | null
+          quantidade?: number
+          retornado_terceiro_em?: string | null
+          status?: Database["public"]["Enums"]["status_item_producao"]
+          tecnica_id?: string | null
+          terceirizada_id?: string | null
+          updated_at?: string
+          valor_total?: number | null
+          valor_unitario?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_pedido_itens_fornecedor_compra_id_fkey"
+            columns: ["fornecedor_compra_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_pedido_itens_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_pedido_itens_produto_cache_id_fkey"
+            columns: ["produto_cache_id"]
+            isOneToOne: false
+            referencedRelation: "products_cache"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_pedido_itens_produto_custom_id_fkey"
+            columns: ["produto_custom_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_produtos_custom"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_pedido_itens_tecnica_id_fkey"
+            columns: ["tecnica_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_tecnicas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_pedido_itens_terceirizada_id_fkey"
+            columns: ["terceirizada_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_fornecedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sistema_pedidos: {
         Row: {
           cliente_id: string | null
@@ -659,6 +987,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sistema_tecnicas: {
+        Row: {
+          ativo: boolean
+          id: string
+          local_padrao: string
+          nome: string
+          prazo_padrao_dias: number
+        }
+        Insert: {
+          ativo?: boolean
+          id?: string
+          local_padrao?: string
+          nome: string
+          prazo_padrao_dias?: number
+        }
+        Update: {
+          ativo?: boolean
+          id?: string
+          local_padrao?: string
+          nome?: string
+          prazo_padrao_dias?: number
+        }
+        Relationships: []
       }
       sistema_transportadoras: {
         Row: {
@@ -953,7 +1305,40 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_fora_de_casa: {
+        Row: {
+          alerta: string | null
+          cliente: string | null
+          data_entrega_item: string | null
+          dias_fora: number | null
+          enviado_em: string | null
+          id: string | null
+          imagem_catalogo_url: string | null
+          mockup_url: string | null
+          pedido: string | null
+          previsao_retorno: string | null
+          produto: string | null
+          qtd_enviada: number | null
+          quantidade: number | null
+          tecnica: string | null
+          terceirizada: string | null
+          terceirizada_telefone: string | null
+        }
+        Relationships: []
+      }
+      vw_pendentes_compra: {
+        Row: {
+          cliente: string | null
+          created_at: string | null
+          data_entrega_item: string | null
+          fornecedor: string | null
+          id: string | null
+          pedido: string | null
+          produto: string | null
+          quantidade: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_search_products: {
@@ -1096,9 +1481,23 @@ export type Database = {
         Args: { p_page?: number; p_page_size?: number; p_search?: string }
         Returns: Json
       }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
-      [_ in never]: never
+      local_producao_tipo:
+        | "interna"
+        | "terceirizada"
+        | "fornecedor_para_terceirizada"
+      status_item_producao:
+        | "aguardando_arte"
+        | "aguardando_compra"
+        | "fila_producao"
+        | "em_producao"
+        | "enviado_terceiro"
+        | "retornou_terceiro"
+        | "conferencia"
+        | "pronto"
+        | "expedido"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1225,6 +1624,23 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      local_producao_tipo: [
+        "interna",
+        "terceirizada",
+        "fornecedor_para_terceirizada",
+      ],
+      status_item_producao: [
+        "aguardando_arte",
+        "aguardando_compra",
+        "fila_producao",
+        "em_producao",
+        "enviado_terceiro",
+        "retornou_terceiro",
+        "conferencia",
+        "pronto",
+        "expedido",
+      ],
+    },
   },
 } as const
