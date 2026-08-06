@@ -53,7 +53,19 @@ const SistemaProdutos = lazy(() => import("./pages/sistema/ProdutosCatalogo.tsx"
 const SistemaClientes = lazy(() => import("./pages/sistema/Clientes.tsx"));
 const SistemaConfiguracoes = lazy(() => import("./pages/sistema/Configuracoes.tsx"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Cache: rotas já visitadas servem do cache e revalidam em segundo plano
+      staleTime: 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      retry: 1,
+      placeholderData: (prev: unknown) => prev,
+    },
+  },
+});
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();

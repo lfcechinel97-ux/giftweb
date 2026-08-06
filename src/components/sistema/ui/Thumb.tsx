@@ -39,6 +39,7 @@ export function Thumb({ src, alt = "", size = "md", className }: ThumbProps) {
       width={px}
       height={px}
       loading="lazy"
+      decoding="async"
       onError={() => setFailed(true)}
       className={cn("object-cover shrink-0", className)}
       style={{ ...base, background: "var(--gw-surface)" }}

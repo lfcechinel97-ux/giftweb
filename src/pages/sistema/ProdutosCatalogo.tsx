@@ -16,7 +16,7 @@ function VarianteRow({ v }: { v: SistemaProduct }) {
     <div className="flex items-center gap-3 px-3 py-1.5 text-xs bg-muted/20 border-t border-border">
       <span className="w-6 h-6 rounded bg-secondary flex items-center justify-center shrink-0">
         {v.image_url
-          ? <img src={v.image_url} alt="" className="w-full h-full object-cover rounded" />
+          ? <img src={v.image_url} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover rounded" />
           : <Package className="h-3 w-3 text-muted-foreground" />}
       </span>
       <span className="font-mono text-muted-foreground w-28 shrink-0">{v.codigo_amigavel}</span>
@@ -58,7 +58,7 @@ function ProdutoCard({ parent, pvariants }: { parent: SistemaProduct; pvariants:
       <div className="flex items-center gap-3 p-3">
         <div className="w-14 h-14 rounded bg-secondary shrink-0 overflow-hidden">
           {parent.image_url
-            ? <img src={parent.image_url} alt={parent.nome} className="w-full h-full object-cover" loading="lazy" />
+            ? <img src={parent.image_url} alt={parent.nome} className="w-full h-full object-cover" loading="lazy" decoding="async" />
             : <div className="w-full h-full flex items-center justify-center"><Package className="h-5 w-5 text-muted-foreground" /></div>}
         </div>
         <div className="flex-1 min-w-0">

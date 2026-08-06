@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Search, Filter, Printer, Trash2, Copy, MoreHorizontal, ChevronDown,
   ChevronLeft, ChevronRight, X, ShoppingCart,
@@ -74,18 +75,17 @@ export default function Pedidos() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(25);
   const [prazoDraft, setPrazoDraft] = useState<Record<string, string>>({});
-  const [progresso, setProgresso] = useState<Record<string, { enviados: number; total: number }>>({});
-
-  /* Progresso de produção (sistema_producao_itens) */
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
+  /* Progresso de produção (sistema_producao_itens) — cacheado 60s */
+  const { data: progresso = {} } = useQuery<Record<string, { enviados: number; total: number }>>({
+    queryKey: ["sistema", "pedidos", "progresso"],
+    staleTime: 60 * 1000,
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("sistema_producao_itens")
         .select("pedido_id,status");
-      if (cancelled || error || !data) return;
+      if (error || !data) return {};
       const acc: Record<string, { enviados: number; total: number }> = {};
       for (const r of data as { pedido_id: string; status: string }[]) {
         const e = acc[r.pedido_id] ?? { enviados: 0, total: 0 };
@@ -93,10 +93,9 @@ export default function Pedidos() {
         if (r.status === "expedido" || r.status === "enviado_terceiro") e.enviados += 1;
         acc[r.pedido_id] = e;
       }
-      setProgresso(acc);
-    })();
-    return () => { cancelled = true; };
-  }, [pedidos.length]);
+      return acc;
+    },
+  });
 
   const getClienteNome = (p: Pedido) => {
     const c = clientes.find(cli => cli.id === p.clienteId);
@@ -459,7 +458,7 @@ export default function Pedidos() {
                           className="inline-flex items-center gap-1.5 text-[13px] font-medium"
                           style={{ color: "var(--gw-success)" }}
                         >
-                          <img src="/logos/whatsapp-white.svg" alt="" width={14} height={14} />
+                          <img src="/logos/whatsapp-white.svg" alt="" width={14} height={14} loading="lazy" decoding="async" />
                           {p.contatoTelefone}
                         </a>
                       )}

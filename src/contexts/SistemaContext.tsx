@@ -211,6 +211,7 @@ interface SistemaContextType extends SistemaData {
     limit?: number;
   }) => Promise<Orcamento[]>;
   fetchOrcamentoCompleto: (id: string) => Promise<Orcamento | null>;
+  fetchOrcamentosItens: (ids: string[]) => Promise<void>;
   addOrcamento: (o: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt">) => Promise<Orcamento>;
   updateOrcamento: (id: string, changes: Partial<Orcamento>) => Promise<void>;
   removeOrcamento: (id: string) => void;
@@ -430,6 +431,28 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }));
     return full;
   }, []);
+
+  // Busca em LOTE os itens de vários orçamentos (1 requisição em vez de N)
+  const fetchOrcamentosItens = useCallback(async (ids: string[]): Promise<void> => {
+    if (ids.length === 0) return;
+    const { data, error } = await supabase
+      .from("sistema_orcamentos")
+      .select("id,itens")
+      .in("id", ids);
+    if (error || !data) {
+      if (error) console.error("[Sistema] carregar itens dos orçamentos falhou:", error);
+      return;
+    }
+    const byId = new Map(data.map((r: any) => [r.id, arr<QuoteItem>(r.itens)]));
+    setData(prev => ({
+      ...prev,
+      orcamentos: prev.orcamentos.map(o => {
+        const itens = byId.get(o.id);
+        return itens && itens.length > 0 && o.itens.length === 0 ? { ...o, itens } : o;
+      }),
+    }));
+  }, []);
+
 
   const loadAll = useCallback(async (force = false) => {
     if (loadedRef.current && !force) return;
@@ -772,7 +795,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const value = useMemo<SistemaContextType>(() => ({
     ...data, loading,
-    refreshOrcamentos, fetchOrcamentoCompleto,
+    refreshOrcamentos, fetchOrcamentoCompleto, fetchOrcamentosItens,
     addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
     addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
@@ -782,7 +805,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     currentVendedor, setCurrentVendedor: setCurrentVendedorState,
     getEstoqueDisponivel, gerarNumeroOrcamento, gerarNumeroPedido,
   }), [
-    data, loading, refreshOrcamentos, fetchOrcamentoCompleto, addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
+    data, loading, refreshOrcamentos, fetchOrcamentoCompleto, fetchOrcamentosItens, addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
     addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
     addMeioPagamento, updateMeioPagamento, removeMeioPagamento, toggleMeioPagamentoAtivo,
