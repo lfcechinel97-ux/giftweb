@@ -143,21 +143,24 @@ function StatusPill({ status, className }: { status: string; className?: string 
 /* ── Card ────────────────────────────────────────────────────────────────── */
 
 function PcpCard({
-  row, indice, total, dragging, saving, onDragStart, onDragEnd, onOpen,
+  row, indice, total, dragging, saving, atrasado, highlight,
+  onDragStart, onDragEnd, onOpen, onHover,
 }: {
   row: PcpRow;
   indice: number;
   total: number;
   dragging: boolean;
   saving: boolean;
+  atrasado: boolean;
+  highlight: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
   onOpen: () => void;
+  onHover: (pedidoId: string | null) => void;
 }) {
   const foto = row.mockup_url || row.imagem_catalogo_url;
   const cor = corDoPedido(row);
-  const tempo = tempoNaEtapa(row.horas_na_etapa);
-  const prazo = prazoInfo(row.data_entrega_item);
+  const tempo = tempoNaEtapaCurto(row.horas_na_etapa);
 
   return (
     <div
@@ -169,59 +172,96 @@ function PcpCard({
       }}
       onDragEnd={onDragEnd}
       onClick={onOpen}
+      onMouseEnter={() => onHover(row.pedido_id)}
+      onMouseLeave={() => onHover(null)}
       className={cn(
-        "group bg-card border border-border rounded-xl overflow-hidden cursor-pointer select-none",
-        "shadow-[0_1px_2px_rgba(16,24,40,0.05)] hover:shadow-[0_8px_20px_rgba(15,42,92,0.12)] transition-shadow",
+        "w-[268px] rounded-[10px] overflow-hidden cursor-pointer select-none bg-[var(--gw-surface)]",
+        "border border-[var(--gw-border)] transition-shadow hover:shadow-[var(--gw-shadow-md)]",
         dragging && "opacity-40",
         saving && "opacity-60 pointer-events-none"
       )}
+      style={{
+        boxShadow: atrasado
+          ? "0 0 0 2px var(--gw-danger)"
+          : highlight
+            ? `0 0 0 2px ${cor}`
+            : undefined,
+      }}
     >
-      {foto ? (
-        <img src={foto} alt="" className="w-full h-[180px] object-cover bg-white" />
-      ) : (
-        <div className="w-full h-[180px] bg-muted flex items-center justify-center">
-          <Package className="h-8 w-8 text-muted-foreground/50" />
-        </div>
-      )}
+      {/* Camada 1 — foto */}
+      <div className="relative h-[168px] w-full">
+        {foto ? (
+          <img src={foto} alt="" className="w-full h-full object-cover bg-white" />
+        ) : (
+          <div className="w-full h-full bg-[var(--gw-surface-alt)] flex items-center justify-center">
+            <Package className="h-8 w-8 text-[var(--gw-text-muted)]" />
+          </div>
+        )}
 
-      <div className="h-[5px] w-full" style={{ backgroundColor: cor }} />
+        {/* gradiente inferior */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-[56px] pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, rgba(11,18,32,0), rgba(11,18,32,.75))" }}
+        />
 
-      <div className="p-3 space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-mono-num text-[13px]">{row.pedido_numero}</span>
-          <span className="text-[11px] font-semibold text-muted-foreground">
-            Item {indice}/{total}
+        {/* origem do estoque */}
+        <span
+          className="absolute top-1.5 left-1.5 text-white text-[10px] font-bold uppercase rounded-[4px] px-2 py-[3px]"
+          style={{
+            backgroundColor: row.origem_estoque === "estoque"
+              ? "rgba(14,163,107,.9)"
+              : "rgba(245,165,36,.9)",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          {row.origem_estoque === "estoque" ? "Em estoque" : "Compra específica"}
+        </span>
+
+        {/* técnica */}
+        {row.tecnica_nome && (
+          <span
+            className="absolute top-1.5 right-1.5 text-white text-[10px] font-semibold rounded-[4px] px-2 py-[3px] max-w-[110px] truncate"
+            style={{ backgroundColor: "rgba(11,18,32,.72)", backdropFilter: "blur(8px)" }}
+          >
+            {row.tecnica_nome}
           </span>
-        </div>
+        )}
 
-        <p className="text-[13px] font-title truncate">{row.produto_nome || "—"}</p>
-
-        <p className="text-[26px] leading-none font-title text-foreground">
-          {row.quantidade ?? 0}
-          <span className="text-[12px] font-normal text-muted-foreground ml-1">un</span>
-        </p>
-
-        <div className="flex flex-wrap items-center gap-1.5">
-          {row.tecnica_nome && (
-            <span className="text-[10px] font-medium border border-border text-muted-foreground rounded-md px-1.5 py-0.5">
-              {row.tecnica_nome}
-            </span>
-          )}
-          <span className="text-[10px] font-medium border border-border text-muted-foreground rounded-md px-1.5 py-0.5">
-            {row.origem_estoque === "estoque" ? "Em estoque" : "Compra específica"}
+        {/* quantidade */}
+        <span className="absolute bottom-1.5 right-2 flex items-baseline gap-1 text-white">
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-[20px] font-bold leading-none">
+            {row.quantidade ?? 0}
           </span>
-        </div>
+          <span className="text-[11px] font-medium text-white/80">un</span>
+        </span>
 
-        <div className="flex items-center justify-between pt-0.5">
-          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-            <Clock className="h-3 w-3" /> {tempo || "—"}
-          </span>
-          {prazo.label && <span className={cn("text-[10px] font-medium", prazo.tone)}>{prazo.label}</span>}
-        </div>
+        {/* tempo na etapa */}
+        <span
+          className={cn("absolute bottom-2 left-2 flex items-center gap-1 text-[10px] font-semibold")}
+          style={{ color: atrasado ? "var(--gw-danger)" : "#FFFFFF" }}
+        >
+          <Clock className="h-[10px] w-[10px]" /> {tempo || "—"}
+        </span>
+      </div>
+
+      {/* Camada 2 — rodapé */}
+      <div className="relative h-[37px] bg-[var(--gw-surface)] flex items-center gap-1.5 pl-3 pr-2 whitespace-nowrap">
+        <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: cor }} />
+        <span
+          className="text-[12px] font-semibold text-[var(--gw-text)]"
+          style={{ fontFamily: "'IBM Plex Mono', monospace" }}
+        >
+          {row.pedido_numero}
+        </span>
+        <span className="text-[var(--gw-text-muted)] text-[12px]">·</span>
+        <span className="text-[11px] font-medium text-[var(--gw-text-secondary)]">
+          Item {indice}/{total}
+        </span>
       </div>
     </div>
   );
 }
+
 
 /* ── Página ──────────────────────────────────────────────────────────────── */
 
