@@ -244,6 +244,18 @@ export default function Orcamentos() {
   useEffect(() => { setPage(1); }, [filtroBusca, filtroCliente, filtroStatus, filtroVendedor, dataInicio, dataFim, pageSize]);
   const currentPage = Math.min(page, totalPages);
   const pageItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  /* Todos os orçamentos ficam abertos: carrega itens dos que estão na página */
+  const fetchedItensRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    pageItems.forEach(o => {
+      if (o.itens.length === 0 && !fetchedItensRef.current.has(o.id)) {
+        fetchedItensRef.current.add(o.id);
+        fetchOrcamentoCompleto(o.id);
+      }
+    });
+  }, [pageItems]);
+
   const pageNumbers: (number | null)[] = (() => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
     const set = new Set<number>([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
