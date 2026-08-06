@@ -321,6 +321,7 @@ const mapPedido = (r: any): Pedido => ({
   dataProduzirAte: r.data_produzir_ate ?? undefined,
   dataDespacharAte: r.data_despachar_ate ?? undefined,
 });
+const pedidoToDb = (p: Partial<Pedido>): any => {
   const out: any = {};
   if (p.id !== undefined) out.id = p.id;
   if (p.numero !== undefined) out.numero = p.numero;
