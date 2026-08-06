@@ -5,7 +5,8 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Check, Filter, Plus, Search, Trash2, FileText, Package, Printer, X, MoreHorizontal
+  Check, Filter, Plus, Search, Trash2, FileText, Package, Printer, X, MoreHorizontal,
+  Pencil, ChevronDown, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,12 @@ const STATUS_STAGE: Record<OrcamentoStatus, GwStage> = {
   "aberto": "pronto",
   "aprovado": "enviado",
   "cancelado": "cancelado",
+};
+
+const STATUS_SOLID: Record<OrcamentoStatus, string> = {
+  "aberto": "var(--gw-primary)",
+  "aprovado": "var(--gw-success)",
+  "cancelado": "var(--gw-danger)",
 };
 
 
@@ -144,6 +151,7 @@ export default function Orcamentos() {
   const {
     orcamentos,
     removeOrcamento,
+    updateOrcamento,
     aprovarOrcamento,
     clientes,
     vendedores,
@@ -166,6 +174,8 @@ export default function Orcamentos() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     if (currentVendedor?.id) setFiltroVendedor(currentVendedor.id);
@@ -229,6 +239,28 @@ export default function Orcamentos() {
     (o.itens.length > 0 ? calcSubtotal(o) : Number(o.subtotal || 0)) + (Number(o.freteValor) || 0);
 
   const valorTotalFiltrado = filtered.reduce((s, o) => s + calcOrcTotal(o), 0);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  useEffect(() => { setPage(1); }, [filtroBusca, filtroCliente, filtroStatus, filtroVendedor, dataInicio, dataFim, pageSize]);
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pageNumbers: (number | null)[] = (() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const set = new Set<number>([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
+    const nums = [...set].filter(n => n >= 1 && n <= totalPages).sort((a, b) => a - b);
+    const out: (number | null)[] = [];
+    nums.forEach((n, i) => {
+      if (i > 0 && n - nums[i - 1] > 1) out.push(null);
+      out.push(n);
+    });
+    return out;
+  })();
+
+  const handleStatusChange = async (o: Orcamento, novo: OrcamentoStatus) => {
+    if (novo === o.status) return;
+    if (novo === "aprovado") { handleAprovar(o.id); return; }
+    await updateOrcamento(o.id, { status: novo });
+  };
 
   const ensureItens = async (o: Orcamento): Promise<Orcamento> => {
     if (o.itens.length > 0) return o;
@@ -413,20 +445,6 @@ export default function Orcamentos() {
           ))}
         </div>
       )}
-
-      {/* Contador + total */}
-      <div className="flex justify-between items-center">
-        <p className="gw-meta">
-          {listLoading ? "Atualizando orçamentos..." : `${filtered.length} orçamento(s)`}
-        </p>
-        <p className="flex items-center gap-2">
-          <span className="gw-label">Total filtrado</span>
-          <span className="gw-tnum text-[16px]" style={{ fontWeight: 700, color: "var(--gw-text)" }}>
-            {formatBRL(valorTotalFiltrado)}
-          </span>
-        </p>
-      </div>
-
       {/* Lista */}
       <div className="space-y-2">
         {(loading || listLoading) && filtered.length === 0 ? (
@@ -437,8 +455,7 @@ export default function Orcamentos() {
           <div className="rounded-[10px] p-12 text-center gw-meta" style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)" }}>
             Nenhum orçamento. Clique em "Novo Orçamento".
           </div>
-        ) : filtered.map(o => {
-          const datas = getDatas(o);
+        ) : pageItems.map(o => {
           const thumbs = o.itens.slice(0, 3);
           const extras = Math.max(0, o.itens.length - 3);
           return (
@@ -449,7 +466,7 @@ export default function Orcamentos() {
             >
               {/* Linha colapsada */}
               <div
-                className="grid grid-cols-[88px_1fr_132px_100px_110px_120px_140px] items-center gap-3 px-4 h-[56px] cursor-pointer transition-colors"
+                className="grid grid-cols-[88px_1fr_132px_100px_140px_120px_140px] items-center gap-3 px-4 h-[56px] cursor-pointer transition-colors"
                 onClick={() => handleExpand(o)}
                 onMouseEnter={e => (e.currentTarget.style.background = "var(--gw-surface-alt)")}
                 onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
@@ -457,9 +474,7 @@ export default function Orcamentos() {
                 <OrderNumber value={o.numero} />
                 <span className="gw-title truncate">{getClienteNome(o)}</span>
                 <div className="flex items-center">
-                  {thumbs.length === 0 ? (
-                    <Thumb size="sm" />
-                  ) : thumbs.map((it, i) => (
+                  {thumbs.map((it, i) => (
                     <span key={i} style={{ marginLeft: i === 0 ? 0 : -8, borderRadius: 8, border: "2px solid var(--gw-surface)" }}>
                       <Thumb size="sm" src={it.mockupImagem || it.imagem} alt={it.nome} />
                     </span>
@@ -478,16 +493,38 @@ export default function Orcamentos() {
                   )}
                 </div>
                 <span className="gw-meta">{new Date(o.createdAt).toLocaleDateString("pt-BR")}</span>
-                <StatusPill status={STATUS_STAGE[o.status]} label={statusStyles[o.status].label} variant="soft" />
+                <div onClick={e => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5 h-[30px] px-[14px] rounded-full text-[12px] text-white whitespace-nowrap"
+                        style={{ background: STATUS_SOLID[o.status], fontWeight: 700 }}
+                      >
+                        {o.status === "aprovado" && <Check className="h-3.5 w-3.5" />}
+                        {statusStyles[o.status].label}
+                        <ChevronDown className="h-3.5 w-3.5 opacity-80" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-40">
+                      {STATUS_OPTS.map(s => (
+                        <DropdownMenuItem key={s} onClick={() => handleStatusChange(o, s)}>
+                          <span className="inline-block h-2 w-2 rounded-full mr-2" style={{ background: STATUS_SOLID[s] }} />
+                          {statusStyles[s].label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
                 <span className="text-right">
                   <Money value={calcOrcTotal(o)} emphasis />
                 </span>
-                <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                   {o.status === "aberto" && (
                     <button
                       type="button"
                       onClick={() => handleAprovar(o.id)}
-                      className="inline-flex items-center h-8 px-3 rounded-md text-sm font-semibold text-white transition-colors"
+                      className="inline-flex items-center h-8 px-3 rounded-md text-[13px] font-semibold text-white transition-colors"
                       style={{ background: "var(--gw-primary)" }}
                       onMouseEnter={e => (e.currentTarget.style.background = "var(--gw-primary-hover)")}
                       onMouseLeave={e => (e.currentTarget.style.background = "var(--gw-primary)")}
@@ -495,22 +532,31 @@ export default function Orcamentos() {
                       <Check className="h-3.5 w-3.5 mr-1" /> Aprovar
                     </button>
                   )}
+                  <button
+                    type="button"
+                    aria-label="Editar"
+                    onClick={() => navigate(`/sistema/orcamentos/${o.id}`)}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-full transition-colors"
+                    style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
                         type="button"
                         aria-label="Mais ações"
-                        className="inline-flex items-center justify-center h-8 w-8 rounded-md"
-                        style={{ border: "1px solid var(--gw-border)", color: "var(--gw-text-secondary)", background: "var(--gw-surface)" }}
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-full transition-colors hover:bg-[var(--gw-primary-soft)] hover:text-[var(--gw-primary)]"
+                        style={{ color: "var(--gw-text-secondary)" }}
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem onClick={() => navigate(`/sistema/orcamentos/${o.id}`)}>
+                      <DropdownMenuItem onClick={() => navigate(`/sistema/orcamentos/${o.id}`)} style={{ color: "var(--gw-primary)" }}>
                         <FileText className="h-3.5 w-3.5 mr-2" /> Editar
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleImprimir(o)}>
+                      <DropdownMenuItem onClick={() => handleImprimir(o)} style={{ color: "var(--gw-violet)" }}>
                         <Printer className="h-3.5 w-3.5 mr-2" /> Imprimir
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setDeleteId(o.id)} style={{ color: "var(--gw-danger)" }}>
@@ -541,12 +587,15 @@ export default function Orcamentos() {
                     ) : o.itens.map((item, idx) => (
                       <div
                         key={idx}
-                        className="grid grid-cols-[56px_1fr_80px_110px_130px] items-center gap-3 px-3 h-[52px]"
+                        className="grid grid-cols-[56px_1fr_80px_110px_130px] items-center gap-3 px-3 h-[56px]"
                         style={{ background: idx % 2 === 1 ? "color-mix(in srgb, var(--gw-surface-alt) 40%, var(--gw-surface))" : "var(--gw-surface)" }}
                       >
                         <Thumb size="sm" src={item.mockupImagem || item.imagem} alt={item.nome} />
-                        <span className="flex flex-col min-w-0">
-                          <span className="gw-body-strong truncate">{item.nome}</span>
+                        <span className="flex flex-col min-w-0 leading-tight">
+                          <span className="gw-title text-[14px] truncate">{item.nome}</span>
+                          {item.observacao && (
+                            <span className="text-[12px] truncate" style={{ color: "var(--gw-text-secondary)" }}>{item.observacao}</span>
+                          )}
                           {item.codigoComposto && (
                             <span className="gw-tnum text-[11px]" style={{ color: "var(--gw-text-muted)" }}>{item.codigoComposto}</span>
                           )}
@@ -578,12 +627,10 @@ export default function Orcamentos() {
                   </div>
 
                   {/* Metadados */}
-                  <div className="h-14 grid grid-cols-6 gap-4 items-center">
+                  <div className="h-14 grid grid-cols-4 gap-4 items-center">
                     <MetaField label="Vendedor" value={getVendedorNome(o.vendedorId)} />
                     <MetaField label="Transportadora" value={getTransportadoraNome(o.transportadoraId)} />
                     <MetaField label="Criado em" value={new Date(o.createdAt).toLocaleDateString("pt-BR")} />
-                    <MetaField label="Produzir até" value={dateBR(datas.produzir)} tone={dateTone(datas.produzir, o.status)} />
-                    <MetaField label="Despachar até" value={dateBR(datas.despachar)} tone={dateTone(datas.despachar, o.status)} />
                     <MetaField label="Contato" value={o.contatoNome || o.contatoTelefone || "—"} />
                   </div>
                 </div>
@@ -592,6 +639,68 @@ export default function Orcamentos() {
           );
         })}
       </div>
+
+      {/* Paginação */}
+      {filtered.length > 0 && (
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1">
+          <span className="gw-meta">{listLoading ? "Atualizando..." : ""}</span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setPage(p => Math.max(1, currentPage - 1))}
+              disabled={currentPage <= 1}
+              className="inline-flex items-center justify-center h-8 w-8 rounded-md disabled:opacity-40"
+              style={{ border: "1px solid var(--gw-border)", color: "var(--gw-primary)" }}
+              aria-label="Página anterior"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            {pageNumbers.map((n, i) =>
+              n === null ? (
+                <span key={`gap-${i}`} className="gw-meta px-1">…</span>
+              ) : (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setPage(n)}
+                  className="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-md text-[13px] font-semibold"
+                  style={
+                    n === currentPage
+                      ? { background: "var(--gw-primary)", color: "#fff" }
+                      : { border: "1px solid var(--gw-border)", color: "var(--gw-text-secondary)" }
+                  }
+                >
+                  {n}
+                </button>
+              )
+            )}
+            <button
+              type="button"
+              onClick={() => setPage(p => Math.min(totalPages, currentPage + 1))}
+              disabled={currentPage >= totalPages}
+              className="inline-flex items-center justify-center h-8 w-8 rounded-md disabled:opacity-40"
+              style={{ border: "1px solid var(--gw-border)", color: "var(--gw-primary)" }}
+              aria-label="Próxima página"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <span className="gw-label">Por página</span>
+            <Select value={String(pageSize)} onValueChange={v => { setPageSize(Number(v)); setPage(1); }}>
+              <SelectTrigger className="h-9 w-[84px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[10, 25, 50, 100].map(n => (
+                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
 
 
       {/* Modal Aprovação */}

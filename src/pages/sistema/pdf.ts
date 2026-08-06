@@ -346,15 +346,7 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     doc.text(nameLines.slice(0, 2), tx, y + 22);
     const afterName = y + 22 + (nameLines.length > 1 ? 24 : 13);
 
-    // Código (chip discreto)
-    if (item.codigoComposto) {
-      doc.setFont("helvetica", "normal"); doc.setFontSize(7.5);
-      const codeW = doc.getTextWidth(item.codigoComposto) + 12;
-      setFill(doc, C.surface);
-      doc.roundedRect(tx, afterName - 9, codeW, 14, 7, 7, "F");
-      setText(doc, C.muted);
-      doc.text(item.codigoComposto, tx + 6, afterName);
-    }
+    // Código interno do produto não é exibido no documento do cliente.
 
     // Quantidade
     const qtdY = afterName + 15;
