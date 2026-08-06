@@ -53,6 +53,10 @@ interface PcpRow {
   pagamento_ok: boolean | null;
   etiqueta_ok: boolean | null;
   coleta_solicitada_em: string | null;
+  pagamento_cartao_conferido_em: string | null;
+  pix_recebido_integral_em: string | null;
+  pagamento_nome: string | null;
+  pedido_total: number | null;
   etapa_desde: string | null;
   horas_na_etapa: number | null;
   total_itens_pedido: number | null;
