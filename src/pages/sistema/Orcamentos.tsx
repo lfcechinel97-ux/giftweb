@@ -446,7 +446,7 @@ export default function Orcamentos() {
         </div>
       )}
       {/* Lista */}
-      <div className="space-y-2">
+      <div className="space-y-5">
         {(loading || listLoading) && filtered.length === 0 ? (
           <div className="rounded-[10px] p-12 text-center gw-meta" style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)" }}>
             Carregando histórico de orçamentos...
@@ -456,42 +456,19 @@ export default function Orcamentos() {
             Nenhum orçamento. Clique em "Novo Orçamento".
           </div>
         ) : pageItems.map(o => {
-          const thumbs = o.itens.slice(0, 3);
-          const extras = Math.max(0, o.itens.length - 3);
           return (
             <div
               key={o.id}
-              className="rounded-[10px] overflow-hidden"
-              style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)", boxShadow: "var(--gw-shadow-sm)" }}
+              className="rounded-[12px] overflow-hidden"
+              style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border-strong)", boxShadow: "var(--gw-shadow-sm)" }}
             >
-              {/* Linha colapsada */}
+              {/* Cabeçalho do orçamento */}
               <div
-                className="grid grid-cols-[88px_1fr_132px_100px_140px_120px_140px] items-center gap-3 px-4 h-[56px] cursor-pointer transition-colors"
-                onClick={() => handleExpand(o)}
-                onMouseEnter={e => (e.currentTarget.style.background = "var(--gw-surface-alt)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                className="grid grid-cols-[88px_1fr_100px_140px_120px_140px] items-center gap-3 px-4 h-[56px]"
+                style={{ background: "var(--gw-surface-alt)", borderBottom: "1px solid var(--gw-border)" }}
               >
                 <OrderNumber value={o.numero} />
                 <span className="gw-title truncate text-[15px]" style={{ fontWeight: 700 }}>{getClienteNome(o)}</span>
-                <div className="flex items-center">
-                  {thumbs.map((it, i) => (
-                    <span key={i} style={{ marginLeft: i === 0 ? 0 : -8, borderRadius: 8, border: "2px solid var(--gw-surface)" }}>
-                      <Thumb size="sm" src={it.mockupImagem || it.imagem} alt={it.nome} />
-                    </span>
-                  ))}
-                  {extras > 0 && (
-                    <span
-                      className="inline-flex items-center justify-center gw-tnum text-[11px]"
-                      style={{
-                        marginLeft: -8, width: 40, height: 40, borderRadius: 8,
-                        background: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)",
-                        border: "2px solid var(--gw-surface)",
-                      }}
-                    >
-                      +{extras}
-                    </span>
-                  )}
-                </div>
                 <span className="gw-meta">{new Date(o.createdAt).toLocaleDateString("pt-BR")}</span>
                 <div onClick={e => e.stopPropagation()}>
                   <DropdownMenu>
