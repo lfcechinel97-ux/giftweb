@@ -127,6 +127,25 @@ const tempoNaEtapa = (horas: number | null) => {
   return `${Math.floor(horas / 24)}d nesta etapa`;
 };
 
+const tempoNaEtapaCurto = (horas: number | null) => {
+  if (horas == null) return null;
+  if (horas < 1) return "<1h";
+  if (horas < 24) return `${Math.floor(horas)}h`;
+  return `${Math.floor(horas / 24)}d`;
+};
+
+/* Limite (em horas) de permanência aceitável em cada etapa */
+const LIMITE_ETAPA: Record<PcpStatus, number> = {
+  organizando_pedido: 48,
+  pronto_producao: 48,
+  teste_fisico: 48,
+  preparacao: 72,
+  em_producao: 120,
+  embalagem_pagamento: 48,
+  aguardando_coleta: 48,
+  enviado: 10000,
+};
+
 function StatusPill({ status, className }: { status: string; className?: string }) {
   const cfg = STATUS_MAP[status];
   if (!cfg) return null;
