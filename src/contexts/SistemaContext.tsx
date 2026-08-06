@@ -317,8 +317,10 @@ const mapPedido = (r: any): Pedido => ({
   transportadoraId: r.transportadora_id ?? undefined, prazoEntrega: r.prazo_entrega ?? undefined,
   pagamentoId: r.pagamento_id ?? undefined, observacoes: r.observacoes ?? undefined,
   status: r.status, createdAt: r.created_at, updatedAt: r.updated_at,
+  prazoProducaoDias: r.prazo_producao_dias ?? undefined,
+  dataProduzirAte: r.data_produzir_ate ?? undefined,
+  dataDespacharAte: r.data_despachar_ate ?? undefined,
 });
-const pedidoToDb = (p: Partial<Pedido>): any => {
   const out: any = {};
   if (p.id !== undefined) out.id = p.id;
   if (p.numero !== undefined) out.numero = p.numero;
