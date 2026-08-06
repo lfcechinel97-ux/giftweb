@@ -221,7 +221,7 @@ input[type="range"]::-moz-range-thumb {
 .sistema-theme h3 { font-size: 0.95rem; font-weight: 600; }
 .sistema-theme label { font-weight: 500; }
 .sistema-theme p, .sistema-theme span, .sistema-theme td, .sistema-theme input, .sistema-theme textarea { font-weight: 400; }
-.sistema-theme a:not([class*="bg-"]) { color: #2563EB; }
+.sistema-theme main a:not([class*="text-"]):not([class*="bg-"]) { color: #2563EB; }
 
 /* Cards brancos, borda cinza, sombra sutil */
 .sistema-theme .bg-card,
