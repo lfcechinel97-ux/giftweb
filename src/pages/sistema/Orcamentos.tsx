@@ -171,7 +171,7 @@ export default function Orcamentos() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [listLoading, setListLoading] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
   const [page, setPage] = useState(1);
@@ -304,9 +304,9 @@ export default function Orcamentos() {
   };
 
   const handleExpand = async (o: Orcamento) => {
-    const next = expandedId === o.id ? null : o.id;
-    setExpandedId(next);
-    if (next && o.itens.length === 0) {
+    const isOpen = expandedIds.includes(o.id);
+    setExpandedIds(prev => (isOpen ? prev.filter(id => id !== o.id) : [...prev, o.id]));
+    if (!isOpen && o.itens.length === 0) {
       await fetchOrcamentoCompleto(o.id);
     }
   };
@@ -498,8 +498,13 @@ export default function Orcamentos() {
                     <DropdownMenuTrigger asChild>
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1.5 h-[30px] px-[14px] rounded-full text-[12px] text-white whitespace-nowrap"
-                        style={{ background: STATUS_SOLID[o.status], fontWeight: 700 }}
+                        className="inline-flex items-center gap-1.5 h-[26px] px-[12px] rounded-full text-[12px] whitespace-nowrap"
+                        style={{
+                          background: `color-mix(in srgb, ${STATUS_SOLID[o.status]} 12%, #FFFFFF)`,
+                          color: STATUS_SOLID[o.status],
+                          border: `1px solid color-mix(in srgb, ${STATUS_SOLID[o.status]} 30%, #FFFFFF)`,
+                          fontWeight: 600,
+                        }}
                       >
                         {o.status === "aprovado" && <Check className="h-3.5 w-3.5" />}
                         {statusStyles[o.status].label}
@@ -568,12 +573,12 @@ export default function Orcamentos() {
               </div>
 
               {/* Linha expandida */}
-              {expandedId === o.id && (
+              {expandedIds.includes(o.id) && (
                 <div className="px-4 pb-4 pt-1 space-y-3" style={{ borderTop: "1px solid var(--gw-border)" }}>
                   {/* Itens */}
                   <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--gw-border)" }}>
                     <div
-                      className="grid grid-cols-[56px_1fr_80px_110px_130px] items-center gap-3 px-3 h-9"
+                      className="grid grid-cols-[72px_1fr_80px_110px_130px] items-center gap-3 px-3 h-9"
                       style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
                     >
                       <span />
@@ -587,12 +592,12 @@ export default function Orcamentos() {
                     ) : o.itens.map((item, idx) => (
                       <div
                         key={idx}
-                        className="grid grid-cols-[56px_1fr_80px_110px_130px] items-center gap-3 px-3 h-[56px]"
+                        className="grid grid-cols-[72px_1fr_80px_110px_130px] items-center gap-3 px-3 h-[72px]"
                         style={{ background: idx % 2 === 1 ? "color-mix(in srgb, var(--gw-surface-alt) 40%, var(--gw-surface))" : "var(--gw-surface)" }}
                       >
-                        <Thumb size="sm" src={item.mockupImagem || item.imagem} alt={item.nome} />
+                        <Thumb size="md" src={item.mockupImagem || item.imagem} alt={item.nome} />
                         <span className="flex flex-col min-w-0 leading-tight">
-                          <span className="gw-title text-[13.5px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
+                          <span className="gw-title text-[12.5px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
                           {item.observacao && (
                             <span className="text-[12px] truncate" style={{ color: "var(--gw-text-secondary)" }}>{item.observacao}</span>
                           )}
