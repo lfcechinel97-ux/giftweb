@@ -73,7 +73,7 @@ function EstoqueXBZ({ search, categoria }: { search: string; categoria: string }
               <div className="flex items-center gap-3 px-4 py-2.5">
                 <div className="w-9 h-9 rounded bg-secondary shrink-0 overflow-hidden">
                   {p.image_url ? (
-                    <img src={p.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    <img src={p.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Package className="h-4 w-4 text-muted-foreground" />
@@ -213,7 +213,7 @@ function EstoqueProprio({ search, categoria }: { search: string; categoria: stri
                 <div className="flex items-center gap-3 px-4 py-2.5">
                   <div className="w-9 h-9 rounded bg-secondary shrink-0 overflow-hidden">
                     {p.image_url ? (
-                      <img src={p.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <img src={p.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Package className="h-4 w-4 text-muted-foreground" />

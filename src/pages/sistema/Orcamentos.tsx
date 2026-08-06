@@ -221,7 +221,7 @@ export default function Orcamentos() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(25);
 
   useEffect(() => {
     if (currentVendedor?.id) setFiltroVendedor(currentVendedor.id);
