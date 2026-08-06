@@ -77,8 +77,9 @@ export default function SistemaLayout() {
       </aside>
 
       <div className="ml-[230px] flex-1 min-h-screen flex flex-col">
-        <header className="h-14 bg-background border-b flex items-center justify-between px-6 sticky top-0 z-40">
+        <header className="h-14 bg-card border-b border-border flex items-center justify-between px-6 sticky top-0 z-40">
           <h1 className="text-sm font-semibold text-foreground">Sistema Gift Web</h1>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 text-sm text-foreground/80 hover:text-foreground transition-colors">
