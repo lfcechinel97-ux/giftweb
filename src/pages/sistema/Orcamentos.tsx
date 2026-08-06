@@ -616,8 +616,7 @@ export default function Orcamentos() {
                     <MetaField label="Criado em" value={new Date(o.createdAt).toLocaleDateString("pt-BR")} />
                     <MetaField label="Contato" value={o.contatoNome || o.contatoTelefone || "—"} />
                   </div>
-                </div>
-              )}
+              </div>
             </div>
           );
         })}
