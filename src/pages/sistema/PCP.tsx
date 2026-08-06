@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag, Clock, History,
@@ -70,6 +70,7 @@ interface HistoricoRow {
   id: string;
   status_anterior: string | null;
   status_novo: string;
+  usuario_id: string | null;
   observacao: string | null;
   created_at: string;
 }
@@ -127,6 +128,25 @@ const tempoNaEtapa = (horas: number | null) => {
   return `${Math.floor(horas / 24)}d nesta etapa`;
 };
 
+const tempoNaEtapaCurto = (horas: number | null) => {
+  if (horas == null) return null;
+  if (horas < 1) return "<1h";
+  if (horas < 24) return `${Math.floor(horas)}h`;
+  return `${Math.floor(horas / 24)}d`;
+};
+
+/* Limite (em horas) de permanência aceitável em cada etapa */
+const LIMITE_ETAPA: Record<PcpStatus, number> = {
+  organizando_pedido: 48,
+  pronto_producao: 48,
+  teste_fisico: 48,
+  preparacao: 72,
+  em_producao: 120,
+  embalagem_pagamento: 48,
+  aguardando_coleta: 48,
+  enviado: 10000,
+};
+
 function StatusPill({ status, className }: { status: string; className?: string }) {
   const cfg = STATUS_MAP[status];
   if (!cfg) return null;
@@ -143,21 +163,24 @@ function StatusPill({ status, className }: { status: string; className?: string 
 /* ── Card ────────────────────────────────────────────────────────────────── */
 
 function PcpCard({
-  row, indice, total, dragging, saving, onDragStart, onDragEnd, onOpen,
+  row, indice, total, dragging, saving, atrasado, highlight,
+  onDragStart, onDragEnd, onOpen, onHover,
 }: {
   row: PcpRow;
   indice: number;
   total: number;
   dragging: boolean;
   saving: boolean;
+  atrasado: boolean;
+  highlight: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
   onOpen: () => void;
+  onHover: (pedidoId: string | null) => void;
 }) {
   const foto = row.mockup_url || row.imagem_catalogo_url;
   const cor = corDoPedido(row);
-  const tempo = tempoNaEtapa(row.horas_na_etapa);
-  const prazo = prazoInfo(row.data_entrega_item);
+  const tempo = tempoNaEtapaCurto(row.horas_na_etapa);
 
   return (
     <div
@@ -169,59 +192,96 @@ function PcpCard({
       }}
       onDragEnd={onDragEnd}
       onClick={onOpen}
+      onMouseEnter={() => onHover(row.pedido_id)}
+      onMouseLeave={() => onHover(null)}
       className={cn(
-        "group bg-card border border-border rounded-xl overflow-hidden cursor-pointer select-none",
-        "shadow-[0_1px_2px_rgba(16,24,40,0.05)] hover:shadow-[0_8px_20px_rgba(15,42,92,0.12)] transition-shadow",
+        "w-[268px] rounded-[10px] overflow-hidden cursor-pointer select-none bg-[var(--gw-surface)]",
+        "border border-[var(--gw-border)] transition-shadow hover:shadow-[var(--gw-shadow-md)]",
         dragging && "opacity-40",
         saving && "opacity-60 pointer-events-none"
       )}
+      style={{
+        boxShadow: atrasado
+          ? "0 0 0 2px var(--gw-danger)"
+          : highlight
+            ? `0 0 0 2px ${cor}`
+            : undefined,
+      }}
     >
-      {foto ? (
-        <img src={foto} alt="" className="w-full h-[180px] object-cover bg-white" />
-      ) : (
-        <div className="w-full h-[180px] bg-muted flex items-center justify-center">
-          <Package className="h-8 w-8 text-muted-foreground/50" />
-        </div>
-      )}
+      {/* Camada 1 — foto */}
+      <div className="relative h-[168px] w-full">
+        {foto ? (
+          <img src={foto} alt="" className="w-full h-full object-cover bg-white" />
+        ) : (
+          <div className="w-full h-full bg-[var(--gw-surface-alt)] flex items-center justify-center">
+            <Package className="h-8 w-8 text-[var(--gw-text-muted)]" />
+          </div>
+        )}
 
-      <div className="h-[5px] w-full" style={{ backgroundColor: cor }} />
+        {/* gradiente inferior */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-[56px] pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, rgba(11,18,32,0), rgba(11,18,32,.75))" }}
+        />
 
-      <div className="p-3 space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-mono-num text-[13px]">{row.pedido_numero}</span>
-          <span className="text-[11px] font-semibold text-muted-foreground">
-            Item {indice}/{total}
+        {/* origem do estoque */}
+        <span
+          className="absolute top-1.5 left-1.5 text-white text-[10px] font-bold uppercase rounded-[4px] px-2 py-[3px]"
+          style={{
+            backgroundColor: row.origem_estoque === "estoque"
+              ? "rgba(14,163,107,.9)"
+              : "rgba(245,165,36,.9)",
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          {row.origem_estoque === "estoque" ? "Em estoque" : "Compra específica"}
+        </span>
+
+        {/* técnica */}
+        {row.tecnica_nome && (
+          <span
+            className="absolute top-1.5 right-1.5 text-white text-[10px] font-semibold rounded-[4px] px-2 py-[3px] max-w-[110px] truncate"
+            style={{ backgroundColor: "rgba(11,18,32,.72)", backdropFilter: "blur(8px)" }}
+          >
+            {row.tecnica_nome}
           </span>
-        </div>
+        )}
 
-        <p className="text-[13px] font-title truncate">{row.produto_nome || "—"}</p>
-
-        <p className="text-[26px] leading-none font-title text-foreground">
-          {row.quantidade ?? 0}
-          <span className="text-[12px] font-normal text-muted-foreground ml-1">un</span>
-        </p>
-
-        <div className="flex flex-wrap items-center gap-1.5">
-          {row.tecnica_nome && (
-            <span className="text-[10px] font-medium border border-border text-muted-foreground rounded-md px-1.5 py-0.5">
-              {row.tecnica_nome}
-            </span>
-          )}
-          <span className="text-[10px] font-medium border border-border text-muted-foreground rounded-md px-1.5 py-0.5">
-            {row.origem_estoque === "estoque" ? "Em estoque" : "Compra específica"}
+        {/* quantidade */}
+        <span className="absolute bottom-1.5 right-2 flex items-baseline gap-1 text-white">
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-[20px] font-bold leading-none">
+            {row.quantidade ?? 0}
           </span>
-        </div>
+          <span className="text-[11px] font-medium text-white/80">un</span>
+        </span>
 
-        <div className="flex items-center justify-between pt-0.5">
-          <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-            <Clock className="h-3 w-3" /> {tempo || "—"}
-          </span>
-          {prazo.label && <span className={cn("text-[10px] font-medium", prazo.tone)}>{prazo.label}</span>}
-        </div>
+        {/* tempo na etapa */}
+        <span
+          className={cn("absolute bottom-2 left-2 flex items-center gap-1 text-[10px] font-semibold")}
+          style={{ color: atrasado ? "var(--gw-danger)" : "#FFFFFF" }}
+        >
+          <Clock className="h-[10px] w-[10px]" /> {tempo || "—"}
+        </span>
+      </div>
+
+      {/* Camada 2 — rodapé */}
+      <div className="relative h-[37px] bg-[var(--gw-surface)] flex items-center gap-1.5 pl-3 pr-2 whitespace-nowrap">
+        <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: cor }} />
+        <span
+          className="text-[12px] font-semibold text-[var(--gw-text)]"
+          style={{ fontFamily: "'IBM Plex Mono', monospace" }}
+        >
+          {row.pedido_numero}
+        </span>
+        <span className="text-[var(--gw-text-muted)] text-[12px]">·</span>
+        <span className="text-[11px] font-medium text-[var(--gw-text-secondary)]">
+          Item {indice}/{total}
+        </span>
       </div>
     </div>
   );
 }
+
 
 /* ── Página ──────────────────────────────────────────────────────────────── */
 
@@ -232,6 +292,48 @@ export default function PCP() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<PcpStatus | null>(null);
+  const [hoverPedido, setHoverPedido] = useState<string | null>(null);
+  const boardRef = useRef<HTMLDivElement | null>(null);
+
+  /* Shift+scroll e arrastar-para-rolar (botão do meio) no quadro */
+  useEffect(() => {
+    const el = boardRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.shiftKey && e.deltaY !== 0) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+    let panning = false;
+    let startX = 0;
+    let startScroll = 0;
+    const onDown = (e: MouseEvent) => {
+      if (e.button !== 1) return;
+      e.preventDefault();
+      panning = true;
+      startX = e.clientX;
+      startScroll = el.scrollLeft;
+      el.style.cursor = "grabbing";
+    };
+    const onMove = (e: MouseEvent) => {
+      if (!panning) return;
+      el.scrollLeft = startScroll - (e.clientX - startX);
+    };
+    const onUp = () => { panning = false; el.style.cursor = ""; };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("mousedown", onDown);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("mousedown", onDown);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [loading]);
+
+
 
   const [detalheId, setDetalheId] = useState<string | null>(null);
   const [historico, setHistorico] = useState<HistoricoRow[]>([]);
@@ -315,7 +417,7 @@ export default function PCP() {
     (async () => {
       const { data } = await supabase
         .from("sistema_producao_historico")
-        .select("id, status_anterior, status_novo, observacao, created_at")
+        .select("id, status_anterior, status_novo, usuario_id, observacao, created_at")
         .eq("producao_item_id", detalheId)
         .order("created_at", { ascending: false });
       setHistorico((data as any as HistoricoRow[]) ?? []);
@@ -408,8 +510,12 @@ export default function PCP() {
           <p className="text-muted-foreground">Nenhum item de produção encontrado.</p>
         </div>
       ) : (
-        <div className="w-full overflow-x-scroll overflow-y-hidden pb-3 pcp-scroll">
-          <div className="flex gap-3 items-start w-max pb-2">
+        <div
+          ref={boardRef}
+          className="w-full overflow-x-auto overflow-y-hidden pcp-scroll"
+          style={{ scrollbarGutter: "stable" }}
+        >
+          <div className="flex gap-4 items-start w-max pb-2">
             {STATUS_COLS.map(col => {
               const items = byStatus[col.value] || [];
               const somaQtd = items.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
@@ -424,22 +530,27 @@ export default function PCP() {
                     handleDrop(col.value, e.dataTransfer.getData("text/plain"));
                   }}
                   className={cn(
-                    "w-[280px] shrink-0 rounded-xl border bg-white/60 transition-colors max-h-[calc(100vh-230px)] flex flex-col",
-                    isOver ? "border-[#2563EB] bg-[#2563EB]/5" : "border-border"
+                    "w-[300px] shrink-0 rounded-xl border transition-colors h-[calc(100vh-250px)] flex flex-col overflow-hidden",
+                    isOver ? "border-[#2563EB] bg-[#2563EB]/5" : "border-[var(--gw-border)] bg-white/60"
                   )}
                 >
                   <div
-                    className="flex items-center justify-between px-3 py-2.5 rounded-t-xl text-white sticky top-0 z-10"
+                    className="flex items-center justify-between px-3 py-2.5 text-white sticky top-0 z-10 shrink-0"
                     style={{ backgroundColor: col.color }}
                   >
-                    <span className="text-xs font-title truncate">{col.label}</span>
-                    <span className="text-[10px] font-semibold bg-white/25 rounded-full px-2 py-0.5 shrink-0">
-                      {items.length} · {somaQtd} un
+                    <span className="text-[13px] font-bold truncate">{col.label}</span>
+                    <span
+                      className="text-[11px] font-semibold text-white rounded-full px-2 py-0.5 shrink-0"
+                      style={{ backgroundColor: "rgba(255,255,255,.22)" }}
+                    >
+                      {items.length} · {somaQtd}un
                     </span>
                   </div>
-                  <div className="p-2 space-y-2 min-h-[120px] overflow-y-auto">
+                  <div className="p-2 space-y-2 flex-1 overflow-y-auto pcp-col-scroll">
                     {items.length === 0 ? (
-                      <div className="text-center text-[11px] text-muted-foreground/60 py-6">Vazio</div>
+                      <div className="h-[96px] rounded-lg border border-dashed border-[var(--gw-border)] flex items-center justify-center gw-meta text-[11px] text-[var(--gw-text-muted)]">
+                        Sem itens nesta etapa
+                      </div>
                     ) : items.map(row => (
                       <PcpCard
                         key={row.producao_id}
@@ -448,6 +559,9 @@ export default function PCP() {
                         total={indices[row.producao_id]?.total ?? 1}
                         dragging={draggingId === row.producao_id}
                         saving={savingId === row.producao_id}
+                        atrasado={(row.horas_na_etapa ?? 0) > (LIMITE_ETAPA[row.status] ?? 9999)}
+                        highlight={!!hoverPedido && hoverPedido === row.pedido_id}
+                        onHover={setHoverPedido}
                         onDragStart={() => setDraggingId(row.producao_id)}
                         onDragEnd={() => setDraggingId(null)}
                         onOpen={() => setDetalheId(row.producao_id)}
@@ -461,69 +575,119 @@ export default function PCP() {
         </div>
       )}
 
-      {/* Modal grande de detalhe do item */}
+      {/* Modal de detalhe do item */}
       <Dialog open={!!detalhe} onOpenChange={open => !open && setDetalheId(null)}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          className="p-0 gap-0 overflow-hidden rounded-[10px] border-[var(--gw-border)]"
+          style={{ maxWidth: 880, width: "94vw", maxHeight: "88vh", boxShadow: "var(--gw-shadow-lg)" }}
+        >
           {detalhe && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-3 pr-6">
-                  <span className="font-mono-num text-xl">{detalhe.pedido_numero}</span>
-                  <span className="font-title truncate">{detalhe.cliente || "—"}</span>
-                  <StatusPill status={detalhe.status} />
-                </DialogTitle>
-              </DialogHeader>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  {detalhe.mockup_url || detalhe.imagem_catalogo_url ? (
+            <div className="grid md:grid-cols-[400px_1fr] max-h-[88vh]">
+              {/* Coluna esquerda — imagens */}
+              <div className="bg-[var(--gw-surface-alt)] p-4 overflow-y-auto">
+                {detalhe.mockup_url || detalhe.imagem_catalogo_url ? (
+                  <>
                     <img
                       src={detalhe.mockup_url || detalhe.imagem_catalogo_url!}
                       alt={detalhe.produto_nome || ""}
-                      className="w-full h-[400px] object-contain bg-white rounded-xl border border-border"
+                      className="w-full h-[360px] object-contain bg-white rounded-lg border border-[var(--gw-border)]"
                     />
-                  ) : (
-                    <div className="w-full h-[400px] rounded-xl bg-muted flex items-center justify-center">
-                      <Package className="h-12 w-12 text-muted-foreground/40" />
+                    <a
+                      href={detalhe.mockup_url || detalhe.imagem_catalogo_url!}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-block text-[12px] font-medium text-[var(--gw-primary)] hover:underline"
+                    >
+                      Abrir imagem em tamanho original
+                    </a>
+                  </>
+                ) : (
+                  <div className="w-full h-[360px] rounded-lg bg-white border border-[var(--gw-border)] flex items-center justify-center">
+                    <Package className="h-10 w-10 text-[var(--gw-text-muted)]" />
+                  </div>
+                )}
+
+                {detalhe.mockup_url && detalhe.imagem_catalogo_url &&
+                  detalhe.imagem_catalogo_url !== detalhe.mockup_url && (
+                    <div className="mt-4">
+                      <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)] mb-1">
+                        Foto de catálogo
+                      </p>
+                      <img
+                        src={detalhe.imagem_catalogo_url}
+                        alt=""
+                        className="w-[96px] h-[96px] object-contain bg-white rounded-lg border border-[var(--gw-border)]"
+                      />
                     </div>
                   )}
-                  <div className="mt-3 h-[6px] rounded-full" style={{ backgroundColor: corDoPedido(detalhe) }} />
+              </div>
+
+              {/* Coluna direita — dados */}
+              <div className="overflow-y-auto">
+                <DialogHeader className="px-5 py-4 border-b border-[var(--gw-border)] space-y-1 text-left">
+                  <DialogTitle className="flex items-center gap-3 pr-8 text-left">
+                    <span
+                      className="text-[15px] font-semibold text-[var(--gw-text)]"
+                      style={{ fontFamily: "'IBM Plex Mono', monospace" }}
+                    >
+                      {detalhe.pedido_numero}
+                    </span>
+                    <span className="text-[15px] font-bold truncate">{detalhe.cliente || "—"}</span>
+                    <StatusPill status={detalhe.status} />
+                  </DialogTitle>
+                </DialogHeader>
+
+                {/* Produto */}
+                <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
+                  <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">Produto</p>
+                  <p className="text-[15px] font-bold text-[var(--gw-text)]">{detalhe.produto_nome || "—"}</p>
+                  <div className="grid grid-cols-3 gap-3 pt-1">
+                    {[
+                      ["Quantidade", `${detalhe.quantidade ?? 0} un`],
+                      ["Valor unitário", detalhe.valor_unitario != null
+                        ? detalhe.valor_unitario.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                        : "—"],
+                      ["Total", detalhe.valor_unitario != null
+                        ? (detalhe.valor_unitario * (detalhe.quantidade ?? 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                        : "—"],
+                    ].map(([k, v]) => (
+                      <div key={k}>
+                        <p className="text-[10px] font-semibold uppercase text-[var(--gw-text-muted)]">{k}</p>
+                        <p className="text-[13px] text-[var(--gw-text)]">{v}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <h2 className="text-foreground">{detalhe.produto_nome || "—"}</h2>
-                    <p className="text-3xl font-title mt-1">
-                      {detalhe.quantidade ?? 0}
-                      <span className="text-sm font-normal text-muted-foreground ml-1">unidades</span>
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                {/* Produção */}
+                <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-3">
+                  <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">Produção</p>
+                  <div className="grid grid-cols-2 gap-3">
                     {[
-                      ["TÉCNICA", detalhe.tecnica_nome || "—"],
-                      ["LOCAL DE PRODUÇÃO", detalhe.local_producao.replace(/_/g, " ")],
-                      ["ENTREGA DO ITEM", formatDate(detalhe.data_entrega_item) || "—"],
-                      ["TEMPO NA ETAPA", tempoNaEtapa(detalhe.horas_na_etapa) || "—"],
-                      ["TERCEIRIZADA", detalhe.terceirizada_nome || "—"],
-                      ["PREVISÃO DE RETORNO", formatDate(detalhe.previsao_retorno) || "—"],
-                      ["QTD ENVIADA", detalhe.qtd_enviada ?? "—"],
-                      ["QTD RETORNADA", detalhe.qtd_retornada ?? "—"],
+                      ["Técnica", detalhe.tecnica_nome || "—"],
+                      ["Local de produção", detalhe.local_producao.replace(/_/g, " ")],
+                      ...(detalhe.terceirizada_nome ? [["Terceirizada", detalhe.terceirizada_nome]] : []),
+                      ...(detalhe.previsao_retorno ? [["Previsão de retorno", formatDate(detalhe.previsao_retorno) || "—"]] : []),
+                      ["Produzir até", formatDate(detalhe.data_entrega_item) || "—"],
+                      ["Despachar até", formatDate(detalhe.data_entrega_item) || "—"],
+                      ["Tempo na etapa", tempoNaEtapa(detalhe.horas_na_etapa) || "—"],
                     ].map(([k, v]) => (
-                      <div key={k as string} className="bg-muted/60 rounded-lg px-3 py-2">
-                        <p className="text-[10px] font-semibold tracking-wide text-muted-foreground">{k}</p>
-                        <p className="text-sm text-foreground truncate">{String(v)}</p>
+                      <div key={k as string}>
+                        <p className="text-[10px] font-semibold uppercase text-[var(--gw-text-muted)]">{k}</p>
+                        <p className="text-[13px] text-[var(--gw-text)] capitalize truncate">{String(v)}</p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label>Origem do estoque</Label>
+                  <div className="space-y-1.5 pt-1">
+                    <Label className="text-[10px] font-semibold uppercase text-[var(--gw-text-muted)]">
+                      Origem do estoque
+                    </Label>
                     <Select
                       value={detalhe.origem_estoque}
                       onValueChange={v => applyUpdate(detalhe.producao_id, { origem_estoque: v })}
                     >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="estoque">Em estoque</SelectItem>
                         <SelectItem value="compra_especifica">Compra específica</SelectItem>
@@ -531,15 +695,24 @@ export default function PCP() {
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Checklist de embalagem</Label>
-                    <div className="flex flex-wrap gap-3">
+                  {TERCEIRIZADA_TRIGGER.includes(detalhe.local_producao) && (
+                    <Button variant="outline" size="sm" onClick={() => { setDetalheId(null); openTerceiroModal(detalhe); }}>
+                      <ShoppingBag className="h-4 w-4 mr-2" /> Dados da terceirizada
+                    </Button>
+                  )}
+                </div>
+
+                {/* Checklist */}
+                {detalhe.status === "embalagem_pagamento" && (
+                  <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
+                    <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">Checklist</p>
+                    <div className="flex flex-wrap gap-4">
                       {([
                         ["medidas_ok", "Medidas"],
                         ["pagamento_ok", "Pagamento"],
                         ["etiqueta_ok", "Etiqueta"],
                       ] as const).map(([key, label]) => (
-                        <label key={key} className="flex items-center gap-2 text-sm">
+                        <label key={key} className="flex items-center gap-2 text-[13px]">
                           <input
                             type="checkbox"
                             className="h-4 w-4 accent-[#2563EB]"
@@ -551,34 +724,40 @@ export default function PCP() {
                       ))}
                     </div>
                   </div>
+                )}
 
-                  {TERCEIRIZADA_TRIGGER.includes(detalhe.local_producao) && (
-                    <Button variant="outline" size="sm" onClick={() => { setDetalheId(null); openTerceiroModal(detalhe); }}>
-                      <ShoppingBag className="h-4 w-4 mr-2" /> Dados da terceirizada
-                    </Button>
-                  )}
-
-                  <div>
-                    <p className="text-sm font-title flex items-center gap-2 mb-2">
-                      <History className="h-4 w-4" /> Histórico de status
-                    </p>
-                    {historico.length === 0 ? (
-                      <p className="text-xs text-muted-foreground">Sem histórico registrado.</p>
-                    ) : (
-                      <ul className="space-y-1.5 max-h-[180px] overflow-y-auto">
-                        {historico.map(h => (
-                          <li key={h.id} className="text-xs flex items-center gap-2">
-                            <span className="text-muted-foreground shrink-0">{formatDateTime(h.created_at)}</span>
+                {/* Histórico */}
+                <div className="px-5 py-4">
+                  <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)] flex items-center gap-2 mb-3">
+                    <History className="h-3.5 w-3.5" /> Histórico
+                  </p>
+                  {historico.length === 0 ? (
+                    <p className="text-[12px] text-[var(--gw-text-muted)]">Sem histórico registrado.</p>
+                  ) : (
+                    <ul className="space-y-3 border-l border-[var(--gw-border)] pl-4">
+                      {historico.map(h => (
+                        <li key={h.id} className="relative">
+                          <span
+                            className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full"
+                            style={{ backgroundColor: STATUS_MAP[h.status_novo]?.color || "var(--gw-border-strong)" }}
+                          />
+                          <div className="flex items-center gap-2 flex-wrap">
                             <StatusPill status={h.status_novo} />
-                            {h.observacao && <span className="text-muted-foreground truncate">{h.observacao}</span>}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                            <span className="text-[11px] text-[var(--gw-text-secondary)]">
+                              {formatDateTime(h.created_at)}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[var(--gw-text-muted)] mt-0.5">
+                            {h.usuario_id ? "Responsável: usuário do sistema" : "Responsável: sistema"}
+                            {h.observacao ? ` · ${h.observacao}` : ""}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
-            </>
+            </div>
           )}
         </DialogContent>
       </Dialog>
