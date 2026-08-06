@@ -39,7 +39,7 @@ const STATUS_STAGE: Record<OrcamentoStatus, GwStage> = {
 };
 
 const STATUS_SOLID: Record<OrcamentoStatus, string> = {
-  "aberto": "var(--gw-primary)",
+  "aberto": "var(--gw-indigo)",
   "aprovado": "var(--gw-success)",
   "cancelado": "var(--gw-danger)",
 };
@@ -472,7 +472,7 @@ export default function Orcamentos() {
                 onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
               >
                 <OrderNumber value={o.numero} />
-                <span className="gw-title truncate">{getClienteNome(o)}</span>
+                <span className="gw-title truncate text-[15px]" style={{ fontWeight: 700 }}>{getClienteNome(o)}</span>
                 <div className="flex items-center">
                   {thumbs.map((it, i) => (
                     <span key={i} style={{ marginLeft: i === 0 ? 0 : -8, borderRadius: 8, border: "2px solid var(--gw-surface)" }}>
@@ -517,7 +517,7 @@ export default function Orcamentos() {
                   </DropdownMenu>
                 </div>
                 <span className="text-right">
-                  <Money value={calcOrcTotal(o)} emphasis />
+                  <Money value={calcOrcTotal(o)} emphasis bold />
                 </span>
                 <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                   {o.status === "aberto" && (
@@ -525,9 +525,9 @@ export default function Orcamentos() {
                       type="button"
                       onClick={() => handleAprovar(o.id)}
                       className="inline-flex items-center h-8 px-3 rounded-md text-[13px] font-semibold text-white transition-colors"
-                      style={{ background: "var(--gw-primary)" }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "var(--gw-primary-hover)")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "var(--gw-primary)")}
+                      style={{ background: "var(--gw-success)" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "#0C8D5C")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "var(--gw-success)")}
                     >
                       <Check className="h-3.5 w-3.5 mr-1" /> Aprovar
                     </button>
@@ -574,13 +574,13 @@ export default function Orcamentos() {
                   <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--gw-border)" }}>
                     <div
                       className="grid grid-cols-[56px_1fr_80px_110px_130px] items-center gap-3 px-3 h-9"
-                      style={{ background: "var(--gw-surface-alt)" }}
+                      style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
                     >
                       <span />
-                      <span className="gw-label">Produto</span>
-                      <span className="gw-label text-right">Qtd</span>
-                      <span className="gw-label text-right">Unit.</span>
-                      <span className="gw-label text-right">Total</span>
+                      <span className="gw-label" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Produto</span>
+                      <span className="gw-label text-right" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Qtd</span>
+                      <span className="gw-label text-right" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Unit.</span>
+                      <span className="gw-label text-right" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Total</span>
                     </div>
                     {o.itens.length === 0 ? (
                       <div className="px-3 py-6 text-center gw-meta">Carregando itens...</div>
@@ -592,7 +592,7 @@ export default function Orcamentos() {
                       >
                         <Thumb size="sm" src={item.mockupImagem || item.imagem} alt={item.nome} />
                         <span className="flex flex-col min-w-0 leading-tight">
-                          <span className="gw-title text-[14px] truncate">{item.nome}</span>
+                          <span className="gw-title text-[13.5px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
                           {item.observacao && (
                             <span className="text-[12px] truncate" style={{ color: "var(--gw-text-secondary)" }}>{item.observacao}</span>
                           )}
@@ -610,19 +610,19 @@ export default function Orcamentos() {
                   {/* Totais */}
                   <div
                     className="h-11 rounded-lg px-4 flex items-center justify-end gap-6"
-                    style={{ background: "var(--gw-surface-alt)" }}
+                    style={{ background: "var(--gw-primary-soft)" }}
                   >
                     <span className="flex items-center gap-2">
-                      <span className="gw-label">Subtotal</span>
+                      <span className="gw-label" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Subtotal</span>
                       <Money value={o.itens.length > 0 ? calcSubtotal(o) : Number(o.subtotal || 0)} />
                     </span>
                     <span className="flex items-center gap-2">
-                      <span className="gw-label">Frete{o.freteTipo ? ` (${o.freteTipo})` : ""}</span>
+                      <span className="gw-label" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Frete{o.freteTipo ? ` (${o.freteTipo})` : ""}</span>
                       <Money value={Number(o.freteValor) || 0} />
                     </span>
                     <span className="flex items-center gap-2">
-                      <span className="gw-label">Total</span>
-                      <Money value={calcOrcTotal(o)} emphasis />
+                      <span className="gw-label" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Total</span>
+                      <Money value={calcOrcTotal(o)} emphasis bold />
                     </span>
                   </div>
 
