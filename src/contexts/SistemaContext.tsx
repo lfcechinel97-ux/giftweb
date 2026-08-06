@@ -342,6 +342,9 @@ const pedidoToDb = (p: Partial<Pedido>): any => {
   if (p.pagamentoId !== undefined) out.pagamento_id = p.pagamentoId ?? null;
   if (p.observacoes !== undefined) out.observacoes = p.observacoes ?? null;
   if (p.status !== undefined) out.status = p.status;
+  if (p.prazoProducaoDias !== undefined) out.prazo_producao_dias = p.prazoProducaoDias;
+  if (p.dataProduzirAte !== undefined) out.data_produzir_ate = p.dataProduzirAte ?? null;
+  if (p.dataDespacharAte !== undefined) out.data_despachar_ate = p.dataDespacharAte ?? null;
   out.updated_at = new Date().toISOString();
   return out;
 };
