@@ -353,9 +353,6 @@ export default function Pedidos() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => toggleExpand(p.id)} style={{ color: "var(--gw-primary)" }}>
-                        <Pencil className="h-3.5 w-3.5 mr-2" /> {expanded ? "Fechar detalhes" : "Ver detalhes"}
-                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleCopiarNumero(p)} style={{ color: "var(--gw-violet)" }}>
                         <Copy className="h-3.5 w-3.5 mr-2" /> Copiar número
                       </DropdownMenuItem>
