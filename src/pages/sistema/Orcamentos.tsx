@@ -106,7 +106,7 @@ function AprovarModal({ orcamento, onClose, onConfirm }: AprovarModalProps) {
                 className="w-4 h-4 accent-green-600 cursor-pointer flex-shrink-0"
               />
               {(it.mockupImagem || it.imagem) ? (
-                <img src={it.mockupImagem || it.imagem} alt="" className="w-10 h-10 rounded object-cover flex-shrink-0" />
+                <img src={it.mockupImagem || it.imagem} alt="" width={40} height={40} loading="lazy" decoding="async" className="w-10 h-10 rounded object-cover flex-shrink-0" />
               ) : (
                 <Package className="w-10 h-10 p-2 text-gray-300 flex-shrink-0" />
               )}
@@ -147,6 +147,52 @@ function AprovarModal({ orcamento, onClose, onConfirm }: AprovarModalProps) {
   );
 }
 
+/* Cache simples da listagem: evita refetch ao voltar para a rota (60s) */
+const listCache: { key: string; at: number } = { key: "", at: 0 };
+
+/* Skeletons localizados — preservam a altura final e evitam salto de layout */
+const ItensSkeleton = () => (
+  <>
+    {[0, 1].map(i => (
+      <div
+        key={i}
+        className="grid grid-cols-[176px_1fr_80px_110px_130px] items-center gap-3 px-3 py-4"
+        style={{ background: i % 2 === 1 ? "color-mix(in srgb, var(--gw-surface-alt) 40%, var(--gw-surface))" : "var(--gw-surface)" }}
+      >
+        <div className="animate-pulse rounded-[12px]" style={{ width: 160, height: 160, background: "var(--gw-surface-alt)" }} />
+        <div className="space-y-2">
+          <div className="animate-pulse h-3 rounded w-3/5" style={{ background: "var(--gw-surface-alt)" }} />
+          <div className="animate-pulse h-3 rounded w-2/5" style={{ background: "var(--gw-surface-alt)" }} />
+        </div>
+        <div className="animate-pulse h-3 rounded" style={{ background: "var(--gw-surface-alt)" }} />
+        <div className="animate-pulse h-3 rounded" style={{ background: "var(--gw-surface-alt)" }} />
+        <div className="animate-pulse h-3 rounded" style={{ background: "var(--gw-surface-alt)" }} />
+      </div>
+    ))}
+  </>
+);
+
+const ListSkeleton = () => (
+  <>
+    {[0, 1, 2].map(i => (
+      <div
+        key={i}
+        className="rounded-[12px] overflow-hidden"
+        style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border-strong)" }}
+      >
+        <div className="grid grid-cols-[88px_1fr_100px_140px_120px_140px] items-center gap-3 px-4 h-[56px]">
+          {[0, 1, 2, 3, 4, 5].map(c => (
+            <div key={c} className="animate-pulse h-3.5 rounded" style={{ background: "var(--gw-surface-alt)" }} />
+          ))}
+        </div>
+        <div className="px-4 pb-4 pt-3">
+          <div className="animate-pulse rounded-lg" style={{ height: 200, background: "var(--gw-surface-alt)" }} />
+        </div>
+      </div>
+    ))}
+  </>
+);
+
 export default function Orcamentos() {
   const {
     orcamentos,
@@ -162,6 +208,7 @@ export default function Orcamentos() {
     loading,
     refreshOrcamentos,
     fetchOrcamentoCompleto,
+    fetchOrcamentosItens,
   } = useSistema();
   const navigate = useNavigate();
   const [filtroCliente, setFiltroCliente] = useState("");
@@ -182,7 +229,13 @@ export default function Orcamentos() {
 
   useEffect(() => {
     let cancelled = false;
+    const key = JSON.stringify([filtroVendedor, filtroStatus, filtroBusca, filtroCliente]);
+    // Cache de 60s: voltar para a rota com os mesmos filtros serve do estado
+    // já carregado e não dispara nova busca (revalida só quando envelhece).
+    if (listCache.key === key && Date.now() - listCache.at < 60_000) return;
     const timer = window.setTimeout(async () => {
+      listCache.key = key;
+      listCache.at = Date.now();
       setListLoading(true);
       try {
         await refreshOrcamentos({
@@ -246,14 +299,17 @@ export default function Orcamentos() {
 
   /* Todos os orçamentos ficam abertos: carrega itens dos que estão na página */
   const fetchedItensRef = useRef<Set<string>>(new Set());
+  const pendingIds = pageItems
+    .filter(o => o.itens.length === 0 && !fetchedItensRef.current.has(o.id))
+    .map(o => o.id);
+  const pendingKey = pendingIds.join(",");
   useEffect(() => {
-    pageItems.forEach(o => {
-      if (o.itens.length === 0 && !fetchedItensRef.current.has(o.id)) {
-        fetchedItensRef.current.add(o.id);
-        fetchOrcamentoCompleto(o.id);
-      }
-    });
-  }, [pageItems]);
+    if (!pendingKey) return;
+    const ids = pendingKey.split(",");
+    ids.forEach(id => fetchedItensRef.current.add(id));
+    // 1 requisição em lote para todos os itens da página (antes: 1 por orçamento)
+    fetchOrcamentosItens(ids);
+  }, [pendingKey, fetchOrcamentosItens]);
 
   const pageNumbers: (number | null)[] = (() => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -451,9 +507,7 @@ export default function Orcamentos() {
       {/* Lista */}
       <div className="space-y-5">
         {(loading || listLoading) && filtered.length === 0 ? (
-          <div className="rounded-[10px] p-12 text-center gw-meta" style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)" }}>
-            Carregando histórico de orçamentos...
-          </div>
+          <ListSkeleton />
         ) : filtered.length === 0 ? (
           <div className="rounded-[10px] p-12 text-center gw-meta" style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)" }}>
             Nenhum orçamento. Clique em "Novo Orçamento".
@@ -568,7 +622,7 @@ export default function Orcamentos() {
                       <span className="gw-label text-right" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Total</span>
                     </div>
                     {o.itens.length === 0 ? (
-                      <div className="px-3 py-6 text-center gw-meta">Carregando itens...</div>
+                      <ItensSkeleton />
                     ) : o.itens.map((item, idx) => (
                       <div
                         key={idx}
