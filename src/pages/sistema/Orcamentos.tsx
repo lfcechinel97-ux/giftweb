@@ -173,6 +173,8 @@ export default function Orcamentos() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     if (currentVendedor?.id) setFiltroVendedor(currentVendedor.id);
