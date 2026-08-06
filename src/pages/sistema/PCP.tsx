@@ -389,6 +389,9 @@ export default function PCP() {
   const [modalPrevisao, setModalPrevisao] = useState("");
   const [modalSaving, setModalSaving] = useState(false);
 
+  const [gateModal, setGateModal] = useState<{ row: PcpRow; target: PcpStatus; tipo: "cartao" | "pix" } | null>(null);
+  const [gateSaving, setGateSaving] = useState(false);
+
   const loadItems = async () => {
     const { data, error } = await supabase
       .from("vw_pcp" as any)
