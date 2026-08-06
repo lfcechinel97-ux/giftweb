@@ -598,7 +598,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       id: crypto.randomUUID(), produtoId: item.produtoId, codigoComposto: item.codigoComposto,
       varianteSlug: item.varianteSlug, nome: item.nome, quantidade: item.quantidade,
       precoUnitario: item.precoUnitario, total: item.quantidade * item.precoUnitario,
-      mockupImagem: item.mockupImagem,
+      mockupImagem: item.mockupImagem, imagem: item.imagem, observacao: (item as any).observacao,
     }));
 
     const pedido: Pedido = {
