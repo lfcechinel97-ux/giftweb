@@ -281,6 +281,17 @@ function PcpCard({
           </span>
         )}
 
+        {/* alerta de pagamento */}
+        {(precisaGateCartao(row) ||
+          (row.status === "embalagem_pagamento" && precisaGatePix(row))) && (
+          <span
+            className="absolute right-2 bottom-[30px] text-white text-[10px] font-bold uppercase rounded-[4px] px-2 py-[3px]"
+            style={{ backgroundColor: "var(--gw-warning)" }}
+          >
+            {precisaGateCartao(row) ? "Conferir Stone" : "Aguarda PIX"}
+          </span>
+        )}
+
         {/* quantidade */}
         <span className="absolute bottom-1.5 right-2 flex items-baseline gap-1 text-white">
           <span style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-[20px] font-bold leading-none">
