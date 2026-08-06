@@ -11,47 +11,70 @@ import { SiteContentProvider } from "@/contexts/SiteContentContext";
 import { QuotationProvider } from "@/contexts/QuotationContext";
 import { SistemaProvider } from "@/contexts/SistemaContext";
 
+/**
+ * Importa chunks de rota com tolerância a deploys: se o arquivo com hash antigo
+ * sumiu (novo build publicado), tenta de novo e, em último caso, recarrega a
+ * página uma única vez para pegar o index atualizado — evita tela em branco.
+ */
+const lazyRetry = (factory: () => Promise<{ default: React.ComponentType<any> }>) =>
+  lazy(() =>
+    factory().catch(async (err) => {
+      try {
+        return await factory();
+      } catch {
+        const KEY = "chunk_reload_at";
+        const last = Number(sessionStorage.getItem(KEY) || 0);
+        if (Date.now() - last > 15000) {
+          sessionStorage.setItem(KEY, String(Date.now()));
+          window.location.reload();
+          return new Promise<never>(() => {});
+        }
+        throw err;
+      }
+    }),
+  );
+
 // Lazy-loaded routes
-const AdminSync = lazy(() => import("./pages/AdminSync.tsx"));
-const ProductDetail = lazy(() => import("./pages/ProductDetail.tsx"));
-const CategoryPage = lazy(() => import("./pages/CategoryPage.tsx"));
-const AllProducts = lazy(() => import("./pages/AllProducts.tsx"));
-const SearchPage = lazy(() => import("./pages/SearchPage.tsx"));
-const AdminLogin = lazy(() => import("./pages/admin/AdminLogin.tsx"));
-const AdminLayout = lazy(() => import("./pages/admin/AdminLayout.tsx"));
-const AdminProducts = lazy(() => import("./pages/admin/AdminProducts.tsx"));
-const AdminProductEdit = lazy(() => import("./pages/admin/AdminProductEdit.tsx"));
-const AdminCategories = lazy(() => import("./pages/AdminCategories.tsx"));
-const AdminPricing = lazy(() => import("./pages/admin/AdminPricing.tsx"));
-const AdminBanners = lazy(() => import("./pages/admin/AdminBanners.tsx"));
-const AdminCategoryImages = lazy(() => import("./pages/admin/AdminCategoryImages.tsx"));
-const AdminVitrine = lazy(() => import("./pages/admin/AdminVitrine.tsx"));
-const AdminCatalogs = lazy(() => import("./pages/admin/AdminCatalogs.tsx"));
-const AdminClientes = lazy(() => import("./pages/admin/AdminClientes.tsx"));
-const AdminFooter = lazy(() => import("./pages/admin/AdminFooter.tsx"));
-const AdminTopProdutos = lazy(() => import("./pages/admin/AdminTopProdutos.tsx"));
-const AdminTopProdutosCategorias = lazy(() => import("./pages/admin/AdminTopProdutosCategorias.tsx"));
-const AdminGuard = lazy(() => import("./components/admin/AdminGuard.tsx"));
-const PrivacyPage = lazy(() => import("./pages/PrivacyPage.tsx"));
-const TermsPage = lazy(() => import("./pages/TermsPage.tsx"));
-const SecurityPage = lazy(() => import("./pages/SecurityPage.tsx"));
-const TrocasDevolucoesPage = lazy(() => import("./pages/TrocasDevolucoesPage.tsx"));
-const WhatsAppPrivacyPage = lazy(() => import("./pages/WhatsAppPrivacyPage.tsx"));
-const WhatsAppTermsPage = lazy(() => import("./pages/WhatsAppTermsPage.tsx"));
-const DataDeletionPage = lazy(() => import("./pages/DataDeletionPage.tsx"));
-const CatalogPage = lazy(() => import("./pages/CatalogPage.tsx"));
-const CatalogProductDetail = lazy(() => import("./pages/CatalogProductDetail.tsx"));
-const TopProdutos = lazy(() => import("./pages/TopProdutos.tsx"));
-const Top10Produtos = lazy(() => import("./pages/Top10Produtos.tsx"));
-const SistemaLayout = lazy(() => import("./pages/sistema/SistemaLayout.tsx"));
-const SistemaOrcamentos = lazy(() => import("./pages/sistema/Orcamentos.tsx"));
-const SistemaOrcamentoForm = lazy(() => import("./pages/sistema/OrcamentoForm.tsx"));
-const SistemaPedidos = lazy(() => import("./pages/sistema/Pedidos.tsx"));
-const SistemaPCP = lazy(() => import("./pages/sistema/PCP.tsx"));
-const SistemaEstoque = lazy(() => import("./pages/sistema/Estoque.tsx"));
-const SistemaProdutos = lazy(() => import("./pages/sistema/ProdutosCatalogo.tsx"));
-const SistemaClientes = lazy(() => import("./pages/sistema/Clientes.tsx"));
-const SistemaConfiguracoes = lazy(() => import("./pages/sistema/Configuracoes.tsx"));
+const AdminSync = lazyRetry(() => import("./pages/AdminSync.tsx"));
+const ProductDetail = lazyRetry(() => import("./pages/ProductDetail.tsx"));
+const CategoryPage = lazyRetry(() => import("./pages/CategoryPage.tsx"));
+const AllProducts = lazyRetry(() => import("./pages/AllProducts.tsx"));
+const SearchPage = lazyRetry(() => import("./pages/SearchPage.tsx"));
+const AdminLogin = lazyRetry(() => import("./pages/admin/AdminLogin.tsx"));
+const AdminLayout = lazyRetry(() => import("./pages/admin/AdminLayout.tsx"));
+const AdminProducts = lazyRetry(() => import("./pages/admin/AdminProducts.tsx"));
+const AdminProductEdit = lazyRetry(() => import("./pages/admin/AdminProductEdit.tsx"));
+const AdminCategories = lazyRetry(() => import("./pages/AdminCategories.tsx"));
+const AdminPricing = lazyRetry(() => import("./pages/admin/AdminPricing.tsx"));
+const AdminBanners = lazyRetry(() => import("./pages/admin/AdminBanners.tsx"));
+const AdminCategoryImages = lazyRetry(() => import("./pages/admin/AdminCategoryImages.tsx"));
+const AdminVitrine = lazyRetry(() => import("./pages/admin/AdminVitrine.tsx"));
+const AdminCatalogs = lazyRetry(() => import("./pages/admin/AdminCatalogs.tsx"));
+const AdminClientes = lazyRetry(() => import("./pages/admin/AdminClientes.tsx"));
+const AdminFooter = lazyRetry(() => import("./pages/admin/AdminFooter.tsx"));
+const AdminTopProdutos = lazyRetry(() => import("./pages/admin/AdminTopProdutos.tsx"));
+const AdminTopProdutosCategorias = lazyRetry(() => import("./pages/admin/AdminTopProdutosCategorias.tsx"));
+const AdminGuard = lazyRetry(() => import("./components/admin/AdminGuard.tsx"));
+const PrivacyPage = lazyRetry(() => import("./pages/PrivacyPage.tsx"));
+const TermsPage = lazyRetry(() => import("./pages/TermsPage.tsx"));
+const SecurityPage = lazyRetry(() => import("./pages/SecurityPage.tsx"));
+const TrocasDevolucoesPage = lazyRetry(() => import("./pages/TrocasDevolucoesPage.tsx"));
+const WhatsAppPrivacyPage = lazyRetry(() => import("./pages/WhatsAppPrivacyPage.tsx"));
+const WhatsAppTermsPage = lazyRetry(() => import("./pages/WhatsAppTermsPage.tsx"));
+const DataDeletionPage = lazyRetry(() => import("./pages/DataDeletionPage.tsx"));
+const CatalogPage = lazyRetry(() => import("./pages/CatalogPage.tsx"));
+const CatalogProductDetail = lazyRetry(() => import("./pages/CatalogProductDetail.tsx"));
+const TopProdutos = lazyRetry(() => import("./pages/TopProdutos.tsx"));
+const Top10Produtos = lazyRetry(() => import("./pages/Top10Produtos.tsx"));
+const SistemaLayout = lazyRetry(() => import("./pages/sistema/SistemaLayout.tsx"));
+const SistemaOrcamentos = lazyRetry(() => import("./pages/sistema/Orcamentos.tsx"));
+const SistemaOrcamentoForm = lazyRetry(() => import("./pages/sistema/OrcamentoForm.tsx"));
+const SistemaPedidos = lazyRetry(() => import("./pages/sistema/Pedidos.tsx"));
+const SistemaPCP = lazyRetry(() => import("./pages/sistema/PCP.tsx"));
+const SistemaEstoque = lazyRetry(() => import("./pages/sistema/Estoque.tsx"));
+const SistemaProdutos = lazyRetry(() => import("./pages/sistema/ProdutosCatalogo.tsx"));
+const SistemaClientes = lazyRetry(() => import("./pages/sistema/Clientes.tsx"));
+const SistemaConfiguracoes = lazyRetry(() => import("./pages/sistema/Configuracoes.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
