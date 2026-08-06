@@ -262,7 +262,7 @@ export default function Pedidos() {
       )}
 
       {/* Lista */}
-      <div className="space-y-2">
+      <div className="space-y-5">
         {filtered.length === 0 ? (
           <div className="rounded-[10px] p-12 text-center gw-meta" style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)" }}>
             <ShoppingCart className="h-10 w-10 mx-auto mb-3" style={{ color: "var(--gw-text-muted)" }} />
@@ -271,10 +271,7 @@ export default function Pedidos() {
               : "Nenhum pedido encontrado para o filtro atual."}
           </div>
         ) : pageItems.map(p => {
-          const expanded = expandedIds.includes(p.id);
           const itens = Array.isArray(p.itens) ? p.itens : [];
-          const capa = itens.find(i => i.mockupImagem)?.mockupImagem || itens.find(i => i.imagem)?.imagem;
-          const extras = Math.max(0, itens.length - 1);
           const prog = progresso[p.id];
           const { prazo, despachar, produzir } = getDatas(p);
           const subtotal = itens.length > 0
@@ -285,15 +282,13 @@ export default function Pedidos() {
           return (
             <div
               key={p.id}
-              className="rounded-[10px] overflow-hidden"
-              style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)", boxShadow: "var(--gw-shadow-sm)" }}
+              className="rounded-[12px] overflow-hidden"
+              style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border-strong)", boxShadow: "var(--gw-shadow-sm)" }}
             >
-              {/* Linha colapsada */}
+              {/* Cabeçalho do pedido */}
               <div
-                className="grid grid-cols-[88px_1fr_120px_100px_150px_120px_120px] items-center gap-3 px-4 h-[104px] cursor-pointer transition-colors"
-                onClick={() => toggleExpand(p.id)}
-                onMouseEnter={e => (e.currentTarget.style.background = "var(--gw-surface-alt)")}
-                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                className="grid grid-cols-[88px_1fr_100px_150px_120px_120px] items-center gap-3 px-4 h-[56px]"
+                style={{ background: "var(--gw-surface-alt)", borderBottom: "1px solid var(--gw-border)" }}
               >
                 <OrderNumber value={p.numero} />
 
