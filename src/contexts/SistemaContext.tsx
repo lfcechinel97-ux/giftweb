@@ -576,8 +576,16 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [data.pedidos.length]);
 
   const aprovarOrcamento = useCallback(async (id: string): Promise<Pedido | null> => {
-    const orcamento = data.orcamentos.find(o => o.id === id);
+    let orcamento = data.orcamentos.find(o => o.id === id);
     if (!orcamento || orcamento.status !== "aberto") return null;
+
+    // A listagem é "leve" (itens vazios). Sem recarregar o orçamento completo,
+    // o pedido seria criado com itens: [] — causa da tabela vazia em /sistema/pedidos.
+    if (orcamento.itens.length === 0) {
+      const { data: full } = await supabase.rpc("sistema_get_orcamento", { p_id: id });
+      const mapped = full ? mapOrcamento(full as any) : null;
+      if (mapped && mapped.itens.length > 0) orcamento = { ...orcamento, itens: mapped.itens };
+    }
 
     const now = new Date().toISOString();
     const { data: nrData } = await supabase.rpc("sistema_next_pedido_numero");
