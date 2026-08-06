@@ -275,7 +275,7 @@ input[type="range"]::-moz-range-thumb {
 
   /* Texto */
   --gw-text: #0B1220;
-  --gw-text-secondary: #5B6779;
+  --gw-text-secondary: #47536B;
   --gw-text-muted: #8A96A6;
 
   /* Ação e feedback */
@@ -283,6 +283,7 @@ input[type="range"]::-moz-range-thumb {
   --gw-primary-hover: #1E4BD8;
   --gw-primary-soft: #EDF2FF;
   --gw-violet: #7C5CFF;
+  --gw-indigo: #5B52E8;
   --gw-violet-soft: #F1EDFF;
   --gw-success: #0EA36B;
   --gw-success-soft: #E3F7EF;
