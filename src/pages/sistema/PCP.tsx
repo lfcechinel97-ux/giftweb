@@ -151,6 +151,36 @@ const LIMITE_ETAPA: Record<PcpStatus, number> = {
   enviado: 10000,
 };
 
+/* ── Gates de pagamento ──────────────────────────────────────────────────── */
+
+const semAcento = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+const isPagamentoCartao = (nome: string | null | undefined) => {
+  if (!nome) return false;
+  const n = semAcento(nome);
+  return n.includes("cartao") || n.includes("credito");
+};
+
+const isPagamentoPix = (nome: string | null | undefined) =>
+  !!nome && semAcento(nome).includes("pix");
+
+const ORDEM_STATUS = STATUS_COLS.map(c => c.value);
+const idxStatus = (s: PcpStatus) => ORDEM_STATUS.indexOf(s);
+
+const precisaGateCartao = (row: PcpRow) =>
+  isPagamentoCartao(row.pagamento_nome) && !row.pagamento_cartao_conferido_em;
+
+const precisaGatePix = (row: PcpRow) =>
+  isPagamentoPix(row.pagamento_nome) && !row.pix_recebido_integral_em;
+
+const pagamentoGateOk = (row: PcpRow) => {
+  if (isPagamentoCartao(row.pagamento_nome)) return !!row.pagamento_cartao_conferido_em;
+  if (isPagamentoPix(row.pagamento_nome)) return !!row.pix_recebido_integral_em;
+  return false;
+};
+
+
 function StatusPill({ status, className }: { status: string; className?: string }) {
   const cfg = STATUS_MAP[status];
   if (!cfg) return null;
