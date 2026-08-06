@@ -549,13 +549,13 @@ export default function Orcamentos() {
                 </div>
               </div>
 
-              {/* Linha expandida */}
-              {expandedIds.includes(o.id) && (
-                <div className="px-4 pb-4 pt-1 space-y-3" style={{ borderTop: "1px solid var(--gw-border)" }}>
+              {/* Conteúdo do orçamento (sempre visível) */}
+              <div className="px-4 pb-4 pt-3 space-y-3" style={{ background: "var(--gw-surface)" }}>
                   {/* Itens */}
-                  <div className="rounded-lg overflow-hidden" style={{ border: "1px solid var(--gw-border)" }}>
+                  <div className="rounded-lg overflow-x-auto" style={{ border: "1px solid var(--gw-border)" }}>
+                    <div className="min-w-[760px]">
                     <div
-                      className="grid grid-cols-[72px_1fr_80px_110px_130px] items-center gap-3 px-3 h-9"
+                      className="grid grid-cols-[176px_1fr_80px_110px_130px] items-center gap-3 px-3 h-9"
                       style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
                     >
                       <span />
@@ -569,10 +569,10 @@ export default function Orcamentos() {
                     ) : o.itens.map((item, idx) => (
                       <div
                         key={idx}
-                        className="grid grid-cols-[72px_1fr_80px_110px_130px] items-center gap-3 px-3 h-[72px]"
+                        className="grid grid-cols-[176px_1fr_80px_110px_130px] items-center gap-3 px-3 py-4"
                         style={{ background: idx % 2 === 1 ? "color-mix(in srgb, var(--gw-surface-alt) 40%, var(--gw-surface))" : "var(--gw-surface)" }}
                       >
-                        <Thumb size="md" src={item.mockupImagem || item.imagem} alt={item.nome} />
+                        <Thumb size="xl" src={item.mockupImagem || item.imagem} alt={item.nome} />
                         <span className="flex flex-col min-w-0 leading-tight">
                           <span className="gw-title text-[12.5px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
                           {item.observacao && (
@@ -587,6 +587,7 @@ export default function Orcamentos() {
                         <span className="text-right"><Money value={item.precoUnitario * item.quantidade} emphasis /></span>
                       </div>
                     ))}
+                    </div>
                   </div>
 
                   {/* Totais */}
