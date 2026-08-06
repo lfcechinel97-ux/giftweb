@@ -239,6 +239,28 @@ export default function Orcamentos() {
 
   const valorTotalFiltrado = filtered.reduce((s, o) => s + calcOrcTotal(o), 0);
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  useEffect(() => { setPage(1); }, [filtroBusca, filtroCliente, filtroStatus, filtroVendedor, dataInicio, dataFim, pageSize]);
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pageNumbers: (number | null)[] = (() => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const set = new Set<number>([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
+    const nums = [...set].filter(n => n >= 1 && n <= totalPages).sort((a, b) => a - b);
+    const out: (number | null)[] = [];
+    nums.forEach((n, i) => {
+      if (i > 0 && n - nums[i - 1] > 1) out.push(null);
+      out.push(n);
+    });
+    return out;
+  })();
+
+  const handleStatusChange = async (o: Orcamento, novo: OrcamentoStatus) => {
+    if (novo === o.status) return;
+    if (novo === "aprovado") { handleAprovar(o.id); return; }
+    await updateOrcamento(o.id, { status: novo });
+  };
+
   const ensureItens = async (o: Orcamento): Promise<Orcamento> => {
     if (o.itens.length > 0) return o;
     const full = await fetchOrcamentoCompleto(o.id);
