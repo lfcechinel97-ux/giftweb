@@ -376,7 +376,7 @@ export default function PCP() {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     };
-  }, [loading]);
+  }, [rows.length]);
 
 
 
@@ -608,8 +608,15 @@ export default function PCP() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center text-muted-foreground gap-2 py-24">
-          <Loader2 className="h-5 w-5 animate-spin" /> Carregando PCP...
+        <div className="flex gap-4 overflow-hidden">
+          {[0, 1, 2, 3].map(c => (
+            <div key={c} className="w-[268px] shrink-0 space-y-3">
+              <div className="animate-pulse h-8 rounded-lg bg-muted" />
+              {[0, 1].map(i => (
+                <div key={i} className="animate-pulse rounded-xl bg-muted" style={{ height: 205 }} />
+              ))}
+            </div>
+          ))}
         </div>
       ) : totalItens === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center shadow-sm">
