@@ -145,6 +145,8 @@ export interface PedidoItem {
   precoUnitario: number;
   total: number;
   mockupImagem?: string;
+  imagem?: string;
+  observacao?: string;
 }
 
 export interface Pedido {
