@@ -70,6 +70,7 @@ interface HistoricoRow {
   id: string;
   status_anterior: string | null;
   status_novo: string;
+  usuario_id: string | null;
   observacao: string | null;
   created_at: string;
 }
@@ -416,7 +417,7 @@ export default function PCP() {
     (async () => {
       const { data } = await supabase
         .from("sistema_producao_historico")
-        .select("id, status_anterior, status_novo, observacao, created_at")
+        .select("id, status_anterior, status_novo, usuario_id, observacao, created_at")
         .eq("producao_item_id", detalheId)
         .order("created_at", { ascending: false });
       setHistorico((data as any as HistoricoRow[]) ?? []);
