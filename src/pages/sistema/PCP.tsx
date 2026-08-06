@@ -943,6 +943,53 @@ export default function PCP() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Gate de pagamento (cartão / PIX) */}
+      <Dialog open={!!gateModal} onOpenChange={open => !open && setGateModal(null)}>
+        <DialogContent style={{ maxWidth: 460 }}>
+          <DialogHeader>
+            <DialogTitle>
+              {gateModal?.tipo === "cartao" ? "Conferiu o pagamento na Stone?" : "Recebeu 100% do valor?"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {gateModal && (
+            <div className="space-y-3 py-1">
+              <div className="rounded-lg bg-[var(--gw-surface-alt)] px-3 py-2.5 space-y-1">
+                <p className="text-[13px] font-semibold text-[var(--gw-text)]">
+                  Pedido {gateModal.row.pedido_numero}
+                </p>
+                <p className="text-[12px] text-[var(--gw-text-secondary)]">
+                  {gateModal.row.cliente || "Cliente não informado"}
+                </p>
+                {gateModal.row.pagamento_nome && (
+                  <p className="text-[11px] text-[var(--gw-text-muted)]">{gateModal.row.pagamento_nome}</p>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">
+                  Valor total
+                </span>
+                <Money value={Number(gateModal.row.pedido_total ?? 0)} emphasis bold />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGateModal(null)} disabled={gateSaving}>
+              {gateModal?.tipo === "cartao" ? "Cancelar" : "Ainda não"}
+            </Button>
+            <Button
+              onClick={confirmarGate}
+              disabled={gateSaving}
+              style={{ backgroundColor: "var(--gw-primary)", color: "#fff" }}
+            >
+              {gateSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {gateModal?.tipo === "cartao" ? "Sim, pagamento confirmado" : "Sim, recebi o valor integral"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
