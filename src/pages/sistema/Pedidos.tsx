@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  Search, Filter, Printer, Pencil, Trash2, Copy, MoreHorizontal, ChevronDown,
+  Search, Filter, Printer, Trash2, Copy, MoreHorizontal, ChevronDown,
   ChevronLeft, ChevronRight, X, ShoppingCart,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -73,7 +73,6 @@ export default function Pedidos() {
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
-  const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [prazoDraft, setPrazoDraft] = useState<Record<string, string>>({});
@@ -149,8 +148,6 @@ export default function Pedidos() {
     return out;
   })();
 
-  const toggleExpand = (id: string) =>
-    setExpandedIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
 
   const handlePrintPDF = async (p: Pedido) => {
     await gerarOrdemProducaoPDF(p, { clientes, vendedores, transportadoras });
