@@ -151,6 +151,7 @@ export default function Orcamentos() {
   const {
     orcamentos,
     removeOrcamento,
+    updateOrcamento,
     aprovarOrcamento,
     clientes,
     vendedores,
