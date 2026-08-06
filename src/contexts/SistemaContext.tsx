@@ -211,6 +211,7 @@ interface SistemaContextType extends SistemaData {
     limit?: number;
   }) => Promise<Orcamento[]>;
   fetchOrcamentoCompleto: (id: string) => Promise<Orcamento | null>;
+  fetchOrcamentosItens: (ids: string[]) => Promise<void>;
   addOrcamento: (o: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt">) => Promise<Orcamento>;
   updateOrcamento: (id: string, changes: Partial<Orcamento>) => Promise<void>;
   removeOrcamento: (id: string) => void;
@@ -794,7 +795,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const value = useMemo<SistemaContextType>(() => ({
     ...data, loading,
-    refreshOrcamentos, fetchOrcamentoCompleto,
+    refreshOrcamentos, fetchOrcamentoCompleto, fetchOrcamentosItens,
     addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
     addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
@@ -804,7 +805,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     currentVendedor, setCurrentVendedor: setCurrentVendedorState,
     getEstoqueDisponivel, gerarNumeroOrcamento, gerarNumeroPedido,
   }), [
-    data, loading, refreshOrcamentos, fetchOrcamentoCompleto, addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
+    data, loading, refreshOrcamentos, fetchOrcamentoCompleto, fetchOrcamentosItens, addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
     addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
     addMeioPagamento, updateMeioPagamento, removeMeioPagamento, toggleMeioPagamentoAtivo,
