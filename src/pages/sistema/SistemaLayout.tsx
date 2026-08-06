@@ -1,7 +1,7 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import {
-  FileText, ShoppingCart, Boxes, Package, Globe, User, Users, Settings, ChevronDown,
+  FileText, ShoppingCart, Boxes, Package, Globe, User, Users, Settings, ChevronDown, Kanban,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -12,6 +12,7 @@ import { useSistema } from "@/contexts/SistemaContext";
 const menu = [
   { icon: FileText, label: "Orçamentos", path: "/sistema/orcamentos" },
   { icon: ShoppingCart, label: "Pedidos", path: "/sistema/pedidos" },
+  { icon: Kanban, label: "PCP", path: "/sistema/pcp" },
   { icon: Boxes, label: "Estoque", path: "/sistema/estoque" },
   { icon: Package, label: "Produtos", path: "/sistema/produtos" },
   { icon: Users, label: "Clientes", path: "/sistema/clientes" },

@@ -47,6 +47,7 @@ const SistemaLayout = lazy(() => import("./pages/sistema/SistemaLayout.tsx"));
 const SistemaOrcamentos = lazy(() => import("./pages/sistema/Orcamentos.tsx"));
 const SistemaOrcamentoForm = lazy(() => import("./pages/sistema/OrcamentoForm.tsx"));
 const SistemaPedidos = lazy(() => import("./pages/sistema/Pedidos.tsx"));
+const SistemaPCP = lazy(() => import("./pages/sistema/PCP.tsx"));
 const SistemaEstoque = lazy(() => import("./pages/sistema/Estoque.tsx"));
 const SistemaProdutos = lazy(() => import("./pages/sistema/ProdutosCatalogo.tsx"));
 const SistemaClientes = lazy(() => import("./pages/sistema/Clientes.tsx"));
@@ -126,6 +127,7 @@ const App = () => (
                 <Route path="orcamentos/novo" element={<SistemaOrcamentoForm />} />
                 <Route path="orcamentos/:id" element={<SistemaOrcamentoForm />} />
                 <Route path="pedidos" element={<SistemaPedidos />} />
+                <Route path="pcp" element={<SistemaPCP />} />
                 <Route path="estoque" element={<SistemaEstoque />} />
                 <Route path="produtos" element={<SistemaProdutos />} />
                 <Route path="clientes" element={<SistemaClientes />} />
