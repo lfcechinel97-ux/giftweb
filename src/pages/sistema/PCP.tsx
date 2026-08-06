@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { Money } from "@/components/sistema/ui/Money";
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
@@ -53,6 +54,10 @@ interface PcpRow {
   pagamento_ok: boolean | null;
   etiqueta_ok: boolean | null;
   coleta_solicitada_em: string | null;
+  pagamento_cartao_conferido_em: string | null;
+  pix_recebido_integral_em: string | null;
+  pagamento_nome: string | null;
+  pedido_total: number | null;
   etapa_desde: string | null;
   horas_na_etapa: number | null;
   total_itens_pedido: number | null;
@@ -146,6 +151,36 @@ const LIMITE_ETAPA: Record<PcpStatus, number> = {
   aguardando_coleta: 48,
   enviado: 10000,
 };
+
+/* ── Gates de pagamento ──────────────────────────────────────────────────── */
+
+const semAcento = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+const isPagamentoCartao = (nome: string | null | undefined) => {
+  if (!nome) return false;
+  const n = semAcento(nome);
+  return n.includes("cartao") || n.includes("credito");
+};
+
+const isPagamentoPix = (nome: string | null | undefined) =>
+  !!nome && semAcento(nome).includes("pix");
+
+const ORDEM_STATUS = STATUS_COLS.map(c => c.value);
+const idxStatus = (s: PcpStatus) => ORDEM_STATUS.indexOf(s);
+
+const precisaGateCartao = (row: PcpRow) =>
+  isPagamentoCartao(row.pagamento_nome) && !row.pagamento_cartao_conferido_em;
+
+const precisaGatePix = (row: PcpRow) =>
+  isPagamentoPix(row.pagamento_nome) && !row.pix_recebido_integral_em;
+
+const pagamentoGateOk = (row: PcpRow) => {
+  if (isPagamentoCartao(row.pagamento_nome)) return !!row.pagamento_cartao_conferido_em;
+  if (isPagamentoPix(row.pagamento_nome)) return !!row.pix_recebido_integral_em;
+  return false;
+};
+
 
 function StatusPill({ status, className }: { status: string; className?: string }) {
   const cfg = STATUS_MAP[status];
@@ -247,6 +282,17 @@ function PcpCard({
           </span>
         )}
 
+        {/* alerta de pagamento */}
+        {(precisaGateCartao(row) ||
+          (row.status === "embalagem_pagamento" && precisaGatePix(row))) && (
+          <span
+            className="absolute right-2 bottom-[30px] text-white text-[10px] font-bold uppercase rounded-[4px] px-2 py-[3px]"
+            style={{ backgroundColor: "var(--gw-warning)" }}
+          >
+            {precisaGateCartao(row) ? "Conferir Stone" : "Aguarda PIX"}
+          </span>
+        )}
+
         {/* quantidade */}
         <span className="absolute bottom-1.5 right-2 flex items-baseline gap-1 text-white">
           <span style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-[20px] font-bold leading-none">
@@ -343,6 +389,9 @@ export default function PCP() {
   const [modalQtdEnviada, setModalQtdEnviada] = useState("");
   const [modalPrevisao, setModalPrevisao] = useState("");
   const [modalSaving, setModalSaving] = useState(false);
+
+  const [gateModal, setGateModal] = useState<{ row: PcpRow; target: PcpStatus; tipo: "cartao" | "pix" } | null>(null);
+  const [gateSaving, setGateSaving] = useState(false);
 
   const loadItems = async () => {
     const { data, error } = await supabase
@@ -443,6 +492,32 @@ export default function PCP() {
     setModalPrevisao(row.previsao_retorno || "");
   };
 
+  /* Grava o gate de pagamento para todos os itens do pedido */
+  const gravarGatePedido = async (pedidoId: string, campo: "pagamento_cartao_conferido_em" | "pix_recebido_integral_em") => {
+    const agora = new Date().toISOString();
+    const patch = { [campo]: agora, pagamento_ok: true };
+    setRows(prev => prev.map(r => (r.pedido_id === pedidoId ? { ...r, ...patch } : r)));
+    const { error } = await supabase
+      .from("sistema_producao_itens" as any)
+      .update(patch)
+      .eq("pedido_id", pedidoId);
+    if (error) {
+      console.error("[PCP] gravar gate de pagamento falhou:", error);
+      toast.error(`Não foi possível registrar a confirmação. ${error.message || ""}`);
+      await loadItems();
+      return false;
+    }
+    return true;
+  };
+
+  const moverItem = (row: PcpRow, targetStatus: PcpStatus) => {
+    if (targetStatus === "preparacao" && TERCEIRIZADA_TRIGGER.includes(row.local_producao)) {
+      openTerceiroModal(row);
+      return;
+    }
+    applyUpdate(row.producao_id, { status: targetStatus });
+  };
+
   const handleDrop = (targetStatus: PcpStatus, id: string) => {
     setDragOverStatus(null);
     setDraggingId(null);
@@ -450,15 +525,37 @@ export default function PCP() {
     const row = rows.find(r => r.producao_id === id);
     if (!row || row.status === targetStatus) return;
 
-    // Preparação: se a etapa é feita por terceirizada (ou fornecedor->terceirizada),
-    // pede os dados do envio antes de mover. Se for interna, entra direto (vetorização própria).
-    if (targetStatus === "preparacao" && TERCEIRIZADA_TRIGGER.includes(row.local_producao)) {
-      openTerceiroModal(row);
+    // Gate de cartão: sair de "Pronto p/ Produção" para qualquer etapa seguinte
+    if (
+      row.status === "pronto_producao" &&
+      idxStatus(targetStatus) > idxStatus("pronto_producao") &&
+      precisaGateCartao(row)
+    ) {
+      setGateModal({ row, target: targetStatus, tipo: "cartao" });
       return;
     }
 
-    applyUpdate(id, { status: targetStatus });
+    // Gate de PIX: entrar em "Aguardando Coleta"
+    if (targetStatus === "aguardando_coleta" && precisaGatePix(row)) {
+      setGateModal({ row, target: targetStatus, tipo: "pix" });
+      return;
+    }
+
+    moverItem(row, targetStatus);
   };
+
+  const confirmarGate = async () => {
+    if (!gateModal) return;
+    setGateSaving(true);
+    const campo = gateModal.tipo === "cartao" ? "pagamento_cartao_conferido_em" : "pix_recebido_integral_em";
+    const ok = await gravarGatePedido(gateModal.row.pedido_id, campo);
+    setGateSaving(false);
+    if (!ok) { setGateModal(null); return; }
+    const alvo = gateModal;
+    setGateModal(null);
+    moverItem(alvo.row, alvo.target);
+  };
+
 
   const confirmEnvioTerceiro = async () => {
     if (!terceiroModal) return;
@@ -711,17 +808,21 @@ export default function PCP() {
                         ["medidas_ok", "Medidas"],
                         ["pagamento_ok", "Pagamento"],
                         ["etiqueta_ok", "Etiqueta"],
-                      ] as const).map(([key, label]) => (
-                        <label key={key} className="flex items-center gap-2 text-[13px]">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 accent-[#2563EB]"
-                            checked={!!detalhe[key]}
-                            onChange={e => applyUpdate(detalhe.producao_id, { [key]: e.target.checked })}
-                          />
-                          {label}
-                        </label>
-                      ))}
+                      ] as const).map(([key, label]) => {
+                        const auto = key === "pagamento_ok" && pagamentoGateOk(detalhe);
+                        return (
+                          <label key={key} className="flex items-center gap-2 text-[13px]">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-[#2563EB]"
+                              checked={!!detalhe[key] || auto}
+                              disabled={auto}
+                              onChange={e => applyUpdate(detalhe.producao_id, { [key]: e.target.checked })}
+                            />
+                            {label}
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -840,6 +941,53 @@ export default function PCP() {
             <Button onClick={confirmEnvioTerceiro} disabled={modalSaving}>
               {modalSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Confirmar envio
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Gate de pagamento (cartão / PIX) */}
+      <Dialog open={!!gateModal} onOpenChange={open => !open && setGateModal(null)}>
+        <DialogContent style={{ maxWidth: 460 }}>
+          <DialogHeader>
+            <DialogTitle>
+              {gateModal?.tipo === "cartao" ? "Conferiu o pagamento na Stone?" : "Recebeu 100% do valor?"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {gateModal && (
+            <div className="space-y-3 py-1">
+              <div className="rounded-lg bg-[var(--gw-surface-alt)] px-3 py-2.5 space-y-1">
+                <p className="text-[13px] font-semibold text-[var(--gw-text)]">
+                  Pedido {gateModal.row.pedido_numero}
+                </p>
+                <p className="text-[12px] text-[var(--gw-text-secondary)]">
+                  {gateModal.row.cliente || "Cliente não informado"}
+                </p>
+                {gateModal.row.pagamento_nome && (
+                  <p className="text-[11px] text-[var(--gw-text-muted)]">{gateModal.row.pagamento_nome}</p>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">
+                  Valor total
+                </span>
+                <Money value={Number(gateModal.row.pedido_total ?? 0)} emphasis bold />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGateModal(null)} disabled={gateSaving}>
+              {gateModal?.tipo === "cartao" ? "Cancelar" : "Ainda não"}
+            </Button>
+            <Button
+              onClick={confirmarGate}
+              disabled={gateSaving}
+              style={{ backgroundColor: "var(--gw-primary)", color: "#fff" }}
+            >
+              {gateSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {gateModal?.tipo === "cartao" ? "Sim, pagamento confirmado" : "Sim, recebi o valor integral"}
             </Button>
           </DialogFooter>
         </DialogContent>

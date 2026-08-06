@@ -1027,8 +1027,10 @@ export type Database = {
           nota_fiscal_compra: string | null
           observacoes: string | null
           origem_estoque: string
+          pagamento_cartao_conferido_em: string | null
           pagamento_ok: boolean
           pedido_id: string
+          pix_recebido_integral_em: string | null
           previsao_retorno: string | null
           qtd_enviada: number | null
           qtd_retornada: number | null
@@ -1055,8 +1057,10 @@ export type Database = {
           nota_fiscal_compra?: string | null
           observacoes?: string | null
           origem_estoque?: string
+          pagamento_cartao_conferido_em?: string | null
           pagamento_ok?: boolean
           pedido_id: string
+          pix_recebido_integral_em?: string | null
           previsao_retorno?: string | null
           qtd_enviada?: number | null
           qtd_retornada?: number | null
@@ -1083,8 +1087,10 @@ export type Database = {
           nota_fiscal_compra?: string | null
           observacoes?: string | null
           origem_estoque?: string
+          pagamento_cartao_conferido_em?: string | null
           pagamento_ok?: boolean
           pedido_id?: string
+          pix_recebido_integral_em?: string | null
           previsao_retorno?: string | null
           qtd_enviada?: number | null
           qtd_retornada?: number | null
@@ -1543,10 +1549,14 @@ export type Database = {
           medidas_ok: boolean | null
           mockup_url: string | null
           origem_estoque: string | null
+          pagamento_cartao_conferido_em: string | null
+          pagamento_nome: string | null
           pagamento_ok: boolean | null
           pedido_cor: string | null
           pedido_id: string | null
           pedido_numero: string | null
+          pedido_total: number | null
+          pix_recebido_integral_em: string | null
           previsao_retorno: string | null
           producao_id: string | null
           produto_nome: string | null
