@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const SIZES = { sm: 40, md: 56, lg: 88 } as const;
+const SIZES = { sm: 40, md: 56, lg: 88, xl: 160 } as const;
 
 interface ThumbProps {
   src?: string | null;
