@@ -301,14 +301,6 @@ export default function Pedidos() {
                   )}
                 </span>
 
-                {/* Miniatura grande — prioriza o mockup */}
-                <div className="flex items-center gap-2">
-                  <Thumb size="lg" src={capa} alt={itens[0]?.nome || ""} />
-                  {extras > 0 && (
-                    <span className="gw-meta whitespace-nowrap">+{extras}</span>
-                  )}
-                </div>
-
                 <span className="gw-meta">{new Date(p.createdAt).toLocaleDateString("pt-BR")}</span>
 
                 {/* StatusPill sólido clicável */}
