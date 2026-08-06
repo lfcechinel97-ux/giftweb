@@ -31,6 +31,14 @@ const statusStyles: Record<OrcamentoStatus, { btn: string; dot: string; label: s
   "cancelado": { btn: "bg-red-600 hover:bg-red-700 text-white",   dot: "bg-red-400",   label: "Cancelado" },
 };
 
+const STATUS_STAGE: Record<OrcamentoStatus, GwStage> = {
+  "aberto": "pronto",
+  "aprovado": "enviado",
+  "cancelado": "cancelado",
+};
+
+
+
 /* ─── Modal de confirmação de aprovação ─────────────────────────────────── */
 
 interface AprovarModalProps {
