@@ -163,6 +163,7 @@ const App = () => (
                 <Route path="orcamentos/novo" element={<SistemaOrcamentoForm />} />
                 <Route path="orcamentos/:id" element={<SistemaOrcamentoForm />} />
                 <Route path="pedidos" element={<SistemaPedidos />} />
+                <Route path="pedidos/:id" element={<SistemaPedidoForm />} />
                 <Route path="pcp" element={<SistemaPCP />} />
                 <Route path="estoque" element={<SistemaEstoque />} />
                 <Route path="produtos" element={<SistemaProdutos />} />
