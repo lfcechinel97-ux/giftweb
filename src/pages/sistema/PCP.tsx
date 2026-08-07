@@ -697,8 +697,8 @@ export default function PCP() {
                 </div>
               );
             })}
-          </div>
         </div>
+
       )}
 
       {/* Modal de detalhe do item */}
