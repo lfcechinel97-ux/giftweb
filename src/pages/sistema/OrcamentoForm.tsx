@@ -50,9 +50,14 @@ export const OrcamentoForm: React.FC = () => {
     updateOrcamento,
     currentVendedor,
     fetchOrcamentoCompleto,
+    ensureClientes,
   } = useSistema();
 
+  /* A lista de clientes carrega sob demanda ao abrir o formulário */
+  useEffect(() => { void ensureClientes(); }, [ensureClientes]);
+
   const sis = { clientes, vendedores, meiosPagamento, transportadoras, origens };
+
 
   const { parentProducts, searchParents, getParentWithVariants, isLoading } = useSistemaProducts();
 
