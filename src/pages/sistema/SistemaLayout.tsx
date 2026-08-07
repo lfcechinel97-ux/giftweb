@@ -133,7 +133,7 @@ export default function SistemaLayout() {
           </DropdownMenu>
         </header>
 
-        <main className="p-6 flex-1">
+        <main className="p-6 flex-1 min-w-0">
           <Suspense fallback={<RouteSkeleton />}>
             <Outlet />
           </Suspense>
