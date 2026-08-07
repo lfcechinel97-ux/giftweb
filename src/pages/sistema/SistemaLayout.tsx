@@ -39,7 +39,7 @@ export default function SistemaLayout() {
   };
   const navigate = useNavigate();
   const loc = useLocation();
-  const queryClient = useQueryClient();
+  
 
   /* Pré-carregamento no hover: SOMENTE o chunk de código da rota (leve).
      Buscar dados por movimento de mouse multiplicava requisições sem ganho. */
