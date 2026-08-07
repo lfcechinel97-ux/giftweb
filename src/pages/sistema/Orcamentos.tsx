@@ -584,7 +584,8 @@ export default function Orcamentos() {
                   <button
                     type="button"
                     aria-label="Editar"
-                    onClick={() => navigate(`/sistema/orcamentos/${o.id}`)}
+                    onClick={() => void abrirEdicao(o)}
+
                     className="inline-flex items-center justify-center h-8 w-8 rounded-full transition-colors"
                     style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
                   >
