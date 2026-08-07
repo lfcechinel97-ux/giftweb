@@ -23,6 +23,8 @@ import {
   type Orcamento, type OrcamentoStatus
 } from "@/contexts/SistemaContext";
 import { gerarPDFOrcamento } from "./pdf";
+import { supabase } from "@/integrations/supabase/client";
+
 
 const STATUS_OPTS: OrcamentoStatus[] = ["aberto", "aprovado", "cancelado"];
 
@@ -224,6 +226,25 @@ export default function Orcamentos() {
   const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  /* Orçamento aprovado não é editável: já virou pedido. */
+  const [bloqueado, setBloqueado] = useState<
+    { orc: Orcamento; pedido?: { id: string; numero: string } | null } | null
+  >(null);
+
+  const abrirEdicao = async (o: Orcamento) => {
+    if (o.status !== "aprovado") {
+      navigate(`/sistema/orcamentos/${o.id}`);
+      return;
+    }
+    setBloqueado({ orc: o, pedido: undefined });
+    const { data } = await supabase
+      .from("sistema_pedidos")
+      .select("id,numero")
+      .eq("orcamento_id", o.id)
+      .maybeSingle();
+    setBloqueado({ orc: o, pedido: data ? { id: data.id, numero: data.numero } : null });
+  };
+
 
   /* Clientes são carregados sob demanda: esta tela resolve nome de cliente. */
   useEffect(() => { void ensureClientes(); }, [ensureClientes]);
@@ -563,7 +584,8 @@ export default function Orcamentos() {
                   <button
                     type="button"
                     aria-label="Editar"
-                    onClick={() => navigate(`/sistema/orcamentos/${o.id}`)}
+                    onClick={() => void abrirEdicao(o)}
+
                     className="inline-flex items-center justify-center h-8 w-8 rounded-full transition-colors"
                     style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
                   >
@@ -581,7 +603,7 @@ export default function Orcamentos() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem onClick={() => navigate(`/sistema/orcamentos/${o.id}`)} style={{ color: "var(--gw-primary)" }}>
+                      <DropdownMenuItem onClick={() => void abrirEdicao(o)} style={{ color: "var(--gw-primary)" }}>
                         <FileText className="h-3.5 w-3.5 mr-2" /> Editar
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleImprimir(o)} style={{ color: "var(--gw-violet)" }}>
@@ -743,7 +765,35 @@ export default function Orcamentos() {
         />
       )}
 
+      {/* Orçamento aprovado — edição bloqueada */}
+      <AlertDialog open={!!bloqueado} onOpenChange={open => !open && setBloqueado(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Este orçamento já foi aprovado</AlertDialogTitle>
+            <AlertDialogDescription>
+              O orçamento {bloqueado?.orc.numero} já virou pedido, por isso não pode mais ser editado.
+              Qualquer alteração deve ser feita diretamente no pedido correspondente.
+              {bloqueado?.pedido === null && " Não encontramos o pedido vinculado a ele."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBloqueado(null)}>Fechar</AlertDialogCancel>
+            {bloqueado?.pedido && (
+              <AlertDialogAction
+                onClick={() => {
+                  setBloqueado(null);
+                  navigate(`/sistema/pedidos?busca=${encodeURIComponent(bloqueado.pedido!.numero)}`);
+                }}
+              >
+                Abrir pedido {bloqueado.pedido.numero}
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Delete Dialog */}
+
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
