@@ -422,16 +422,23 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     pageSize?: number;
   }): Promise<{ rows: Orcamento[]; total: number }> => {
     // Todos os filtros vão para o SERVIDOR, aplicados ANTES do recorte da página.
-    const { data: payload, error } = await supabase.rpc("sistema_list_orcamentos", {
-      p_vendedor_id: opts?.vendedorId || null,
-      p_status: opts?.status && opts.status !== "todos" ? opts.status : null,
-      p_search: opts?.search || null,
-      p_cliente: opts?.cliente || null,
-      p_data_inicio: opts?.dataInicio || null,
-      p_data_fim: opts?.dataFim || null,
-      p_page: opts?.page ?? 1,
-      p_page_size: opts?.pageSize ?? 10,
-    } as any);
+    // fetchQuery serve do cache do React Query (60s) quando os mesmos filtros
+    // já foram buscados — voltar para a tela não gera nova requisição.
+    const { data: payload, error } = await qc.fetchQuery({
+      queryKey: ["sistema", "orcamentos", "list", opts ?? null],
+      staleTime: 60 * 1000,
+      queryFn: () => supabase.rpc("sistema_list_orcamentos", {
+        p_vendedor_id: opts?.vendedorId || null,
+        p_status: opts?.status && opts.status !== "todos" ? opts.status : null,
+        p_search: opts?.search || null,
+        p_cliente: opts?.cliente || null,
+        p_data_inicio: opts?.dataInicio || null,
+        p_data_fim: opts?.dataFim || null,
+        p_page: opts?.page ?? 1,
+        p_page_size: opts?.pageSize ?? 10,
+      } as any),
+    });
+
 
     if (error) {
       console.error("[Sistema] carregar orçamentos falhou:", error);
