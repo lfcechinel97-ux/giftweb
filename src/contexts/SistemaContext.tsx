@@ -623,7 +623,8 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setData(prev => ({ ...prev, orcamentos: prev.orcamentos.filter(item => item.id !== id) }));
       throw res.error;
     }
-    await refreshOrcamentos({ limit: 300 }).catch(() => undefined);
+    // Estado local já atualizado; não recarrega a lista para não perder a página atual.
+
     return orcamento;
   }, [refreshOrcamentos]);
 
@@ -634,7 +635,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }));
     const res = await dbWrite("orçamento", () => supabase.from("sistema_orcamentos").update(orcamentoToDb(changes)).eq("id", id));
     if (res?.error) throw res.error;
-    await refreshOrcamentos({ limit: 300 }).catch(() => undefined);
+    // Estado local já atualizado; não recarrega a lista para não perder a página atual.
   }, [refreshOrcamentos]);
 
   const removeOrcamento = useCallback((id: string) => {
@@ -642,15 +643,11 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     dbWrite("excluir orçamento", () => supabase.from("sistema_orcamentos").delete().eq("id", id));
   }, []);
 
-  const gerarNumeroOrcamento = useCallback(() => {
-    const BASE = 125748;
-    return String(BASE + data.orcamentos.length + 1);
-  }, [data.orcamentos.length]);
+  /* Números de orçamento e pedido vêm SEMPRE das sequências do banco
+     (sistema_next_orcamento_numero / sistema_next_pedido_numero).
+     As antigas funções baseadas em .length foram removidas: com carga
+     sob demanda elas gerariam número duplicado. */
 
-  const gerarNumeroPedido = useCallback(() => {
-    const seq = data.pedidos.length + 1;
-    return `PED-${new Date().getFullYear()}-${String(seq).padStart(5, "0")}`;
-  }, [data.pedidos.length]);
 
   const aprovarOrcamento = useCallback(async (id: string): Promise<Pedido | null> => {
     let orcamento = data.orcamentos.find(o => o.id === id);
