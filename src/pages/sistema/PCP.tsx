@@ -594,7 +594,7 @@ export default function PCP() {
   const totalItens = rows.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 overflow-hidden">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-foreground">PCP — Produção</h1>
