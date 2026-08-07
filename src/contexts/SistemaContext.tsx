@@ -204,6 +204,7 @@ export interface SistemaData {
 interface SistemaContextType extends SistemaData {
   loading: boolean;
   orcamentosTotal: number;
+  pedidosTotal: number;
   refreshOrcamentos: (opts?: {
     vendedorId?: string | null;
     status?: string | null;
@@ -214,12 +215,22 @@ interface SistemaContextType extends SistemaData {
     page?: number;
     pageSize?: number;
   }) => Promise<{ rows: Orcamento[]; total: number }>;
+  /* Pedidos com paginação e filtros aplicados no SERVIDOR */
+  refreshPedidos: (opts?: {
+    status?: string | null;
+    search?: string | null;
+    dataInicio?: string | null;
+    dataFim?: string | null;
+    page?: number;
+    pageSize?: number;
+  }) => Promise<{ rows: Pedido[]; total: number }>;
   /* Carregadores sob demanda — a carga inicial traz só o bootstrap */
   ensureClientes: () => Promise<void>;
   ensurePedidos: () => Promise<void>;
   ensureAjustes: () => Promise<void>;
   fetchOrcamentoCompleto: (id: string) => Promise<Orcamento | null>;
   fetchOrcamentosItens: (ids: string[]) => Promise<void>;
+
 
   addOrcamento: (o: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt">) => Promise<Orcamento>;
   updateOrcamento: (id: string, changes: Partial<Orcamento>) => Promise<void>;
