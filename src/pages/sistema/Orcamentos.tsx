@@ -23,6 +23,8 @@ import {
   type Orcamento, type OrcamentoStatus
 } from "@/contexts/SistemaContext";
 import { gerarPDFOrcamento } from "./pdf";
+import { supabase } from "@/integrations/supabase/client";
+
 
 const STATUS_OPTS: OrcamentoStatus[] = ["aberto", "aprovado", "cancelado"];
 
