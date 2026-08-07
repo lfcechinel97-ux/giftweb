@@ -364,6 +364,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sistema_auditoria: {
+        Row: {
+          acao: string
+          created_at: string
+          detalhes: Json
+          entidade: string
+          entidade_id: string | null
+          entidade_numero: string | null
+          id: string
+          usuario_email: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          acao: string
+          created_at?: string
+          detalhes?: Json
+          entidade: string
+          entidade_id?: string | null
+          entidade_numero?: string | null
+          id?: string
+          usuario_email?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          acao?: string
+          created_at?: string
+          detalhes?: Json
+          entidade?: string
+          entidade_id?: string | null
+          entidade_numero?: string | null
+          id?: string
+          usuario_email?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       sistema_clientes: {
         Row: {
           contatos: Json
@@ -400,6 +436,24 @@ export type Database = {
           observacoes?: string | null
           tipo?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sistema_config: {
+        Row: {
+          chave: string
+          updated_at: string
+          valor: string
+        }
+        Insert: {
+          chave: string
+          updated_at?: string
+          valor: string
+        }
+        Update: {
+          chave?: string
+          updated_at?: string
+          valor?: string
         }
         Relationships: []
       }
@@ -1509,6 +1563,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       vw_fora_de_casa: {
@@ -1656,6 +1731,13 @@ export type Database = {
           total: number
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin_user: { Args: never; Returns: boolean }
       recalc_estoque_total: { Args: { p_id: string }; Returns: undefined }
       search_products_by_category:
@@ -1756,9 +1838,14 @@ export type Database = {
         Args: { p_page?: number; p_page_size?: number; p_search?: string }
         Returns: Json
       }
+      sistema_verificar_senha_exclusao: {
+        Args: { p_senha: string }
+        Returns: boolean
+      }
       unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
+      app_role: "admin" | "vendedor" | "producao"
       local_producao_tipo:
         | "interna"
         | "terceirizada"
@@ -1900,6 +1987,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "vendedor", "producao"],
       local_producao_tipo: [
         "interna",
         "terceirizada",

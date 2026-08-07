@@ -753,7 +753,7 @@ interface ItemDialogProps {
   onSave: (item: QuoteItem) => void;
 }
 
-const ItemDialog: React.FC<ItemDialogProps> = ({
+export const ItemDialog: React.FC<ItemDialogProps> = ({
   item,
   parentProducts,
   isLoading,

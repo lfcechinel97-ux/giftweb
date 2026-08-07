@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { useQuery } from "@tanstack/react-query";
 import {
-  Search, Filter, Printer, Trash2, Copy, MoreHorizontal, ChevronDown,
+  Search, Filter, Printer, Trash2, Copy, MoreHorizontal, ChevronDown, Pencil,
   ChevronLeft, ChevronRight, X, ShoppingCart,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -70,6 +70,7 @@ const num = (v: unknown) => {
 /* ── Component ───────────────────────────────────────────────────────────── */
 
 export default function Pedidos() {
+  const navigate = useNavigate();
   const { pedidos, pedidosTotal, updatePedido, clientes, vendedores, transportadoras, refreshPedidos, ensureClientes } = useSistema();
 
   /* Clientes carregam só quando esta tela abre (resolve o nome do cliente) */
@@ -340,6 +341,15 @@ export default function Pedidos() {
                 </span>
 
                 <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    aria-label="Editar pedido"
+                    onClick={() => navigate(`/sistema/pedidos/${p.id}`)}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-full"
+                    style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
                   <button
                     type="button"
                     aria-label="Imprimir ordem de produção"
