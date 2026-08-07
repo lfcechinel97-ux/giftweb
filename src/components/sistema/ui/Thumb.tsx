@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Package } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sizedImage } from "@/lib/imageSize";
 
 const SIZES = { sm: 40, md: 56, lg: 88, xl: 160 } as const;
 
@@ -34,7 +35,7 @@ export function Thumb({ src, alt = "", size = "md", className }: ThumbProps) {
 
   return (
     <img
-      src={src}
+      src={sizedImage(src, px * 2) ?? src}
       alt={alt}
       width={px}
       height={px}

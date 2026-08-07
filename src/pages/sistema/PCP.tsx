@@ -14,6 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { sizedImage } from "@/lib/imageSize";
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/sistema/ui/Money";
 
@@ -247,7 +248,7 @@ function PcpCard({
       {/* Camada 1 — foto */}
       <div className="relative h-[168px] w-full">
         {foto ? (
-          <img src={foto} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-white" />
+          <img src={sizedImage(foto, 320)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-white" />
         ) : (
           <div className="w-full h-full bg-[var(--gw-surface-alt)] flex items-center justify-center">
             <Package className="h-8 w-8 text-[var(--gw-text-muted)]" />
@@ -704,7 +705,7 @@ export default function PCP() {
                 {detalhe.mockup_url || detalhe.imagem_catalogo_url ? (
                   <>
                     <img
-                      src={detalhe.mockup_url || detalhe.imagem_catalogo_url!}
+                      src={sizedImage(detalhe.mockup_url || detalhe.imagem_catalogo_url!, 800)}
                       alt={detalhe.produto_nome || ""}
                       loading="lazy"
                       decoding="async"
@@ -732,7 +733,7 @@ export default function PCP() {
                         Foto de catálogo
                       </p>
                       <img
-                        src={detalhe.imagem_catalogo_url}
+                        src={sizedImage(detalhe.imagem_catalogo_url, 320)}
                         alt=""
                         width={96}
                         height={96}

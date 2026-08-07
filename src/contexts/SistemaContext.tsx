@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -204,6 +205,7 @@ export interface SistemaData {
 interface SistemaContextType extends SistemaData {
   loading: boolean;
   orcamentosTotal: number;
+  pedidosTotal: number;
   refreshOrcamentos: (opts?: {
     vendedorId?: string | null;
     status?: string | null;
@@ -214,12 +216,22 @@ interface SistemaContextType extends SistemaData {
     page?: number;
     pageSize?: number;
   }) => Promise<{ rows: Orcamento[]; total: number }>;
+  /* Pedidos com paginação e filtros aplicados no SERVIDOR */
+  refreshPedidos: (opts?: {
+    status?: string | null;
+    search?: string | null;
+    dataInicio?: string | null;
+    dataFim?: string | null;
+    page?: number;
+    pageSize?: number;
+  }) => Promise<{ rows: Pedido[]; total: number }>;
   /* Carregadores sob demanda — a carga inicial traz só o bootstrap */
   ensureClientes: () => Promise<void>;
   ensurePedidos: () => Promise<void>;
   ensureAjustes: () => Promise<void>;
   fetchOrcamentoCompleto: (id: string) => Promise<Orcamento | null>;
   fetchOrcamentosItens: (ids: string[]) => Promise<void>;
+
 
   addOrcamento: (o: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt">) => Promise<Orcamento>;
   updateOrcamento: (id: string, changes: Partial<Orcamento>) => Promise<void>;
@@ -361,6 +373,9 @@ const pedidoToDb = (p: Partial<Pedido>): any => {
 };
 
 export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  /* O cache do React Query vive FORA da árvore de componentes: mesmo que o
+     provider seja remontado, as listas já buscadas são servidas na hora. */
+  const qc = useQueryClient();
   const [data, setData] = useState<SistemaData>(emptyData);
   const [loading, setLoading] = useState(true);
   const [currentVendedor, setCurrentVendedorState] = useState<LookupItem | null>(() => {
@@ -377,9 +392,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const migratedRef = useRef(false);
   const loadedRef = useRef(false);
   const [orcamentosTotal, setOrcamentosTotal] = useState(0);
-  const clientesRef = useRef<Promise<void> | null>(null);
-  const pedidosRef = useRef<Promise<void> | null>(null);
-  const ajustesRef = useRef<Promise<void> | null>(null);
+  const [pedidosTotal, setPedidosTotal] = useState(0);
 
 
   const reconcileCurrentVendedor = useCallback((vendedores: LookupItem[]) => {
@@ -406,16 +419,23 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     pageSize?: number;
   }): Promise<{ rows: Orcamento[]; total: number }> => {
     // Todos os filtros vão para o SERVIDOR, aplicados ANTES do recorte da página.
-    const { data: payload, error } = await supabase.rpc("sistema_list_orcamentos", {
-      p_vendedor_id: opts?.vendedorId || null,
-      p_status: opts?.status && opts.status !== "todos" ? opts.status : null,
-      p_search: opts?.search || null,
-      p_cliente: opts?.cliente || null,
-      p_data_inicio: opts?.dataInicio || null,
-      p_data_fim: opts?.dataFim || null,
-      p_page: opts?.page ?? 1,
-      p_page_size: opts?.pageSize ?? 10,
-    } as any);
+    // fetchQuery serve do cache do React Query (60s) quando os mesmos filtros
+    // já foram buscados — voltar para a tela não gera nova requisição.
+    const { data: payload, error } = await qc.fetchQuery({
+      queryKey: ["sistema", "orcamentos", "list", opts ?? null],
+      staleTime: 60 * 1000,
+      queryFn: () => supabase.rpc("sistema_list_orcamentos", {
+        p_vendedor_id: opts?.vendedorId || null,
+        p_status: opts?.status && opts.status !== "todos" ? opts.status : null,
+        p_search: opts?.search || null,
+        p_cliente: opts?.cliente || null,
+        p_data_inicio: opts?.dataInicio || null,
+        p_data_fim: opts?.dataFim || null,
+        p_page: opts?.page ?? 1,
+        p_page_size: opts?.pageSize ?? 10,
+      } as any),
+    });
+
 
     if (error) {
       console.error("[Sistema] carregar orçamentos falhou:", error);
@@ -436,7 +456,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
     setOrcamentosTotal(total);
     return { rows, total };
-  }, []);
+  }, [qc]);
 
 
   const fetchOrcamentoCompleto = useCallback(async (id: string): Promise<Orcamento | null> => {
@@ -482,59 +502,93 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
      estoque são buscados pela primeira tela que precisa deles, uma única
      vez por sessão (guarda contra chamadas simultâneas). */
   const ensureClientes = useCallback(async () => {
-    if (clientesRef.current) return clientesRef.current;
-    clientesRef.current = (async () => {
-      const { data: rows, error } = await supabase.from("sistema_clientes").select("*").order("nome");
-      if (error) {
-        clientesRef.current = null;
-        console.error("[Sistema] carregar clientes falhou:", error);
-        toast.error(`Não foi possível carregar os clientes. ${error.message || ""}`);
-        return;
-      }
-      setData(prev => ({ ...prev, clientes: (rows ?? []).map(mapCliente) }));
-    })();
-    return clientesRef.current;
-  }, []);
+    // Cache do React Query: sobrevive à remontagem do provider (troca de rota).
+    const { data: rows, error } = await qc.fetchQuery({
+      queryKey: ["sistema", "clientes"],
+      staleTime: 5 * 60 * 1000,
+      queryFn: () => supabase.from("sistema_clientes").select("*").order("nome"),
+    });
+    if (error) {
+      console.error("[Sistema] carregar clientes falhou:", error);
+      toast.error(`Não foi possível carregar os clientes. ${error.message || ""}`);
+      return;
+    }
+    setData(prev => ({ ...prev, clientes: (rows ?? []).map(mapCliente) }));
+  }, [qc]);
+
+  /* Pedidos: paginação e filtros no SERVIDOR (antes: 500 registros com o
+     jsonb `itens` embutido em cada linha — ~4s de espera). */
+  const refreshPedidos = useCallback(async (opts?: {
+    status?: string | null;
+    search?: string | null;
+    dataInicio?: string | null;
+    dataFim?: string | null;
+    page?: number;
+    pageSize?: number;
+  }): Promise<{ rows: Pedido[]; total: number }> => {
+    const page = opts?.page ?? 1;
+    const pageSize = opts?.pageSize ?? 10;
+    const from = (page - 1) * pageSize;
+
+    const res = await qc.fetchQuery({
+      queryKey: ["sistema", "pedidos", "list", opts ?? null],
+      staleTime: 60 * 1000,
+      queryFn: () => {
+        let q = supabase
+          .from("sistema_pedidos")
+          .select("*", { count: "exact" })
+          .order("created_at", { ascending: false });
+        // Filtros ANTES do recorte da página
+        if (opts?.status && opts.status !== "todos") q = q.eq("status", opts.status);
+        if (opts?.dataInicio) q = q.gte("created_at", `${opts.dataInicio}T00:00:00`);
+        if (opts?.dataFim) q = q.lte("created_at", `${opts.dataFim}T23:59:59`);
+        const term = (opts?.search || "").trim();
+        if (term) {
+          const like = `%${term}%`;
+          q = q.or(`numero.ilike.${like},contato_nome.ilike.${like},contato_email.ilike.${like}`);
+        }
+        return q.range(from, from + pageSize - 1);
+      },
+    });
+
+    if (res.error) {
+      console.error("[Sistema] carregar pedidos falhou:", res.error);
+      toast.error(`Não foi possível carregar os pedidos. ${res.error.message || ""}`);
+      throw res.error;
+    }
+    const rows = (res.data ?? []).map(mapPedido);
+    const total = Number(res.count ?? rows.length);
+    setData(prev => ({ ...prev, pedidos: rows }));
+    setPedidosTotal(total);
+    return { rows, total };
+  }, [qc]);
 
   const ensurePedidos = useCallback(async () => {
-    if (pedidosRef.current) return pedidosRef.current;
-    pedidosRef.current = (async () => {
-      const { data: rows, error } = await supabase
-        .from("sistema_pedidos").select("*").order("created_at", { ascending: false }).limit(500);
-      if (error) {
-        pedidosRef.current = null;
-        console.error("[Sistema] carregar pedidos falhou:", error);
-        toast.error(`Não foi possível carregar os pedidos. ${error.message || ""}`);
-        return;
-      }
-      setData(prev => ({ ...prev, pedidos: (rows ?? []).map(mapPedido) }));
-    })();
-    return pedidosRef.current;
-  }, []);
+    await refreshPedidos({ page: 1, pageSize: 10 });
+  }, [refreshPedidos]);
 
   const ensureAjustes = useCallback(async () => {
-    if (ajustesRef.current) return ajustesRef.current;
-    ajustesRef.current = (async () => {
-      const { data: rows, error } = await supabase
-        .from("sistema_ajustes_estoque").select("*").order("created_at", { ascending: false }).limit(1000);
-      if (error) {
-        ajustesRef.current = null;
-        console.error("[Sistema] carregar ajustes de estoque falhou:", error);
-        toast.error(`Não foi possível carregar o estoque. ${error.message || ""}`);
-        return;
-      }
-      setData(prev => ({
-        ...prev,
-        ajustesEstoque: (rows ?? []).map((r: any) => ({
-          id: r.id, produtoId: r.produto_id ?? "", codigoComposto: r.codigo_composto ?? "",
-          varianteSlug: r.variante_slug ?? undefined, tipo: r.tipo, quantidade: r.quantidade,
-          motivo: r.motivo ?? "", orcamentoId: r.orcamento_id ?? undefined,
-          pedidoId: r.pedido_id ?? undefined, createdAt: r.created_at, createdBy: r.created_by ?? undefined,
-        })),
-      }));
-    })();
-    return ajustesRef.current;
-  }, []);
+    const { data: rows, error } = await qc.fetchQuery({
+      queryKey: ["sistema", "ajustes"],
+      staleTime: 60 * 1000,
+      queryFn: () => supabase
+        .from("sistema_ajustes_estoque").select("*").order("created_at", { ascending: false }).limit(1000),
+    });
+    if (error) {
+      console.error("[Sistema] carregar ajustes de estoque falhou:", error);
+      toast.error(`Não foi possível carregar o estoque. ${error.message || ""}`);
+      return;
+    }
+    setData(prev => ({
+      ...prev,
+      ajustesEstoque: (rows ?? []).map((r: any) => ({
+        id: r.id, produtoId: r.produto_id ?? "", codigoComposto: r.codigo_composto ?? "",
+        varianteSlug: r.variante_slug ?? undefined, tipo: r.tipo, quantidade: r.quantidade,
+        motivo: r.motivo ?? "", orcamentoId: r.orcamento_id ?? undefined,
+        pedidoId: r.pedido_id ?? undefined, createdAt: r.created_at, createdBy: r.created_by ?? undefined,
+      })),
+    }));
+  }, [qc]);
 
   /* Carga inicial mínima: apenas o bootstrap (vendedores, meios de pagamento,
      transportadoras e origens) — usado pelo cabeçalho e por todos os formulários. */
@@ -542,7 +596,11 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (loadedRef.current && !force) return;
     setLoading(prev => (loadedRef.current ? prev : true));
     try {
-      const bootstrapRes = await supabase.rpc("sistema_get_bootstrap");
+      const bootstrapRes = await qc.fetchQuery({
+        queryKey: ["sistema", "bootstrap"],
+        staleTime: 5 * 60 * 1000,
+        queryFn: () => supabase.rpc("sistema_get_bootstrap"),
+      });
       if (bootstrapRes.error) throw bootstrapRes.error;
 
       const bootstrap = (bootstrapRes.data ?? {}) as any;
@@ -565,7 +623,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       toast.error(`Não foi possível carregar o sistema. ${e?.message || "Tente novamente."}`);
       if (!loadedRef.current) setLoading(false);
     }
-  }, [reconcileCurrentVendedor]);
+  }, [reconcileCurrentVendedor, qc]);
 
   useEffect(() => {
     let cancelled = false;
@@ -845,8 +903,8 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
 
   const value = useMemo<SistemaContextType>(() => ({
-    ...data, loading, orcamentosTotal,
-    refreshOrcamentos, fetchOrcamentoCompleto, fetchOrcamentosItens,
+    ...data, loading, orcamentosTotal, pedidosTotal,
+    refreshOrcamentos, refreshPedidos, fetchOrcamentoCompleto, fetchOrcamentosItens,
     ensureClientes, ensurePedidos, ensureAjustes,
     addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
@@ -857,7 +915,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     currentVendedor, setCurrentVendedor: setCurrentVendedorState,
     getEstoqueDisponivel,
   }), [
-    data, loading, orcamentosTotal, refreshOrcamentos, fetchOrcamentoCompleto, fetchOrcamentosItens,
+    data, loading, orcamentosTotal, pedidosTotal, refreshOrcamentos, refreshPedidos, fetchOrcamentoCompleto, fetchOrcamentosItens,
     ensureClientes, ensurePedidos, ensureAjustes,
     addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,

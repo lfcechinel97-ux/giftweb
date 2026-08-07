@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,13 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
   const [state, setState] = useState<State>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
   const navigate = useNavigate();
+  /* `navigate` muda de identidade a cada troca de rota. Se ele ficasse nas
+     dependências do efeito, a verificação rodava de novo e o guard voltava
+     para "Verificando acesso...", DESMONTANDO toda a árvore do /sistema
+     (contexto, listas, caches) a cada clique no menu. */
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
+
 
   useEffect(() => {
     let cancelled = false;
@@ -25,7 +32,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       const session = sessionData.session;
       if (!session) {
         clearAdminAccess();
-        if (!cancelled) navigate('/admin/login');
+        if (!cancelled) navigateRef.current('/admin/login');
         return;
       }
 
@@ -70,7 +77,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
         if (!data) {
           clearAdminAccess();
           await supabase.auth.signOut();
-          navigate('/admin/login');
+          navigateRef.current('/admin/login');
           return;
         }
 
@@ -91,7 +98,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         clearAdminAccess();
-        navigate('/admin/login');
+        navigateRef.current('/admin/login');
       }
     });
 
@@ -99,7 +106,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       cancelled = true;
       sub.subscription.unsubscribe();
     };
-  }, [navigate, attempt]);
+  }, [attempt]);
 
   if (state.status === 'loading') {
     return (

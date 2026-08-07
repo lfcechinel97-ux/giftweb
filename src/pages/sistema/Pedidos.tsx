@@ -68,10 +68,10 @@ const num = (v: unknown) => {
 /* ── Component ───────────────────────────────────────────────────────────── */
 
 export default function Pedidos() {
-  const { pedidos, updatePedido, clientes, vendedores, transportadoras, ensurePedidos, ensureClientes } = useSistema();
+  const { pedidos, pedidosTotal, updatePedido, clientes, vendedores, transportadoras, refreshPedidos, ensureClientes } = useSistema();
 
-  /* Pedidos e clientes carregam só quando esta tela abre */
-  useEffect(() => { void ensurePedidos(); void ensureClientes(); }, [ensurePedidos, ensureClientes]);
+  /* Clientes carregam só quando esta tela abre (resolve o nome do cliente) */
+  useEffect(() => { void ensureClientes(); }, [ensureClientes]);
 
 
   const [busca, setBusca] = useState("");
@@ -79,7 +79,7 @@ export default function Pedidos() {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
   const [prazoDraft, setPrazoDraft] = useState<Record<string, string>>({});
   /* Progresso de produção (sistema_producao_itens) — cacheado 60s */
   const { data: progresso = {} } = useQuery<Record<string, { enviados: number; total: number }>>({
@@ -111,34 +111,37 @@ export default function Pedidos() {
   const getVendedorNome = (id?: string) => vendedores.find(v => v.id === id)?.nome || "—";
   const getTransportadoraNome = (id?: string) => transportadoras.find(t => t.id === id)?.nome || "—";
 
-  const filtered = useMemo(() => {
-    return pedidos
-      .filter(p => {
-        if (filtroStatus !== "todos" && p.status !== filtroStatus) return false;
-        if (dataInicio || dataFim) {
-          const d = new Date(p.createdAt);
-          if (dataInicio && d < new Date(`${dataInicio}T00:00:00`)) return false;
-          if (dataFim && d > new Date(`${dataFim}T23:59:59`)) return false;
-        }
-        if (busca.trim()) {
-          const t = busca.toLowerCase();
-          const matchNum = String(p.numero).toLowerCase().includes(t);
-          const matchCliente = getClienteNome(p).toLowerCase().includes(t);
-          const matchItem = (p.itens || []).some(i =>
-            (i.nome || "").toLowerCase().includes(t) ||
-            (i.codigoComposto || "").toLowerCase().includes(t)
-          );
-          if (!matchNum && !matchCliente && !matchItem) return false;
-        }
-        return true;
-      })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [pedidos, busca, filtroStatus, dataInicio, dataFim, clientes]);
+  /* Busca no SERVIDOR: filtros aplicados antes do recorte da página.
+     O contexto devolve exatamente a página atual. */
+  const [listLoading, setListLoading] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setListLoading(true);
+      try {
+        await refreshPedidos({
+          status: filtroStatus,
+          search: busca,
+          dataInicio: dataInicio || null,
+          dataFim: dataFim || null,
+          page,
+          pageSize,
+        });
+      } catch {
+        /* erro já reportado pelo contexto */
+      } finally {
+        if (!cancelled) setListLoading(false);
+      }
+    }, 250);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [busca, filtroStatus, dataInicio, dataFim, page, pageSize, refreshPedidos]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const filtered = pedidos;
+
+  const totalPages = Math.max(1, Math.ceil(pedidosTotal / pageSize));
   useEffect(() => { setPage(1); }, [busca, filtroStatus, dataInicio, dataFim, pageSize]);
   const currentPage = Math.min(page, totalPages);
-  const pageItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pageItems = filtered;
   const pageNumbers: (number | null)[] = (() => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
     const set = new Set<number>([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
@@ -211,7 +214,7 @@ export default function Pedidos() {
           <h2 className="gw-display">Pedidos</h2>
           <p className="gw-meta">Pedidos gerados a partir de orçamentos aprovados.</p>
         </div>
-        <span className="gw-meta">{filtered.length} pedido(s)</span>
+        <span className="gw-meta">{listLoading ? "Atualizando..." : `${pedidosTotal} pedido(s) • página ${currentPage} de ${totalPages}`}</span>
       </div>
 
       {/* Filtros */}
