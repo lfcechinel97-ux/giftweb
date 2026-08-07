@@ -70,6 +70,7 @@ const SistemaLayout = lazyRetry(() => import("./pages/sistema/SistemaLayout.tsx"
 const SistemaOrcamentos = lazyRetry(() => import("./pages/sistema/Orcamentos.tsx"));
 const SistemaOrcamentoForm = lazyRetry(() => import("./pages/sistema/OrcamentoForm.tsx"));
 const SistemaPedidos = lazyRetry(() => import("./pages/sistema/Pedidos.tsx"));
+const SistemaPedidoForm = lazyRetry(() => import("./pages/sistema/PedidoForm.tsx"));
 const SistemaPCP = lazyRetry(() => import("./pages/sistema/PCP.tsx"));
 const SistemaEstoque = lazyRetry(() => import("./pages/sistema/Estoque.tsx"));
 const SistemaProdutos = lazyRetry(() => import("./pages/sistema/ProdutosCatalogo.tsx"));
