@@ -256,12 +256,12 @@ input[type="range"]::-moz-range-thumb {
 
 /* PCP: scrollbar horizontal sempre visível no quadro kanban */
 .sistema-theme .pcp-scroll { scrollbar-width: auto; scrollbar-color: var(--gw-border-strong) var(--gw-surface-alt); }
-.sistema-theme .pcp-scroll::-webkit-scrollbar { height: 10px; width: 8px; -webkit-appearance: none; }
+.sistema-theme .pcp-scroll::-webkit-scrollbar { height: 12px; width: 12px; -webkit-appearance: none; }
 .sistema-theme .pcp-scroll::-webkit-scrollbar-track { background: var(--gw-surface-alt); border-radius: 999px; }
 .sistema-theme .pcp-scroll::-webkit-scrollbar-thumb { background: var(--gw-border-strong); border-radius: 999px; min-width: 48px; }
 .sistema-theme .pcp-scroll::-webkit-scrollbar-thumb:hover { background: #2563EB; }
 
-.sistema-theme .pcp-col-scroll { scrollbar-width: thin; }
+.sistema-theme .pcp-col-scroll { scrollbar-width: thin; scrollbar-color: var(--gw-border-strong) transparent; }
 .sistema-theme .pcp-col-scroll::-webkit-scrollbar { width: 8px; }
 .sistema-theme .pcp-col-scroll::-webkit-scrollbar-thumb { background: var(--gw-border-strong); border-radius: 999px; }
 

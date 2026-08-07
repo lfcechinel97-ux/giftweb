@@ -341,7 +341,7 @@ export default function PCP() {
   const [hoverPedido, setHoverPedido] = useState<string | null>(null);
   const boardRef = useRef<HTMLDivElement | null>(null);
 
-  /* Shift+scroll e arrastar-para-rolar (botão do meio) no quadro */
+  /* Shift+scroll e arrastar-para-rolar (botão do meio ou esquerdo em área vazia) */
   useEffect(() => {
     const el = boardRef.current;
     if (!el) return;
@@ -355,8 +355,11 @@ export default function PCP() {
     let startX = 0;
     let startScroll = 0;
     const onDown = (e: MouseEvent) => {
-      if (e.button !== 1) return;
-      e.preventDefault();
+      const target = e.target as HTMLElement | null;
+      /* Botão esquerdo só rola quando o clique NÃO é em um card (o card tem drag-and-drop próprio) */
+      const emCard = !!target?.closest("[draggable='true']");
+      if (e.button !== 1 && !(e.button === 0 && !emCard)) return;
+      if (e.button === 1) e.preventDefault();
       panning = true;
       startX = e.clientX;
       startScroll = el.scrollLeft;
@@ -591,7 +594,7 @@ export default function PCP() {
   const totalItens = rows.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 overflow-hidden">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-foreground">PCP — Produção</h1>
@@ -633,11 +636,12 @@ export default function PCP() {
           style={{
             display: "flex",
             gap: 16,
-            alignItems: "flex-start",
-            overflowX: "scroll",
-            overflowY: "auto",
-            maxHeight: "calc(100vh - 230px)",
-            paddingBottom: 4,
+            alignItems: "stretch",
+            overflowX: "auto",
+            overflowY: "hidden",
+            /* Altura fixa do quadro: as colunas nunca empurram a barra para fora da tela */
+            height: "calc(100vh - 220px)",
+            minHeight: 480,
           }}
         >
             {STATUS_COLS.map(col => {
@@ -653,14 +657,14 @@ export default function PCP() {
                     e.preventDefault();
                     handleDrop(col.value, e.dataTransfer.getData("text/plain"));
                   }}
-                  style={{ width: 300, flexShrink: 0, minHeight: 320 }}
+                  style={{ width: 300, flexShrink: 0, height: "100%" }}
                   className={cn(
-                    "rounded-xl border transition-colors flex flex-col",
+                    "rounded-xl border transition-colors flex flex-col overflow-hidden",
                     isOver ? "border-[#2563EB] bg-[#2563EB]/5" : "border-[var(--gw-border)] bg-white/60"
                   )}
                 >
                   <div
-                    className="flex items-center justify-between px-3 py-2.5 text-white sticky top-0 z-10 shrink-0 rounded-t-xl"
+                    className="flex items-center justify-between px-3 py-2.5 text-white shrink-0"
                     style={{ backgroundColor: col.color }}
                   >
                     <span className="text-[13px] font-bold truncate">{col.label}</span>
@@ -671,7 +675,8 @@ export default function PCP() {
                       {items.length} · {somaQtd}un
                     </span>
                   </div>
-                  <div className="p-2 space-y-2 flex-1">
+                  {/* Rolagem vertical acontece por coluna */}
+                  <div className="p-2 space-y-2 flex-1 min-h-0 overflow-y-auto pcp-col-scroll">
 
                     {items.length === 0 ? (
                       <div className="h-[96px] rounded-lg border border-dashed border-[var(--gw-border)] flex items-center justify-center gw-meta text-[11px] text-[var(--gw-text-muted)]">
