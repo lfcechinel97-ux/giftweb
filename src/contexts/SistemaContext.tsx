@@ -473,61 +473,89 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
 
+  /* ---------- Carregadores sob demanda ----------
+     A carga inicial traz SÓ o bootstrap. Clientes, pedidos e ajustes de
+     estoque são buscados pela primeira tela que precisa deles, uma única
+     vez por sessão (guarda contra chamadas simultâneas). */
+  const ensureClientes = useCallback(async () => {
+    if (clientesRef.current) return clientesRef.current;
+    clientesRef.current = (async () => {
+      const { data: rows, error } = await supabase.from("sistema_clientes").select("*").order("nome");
+      if (error) {
+        clientesRef.current = null;
+        console.error("[Sistema] carregar clientes falhou:", error);
+        toast.error(`Não foi possível carregar os clientes. ${error.message || ""}`);
+        return;
+      }
+      setData(prev => ({ ...prev, clientes: (rows ?? []).map(mapCliente) }));
+    })();
+    return clientesRef.current;
+  }, []);
+
+  const ensurePedidos = useCallback(async () => {
+    if (pedidosRef.current) return pedidosRef.current;
+    pedidosRef.current = (async () => {
+      const { data: rows, error } = await supabase
+        .from("sistema_pedidos").select("*").order("created_at", { ascending: false }).limit(500);
+      if (error) {
+        pedidosRef.current = null;
+        console.error("[Sistema] carregar pedidos falhou:", error);
+        toast.error(`Não foi possível carregar os pedidos. ${error.message || ""}`);
+        return;
+      }
+      setData(prev => ({ ...prev, pedidos: (rows ?? []).map(mapPedido) }));
+    })();
+    return pedidosRef.current;
+  }, []);
+
+  const ensureAjustes = useCallback(async () => {
+    if (ajustesRef.current) return ajustesRef.current;
+    ajustesRef.current = (async () => {
+      const { data: rows, error } = await supabase
+        .from("sistema_ajustes_estoque").select("*").order("created_at", { ascending: false }).limit(1000);
+      if (error) {
+        ajustesRef.current = null;
+        console.error("[Sistema] carregar ajustes de estoque falhou:", error);
+        toast.error(`Não foi possível carregar o estoque. ${error.message || ""}`);
+        return;
+      }
+      setData(prev => ({
+        ...prev,
+        ajustesEstoque: (rows ?? []).map((r: any) => ({
+          id: r.id, produtoId: r.produto_id ?? "", codigoComposto: r.codigo_composto ?? "",
+          varianteSlug: r.variante_slug ?? undefined, tipo: r.tipo, quantidade: r.quantidade,
+          motivo: r.motivo ?? "", orcamentoId: r.orcamento_id ?? undefined,
+          pedidoId: r.pedido_id ?? undefined, createdAt: r.created_at, createdBy: r.created_by ?? undefined,
+        })),
+      }));
+    })();
+    return ajustesRef.current;
+  }, []);
+
+  /* Carga inicial mínima: apenas o bootstrap (vendedores, meios de pagamento,
+     transportadoras e origens) — usado pelo cabeçalho e por todos os formulários. */
   const loadAll = useCallback(async (force = false) => {
     if (loadedRef.current && !force) return;
     setLoading(prev => (loadedRef.current ? prev : true));
     try {
-      const [bootstrapRes, clientesRes, orcamentosRes] = await Promise.all([
-        supabase.rpc("sistema_get_bootstrap"),
-        supabase.from("sistema_clientes").select("*").order("nome"),
-        supabase.rpc("sistema_list_orcamentos", { p_limit: 300 }),
-      ]);
-
+      const bootstrapRes = await supabase.rpc("sistema_get_bootstrap");
       if (bootstrapRes.error) throw bootstrapRes.error;
-      if (clientesRes.error) throw clientesRes.error;
-      if (orcamentosRes.error) throw orcamentosRes.error;
 
       const bootstrap = (bootstrapRes.data ?? {}) as any;
       const vendedores = arr<any>(bootstrap.vendedores).map(mapVendedor);
 
-      setData(prev => {
-        // Preserva itens já carregados: a listagem leve devolve itens vazios e
-        // não pode "zerar" o que já está visível na tela.
-        const prevById = new Map(prev.orcamentos.map(o => [o.id, o]));
-        const orcamentos = arr<any>((orcamentosRes.data as any)?.rows).map(mapOrcamento).map(r => {
-          const prevOrc = prevById.get(r.id);
-          return prevOrc && prevOrc.itens.length > 0 ? { ...r, itens: prevOrc.itens } : r;
-        });
-        return {
-          ...prev,
-          vendedores,
-          meiosPagamento: arr<any>(bootstrap.meios_pagamento).map(mapMeio),
-          transportadoras: arr<any>(bootstrap.transportadoras).map(mapTransp),
-          origens: arr<any>(bootstrap.origens).map(mapOrigem),
-          clientes: (clientesRes.data ?? []).map(mapCliente),
-          orcamentos,
-        };
-      });
+      setData(prev => ({
+        ...prev,
+        vendedores,
+        meiosPagamento: arr<any>(bootstrap.meios_pagamento).map(mapMeio),
+        transportadoras: arr<any>(bootstrap.transportadoras).map(mapTransp),
+        origens: arr<any>(bootstrap.origens).map(mapOrigem),
+      }));
 
       reconcileCurrentVendedor(vendedores);
       loadedRef.current = true;
       setLoading(false);
 
-      Promise.all([
-        supabase.from("sistema_pedidos").select("*").order("created_at", { ascending: false }).limit(500),
-        supabase.from("sistema_ajustes_estoque").select("*").order("created_at", { ascending: false }).limit(1000),
-      ]).then(([p, ae]) => {
-        setData(prev => ({
-          ...prev,
-          pedidos: (p.data ?? []).map(mapPedido),
-          ajustesEstoque: (ae.data ?? []).map((r: any) => ({
-            id: r.id, produtoId: r.produto_id ?? "", codigoComposto: r.codigo_composto ?? "",
-            varianteSlug: r.variante_slug ?? undefined, tipo: r.tipo, quantidade: r.quantidade,
-            motivo: r.motivo ?? "", orcamentoId: r.orcamento_id ?? undefined,
-            pedidoId: r.pedido_id ?? undefined, createdAt: r.created_at, createdBy: r.created_by ?? undefined,
-          })),
-        }));
-      }).catch(e => console.warn("[Sistema] carga secundária falhou", e));
     } catch (e: any) {
       console.error("[Sistema] carregamento inicial falhou:", e);
       toast.error(`Não foi possível carregar o sistema. ${e?.message || "Tente novamente."}`);
