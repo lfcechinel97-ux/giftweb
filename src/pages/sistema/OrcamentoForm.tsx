@@ -291,7 +291,51 @@ export const OrcamentoForm: React.FC = () => {
     return cpfMask(digits);
   };
 
+  /* Orçamento aprovado já virou pedido: edição não é permitida. */
+  const aprovado = isEdit && orcamentoExistente?.status === "aprovado";
+  if (aprovado) {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="flex items-center gap-4 p-6 border-b bg-white">
+          <button onClick={() => navigate("/sistema/orcamentos")} className="p-2 hover:bg-gray-100 rounded-lg">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-xl font-semibold">Orçamento {orcamentoExistente?.numero}</h1>
+        </div>
+        <div className="flex-1 p-6">
+          <div className="max-w-2xl mx-auto bg-white border rounded-xl p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5" />
+              <div>
+                <p className="font-semibold">Este orçamento já foi aprovado</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Ele já virou pedido e não pode mais ser editado. Faça a alteração diretamente no
+                  pedido correspondente.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate("/sistema/orcamentos")}
+                className="px-4 py-2 rounded-lg border text-gray-700 hover:bg-gray-50"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={() => navigate("/sistema/pedidos")}
+                className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90"
+              >
+                Ir para pedidos
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
+
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-4 p-6 border-b bg-white">
         <button onClick={() => navigate("/sistema/orcamentos")} className="p-2 hover:bg-gray-100 rounded-lg">
