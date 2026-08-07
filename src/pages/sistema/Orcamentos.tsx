@@ -279,7 +279,7 @@ export default function Orcamentos() {
   const calcOrcTotal = (o: Orcamento) =>
     (o.itens.length > 0 ? calcSubtotal(o) : Number(o.subtotal || 0)) + (Number(o.freteValor) || 0);
 
-  const valorTotalFiltrado = filtered.reduce((s, o) => s + calcOrcTotal(o), 0);
+  
 
   const totalPages = Math.max(1, Math.ceil(orcamentosTotal / pageSize));
   const currentPage = Math.min(page, totalPages);
