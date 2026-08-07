@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Package, Search, Warehouse, Box } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -136,7 +136,9 @@ function EstoqueXBZ({ search, categoria }: { search: string; categoria: string }
 // ─── Aba: Estoque Próprio ─────────────────────────────────────────────────────
 function EstoqueProprio({ search, categoria }: { search: string; categoria: string }) {
   const { parentProducts, allProducts, isLoading } = useSistemaProducts();
-  const { ajustesEstoque } = useSistema();
+  const { ajustesEstoque, ensureAjustes } = useSistema();
+  useEffect(() => { void ensureAjustes(); }, [ensureAjustes]);
+
 
   const getReserva = (produtoId: string, codigoComposto?: string): number => {
     return ajustesEstoque

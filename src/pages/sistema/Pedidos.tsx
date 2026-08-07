@@ -68,7 +68,11 @@ const num = (v: unknown) => {
 /* ── Component ───────────────────────────────────────────────────────────── */
 
 export default function Pedidos() {
-  const { pedidos, updatePedido, clientes, vendedores, transportadoras } = useSistema();
+  const { pedidos, updatePedido, clientes, vendedores, transportadoras, ensurePedidos, ensureClientes } = useSistema();
+
+  /* Pedidos e clientes carregam só quando esta tela abre */
+  useEffect(() => { void ensurePedidos(); void ensureClientes(); }, [ensurePedidos, ensureClientes]);
+
 
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");

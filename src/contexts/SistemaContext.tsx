@@ -203,15 +203,24 @@ export interface SistemaData {
 
 interface SistemaContextType extends SistemaData {
   loading: boolean;
+  orcamentosTotal: number;
   refreshOrcamentos: (opts?: {
     vendedorId?: string | null;
     status?: string | null;
     search?: string | null;
     cliente?: string | null;
-    limit?: number;
-  }) => Promise<Orcamento[]>;
+    dataInicio?: string | null;
+    dataFim?: string | null;
+    page?: number;
+    pageSize?: number;
+  }) => Promise<{ rows: Orcamento[]; total: number }>;
+  /* Carregadores sob demanda — a carga inicial traz só o bootstrap */
+  ensureClientes: () => Promise<void>;
+  ensurePedidos: () => Promise<void>;
+  ensureAjustes: () => Promise<void>;
   fetchOrcamentoCompleto: (id: string) => Promise<Orcamento | null>;
   fetchOrcamentosItens: (ids: string[]) => Promise<void>;
+
   addOrcamento: (o: Omit<Orcamento, "id" | "numero" | "createdAt" | "updatedAt">) => Promise<Orcamento>;
   updateOrcamento: (id: string, changes: Partial<Orcamento>) => Promise<void>;
   removeOrcamento: (id: string) => void;
@@ -239,9 +248,8 @@ interface SistemaContextType extends SistemaData {
   currentVendedor: LookupItem | null;
   setCurrentVendedor: (v: LookupItem | null) => void;
   getEstoqueDisponivel: (produtoId: string, codigoComposto: string) => number;
-  gerarNumeroOrcamento: () => string;
-  gerarNumeroPedido: () => string;
 }
+
 
 const VENDEDOR_KEY = `sistema_vendedor_v1`;
 const LEGACY_KEY = `sistema_data_v1`;
@@ -368,6 +376,11 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const migratedRef = useRef(false);
   const loadedRef = useRef(false);
+  const [orcamentosTotal, setOrcamentosTotal] = useState(0);
+  const clientesRef = useRef<Promise<void> | null>(null);
+  const pedidosRef = useRef<Promise<void> | null>(null);
+  const ajustesRef = useRef<Promise<void> | null>(null);
+
 
   const reconcileCurrentVendedor = useCallback((vendedores: LookupItem[]) => {
     setCurrentVendedorState(prev => {
@@ -387,15 +400,22 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     status?: string | null;
     search?: string | null;
     cliente?: string | null;
-    limit?: number;
-  }): Promise<Orcamento[]> => {
+    dataInicio?: string | null;
+    dataFim?: string | null;
+    page?: number;
+    pageSize?: number;
+  }): Promise<{ rows: Orcamento[]; total: number }> => {
+    // Todos os filtros vão para o SERVIDOR, aplicados ANTES do recorte da página.
     const { data: payload, error } = await supabase.rpc("sistema_list_orcamentos", {
       p_vendedor_id: opts?.vendedorId || null,
       p_status: opts?.status && opts.status !== "todos" ? opts.status : null,
       p_search: opts?.search || null,
       p_cliente: opts?.cliente || null,
-      p_limit: opts?.limit ?? 300,
-    });
+      p_data_inicio: opts?.dataInicio || null,
+      p_data_fim: opts?.dataFim || null,
+      p_page: opts?.page ?? 1,
+      p_page_size: opts?.pageSize ?? 10,
+    } as any);
 
     if (error) {
       console.error("[Sistema] carregar orçamentos falhou:", error);
@@ -404,6 +424,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     const rows = arr<any>((payload as any)?.rows).map(mapOrcamento);
+    const total = Number((payload as any)?.total_count ?? rows.length);
     setData(prev => {
       // Preserva itens já carregados (a função leve devolve itens vazios)
       const prevById = new Map(prev.orcamentos.map(o => [o.id, o]));
@@ -413,8 +434,10 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       });
       return { ...prev, orcamentos: merged };
     });
-    return rows;
+    setOrcamentosTotal(total);
+    return { rows, total };
   }, []);
+
 
   const fetchOrcamentoCompleto = useCallback(async (id: string): Promise<Orcamento | null> => {
     const { data, error } = await supabase.rpc("sistema_get_orcamento", { p_id: id });
@@ -454,61 +477,89 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
 
+  /* ---------- Carregadores sob demanda ----------
+     A carga inicial traz SÓ o bootstrap. Clientes, pedidos e ajustes de
+     estoque são buscados pela primeira tela que precisa deles, uma única
+     vez por sessão (guarda contra chamadas simultâneas). */
+  const ensureClientes = useCallback(async () => {
+    if (clientesRef.current) return clientesRef.current;
+    clientesRef.current = (async () => {
+      const { data: rows, error } = await supabase.from("sistema_clientes").select("*").order("nome");
+      if (error) {
+        clientesRef.current = null;
+        console.error("[Sistema] carregar clientes falhou:", error);
+        toast.error(`Não foi possível carregar os clientes. ${error.message || ""}`);
+        return;
+      }
+      setData(prev => ({ ...prev, clientes: (rows ?? []).map(mapCliente) }));
+    })();
+    return clientesRef.current;
+  }, []);
+
+  const ensurePedidos = useCallback(async () => {
+    if (pedidosRef.current) return pedidosRef.current;
+    pedidosRef.current = (async () => {
+      const { data: rows, error } = await supabase
+        .from("sistema_pedidos").select("*").order("created_at", { ascending: false }).limit(500);
+      if (error) {
+        pedidosRef.current = null;
+        console.error("[Sistema] carregar pedidos falhou:", error);
+        toast.error(`Não foi possível carregar os pedidos. ${error.message || ""}`);
+        return;
+      }
+      setData(prev => ({ ...prev, pedidos: (rows ?? []).map(mapPedido) }));
+    })();
+    return pedidosRef.current;
+  }, []);
+
+  const ensureAjustes = useCallback(async () => {
+    if (ajustesRef.current) return ajustesRef.current;
+    ajustesRef.current = (async () => {
+      const { data: rows, error } = await supabase
+        .from("sistema_ajustes_estoque").select("*").order("created_at", { ascending: false }).limit(1000);
+      if (error) {
+        ajustesRef.current = null;
+        console.error("[Sistema] carregar ajustes de estoque falhou:", error);
+        toast.error(`Não foi possível carregar o estoque. ${error.message || ""}`);
+        return;
+      }
+      setData(prev => ({
+        ...prev,
+        ajustesEstoque: (rows ?? []).map((r: any) => ({
+          id: r.id, produtoId: r.produto_id ?? "", codigoComposto: r.codigo_composto ?? "",
+          varianteSlug: r.variante_slug ?? undefined, tipo: r.tipo, quantidade: r.quantidade,
+          motivo: r.motivo ?? "", orcamentoId: r.orcamento_id ?? undefined,
+          pedidoId: r.pedido_id ?? undefined, createdAt: r.created_at, createdBy: r.created_by ?? undefined,
+        })),
+      }));
+    })();
+    return ajustesRef.current;
+  }, []);
+
+  /* Carga inicial mínima: apenas o bootstrap (vendedores, meios de pagamento,
+     transportadoras e origens) — usado pelo cabeçalho e por todos os formulários. */
   const loadAll = useCallback(async (force = false) => {
     if (loadedRef.current && !force) return;
     setLoading(prev => (loadedRef.current ? prev : true));
     try {
-      const [bootstrapRes, clientesRes, orcamentosRes] = await Promise.all([
-        supabase.rpc("sistema_get_bootstrap"),
-        supabase.from("sistema_clientes").select("*").order("nome"),
-        supabase.rpc("sistema_list_orcamentos", { p_limit: 300 }),
-      ]);
-
+      const bootstrapRes = await supabase.rpc("sistema_get_bootstrap");
       if (bootstrapRes.error) throw bootstrapRes.error;
-      if (clientesRes.error) throw clientesRes.error;
-      if (orcamentosRes.error) throw orcamentosRes.error;
 
       const bootstrap = (bootstrapRes.data ?? {}) as any;
       const vendedores = arr<any>(bootstrap.vendedores).map(mapVendedor);
 
-      setData(prev => {
-        // Preserva itens já carregados: a listagem leve devolve itens vazios e
-        // não pode "zerar" o que já está visível na tela.
-        const prevById = new Map(prev.orcamentos.map(o => [o.id, o]));
-        const orcamentos = arr<any>((orcamentosRes.data as any)?.rows).map(mapOrcamento).map(r => {
-          const prevOrc = prevById.get(r.id);
-          return prevOrc && prevOrc.itens.length > 0 ? { ...r, itens: prevOrc.itens } : r;
-        });
-        return {
-          ...prev,
-          vendedores,
-          meiosPagamento: arr<any>(bootstrap.meios_pagamento).map(mapMeio),
-          transportadoras: arr<any>(bootstrap.transportadoras).map(mapTransp),
-          origens: arr<any>(bootstrap.origens).map(mapOrigem),
-          clientes: (clientesRes.data ?? []).map(mapCliente),
-          orcamentos,
-        };
-      });
+      setData(prev => ({
+        ...prev,
+        vendedores,
+        meiosPagamento: arr<any>(bootstrap.meios_pagamento).map(mapMeio),
+        transportadoras: arr<any>(bootstrap.transportadoras).map(mapTransp),
+        origens: arr<any>(bootstrap.origens).map(mapOrigem),
+      }));
 
       reconcileCurrentVendedor(vendedores);
       loadedRef.current = true;
       setLoading(false);
 
-      Promise.all([
-        supabase.from("sistema_pedidos").select("*").order("created_at", { ascending: false }).limit(500),
-        supabase.from("sistema_ajustes_estoque").select("*").order("created_at", { ascending: false }).limit(1000),
-      ]).then(([p, ae]) => {
-        setData(prev => ({
-          ...prev,
-          pedidos: (p.data ?? []).map(mapPedido),
-          ajustesEstoque: (ae.data ?? []).map((r: any) => ({
-            id: r.id, produtoId: r.produto_id ?? "", codigoComposto: r.codigo_composto ?? "",
-            varianteSlug: r.variante_slug ?? undefined, tipo: r.tipo, quantidade: r.quantidade,
-            motivo: r.motivo ?? "", orcamentoId: r.orcamento_id ?? undefined,
-            pedidoId: r.pedido_id ?? undefined, createdAt: r.created_at, createdBy: r.created_by ?? undefined,
-          })),
-        }));
-      }).catch(e => console.warn("[Sistema] carga secundária falhou", e));
     } catch (e: any) {
       console.error("[Sistema] carregamento inicial falhou:", e);
       toast.error(`Não foi possível carregar o sistema. ${e?.message || "Tente novamente."}`);
@@ -571,7 +622,8 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setData(prev => ({ ...prev, orcamentos: prev.orcamentos.filter(item => item.id !== id) }));
       throw res.error;
     }
-    await refreshOrcamentos({ limit: 300 }).catch(() => undefined);
+    // Estado local já atualizado; não recarrega a lista para não perder a página atual.
+
     return orcamento;
   }, [refreshOrcamentos]);
 
@@ -582,7 +634,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }));
     const res = await dbWrite("orçamento", () => supabase.from("sistema_orcamentos").update(orcamentoToDb(changes)).eq("id", id));
     if (res?.error) throw res.error;
-    await refreshOrcamentos({ limit: 300 }).catch(() => undefined);
+    // Estado local já atualizado; não recarrega a lista para não perder a página atual.
   }, [refreshOrcamentos]);
 
   const removeOrcamento = useCallback((id: string) => {
@@ -590,15 +642,11 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     dbWrite("excluir orçamento", () => supabase.from("sistema_orcamentos").delete().eq("id", id));
   }, []);
 
-  const gerarNumeroOrcamento = useCallback(() => {
-    const BASE = 125748;
-    return String(BASE + data.orcamentos.length + 1);
-  }, [data.orcamentos.length]);
+  /* Números de orçamento e pedido vêm SEMPRE das sequências do banco
+     (sistema_next_orcamento_numero / sistema_next_pedido_numero).
+     As antigas funções baseadas em .length foram removidas: com carga
+     sob demanda elas gerariam número duplicado. */
 
-  const gerarNumeroPedido = useCallback(() => {
-    const seq = data.pedidos.length + 1;
-    return `PED-${new Date().getFullYear()}-${String(seq).padStart(5, "0")}`;
-  }, [data.pedidos.length]);
 
   const aprovarOrcamento = useCallback(async (id: string): Promise<Pedido | null> => {
     let orcamento = data.orcamentos.find(o => o.id === id);
@@ -786,16 +834,20 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const toggleTransportadoraAtivo = useCallback((id: string) => toggleLookupAtivo("transportadoras", "sistema_transportadoras", id), [toggleLookupAtivo]);
 
   const getEstoqueDisponivel = useCallback((produtoId: string, codigoComposto: string) => {
+    // Garante que os ajustes estejam carregados mesmo se a tela não pediu.
+    void ensureAjustes();
     const baseStock = 100;
     const ajuste = data.ajustesEstoque
       .filter(a => a.codigoComposto === codigoComposto || a.produtoId === produtoId)
       .reduce((sum, a) => sum + a.quantidade, 0);
     return Math.max(0, baseStock + ajuste);
-  }, [data.ajustesEstoque]);
+  }, [data.ajustesEstoque, ensureAjustes]);
+
 
   const value = useMemo<SistemaContextType>(() => ({
-    ...data, loading,
+    ...data, loading, orcamentosTotal,
     refreshOrcamentos, fetchOrcamentoCompleto, fetchOrcamentosItens,
+    ensureClientes, ensurePedidos, ensureAjustes,
     addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
     addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
@@ -803,16 +855,19 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     addTransportadora, updateTransportadora, removeTransportadora, toggleTransportadoraAtivo,
     addOrigem, updateOrigem, removeOrigem, toggleOrigemAtivo,
     currentVendedor, setCurrentVendedor: setCurrentVendedorState,
-    getEstoqueDisponivel, gerarNumeroOrcamento, gerarNumeroPedido,
+    getEstoqueDisponivel,
   }), [
-    data, loading, refreshOrcamentos, fetchOrcamentoCompleto, fetchOrcamentosItens, addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
+    data, loading, orcamentosTotal, refreshOrcamentos, fetchOrcamentoCompleto, fetchOrcamentosItens,
+    ensureClientes, ensurePedidos, ensureAjustes,
+    addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
     addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
     addMeioPagamento, updateMeioPagamento, removeMeioPagamento, toggleMeioPagamentoAtivo,
     addTransportadora, updateTransportadora, removeTransportadora, toggleTransportadoraAtivo,
     addOrigem, updateOrigem, removeOrigem, toggleOrigemAtivo,
-    currentVendedor, getEstoqueDisponivel, gerarNumeroOrcamento, gerarNumeroPedido,
+    currentVendedor, getEstoqueDisponivel,
   ]);
+
 
   return <SistemaContext.Provider value={value}>{children}</SistemaContext.Provider>;
 };

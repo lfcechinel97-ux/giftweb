@@ -1739,7 +1739,11 @@ export type Database = {
       sistema_list_orcamentos: {
         Args: {
           p_cliente?: string
+          p_data_fim?: string
+          p_data_inicio?: string
           p_limit?: number
+          p_page?: number
+          p_page_size?: number
           p_search?: string
           p_status?: string
           p_vendedor_id?: string
