@@ -342,6 +342,15 @@ export default function Pedidos() {
                 <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                   <button
                     type="button"
+                    aria-label="Editar pedido"
+                    onClick={() => navigate(`/sistema/pedidos/${p.id}`)}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-full"
+                    style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
                     aria-label="Imprimir ordem de produção"
                     onClick={() => handlePrintPDF(p)}
                     className="inline-flex items-center justify-center h-8 w-8 rounded-full"
