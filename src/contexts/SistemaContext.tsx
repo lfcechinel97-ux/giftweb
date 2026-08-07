@@ -248,9 +248,8 @@ interface SistemaContextType extends SistemaData {
   currentVendedor: LookupItem | null;
   setCurrentVendedor: (v: LookupItem | null) => void;
   getEstoqueDisponivel: (produtoId: string, codigoComposto: string) => number;
-  gerarNumeroOrcamento: () => string;
-  gerarNumeroPedido: () => string;
 }
+
 
 const VENDEDOR_KEY = `sistema_vendedor_v1`;
 const LEGACY_KEY = `sistema_data_v1`;
@@ -843,8 +842,9 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [data.ajustesEstoque]);
 
   const value = useMemo<SistemaContextType>(() => ({
-    ...data, loading,
+    ...data, loading, orcamentosTotal,
     refreshOrcamentos, fetchOrcamentoCompleto, fetchOrcamentosItens,
+    ensureClientes, ensurePedidos, ensureAjustes,
     addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
     addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
@@ -852,16 +852,19 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     addTransportadora, updateTransportadora, removeTransportadora, toggleTransportadoraAtivo,
     addOrigem, updateOrigem, removeOrigem, toggleOrigemAtivo,
     currentVendedor, setCurrentVendedor: setCurrentVendedorState,
-    getEstoqueDisponivel, gerarNumeroOrcamento, gerarNumeroPedido,
+    getEstoqueDisponivel,
   }), [
-    data, loading, refreshOrcamentos, fetchOrcamentoCompleto, fetchOrcamentosItens, addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
+    data, loading, orcamentosTotal, refreshOrcamentos, fetchOrcamentoCompleto, fetchOrcamentosItens,
+    ensureClientes, ensurePedidos, ensureAjustes,
+    addOrcamento, updateOrcamento, removeOrcamento, aprovarOrcamento, updatePedido,
     addCliente, updateCliente, removeCliente,
     addVendedor, updateVendedor, removeVendedor, toggleVendedorAtivo,
     addMeioPagamento, updateMeioPagamento, removeMeioPagamento, toggleMeioPagamentoAtivo,
     addTransportadora, updateTransportadora, removeTransportadora, toggleTransportadoraAtivo,
     addOrigem, updateOrigem, removeOrigem, toggleOrigemAtivo,
-    currentVendedor, getEstoqueDisponivel, gerarNumeroOrcamento, gerarNumeroPedido,
+    currentVendedor, getEstoqueDisponivel,
   ]);
+
 
   return <SistemaContext.Provider value={value}>{children}</SistemaContext.Provider>;
 };
