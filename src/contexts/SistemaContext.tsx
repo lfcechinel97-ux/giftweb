@@ -373,6 +373,9 @@ const pedidoToDb = (p: Partial<Pedido>): any => {
 };
 
 export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  /* O cache do React Query vive FORA da árvore de componentes: mesmo que o
+     provider seja remontado, as listas já buscadas são servidas na hora. */
+  const qc = useQueryClient();
   const [data, setData] = useState<SistemaData>(emptyData);
   const [loading, setLoading] = useState(true);
   const [currentVendedor, setCurrentVendedorState] = useState<LookupItem | null>(() => {
