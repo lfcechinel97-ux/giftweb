@@ -634,16 +634,25 @@ export default function PCP() {
           ref={boardRef}
           className="w-full pcp-scroll"
           style={{
-            display: "flex",
-            gap: 16,
-            alignItems: "stretch",
             overflowX: "auto",
             overflowY: "hidden",
+            width: "100%",
+            paddingBottom: 12,
             /* Altura fixa do quadro: as colunas nunca empurram a barra para fora da tela */
             height: "calc(100vh - 220px)",
             minHeight: 480,
           }}
         >
+          <div
+            style={{
+              display: "flex",
+              gap: 16,
+              alignItems: "stretch",
+              width: "max-content",
+              height: "100%",
+            }}
+          >
+
             {STATUS_COLS.map(col => {
               const items = byStatus[col.value] || [];
               const somaQtd = items.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
