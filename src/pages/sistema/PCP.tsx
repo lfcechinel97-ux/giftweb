@@ -341,7 +341,7 @@ export default function PCP() {
   const [hoverPedido, setHoverPedido] = useState<string | null>(null);
   const boardRef = useRef<HTMLDivElement | null>(null);
 
-  /* Shift+scroll e arrastar-para-rolar (botão do meio) no quadro */
+  /* Shift+scroll e arrastar-para-rolar (botão do meio ou esquerdo em área vazia) */
   useEffect(() => {
     const el = boardRef.current;
     if (!el) return;
@@ -355,8 +355,11 @@ export default function PCP() {
     let startX = 0;
     let startScroll = 0;
     const onDown = (e: MouseEvent) => {
-      if (e.button !== 1) return;
-      e.preventDefault();
+      const target = e.target as HTMLElement | null;
+      /* Botão esquerdo só rola quando o clique NÃO é em um card (o card tem drag-and-drop próprio) */
+      const emCard = !!target?.closest("[draggable='true']");
+      if (e.button !== 1 && !(e.button === 0 && !emCard)) return;
+      if (e.button === 1) e.preventDefault();
       panning = true;
       startX = e.clientX;
       startScroll = el.scrollLeft;
