@@ -74,7 +74,10 @@ export default function Pedidos() {
   useEffect(() => { void ensureClientes(); }, [ensureClientes]);
 
 
-  const [busca, setBusca] = useState("");
+  /* Permite chegar aqui já filtrado por número (ex.: vindo de um orçamento aprovado) */
+  const [searchParams] = useSearchParams();
+  const [busca, setBusca] = useState(() => searchParams.get("busca") || "");
+
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
