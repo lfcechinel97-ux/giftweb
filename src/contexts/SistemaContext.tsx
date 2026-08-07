@@ -392,6 +392,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const migratedRef = useRef(false);
   const loadedRef = useRef(false);
   const [orcamentosTotal, setOrcamentosTotal] = useState(0);
+  const [pedidosTotal, setPedidosTotal] = useState(0);
   const clientesRef = useRef<Promise<void> | null>(null);
   const pedidosRef = useRef<Promise<void> | null>(null);
   const ajustesRef = useRef<Promise<void> | null>(null);
