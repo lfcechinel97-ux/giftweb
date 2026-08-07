@@ -32,7 +32,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       const session = sessionData.session;
       if (!session) {
         clearAdminAccess();
-        if (!cancelled) navigate('/admin/login');
+        if (!cancelled) navigateRef.current('/admin/login');
         return;
       }
 
@@ -77,7 +77,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
         if (!data) {
           clearAdminAccess();
           await supabase.auth.signOut();
-          navigate('/admin/login');
+          navigateRef.current('/admin/login');
           return;
         }
 
@@ -98,7 +98,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         clearAdminAccess();
-        navigate('/admin/login');
+        navigateRef.current('/admin/login');
       }
     });
 
@@ -106,7 +106,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       cancelled = true;
       sub.subscription.unsubscribe();
     };
-  }, [navigate, attempt]);
+  }, [attempt]);
 
   if (state.status === 'loading') {
     return (
