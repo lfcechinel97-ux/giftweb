@@ -1,7 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Suspense, useCallback, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import {
   FileText, ShoppingCart, Boxes, Package, Globe, User, Users, Settings, ChevronDown, Kanban,
 } from "lucide-react";
