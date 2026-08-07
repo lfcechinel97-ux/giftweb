@@ -70,6 +70,7 @@ const num = (v: unknown) => {
 /* ── Component ───────────────────────────────────────────────────────────── */
 
 export default function Pedidos() {
+  const navigate = useNavigate();
   const { pedidos, pedidosTotal, updatePedido, clientes, vendedores, transportadoras, refreshPedidos, ensureClientes } = useSistema();
 
   /* Clientes carregam só quando esta tela abre (resolve o nome do cliente) */
