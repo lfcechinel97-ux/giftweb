@@ -629,10 +629,17 @@ export default function PCP() {
       ) : (
         <div
           ref={boardRef}
-          className="w-full overflow-x-auto overflow-y-hidden pcp-scroll"
-          style={{ scrollbarGutter: "stable" }}
+          className="w-full pcp-scroll"
+          style={{
+            display: "flex",
+            gap: 16,
+            alignItems: "flex-start",
+            overflowX: "scroll",
+            overflowY: "auto",
+            maxHeight: "calc(100vh - 230px)",
+            paddingBottom: 4,
+          }}
         >
-          <div className="flex gap-4 items-start w-max pb-2">
             {STATUS_COLS.map(col => {
               const items = byStatus[col.value] || [];
               const somaQtd = items.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
@@ -646,13 +653,14 @@ export default function PCP() {
                     e.preventDefault();
                     handleDrop(col.value, e.dataTransfer.getData("text/plain"));
                   }}
+                  style={{ width: 300, flexShrink: 0, minHeight: 320 }}
                   className={cn(
-                    "w-[300px] shrink-0 rounded-xl border transition-colors h-[calc(100vh-250px)] flex flex-col overflow-hidden",
+                    "rounded-xl border transition-colors flex flex-col",
                     isOver ? "border-[#2563EB] bg-[#2563EB]/5" : "border-[var(--gw-border)] bg-white/60"
                   )}
                 >
                   <div
-                    className="flex items-center justify-between px-3 py-2.5 text-white sticky top-0 z-10 shrink-0"
+                    className="flex items-center justify-between px-3 py-2.5 text-white sticky top-0 z-10 shrink-0 rounded-t-xl"
                     style={{ backgroundColor: col.color }}
                   >
                     <span className="text-[13px] font-bold truncate">{col.label}</span>
@@ -663,7 +671,8 @@ export default function PCP() {
                       {items.length} · {somaQtd}un
                     </span>
                   </div>
-                  <div className="p-2 space-y-2 flex-1 overflow-y-auto pcp-col-scroll">
+                  <div className="p-2 space-y-2 flex-1">
+
                     {items.length === 0 ? (
                       <div className="h-[96px] rounded-lg border border-dashed border-[var(--gw-border)] flex items-center justify-center gw-meta text-[11px] text-[var(--gw-text-muted)]">
                         Sem itens nesta etapa
@@ -688,8 +697,8 @@ export default function PCP() {
                 </div>
               );
             })}
-          </div>
         </div>
+
       )}
 
       {/* Modal de detalhe do item */}
