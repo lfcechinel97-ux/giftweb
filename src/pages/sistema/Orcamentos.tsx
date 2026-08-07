@@ -765,7 +765,35 @@ export default function Orcamentos() {
         />
       )}
 
+      {/* Orçamento aprovado — edição bloqueada */}
+      <AlertDialog open={!!bloqueado} onOpenChange={open => !open && setBloqueado(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Este orçamento já foi aprovado</AlertDialogTitle>
+            <AlertDialogDescription>
+              O orçamento {bloqueado?.orc.numero} já virou pedido, por isso não pode mais ser editado.
+              Qualquer alteração deve ser feita diretamente no pedido correspondente.
+              {bloqueado?.pedido === null && " Não encontramos o pedido vinculado a ele."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setBloqueado(null)}>Fechar</AlertDialogCancel>
+            {bloqueado?.pedido && (
+              <AlertDialogAction
+                onClick={() => {
+                  setBloqueado(null);
+                  navigate(`/sistema/pedidos?busca=${encodeURIComponent(bloqueado.pedido!.numero)}`);
+                }}
+              >
+                Abrir pedido {bloqueado.pedido.numero}
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Delete Dialog */}
+
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
