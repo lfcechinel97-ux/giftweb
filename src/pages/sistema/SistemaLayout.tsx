@@ -43,40 +43,12 @@ export default function SistemaLayout() {
   const loc = useLocation();
   const queryClient = useQueryClient();
 
-  /* Pré-carregamento no hover do menu: chunk da rota + dados dela */
+  /* Pré-carregamento no hover: SOMENTE o chunk de código da rota (leve).
+     Buscar dados por movimento de mouse multiplicava requisições sem ganho. */
   const prefetch = useCallback((item: typeof menu[number]) => {
     item.chunk().catch(() => undefined);
-    if (item.path === "/sistema/pcp") {
-      queryClient.prefetchQuery({
-        queryKey: ["sistema", "pcp", "rows"],
-        staleTime: 60 * 1000,
-        queryFn: async () => {
-          const { data } = await supabase
-            .from("vw_pcp" as any)
-            .select("*")
-            .order("data_entrega_item", { ascending: true, nullsFirst: false });
-          return (data as any) ?? [];
-        },
-      });
-    }
-    if (item.path === "/sistema/pedidos") {
-      queryClient.prefetchQuery({
-        queryKey: ["sistema", "pedidos", "progresso"],
-        staleTime: 60 * 1000,
-        queryFn: async () => {
-          const { data } = await supabase.from("sistema_producao_itens").select("pedido_id,status");
-          const acc: Record<string, { enviados: number; total: number }> = {};
-          for (const r of (data ?? []) as { pedido_id: string; status: string }[]) {
-            const e = acc[r.pedido_id] ?? { enviados: 0, total: 0 };
-            e.total += 1;
-            if (r.status === "expedido" || r.status === "enviado_terceiro") e.enviados += 1;
-            acc[r.pedido_id] = e;
-          }
-          return acc;
-        },
-      });
-    }
-  }, [queryClient]);
+  }, []);
+
 
   useEffect(() => {
     if (loc.pathname === "/sistema" || loc.pathname === "/sistema/") {

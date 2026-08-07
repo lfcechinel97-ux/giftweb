@@ -834,12 +834,15 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const toggleTransportadoraAtivo = useCallback((id: string) => toggleLookupAtivo("transportadoras", "sistema_transportadoras", id), [toggleLookupAtivo]);
 
   const getEstoqueDisponivel = useCallback((produtoId: string, codigoComposto: string) => {
+    // Garante que os ajustes estejam carregados mesmo se a tela não pediu.
+    void ensureAjustes();
     const baseStock = 100;
     const ajuste = data.ajustesEstoque
       .filter(a => a.codigoComposto === codigoComposto || a.produtoId === produtoId)
       .reduce((sum, a) => sum + a.quantidade, 0);
     return Math.max(0, baseStock + ajuste);
-  }, [data.ajustesEstoque]);
+  }, [data.ajustesEstoque, ensureAjustes]);
+
 
   const value = useMemo<SistemaContextType>(() => ({
     ...data, loading, orcamentosTotal,
