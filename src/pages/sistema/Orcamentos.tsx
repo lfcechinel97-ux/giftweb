@@ -207,6 +207,8 @@ export default function Orcamentos() {
     currentVendedor,
     loading,
     refreshOrcamentos,
+    orcamentosTotal,
+    ensureClientes,
     fetchOrcamentoCompleto,
     fetchOrcamentosItens,
   } = useSistema();
@@ -221,29 +223,41 @@ export default function Orcamentos() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
+
+  /* Clientes são carregados sob demanda: esta tela resolve nome de cliente. */
+  useEffect(() => { void ensureClientes(); }, [ensureClientes]);
 
   useEffect(() => {
     if (currentVendedor?.id) setFiltroVendedor(currentVendedor.id);
   }, [currentVendedor?.id]);
 
+  /* Volta para a página 1 sempre que um filtro muda */
+  useEffect(() => {
+    setPage(1);
+  }, [filtroBusca, filtroCliente, filtroStatus, filtroVendedor, dataInicio, dataFim, pageSize]);
+
   useEffect(() => {
     let cancelled = false;
-    const key = JSON.stringify([filtroVendedor, filtroStatus, filtroBusca, filtroCliente]);
-    // Cache de 60s: voltar para a rota com os mesmos filtros serve do estado
-    // já carregado e não dispara nova busca (revalida só quando envelhece).
+    const key = JSON.stringify([filtroVendedor, filtroStatus, filtroBusca, filtroCliente, dataInicio, dataFim, page, pageSize]);
+    // Cache de 60s: voltar para a rota com os mesmos filtros/página serve do
+    // estado já carregado e não dispara nova busca.
     if (listCache.key === key && Date.now() - listCache.at < 60_000) return;
     const timer = window.setTimeout(async () => {
       listCache.key = key;
       listCache.at = Date.now();
       setListLoading(true);
       try {
+        // Todos os filtros são aplicados no SERVIDOR, antes do recorte da página.
         await refreshOrcamentos({
           vendedorId: filtroVendedor === "todos" ? null : filtroVendedor,
           status: filtroStatus,
           search: filtroBusca,
           cliente: filtroCliente,
-          limit: 300,
+          dataInicio: dataInicio || null,
+          dataFim: dataFim || null,
+          page,
+          pageSize,
         });
       } catch {
         // Erro já exibido pelo contexto; mantém a lista anterior na tela.
@@ -256,35 +270,10 @@ export default function Orcamentos() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [filtroVendedor, filtroStatus, filtroBusca, filtroCliente, refreshOrcamentos]);
+  }, [filtroVendedor, filtroStatus, filtroBusca, filtroCliente, dataInicio, dataFim, page, pageSize, refreshOrcamentos]);
 
-  const filtered = useMemo(() => {
-    return orcamentos.filter(o => {
-      if (filtroVendedor !== "todos" && o.vendedorId !== filtroVendedor) return false;
-      if (filtroStatus !== "todos" && o.status !== filtroStatus) return false;
-      if (filtroCliente) {
-        const c = clientes.find(cli => cli.id === o.clienteId);
-        const nome = (clienteDisplay(c) !== "—" ? clienteDisplay(c) : (o.clienteSnapshot?.nome || "")).toLowerCase();
-        if (!nome.includes(filtroCliente.toLowerCase())) return false;
-      }
-      if (dataInicio || dataFim) {
-        const d = new Date(o.createdAt);
-        if (dataInicio && d < new Date(`${dataInicio}T00:00:00`)) return false;
-        if (dataFim && d > new Date(`${dataFim}T23:59:59`)) return false;
-      }
-      if (filtroBusca) {
-        const term = filtroBusca.toLowerCase();
-        const matchNumero = String(o.numero).includes(term);
-        const matchCliente = (o.clienteSnapshot?.nome || "").toLowerCase().includes(term);
-        const matchItem = o.itens.some(i =>
-          i.nome.toLowerCase().includes(term) ||
-          (i.codigoComposto || "").toLowerCase().includes(term)
-        );
-        if (!matchNumero && !matchCliente && !matchItem) return false;
-      }
-      return true;
-    });
-  }, [orcamentos, filtroCliente, filtroBusca, filtroStatus, filtroVendedor, clientes, dataInicio, dataFim]);
+  // A lista do contexto já é exatamente a página atual devolvida pelo servidor.
+  const filtered = orcamentos;
 
   // Usa o subtotal armazenado (a listagem leve não traz os itens em detalhe)
   const calcOrcTotal = (o: Orcamento) =>
@@ -292,10 +281,10 @@ export default function Orcamentos() {
 
   const valorTotalFiltrado = filtered.reduce((s, o) => s + calcOrcTotal(o), 0);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  useEffect(() => { setPage(1); }, [filtroBusca, filtroCliente, filtroStatus, filtroVendedor, dataInicio, dataFim, pageSize]);
+  const totalPages = Math.max(1, Math.ceil(orcamentosTotal / pageSize));
   const currentPage = Math.min(page, totalPages);
-  const pageItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pageItems = filtered;
+
 
   /* Todos os orçamentos ficam abertos: carrega itens dos que estão na página */
   const fetchedItensRef = useRef<Set<string>>(new Set());
