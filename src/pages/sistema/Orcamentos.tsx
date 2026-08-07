@@ -603,7 +603,7 @@ export default function Orcamentos() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem onClick={() => navigate(`/sistema/orcamentos/${o.id}`)} style={{ color: "var(--gw-primary)" }}>
+                      <DropdownMenuItem onClick={() => void abrirEdicao(o)} style={{ color: "var(--gw-primary)" }}>
                         <FileText className="h-3.5 w-3.5 mr-2" /> Editar
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleImprimir(o)} style={{ color: "var(--gw-violet)" }}>
