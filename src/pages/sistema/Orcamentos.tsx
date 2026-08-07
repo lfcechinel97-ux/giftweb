@@ -226,6 +226,25 @@ export default function Orcamentos() {
   const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  /* Orçamento aprovado não é editável: já virou pedido. */
+  const [bloqueado, setBloqueado] = useState<
+    { orc: Orcamento; pedido?: { id: string; numero: string } | null } | null
+  >(null);
+
+  const abrirEdicao = async (o: Orcamento) => {
+    if (o.status !== "aprovado") {
+      navigate(`/sistema/orcamentos/${o.id}`);
+      return;
+    }
+    setBloqueado({ orc: o, pedido: undefined });
+    const { data } = await supabase
+      .from("sistema_pedidos")
+      .select("id,numero")
+      .eq("orcamento_id", o.id)
+      .maybeSingle();
+    setBloqueado({ orc: o, pedido: data ? { id: data.id, numero: data.numero } : null });
+  };
+
 
   /* Clientes são carregados sob demanda: esta tela resolve nome de cliente. */
   useEffect(() => { void ensureClientes(); }, [ensureClientes]);
