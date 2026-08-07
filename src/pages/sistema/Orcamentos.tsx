@@ -671,7 +671,10 @@ export default function Orcamentos() {
       {/* Paginação */}
       {filtered.length > 0 && (
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1">
-          <span className="gw-meta">{listLoading ? "Atualizando..." : ""}</span>
+          <span className="gw-meta">
+            {listLoading ? "Atualizando..." : `${orcamentosTotal} orçamento(s) • página ${currentPage} de ${totalPages}`}
+          </span>
+
           <div className="flex items-center gap-1">
             <button
               type="button"
