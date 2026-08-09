@@ -921,21 +921,16 @@ export default function PCP() {
               <div className="overflow-y-auto">
                 <DialogHeader className="px-5 py-4 border-b border-[var(--gw-border)] space-y-1 text-left">
                   <DialogTitle className="flex items-center gap-3 pr-8 text-left">
-                    <span
-                      className="text-[15px] font-semibold text-[var(--gw-text)]"
-                      style={{ fontFamily: "'IBM Plex Mono', monospace" }}
-                    >
-                      {detalhe.pedido_numero}
-                    </span>
-                    <span className="text-[15px] font-bold truncate">{detalhe.cliente || "—"}</span>
+                    <OrderNumber value={detalhe.pedido_numero} />
+                    <span className="gw-title text-[15px] truncate">{detalhe.cliente || "—"}</span>
                     <StatusPill status={detalhe.status} />
                   </DialogTitle>
                 </DialogHeader>
 
                 {/* Produto */}
                 <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
-                  <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">Produto</p>
-                  <p className="text-[15px] font-bold text-[var(--gw-text)]">{detalhe.produto_nome || "—"}</p>
+                  <p className="gw-label">Produto</p>
+                  <p className="gw-title text-[15px]">{detalhe.produto_nome || "—"}</p>
                   <div className="grid grid-cols-3 gap-3 pt-1">
                     {[
                       ["Quantidade", `${detalhe.quantidade ?? 0} un`],
@@ -947,8 +942,8 @@ export default function PCP() {
                         : "—"],
                     ].map(([k, v]) => (
                       <div key={k}>
-                        <p className="text-[10px] font-semibold uppercase text-[var(--gw-text-muted)]">{k}</p>
-                        <p className="text-[13px] text-[var(--gw-text)]">{v}</p>
+                        <p className="gw-label">{k}</p>
+                        <p className="gw-body text-[13px] text-[var(--gw-text)]">{v}</p>
                       </div>
                     ))}
                   </div>
@@ -956,7 +951,7 @@ export default function PCP() {
 
                 {/* Produção */}
                 <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-3">
-                  <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">Produção</p>
+                  <p className="gw-label">Produção</p>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       ["Técnica", detalhe.tecnica_nome || "—"],
@@ -968,26 +963,65 @@ export default function PCP() {
                       ["Tempo na etapa", tempoNaEtapa(detalhe.horas_na_etapa) || "—"],
                     ].map(([k, v]) => (
                       <div key={k as string}>
-                        <p className="text-[10px] font-semibold uppercase text-[var(--gw-text-muted)]">{k}</p>
-                        <p className="text-[13px] text-[var(--gw-text)] capitalize truncate">{String(v)}</p>
+                        <p className="gw-label">{k}</p>
+                        <p className="gw-body text-[13px] text-[var(--gw-text)] capitalize truncate">{String(v)}</p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="space-y-1.5 pt-1">
-                    <Label className="text-[10px] font-semibold uppercase text-[var(--gw-text-muted)]">
-                      Origem do estoque
+                  {/* Etiquetas */}
+                  <div className="space-y-2 pt-1">
+                    <Label className="gw-label flex items-center gap-1.5">
+                      <Tag className="h-3.5 w-3.5" /> Etiquetas
                     </Label>
-                    <Select
-                      value={detalhe.origem_estoque}
-                      onValueChange={v => applyUpdate(detalhe.producao_id, { origem_estoque: v })}
-                    >
-                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="estoque">Em estoque</SelectItem>
-                        <SelectItem value="compra_especifica">Compra específica</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {(detalhe.tags ?? []).map(t => (
+                        <span
+                          key={t}
+                          className="gw-body inline-flex items-center gap-1 text-[13px] font-medium rounded-full pl-3 pr-1.5 py-1 bg-[var(--gw-primary-soft)] text-[var(--gw-primary)]"
+                        >
+                          {t}
+                          <button
+                            type="button"
+                            onClick={() => removerTag(detalhe, t)}
+                            className="rounded-full p-0.5 hover:bg-[var(--gw-primary)]/15"
+                            aria-label={`Remover etiqueta ${t}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                      {(detalhe.tags ?? []).length === 0 && (
+                        <span className="gw-body text-[13px] text-[var(--gw-text-muted)]">Nenhuma etiqueta</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={novaTag}
+                        onChange={e => setNovaTag(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            adicionarTag(detalhe, novaTag);
+                            setNovaTag("");
+                          }
+                        }}
+                        placeholder="Nova etiqueta (ex.: Comprado XBZ)"
+                        className="h-9 max-w-[280px]"
+                        list="pcp-tags-existentes"
+                      />
+                      <datalist id="pcp-tags-existentes">
+                        {todasTags.map(t => <option key={t} value={t} />)}
+                      </datalist>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { adicionarTag(detalhe, novaTag); setNovaTag(""); }}
+                        disabled={!novaTag.trim()}
+                      >
+                        Criar
+                      </Button>
+                    </div>
                   </div>
 
                   {TERCEIRIZADA_TRIGGER.includes(detalhe.local_producao) && (
@@ -996,6 +1030,89 @@ export default function PCP() {
                     </Button>
                   )}
                 </div>
+
+                {/* Observações — histórico em formato de conversa */}
+                <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-3">
+                  <p className="gw-label flex items-center gap-1.5">
+                    <MessageSquare className="h-3.5 w-3.5" /> Observações
+                  </p>
+
+                  {(detalhe.pedido_observacoes || detalhe.item_observacao) && (
+                    <div className="space-y-2">
+                      {detalhe.pedido_observacoes && (
+                        <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
+                          <p className="gw-label mb-0.5">Observação do pedido</p>
+                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
+                            {detalhe.pedido_observacoes}
+                          </p>
+                        </div>
+                      )}
+                      {detalhe.item_observacao && (
+                        <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
+                          <p className="gw-label mb-0.5">Observação do item</p>
+                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
+                            {detalhe.item_observacao}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="space-y-2 max-h-[260px] overflow-y-auto">
+                    {comentarios.length === 0 ? (
+                      <p className="gw-body text-[13px] text-[var(--gw-text-muted)]">
+                        Nenhuma mensagem ainda. Escreva a primeira abaixo.
+                      </p>
+                    ) : (
+                      comentarios.map(c => (
+                        <div
+                          key={c.id}
+                          className="rounded-[10px] bg-[var(--gw-primary-soft)]/60 border border-[var(--gw-border)] px-3 py-2"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="gw-body text-[12px] font-semibold text-[var(--gw-text-secondary)] truncate">
+                              {c.autor_email || "Sistema"}
+                            </span>
+                            <span className="gw-body text-[11px] text-[var(--gw-text-muted)] shrink-0">
+                              {new Date(c.created_at).toLocaleString("pt-BR", {
+                                day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap mt-0.5">
+                            {c.mensagem}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="flex items-end gap-2">
+                    <Textarea
+                      value={novoComentario}
+                      onChange={e => setNovoComentario(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                          e.preventDefault();
+                          enviarComentario();
+                        }
+                      }}
+                      placeholder="Escreva uma observação…"
+                      rows={2}
+                      className="text-[13px] resize-none"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={enviarComentario}
+                      disabled={enviandoComentario || !novoComentario.trim()}
+                    >
+                      {enviandoComentario
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : <Send className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
 
                 {/* Checklist */}
                 {detalhe.status === "embalagem_pagamento" && (
