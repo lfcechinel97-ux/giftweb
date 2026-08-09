@@ -530,6 +530,72 @@ export default function PCP() {
     })();
   }, [detalheId]);
 
+  const carregarComentarios = async (producaoId: string) => {
+    const { data } = await supabase
+      .from("sistema_producao_comentarios" as any)
+      .select("id, mensagem, autor_email, created_at")
+      .eq("producao_item_id", producaoId)
+      .order("created_at", { ascending: true });
+    setComentarios((data as any as ComentarioRow[]) ?? []);
+  };
+
+  useEffect(() => {
+    setNovoComentario("");
+    if (!detalheId) { setComentarios([]); return; }
+    carregarComentarios(detalheId);
+  }, [detalheId]);
+
+  const enviarComentario = async () => {
+    if (!detalhe) return;
+    const texto = novoComentario.trim();
+    if (!texto) return;
+    setEnviandoComentario(true);
+    const { data: auth } = await supabase.auth.getUser();
+    const { error } = await supabase.from("sistema_producao_comentarios" as any).insert({
+      producao_item_id: detalhe.producao_id,
+      pedido_id: detalhe.pedido_id,
+      mensagem: texto,
+      autor_id: auth?.user?.id ?? null,
+      autor_email: auth?.user?.email ?? null,
+    });
+    setEnviandoComentario(false);
+    if (error) {
+      console.error("[PCP] comentário falhou:", error);
+      toast.error(`Não foi possível enviar. ${error.message || ""}`);
+      return;
+    }
+    setNovoComentario("");
+    await carregarComentarios(detalhe.producao_id);
+  };
+
+  /* Etiquetas do item */
+  const salvarTags = async (row: PcpRow, tags: string[]) => {
+    setRows(prev => prev.map(r => (r.producao_id === row.producao_id ? { ...r, tags } : r)));
+    const { error } = await supabase
+      .from("sistema_producao_itens" as any)
+      .update({ tags })
+      .eq("id", row.producao_id);
+    if (error) {
+      console.error("[PCP] salvar etiquetas falhou:", error);
+      toast.error(`Não foi possível salvar as etiquetas. ${error.message || ""}`);
+      await loadItems();
+    }
+  };
+
+  const adicionarTag = async (row: PcpRow, valor: string) => {
+    const t = valor.trim();
+    if (!t) return;
+    const atuais = row.tags ?? [];
+    if (atuais.some(x => x.toLowerCase() === t.toLowerCase())) return;
+    await salvarTags(row, [...atuais, t]);
+  };
+
+  const removerTag = async (row: PcpRow, valor: string) => {
+    await salvarTags(row, (row.tags ?? []).filter(t => t !== valor));
+  };
+
+
+
   const applyUpdate = async (producaoId: string, patch: Record<string, any>) => {
     setSavingId(producaoId);
     setRows(prev => prev.map(r => (r.producao_id === producaoId ? { ...r, ...patch } : r)));
