@@ -68,7 +68,18 @@ interface PcpRow {
   horas_na_etapa: number | null;
   total_itens_pedido: number | null;
   itens_enviados_pedido: number | null;
+  item_observacao: string | null;
+  pedido_observacoes: string | null;
+  tags: string[] | null;
 }
+
+interface ComentarioRow {
+  id: string;
+  mensagem: string;
+  autor_email: string | null;
+  created_at: string;
+}
+
 
 interface Fornecedor {
   id: string;
