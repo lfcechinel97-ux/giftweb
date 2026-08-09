@@ -698,19 +698,19 @@ export default function PCP() {
     setTerceiroModal(null);
   };
 
-  const totalItens = rows.length;
+  const totalItens = rowsFiltradas.length;
 
   return (
     <div className="space-y-4 min-w-0">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-foreground">PCP — Produção</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="gw-display">PCP — Produção</h1>
+          <p className="gw-meta">
             Acompanhe cada item de pedido pelo fluxo de produção. Arraste os cards entre as colunas.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">{totalItens} item(ns)</span>
+          <span className="gw-meta">{totalItens} item(ns)</span>
           <Button variant="outline" size="sm" onClick={() => loadItems()} disabled={loading}>
             <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
             Atualizar
@@ -718,16 +718,55 @@ export default function PCP() {
         </div>
       </div>
 
+      {/* Filtro por etiquetas */}
+      {todasTags.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="gw-label flex items-center gap-1.5">
+            <Tag className="h-3.5 w-3.5" /> Etiquetas
+          </span>
+          {todasTags.map(t => {
+            const ativo = tagsFiltro.includes(t);
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() =>
+                  setTagsFiltro(prev => (ativo ? prev.filter(x => x !== t) : [...prev, t]))
+                }
+                className={cn(
+                  "gw-body text-[13px] font-medium rounded-full px-3 py-1 border transition-colors",
+                  ativo
+                    ? "bg-[var(--gw-primary)] text-white border-transparent"
+                    : "bg-[var(--gw-surface)] text-[var(--gw-text-secondary)] border-[var(--gw-border)] hover:border-[var(--gw-border-strong)]"
+                )}
+              >
+                {t}
+              </button>
+            );
+          })}
+          {tagsFiltro.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setTagsFiltro([])}
+              className="gw-body text-[13px] text-[var(--gw-text-muted)] hover:underline"
+            >
+              limpar
+            </button>
+          )}
+        </div>
+      )}
+
       {loading ? (
         <div className="flex gap-4 overflow-hidden">
           {[0, 1, 2, 3].map(c => (
-            <div key={c} className="w-[268px] shrink-0 space-y-3">
+            <div key={c} className="w-[490px] shrink-0 space-y-3">
               <div className="animate-pulse h-8 rounded-lg bg-muted" />
               {[0, 1].map(i => (
-                <div key={i} className="animate-pulse rounded-xl bg-muted" style={{ height: 205 }} />
+                <div key={i} className="animate-pulse rounded-xl bg-muted" style={{ height: 349 }} />
               ))}
             </div>
           ))}
+
         </div>
       ) : totalItens === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center shadow-sm">
