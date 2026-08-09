@@ -466,12 +466,24 @@ export default function PCP() {
   // Loading só quando não há nada em cache para mostrar
   const loading = pcpQuery.isLoading && rows.length === 0;
 
+  const todasTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of rows) for (const t of r.tags ?? []) set.add(t);
+    return [...set].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [rows]);
+
+  const rowsFiltradas = useMemo(() => {
+    if (tagsFiltro.length === 0) return rows;
+    return rows.filter(r => tagsFiltro.every(t => (r.tags ?? []).includes(t)));
+  }, [rows, tagsFiltro]);
+
   const byStatus = useMemo(() => {
     const map: Record<string, PcpRow[]> = {};
     for (const col of STATUS_COLS) map[col.value] = [];
-    for (const row of rows) (map[row.status] ??= []).push(row);
+    for (const row of rowsFiltradas) (map[row.status] ??= []).push(row);
     return map;
-  }, [rows]);
+  }, [rowsFiltradas]);
+
 
   /* Índice do item dentro do pedido (Item n/total) */
   const indices = useMemo(() => {
