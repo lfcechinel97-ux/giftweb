@@ -812,21 +812,22 @@ export default function PCP() {
                     e.preventDefault();
                     handleDrop(col.value, e.dataTransfer.getData("text/plain"));
                   }}
-                  style={{ width: 300, flexShrink: 0, height: "100%" }}
+                  style={{ width: 490, flexShrink: 0, height: "100%" }}
                   className={cn(
                     "rounded-xl border transition-colors flex flex-col overflow-hidden",
                     isOver ? "border-[#2563EB] bg-[#2563EB]/5" : "border-[var(--gw-border)] bg-white/60"
                   )}
                 >
                   <div
-                    className="flex items-center justify-between px-3 py-2.5 text-white shrink-0"
+                    className="flex items-center justify-between px-4 py-3 text-white shrink-0"
                     style={{ backgroundColor: col.color }}
                   >
-                    <span className="text-[13px] font-bold truncate">{col.label}</span>
+                    <span className="gw-title text-[15px] text-white truncate">{col.label}</span>
                     <span
-                      className="text-[11px] font-semibold text-white rounded-full px-2 py-0.5 shrink-0"
+                      className="gw-body text-[12px] font-semibold text-white rounded-full px-2.5 py-0.5 shrink-0"
                       style={{ backgroundColor: "rgba(255,255,255,.22)" }}
                     >
+
                       {items.length} · {somaQtd}un
                     </span>
                   </div>
