@@ -362,7 +362,13 @@ export default function PCP() {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<PcpStatus | null>(null);
   const [hoverPedido, setHoverPedido] = useState<string | null>(null);
+  const [tagsFiltro, setTagsFiltro] = useState<string[]>([]);
+  const [novaTag, setNovaTag] = useState("");
+  const [comentarios, setComentarios] = useState<ComentarioRow[]>([]);
+  const [novoComentario, setNovoComentario] = useState("");
+  const [enviandoComentario, setEnviandoComentario] = useState(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
+
 
   /* Shift+scroll e arrastar-para-rolar (botão do meio ou esquerdo em área vazia) */
   useEffect(() => {
