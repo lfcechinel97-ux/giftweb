@@ -3,10 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag, Clock, History,
+  Tag, X, MessageSquare, Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -17,6 +19,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { sizedImage } from "@/lib/imageSize";
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/sistema/ui/Money";
+import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
+
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
@@ -64,7 +68,18 @@ interface PcpRow {
   horas_na_etapa: number | null;
   total_itens_pedido: number | null;
   itens_enviados_pedido: number | null;
+  item_observacao: string | null;
+  pedido_observacoes: string | null;
+  tags: string[] | null;
 }
+
+interface ComentarioRow {
+  id: string;
+  mensagem: string;
+  autor_email: string | null;
+  created_at: string;
+}
+
 
 interface Fornecedor {
   id: string;
@@ -198,6 +213,7 @@ function StatusPill({ status, className }: { status: string; className?: string 
 }
 
 /* ── Card ────────────────────────────────────────────────────────────────── */
+/* Dimensões 1,7x maiores que a versão anterior (268 → 456px). */
 
 function PcpCard({
   row, indice, total, dragging, saving, atrasado, highlight,
@@ -218,6 +234,7 @@ function PcpCard({
   const foto = row.mockup_url || row.imagem_catalogo_url;
   const cor = corDoPedido(row);
   const tempo = tempoNaEtapaCurto(row.horas_na_etapa);
+  const tags = row.tags ?? [];
 
   return (
     <div
@@ -232,7 +249,7 @@ function PcpCard({
       onMouseEnter={() => onHover(row.pedido_id)}
       onMouseLeave={() => onHover(null)}
       className={cn(
-        "w-[268px] rounded-[10px] overflow-hidden cursor-pointer select-none bg-[var(--gw-surface)]",
+        "w-[456px] rounded-[12px] overflow-hidden cursor-pointer select-none bg-[var(--gw-surface)]",
         "border border-[var(--gw-border)] transition-shadow hover:shadow-[var(--gw-shadow-md)]",
         dragging && "opacity-40",
         saving && "opacity-60 pointer-events-none"
@@ -246,38 +263,48 @@ function PcpCard({
       }}
     >
       {/* Camada 1 — foto */}
-      <div className="relative h-[168px] w-full">
+      <div className="relative h-[286px] w-full">
         {foto ? (
-          <img src={sizedImage(foto, 320)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-white" />
+          <img src={sizedImage(foto, 640)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-white" />
         ) : (
           <div className="w-full h-full bg-[var(--gw-surface-alt)] flex items-center justify-center">
-            <Package className="h-8 w-8 text-[var(--gw-text-muted)]" />
+            <Package className="h-12 w-12 text-[var(--gw-text-muted)]" />
           </div>
         )}
 
         {/* gradiente inferior */}
         <div
-          className="absolute inset-x-0 bottom-0 h-[56px] pointer-events-none"
+          className="absolute inset-x-0 bottom-0 h-[92px] pointer-events-none"
           style={{ background: "linear-gradient(to bottom, rgba(11,18,32,0), rgba(11,18,32,.75))" }}
         />
 
-        {/* origem do estoque */}
-        <span
-          className="absolute top-1.5 left-1.5 text-white text-[10px] font-bold uppercase rounded-[4px] px-2 py-[3px]"
-          style={{
-            backgroundColor: row.origem_estoque === "estoque"
-              ? "rgba(14,163,107,.9)"
-              : "rgba(245,165,36,.9)",
-            backdropFilter: "blur(8px)",
-          }}
-        >
-          {row.origem_estoque === "estoque" ? "Em estoque" : "Compra específica"}
-        </span>
+        {/* etiquetas */}
+        {tags.length > 0 && (
+          <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5 max-w-[62%]">
+            {tags.slice(0, 3).map(t => (
+              <span
+                key={t}
+                className="gw-body text-white text-[12px] font-semibold rounded-[6px] px-2.5 py-[4px] truncate"
+                style={{ backgroundColor: "rgba(37,99,235,.88)", backdropFilter: "blur(8px)" }}
+              >
+                {t}
+              </span>
+            ))}
+            {tags.length > 3 && (
+              <span
+                className="gw-body text-white text-[12px] font-semibold rounded-[6px] px-2 py-[4px]"
+                style={{ backgroundColor: "rgba(11,18,32,.72)", backdropFilter: "blur(8px)" }}
+              >
+                +{tags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* técnica */}
         {row.tecnica_nome && (
           <span
-            className="absolute top-1.5 right-1.5 text-white text-[10px] font-semibold rounded-[4px] px-2 py-[3px] max-w-[110px] truncate"
+            className="gw-body absolute top-2.5 right-2.5 text-white text-[12px] font-semibold rounded-[6px] px-2.5 py-[4px] max-w-[170px] truncate"
             style={{ backgroundColor: "rgba(11,18,32,.72)", backdropFilter: "blur(8px)" }}
           >
             {row.tecnica_nome}
@@ -288,7 +315,7 @@ function PcpCard({
         {(precisaGateCartao(row) ||
           (row.status === "embalagem_pagamento" && precisaGatePix(row))) && (
           <span
-            className="absolute right-2 bottom-[30px] text-white text-[10px] font-bold uppercase rounded-[4px] px-2 py-[3px]"
+            className="gw-body absolute right-3 bottom-[52px] text-white text-[12px] font-bold uppercase rounded-[6px] px-2.5 py-[4px]"
             style={{ backgroundColor: "var(--gw-warning)" }}
           >
             {precisaGateCartao(row) ? "Conferir Stone" : "Aguarda PIX"}
@@ -296,39 +323,35 @@ function PcpCard({
         )}
 
         {/* quantidade */}
-        <span className="absolute bottom-1.5 right-2 flex items-baseline gap-1 text-white">
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-[20px] font-bold leading-none">
+        <span className="absolute bottom-2.5 right-3 flex items-baseline gap-1.5 text-white">
+          <span className="gw-num text-[32px] leading-none" style={{ fontWeight: 700 }}>
             {row.quantidade ?? 0}
           </span>
-          <span className="text-[11px] font-medium text-white/80">un</span>
+          <span className="gw-body text-[14px] font-medium text-white/80">un</span>
         </span>
 
         {/* tempo na etapa */}
         <span
-          className={cn("absolute bottom-2 left-2 flex items-center gap-1 text-[10px] font-semibold")}
+          className="gw-body absolute bottom-3.5 left-3 flex items-center gap-1.5 text-[13px] font-semibold"
           style={{ color: atrasado ? "var(--gw-danger)" : "#FFFFFF" }}
         >
-          <Clock className="h-[10px] w-[10px]" /> {tempo || "—"}
+          <Clock className="h-[14px] w-[14px]" /> {tempo || "—"}
         </span>
       </div>
 
       {/* Camada 2 — rodapé */}
-      <div className="relative h-[37px] bg-[var(--gw-surface)] flex items-center gap-1.5 pl-3 pr-2 whitespace-nowrap">
-        <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: cor }} />
-        <span
-          className="text-[12px] font-semibold text-[var(--gw-text)]"
-          style={{ fontFamily: "'IBM Plex Mono', monospace" }}
-        >
-          {row.pedido_numero}
-        </span>
-        <span className="text-[var(--gw-text-muted)] text-[12px]">·</span>
-        <span className="text-[11px] font-medium text-[var(--gw-text-secondary)]">
+      <div className="relative h-[63px] bg-[var(--gw-surface)] flex items-center gap-2 pl-5 pr-3 whitespace-nowrap">
+        <span className="absolute left-0 top-0 bottom-0 w-[5px]" style={{ backgroundColor: cor }} />
+        <OrderNumber value={row.pedido_numero} className="text-[17px]" />
+        <span className="text-[var(--gw-text-muted)] text-[14px]">·</span>
+        <span className="gw-body text-[14px] font-medium text-[var(--gw-text-secondary)]">
           Item {indice}/{total}
         </span>
       </div>
     </div>
   );
 }
+
 
 
 /* ── Página ──────────────────────────────────────────────────────────────── */
@@ -339,7 +362,13 @@ export default function PCP() {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<PcpStatus | null>(null);
   const [hoverPedido, setHoverPedido] = useState<string | null>(null);
+  const [tagsFiltro, setTagsFiltro] = useState<string[]>([]);
+  const [novaTag, setNovaTag] = useState("");
+  const [comentarios, setComentarios] = useState<ComentarioRow[]>([]);
+  const [novoComentario, setNovoComentario] = useState("");
+  const [enviandoComentario, setEnviandoComentario] = useState(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
+
 
   /* Shift+scroll e arrastar-para-rolar (botão do meio ou esquerdo em área vazia) */
   useEffect(() => {
@@ -443,12 +472,24 @@ export default function PCP() {
   // Loading só quando não há nada em cache para mostrar
   const loading = pcpQuery.isLoading && rows.length === 0;
 
+  const todasTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of rows) for (const t of r.tags ?? []) set.add(t);
+    return [...set].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [rows]);
+
+  const rowsFiltradas = useMemo(() => {
+    if (tagsFiltro.length === 0) return rows;
+    return rows.filter(r => tagsFiltro.every(t => (r.tags ?? []).includes(t)));
+  }, [rows, tagsFiltro]);
+
   const byStatus = useMemo(() => {
     const map: Record<string, PcpRow[]> = {};
     for (const col of STATUS_COLS) map[col.value] = [];
-    for (const row of rows) (map[row.status] ??= []).push(row);
+    for (const row of rowsFiltradas) (map[row.status] ??= []).push(row);
     return map;
-  }, [rows]);
+  }, [rowsFiltradas]);
+
 
   /* Índice do item dentro do pedido (Item n/total) */
   const indices = useMemo(() => {
@@ -488,6 +529,72 @@ export default function PCP() {
       setHistorico((data as any as HistoricoRow[]) ?? []);
     })();
   }, [detalheId]);
+
+  const carregarComentarios = async (producaoId: string) => {
+    const { data } = await supabase
+      .from("sistema_producao_comentarios" as any)
+      .select("id, mensagem, autor_email, created_at")
+      .eq("producao_item_id", producaoId)
+      .order("created_at", { ascending: true });
+    setComentarios((data as any as ComentarioRow[]) ?? []);
+  };
+
+  useEffect(() => {
+    setNovoComentario("");
+    if (!detalheId) { setComentarios([]); return; }
+    carregarComentarios(detalheId);
+  }, [detalheId]);
+
+  const enviarComentario = async () => {
+    if (!detalhe) return;
+    const texto = novoComentario.trim();
+    if (!texto) return;
+    setEnviandoComentario(true);
+    const { data: auth } = await supabase.auth.getUser();
+    const { error } = await supabase.from("sistema_producao_comentarios" as any).insert({
+      producao_item_id: detalhe.producao_id,
+      pedido_id: detalhe.pedido_id,
+      mensagem: texto,
+      autor_id: auth?.user?.id ?? null,
+      autor_email: auth?.user?.email ?? null,
+    });
+    setEnviandoComentario(false);
+    if (error) {
+      console.error("[PCP] comentário falhou:", error);
+      toast.error(`Não foi possível enviar. ${error.message || ""}`);
+      return;
+    }
+    setNovoComentario("");
+    await carregarComentarios(detalhe.producao_id);
+  };
+
+  /* Etiquetas do item */
+  const salvarTags = async (row: PcpRow, tags: string[]) => {
+    setRows(prev => prev.map(r => (r.producao_id === row.producao_id ? { ...r, tags } : r)));
+    const { error } = await supabase
+      .from("sistema_producao_itens" as any)
+      .update({ tags })
+      .eq("id", row.producao_id);
+    if (error) {
+      console.error("[PCP] salvar etiquetas falhou:", error);
+      toast.error(`Não foi possível salvar as etiquetas. ${error.message || ""}`);
+      await loadItems();
+    }
+  };
+
+  const adicionarTag = async (row: PcpRow, valor: string) => {
+    const t = valor.trim();
+    if (!t) return;
+    const atuais = row.tags ?? [];
+    if (atuais.some(x => x.toLowerCase() === t.toLowerCase())) return;
+    await salvarTags(row, [...atuais, t]);
+  };
+
+  const removerTag = async (row: PcpRow, valor: string) => {
+    await salvarTags(row, (row.tags ?? []).filter(t => t !== valor));
+  };
+
+
 
   const applyUpdate = async (producaoId: string, patch: Record<string, any>) => {
     setSavingId(producaoId);
@@ -591,19 +698,19 @@ export default function PCP() {
     setTerceiroModal(null);
   };
 
-  const totalItens = rows.length;
+  const totalItens = rowsFiltradas.length;
 
   return (
     <div className="space-y-4 min-w-0">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-foreground">PCP — Produção</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="gw-display">PCP — Produção</h1>
+          <p className="gw-meta">
             Acompanhe cada item de pedido pelo fluxo de produção. Arraste os cards entre as colunas.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">{totalItens} item(ns)</span>
+          <span className="gw-meta">{totalItens} item(ns)</span>
           <Button variant="outline" size="sm" onClick={() => loadItems()} disabled={loading}>
             <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
             Atualizar
@@ -611,16 +718,55 @@ export default function PCP() {
         </div>
       </div>
 
+      {/* Filtro por etiquetas */}
+      {todasTags.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="gw-label flex items-center gap-1.5">
+            <Tag className="h-3.5 w-3.5" /> Etiquetas
+          </span>
+          {todasTags.map(t => {
+            const ativo = tagsFiltro.includes(t);
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() =>
+                  setTagsFiltro(prev => (ativo ? prev.filter(x => x !== t) : [...prev, t]))
+                }
+                className={cn(
+                  "gw-body text-[13px] font-medium rounded-full px-3 py-1 border transition-colors",
+                  ativo
+                    ? "bg-[var(--gw-primary)] text-white border-transparent"
+                    : "bg-[var(--gw-surface)] text-[var(--gw-text-secondary)] border-[var(--gw-border)] hover:border-[var(--gw-border-strong)]"
+                )}
+              >
+                {t}
+              </button>
+            );
+          })}
+          {tagsFiltro.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setTagsFiltro([])}
+              className="gw-body text-[13px] text-[var(--gw-text-muted)] hover:underline"
+            >
+              limpar
+            </button>
+          )}
+        </div>
+      )}
+
       {loading ? (
         <div className="flex gap-4 overflow-hidden">
           {[0, 1, 2, 3].map(c => (
-            <div key={c} className="w-[268px] shrink-0 space-y-3">
+            <div key={c} className="w-[490px] shrink-0 space-y-3">
               <div className="animate-pulse h-8 rounded-lg bg-muted" />
               {[0, 1].map(i => (
-                <div key={i} className="animate-pulse rounded-xl bg-muted" style={{ height: 205 }} />
+                <div key={i} className="animate-pulse rounded-xl bg-muted" style={{ height: 349 }} />
               ))}
             </div>
           ))}
+
         </div>
       ) : totalItens === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center shadow-sm">
@@ -666,21 +812,22 @@ export default function PCP() {
                     e.preventDefault();
                     handleDrop(col.value, e.dataTransfer.getData("text/plain"));
                   }}
-                  style={{ width: 300, flexShrink: 0, height: "100%" }}
+                  style={{ width: 490, flexShrink: 0, height: "100%" }}
                   className={cn(
                     "rounded-xl border transition-colors flex flex-col overflow-hidden",
                     isOver ? "border-[#2563EB] bg-[#2563EB]/5" : "border-[var(--gw-border)] bg-white/60"
                   )}
                 >
                   <div
-                    className="flex items-center justify-between px-3 py-2.5 text-white shrink-0"
+                    className="flex items-center justify-between px-4 py-3 text-white shrink-0"
                     style={{ backgroundColor: col.color }}
                   >
-                    <span className="text-[13px] font-bold truncate">{col.label}</span>
+                    <span className="gw-title text-[15px] text-white truncate">{col.label}</span>
                     <span
-                      className="text-[11px] font-semibold text-white rounded-full px-2 py-0.5 shrink-0"
+                      className="gw-body text-[12px] font-semibold text-white rounded-full px-2.5 py-0.5 shrink-0"
                       style={{ backgroundColor: "rgba(255,255,255,.22)" }}
                     >
+
                       {items.length} · {somaQtd}un
                     </span>
                   </div>
@@ -774,21 +921,16 @@ export default function PCP() {
               <div className="overflow-y-auto">
                 <DialogHeader className="px-5 py-4 border-b border-[var(--gw-border)] space-y-1 text-left">
                   <DialogTitle className="flex items-center gap-3 pr-8 text-left">
-                    <span
-                      className="text-[15px] font-semibold text-[var(--gw-text)]"
-                      style={{ fontFamily: "'IBM Plex Mono', monospace" }}
-                    >
-                      {detalhe.pedido_numero}
-                    </span>
-                    <span className="text-[15px] font-bold truncate">{detalhe.cliente || "—"}</span>
+                    <OrderNumber value={detalhe.pedido_numero} />
+                    <span className="gw-title text-[15px] truncate">{detalhe.cliente || "—"}</span>
                     <StatusPill status={detalhe.status} />
                   </DialogTitle>
                 </DialogHeader>
 
                 {/* Produto */}
                 <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
-                  <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">Produto</p>
-                  <p className="text-[15px] font-bold text-[var(--gw-text)]">{detalhe.produto_nome || "—"}</p>
+                  <p className="gw-label">Produto</p>
+                  <p className="gw-title text-[15px]">{detalhe.produto_nome || "—"}</p>
                   <div className="grid grid-cols-3 gap-3 pt-1">
                     {[
                       ["Quantidade", `${detalhe.quantidade ?? 0} un`],
@@ -800,8 +942,8 @@ export default function PCP() {
                         : "—"],
                     ].map(([k, v]) => (
                       <div key={k}>
-                        <p className="text-[10px] font-semibold uppercase text-[var(--gw-text-muted)]">{k}</p>
-                        <p className="text-[13px] text-[var(--gw-text)]">{v}</p>
+                        <p className="gw-label">{k}</p>
+                        <p className="gw-body text-[13px] text-[var(--gw-text)]">{v}</p>
                       </div>
                     ))}
                   </div>
@@ -809,7 +951,7 @@ export default function PCP() {
 
                 {/* Produção */}
                 <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-3">
-                  <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">Produção</p>
+                  <p className="gw-label">Produção</p>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       ["Técnica", detalhe.tecnica_nome || "—"],
@@ -821,26 +963,65 @@ export default function PCP() {
                       ["Tempo na etapa", tempoNaEtapa(detalhe.horas_na_etapa) || "—"],
                     ].map(([k, v]) => (
                       <div key={k as string}>
-                        <p className="text-[10px] font-semibold uppercase text-[var(--gw-text-muted)]">{k}</p>
-                        <p className="text-[13px] text-[var(--gw-text)] capitalize truncate">{String(v)}</p>
+                        <p className="gw-label">{k}</p>
+                        <p className="gw-body text-[13px] text-[var(--gw-text)] capitalize truncate">{String(v)}</p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="space-y-1.5 pt-1">
-                    <Label className="text-[10px] font-semibold uppercase text-[var(--gw-text-muted)]">
-                      Origem do estoque
+                  {/* Etiquetas */}
+                  <div className="space-y-2 pt-1">
+                    <Label className="gw-label flex items-center gap-1.5">
+                      <Tag className="h-3.5 w-3.5" /> Etiquetas
                     </Label>
-                    <Select
-                      value={detalhe.origem_estoque}
-                      onValueChange={v => applyUpdate(detalhe.producao_id, { origem_estoque: v })}
-                    >
-                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="estoque">Em estoque</SelectItem>
-                        <SelectItem value="compra_especifica">Compra específica</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {(detalhe.tags ?? []).map(t => (
+                        <span
+                          key={t}
+                          className="gw-body inline-flex items-center gap-1 text-[13px] font-medium rounded-full pl-3 pr-1.5 py-1 bg-[var(--gw-primary-soft)] text-[var(--gw-primary)]"
+                        >
+                          {t}
+                          <button
+                            type="button"
+                            onClick={() => removerTag(detalhe, t)}
+                            className="rounded-full p-0.5 hover:bg-[var(--gw-primary)]/15"
+                            aria-label={`Remover etiqueta ${t}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                      {(detalhe.tags ?? []).length === 0 && (
+                        <span className="gw-body text-[13px] text-[var(--gw-text-muted)]">Nenhuma etiqueta</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={novaTag}
+                        onChange={e => setNovaTag(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            adicionarTag(detalhe, novaTag);
+                            setNovaTag("");
+                          }
+                        }}
+                        placeholder="Nova etiqueta (ex.: Comprado XBZ)"
+                        className="h-9 max-w-[280px]"
+                        list="pcp-tags-existentes"
+                      />
+                      <datalist id="pcp-tags-existentes">
+                        {todasTags.map(t => <option key={t} value={t} />)}
+                      </datalist>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { adicionarTag(detalhe, novaTag); setNovaTag(""); }}
+                        disabled={!novaTag.trim()}
+                      >
+                        Criar
+                      </Button>
+                    </div>
                   </div>
 
                   {TERCEIRIZADA_TRIGGER.includes(detalhe.local_producao) && (
@@ -849,6 +1030,89 @@ export default function PCP() {
                     </Button>
                   )}
                 </div>
+
+                {/* Observações — histórico em formato de conversa */}
+                <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-3">
+                  <p className="gw-label flex items-center gap-1.5">
+                    <MessageSquare className="h-3.5 w-3.5" /> Observações
+                  </p>
+
+                  {(detalhe.pedido_observacoes || detalhe.item_observacao) && (
+                    <div className="space-y-2">
+                      {detalhe.pedido_observacoes && (
+                        <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
+                          <p className="gw-label mb-0.5">Observação do pedido</p>
+                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
+                            {detalhe.pedido_observacoes}
+                          </p>
+                        </div>
+                      )}
+                      {detalhe.item_observacao && (
+                        <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
+                          <p className="gw-label mb-0.5">Observação do item</p>
+                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
+                            {detalhe.item_observacao}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="space-y-2 max-h-[260px] overflow-y-auto">
+                    {comentarios.length === 0 ? (
+                      <p className="gw-body text-[13px] text-[var(--gw-text-muted)]">
+                        Nenhuma mensagem ainda. Escreva a primeira abaixo.
+                      </p>
+                    ) : (
+                      comentarios.map(c => (
+                        <div
+                          key={c.id}
+                          className="rounded-[10px] bg-[var(--gw-primary-soft)]/60 border border-[var(--gw-border)] px-3 py-2"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="gw-body text-[12px] font-semibold text-[var(--gw-text-secondary)] truncate">
+                              {c.autor_email || "Sistema"}
+                            </span>
+                            <span className="gw-body text-[11px] text-[var(--gw-text-muted)] shrink-0">
+                              {new Date(c.created_at).toLocaleString("pt-BR", {
+                                day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap mt-0.5">
+                            {c.mensagem}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="flex items-end gap-2">
+                    <Textarea
+                      value={novoComentario}
+                      onChange={e => setNovoComentario(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                          e.preventDefault();
+                          enviarComentario();
+                        }
+                      }}
+                      placeholder="Escreva uma observação…"
+                      rows={2}
+                      className="text-[13px] resize-none"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={enviarComentario}
+                      disabled={enviandoComentario || !novoComentario.trim()}
+                    >
+                      {enviandoComentario
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : <Send className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
 
                 {/* Checklist */}
                 {detalhe.status === "embalagem_pagamento" && (

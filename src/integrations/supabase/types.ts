@@ -1018,6 +1018,51 @@ export type Database = {
         }
         Relationships: []
       }
+      sistema_producao_comentarios: {
+        Row: {
+          autor_email: string | null
+          autor_id: string | null
+          created_at: string
+          id: string
+          mensagem: string
+          pedido_id: string | null
+          producao_item_id: string
+        }
+        Insert: {
+          autor_email?: string | null
+          autor_id?: string | null
+          created_at?: string
+          id?: string
+          mensagem: string
+          pedido_id?: string | null
+          producao_item_id: string
+        }
+        Update: {
+          autor_email?: string | null
+          autor_id?: string | null
+          created_at?: string
+          id?: string
+          mensagem?: string
+          pedido_id?: string | null
+          producao_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_producao_comentarios_producao_item_id_fkey"
+            columns: ["producao_item_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_producao_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_producao_comentarios_producao_item_id_fkey"
+            columns: ["producao_item_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pcp"
+            referencedColumns: ["producao_id"]
+          },
+        ]
+      }
       sistema_producao_historico: {
         Row: {
           created_at: string
@@ -1090,6 +1135,7 @@ export type Database = {
           qtd_retornada: number | null
           retornado_terceiro_em: string | null
           status: string
+          tags: string[]
           tecnica_id: string | null
           terceirizada_id: string | null
           updated_at: string
@@ -1120,6 +1166,7 @@ export type Database = {
           qtd_retornada?: number | null
           retornado_terceiro_em?: string | null
           status?: string
+          tags?: string[]
           tecnica_id?: string | null
           terceirizada_id?: string | null
           updated_at?: string
@@ -1150,6 +1197,7 @@ export type Database = {
           qtd_retornada?: number | null
           retornado_terceiro_em?: string | null
           status?: string
+          tags?: string[]
           tecnica_id?: string | null
           terceirizada_id?: string | null
           updated_at?: string
@@ -1619,6 +1667,7 @@ export type Database = {
           fornecedor_compra_id: string | null
           horas_na_etapa: number | null
           imagem_catalogo_url: string | null
+          item_observacao: string | null
           itens_enviados_pedido: number | null
           local_producao: string | null
           medidas_ok: boolean | null
@@ -1630,6 +1679,7 @@ export type Database = {
           pedido_cor: string | null
           pedido_id: string | null
           pedido_numero: string | null
+          pedido_observacoes: string | null
           pedido_total: number | null
           pix_recebido_integral_em: string | null
           previsao_retorno: string | null
@@ -1639,6 +1689,7 @@ export type Database = {
           qtd_retornada: number | null
           quantidade: number | null
           status: string | null
+          tags: string[] | null
           tecnica_id: string | null
           tecnica_nome: string | null
           terceirizada_id: string | null
