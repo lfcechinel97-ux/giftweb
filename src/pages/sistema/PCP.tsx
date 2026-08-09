@@ -198,6 +198,7 @@ function StatusPill({ status, className }: { status: string; className?: string 
 }
 
 /* ── Card ────────────────────────────────────────────────────────────────── */
+/* Dimensões 1,7x maiores que a versão anterior (268 → 456px). */
 
 function PcpCard({
   row, indice, total, dragging, saving, atrasado, highlight,
@@ -218,6 +219,7 @@ function PcpCard({
   const foto = row.mockup_url || row.imagem_catalogo_url;
   const cor = corDoPedido(row);
   const tempo = tempoNaEtapaCurto(row.horas_na_etapa);
+  const tags = row.tags ?? [];
 
   return (
     <div
@@ -232,7 +234,7 @@ function PcpCard({
       onMouseEnter={() => onHover(row.pedido_id)}
       onMouseLeave={() => onHover(null)}
       className={cn(
-        "w-[268px] rounded-[10px] overflow-hidden cursor-pointer select-none bg-[var(--gw-surface)]",
+        "w-[456px] rounded-[12px] overflow-hidden cursor-pointer select-none bg-[var(--gw-surface)]",
         "border border-[var(--gw-border)] transition-shadow hover:shadow-[var(--gw-shadow-md)]",
         dragging && "opacity-40",
         saving && "opacity-60 pointer-events-none"
@@ -246,38 +248,48 @@ function PcpCard({
       }}
     >
       {/* Camada 1 — foto */}
-      <div className="relative h-[168px] w-full">
+      <div className="relative h-[286px] w-full">
         {foto ? (
-          <img src={sizedImage(foto, 320)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-white" />
+          <img src={sizedImage(foto, 640)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-white" />
         ) : (
           <div className="w-full h-full bg-[var(--gw-surface-alt)] flex items-center justify-center">
-            <Package className="h-8 w-8 text-[var(--gw-text-muted)]" />
+            <Package className="h-12 w-12 text-[var(--gw-text-muted)]" />
           </div>
         )}
 
         {/* gradiente inferior */}
         <div
-          className="absolute inset-x-0 bottom-0 h-[56px] pointer-events-none"
+          className="absolute inset-x-0 bottom-0 h-[92px] pointer-events-none"
           style={{ background: "linear-gradient(to bottom, rgba(11,18,32,0), rgba(11,18,32,.75))" }}
         />
 
-        {/* origem do estoque */}
-        <span
-          className="absolute top-1.5 left-1.5 text-white text-[10px] font-bold uppercase rounded-[4px] px-2 py-[3px]"
-          style={{
-            backgroundColor: row.origem_estoque === "estoque"
-              ? "rgba(14,163,107,.9)"
-              : "rgba(245,165,36,.9)",
-            backdropFilter: "blur(8px)",
-          }}
-        >
-          {row.origem_estoque === "estoque" ? "Em estoque" : "Compra específica"}
-        </span>
+        {/* etiquetas */}
+        {tags.length > 0 && (
+          <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5 max-w-[62%]">
+            {tags.slice(0, 3).map(t => (
+              <span
+                key={t}
+                className="gw-body text-white text-[12px] font-semibold rounded-[6px] px-2.5 py-[4px] truncate"
+                style={{ backgroundColor: "rgba(37,99,235,.88)", backdropFilter: "blur(8px)" }}
+              >
+                {t}
+              </span>
+            ))}
+            {tags.length > 3 && (
+              <span
+                className="gw-body text-white text-[12px] font-semibold rounded-[6px] px-2 py-[4px]"
+                style={{ backgroundColor: "rgba(11,18,32,.72)", backdropFilter: "blur(8px)" }}
+              >
+                +{tags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* técnica */}
         {row.tecnica_nome && (
           <span
-            className="absolute top-1.5 right-1.5 text-white text-[10px] font-semibold rounded-[4px] px-2 py-[3px] max-w-[110px] truncate"
+            className="gw-body absolute top-2.5 right-2.5 text-white text-[12px] font-semibold rounded-[6px] px-2.5 py-[4px] max-w-[170px] truncate"
             style={{ backgroundColor: "rgba(11,18,32,.72)", backdropFilter: "blur(8px)" }}
           >
             {row.tecnica_nome}
@@ -288,7 +300,7 @@ function PcpCard({
         {(precisaGateCartao(row) ||
           (row.status === "embalagem_pagamento" && precisaGatePix(row))) && (
           <span
-            className="absolute right-2 bottom-[30px] text-white text-[10px] font-bold uppercase rounded-[4px] px-2 py-[3px]"
+            className="gw-body absolute right-3 bottom-[52px] text-white text-[12px] font-bold uppercase rounded-[6px] px-2.5 py-[4px]"
             style={{ backgroundColor: "var(--gw-warning)" }}
           >
             {precisaGateCartao(row) ? "Conferir Stone" : "Aguarda PIX"}
@@ -296,39 +308,35 @@ function PcpCard({
         )}
 
         {/* quantidade */}
-        <span className="absolute bottom-1.5 right-2 flex items-baseline gap-1 text-white">
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace" }} className="text-[20px] font-bold leading-none">
+        <span className="absolute bottom-2.5 right-3 flex items-baseline gap-1.5 text-white">
+          <span className="gw-num text-[32px] leading-none" style={{ fontWeight: 700 }}>
             {row.quantidade ?? 0}
           </span>
-          <span className="text-[11px] font-medium text-white/80">un</span>
+          <span className="gw-body text-[14px] font-medium text-white/80">un</span>
         </span>
 
         {/* tempo na etapa */}
         <span
-          className={cn("absolute bottom-2 left-2 flex items-center gap-1 text-[10px] font-semibold")}
+          className="gw-body absolute bottom-3.5 left-3 flex items-center gap-1.5 text-[13px] font-semibold"
           style={{ color: atrasado ? "var(--gw-danger)" : "#FFFFFF" }}
         >
-          <Clock className="h-[10px] w-[10px]" /> {tempo || "—"}
+          <Clock className="h-[14px] w-[14px]" /> {tempo || "—"}
         </span>
       </div>
 
       {/* Camada 2 — rodapé */}
-      <div className="relative h-[37px] bg-[var(--gw-surface)] flex items-center gap-1.5 pl-3 pr-2 whitespace-nowrap">
-        <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: cor }} />
-        <span
-          className="text-[12px] font-semibold text-[var(--gw-text)]"
-          style={{ fontFamily: "'IBM Plex Mono', monospace" }}
-        >
-          {row.pedido_numero}
-        </span>
-        <span className="text-[var(--gw-text-muted)] text-[12px]">·</span>
-        <span className="text-[11px] font-medium text-[var(--gw-text-secondary)]">
+      <div className="relative h-[63px] bg-[var(--gw-surface)] flex items-center gap-2 pl-5 pr-3 whitespace-nowrap">
+        <span className="absolute left-0 top-0 bottom-0 w-[5px]" style={{ backgroundColor: cor }} />
+        <OrderNumber value={row.pedido_numero} className="text-[17px]" />
+        <span className="text-[var(--gw-text-muted)] text-[14px]">·</span>
+        <span className="gw-body text-[14px] font-medium text-[var(--gw-text-secondary)]">
           Item {indice}/{total}
         </span>
       </div>
     </div>
   );
 }
+
 
 
 /* ── Página ──────────────────────────────────────────────────────────────── */
