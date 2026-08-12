@@ -1,6 +1,6 @@
 # Relatório — Feed Meta (catálogo WhatsApp) — XBZ Brindes
 
-Gerado em 2026-08-12T16:58:43.706540+00:00
+Gerado em 2026-08-12T17:11:43.740025+00:00
 
 ## Resumo
 
@@ -10,7 +10,7 @@ Gerado em 2026-08-12T16:58:43.706540+00:00
 
 ## Observações gerais
 
-- additional_image_link foi deixado vazio para todos os produtos - decisão do usuário: preencher só após revisão manual em output/revisao_imagens.html (não existe 'foto coletiva com todas as cores' em nenhuma fonte de dado real, API ou curadoria).
+- additional_image_link = candidato #1 mostrado em revisao_imagens.html (1ª foto de galeria curada, ou 1ª variante de cor quando não há curadoria) - aproximação combinada com o usuário em 2026-08-12, já que não existe 'foto coletiva com todas as cores' em nenhuma fonte de dado real; será ajustado manualmente depois.
 - Campo 'material' deixado vazio para todos os produtos: nenhuma fonte (products_cache ou topprodutos_curadoria) tem uma coluna estruturada de material; o texto da descrição já menciona material quando a API/curadoria o informa em prosa.
 - price = products_cache.preco_custo × multiplicador escalonado do product-feed do site (mesma fórmula do feed do Google) × (1 - 16%).
 - SUPABASE_SERVICE_ROLE_KEY não estava configurada nesta execução: imagens novas (códigos sem curadoria) foram baixadas e normalizadas em data/processed/ mas NÃO enviadas ao bucket catalogo-meta - por isso ficaram sem image_link válido e saíram do CSV.

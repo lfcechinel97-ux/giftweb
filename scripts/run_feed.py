@@ -99,10 +99,72 @@ def stage_images():
 
     CAPA_META_FILE.write_text(json.dumps(capa_status, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[IMAGES] status salvo em {CAPA_META_FILE}")
-    return resolvidos, capa_status
+
+    additional_status = stage_additional_images(resolvidos, tem_service_key, service_client)
+
+    return resolvidos, capa_status, additional_status
 
 
-def stage_review(resolvidos=None, capa_status=None):
+ADDITIONAL_META_FILE = config.DATA_DIR / "additional_status.json"
+
+
+def stage_additional_images(resolvidos, tem_service_key: bool, service_client):
+    """additional_image_link = sempre o candidato #1 mostrado em revisao_imagens.html
+    (decisão do usuário em 2026-08-12: usar a 1ª foto de galeria curada como
+    aproximação, sabendo que será ajustado manualmente depois)."""
+    print("-" * 70)
+    print("additional_image_link = candidato #1 de cada produto")
+    print("-" * 70)
+    additional_status: dict[str, dict] = {}
+
+    for p in resolvidos:
+        if not p.candidatos_secundarios:
+            additional_status[p.codigo_entrada] = {"ok": False, "motivo": "sem candidato disponível"}
+            continue
+
+        candidato = p.candidatos_secundarios[0]
+
+        if candidato.fonte.startswith("curada"):
+            r = validar_url_existente(candidato.url)
+            print(f"[IMAGES] {p.codigo_entrada}: additional #1 já hospedada ({candidato.fonte}) -> "
+                  f"{'OK' if r['ok'] else 'FALHOU'} (status={r.get('status')})")
+            additional_status[p.codigo_entrada] = {
+                "ok": r["ok"], "url": candidato.url, "reaproveitada": True, "fonte": candidato.fonte,
+            }
+            continue
+
+        # candidato hotlinked (api:variante) - precisa do pipeline completo (2.1-2.4)
+        proc = processar_imagem_nao_curada(p.codigo_entrada, 2, candidato)
+        entrada = {
+            "ok": proc.ok, "motivo": proc.motivo_reprovacao,
+            "watermark_suspeito": proc.watermark_suspeito,
+            "local_path": proc.local_path, "sha256": proc.sha256, "reaproveitada": False,
+        }
+        if proc.ok:
+            if tem_service_key:
+                entrada["url"] = enviar_para_storage(proc, service_client)
+                entrada["upload_pendente"] = False
+            else:
+                entrada["url"] = None
+                entrada["upload_pendente"] = True
+        additional_status[p.codigo_entrada] = entrada
+
+    ADDITIONAL_META_FILE.write_text(json.dumps(additional_status, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[IMAGES] status (additional) salvo em {ADDITIONAL_META_FILE}")
+    return additional_status
+
+
+def _local_preview_url(st: dict) -> str | None:
+    url = st.get("url")
+    if not url and st.get("local_path"):
+        # ainda não subiu pro Storage - referencia o arquivo local processado
+        # (o HTML de revisão é aberto localmente, então o caminho relativo funciona)
+        rel = Path(st["local_path"]).resolve().relative_to(config.ROOT)
+        url = "../" + str(rel).replace("\\", "/")
+    return url
+
+
+def stage_review(resolvidos=None, capa_status=None, additional_status=None):
     print("=" * 70)
     print("REVISÃO DE IMAGENS (output/revisao_imagens.html)")
     print("=" * 70)
@@ -121,26 +183,21 @@ def stage_review(resolvidos=None, capa_status=None):
             imagens_processadas[p.codigo_entrada] = ImagemProcessada(
                 codigo=p.codigo_entrada, slot=1, ok=st["ok"], watermark_suspeito=True,
             )
-        url = st.get("url")
-        if not url and st.get("local_path"):
-            # ainda não subiu pro Storage - referencia o arquivo local processado
-            # (o HTML de revisão é aberto localmente, então o caminho relativo funciona)
-            rel = Path(st["local_path"]).resolve().relative_to(config.ROOT)
-            url = "../" + str(rel).replace("\\", "/")
+        url = _local_preview_url(st)
         if url:
             urls_capa_final[p.codigo_entrada] = url
 
     gerar_e_salvar(resolvidos, imagens_processadas, urls_capa_final)
 
 
-def _capa_urls_publicas(capa_status: dict) -> dict[str, str]:
+def _urls_publicas(status: dict) -> dict[str, str]:
     """Só URLs públicas de verdade (Storage ou já hospedadas). Upload local pendente
-    (sem SUPABASE_SERVICE_ROLE_KEY) NÃO entra aqui - vira image_link vazio no CSV,
+    (sem SUPABASE_SERVICE_ROLE_KEY) NÃO entra aqui - vira campo vazio no CSV,
     o produto fica de fora até o upload real acontecer."""
-    return {codigo: st["url"] for codigo, st in capa_status.items() if st.get("url")}
+    return {codigo: st["url"] for codigo, st in status.items() if st.get("url")}
 
 
-def stage_csv(resolvidos=None, capa_status=None):
+def stage_csv(resolvidos=None, capa_status=None, additional_status=None):
     print("=" * 70)
     print("FASE 3 — CSV")
     print("=" * 70)
@@ -148,9 +205,12 @@ def stage_csv(resolvidos=None, capa_status=None):
         resolvidos = resolver_todos()
     if capa_status is None:
         capa_status = json.loads(CAPA_META_FILE.read_text(encoding="utf-8")) if CAPA_META_FILE.exists() else {}
+    if additional_status is None:
+        additional_status = json.loads(ADDITIONAL_META_FILE.read_text(encoding="utf-8")) if ADDITIONAL_META_FILE.exists() else {}
 
-    capa_urls = _capa_urls_publicas(capa_status)
-    linhas, avisos_por_codigo = gerar_csv(resolvidos, capa_urls, additional_urls={})
+    capa_urls = _urls_publicas(capa_status)
+    additional_urls = _urls_publicas(additional_status)
+    linhas, avisos_por_codigo = gerar_csv(resolvidos, capa_urls, additional_urls=additional_urls)
     return resolvidos, linhas, avisos_por_codigo
 
 
@@ -186,9 +246,10 @@ def stage_validate(resolvidos=None, linhas=None, avisos_por_codigo=None):
     print(f"[VALIDATE] CSV final reescrito com {len(validas_finais)} linhas em {out_path}")
 
     observacoes_gerais = [
-        "additional_image_link foi deixado vazio para todos os produtos - decisão do usuário: "
-        "preencher só após revisão manual em output/revisao_imagens.html (não existe 'foto coletiva "
-        "com todas as cores' em nenhuma fonte de dado real, API ou curadoria).",
+        "additional_image_link = candidato #1 mostrado em revisao_imagens.html (1ª foto de galeria "
+        "curada, ou 1ª variante de cor quando não há curadoria) - aproximação combinada com o "
+        "usuário em 2026-08-12, já que não existe 'foto coletiva com todas as cores' em nenhuma "
+        "fonte de dado real; será ajustado manualmente depois.",
         "Campo 'material' deixado vazio para todos os produtos: nenhuma fonte (products_cache ou "
         "topprodutos_curadoria) tem uma coluna estruturada de material; o texto da descrição já "
         "menciona material quando a API/curadoria o informa em prosa.",
@@ -208,9 +269,9 @@ def stage_validate(resolvidos=None, linhas=None, avisos_por_codigo=None):
 
 def stage_all():
     stage_collect()
-    resolvidos, capa_status = stage_images()
-    stage_review(resolvidos, capa_status)
-    resolvidos, linhas, avisos_por_codigo = stage_csv(resolvidos, capa_status)
+    resolvidos, capa_status, additional_status = stage_images()
+    stage_review(resolvidos, capa_status, additional_status)
+    resolvidos, linhas, avisos_por_codigo = stage_csv(resolvidos, capa_status, additional_status)
     stage_validate(resolvidos, linhas, avisos_por_codigo)
 
 
