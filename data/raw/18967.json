@@ -1,0 +1,223 @@
+{
+  "codigo_entrada": "18967",
+  "codigo_consulta": "18967",
+  "coletado_em": "2026-08-12T16:40:07.887684+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "4f364cb9-1460-47e0-a079-ca03ee0b753c",
+      "codigo_amigavel": "18967-RSC",
+      "codigo_prefixo": "18967",
+      "slug": "bolsa-termica-5l-18967-rsc",
+      "nome": "BOLSA TÉRMICA 5L",
+      "descricao": "Bolsa térmica o confeccionada em poliéster impermeável e capacidade de até 5 litros. Apresenta revestimento interno em folha de alumínio, o que oferece mais tempo de conservação de temperatura para alimentos e bebidas. Conta também com bolso frontal com plaquinha fixa em plástico e par de alças em nylon para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-5-Litros-ROSA-CLARO-23907-1752860465.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-5-Litros-ROSA-CLARO-23907-1752860465.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18967",
+      "cor": "ROSA",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 6.9,
+      "estoque": 4949,
+      "peso": 87.0,
+      "altura": 19.0,
+      "largura": 21.5,
+      "profundidade": 11.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "28cd0380-f4b0-4029-9076-52212000de3a",
+      "codigo_amigavel": "18967-VM",
+      "codigo_prefixo": "18967",
+      "slug": "bolsa-termica-5l-18967-vm",
+      "nome": "BOLSA TÉRMICA 5L",
+      "descricao": "Bolsa térmica o confeccionada em poliéster impermeável e capacidade de até 5 litros. Apresenta revestimento interno em folha de alumínio, o que oferece mais tempo de conservação de temperatura para alimentos e bebidas. Conta também com bolso frontal com plaquinha fixa em plástico e par de alças em nylon para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-5L-VERMELHO-25001-1768394786.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-5L-VERMELHO-25001-1768394786.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18967",
+      "cor": "VERMELHO",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 6.9,
+      "estoque": 3235,
+      "peso": 87.0,
+      "altura": 19.0,
+      "largura": 21.5,
+      "profundidade": 11.5,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "7a827da9-f276-4bbb-a23a-01273d174cc5",
+      "codigo_amigavel": "18967-CIN",
+      "codigo_prefixo": "18967",
+      "slug": "bolsa-termica-5l-18967-cin",
+      "nome": "BOLSA TÉRMICA 5L",
+      "descricao": "Bolsa térmica o confeccionada em poliéster impermeável e capacidade de até 5 litros. Apresenta revestimento interno em folha de alumínio, o que oferece mais tempo de conservação de temperatura para alimentos e bebidas. Conta também com bolso frontal com plaquinha fixa em plástico e par de alças em nylon para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-5-Litros-CINZA-23906-1752860446.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-5-Litros-CINZA-23906-1752860446.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18967",
+      "cor": "CINZA",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 6.9,
+      "estoque": 1,
+      "peso": 87.0,
+      "altura": 19.0,
+      "largura": 21.5,
+      "profundidade": 11.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "835e0208-5ba2-4726-8e59-b09fd279f5e0",
+      "codigo_amigavel": "18967-AZE",
+      "codigo_prefixo": "18967",
+      "slug": "bolsa-termica-5l-18967-aze",
+      "nome": "BOLSA TÉRMICA 5L",
+      "descricao": "Bolsa térmica o confeccionada em poliéster impermeável e capacidade de até 5 litros. Apresenta revestimento interno em folha de alumínio, o que oferece mais tempo de conservação de temperatura para alimentos e bebidas. Conta também com bolso frontal com plaquinha fixa em plástico e par de alças em nylon para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-5-Litros-23904-1752860409.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-5-Litros-23904-1752860409.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18967",
+      "cor": "AZUL",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 6.9,
+      "estoque": 6216,
+      "peso": 87.0,
+      "altura": 19.0,
+      "largura": 21.5,
+      "profundidade": 11.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "40a0f90e-f4bb-4bf9-835c-29d64a5b4ffe",
+      "codigo_amigavel": "18967-RSE",
+      "codigo_prefixo": "18967",
+      "slug": "bolsa-termica-5l-18967-rse",
+      "nome": "BOLSA TÉRMICA 5L",
+      "descricao": "Bolsa térmica o confeccionada em poliéster impermeável e capacidade de até 5 litros. Apresenta revestimento interno em folha de alumínio, o que oferece mais tempo de conservação de temperatura para alimentos e bebidas. Conta também com bolso frontal com plaquinha fixa em plástico e par de alças em nylon para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-5L-ROSA-ESCURO-23908-1774291107.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-5L-ROSA-ESCURO-23908-1774291107.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18967",
+      "cor": "ROSA",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 6.9,
+      "estoque": 4825,
+      "peso": 87.0,
+      "altura": 19.0,
+      "largura": 21.5,
+      "profundidade": 11.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "62f4dffe-0840-4915-a3a1-9ed820349ead",
+      "codigo_amigavel": "18967-PRE",
+      "codigo_prefixo": "18967",
+      "slug": "bolsa-termica-5l-18967-pre",
+      "nome": "BOLSA TÉRMICA 5L",
+      "descricao": "Bolsa térmica o confeccionada em poliéster impermeável e capacidade de até 5 litros. Apresenta revestimento interno em folha de alumínio, o que oferece mais tempo de conservação de temperatura para alimentos e bebidas. Conta também com bolso frontal com plaquinha fixa em plástico e par de alças em nylon para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-4-Litros-PRETO-24643-1755722433.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-4-Litros-PRETO-24643-1755722433.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18967",
+      "cor": "PRETO",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 6.9,
+      "estoque": 0,
+      "peso": 87.0,
+      "altura": 19.0,
+      "largura": 21.5,
+      "profundidade": 11.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "01f47663-e9b8-43cc-a484-a6d0ffb2457a",
+    "nome": "Bolsa Térmica 5L",
+    "descricao_curta": "Bolsa térmica o confeccionada em poliéster impermeável e capacidade de até 5 litros.",
+    "descricao_longa": "Bolsa térmica o confeccionada em poliéster impermeável e capacidade de até 5 litros. Apresenta revestimento interno em folha de alumínio, o que oferece mais tempo de conservação de temperatura para alimentos e bebidas. Conta também com bolso frontal com plaquinha fixa em plástico e par de alças em nylon para transporte.\n\nAltura: 19 cm | Largura: 21,5 cm | Medidas de gravação (CxL): 4 cm x 4 cm | Peso aproximado: 87g",
+    "preco_exibicao": null,
+    "categoria": "mochilas-bolsa-necessaire",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 10,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/18967_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/18967_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/18967_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/18967_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/18967_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/18967_6.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/18967_7.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-28T00:31:03.585883+00:00",
+    "updated_at": "2026-07-28T00:31:03.585883+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/azul-escuro.jpg",
+        "referencia": "18967-AZE"
+      },
+      {
+        "nome": "CINZA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/cinza.jpg",
+        "referencia": "18967-CIN"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/preto.jpg",
+        "referencia": "18967-PRE"
+      },
+      {
+        "nome": "ROSA CLARO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/rosa-claro.jpg",
+        "referencia": "18967-RSC"
+      },
+      {
+        "nome": "ROSA ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/rosa-escuro.jpg",
+        "referencia": "18967-RSE"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18967/vermelho.jpg",
+        "referencia": "18967-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

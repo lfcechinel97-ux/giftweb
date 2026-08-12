@@ -1,0 +1,127 @@
+{
+  "codigo_entrada": "06052",
+  "codigo_consulta": "06052",
+  "coletado_em": "2026-08-12T16:39:55.607609+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "57297bc3-ca9c-4b05-889b-c5c1b87a9c69",
+      "codigo_amigavel": "06052-BCO",
+      "codigo_prefixo": "06052",
+      "slug": "power-bank-10-000mah-com-carregamento-via-inducao-ou-via-cabo-06052-bco",
+      "nome": "POWER BANK 10.000MAH COM CARREGAMENTO VIA INDUÇÃO OU VIA CABO",
+      "descricao": "Carregador portátil com capacidade para até 10.000mAh. Conta com display digital que indica o percentual de bateria do próprio carregador, área para carregamento de dispositivos compatíveis com tecnologia de indução e quatro cabos com saídas micro-USB, USB-C, Lightning e USB-A. Dispõe ainda de entradas micro-USB e USB-C exclusivas para a recarga do próprio carregador.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Carregamento-via-Inducao-ou-via-Cabo-17875-1702556149.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Carregamento-via-Inducao-ou-via-Cabo-17875-1702556149.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/06052",
+      "cor": "BRANCO",
+      "categoria": "power-banks",
+      "marca": "XBZ",
+      "preco_custo": 61.9,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "69fa2701-4912-4cdb-ab34-8a14f1c7d925",
+      "codigo_amigavel": "06052-PRE",
+      "codigo_prefixo": "06052",
+      "slug": "power-bank-10-000mah-com-carregamento-via-inducao-ou-via-cabo-06052-pre",
+      "nome": "POWER BANK 10.000MAH COM CARREGAMENTO VIA INDUÇÃO OU VIA CABO",
+      "descricao": "Carregador portátil com capacidade para até 10.000mAh. Conta com display digital que indica o percentual de bateria do próprio carregador, área para carregamento de dispositivos compatíveis com tecnologia de indução e quatro cabos com saídas micro-USB, USB-C, Lightning e USB-A. Dispõe ainda de entradas micro-USB e USB-C exclusivas para a recarga do próprio carregador.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Carregamento-via-Inducao-ou-via-Cabo-PRETO-17908-1702556168.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Carregamento-via-Inducao-ou-via-Cabo-PRETO-17908-1702556168.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/06052",
+      "cor": "PRETO",
+      "categoria": "power-banks",
+      "marca": "XBZ",
+      "preco_custo": 61.9,
+      "estoque": 3231,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "bfe9722a-747c-4359-ab5e-b5ed2c69501c",
+      "codigo_amigavel": "06052-BCO/CIN",
+      "codigo_prefixo": "06052",
+      "slug": "power-bank-10-000mah-com-carregamento-via-inducao-ou-via-cabo-06052-bco-cin",
+      "nome": "POWER BANK 10.000MAH COM CARREGAMENTO VIA INDUÇÃO OU VIA CABO",
+      "descricao": "Carregador portátil com capacidade para até 10.000mAh. Conta com display digital que indica o percentual de bateria do próprio carregador, área para carregamento de dispositivos compatíveis com tecnologia de indução e quatro cabos com saídas micro-USB, USB-C, Lightning e USB-A. Dispõe ainda de entradas micro-USB e USB-C exclusivas para a recarga do próprio carregador.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Carregamento-via-Inducao-ou-via-Cabo-BRANCO-COM-CINZA-21013-1728390726.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Carregamento-via-Inducao-ou-via-Cabo-BRANCO-COM-CINZA-21013-1728390726.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/06052",
+      "cor": "BRANCO",
+      "categoria": "power-banks",
+      "marca": "XBZ",
+      "preco_custo": 61.9,
+      "estoque": 3231,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "d44d9420-b0b3-412a-b5d7-e3f82f08c0a1",
+    "nome": "Power Bank 10.000mAh com Carregamento via Indução ou via Cabo",
+    "descricao_curta": "Carregador portátil com capacidade para até 10.000mAh.",
+    "descricao_longa": "Carregador portátil com capacidade para até 10.000mAh. Conta com display digital que indica o percentual de bateria do próprio carregador, área para carregamento de dispositivos compatíveis com tecnologia de indução e quatro cabos com saídas micro-USB, USB-C, Lightning e USB-A. Dispõe ainda de entradas micro-USB e USB-C exclusivas para a recarga do próprio carregador.\n\nLargura: 6,9 cm | Medidas de gravação (CxL): 3,5 cm x 5 cm | Peso aproximado: 227g",
+    "preco_exibicao": 59.9,
+    "categoria": "som-power-bank",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 1,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/06052/06052_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/06052/06052_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/06052/06052_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/06052/06052_4.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:28:16.866103+00:00",
+    "destaque": "grande",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/06052/branco.jpg",
+        "referencia": "06052-BCO"
+      },
+      {
+        "nome": "BRANCO COM CINZA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/06052/branco-com-cinza.jpg",
+        "referencia": "06052-BCO/CIN"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/06052/preto.jpg",
+        "referencia": "06052-PRE"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

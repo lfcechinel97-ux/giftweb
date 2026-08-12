@@ -1,0 +1,271 @@
+{
+  "codigo_entrada": "12487F",
+  "codigo_consulta": "12487F",
+  "coletado_em": "2026-08-12T16:40:00.637570+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "4b314942-9072-4885-a0bb-f2d4b3591ca9",
+      "codigo_amigavel": "12487F",
+      "codigo_prefixo": "12487F",
+      "slug": "squeeze-aluminio-fosco-650ml-12487f",
+      "nome": "SQUEEZE ALUMINIO FOSCO 650ML",
+      "descricao": "Squeeze alumínio de 650ml com pintura fosca. Squeeze com tampa plástica rosqueável, alça e tampa protetora para o bocal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Aluminio-600ml-INOX-4482-1724341961.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Aluminio-600ml-INOX-4482-1724341961.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/12487f",
+      "cor": "INOX",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 18320,
+      "peso": 113.0,
+      "altura": 21.0,
+      "largura": 23.1,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "0e14bc21-8fca-471c-a25e-f9385f376a9c"
+    },
+    {
+      "id": "6233c7e6-a9c7-4ae6-a7b9-3375355a3f0e",
+      "codigo_amigavel": "12487F-INO",
+      "codigo_prefixo": "12487F",
+      "slug": "squeeze-aluminio-650ml-12487f-ino",
+      "nome": "SQUEEZE ALUMÍNIO 650ML",
+      "descricao": "Squeeze em alumínio com capacidade máxima de 650ml. Possui pintura spray de acabamento fosco e revestimento plástico no bocal. Conta com tampa rosqueável em plástico polipropileno (PP) com protetor para o bocal e alça fixa.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Aluminio-600ml-INOX-4482-1724341961.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Aluminio-600ml-INOX-4482-1724341961.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/12487f",
+      "cor": "INOX",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.8,
+      "estoque": 3152,
+      "peso": 112.0,
+      "altura": 21.0,
+      "largura": 8.3,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "0e14bc21-8fca-471c-a25e-f9385f376a9c",
+      "codigo_amigavel": "12487F-VD",
+      "codigo_prefixo": "12487F",
+      "slug": "squeeze-aluminio-650ml-12487f-vd",
+      "nome": "SQUEEZE ALUMÍNIO 650ML",
+      "descricao": "Squeeze em alumínio com capacidade máxima de 650ml. Possui pintura spray de acabamento fosco e revestimento plástico no bocal. Conta com tampa rosqueável em plástico polipropileno (PP) com protetor para o bocal e alça fixa.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Aluminio-600ml-VERDE-8107-1719867166.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Aluminio-600ml-VERDE-8107-1719867166.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/12487f",
+      "cor": "VERDE",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.8,
+      "estoque": 5766,
+      "peso": 112.0,
+      "altura": 21.0,
+      "largura": 8.3,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "7217950d-ba84-475f-8252-05caaa72ec20",
+      "codigo_amigavel": "12487F-AZU",
+      "codigo_prefixo": "12487F",
+      "slug": "squeeze-aluminio-650ml-12487f-azu",
+      "nome": "SQUEEZE ALUMÍNIO 650ML",
+      "descricao": "Squeeze em alumínio com capacidade máxima de 650ml. Possui pintura spray de acabamento fosco e revestimento plástico no bocal. Conta com tampa rosqueável em plástico polipropileno (PP) com protetor para o bocal e alça fixa.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-600ml-Aluminio-AZUL-163-1563375236.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-600ml-Aluminio-AZUL-163-1563375236.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/12487f",
+      "cor": "AZUL",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.8,
+      "estoque": 18519,
+      "peso": 112.0,
+      "altura": 21.0,
+      "largura": 8.3,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "7a5784b2-73a5-4986-8431-cc8f45141533",
+      "codigo_amigavel": "12487F-PRE",
+      "codigo_prefixo": "12487F",
+      "slug": "squeeze-aluminio-650ml-12487f-pre",
+      "nome": "SQUEEZE ALUMÍNIO 650ML",
+      "descricao": "Squeeze em alumínio com capacidade máxima de 650ml. Possui pintura spray de acabamento fosco e revestimento plástico no bocal. Conta com tampa rosqueável em plástico polipropileno (PP) com protetor para o bocal e alça fixa.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-600ml-Aluminio-PRETO-166-1563376143.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-600ml-Aluminio-PRETO-166-1563376143.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/12487f",
+      "cor": "PRETO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.8,
+      "estoque": 18519,
+      "peso": 112.0,
+      "altura": 21.0,
+      "largura": 8.3,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "592cf1d2-2efb-489e-809e-7a2f9f7d748d",
+      "codigo_amigavel": "12487F-ROS",
+      "codigo_prefixo": "12487F",
+      "slug": "squeeze-aluminio-650ml-12487f-ros",
+      "nome": "SQUEEZE ALUMÍNIO 650ML",
+      "descricao": "Squeeze em alumínio com capacidade máxima de 650ml. Possui pintura spray de acabamento fosco e revestimento plástico no bocal. Conta com tampa rosqueável em plástico polipropileno (PP) com protetor para o bocal e alça fixa.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Aluminio-600ml-ROSA-164-1654515710.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Aluminio-600ml-ROSA-164-1654515710.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/12487f",
+      "cor": "ROSA",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.8,
+      "estoque": 9385,
+      "peso": 112.0,
+      "altura": 21.0,
+      "largura": 8.3,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "d596e69b-7fee-4c54-b5af-e29df3f25bad",
+      "codigo_amigavel": "12487F-VM",
+      "codigo_prefixo": "12487F",
+      "slug": "squeeze-aluminio-650ml-12487f-vm",
+      "nome": "SQUEEZE ALUMÍNIO 650ML",
+      "descricao": "Squeeze em alumínio com capacidade máxima de 650ml. Possui pintura spray de acabamento fosco e revestimento plástico no bocal. Conta com tampa rosqueável em plástico polipropileno (PP) com protetor para o bocal e alça fixa.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-600ml-Aluminio-VERMELHO-165-1563375223.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-600ml-Aluminio-VERMELHO-165-1563375223.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/12487f",
+      "cor": "VERMELHO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.8,
+      "estoque": 0,
+      "peso": 112.0,
+      "altura": 21.0,
+      "largura": 8.3,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "22498c46-6792-49ce-aaba-b81b3beb8975",
+      "codigo_amigavel": "12487F-PR1",
+      "codigo_prefixo": "12487F",
+      "slug": "squeeze-aluminio-fosco-650ml-12487f-pr1",
+      "nome": "SQUEEZE ALUMINIO FOSCO 650ML",
+      "descricao": "Squeeze alumínio de 650ml com pintura fosca. Squeeze com tampa plástica rosqueável, alça e tampa protetora para o bocal.",
+      "image_url": "https://www.xbzbrindes.com.br/img/produtos/3/Squeeze-Aluminio-650ml-PRETO-27283-1771533944.jpg",
+      "image_urls": [
+        "https://www.xbzbrindes.com.br/img/produtos/3/Squeeze-Aluminio-650ml-PRETO-27283-1771533944.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/12487b",
+      "cor": "PRETO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 18349,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "0e14bc21-8fca-471c-a25e-f9385f376a9c"
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "4e318819-b28a-4694-b23b-6a3a61c4545d",
+    "nome": "Squeeze Alumínio 650ml",
+    "descricao_curta": "Squeeze em alumínio com capacidade máxima de 650ml.",
+    "descricao_longa": "Squeeze em alumínio com capacidade máxima de 650ml. Possui pintura spray de acabamento fosco e revestimento plástico no bocal. Conta com tampa rosqueável em plástico polipropileno (PP) com protetor para o bocal e alça fixa.\n\nAltura: 21 cm | Largura: 8,3 cm | Circunferência: 22,9 cm | Medidas de gravação (CxL): 15 cm x 7 cm | Peso aproximado: 112g",
+    "preco_exibicao": 59.9,
+    "categoria": "garrafas-agua",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 5,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/12487F/12487F_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/12487F/12487F_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/12487F/12487F_3.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:26:30.457794+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/12487F/azul.jpg",
+        "referencia": "12487F-AZU"
+      },
+      {
+        "nome": "INOX",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/12487F/inox.jpg",
+        "referencia": "12487F-INO"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/12487F/preto.jpg",
+        "referencia": "12487F-PRE"
+      },
+      {
+        "nome": "ROSA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/12487F/rosa.jpg",
+        "referencia": "12487F-ROS"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/12487F/verde.jpg",
+        "referencia": "12487F-VD"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/12487F/vermelho.jpg",
+        "referencia": "12487F-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

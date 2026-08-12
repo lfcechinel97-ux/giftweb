@@ -1,0 +1,64 @@
+{
+  "codigo_entrada": "07447",
+  "codigo_consulta": "07447",
+  "coletado_em": "2026-08-12T16:39:56.145293+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "8386dc6f-2e04-46b1-ba53-a0d2e0de5853",
+      "codigo_amigavel": "07447-MAD",
+      "codigo_prefixo": "07447",
+      "slug": "kit-churrasco-no-estojo-c-2-pcs-07447-mad",
+      "nome": "KIT CHURRASCO NO ESTOJO C/ 2 PÇS",
+      "descricao": "Kit churrasco 2 peças com estojo, contém faca e garfo. Estojo com alça para transporte e área interna com elástico de fixação para os utensílios.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-churrasco-2-pecas-MARFIM-3090-1480014763.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-churrasco-2-pecas-MARFIM-3090-1480014763.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/07447",
+      "cor": "MADEIRA",
+      "categoria": "kit-churrasco",
+      "marca": "XBZ",
+      "preco_custo": 16.4,
+      "estoque": 12195,
+      "peso": 271.0,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "02b67ea1-7acf-43dd-9000-53bd194c4ab5",
+    "nome": "Kit Churrasco 2 Peças",
+    "descricao_curta": "Kit churrasco 2 peças com estojo, contém faca e garfo. Estojo com alça para transporte e área interna com elástico de fixação para os utensílios.",
+    "descricao_longa": "Kit churrasco 2 peças com estojo, contém faca e garfo. Estojo com alça para transporte e área interna com elástico de fixação para os utensílios.",
+    "preco_exibicao": 59.9,
+    "categoria": "kit-churrasco-vinho",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 2,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/07447/07447_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/07447/07447_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/07447/07447_3.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:27:43.192675+00:00",
+    "destaque": "medio",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "MADEIRA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/07447/madeira.jpg",
+        "referencia": "07447-MAD"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

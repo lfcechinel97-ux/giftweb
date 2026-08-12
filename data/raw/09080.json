@@ -1,0 +1,68 @@
+{
+  "codigo_entrada": "09080",
+  "codigo_consulta": "09080",
+  "coletado_em": "2026-08-12T16:39:59.115851+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "5cf2fb68-1e71-4dc9-a73e-f65d3bb557ba",
+      "codigo_amigavel": "09080-PRE",
+      "codigo_prefixo": "09080",
+      "slug": "kit-vinho-5-pecas-09080-pre",
+      "nome": "KIT VINHO 5 PEÇAS",
+      "descricao": "Kit vinho com cinco peças, incluindo: saca-rolhas em plástico e aço carbono com acionamento por botões alimentado por quatro pilhas AA (não inclusas), bico dosador e rolha em plástico e borracha TPR, cortador de lacre e base em plástico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-5-Pecas-26107-1763137203.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-5-Pecas-26107-1763137203.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09080",
+      "cor": "PRETO",
+      "categoria": "kit-vinho",
+      "marca": "XBZ",
+      "preco_custo": 36.9,
+      "estoque": 2178,
+      "peso": 376.0,
+      "altura": 22.5,
+      "largura": 4.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "1374ec1f-bfec-444b-b389-05aa94e74e87",
+    "nome": "Kit Vinho 5 Peças",
+    "descricao_curta": "Kit vinho com cinco peças, incluindo: saca-rolhas em plástico e aço carbono com acionamento por botões alimentado por quatro pilhas AA (não...",
+    "descricao_longa": "Kit vinho com cinco peças, incluindo: saca-rolhas em plástico e aço carbono com acionamento por botões alimentado por quatro pilhas AA (não inclusas), bico dosador e rolha em plástico e borracha TPR, cortador de lacre e base em plástico.\n\nAltura: 22,5 cm | Largura: 4,5 cm | Circunferência: 14 cm | Medidas de gravação (CxL): 14 cm x 4 cm (saca-rolhas) - 2 cm x 8 cm (base) | Peso aproximado: 376g",
+    "preco_exibicao": 59.9,
+    "categoria": "kit-churrasco-vinho",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 3,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09080/09080_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09080/09080_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09080/09080_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09080/09080_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09080/09080_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09080/09080_6.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09080/09080_7.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:27:43.192675+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09080/preto.jpg",
+        "referencia": "09080-PRE"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

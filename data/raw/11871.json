@@ -1,0 +1,64 @@
+{
+  "codigo_entrada": "11871",
+  "codigo_consulta": "11871",
+  "coletado_em": "2026-08-12T16:40:00.159538+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "d13ec1c1-449f-46ad-bb66-84c402d4f7b7",
+      "codigo_amigavel": "11871-PRE",
+      "codigo_prefixo": "11871",
+      "slug": "kit-vinho-plastico-resistente-3-pecas-formato-garrafa-11871-pre",
+      "nome": "KIT VINHO PLÁSTICO RESISTENTE 3 PEÇAS FORMATO GARRAFA ",
+      "descricao": "Kit vinho formato garrafa com 3 peças: wine collar, bico condutor com tampa e saca-rolhas metálico com lâmina de corte e abridor de garrafa. Estojo com fechamento imantado e área interna com berço de espuma.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-Garrafa-3-pecas-PRETO-3596-1536942021.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-Garrafa-3-pecas-PRETO-3596-1536942021.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/11871",
+      "cor": "PRETO",
+      "categoria": "kit-vinho",
+      "marca": "XBZ",
+      "preco_custo": 20.9,
+      "estoque": 9569,
+      "peso": 224.0,
+      "altura": 23.0,
+      "largura": 6.1,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "0b093601-5049-490b-abd7-540de5a6b546",
+    "nome": "Kit Vinho Garrafa 3 peças",
+    "descricao_curta": "Kit vinho formato garrafa com 3 peças: wine collar, bico condutor com tampa e saca-rolhas metálico com lâmina de corte e abridor de garrafa.",
+    "descricao_longa": "Kit vinho formato garrafa com 3 peças: wine collar, bico condutor com tampa e saca-rolhas metálico com lâmina de corte e abridor de garrafa. Estojo com fechamento imantado e área interna com berço de espuma.\n\nAltura: 23 cm | Largura: 6,1 cm | Medidas de gravação (CxL): 7 cm x 11 cm | Peso aproximado: 224g",
+    "preco_exibicao": 59.9,
+    "categoria": "kit-churrasco-vinho",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 4,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11871/11871_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11871/11871_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11871/11871_3.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:27:43.192675+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11871/preto.jpg",
+        "referencia": "11871-PRE"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

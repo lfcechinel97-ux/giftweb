@@ -1,0 +1,253 @@
+{
+  "codigo_entrada": "08196",
+  "codigo_consulta": "08196",
+  "coletado_em": "2026-08-12T16:39:57.647928+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "9284d299-fac2-4985-ab7e-28d6287110cb",
+      "codigo_amigavel": "08196-INO",
+      "codigo_prefixo": "08196",
+      "slug": "garrafa-termica-inox-750ml-08196-ino",
+      "nome": "GARRAFA TÉRMICA INOX 750ML",
+      "descricao": "Garrafa térmica feita em inox com pintura eletrostática e capacidade de até 750ml. Possui estrutura em parede dupla e isolamento a vácuo, o que permite manter a temperatura de líquidos conservada por mais tempo. Conta ainda com tampa rosqueável em plástico, protetor para o bocal e alça retangular para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-INOX-22690-1772538093.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-INOX-22690-1772538093.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08196",
+      "cor": "INOX",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 2428,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "0880a67f-00ea-45df-829e-0e2d202d40bc",
+      "codigo_amigavel": "08196-LAR",
+      "codigo_prefixo": "08196",
+      "slug": "garrafa-termica-inox-750ml-08196-lar",
+      "nome": "GARRAFA TÉRMICA INOX 750ML",
+      "descricao": "Garrafa térmica feita em inox com pintura eletrostática e capacidade de até 750ml. Possui estrutura em parede dupla e isolamento a vácuo, o que permite manter a temperatura de líquidos conservada por mais tempo. Conta ainda com tampa rosqueável em plástico, protetor para o bocal e alça retangular para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-LARANJA-22691-1744127966.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-LARANJA-22691-1744127966.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08196",
+      "cor": "LARANJA",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 3591,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "6e4d6d8f-ccc6-45c4-a196-3f3a346575b1",
+      "codigo_amigavel": "08196-BCO",
+      "codigo_prefixo": "08196",
+      "slug": "garrafa-termica-inox-750ml-08196-bco",
+      "nome": "GARRAFA TÉRMICA INOX 750ML",
+      "descricao": "Garrafa térmica feita em inox com pintura eletrostática e capacidade de até 750ml. Possui estrutura em parede dupla e isolamento a vácuo, o que permite manter a temperatura de líquidos conservada por mais tempo. Conta ainda com tampa rosqueável em plástico, protetor para o bocal e alça retangular para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-BRANCO-22689-1744127962.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-BRANCO-22689-1744127962.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08196",
+      "cor": "BRANCO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 6102,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "f6c3d637-b5e7-416b-97a9-52a0b6df3bac",
+      "codigo_amigavel": "08196-AZU",
+      "codigo_prefixo": "08196",
+      "slug": "garrafa-termica-inox-750ml-08196-azu",
+      "nome": "GARRAFA TÉRMICA INOX 750ML",
+      "descricao": "Garrafa térmica feita em inox com pintura eletrostática e capacidade de até 750ml. Possui estrutura em parede dupla e isolamento a vácuo, o que permite manter a temperatura de líquidos conservada por mais tempo. Conta ainda com tampa rosqueável em plástico, protetor para o bocal e alça retangular para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-AZUL-22688-1744127962.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-AZUL-22688-1744127962.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08196",
+      "cor": "AZUL",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 2393,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "4424698f-2dce-4524-9c49-9a4b79a41976",
+      "codigo_amigavel": "08196-ROS",
+      "codigo_prefixo": "08196",
+      "slug": "garrafa-termica-inox-750ml-08196-ros",
+      "nome": "GARRAFA TÉRMICA INOX 750ML",
+      "descricao": "Garrafa térmica feita em inox com pintura eletrostática e capacidade de até 750ml. Possui estrutura em parede dupla e isolamento a vácuo, o que permite manter a temperatura de líquidos conservada por mais tempo. Conta ainda com tampa rosqueável em plástico, protetor para o bocal e alça retangular para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-ROSA-22693-1744127966.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-ROSA-22693-1744127966.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08196",
+      "cor": "ROSA",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 4175,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "7ba23fd3-48f0-4926-81c9-e6afd6e65098",
+      "codigo_amigavel": "08196-PRE",
+      "codigo_prefixo": "08196",
+      "slug": "garrafa-termica-inox-750ml-08196-pre",
+      "nome": "GARRAFA TÉRMICA INOX 750ML",
+      "descricao": "Garrafa térmica feita em inox com pintura eletrostática e capacidade de até 750ml. Possui estrutura em parede dupla e isolamento a vácuo, o que permite manter a temperatura de líquidos conservada por mais tempo. Conta ainda com tampa rosqueável em plástico, protetor para o bocal e alça retangular para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-PRETO-22692-1744127966.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-PRETO-22692-1744127966.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08196",
+      "cor": "PRETO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 5318,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "fdaeb1cc-1992-4275-a143-06e16277644f",
+      "codigo_amigavel": "08196-VD",
+      "codigo_prefixo": "08196",
+      "slug": "garrafa-termica-inox-750ml-08196-vd",
+      "nome": "GARRAFA TÉRMICA INOX 750ML",
+      "descricao": "Garrafa térmica feita em inox com pintura eletrostática e capacidade de até 750ml. Possui estrutura em parede dupla e isolamento a vácuo, o que permite manter a temperatura de líquidos conservada por mais tempo. Conta ainda com tampa rosqueável em plástico, protetor para o bocal e alça retangular para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-VERDE-22694-1767786764.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-750ml-VERDE-22694-1767786764.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08196",
+      "cor": "VERDE",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 6270,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "7982062d-c77c-4962-bb48-e6a98bf72850",
+    "nome": "Garrafa Térmica Inox 750ml",
+    "descricao_curta": "Garrafa térmica feita em inox com pintura eletrostática e capacidade de até 750ml.",
+    "descricao_longa": "Garrafa térmica feita em inox com pintura eletrostática e capacidade de até 750ml. Possui estrutura em parede dupla e isolamento a vácuo, o que permite manter a temperatura de líquidos conservada por mais tempo. Conta ainda com tampa rosqueável em plástico, protetor para o bocal e alça retangular para transporte.\n\nAltura: 26 cm | Largura: 7 cm | Circunferência: 24 cm | Medidas de gravação (CxL): 14 cm x 7 cm | Peso aproximado: 369g",
+    "preco_exibicao": 59.9,
+    "categoria": "garrafas-agua",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 2,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/08196_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/08196_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/08196_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/08196_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/08196_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/08196_6.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:26:30.457794+00:00",
+    "destaque": "medio",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/azul.jpg",
+        "referencia": "08196-AZU"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/branco.jpg",
+        "referencia": "08196-BCO"
+      },
+      {
+        "nome": "INOX",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/inox.jpg",
+        "referencia": "08196-INO"
+      },
+      {
+        "nome": "LARANJA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/laranja.jpg",
+        "referencia": "08196-LAR"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/preto.jpg",
+        "referencia": "08196-PRE"
+      },
+      {
+        "nome": "ROSA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/rosa.jpg",
+        "referencia": "08196-ROS"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08196/verde.jpg",
+        "referencia": "08196-VD"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

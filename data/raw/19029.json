@@ -1,0 +1,194 @@
+{
+  "codigo_entrada": "19029",
+  "codigo_consulta": "19029",
+  "coletado_em": "2026-08-12T16:40:08.182746+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "3090bb30-1510-4deb-8068-c9ff4e4aa826",
+      "codigo_amigavel": "19029-VM/VM",
+      "codigo_prefixo": "19029",
+      "slug": "kit-executivo-2-pecas-19029-vm-vm",
+      "nome": "KIT EXECUTIVO 2 PEÇAS",
+      "descricao": "Kit executivo composto por uma caderneta e uma caneta. A caderneta possui capa dura, marca-páginas em fita de cetim e elástico para fechamento, além de aproximadamente 80 folhas com pauta. Por sua vez, a caneta metálica conta com detalhe em bambu, acionamento por clique e carga esferográfica azul de 1,0mm. Acompanha uma caixa de papelão com berço interno em espuma.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-VERMELHO-26210-1763407072.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-VERMELHO-26210-1763407072.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/19029",
+      "cor": "VERMELHO",
+      "categoria": "kit-executivo",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 5169,
+      "peso": 212.0,
+      "altura": 19.0,
+      "largura": 14.5,
+      "profundidade": 2.2,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "e6354d40-9e60-46b9-ad33-a364cb6a8bfb",
+      "codigo_amigavel": "19029-BCO",
+      "codigo_prefixo": "19029",
+      "slug": "kit-executivo-2-pecas-19029-bco",
+      "nome": "KIT EXECUTIVO 2 PEÇAS",
+      "descricao": "Kit executivo composto por uma caderneta e uma caneta. A caderneta possui capa dura, marca-páginas em fita de cetim e elástico para fechamento, além de aproximadamente 80 folhas com pauta. Por sua vez, a caneta metálica conta com detalhe em bambu, acionamento por clique e carga esferográfica azul de 1,0mm. Acompanha uma caixa de papelão com berço interno em espuma.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-BRANCO-26207-1763567864.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-BRANCO-26207-1763567864.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/19029",
+      "cor": "BRANCO",
+      "categoria": "kit-executivo",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 0,
+      "peso": 212.0,
+      "altura": 19.0,
+      "largura": 14.5,
+      "profundidade": 2.2,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "84982a59-15ae-4f71-a44e-d97a3dee38c2",
+      "codigo_amigavel": "19029-AZU",
+      "codigo_prefixo": "19029",
+      "slug": "kit-executivo-2-pecas-19029-azu",
+      "nome": "KIT EXECUTIVO 2 PEÇAS",
+      "descricao": "Kit executivo composto por uma caderneta e uma caneta. A caderneta possui capa dura, marca-páginas em fita de cetim e elástico para fechamento, além de aproximadamente 80 folhas com pauta. Por sua vez, a caneta metálica conta com detalhe em bambu, acionamento por clique e carga esferográfica azul de 1,0mm. Acompanha uma caixa de papelão com berço interno em espuma.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-AZUL-26206-1763567864.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-AZUL-26206-1763567864.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/19029",
+      "cor": "AZUL",
+      "categoria": "kit-executivo",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 0,
+      "peso": 212.0,
+      "altura": 19.0,
+      "largura": 14.5,
+      "profundidade": 2.2,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "3d61ee75-11fa-4247-a7ca-d82d2ebdd20a",
+      "codigo_amigavel": "19029-VD",
+      "codigo_prefixo": "19029",
+      "slug": "kit-executivo-2-pecas-19029-vd",
+      "nome": "KIT EXECUTIVO 2 PEÇAS",
+      "descricao": "Kit executivo composto por uma caderneta e uma caneta. A caderneta possui capa dura, marca-páginas em fita de cetim e elástico para fechamento, além de aproximadamente 80 folhas com pauta. Por sua vez, a caneta metálica conta com detalhe em bambu, acionamento por clique e carga esferográfica azul de 1,0mm. Acompanha uma caixa de papelão com berço interno em espuma.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-VERDE-26209-1763567864.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-VERDE-26209-1763567864.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/19029",
+      "cor": "VERDE",
+      "categoria": "kit-executivo",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 0,
+      "peso": 212.0,
+      "altura": 19.0,
+      "largura": 14.5,
+      "profundidade": 2.2,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "cad132d3-f776-490b-8668-2da5619804cf",
+      "codigo_amigavel": "19029-PRE",
+      "codigo_prefixo": "19029",
+      "slug": "kit-executivo-2-pecas-19029-pre",
+      "nome": "KIT EXECUTIVO 2 PEÇAS",
+      "descricao": "Kit executivo composto por uma caderneta e uma caneta. A caderneta possui capa dura, marca-páginas em fita de cetim e elástico para fechamento, além de aproximadamente 80 folhas com pauta. Por sua vez, a caneta metálica conta com detalhe em bambu, acionamento por clique e carga esferográfica azul de 1,0mm. Acompanha uma caixa de papelão com berço interno em espuma.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-PRETO-26208-1763567864.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-PRETO-26208-1763567864.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/19029",
+      "cor": "PRETO",
+      "categoria": "kit-executivo",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 1159,
+      "peso": 212.0,
+      "altura": 19.0,
+      "largura": 14.5,
+      "profundidade": 2.2,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "ae0c53b1-26db-4811-be42-5a61b9433f3b",
+    "nome": "Kit Executivo 2 Peças",
+    "descricao_curta": "Kit executivo composto por uma caderneta e uma caneta.",
+    "descricao_longa": "Kit executivo composto por uma caderneta e uma caneta. A caderneta possui capa dura em couro sintético, marca-páginas em fita de cetim e elástico para fechamento, além de aproximadamente 80 folhas com pauta. Por sua vez, a caneta metálica conta com detalhe em bambu, acionamento por clique e carga esferográfica azul de 1,0mm. Acompanha uma caixa de papelão com berço interno em espuma.\n\nLargura: 14,5 cm | Medidas de gravação (CxL): 17 cm x 13 cm (caixa) - 13 cm x 8 cm (caderneta) - 0,8 cm x 10 cm (caneta) | Peso aproximado: 212g",
+    "preco_exibicao": 59.9,
+    "categoria": "caderneta-caneta",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 5,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/19029_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/19029_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/19029_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/19029_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/19029_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/19029_6.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/19029_7.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/19029_8.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/19029_9.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:29:46.051243+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/azul.jpg",
+        "referencia": "19029-AZU"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/branco.jpg",
+        "referencia": "19029-BCO"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/preto.jpg",
+        "referencia": "19029-PRE"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/verde.jpg",
+        "referencia": "19029-VD"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19029/vermelho.jpg",
+        "referencia": "19029-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

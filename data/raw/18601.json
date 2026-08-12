@@ -1,0 +1,285 @@
+{
+  "codigo_entrada": "18601",
+  "codigo_consulta": "18601",
+  "coletado_em": "2026-08-12T16:40:05.335816+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "299134ae-23a1-4d1c-82f2-7ef1967991e4",
+      "codigo_amigavel": "18601-AZU",
+      "codigo_prefixo": "18601",
+      "slug": "sacochila-poliester-18601-azu",
+      "nome": "SACOCHILA POLIÉSTER",
+      "descricao": "Uma mochila saco versátil com design que combina com uma rotina cheia de movimento. Feita em poliéster resistente à água e com alças ajustáveis em nylon, ela conta com espaço interno de sobra para se tornar uma companhia indispensável para todos os lugares, seja para o trabalho, escola, faculdade, academia, trilha ou demais atividades ao ar livre. A mochila ainda conta com um bolso frontal com entrada para fones de ouvido, uma opção adicional para carregar objetos à parte do compartimento princ",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-AZUL-13281-1628284017.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-AZUL-13281-1628284017.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18601",
+      "cor": "AZUL",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 11723,
+      "peso": 86.0,
+      "altura": 39.0,
+      "largura": 34.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "b873d6fa-8db8-4494-bacb-e42496bf11e9",
+      "codigo_amigavel": "18601-PRE",
+      "codigo_prefixo": "18601",
+      "slug": "sacochila-poliester-18601-pre",
+      "nome": "SACOCHILA POLIÉSTER",
+      "descricao": "Uma mochila saco versátil com design que combina com uma rotina cheia de movimento. Feita em poliéster resistente à água e com alças ajustáveis em nylon, ela conta com espaço interno de sobra para se tornar uma companhia indispensável para todos os lugares, seja para o trabalho, escola, faculdade, academia, trilha ou demais atividades ao ar livre. A mochila ainda conta com um bolso frontal com entrada para fones de ouvido, uma opção adicional para carregar objetos à parte do compartimento princ",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-PRETO-13287-1628283893.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-PRETO-13287-1628283893.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18601",
+      "cor": "PRETO",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 18349,
+      "peso": 86.0,
+      "altura": 39.0,
+      "largura": 34.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "f4dc24e3-ca10-409c-af54-30b02143538e",
+      "codigo_amigavel": "18601-AZE",
+      "codigo_prefixo": "18601",
+      "slug": "sacochila-poliester-18601-aze",
+      "nome": "SACOCHILA POLIÉSTER",
+      "descricao": "Uma mochila saco versátil com design que combina com uma rotina cheia de movimento. Feita em poliéster resistente à água e com alças ajustáveis em nylon, ela conta com espaço interno de sobra para se tornar uma companhia indispensável para todos os lugares, seja para o trabalho, escola, faculdade, academia, trilha ou demais atividades ao ar livre. A mochila ainda conta com um bolso frontal com entrada para fones de ouvido, uma opção adicional para carregar objetos à parte do compartimento princ",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-AZUL-ESCURO-13283-1628283833.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-AZUL-ESCURO-13283-1628283833.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18601",
+      "cor": "AZUL",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 18349,
+      "peso": 86.0,
+      "altura": 39.0,
+      "largura": 34.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "43469310-866a-4918-a4ec-5561e8119850",
+      "codigo_amigavel": "18601-CIN",
+      "codigo_prefixo": "18601",
+      "slug": "sacochila-poliester-18601-cin",
+      "nome": "SACOCHILA POLIÉSTER",
+      "descricao": "Uma mochila saco versátil com design que combina com uma rotina cheia de movimento. Feita em poliéster resistente à água e com alças ajustáveis em nylon, ela conta com espaço interno de sobra para se tornar uma companhia indispensável para todos os lugares, seja para o trabalho, escola, faculdade, academia, trilha ou demais atividades ao ar livre. A mochila ainda conta com um bolso frontal com entrada para fones de ouvido, uma opção adicional para carregar objetos à parte do compartimento princ",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-CINZA-13284-1628283849.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-CINZA-13284-1628283849.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18601",
+      "cor": "CINZA",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 7238,
+      "peso": 86.0,
+      "altura": 39.0,
+      "largura": 34.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "429a3c88-e502-495a-9d2a-9ef035704e8f",
+      "codigo_amigavel": "18601-VD",
+      "codigo_prefixo": "18601",
+      "slug": "sacochila-poliester-18601-vd",
+      "nome": "SACOCHILA POLIÉSTER",
+      "descricao": "Uma mochila saco versátil com design que combina com uma rotina cheia de movimento. Feita em poliéster resistente à água e com alças ajustáveis em nylon, ela conta com espaço interno de sobra para se tornar uma companhia indispensável para todos os lugares, seja para o trabalho, escola, faculdade, academia, trilha ou demais atividades ao ar livre. A mochila ainda conta com um bolso frontal com entrada para fones de ouvido, uma opção adicional para carregar objetos à parte do compartimento princ",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-VERDE-13282-1628283814.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-VERDE-13282-1628283814.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18601",
+      "cor": "VERDE",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 9371,
+      "peso": 86.0,
+      "altura": 39.0,
+      "largura": 34.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "050b8960-d03a-4b17-befa-4c5513ede4f6",
+      "codigo_amigavel": "18601-VM",
+      "codigo_prefixo": "18601",
+      "slug": "sacochila-poliester-18601-vm",
+      "nome": "SACOCHILA POLIÉSTER",
+      "descricao": "Uma mochila saco versátil com design que combina com uma rotina cheia de movimento. Feita em poliéster resistente à água e com alças ajustáveis em nylon, ela conta com espaço interno de sobra para se tornar uma companhia indispensável para todos os lugares, seja para o trabalho, escola, faculdade, academia, trilha ou demais atividades ao ar livre. A mochila ainda conta com um bolso frontal com entrada para fones de ouvido, uma opção adicional para carregar objetos à parte do compartimento princ",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-VERMELHO-13280-1628283745.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-VERMELHO-13280-1628283745.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18601",
+      "cor": "VERMELHO",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 4840,
+      "peso": 86.0,
+      "altura": 39.0,
+      "largura": 34.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "5722c688-6172-47f1-b8b8-4a80090b8268",
+      "codigo_amigavel": "18601-LAR",
+      "codigo_prefixo": "18601",
+      "slug": "sacochila-poliester-18601-lar",
+      "nome": "SACOCHILA POLIÉSTER",
+      "descricao": "Uma mochila saco versátil com design que combina com uma rotina cheia de movimento. Feita em poliéster resistente à água e com alças ajustáveis em nylon, ela conta com espaço interno de sobra para se tornar uma companhia indispensável para todos os lugares, seja para o trabalho, escola, faculdade, academia, trilha ou demais atividades ao ar livre. A mochila ainda conta com um bolso frontal com entrada para fones de ouvido, uma opção adicional para carregar objetos à parte do compartimento princ",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-LARANJA-13286-1628283872.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-LARANJA-13286-1628283872.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18601",
+      "cor": "LARANJA",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 8143,
+      "peso": 86.0,
+      "altura": 39.0,
+      "largura": 34.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "b0501a69-9afd-4f2b-b70c-0bb495dadf8f",
+      "codigo_amigavel": "18601-ROS",
+      "codigo_prefixo": "18601",
+      "slug": "sacochila-poliester-18601-ros",
+      "nome": "SACOCHILA POLIÉSTER",
+      "descricao": "Uma mochila saco versátil com design que combina com uma rotina cheia de movimento. Feita em poliéster resistente à água e com alças ajustáveis em nylon, ela conta com espaço interno de sobra para se tornar uma companhia indispensável para todos os lugares, seja para o trabalho, escola, faculdade, academia, trilha ou demais atividades ao ar livre. A mochila ainda conta com um bolso frontal com entrada para fones de ouvido, uma opção adicional para carregar objetos à parte do compartimento princ",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-ROSA-13285-1628283859.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-ROSA-13285-1628283859.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18601",
+      "cor": "ROSA",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 10876,
+      "peso": 86.0,
+      "altura": 39.0,
+      "largura": 34.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "03c4b7bb-de40-439b-b06f-50b3f7ae1675",
+    "nome": "Mochila Saco Poliéster",
+    "descricao_curta": "Mochila saco em poliéster resistente à água com alças ajustáveis em nylon, bolso frontal com fechamento em zíper e entrada para fones de ouvido.",
+    "descricao_longa": "Mochila saco em poliéster resistente à água com alças ajustáveis em nylon, bolso frontal com fechamento em zíper e entrada para fones de ouvido.\n\nAltura: 39 cm | Largura: 34,5 cm | Medidas de gravação (CxL): 14 cm x 30 cm | Peso aproximado: 86g",
+    "preco_exibicao": null,
+    "categoria": "mochilas-bolsa-necessaire",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 8,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/18601_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/18601_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/18601_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/18601_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/18601_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/18601_6.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/18601_7.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-28T00:31:03.585883+00:00",
+    "updated_at": "2026-07-28T00:31:03.585883+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/azul.jpg",
+        "referencia": "18601-AZU"
+      },
+      {
+        "nome": "AZUL ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/azul-escuro.jpg",
+        "referencia": "18601-AZE"
+      },
+      {
+        "nome": "CINZA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/cinza.jpg",
+        "referencia": "18601-CIN"
+      },
+      {
+        "nome": "LARANJA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/laranja.jpg",
+        "referencia": "18601-LAR"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/preto.jpg",
+        "referencia": "18601-PRE"
+      },
+      {
+        "nome": "ROSA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/rosa.jpg",
+        "referencia": "18601-ROS"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/verde.jpg",
+        "referencia": "18601-VD"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18601/vermelho.jpg",
+        "referencia": "18601-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

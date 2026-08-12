@@ -1,0 +1,160 @@
+{
+  "codigo_entrada": "04846",
+  "codigo_consulta": "04846",
+  "coletado_em": "2026-08-12T16:39:52.007543+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "292f11da-81c4-4b59-86ab-8641410089bd",
+      "codigo_amigavel": "04846-AZE",
+      "codigo_prefixo": "04846",
+      "slug": "bolsa-termica-7l-04846-aze",
+      "nome": "BOLSA TÉRMICA 7L",
+      "descricao": "Bolsa térmica de poliéster com dois compartimentos, capacidade de 7 litros. A bolsa possui revestimento térmico em PEVA atóxico, alça de mão, bolsos laterais telados e alça transversal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-AZUL-ESCURO-16014-1681301150.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-AZUL-ESCURO-16014-1681301150.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04846",
+      "cor": "PRETO",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 23.5,
+      "estoque": 647,
+      "peso": null,
+      "altura": 18.0,
+      "largura": 22.5,
+      "profundidade": 15.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "a8c29d24-8c66-4fed-9e02-f11c588b17ae",
+      "codigo_amigavel": "04846-VM",
+      "codigo_prefixo": "04846",
+      "slug": "bolsa-termica-7l-04846-vm",
+      "nome": "BOLSA TÉRMICA 7L",
+      "descricao": "Bolsa térmica de poliéster com dois compartimentos, capacidade de 7 litros. A bolsa possui revestimento térmico em PEVA atóxico, alça de mão, bolsos laterais telados e alça transversal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-VERMELHO-16058-1681300005.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-VERMELHO-16058-1681300005.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04846",
+      "cor": "PRETO",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 23.5,
+      "estoque": 2256,
+      "peso": null,
+      "altura": 18.0,
+      "largura": 22.5,
+      "profundidade": 15.5,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "7861fcb7-851a-41bc-a4d5-ca949bcf0d98",
+      "codigo_amigavel": "04846-CZC",
+      "codigo_prefixo": "04846",
+      "slug": "bolsa-termica-7l-04846-czc",
+      "nome": "BOLSA TÉRMICA 7L",
+      "descricao": "Bolsa térmica de poliéster com dois compartimentos, capacidade de 7 litros. A bolsa possui revestimento térmico em PEVA atóxico, alça de mão, bolsos laterais telados e alça transversal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-CINZA-CLARO-16056-1732305698.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-CINZA-CLARO-16056-1732305698.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04846",
+      "cor": "PRETO",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 23.5,
+      "estoque": 5426,
+      "peso": null,
+      "altura": 18.0,
+      "largura": 22.5,
+      "profundidade": 15.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "37219de4-3b8b-41df-a0e2-3a6d456e1326",
+      "codigo_amigavel": "04846-CZE",
+      "codigo_prefixo": "04846",
+      "slug": "bolsa-termica-7l-04846-cze",
+      "nome": "BOLSA TÉRMICA 7L",
+      "descricao": "Bolsa térmica de poliéster com dois compartimentos, capacidade de 7 litros. A bolsa possui revestimento térmico em PEVA atóxico, alça de mão, bolsos laterais telados e alça transversal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-CINZA-ESCURO-16057-1681300005.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-CINZA-ESCURO-16057-1681300005.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04846",
+      "cor": "PRETO",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 23.5,
+      "estoque": 6149,
+      "peso": null,
+      "altura": 18.0,
+      "largura": 22.5,
+      "profundidade": 15.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "0dfe7601-307b-4820-beaa-a1670d02b5c9",
+    "nome": "Bolsa Térmica 7L",
+    "descricao_curta": "Bolsa térmica de poliéster com dois compartimentos, capacidade de 7 litros.",
+    "descricao_longa": "Bolsa térmica de poliéster com dois compartimentos, capacidade de 7 litros. A bolsa possui revestimento térmico em PEVA atóxico, alça de mão, bolsos laterais telados e alça transversal.\n\nAltura: 18 cm | Largura: 22,5 cm | Medidas de gravação (CxL): 8 cm x 16,5 cm | Peso aproximado: 172g",
+    "preco_exibicao": 59.9,
+    "categoria": "mochilas-bolsa-necessaire",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 4,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04846/04846_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04846/04846_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04846/04846_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04846/04846_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04846/04846_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04846/04846_6.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:30:21.573569+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04846/azul-escuro.jpg",
+        "referencia": "04846-AZE"
+      },
+      {
+        "nome": "CINZA CLARO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04846/cinza-claro.jpg",
+        "referencia": "04846-CZC"
+      },
+      {
+        "nome": "CINZA ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04846/cinza-escuro.jpg",
+        "referencia": "04846-CZE"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04846/vermelho.jpg",
+        "referencia": "04846-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

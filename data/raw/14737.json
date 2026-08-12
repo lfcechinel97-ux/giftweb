@@ -1,0 +1,95 @@
+{
+  "codigo_entrada": "14737",
+  "codigo_consulta": "14737",
+  "coletado_em": "2026-08-12T16:40:02.309673+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "20e4b9f7-fc6f-447f-a1f6-634b59411f5e",
+      "codigo_amigavel": "14737-BCO",
+      "codigo_prefixo": "14737",
+      "slug": "garrafa-plastica-700ml-14737-bco",
+      "nome": "GARRAFA PLÁSTICA 700ML",
+      "descricao": "Garrafa plástica com capacidade de 700ml, possui uma tampa rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-com-Tampa-750ml-BRANCO-14361-1652886754.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-com-Tampa-750ml-BRANCO-14361-1652886754.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14737",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 5.15,
+      "estoque": 1610,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "1deb4d05-2c24-4b7f-8583-2ec64df16116",
+      "codigo_amigavel": "14737-PRE",
+      "codigo_prefixo": "14737",
+      "slug": "garrafa-plastica-700ml-14737-pre",
+      "nome": "GARRAFA PLÁSTICA 700ML",
+      "descricao": "Garrafa plástica com capacidade de 700ml, possui uma tampa rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-com-Tampa-750ml-PRETO-14362-1652886755.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-com-Tampa-750ml-PRETO-14362-1652886755.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14737",
+      "cor": "PRETO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 5.15,
+      "estoque": 556,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "728518bf-fb05-4bb4-a916-b7069fb6b0b5",
+    "nome": "Garrafa Plástica 700ml",
+    "descricao_curta": "Garrafa plástica com capacidade de 700ml, possui uma tampa rosqueável.",
+    "descricao_longa": "Garrafa plástica com capacidade de 700ml, possui uma tampa rosqueável.\n\nAltura: 25,7 cm | Largura: 7 cm | Circunferência: 22,5 cm | Medidas de gravação (CxL): 10 cm X 5 cm | Peso aproximado: 87g",
+    "preco_exibicao": 59.9,
+    "categoria": "garrafas-agua",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 6,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14737/14737_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14737/14737_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14737/14737_3.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:27:09.701766+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14737/branco.jpg",
+        "referencia": "14737-BCO"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14737/preto.jpg",
+        "referencia": "14737-PRE"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

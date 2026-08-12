@@ -1,0 +1,219 @@
+{
+  "codigo_entrada": "08002",
+  "codigo_consulta": "08002",
+  "coletado_em": "2026-08-12T16:39:56.619460+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "4fcac282-c3ed-46d3-a6b0-9854726b8941",
+      "codigo_amigavel": "08002-ROS",
+      "codigo_prefixo": "08002",
+      "slug": "caixa-de-som-bluetooth-tws-08002-ros",
+      "nome": "CAIXA DE SOM BLUETOOTH TWS",
+      "descricao": "Caixa de som sem fio em inox com base emborrachada. Possui entrada Micro-USB para carregamento, conexão Bluetooth 5.0 e compatibilidade com a tecnologia TWS, que permite sincronizar duas caixas de som ao mesmo tempo. Acompanha cordão de nylon e cabo Micro-USB.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-ROSA-19501-1721735086.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-ROSA-19501-1721735086.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08002",
+      "cor": "ROSA",
+      "categoria": "caixas-de-som",
+      "marca": "XBZ",
+      "preco_custo": 16.9,
+      "estoque": 353,
+      "peso": 75.0,
+      "altura": 3.5,
+      "largura": 4.9,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "36183532-31b0-44c6-88a0-a21e38ca370c",
+      "codigo_amigavel": "08002-PRE",
+      "codigo_prefixo": "08002",
+      "slug": "caixa-de-som-bluetooth-tws-08002-pre",
+      "nome": "CAIXA DE SOM BLUETOOTH TWS",
+      "descricao": "Caixa de som sem fio em inox com base emborrachada. Possui entrada Micro-USB para carregamento, conexão Bluetooth 5.0 e compatibilidade com a tecnologia TWS, que permite sincronizar duas caixas de som ao mesmo tempo. Acompanha cordão de nylon e cabo Micro-USB.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-PRETO-19500-1721735085.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-PRETO-19500-1721735085.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08002",
+      "cor": "PRETO",
+      "categoria": "caixas-de-som",
+      "marca": "XBZ",
+      "preco_custo": 16.9,
+      "estoque": 4296,
+      "peso": 75.0,
+      "altura": 3.5,
+      "largura": 4.9,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "bdc685eb-2035-4bcc-8c43-c98e7213a9d9",
+      "codigo_amigavel": "08002-VM",
+      "codigo_prefixo": "08002",
+      "slug": "caixa-de-som-bluetooth-tws-08002-vm",
+      "nome": "CAIXA DE SOM BLUETOOTH TWS",
+      "descricao": "Caixa de som sem fio em inox com base emborrachada. Possui entrada Micro-USB para carregamento, conexão Bluetooth 5.0 e compatibilidade com a tecnologia TWS, que permite sincronizar duas caixas de som ao mesmo tempo. Acompanha cordão de nylon e cabo Micro-USB.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-VERMELHO-19502-1721735086.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-VERMELHO-19502-1721735086.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08002",
+      "cor": "VERMELHO",
+      "categoria": "caixas-de-som",
+      "marca": "XBZ",
+      "preco_custo": 16.9,
+      "estoque": 608,
+      "peso": 75.0,
+      "altura": 3.5,
+      "largura": 4.9,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "464a338f-d7ab-4eb0-a54b-3eb7db908cfe",
+      "codigo_amigavel": "08002-DOU",
+      "codigo_prefixo": "08002",
+      "slug": "caixa-de-som-bluetooth-tws-08002-dou",
+      "nome": "CAIXA DE SOM BLUETOOTH TWS",
+      "descricao": "Caixa de som sem fio em inox com base emborrachada. Possui entrada Micro-USB para carregamento, conexão Bluetooth 5.0 e compatibilidade com a tecnologia TWS, que permite sincronizar duas caixas de som ao mesmo tempo. Acompanha cordão de nylon e cabo Micro-USB.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-DOURADO-19534-1719942453.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-DOURADO-19534-1719942453.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08002",
+      "cor": "DOURADO",
+      "categoria": "caixas-de-som",
+      "marca": "XBZ",
+      "preco_custo": 16.9,
+      "estoque": 558,
+      "peso": 75.0,
+      "altura": 3.5,
+      "largura": 4.9,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "86770236-7d50-410c-a359-92b089973c0b",
+      "codigo_amigavel": "08002-PNK",
+      "codigo_prefixo": "08002",
+      "slug": "caixa-de-som-bluetooth-tws-08002-pnk",
+      "nome": "CAIXA DE SOM BLUETOOTH TWS",
+      "descricao": "Caixa de som sem fio em inox com base emborrachada. Possui entrada Micro-USB para carregamento, conexão Bluetooth 5.0 e compatibilidade com a tecnologia TWS, que permite sincronizar duas caixas de som ao mesmo tempo. Acompanha cordão de nylon e cabo Micro-USB.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-PINK-19575-1720699307.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-PINK-19575-1720699307.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08002",
+      "cor": "ROSA",
+      "categoria": "caixas-de-som",
+      "marca": "XBZ",
+      "preco_custo": 16.9,
+      "estoque": 443,
+      "peso": 75.0,
+      "altura": 3.5,
+      "largura": 4.9,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "33d973d6-ce34-440b-adc2-7dcc57cb3d23",
+      "codigo_amigavel": "08002-PRA",
+      "codigo_prefixo": "08002",
+      "slug": "caixa-de-som-bluetooth-tws-08002-pra",
+      "nome": "CAIXA DE SOM BLUETOOTH TWS",
+      "descricao": "Caixa de som sem fio em inox com base emborrachada. Possui entrada Micro-USB para carregamento, conexão Bluetooth 5.0 e compatibilidade com a tecnologia TWS, que permite sincronizar duas caixas de som ao mesmo tempo. Acompanha cordão de nylon e cabo Micro-USB.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-PRATA-19499-1721735085.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-PRATA-19499-1721735085.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08002",
+      "cor": "PRATA",
+      "categoria": "caixas-de-som",
+      "marca": "XBZ",
+      "preco_custo": 16.9,
+      "estoque": 5579,
+      "peso": 75.0,
+      "altura": 3.5,
+      "largura": 4.9,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "cca3ded8-fc6e-4369-8939-7878d07f7b60",
+    "nome": "Caixa de Som Bluetooth TWS",
+    "descricao_curta": "Caixa de som sem fio em inox com base emborrachada.",
+    "descricao_longa": "Caixa de som sem fio em inox com base emborrachada. Possui entrada Micro-USB para carregamento, conexão Bluetooth 5.0 e compatibilidade com a tecnologia TWS, que permite sincronizar duas caixas de som ao mesmo tempo. Acompanha cordão de nylon e cabo Micro-USB.\n\nAltura: 3,5 cm | Largura: 4,9 cm | Circunferência: 15,5 cm | Medidas de gravação (CxL): 2 cm x 4 cm | Peso aproximado: 75g",
+    "preco_exibicao": 59.9,
+    "categoria": "som-power-bank",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 2,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08002/08002_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08002/08002_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08002/08002_3.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:28:16.866103+00:00",
+    "destaque": "medio",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "DOURADO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08002/dourado.jpg",
+        "referencia": "08002-DOU"
+      },
+      {
+        "nome": "PINK",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08002/pink.jpg",
+        "referencia": "08002-PNK"
+      },
+      {
+        "nome": "PRATA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08002/prata.jpg",
+        "referencia": "08002-PRA"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08002/preto.jpg",
+        "referencia": "08002-PRE"
+      },
+      {
+        "nome": "ROSA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08002/rosa.jpg",
+        "referencia": "08002-ROS"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08002/vermelho.jpg",
+        "referencia": "08002-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

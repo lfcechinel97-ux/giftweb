@@ -1,0 +1,132 @@
+{
+  "codigo_entrada": "19144",
+  "codigo_consulta": "19144",
+  "coletado_em": "2026-08-12T16:40:08.759756+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "2f915deb-86e8-494f-8c8b-07745069bbef",
+      "codigo_amigavel": "19144-AZU",
+      "codigo_prefixo": "19144",
+      "slug": "kit-executivo-2-pecas-19144-azu",
+      "nome": "KIT EXECUTIVO 2 PEÇAS",
+      "descricao": "Kit executivo composto por dois itens: uma caderneta e uma caneta. A caderneta possui capa em couro sintético, fecho magnético com detalhe metálico na aba, marca-páginas em fita de cetim e cerca de 96 folhas marfim pautadas e espaço para assinalar dias da semana e datas numéricas. A caneta metálica conta com acionamento por rotação e carga esferográfica azul de 1,0mm. Acompanha caixa em papelão com berço em plástico para guardar os itens do conjunto.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-AZUL-28037-1779191892.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-AZUL-28037-1779191892.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/19144",
+      "cor": "AZUL",
+      "categoria": "kit-executivo",
+      "marca": "XBZ",
+      "preco_custo": 19.9,
+      "estoque": 1027,
+      "peso": 492.0,
+      "altura": 22.3,
+      "largura": 19.7,
+      "profundidade": 2.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "9af6da39-ae5d-43c3-9134-9871cc4ce745",
+      "codigo_amigavel": "19144-PRE",
+      "codigo_prefixo": "19144",
+      "slug": "kit-executivo-2-pecas-19144-pre",
+      "nome": "KIT EXECUTIVO 2 PEÇAS",
+      "descricao": "Kit executivo composto por dois itens: uma caderneta e uma caneta. A caderneta possui capa em couro sintético, fecho magnético com detalhe metálico na aba, marca-páginas em fita de cetim e cerca de 96 folhas marfim pautadas e espaço para assinalar dias da semana e datas numéricas. A caneta metálica conta com acionamento por rotação e carga esferográfica azul de 1,0mm. Acompanha caixa em papelão com berço em plástico para guardar os itens do conjunto.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-PRETO-28039-1776949129.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-PRETO-28039-1776949129.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/19144",
+      "cor": "PRETO",
+      "categoria": "kit-executivo",
+      "marca": "XBZ",
+      "preco_custo": 19.9,
+      "estoque": 592,
+      "peso": 492.0,
+      "altura": 22.3,
+      "largura": 19.7,
+      "profundidade": 2.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "5e9c151a-86a1-49be-8b33-ecd448fb1915",
+      "codigo_amigavel": "19144-VM",
+      "codigo_prefixo": "19144",
+      "slug": "kit-executivo-2-pecas-19144-vm",
+      "nome": "KIT EXECUTIVO 2 PEÇAS",
+      "descricao": "Kit executivo composto por dois itens: uma caderneta e uma caneta. A caderneta possui capa em couro sintético, fecho magnético com detalhe metálico na aba, marca-páginas em fita de cetim e cerca de 96 folhas marfim pautadas e espaço para assinalar dias da semana e datas numéricas. A caneta metálica conta com acionamento por rotação e carga esferográfica azul de 1,0mm. Acompanha caixa em papelão com berço em plástico para guardar os itens do conjunto.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-VERMELHO-28038-1779191893.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-VERMELHO-28038-1779191893.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/19144",
+      "cor": "VERMELHO",
+      "categoria": "kit-executivo",
+      "marca": "XBZ",
+      "preco_custo": 19.9,
+      "estoque": 1139,
+      "peso": 492.0,
+      "altura": 22.3,
+      "largura": 19.7,
+      "profundidade": 2.5,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "ccdbc3e7-784f-41df-ac01-9f2b0a304e79",
+    "nome": "Kit Executivo 2 Peças",
+    "descricao_curta": "Kit executivo composto por dois itens: uma caderneta e uma caneta.",
+    "descricao_longa": "Kit executivo composto por dois itens: uma caderneta e uma caneta. A caderneta possui capa em couro sintético, fecho magnético com detalhe metálico na aba, marca-páginas em fita de cetim e cerca de 96 folhas marfim pautadas e espaço para assinalar dias da semana e datas numéricas. A caneta metálica conta com acionamento por rotação e carga esferográfica azul de 1,0mm. Acompanha caixa em papelão com berço em plástico para guardar os itens do conjunto.\n\nAltura: 22,3 cm | Largura: 19,7 cm | Medidas de gravação (CxL): 21 cm x 8 cm (embalagem) - 8 cm x 12 cm (caderneta) - 1 cm x 5 cm (caneta) | Peso aproximado: 492g",
+    "preco_exibicao": 59.9,
+    "categoria": "caderneta-caneta",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 6,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19144/19144_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19144/19144_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19144/19144_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19144/19144_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19144/19144_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19144/19144_6.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19144/19144_7.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19144/19144_8.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19144/19144_9.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:29:46.051243+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19144/azul.jpg",
+        "referencia": "19144-AZU"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19144/preto.jpg",
+        "referencia": "19144-PRE"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19144/vermelho.jpg",
+        "referencia": "19144-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

@@ -1,0 +1,66 @@
+{
+  "codigo_entrada": "19120",
+  "codigo_consulta": "19120",
+  "coletado_em": "2026-08-12T16:39:50.139658+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "a4c07eca-c06c-4522-8df2-66db7df4cb89",
+      "codigo_amigavel": "19120-PRE",
+      "codigo_prefixo": "19120",
+      "slug": "kit-vinho-4-pecas-19120-pre",
+      "nome": "KIT VINHO 4 PEÇAS",
+      "descricao": "Kit vinho composto por 4 itens: saca-rolhas de dois estágios em inox, anel corta-gotas (wine collar) em liga de zinco e feltro, além de bico dosador e tampa de bico, ambos em liga de zinco com revestimento em silicone. Acompanha estojo em papelão e revestimento interno em espuma de EVA para acomodar os itens do conjunto.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-4-Pecas-PRETO-28280-1778095907.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-4-Pecas-PRETO-28280-1778095907.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/19120",
+      "cor": "PRETO",
+      "categoria": "kit-vinho",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 2208,
+      "peso": 208.0,
+      "altura": 15.7,
+      "largura": 13.8,
+      "profundidade": 3.1,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "28568c16-85ba-49eb-8e17-524072596a7f",
+    "nome": "Kit Vinho 4 Peças",
+    "descricao_curta": "Kit vinho composto por 4 itens: saca-rolhas de dois estágios em inox, anel corta-gotas (wine collar) em liga de zinco e feltro, além de bico dosador...",
+    "descricao_longa": "Kit vinho composto por 4 itens: saca-rolhas de dois estágios em inox, anel corta-gotas (wine collar) em liga de zinco e feltro, além de bico dosador e tampa de bico, ambos em liga de zinco com revestimento em silicone. Acompanha estojo em papelão e revestimento interno em espuma de EVA para acomodar os itens do conjunto.\n\nAltura: 15,7 cm | Largura: 13,8 cm | Medidas de gravação (CxL): 14 cm x 12 cm (tampa do estojo) | Peso aproximado: 208g",
+    "preco_exibicao": 59.9,
+    "categoria": "kit-churrasco-vinho",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 1,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19120/19120_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19120/19120_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19120/19120_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19120/19120_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19120/19120_5.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:27:43.192675+00:00",
+    "destaque": "grande",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/19120/preto.jpg",
+        "referencia": "19120-PRE"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

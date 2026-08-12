@@ -1,0 +1,425 @@
+{
+  "codigo_entrada": "17011F",
+  "codigo_consulta": "17011F",
+  "coletado_em": "2026-08-12T16:40:03.344104+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "69eeb030-4b5e-4246-8301-bc5375760317",
+      "codigo_amigavel": "17011F-LAR",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-17011f-lar",
+      "nome": "GARRAFA 750ML INOX",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-LARANJA-11631-1666033396.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-LARANJA-11631-1666033396.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/17011f",
+      "cor": "LARANJA",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 10811,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "6e7af62f-d2c3-412c-8c92-09a7c2f5c95e",
+      "codigo_amigavel": "17011F-VM2",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-17011f-vm2",
+      "nome": "GARRAFA 750ML INOX",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-VERMELHO-2-16520-1686596219.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-VERMELHO-2-16520-1686596219.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/17011f",
+      "cor": "VERMELHO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "eb66906e-7e89-4363-b352-be73b5fdd6d9",
+      "codigo_amigavel": "17011F-ROS",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-17011f-ros",
+      "nome": "GARRAFA 750ML INOX",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-ROSA-8211-1759836980.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-ROSA-8211-1759836980.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/17011f",
+      "cor": "ROSA",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 4718,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "55893e43-645b-4e53-a537-8a825d27bc6d",
+      "codigo_amigavel": "17011F-PRE",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-tampa-preta-17011f-pre",
+      "nome": "GARRAFA 750ML INOX TAMPA PRETA",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-PRETO-COM-PRETO-17499-1723633980.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-PRETO-COM-PRETO-17499-1723633980.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/17011f",
+      "cor": "PRETO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 10811,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "1c4a54fe-833d-4bdf-96c8-d050e83a4280",
+      "codigo_amigavel": "17011F-INO",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-17011f-ino",
+      "nome": "GARRAFA 750ML INOX",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-INOX-13102-1624557987.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-INOX-13102-1624557987.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/17011f",
+      "cor": "INOX",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "6e91d6c4-53eb-4e21-bb2b-540175c7e756",
+      "codigo_amigavel": "17011F-PRE/PRA",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-tampa-prata-17011f-pre-pra",
+      "nome": "GARRAFA 750ML INOX TAMPA PRATA",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-PRETO-11632-1582127779.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-PRETO-11632-1582127779.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/17011f",
+      "cor": "PRETO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 10811,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "942addb6-4617-4bf5-91d5-59f5c0b84bbf",
+      "codigo_amigavel": "17011F-VD",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-17011f-vd",
+      "nome": "GARRAFA 750ML INOX",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-VERDE-11633-1582127797.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-VERDE-11633-1582127797.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/17011f",
+      "cor": "VERDE",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 7620,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "ffe7d395-9531-4884-83da-b902a83edc1e",
+      "codigo_amigavel": "17011F-VM1",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-17011f-vm1",
+      "nome": "GARRAFA 750ML INOX",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-VERMELHO-1-11634-1697546595.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-VERMELHO-1-11634-1697546595.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/17011f",
+      "cor": "VERMELHO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 10811,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "19584e3c-6f05-427a-adae-07cff4c61466",
+      "codigo_amigavel": "17011F-AZU",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-17011f-azu",
+      "nome": "GARRAFA 750ML INOX",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-AZUL-11629-1782412752.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-AZUL-11629-1782412752.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/17011f",
+      "cor": "AZUL",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 10811,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "833d74c7-df84-4e6b-94d9-0eba830e977b",
+      "codigo_amigavel": "17011F-BCO",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-17011f-bco",
+      "nome": "GARRAFA 750ML INOX",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-BRANCO-11630-1582127718.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-BRANCO-11630-1582127718.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/17011f",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 10811,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "14db9a0e-b35d-4b0c-9bc0-25bf96d700ec",
+      "codigo_amigavel": "17011F",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-tampa-preta-17011f",
+      "nome": "GARRAFA 750ML INOX TAMPA PRETA",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-PRETO-COM-PRETO-17499-1723633980.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-PRETO-COM-PRETO-17499-1723633980.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/17011f",
+      "cor": "PRETO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 10402,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "942addb6-4617-4bf5-91d5-59f5c0b84bbf"
+    },
+    {
+      "id": "d45c3e33-a2da-45ae-9263-4172a22b511a",
+      "codigo_amigavel": "17011F-PRE/PRE",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-tampa-preta-17011f-pre-pre",
+      "nome": "GARRAFA 750ML INOX TAMPA PRETA",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-PRETO-COM-PRETO-17499-1723633980.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-PRETO-COM-PRETO-17499-1723633980.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/17011f",
+      "cor": "PRETO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 10811,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "942addb6-4617-4bf5-91d5-59f5c0b84bbf"
+    },
+    {
+      "id": "99470569-3cc5-45a8-bd35-a4dab379c441",
+      "codigo_amigavel": "17011F-PRA",
+      "codigo_prefixo": "17011F",
+      "slug": "garrafa-750ml-inox-17011f-pra",
+      "nome": "GARRAFA 750ML INOX",
+      "descricao": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-PRATA-8389-1581347875.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-PRATA-8389-1581347875.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/17011f",
+      "cor": "PRATA",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 18.5,
+      "estoque": 10811,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "8df8b0cb-2862-4e61-bb7e-0a39c8377d82",
+    "nome": "Garrafa Inox 750ml",
+    "descricao_curta": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.",
+    "descricao_longa": "Garrafa 750ml em inox com tampa rosqueável e pintura fosca. Obs.: Não é um modelo térmico.\n\nAltura: 27,5 cm | Largura: 7,3 cm | Circunferência: 23 cm | Medidas de gravação (CxL): 14 cm x 6 cm | Peso aproximado: 189g",
+    "preco_exibicao": null,
+    "categoria": "garrafas-agua",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 8,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/17011F_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/17011F_2.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-28T00:27:09.701766+00:00",
+    "updated_at": "2026-07-28T00:27:09.701766+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/azul.jpg",
+        "referencia": "17011F-AZU"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/branco.jpg",
+        "referencia": "17011F-BCO"
+      },
+      {
+        "nome": "INOX",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/inox.jpg",
+        "referencia": "17011F-INO"
+      },
+      {
+        "nome": "LARANJA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/laranja.jpg",
+        "referencia": "17011F-LAR"
+      },
+      {
+        "nome": "PRATA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/prata.jpg",
+        "referencia": "17011F-PRA"
+      },
+      {
+        "nome": "PRETO COM PRATA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/preto-com-prata.jpg",
+        "referencia": "17011F-PRE/PRA"
+      },
+      {
+        "nome": "PRETO COM PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/preto-com-preto.jpg",
+        "referencia": "17011F-PRE/PRE"
+      },
+      {
+        "nome": "ROSA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/rosa.jpg",
+        "referencia": "17011F-ROS"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/verde.jpg",
+        "referencia": "17011F-VD"
+      },
+      {
+        "nome": "VERMELHO 1",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/vermelho-1.jpg",
+        "referencia": "17011F-VM1"
+      },
+      {
+        "nome": "VERMELHO 2",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/17011F/vermelho-2.jpg",
+        "referencia": "17011F-VM2"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

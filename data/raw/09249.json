@@ -1,0 +1,287 @@
+{
+  "codigo_entrada": "09249",
+  "codigo_consulta": "09249",
+  "coletado_em": "2026-08-12T16:39:53.577530+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "b960300f-89a1-4c9a-ad24-12db58099a1a",
+      "codigo_amigavel": "09249-BCO",
+      "codigo_prefixo": "09249",
+      "slug": "guarda-chuva-automatico-09249-bco",
+      "nome": "GUARDA-CHUVA AUTOMÁTICO",
+      "descricao": "Guarda-chuva em poliéster de impacto impermeável com abertura automática por botão em plástico. Possui estrutura com haste em meta, pegador em polipropileno (PP) com acabamento semelhante à madeira, oito varetas metálicas e faixa para fechamento em velcro.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-BRANCO-28526-1778531090.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-BRANCO-28526-1778531090.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09249",
+      "cor": "BRANCO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 16.2,
+      "estoque": 4395,
+      "peso": 381.0,
+      "altura": 85.5,
+      "largura": 11.6,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "68540bec-d030-4b46-b8ab-694df74ef04e",
+      "codigo_amigavel": "09249-AZU",
+      "codigo_prefixo": "09249",
+      "slug": "guarda-chuva-automatico-09249-azu",
+      "nome": "GUARDA-CHUVA AUTOMÁTICO",
+      "descricao": "Guarda-chuva em poliéster de impacto impermeável com abertura automática por botão em plástico. Possui estrutura com haste em meta, pegador em polipropileno (PP) com acabamento semelhante à madeira, oito varetas metálicas e faixa para fechamento em velcro.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-AZUL-28525-1778531090.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-AZUL-28525-1778531090.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09249",
+      "cor": "AZUL",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 16.2,
+      "estoque": 4115,
+      "peso": 381.0,
+      "altura": 85.5,
+      "largura": 11.6,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "c4cff981-4caf-408c-9d9b-c3ca736f3872",
+      "codigo_amigavel": "09249-VM",
+      "codigo_prefixo": "09249",
+      "slug": "guarda-chuva-automatico-09249-vm",
+      "nome": "GUARDA-CHUVA AUTOMÁTICO",
+      "descricao": "Guarda-chuva em poliéster de impacto impermeável com abertura automática por botão em plástico. Possui estrutura com haste em meta, pegador em polipropileno (PP) com acabamento semelhante à madeira, oito varetas metálicas e faixa para fechamento em velcro.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-VERMELHO-28531-1778531091.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-VERMELHO-28531-1778531091.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09249",
+      "cor": "VERMELHO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 16.2,
+      "estoque": 2421,
+      "peso": 381.0,
+      "altura": 85.5,
+      "largura": 11.6,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "c2cc7703-d22b-4b34-ba0f-fa8a649b67b8",
+      "codigo_amigavel": "09249-AMA",
+      "codigo_prefixo": "09249",
+      "slug": "guarda-chuva-automatico-09249-ama",
+      "nome": "GUARDA-CHUVA AUTOMÁTICO",
+      "descricao": "Guarda-chuva em poliéster de impacto impermeável com abertura automática por botão em plástico. Possui estrutura com haste em meta, pegador em polipropileno (PP) com acabamento semelhante à madeira, oito varetas metálicas e faixa para fechamento em velcro.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-AMARELO-28524-1778531090.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-AMARELO-28524-1778531090.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09249",
+      "cor": "AMARELO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 16.2,
+      "estoque": 331,
+      "peso": 381.0,
+      "altura": 85.5,
+      "largura": 11.6,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "cdbbb493-9a63-4274-ac26-2bffc82359ab",
+      "codigo_amigavel": "09249-ROS",
+      "codigo_prefixo": "09249",
+      "slug": "guarda-chuva-automatico-09249-ros",
+      "nome": "GUARDA-CHUVA AUTOMÁTICO",
+      "descricao": "Guarda-chuva em poliéster de impacto impermeável com abertura automática por botão em plástico. Possui estrutura com haste em meta, pegador em polipropileno (PP) com acabamento semelhante à madeira, oito varetas metálicas e faixa para fechamento em velcro.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-ROSA-28529-1778531091.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-ROSA-28529-1778531091.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09249",
+      "cor": "ROSA",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 16.2,
+      "estoque": 292,
+      "peso": 381.0,
+      "altura": 85.5,
+      "largura": 11.6,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "79098db9-55b2-4b0e-a3c4-e4fdc1cf5925",
+      "codigo_amigavel": "09249-PRE",
+      "codigo_prefixo": "09249",
+      "slug": "guarda-chuva-automatico-09249-pre",
+      "nome": "GUARDA-CHUVA AUTOMÁTICO",
+      "descricao": "Guarda-chuva em poliéster de impacto impermeável com abertura automática por botão em plástico. Possui estrutura com haste em meta, pegador em polipropileno (PP) com acabamento semelhante à madeira, oito varetas metálicas e faixa para fechamento em velcro.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-PRETO-28528-1778531091.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-PRETO-28528-1778531091.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09249",
+      "cor": "PRETO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 16.2,
+      "estoque": 3781,
+      "peso": 381.0,
+      "altura": 85.5,
+      "largura": 11.6,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "81e608f9-d54e-4b77-98c3-79dcfe3253d6",
+      "codigo_amigavel": "09249-VD",
+      "codigo_prefixo": "09249",
+      "slug": "guarda-chuva-automatico-09249-vd",
+      "nome": "GUARDA-CHUVA AUTOMÁTICO",
+      "descricao": "Guarda-chuva em poliéster de impacto impermeável com abertura automática por botão em plástico. Possui estrutura com haste em meta, pegador em polipropileno (PP) com acabamento semelhante à madeira, oito varetas metálicas e faixa para fechamento em velcro.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-VERDE-28530-1778531091.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-VERDE-28530-1778531091.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09249",
+      "cor": "VERDE",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 16.2,
+      "estoque": 2059,
+      "peso": 381.0,
+      "altura": 85.5,
+      "largura": 11.6,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "4e088ed7-8724-4ea4-a150-3d3eb84db9be",
+      "codigo_amigavel": "09249-MAR",
+      "codigo_prefixo": "09249",
+      "slug": "guarda-chuva-automatico-09249-mar",
+      "nome": "GUARDA-CHUVA AUTOMÁTICO",
+      "descricao": "Guarda-chuva em poliéster de impacto impermeável com abertura automática por botão em plástico. Possui estrutura com haste em meta, pegador em polipropileno (PP) com acabamento semelhante à madeira, oito varetas metálicas e faixa para fechamento em velcro.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-MARROM-28527-1778531169.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Automatico-MARROM-28527-1778531169.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09249",
+      "cor": "MARROM",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 16.2,
+      "estoque": 2407,
+      "peso": 381.0,
+      "altura": 85.5,
+      "largura": 11.6,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "9aaafef2-b7b0-452d-96f9-70fbd01d7674",
+    "nome": "Guarda-Chuva Automático",
+    "descricao_curta": "Guarda-chuva em poliéster de impacto impermeável com abertura automática por botão em plástico.",
+    "descricao_longa": "Guarda-chuva em poliéster de impacto impermeável com abertura automática por botão em plástico. Possui estrutura com haste em metal, pegador em polipropileno (PP) com acabamento semelhante à madeira, oito varetas metálicas e faixa para fechamento em velcro.\n\nAltura: 85,5 cm | Largura: 11,6 cm | Medidas de gravação (CxL): 32 cm x 16 cm (cada gomo) | Peso aproximado: 381g",
+    "preco_exibicao": 59.9,
+    "categoria": "guarda-chuvas",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 3,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/09249_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/09249_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/09249_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/09249_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/09249_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/09249_6.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/09249_7.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/09249_8.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/09249_9.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:29:00.971796+00:00",
+    "destaque": "medio",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AMARELO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/amarelo.jpg",
+        "referencia": "09249-AMA"
+      },
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/azul.jpg",
+        "referencia": "09249-AZU"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/branco.jpg",
+        "referencia": "09249-BCO"
+      },
+      {
+        "nome": "MARROM",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/marrom.jpg",
+        "referencia": "09249-MAR"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/preto.jpg",
+        "referencia": "09249-PRE"
+      },
+      {
+        "nome": "ROSA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/rosa.jpg",
+        "referencia": "09249-ROS"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/verde.jpg",
+        "referencia": "09249-VD"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09249/vermelho.jpg",
+        "referencia": "09249-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

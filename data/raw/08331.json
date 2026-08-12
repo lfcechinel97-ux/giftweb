@@ -1,0 +1,313 @@
+{
+  "codigo_entrada": "08331",
+  "codigo_consulta": "08331",
+  "coletado_em": "2026-08-12T16:39:58.193538+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "ff1c8c9f-4833-4dd4-8f50-7dbfb5b56698",
+      "codigo_amigavel": "08331-VD",
+      "codigo_prefixo": "08331",
+      "slug": "garrafa-termica-com-tampa-inox-500ml-08331-vd",
+      "nome": "GARRAFA TÉRMICA COM TAMPA INOX 500ML",
+      "descricao": "Garrafa térmica em inox com capacidade de até 500ml. Conta com tampa rosqueável e estrutura em parede dupla e isolamento a vácuo, que permite conservar a temperatura de líquidos por mais tempo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-500ml-VERDE-22752-1744140759.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-500ml-VERDE-22752-1744140759.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08331",
+      "cor": "VERDE",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 2335,
+      "peso": 272.0,
+      "altura": 26.5,
+      "largura": 6.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "8d148262-2483-4332-884b-51383fe3ce55",
+      "codigo_amigavel": "08331-AZU",
+      "codigo_prefixo": "08331",
+      "slug": "garrafa-termica-com-tampa-inox-500ml-08331-azu",
+      "nome": "GARRAFA TÉRMICA COM TAMPA INOX 500ML",
+      "descricao": "Garrafa térmica em inox com capacidade de até 500ml. Conta com tampa rosqueável e estrutura em parede dupla e isolamento a vácuo, que permite conservar a temperatura de líquidos por mais tempo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-500ml-22747-1744140674.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-500ml-22747-1744140674.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08331",
+      "cor": "AZUL",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 0,
+      "peso": 272.0,
+      "altura": 26.5,
+      "largura": 6.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "0d271259-0bcf-4e6b-8067-40f811f929d8",
+      "codigo_amigavel": "08331-AZE",
+      "codigo_prefixo": "08331",
+      "slug": "garrafa-termica-com-tampa-inox-500ml-08331-aze",
+      "nome": "GARRAFA TÉRMICA COM TAMPA INOX 500ML",
+      "descricao": "Garrafa térmica com tampa inox com capacidade de até 500ml. Sua parede dupla em aço inox e isolamento a vácuo na tampa ajudam a conservar o líquido quente por mais tempo, além de conter vazamentos e o contato direto com o calor excessivo da parte interna.",
+      "image_url": "https://www.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Com-Tampa-Inox-500ml-AZUL-22748-1769797459.jpg",
+      "image_urls": [
+        "https://www.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Com-Tampa-Inox-500ml-AZUL-22748-1769797459.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08331",
+      "cor": "AZUL",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 1775,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "b415af3d-dc74-46a4-9431-b57267325a0f",
+      "codigo_amigavel": "08331-LAR",
+      "codigo_prefixo": "08331",
+      "slug": "garrafa-termica-com-tampa-inox-500ml-08331-lar",
+      "nome": "GARRAFA TÉRMICA COM TAMPA INOX 500ML",
+      "descricao": "Garrafa térmica com tampa inox com capacidade de até 500ml. Sua parede dupla em aço inox e isolamento a vácuo na tampa ajudam a conservar o líquido quente por mais tempo, além de conter vazamentos e o contato direto com o calor excessivo da parte interna.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Com-Tampa-Inox-500ml-LARANJA-26530-1765288180.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Com-Tampa-Inox-500ml-LARANJA-26530-1765288180.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08331",
+      "cor": "LARANJA",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 540,
+      "peso": 272.0,
+      "altura": 26.5,
+      "largura": 6.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "2c4679a2-fd01-4cf5-8abd-3d4a495e84b8",
+      "codigo_amigavel": "08331-DOU",
+      "codigo_prefixo": "08331",
+      "slug": "garrafa-termica-com-tampa-inox-500ml-08331-dou",
+      "nome": "GARRAFA TÉRMICA COM TAMPA INOX 500ML",
+      "descricao": "Garrafa térmica com tampa inox com capacidade de até 500ml. Sua parede dupla em aço inox e isolamento a vácuo na tampa ajudam a conservar o líquido quente por mais tempo, além de conter vazamentos e o contato direto com o calor excessivo da parte interna.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Com-Tampa-Inox-500ml-DOURADO-26531-1765288192.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Com-Tampa-Inox-500ml-DOURADO-26531-1765288192.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08331",
+      "cor": "DOURADO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 2946,
+      "peso": 272.0,
+      "altura": 26.5,
+      "largura": 6.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "6ed347d1-de9f-4f99-b6e6-9b30649954b9",
+      "codigo_amigavel": "08331-BCO",
+      "codigo_prefixo": "08331",
+      "slug": "garrafa-termica-com-tampa-inox-500ml-08331-bco",
+      "nome": "GARRAFA TÉRMICA COM TAMPA INOX 500ML",
+      "descricao": "Garrafa térmica em inox com capacidade de até 500ml. Conta com tampa rosqueável e estrutura em parede dupla e isolamento a vácuo, que permite conservar a temperatura de líquidos por mais tempo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-500ml-BRANCO-22749-1744140688.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-500ml-BRANCO-22749-1744140688.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08331",
+      "cor": "BRANCO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 7357,
+      "peso": 272.0,
+      "altura": 26.5,
+      "largura": 6.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "6f12cad3-cf11-4c9a-a87b-26a860b5c6f2",
+      "codigo_amigavel": "08331-INO",
+      "codigo_prefixo": "08331",
+      "slug": "garrafa-termica-com-tampa-inox-500ml-08331-ino",
+      "nome": "GARRAFA TÉRMICA COM TAMPA INOX 500ML",
+      "descricao": "Garrafa térmica em inox com capacidade de até 500ml. Conta com tampa rosqueável e estrutura em parede dupla e isolamento a vácuo, que permite conservar a temperatura de líquidos por mais tempo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-500ml-INOX-22750-1744140707.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-500ml-INOX-22750-1744140707.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08331",
+      "cor": "INOX",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 3560,
+      "peso": 272.0,
+      "altura": 26.5,
+      "largura": 6.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "dbb63dde-1160-4fb9-a437-2367c6a230ea",
+      "codigo_amigavel": "08331-PRE",
+      "codigo_prefixo": "08331",
+      "slug": "garrafa-termica-com-tampa-inox-500ml-08331-pre",
+      "nome": "GARRAFA TÉRMICA COM TAMPA INOX 500ML",
+      "descricao": "Garrafa térmica em inox com capacidade de até 500ml. Conta com tampa rosqueável e estrutura em parede dupla e isolamento a vácuo, que permite conservar a temperatura de líquidos por mais tempo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-500ml-PRETO-22751-1744140734.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-500ml-PRETO-22751-1744140734.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08331",
+      "cor": "PRETO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 5429,
+      "peso": 272.0,
+      "altura": 26.5,
+      "largura": 6.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "89c8d3f4-a34c-4f2b-af2b-99b65193e856",
+      "codigo_amigavel": "08331-VM",
+      "codigo_prefixo": "08331",
+      "slug": "garrafa-termica-com-tampa-inox-500ml-08331-vm",
+      "nome": "GARRAFA TÉRMICA COM TAMPA INOX 500ML",
+      "descricao": "Garrafa térmica em inox com capacidade de até 500ml. Conta com tampa rosqueável e estrutura em parede dupla e isolamento a vácuo, que permite conservar a temperatura de líquidos por mais tempo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-500ml-VERMELHO-22753-1744141458.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-500ml-VERMELHO-22753-1744141458.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08331",
+      "cor": "VERMELHO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 6805,
+      "peso": 272.0,
+      "altura": 26.5,
+      "largura": 6.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "5f3e9da5-743e-4d85-9c86-cabeda444d59",
+    "nome": "Garrafa Térmica Com Tampa Inox 500ml",
+    "descricao_curta": "Garrafa térmica em inox com capacidade de até 500ml.",
+    "descricao_longa": "Garrafa térmica em inox com capacidade de até 500ml. Conta com tampa rosqueável e estrutura em parede dupla e isolamento a vácuo, que permite conservar a temperatura de líquidos por mais tempo.\n\nAltura: 26,5 cm | Largura: 6,5 cm | Circunferência: 22,8 cm | Medidas de gravação (CxL): 15 cm x 5 cm | Peso aproximado: 272g",
+    "preco_exibicao": 59.9,
+    "categoria": "garrafas-agua",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 3,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/08331_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/08331_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/08331_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/08331_4.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:26:30.457794+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/azul.jpg",
+        "referencia": "08331-AZU"
+      },
+      {
+        "nome": "AZUL ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/azul-escuro.jpg",
+        "referencia": "08331-AZE"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/branco.jpg",
+        "referencia": "08331-BCO"
+      },
+      {
+        "nome": "DOURADO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/dourado.jpg",
+        "referencia": "08331-DOU"
+      },
+      {
+        "nome": "INOX",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/inox.jpg",
+        "referencia": "08331-INO"
+      },
+      {
+        "nome": "LARANJA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/laranja.jpg",
+        "referencia": "08331-LAR"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/preto.jpg",
+        "referencia": "08331-PRE"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/verde.jpg",
+        "referencia": "08331-VD"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/08331/vermelho.jpg",
+        "referencia": "08331-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

@@ -1,0 +1,312 @@
+{
+  "codigo_entrada": "05071",
+  "codigo_consulta": "05071",
+  "coletado_em": "2026-08-12T16:39:55.321224+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "d181d1e9-917d-45ab-9086-4e4952e85881",
+      "codigo_amigavel": "05071-VDC",
+      "codigo_prefixo": "05071",
+      "slug": "caderno-a5-plastico-05071-vdc",
+      "nome": "CADERNO A5 PLÁSTICO",
+      "descricao": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-VERDE-CLARO-16252-1734019159.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-VERDE-CLARO-16252-1734019159.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05071",
+      "cor": "VERDE",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 4.9,
+      "estoque": 3502,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "9ad172e1-8816-4b1c-895f-599a2eae7c2c",
+      "codigo_amigavel": "05071-VDE",
+      "codigo_prefixo": "05071",
+      "slug": "caderno-a5-plastico-05071-vde",
+      "nome": "CADERNO A5 PLÁSTICO",
+      "descricao": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-VERDE-ESCURO-16253-1731003829.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-VERDE-ESCURO-16253-1731003829.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05071",
+      "cor": "VERDE",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 4.9,
+      "estoque": 5171,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "be2d8069-0518-4c12-84fc-0409d3f88959",
+      "codigo_amigavel": "05071-BEG",
+      "codigo_prefixo": "05071",
+      "slug": "caderno-a5-plastico-05071-beg",
+      "nome": "CADERNO A5 PLÁSTICO",
+      "descricao": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-BEGE-16248-1682453036.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-BEGE-16248-1682453036.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05071",
+      "cor": "BEGE",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 4.9,
+      "estoque": 7678,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "4f2668af-605b-48b3-94bd-4b88d41db5db",
+      "codigo_amigavel": "05071-LAR",
+      "codigo_prefixo": "05071",
+      "slug": "caderno-a5-plastico-05071-lar",
+      "nome": "CADERNO A5 PLÁSTICO",
+      "descricao": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-LARANJA-16249-1682453050.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-LARANJA-16249-1682453050.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05071",
+      "cor": "LARANJA",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 4.9,
+      "estoque": 17136,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "90fdf1bf-6f80-4287-8a5b-44c91721990e",
+      "codigo_amigavel": "05071-PRE",
+      "codigo_prefixo": "05071",
+      "slug": "caderno-a5-plastico-05071-pre",
+      "nome": "CADERNO A5 PLÁSTICO",
+      "descricao": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-PRETO-16251-1682453081.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-PRETO-16251-1682453081.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05071",
+      "cor": "PRETO",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 4.9,
+      "estoque": 19340,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "726d6520-b282-4cbe-96ec-7a2d2b5a17c8",
+      "codigo_amigavel": "05071-VM",
+      "codigo_prefixo": "05071",
+      "slug": "caderno-a5-plastico-05071-vm",
+      "nome": "CADERNO A5 PLÁSTICO",
+      "descricao": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-VERMELHO-16254-1731087043.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-VERMELHO-16254-1731087043.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05071",
+      "cor": "VERMELHO",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 4.9,
+      "estoque": 6181,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "d3514491-7e13-46e6-9aa0-a14222a76ef9",
+      "codigo_amigavel": "05071-AZU",
+      "codigo_prefixo": "05071",
+      "slug": "caderno-a5-plastico-05071-azu",
+      "nome": "CADERNO A5 PLÁSTICO",
+      "descricao": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-AZUL-16156-1682453035.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-AZUL-16156-1682453035.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05071",
+      "cor": "AZUL",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 4.9,
+      "estoque": 23508,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "5d0f09d6-2d95-4f96-8814-7256fa597dbb",
+      "codigo_amigavel": "05071-MAR/DOU",
+      "codigo_prefixo": "05071",
+      "slug": "caderno-a5-plastico-05071-mar-dou",
+      "nome": "CADERNO A5 PLÁSTICO",
+      "descricao": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-MARROM-16250-1682453064.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-MARROM-16250-1682453064.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05071",
+      "cor": "MARROM",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 4.9,
+      "estoque": 5054,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "7e039a26-8357-4d10-adbb-215b18f355db",
+      "codigo_amigavel": "05071-VIN",
+      "codigo_prefixo": "05071",
+      "slug": "caderno-a5-plastico-05071-vin",
+      "nome": "CADERNO A5 PLÁSTICO",
+      "descricao": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-VINHO-26175-1762867139.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-VINHO-26175-1762867139.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05071",
+      "cor": "VERMELHO",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 4.9,
+      "estoque": 3,
+      "peso": 207.0,
+      "altura": 21.2,
+      "largura": 15.0,
+      "profundidade": 1.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "c78306a2-b1fb-4eaa-abd8-fb02115486e8",
+    "nome": "Caderno A5 Plástico",
+    "descricao_curta": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.",
+    "descricao_longa": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.\n\nAltura: 21,2 cm | Largura: 15 cm | Medidas de gravação (CxL): 20,5 cm x 13 cm | Peso aproximado: 207g",
+    "preco_exibicao": 59.9,
+    "categoria": "caderneta-caneta",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 2,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05071/05071_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05071/05071_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05071/05071_3.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:29:46.051243+00:00",
+    "destaque": "grande",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05071/azul.jpg",
+        "referencia": "05071-AZU"
+      },
+      {
+        "nome": "BEGE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05071/bege.jpg",
+        "referencia": "05071-BEG"
+      },
+      {
+        "nome": "LARANJA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05071/laranja.jpg",
+        "referencia": "05071-LAR"
+      },
+      {
+        "nome": "MARROM",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05071/marrom.jpg",
+        "referencia": "05071-MAR"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05071/preto.jpg",
+        "referencia": "05071-PRE"
+      },
+      {
+        "nome": "VERDE CLARO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05071/verde-claro.jpg",
+        "referencia": "05071-VDC"
+      },
+      {
+        "nome": "VERDE ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05071/verde-escuro.jpg",
+        "referencia": "05071-VDE"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05071/vermelho.jpg",
+        "referencia": "05071-VM"
+      },
+      {
+        "nome": "VINHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05071/vinho.jpg",
+        "referencia": "05071-VIN"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

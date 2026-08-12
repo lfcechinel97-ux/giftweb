@@ -1,0 +1,276 @@
+{
+  "codigo_entrada": "02082N",
+  "codigo_consulta": "02082N",
+  "coletado_em": "2026-08-12T16:39:51.029436+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "3a951b56-c339-4908-bd5f-f3509c1afa8f",
+      "codigo_amigavel": "02082N",
+      "codigo_prefixo": "02082N",
+      "slug": "sacola-de-tnt-sem-alca-02082n",
+      "nome": "SACOLA DE TNT SEM ALÇA",
+      "descricao": "Sacola de tnt sem alça com costura termo selada.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-VERMELHO-15296-1749560078.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-VERMELHO-15296-1749560078.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02082n",
+      "cor": "VERMELHO",
+      "categoria": "sacolas",
+      "marca": "XBZ",
+      "preco_custo": 1.05,
+      "estoque": 21146,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "43d747c0-829e-4294-8947-2a42479ba65d"
+    },
+    {
+      "id": "676ba624-6f6c-4567-bba0-f3e60bfecf82",
+      "codigo_amigavel": "02082N-VM",
+      "codigo_prefixo": "02082N",
+      "slug": "sacola-de-tnt-sem-alca-02082n-vm",
+      "nome": "SACOLA DE TNT SEM ALÇA",
+      "descricao": "Sacola de tnt sem alça com costura termo selada.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-VERMELHO-15296-1749560078.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-VERMELHO-15296-1749560078.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02082n",
+      "cor": "VERMELHO",
+      "categoria": "sacolas",
+      "marca": "XBZ",
+      "preco_custo": 1.1,
+      "estoque": 13335,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "d828a2d9-eab8-45ef-b55c-bb8ae2c491ed",
+      "codigo_amigavel": "02082N-PRE",
+      "codigo_prefixo": "02082N",
+      "slug": "sacola-de-tnt-sem-alca-02082n-pre",
+      "nome": "SACOLA DE TNT SEM ALÇA",
+      "descricao": "Sacola de tnt sem alça com costura termo selada.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-PRETO-15294-1749560077.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-PRETO-15294-1749560077.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02082n",
+      "cor": "PRETO",
+      "categoria": "sacolas",
+      "marca": "XBZ",
+      "preco_custo": 1.1,
+      "estoque": 21251,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "547ef7be-31b6-448c-976c-5f70bb632a1f",
+      "codigo_amigavel": "02082N-LAR",
+      "codigo_prefixo": "02082N",
+      "slug": "sacola-de-tnt-sem-alca-02082n-lar",
+      "nome": "SACOLA DE TNT SEM ALÇA",
+      "descricao": "Sacola de tnt sem alça com costura termo selada.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-LARANJA-15293-1749560077.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-LARANJA-15293-1749560077.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02082n",
+      "cor": "LARANJA",
+      "categoria": "sacolas",
+      "marca": "XBZ",
+      "preco_custo": 1.1,
+      "estoque": 32384,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "43d747c0-829e-4294-8947-2a42479ba65d",
+      "codigo_amigavel": "02082N-VD",
+      "codigo_prefixo": "02082N",
+      "slug": "sacola-de-tnt-sem-alca-02082n-vd",
+      "nome": "SACOLA DE TNT SEM ALÇA",
+      "descricao": "Sacola de tnt sem alça com costura termo selada.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-VERDE-15295-1749560077.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-VERDE-15295-1749560077.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02082n",
+      "cor": "ROXO",
+      "categoria": "sacolas",
+      "marca": "XBZ",
+      "preco_custo": 1.1,
+      "estoque": 13043,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "8bbcd576-316d-4251-a0df-e65bfcb32f42",
+      "codigo_amigavel": "02082N-AZR",
+      "codigo_prefixo": "02082N",
+      "slug": "sacola-de-tnt-sem-alca-02082n-azr",
+      "nome": "SACOLA DE TNT SEM ALÇA",
+      "descricao": "Sacola de tnt sem alça com costura termo selada.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-AZUL-ROYAL-15290-1749560077.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-AZUL-ROYAL-15290-1749560077.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02082n",
+      "cor": "AZUL",
+      "categoria": "sacolas",
+      "marca": "XBZ",
+      "preco_custo": 1.1,
+      "estoque": 17447,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "44695bb5-daec-4b0b-a732-26d02624d4eb",
+      "codigo_amigavel": "02082N-AZE",
+      "codigo_prefixo": "02082N",
+      "slug": "sacola-de-tnt-sem-alca-02082n-aze",
+      "nome": "SACOLA DE TNT SEM ALÇA",
+      "descricao": "Sacola de tnt sem alça com costura termo selada.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-AZUL-ESCURO-15291-1749560076.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-AZUL-ESCURO-15291-1749560076.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02082n",
+      "cor": "AZUL",
+      "categoria": "sacolas",
+      "marca": "XBZ",
+      "preco_custo": 1.1,
+      "estoque": 17560,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "8dead105-ca58-4806-964e-df5a669523db",
+      "codigo_amigavel": "02082N-BCO",
+      "codigo_prefixo": "02082N",
+      "slug": "sacola-de-tnt-sem-alca-02082n-bco",
+      "nome": "SACOLA DE TNT SEM ALÇA",
+      "descricao": "Sacola de tnt sem alça com costura termo selada.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-BRANCO-15292-1749560077.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-sem-Alca-BRANCO-15292-1749560077.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02082n",
+      "cor": "BRANCO",
+      "categoria": "sacolas",
+      "marca": "XBZ",
+      "preco_custo": 1.1,
+      "estoque": 17132,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "fbe0bc86-48a2-4a6d-abbc-2e68b2a4e525",
+    "nome": "Sacola de TNT sem Alça",
+    "descricao_curta": "Sacola de tnt sem alça com costura termo selada.",
+    "descricao_longa": "Sacola de tnt sem alça com costura termo selada.\n\nLargura: 24,8cm | Medidas de gravação (CxL): 24 cm x 21 cm | Peso aproximado: 17g",
+    "preco_exibicao": 59.9,
+    "categoria": "sacola-tnt-algodao",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 2,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02082N/02082N_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02082N/02082N_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02082N/02082N_3.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:28:16.866103+00:00",
+    "destaque": "medio",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02082N/azul-escuro.jpg",
+        "referencia": "02082N-AZE"
+      },
+      {
+        "nome": "AZUL ROYAL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02082N/azul-royal.jpg",
+        "referencia": "02082N-AZR"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02082N/branco.jpg",
+        "referencia": "02082N-BCO"
+      },
+      {
+        "nome": "LARANJA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02082N/laranja.jpg",
+        "referencia": "02082N-LAR"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02082N/preto.jpg",
+        "referencia": "02082N-PRE"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02082N/verde.jpg",
+        "referencia": "02082N-VD"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02082N/vermelho.jpg",
+        "referencia": "02082N-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

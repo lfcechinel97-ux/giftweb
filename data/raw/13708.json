@@ -1,0 +1,284 @@
+{
+  "codigo_entrada": "13708",
+  "codigo_consulta": "13708",
+  "coletado_em": "2026-08-12T16:40:01.148245+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "6b2697b3-0ef4-4d49-9658-25d32a51b003",
+      "codigo_amigavel": "13708-ROX",
+      "codigo_prefixo": "13708",
+      "slug": "caderno-capa-emborrachada-13708-rox",
+      "nome": "CADERNO CAPA EMBORRACHADA",
+      "descricao": "Caderno emborrachado de frente e verso lisa com espiral preto. Possui dados pessoais, calendário de 2025 à 2027, aproximadamente 100 folhas brancas pautadas com detalhe \"data\" na parte superior de cada folha.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-ROXO-24895-1756381669.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-ROXO-24895-1756381669.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/13708",
+      "cor": "ROXO",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 15.5,
+      "estoque": 943,
+      "peso": 402.0,
+      "altura": 23.0,
+      "largura": 17.5,
+      "profundidade": 1.6,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "621d491c-e85e-40b8-8bc0-d75e56f2f72e",
+      "codigo_amigavel": "13708-ROS",
+      "codigo_prefixo": "13708",
+      "slug": "caderno-capa-emborrachada-13708-ros",
+      "nome": "CADERNO CAPA EMBORRACHADA",
+      "descricao": "Caderno emborrachado de frente e verso lisa com espiral preto. Possui dados pessoais, calendário de 2025 à 2027, aproximadamente 100 folhas brancas pautadas com detalhe \"data\" na parte superior de cada folha.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-ROSA-24894-1756381652.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-ROSA-24894-1756381652.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/13708",
+      "cor": "ROSA",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 15.5,
+      "estoque": 928,
+      "peso": 402.0,
+      "altura": 23.0,
+      "largura": 17.5,
+      "profundidade": 1.6,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "d29324a9-be25-4cf1-a7a4-fe9d13313e2e",
+      "codigo_amigavel": "13708-LAR",
+      "codigo_prefixo": "13708",
+      "slug": "caderno-capa-emborrachada-13708-lar",
+      "nome": "CADERNO CAPA EMBORRACHADA",
+      "descricao": "Caderno emborrachado de frente e verso lisa com espiral preto. Possui dados pessoais, calendário de 2025 à 2027, aproximadamente 100 folhas brancas pautadas com detalhe \"data\" na parte superior de cada folha.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-LARANJA-24893-1756381636.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-LARANJA-24893-1756381636.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/13708",
+      "cor": "LARANJA",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 15.5,
+      "estoque": 236,
+      "peso": 402.0,
+      "altura": 23.0,
+      "largura": 17.5,
+      "profundidade": 1.6,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "520af558-67b8-4077-a0c8-4e296a07a7b4",
+      "codigo_amigavel": "13708-CIN",
+      "codigo_prefixo": "13708",
+      "slug": "caderno-capa-emborrachada-13708-cin",
+      "nome": "CADERNO CAPA EMBORRACHADA",
+      "descricao": "Caderno emborrachado de frente e verso lisa com espiral preto. Possui dados pessoais, calendário de 2025 à 2027, aproximadamente 100 folhas brancas pautadas com detalhe \"data\" na parte superior de cada folha.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-CINZA-24892-1756381624.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-CINZA-24892-1756381624.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/13708",
+      "cor": "CINZA",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 15.5,
+      "estoque": 2599,
+      "peso": 402.0,
+      "altura": 23.0,
+      "largura": 17.5,
+      "profundidade": 1.6,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "7653db25-0a9f-4f71-9a8a-5c1da941273d",
+      "codigo_amigavel": "13708-VM",
+      "codigo_prefixo": "13708",
+      "slug": "caderno-capa-emborrachada-13708-vm",
+      "nome": "CADERNO CAPA EMBORRACHADA",
+      "descricao": "Caderno emborrachado de frente e verso lisa com espiral preto. Possui dados pessoais, calendário de 2024 à 2026, aproximadamente 100 folhas brancas pautadas com detalhe data na parte superior de cada folha.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-VERMELHO-6139-1756906324.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-VERMELHO-6139-1756906324.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/13708",
+      "cor": "VERMELHO",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 15.5,
+      "estoque": 3067,
+      "peso": 402.0,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "893f0737-fc8a-492c-aa14-1a6f325a3522",
+      "codigo_amigavel": "13708-PRE",
+      "codigo_prefixo": "13708",
+      "slug": "caderno-capa-emborrachada-13708-pre",
+      "nome": "CADERNO CAPA EMBORRACHADA",
+      "descricao": "Caderno emborrachado de frente e verso lisa com espiral preto. Possui dados pessoais, calendário de 2024 à 2026, aproximadamente 100 folhas brancas pautadas com detalhe data na parte superior de cada folha.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-PRETO-6138-1756906324.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-PRETO-6138-1756906324.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/13708",
+      "cor": "PRETO",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 15.5,
+      "estoque": 5424,
+      "peso": 402.0,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "f5fabecb-0e9b-4187-ba13-3dc828e17ea9",
+      "codigo_amigavel": "13708-AZU",
+      "codigo_prefixo": "13708",
+      "slug": "caderno-capa-emborrachada-13708-azu",
+      "nome": "CADERNO CAPA EMBORRACHADA",
+      "descricao": "Caderno emborrachado de frente e verso lisa com espiral preto. Possui dados pessoais, calendário de 2024 à 2026, aproximadamente 100 folhas brancas pautadas com detalhe data na parte superior de cada folha.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-AZUL-6137-1756906324.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-AZUL-6137-1756906324.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/13708",
+      "cor": "AZUL",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 15.5,
+      "estoque": 656,
+      "peso": 402.0,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "41785017-9843-4560-b5b7-ba4a3956c261",
+      "codigo_amigavel": "13708-VD",
+      "codigo_prefixo": "13708",
+      "slug": "caderno-capa-emborrachada-13708-vd",
+      "nome": "CADERNO CAPA EMBORRACHADA",
+      "descricao": "Caderno emborrachado de frente e verso lisa com espiral preto. Possui dados pessoais, calendário de 2024 à 2026, aproximadamente 100 folhas brancas pautadas com detalhe data na parte superior de cada folha.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-VERDE-16273-1756906324.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-Emborrachado-VERDE-16273-1756906324.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/13708",
+      "cor": "VERDE",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 15.5,
+      "estoque": 881,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "aea6cd59-55ff-4bd7-956f-38e81a6e149b",
+    "nome": "Caderno Emborrachado",
+    "descricao_curta": "Caderno emborrachado de frente e verso lisa com espiral preto.",
+    "descricao_longa": "Caderno emborrachado de frente e verso lisa com espiral preto. Possui dados pessoais, calendário de 2025 à 2027, aproximadamente 100 folhas brancas pautadas com detalhe \"data\" na parte superior de cada folha.\n\nAltura: 23 cm | Largura: 17,5 cm | Medidas de gravação (CxL): 22,5 cm x 15,2 cm | Peso aproximado: 402g",
+    "preco_exibicao": 59.9,
+    "categoria": "caderneta-caneta",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 3,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/13708_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/13708_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/13708_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/13708_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/13708_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/13708_6.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:29:46.051243+00:00",
+    "destaque": "medio",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/azul.jpg",
+        "referencia": "13708-AZU"
+      },
+      {
+        "nome": "CINZA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/cinza.jpg",
+        "referencia": "13708-CIN"
+      },
+      {
+        "nome": "LARANJA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/laranja.jpg",
+        "referencia": "13708-LAR"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/preto.jpg",
+        "referencia": "13708-PRE"
+      },
+      {
+        "nome": "ROSA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/rosa.jpg",
+        "referencia": "13708-ROS"
+      },
+      {
+        "nome": "ROXO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/roxo.jpg",
+        "referencia": "13708-ROX"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/verde.jpg",
+        "referencia": "13708-VD"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/13708/vermelho.jpg",
+        "referencia": "13708-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

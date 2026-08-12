@@ -1,0 +1,252 @@
+{
+  "codigo_entrada": "14794",
+  "codigo_consulta": "14794",
+  "coletado_em": "2026-08-12T16:40:02.859175+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "57fd9e3c-9d5b-4c75-9a12-d63d211fa298",
+      "codigo_amigavel": "14794-DOU",
+      "codigo_prefixo": "14794",
+      "slug": "garrafa-termica-400ml-c-termometro-14794-dou",
+      "nome": "GARRAFA TÉRMICA 400ML C/ TERMÔMETRO",
+      "descricao": "Garrafa térmica de parede dupla em inox, capacidade de 400ml. Tampa com display touch screen de temperatura em led, acompanha infusor de bebidas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-DOURADO-18016-1703246793.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-DOURADO-18016-1703246793.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14794",
+      "cor": "DOURADO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 26.0,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "9c7eb603-e04d-4d0b-8a01-45c0586639d2",
+      "codigo_amigavel": "14794-AZU",
+      "codigo_prefixo": "14794",
+      "slug": "garrafa-termica-400ml-c-termometro-14794-azu",
+      "nome": "GARRAFA TÉRMICA 400ML C/ TERMÔMETRO",
+      "descricao": "Garrafa térmica de parede dupla em inox, capacidade de 400ml. Tampa com display touch screen de temperatura em led, acompanha infusor de bebidas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-AZUL-16826-1731957911.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-AZUL-16826-1731957911.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14794",
+      "cor": "AZUL",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 17.6,
+      "estoque": 11364,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "1439e91a-3157-46d6-8e6a-7b2eeb25e86c",
+      "codigo_amigavel": "14794-ROS",
+      "codigo_prefixo": "14794",
+      "slug": "garrafa-termica-400ml-c-termometro-14794-ros",
+      "nome": "GARRAFA TÉRMICA 400ML C/ TERMÔMETRO",
+      "descricao": "Garrafa térmica de parede dupla em inox, capacidade de 400ml. Tampa com display touch screen de temperatura em led, acompanha infusor de bebidas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-ROSA-16827-1690469593.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-ROSA-16827-1690469593.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14794",
+      "cor": "ROSA",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 26.0,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "3e8ef9d8-2340-449b-837d-050ff87b9c16",
+      "codigo_amigavel": "14794-VM",
+      "codigo_prefixo": "14794",
+      "slug": "garrafa-termica-400ml-c-termometro-14794-vm",
+      "nome": "GARRAFA TÉRMICA 400ML C/ TERMÔMETRO",
+      "descricao": "Garrafa térmica de parede dupla em inox, capacidade de 400ml. Tampa com display touch screen de temperatura em led, acompanha infusor de bebidas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-VERMELHO-20793-1726746795.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-VERMELHO-20793-1726746795.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14794",
+      "cor": "VERMELHO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": null,
+      "estoque": 6476,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "86ff51d9-09b8-4e40-a2cc-7b94bdae12cd",
+      "codigo_amigavel": "14794-PRE",
+      "codigo_prefixo": "14794",
+      "slug": "garrafa-termica-400ml-c-termometro-14794-pre",
+      "nome": "GARRAFA TÉRMICA 400ML C/ TERMÔMETRO",
+      "descricao": "Garrafa térmica de parede dupla em inox, capacidade de 400ml. Tampa com display touch screen de temperatura em led, acompanha infusor de bebidas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-PRETO-15011-1662670787.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-PRETO-15011-1662670787.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14794",
+      "cor": "PRETO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 17.6,
+      "estoque": 11364,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "72349220-29d4-46d7-b1cd-6c1e3f04f31c",
+      "codigo_amigavel": "14794-BCO",
+      "codigo_prefixo": "14794",
+      "slug": "garrafa-termica-400ml-c-termometro-14794-bco",
+      "nome": "GARRAFA TÉRMICA 400ML C/ TERMÔMETRO",
+      "descricao": "Garrafa térmica de parede dupla em inox, capacidade de 400ml. Tampa com display touch screen de temperatura em led, acompanha infusor de bebidas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-BRANCO-16387-1731957927.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-BRANCO-16387-1731957927.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14794",
+      "cor": "BRANCO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 17.6,
+      "estoque": 11364,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "d0259434-7ef1-4c81-b6be-918d4cacf67c",
+      "codigo_amigavel": "14794-INO",
+      "codigo_prefixo": "14794",
+      "slug": "garrafa-termica-400ml-c-termometro-14794-ino",
+      "nome": "GARRAFA TÉRMICA 400ML C/ TERMÔMETRO",
+      "descricao": "Garrafa térmica de parede dupla em inox, capacidade de 400ml. Tampa com display touch screen de temperatura em led, acompanha infusor de bebidas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-INOX-23236-1747312154.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-INOX-23236-1747312154.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14794",
+      "cor": "INOX",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 17.6,
+      "estoque": 4424,
+      "peso": 252.0,
+      "altura": 22.8,
+      "largura": 6.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "c0c41d8e-b3d5-47fb-9d14-2e965e2b1665",
+    "nome": "Garrafa Térmica 400ml com Display LED",
+    "descricao_curta": "Garrafa térmica de parede dupla em inox, capacidade de 400ml. Tampa com display touch screen de temperatura em led, acompanha infusor de bebidas.",
+    "descricao_longa": "Garrafa térmica de parede dupla em inox, capacidade de 400ml. Tampa com display touch screen de temperatura em led, acompanha infusor de bebidas.\n\nAltura: 22,8 cm | Largura: 6,5 cm | Circunferência: 20,5 cm | Medidas de gravação (CxL): 16 cm x 3 cm | Peso aproximado: 252g",
+    "preco_exibicao": null,
+    "categoria": "garrafas-agua",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 7,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14794/14794_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14794/14794_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14794/14794_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14794/14794_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14794/14794_5.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-28T00:27:09.701766+00:00",
+    "updated_at": "2026-07-28T00:27:09.701766+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14794/azul.jpg",
+        "referencia": "14794-AZU"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14794/branco.jpg",
+        "referencia": "14794-BCO"
+      },
+      {
+        "nome": "DOURADO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14794/dourado.jpg",
+        "referencia": "14794-DOU"
+      },
+      {
+        "nome": "INOX",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14794/inox.jpg",
+        "referencia": "14794-INO"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14794/preto.jpg",
+        "referencia": "14794-PRE"
+      },
+      {
+        "nome": "ROSA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14794/rosa.jpg",
+        "referencia": "14794-ROS"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14794/vermelho.jpg",
+        "referencia": "14794-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

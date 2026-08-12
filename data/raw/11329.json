@@ -1,0 +1,161 @@
+{
+  "codigo_entrada": "11329",
+  "codigo_consulta": "11329",
+  "coletado_em": "2026-08-12T16:39:59.631164+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "15b0388c-e327-40bb-ae75-9dbfd923b6f4",
+      "codigo_amigavel": "11329-CIN",
+      "codigo_prefixo": "11329",
+      "slug": "mochila-de-nylon-usb-17l-11329-cin",
+      "nome": "MOCHILA DE NYLON USB 17L",
+      "descricao": "Mochila em nylon com capacidade máxima de até 17 litros. Possui três compartimentos, sendo o principal com divisórias para notebooks de até 15,6 polegadas e bolsos internos em diferentes tamanhos. Conta ainda com bolso lateral e suporte USB externo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-18L-CINZA-13165-1626191448.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-18L-CINZA-13165-1626191448.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/11329",
+      "cor": "CINZA",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 36.5,
+      "estoque": 5479,
+      "peso": null,
+      "altura": 40.0,
+      "largura": 30.0,
+      "profundidade": 12.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "5c7c37b1-e405-4288-b479-f5d4ebb29c12",
+      "codigo_amigavel": "11329-PRE",
+      "codigo_prefixo": "11329",
+      "slug": "mochila-de-nylon-usb-17l-11329-pre",
+      "nome": "MOCHILA DE NYLON USB 17L",
+      "descricao": "Mochila em nylon com capacidade máxima de até 17 litros. Possui três compartimentos, sendo o principal com divisórias para notebooks de até 15,6 polegadas e bolsos internos em diferentes tamanhos. Conta ainda com bolso lateral e suporte USB externo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-21L-13163-1716380580.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-21L-13163-1716380580.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/11329",
+      "cor": "PRETO",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 36.5,
+      "estoque": 1539,
+      "peso": null,
+      "altura": 40.0,
+      "largura": 30.0,
+      "profundidade": 12.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "29478d52-54a4-46e8-a7c6-73e2a395a65d",
+      "codigo_amigavel": "11329-AZU",
+      "codigo_prefixo": "11329",
+      "slug": "mochila-de-nylon-usb-17l-11329-azu",
+      "nome": "MOCHILA DE NYLON USB 17L",
+      "descricao": "Mochila em nylon com capacidade máxima de até 17 litros. Possui três compartimentos, sendo o principal com divisórias para notebooks de até 15,6 polegadas e bolsos internos em diferentes tamanhos. Conta ainda com bolso lateral e suporte USB externo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-18L-AZUL-13167-1626191806.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-18L-AZUL-13167-1626191806.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/11329",
+      "cor": "AZUL",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 36.5,
+      "estoque": 4044,
+      "peso": null,
+      "altura": 40.0,
+      "largura": 30.0,
+      "profundidade": 12.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "73ed1734-f099-44b4-be97-bc9ccdeacc06",
+      "codigo_amigavel": "11329-VM",
+      "codigo_prefixo": "11329",
+      "slug": "mochila-de-nylon-usb-17l-11329-vm",
+      "nome": "MOCHILA DE NYLON USB 17L",
+      "descricao": "Mochila em nylon com capacidade máxima de até 17 litros. Possui três compartimentos, sendo o principal com divisórias para notebooks de até 15,6 polegadas e bolsos internos em diferentes tamanhos. Conta ainda com bolso lateral e suporte USB externo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-18L-13163-1626190936.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-18L-13163-1626190936.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/11329",
+      "cor": "VERMELHO",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 36.5,
+      "estoque": 214,
+      "peso": null,
+      "altura": 40.0,
+      "largura": 30.0,
+      "profundidade": 12.0,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "371b7a81-a0cb-4b88-b2f8-e75169d0f9eb",
+    "nome": "Mochila de Nylon USB 17L",
+    "descricao_curta": "Mochila em nylon com capacidade máxima de até 17 litros.",
+    "descricao_longa": "Mochila em nylon com capacidade máxima de até 17 litros. Possui três compartimentos, sendo o principal com divisórias para notebooks de até 15,6 polegadas e bolsos internos em diferentes tamanhos. Conta ainda com bolso lateral e suporte USB externo. Obs.: O adaptador USB externo pode estar localizado na lateral direita ou esquerda, podendo variar conforme o lote.\n\nAltura: 40 cm | Largura: 30 cm | Medidas de gravação (CxL): 23 cm x 18 cm | Peso aproximado: 472g",
+    "preco_exibicao": 59.9,
+    "categoria": "mochilas-bolsa-necessaire",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 5,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11329/11329_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11329/11329_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11329/11329_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11329/11329_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11329/11329_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11329/11329_6.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11329/11329_7.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:30:21.573569+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11329/azul.jpg",
+        "referencia": "11329-AZU"
+      },
+      {
+        "nome": "CINZA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11329/cinza.jpg",
+        "referencia": "11329-CIN"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11329/preto.jpg",
+        "referencia": "11329-PRE"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/11329/vermelho.jpg",
+        "referencia": "11329-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

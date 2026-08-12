@@ -1,0 +1,368 @@
+{
+  "codigo_entrada": "09072",
+  "codigo_consulta": "09072",
+  "coletado_em": "2026-08-12T16:39:58.682078+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "b2a47309-4e71-4f46-9cbc-c88a099e1835",
+      "codigo_amigavel": "09072-BCO/ROX",
+      "codigo_prefixo": "09072",
+      "slug": "squeeze-plastico-500ml-bic-plastic-09072-bco-rox",
+      "nome": "SQUEEZE PLASTICO 500ML BIC PLASTIC",
+      "descricao": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Plastico-500ml-ROXO-28658-1779101726.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Plastico-500ml-ROXO-28658-1779101726.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09072",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 1.85,
+      "estoque": 628,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "34356602-0259-4905-97d0-a4b696f1ede8",
+      "codigo_amigavel": "09072-BCO/AMA",
+      "codigo_prefixo": "09072",
+      "slug": "squeeze-plastico-500ml-bic-plastic-09072-bco-ama",
+      "nome": "SQUEEZE PLASTICO 500ML BIC PLASTIC",
+      "descricao": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-7634-1527078778.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-7634-1527078778.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09072",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 1.85,
+      "estoque": 2022,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "92a80c63-819c-47a1-b3a4-9a0138c3ee98",
+      "codigo_amigavel": "09072-BCO/LAR",
+      "codigo_prefixo": "09072",
+      "slug": "squeeze-plastico-500ml-bic-plastic-09072-bco-lar",
+      "nome": "SQUEEZE PLASTICO 500ML BIC PLASTIC",
+      "descricao": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-LARANJA-7638-1527078859.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-LARANJA-7638-1527078859.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09072",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 1.85,
+      "estoque": 2876,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "d737d625-95a1-4772-8459-123d9b57c57c",
+      "codigo_amigavel": "09072-BCO/VD",
+      "codigo_prefixo": "09072",
+      "slug": "squeeze-plastico-500ml-bic-plastic-09072-bco-vd",
+      "nome": "SQUEEZE PLASTICO 500ML BIC PLASTIC",
+      "descricao": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-VERDE-7641-1527078948.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-VERDE-7641-1527078948.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09072",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 1.85,
+      "estoque": 4045,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "383321d2-9f9a-4788-bd81-d648c94ebb92",
+      "codigo_amigavel": "09072-BCO/AZE",
+      "codigo_prefixo": "09072",
+      "slug": "squeeze-plastico-500ml-bic-plastic-09072-bco-aze",
+      "nome": "SQUEEZE PLASTICO 500ML BIC PLASTIC",
+      "descricao": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-AZUL-7636-1527078859.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-AZUL-7636-1527078859.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09072       ",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 1.85,
+      "estoque": 6343,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "449f0b97-8d89-4359-b22b-11eea67ea187",
+      "codigo_amigavel": "09072-BCO/CST",
+      "codigo_prefixo": "09072",
+      "slug": "squeeze-plastico-500ml-bic-plastic-09072-bco-cst",
+      "nome": "SQUEEZE PLASTICO 500ML BIC PLASTIC",
+      "descricao": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-BRANCO-7637-1527078859.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-BRANCO-7637-1527078859.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09072",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 1.85,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "d737d625-95a1-4772-8459-123d9b57c57c"
+    },
+    {
+      "id": "5e279ef7-bc48-4fdc-bedb-514017bee3fc",
+      "codigo_amigavel": "09072-CST/CST",
+      "codigo_prefixo": "09072",
+      "slug": "squeeze-plastico-500ml-bic-plastic-09072-cst-cst",
+      "nome": "SQUEEZE PLASTICO 500ML BIC PLASTIC",
+      "descricao": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-BRANCO-7637-1527078859.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-BRANCO-7637-1527078859.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09072",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 1.85,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "1a539346-15d1-4224-beb2-3fd159f8a1d7",
+      "codigo_amigavel": "09072-BCO/ROS",
+      "codigo_prefixo": "09072",
+      "slug": "squeeze-plastico-500ml-bic-plastic-09072-bco-ros",
+      "nome": "SQUEEZE PLASTICO 500ML BIC PLASTIC",
+      "descricao": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Plastico-500ml-ROSA-25351-1758293347.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Plastico-500ml-ROSA-25351-1758293347.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09072",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 1.85,
+      "estoque": 3058,
+      "peso": 44.0,
+      "altura": 20.0,
+      "largura": 6.5,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "91ab99ef-5df7-425d-a20f-a22a15a4aa20",
+      "codigo_amigavel": "09072-BCO/PRE",
+      "codigo_prefixo": "09072",
+      "slug": "squeeze-plastico-500ml-bic-plastic-09072-bco-pre",
+      "nome": "SQUEEZE PLASTICO 500ML BIC PLASTIC",
+      "descricao": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-PRETO-7640-1527078860.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-PRETO-7640-1527078860.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09072       ",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 1.85,
+      "estoque": 13692,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "8933fc5c-d74f-453a-990b-488c48e9eaa5",
+      "codigo_amigavel": "09072-BCO/BCO",
+      "codigo_prefixo": "09072",
+      "slug": "squeeze-plastico-500ml-bic-plastic-09072-bco-bco",
+      "nome": "SQUEEZE PLASTICO 500ML BIC PLASTIC",
+      "descricao": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-BRANCO-7637-1527078859.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-BRANCO-7637-1527078859.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09072",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 1.85,
+      "estoque": 7044,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "9490159b-427d-4181-8712-264e06652767",
+      "codigo_amigavel": "09072-BCO/VM",
+      "codigo_prefixo": "09072",
+      "slug": "squeeze-plastico-500ml-bic-plastic-09072-bco-vm",
+      "nome": "SQUEEZE PLASTICO 500ML BIC PLASTIC",
+      "descricao": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-VERMELHO-7642-1527078948.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-500ml-Plastico-VERMELHO-7642-1527078948.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09072",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 1.85,
+      "estoque": 654,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "87013c7c-2390-4325-ad8c-45a92f6fe049",
+    "nome": "Squeeze Plástico 500ml",
+    "descricao_curta": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.",
+    "descricao_longa": "Squeeze 500ml de plástico resistente, possui detalhe em relevo na parte superior e tampa de bico(plástico) rosqueável.\n\nMedidas de gravação (CxL): 10 cm x 7 cm | Peso aproximado: 44g",
+    "preco_exibicao": 59.9,
+    "categoria": "garrafas-agua",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 4,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09072/09072_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09072/09072_2.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:26:30.457794+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AMARELO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09072/amarelo.jpg",
+        "referencia": "09072-AMA"
+      },
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09072/azul.jpg",
+        "referencia": "09072-AZU"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09072/branco.jpg",
+        "referencia": "09072-BCO"
+      },
+      {
+        "nome": "LARANJA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09072/laranja.jpg",
+        "referencia": "09072-LAR"
+      },
+      {
+        "nome": "PRATA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09072/prata.jpg",
+        "referencia": "09072-PRA"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09072/preto.jpg",
+        "referencia": "09072-PRE"
+      },
+      {
+        "nome": "ROSA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09072/rosa.jpg",
+        "referencia": "09072-ROS"
+      },
+      {
+        "nome": "ROXO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09072/roxo.jpg",
+        "referencia": "09072-ROX"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09072/verde.jpg",
+        "referencia": "09072-VD"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/09072/vermelho.jpg",
+        "referencia": "09072-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

@@ -23,3 +23,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Scratch: extração completa do PDF da XBZ usada só para investigação (Fase 0), 13MB
+data/api_xbz_fulltext.txt
+__pycache__/
+*.pyc

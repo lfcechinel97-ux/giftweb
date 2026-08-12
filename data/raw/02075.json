@@ -1,0 +1,192 @@
+{
+  "codigo_entrada": "02075",
+  "codigo_consulta": "02075",
+  "coletado_em": "2026-08-12T16:39:52.612369+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "903823d4-f7e7-4306-8532-da266000e55a",
+      "codigo_amigavel": "02075-PRE",
+      "codigo_prefixo": "02075",
+      "slug": "guarda-chuva-02075-pre",
+      "nome": "GUARDA-CHUVA",
+      "descricao": "Guarda-chuva com tecido de nylon e abertura automática, basta acionar o botão inferior. Possui 8 varetas pretas de aço, pegador e bico superior de plástico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-PRETO-7043-1516131118.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-PRETO-7043-1516131118.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://xbzbrindes.com.br/02075",
+      "cor": "PRETO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 13.5,
+      "estoque": 5691,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "83fb82ed-da2b-4572-910f-14e11c51a034",
+      "codigo_amigavel": "02075-LAR",
+      "codigo_prefixo": "02075",
+      "slug": "guarda-chuva-02075-lar",
+      "nome": "GUARDA-CHUVA",
+      "descricao": "Guarda-chuva com tecido de nylon e abertura automática, basta acionar o botão inferior. Possui 8 varetas pretas de aço, pegador e bico superior de plástico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-LARANJA-7042-1516131115.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-LARANJA-7042-1516131115.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://xbzbrindes.com.br/02075",
+      "cor": "LARANJA",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 13.5,
+      "estoque": 2313,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "7b187b0c-b7d2-4eee-996d-7d303950ceb3",
+      "codigo_amigavel": "02075-VM",
+      "codigo_prefixo": "02075",
+      "slug": "guarda-chuva-02075-vm",
+      "nome": "GUARDA-CHUVA",
+      "descricao": "Guarda-chuva com tecido de nylon e abertura automática, basta acionar o botão inferior. Possui 8 varetas pretas de aço, pegador e bico superior de plástico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-VERMELHO-7044-1516131123.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-VERMELHO-7044-1516131123.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://xbzbrindes.com.br/02075",
+      "cor": "VERMELHO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 13.5,
+      "estoque": 8306,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "2d60ac4a-b501-4a71-9527-53fc04cd6762",
+      "codigo_amigavel": "02075-BCO",
+      "codigo_prefixo": "02075",
+      "slug": "guarda-chuva-02075-bco",
+      "nome": "GUARDA-CHUVA",
+      "descricao": "Guarda-chuva com tecido de nylon e abertura automática, basta acionar o botão inferior. Possui 8 varetas pretas de aço, pegador e bico superior de plástico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-BRANCO-7041-1516191388.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-BRANCO-7041-1516191388.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://xbzbrindes.com.br/02075",
+      "cor": "BRANCO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 13.5,
+      "estoque": 10430,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "e2fc2e64-f11a-4897-8751-edfe8be7b5f9",
+      "codigo_amigavel": "02075-AZU",
+      "codigo_prefixo": "02075",
+      "slug": "guarda-chuva-02075-azu",
+      "nome": "GUARDA-CHUVA",
+      "descricao": "Guarda-chuva com tecido de nylon e abertura automática, basta acionar o botão inferior. Possui 8 varetas pretas de aço, pegador e bico superior de plástico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-7039-1516131026.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-7039-1516131026.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://xbzbrindes.com.br/02075",
+      "cor": "AZUL",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 13.5,
+      "estoque": 5902,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "fe392fa7-b9f7-4040-a5b0-b5177c8a52b8",
+    "nome": "Guarda-chuva Automático",
+    "descricao_curta": "Guarda-chuva com tecido de nylon e abertura automática, basta acionar o botão inferior.",
+    "descricao_longa": "Guarda-chuva com tecido de nylon e abertura automática, basta acionar o botão inferior. Possui 8 varetas pretas de aço, pegador e bico superior de plástico.\n\nMedidas de gravação (CxL): 15 cm x 30 cm | Peso aproximado: 292g",
+    "preco_exibicao": 59.9,
+    "categoria": "guarda-chuvas",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 1,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02075/02075_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02075/02075_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02075/02075_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02075/02075_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02075/02075_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02075/02075_6.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02075/02075_7.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:29:00.971796+00:00",
+    "destaque": "grande",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02075/azul.jpg",
+        "referencia": "02075-AZU"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02075/branco.jpg",
+        "referencia": "02075-BCO"
+      },
+      {
+        "nome": "LARANJA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02075/laranja.jpg",
+        "referencia": "02075-LAR"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02075/preto.jpg",
+        "referencia": "02075-PRE"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02075/vermelho.jpg",
+        "referencia": "02075-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

@@ -1,0 +1,188 @@
+{
+  "codigo_entrada": "02596",
+  "codigo_consulta": "02596",
+  "coletado_em": "2026-08-12T16:39:45.378256+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "357f69bb-d096-47ee-a22f-f78f21ec5f52",
+      "codigo_amigavel": "02596-VM",
+      "codigo_prefixo": "02596",
+      "slug": "bolsa-termica-15l-02596-vm",
+      "nome": "BOLSA TÉRMICA 15L",
+      "descricao": "Bolsa térmica de poliéster com capacidade de 15 Litros. Contém alça de mão em nylon.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-12-Litros-VERMELHO-17366-1716815213.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-12-Litros-VERMELHO-17366-1716815213.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02596",
+      "cor": "VERMELHO",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 12.5,
+      "estoque": 5450,
+      "peso": 193.0,
+      "altura": 25.0,
+      "largura": 28.5,
+      "profundidade": 18.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "cc4f6eef-1c96-4120-801f-16b9931a49a4",
+      "codigo_amigavel": "02596-AZU",
+      "codigo_prefixo": "02596",
+      "slug": "bolsa-termica-15l-02596-azu",
+      "nome": "BOLSA TÉRMICA 15L",
+      "descricao": "Bolsa térmica de poliéster com capacidade de 15 Litros. Contém alça de mão em nylon.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-12-Litros-AZUL-17563-1698081634.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-12-Litros-AZUL-17563-1698081634.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02596",
+      "cor": "AZUL",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 12.5,
+      "estoque": 15932,
+      "peso": 193.0,
+      "altura": 25.0,
+      "largura": 28.5,
+      "profundidade": 18.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "b38beba6-dbbb-4f53-8e14-31faa4152a48",
+      "codigo_amigavel": "02596-VD",
+      "codigo_prefixo": "02596",
+      "slug": "bolsa-termica-15l-02596-vd",
+      "nome": "BOLSA TÉRMICA 15L",
+      "descricao": "Bolsa térmica de poliéster com capacidade de 15 Litros. Contém alça de mão em nylon.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-12-Litros-VERDE-17365-1698081652.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-12-Litros-VERDE-17365-1698081652.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02596",
+      "cor": "VERDE",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 12.5,
+      "estoque": 7226,
+      "peso": 193.0,
+      "altura": 25.0,
+      "largura": 28.5,
+      "profundidade": 18.0,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "4f3c3ca1-7eec-48ea-80ff-c460596062e1",
+      "codigo_amigavel": "02596-CIN",
+      "codigo_prefixo": "02596",
+      "slug": "bolsa-termica-15l-02596-cin",
+      "nome": "BOLSA TÉRMICA 15L",
+      "descricao": "Bolsa térmica de poliéster com capacidade de 15 Litros. Contém alça de mão em nylon.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-12-Litros-CINZA-19204-1716297972.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-12-Litros-CINZA-19204-1716297972.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02596",
+      "cor": "CINZA",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 12.5,
+      "estoque": 11980,
+      "peso": 193.0,
+      "altura": 25.0,
+      "largura": 28.5,
+      "profundidade": 18.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "368afebb-c026-4c58-bd3c-0fdd9a0c0e42",
+      "codigo_amigavel": "02596-PRE",
+      "codigo_prefixo": "02596",
+      "slug": "bolsa-termica-15l-02596-pre",
+      "nome": "BOLSA TÉRMICA 15L",
+      "descricao": "Bolsa térmica de poliéster com capacidade de 15 Litros. Contém alça de mão em nylon.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-12-Litros-PRETO-19205-1716297987.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-12-Litros-PRETO-19205-1716297987.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02596",
+      "cor": "PRETO",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 12.5,
+      "estoque": 0,
+      "peso": 193.0,
+      "altura": 25.0,
+      "largura": 28.5,
+      "profundidade": 18.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "5a7b3169-a726-4382-80bf-4d3983f01afe",
+    "nome": "Bolsa Térmica 15L",
+    "descricao_curta": "Bolsa térmica de poliéster com capacidade de 15 Litros. Contém alça de mão em nylon.",
+    "descricao_longa": "Bolsa térmica de poliéster com capacidade de 15 Litros. Contém alça de mão em nylon.\n\nAltura: 25 cm | Largura: 28,5 cm | Medidas de gravação (CxL): 15 cm x 11,5 cm | Peso aproximado: 193g",
+    "preco_exibicao": 59.9,
+    "categoria": "mochilas-bolsa-necessaire",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 1,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02596/02596_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02596/02596_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02596/02596_3.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:30:21.573569+00:00",
+    "destaque": "grande",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02596/azul.jpg",
+        "referencia": "02596-AZU"
+      },
+      {
+        "nome": "CINZA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02596/cinza.jpg",
+        "referencia": "02596-CIN"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02596/preto.jpg",
+        "referencia": "02596-PRE"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02596/verde.jpg",
+        "referencia": "02596-VD"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/02596/vermelho.jpg",
+        "referencia": "02596-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

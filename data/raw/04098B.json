@@ -1,0 +1,247 @@
+{
+  "codigo_entrada": "04098B",
+  "codigo_consulta": "04098B",
+  "coletado_em": "2026-08-12T16:39:48.132356+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "095adc3d-6555-420c-b8c3-2245669c77c7",
+      "codigo_amigavel": "04098B-VD",
+      "codigo_prefixo": "04098B",
+      "slug": "garrafa-termica-630ml-04098b-vd",
+      "nome": "GARRAFA TÉRMICA 630ML",
+      "descricao": "Beba com qualidade e na temperatura perfeita. Com design pensado para o dia a dia, esta garrafa térmica de 630ml oferece uma ótima experiência para quem busca manter a bebida sempre na temperatura ideal. Fabricada em inox SUS 304 com parede dupla, conserva líquidos quentes ou gelados por mais tempo, preservando o sabor e a qualidade. O bico flexível integrado à tampa plástica rosqueável e com alça facilita o consumo a qualquer momento, enquanto o canudo interno permite beber de forma confortável. Perfeita para acompanhar treinos, momentos ao ar livre ou a rotina diária, deixando água, vitaminas e outras bebidas sempre prontas para consumo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-VERDE-23171-1746623129.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-VERDE-23171-1746623129.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04098b",
+      "cor": "VERDE",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 1376,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "3a026cd2-b7dc-4f25-947f-ca7419d10d5b",
+      "codigo_amigavel": "04098B-BCO",
+      "codigo_prefixo": "04098B",
+      "slug": "garrafa-termica-630ml-04098b-bco",
+      "nome": "GARRAFA TÉRMICA 630ML",
+      "descricao": "Beba com qualidade e na temperatura perfeita. Com design pensado para o dia a dia, esta garrafa térmica de 630ml oferece uma ótima experiência para quem busca manter a bebida sempre na temperatura ideal. Fabricada em inox SUS 304 com parede dupla, conserva líquidos quentes ou gelados por mais tempo, preservando o sabor e a qualidade. O bico flexível integrado à tampa plástica rosqueável e com alça facilita o consumo a qualquer momento, enquanto o canudo interno permite beber de forma confortável. Perfeita para acompanhar treinos, momentos ao ar livre ou a rotina diária, deixando água, vitaminas e outras bebidas sempre prontas para consumo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-BRANCO-22359-1746623128.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-BRANCO-22359-1746623128.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04098b",
+      "cor": "BRANCO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 6270,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "58c628b9-ba34-40e3-9db9-d487781ed9d0",
+      "codigo_amigavel": "04098B-CIN",
+      "codigo_prefixo": "04098B",
+      "slug": "garrafa-termica-630ml-04098b-cin",
+      "nome": "GARRAFA TÉRMICA 630ML",
+      "descricao": "Beba com qualidade e na temperatura perfeita. Com design pensado para o dia a dia, esta garrafa térmica de 630ml oferece uma ótima experiência para quem busca manter a bebida sempre na temperatura ideal. Fabricada em inox SUS 304 com parede dupla, conserva líquidos quentes ou gelados por mais tempo, preservando o sabor e a qualidade. O bico flexível integrado à tampa plástica rosqueável e com alça facilita o consumo a qualquer momento, enquanto o canudo interno permite beber de forma confortável. Perfeita para acompanhar treinos, momentos ao ar livre ou a rotina diária, deixando água, vitaminas e outras bebidas sempre prontas para consumo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-CINZA-22360-1746623129.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-CINZA-22360-1746623129.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04098b",
+      "cor": "CINZA",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 1693,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "25b22e73-d5f5-4271-bb06-2dd25102f2ed",
+      "codigo_amigavel": "04098B-PRE",
+      "codigo_prefixo": "04098B",
+      "slug": "garrafa-termica-630ml-04098b-pre",
+      "nome": "GARRAFA TÉRMICA 630ML",
+      "descricao": "Beba com qualidade e na temperatura perfeita. Com design pensado para o dia a dia, esta garrafa térmica de 630ml oferece uma ótima experiência para quem busca manter a bebida sempre na temperatura ideal. Fabricada em inox SUS 304 com parede dupla, conserva líquidos quentes ou gelados por mais tempo, preservando o sabor e a qualidade. O bico flexível integrado à tampa plástica rosqueável e com alça facilita o consumo a qualquer momento, enquanto o canudo interno permite beber de forma confortável. Perfeita para acompanhar treinos, momentos ao ar livre ou a rotina diária, deixando água, vitaminas e outras bebidas sempre prontas para consumo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-PRETO-22361-1746623129.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-PRETO-22361-1746623129.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04098b",
+      "cor": "PRETO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 6270,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "c774f78f-7b00-4624-a3e5-7844d0d8f946",
+      "codigo_amigavel": "04098B",
+      "codigo_prefixo": "04098B",
+      "slug": "garrafa-termica-630ml-04098b",
+      "nome": "GARRAFA TÉRMICA 630ML",
+      "descricao": "Beba com qualidade e na temperatura perfeita. Com design pensado para o dia a dia, esta garrafa térmica de 630ml oferece uma ótima experiência para quem busca manter a bebida sempre na temperatura ideal. Fabricada em inox SUS 304 com parede dupla, conserva líquidos quentes ou gelados por mais tempo, preservando o sabor e a qualidade. O bico flexível integrado à tampa plástica rosqueável e com alça facilita o consumo a qualquer momento, enquanto o canudo interno permite beber de forma confortável. Perfeita para acompanhar treinos, momentos ao ar livre ou a rotina diária, deixando água, vitaminas e outras bebidas sempre prontas para consumo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-VERDE-23171-1746623129.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-VERDE-23171-1746623129.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04098b",
+      "cor": "VERDE",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 1665,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "095adc3d-6555-420c-b8c3-2245669c77c7"
+    },
+    {
+      "id": "01800e90-8408-4878-baf1-f4bc74fc7fec",
+      "codigo_amigavel": "04098B-AZU",
+      "codigo_prefixo": "04098B",
+      "slug": "garrafa-termica-630ml-04098b-azu",
+      "nome": "GARRAFA TÉRMICA 630ML",
+      "descricao": "Beba com qualidade e na temperatura perfeita. Com design pensado para o dia a dia, esta garrafa térmica de 630ml oferece uma ótima experiência para quem busca manter a bebida sempre na temperatura ideal. Fabricada em inox SUS 304 com parede dupla, conserva líquidos quentes ou gelados por mais tempo, preservando o sabor e a qualidade. O bico flexível integrado à tampa plástica rosqueável e com alça facilita o consumo a qualquer momento, enquanto o canudo interno permite beber de forma confortável. Perfeita para acompanhar treinos, momentos ao ar livre ou a rotina diária, deixando água, vitaminas e outras bebidas sempre prontas para consumo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-AZUL-22358-1746623128.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-AZUL-22358-1746623128.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04098b",
+      "cor": "AZUL",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 1358,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "bae62c79-254e-4434-8c97-ca7f80bb6ce3",
+      "codigo_amigavel": "04098B-AMA",
+      "codigo_prefixo": "04098B",
+      "slug": "garrafa-termica-630ml-04098b-ama",
+      "nome": "GARRAFA TÉRMICA 630ML",
+      "descricao": "Beba com qualidade e na temperatura perfeita. Com design pensado para o dia a dia, esta garrafa térmica de 630ml oferece uma ótima experiência para quem busca manter a bebida sempre na temperatura ideal. Fabricada em inox SUS 304 com parede dupla, conserva líquidos quentes ou gelados por mais tempo, preservando o sabor e a qualidade. O bico flexível integrado à tampa plástica rosqueável e com alça facilita o consumo a qualquer momento, enquanto o canudo interno permite beber de forma confortável. Perfeita para acompanhar treinos, momentos ao ar livre ou a rotina diária, deixando água, vitaminas e outras bebidas sempre prontas para consumo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-AMARELO-23170-1746623088.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-630ml-AMARELO-23170-1746623088.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04098b",
+      "cor": "AMARELO",
+      "categoria": "garrafas-termicas",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 2704,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "94943068-6131-4d9a-853d-59502d4e485b",
+    "nome": "Garrafa Térmica 630ml",
+    "descricao_curta": "Beba com qualidade e na temperatura perfeita.",
+    "descricao_longa": "Beba com qualidade e na temperatura perfeita. Com design pensado para o dia a dia, esta garrafa térmica de 630ml oferece uma ótima experiência para quem busca manter a bebida sempre na temperatura ideal. Fabricada em inox SUS 304 com parede dupla, conserva líquidos quentes ou gelados por mais tempo, preservando o sabor e a qualidade. O bico flexível integrado à tampa plástica rosqueável e com alça facilita o consumo a qualquer momento, enquanto o canudo interno permite beber de forma confortável. Perfeita para acompanhar treinos, momentos ao ar livre ou a rotina diária, deixando água, vitaminas e outras bebidas sempre prontas para consumo.\n\nAltura: 25,4 cm | Largura: 9 cm | Circunferência: 25,4 cm | Medidas de gravação (CxL): 15 cm x 2,5 cm | Peso aproximado: 350g",
+    "preco_exibicao": 59.9,
+    "categoria": "garrafas-agua",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 1,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04098B/04098B_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04098B/04098B_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04098B/04098B_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04098B/04098B_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04098B/04098B_5.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:26:30.457794+00:00",
+    "destaque": "grande",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AMARELO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04098B/amarelo.jpg",
+        "referencia": "04098B-AMA"
+      },
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04098B/azul.jpg",
+        "referencia": "04098B-AZU"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04098B/branco.jpg",
+        "referencia": "04098B-BCO"
+      },
+      {
+        "nome": "CINZA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04098B/cinza.jpg",
+        "referencia": "04098B-CIN"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04098B/preto.jpg",
+        "referencia": "04098B-PRE"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04098B/verde.jpg",
+        "referencia": "04098B-VD"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

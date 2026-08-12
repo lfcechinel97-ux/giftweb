@@ -1,0 +1,314 @@
+{
+  "codigo_entrada": "9139i",
+  "codigo_consulta": "9139I",
+  "coletado_em": "2026-08-12T16:40:09.205276+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "76fe0478-20c8-471e-8e18-3be251a56aa8",
+      "codigo_amigavel": "9139I-AZU",
+      "codigo_prefixo": "9139I",
+      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-azu-9139i-azu",
+      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO-AZU",
+      "descricao": "",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-AZUL-7136-1690458790.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-AZUL-7136-1690458790.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/9139i",
+      "cor": "AZUL",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 11314,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "539bdfdc-7680-4671-a1f2-907065f2a873",
+      "codigo_amigavel": "9139I-PRE",
+      "codigo_prefixo": "9139I",
+      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-9139i-pre",
+      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO",
+      "descricao": "Squeeze 500ml de inox com pintura metalizada, tampa rosqueável e acompanha um segundo bico com mosquetão (não é térmico).",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-PRETO-7138-1690458792.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-PRETO-7138-1690458792.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/9139i",
+      "cor": "PRETO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 18349,
+      "peso": 114.0,
+      "altura": 21.5,
+      "largura": 20.8,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "dfc789a8-84b2-4e0b-9902-6132a7d25403",
+      "codigo_amigavel": "9139I-VD",
+      "codigo_prefixo": "9139I",
+      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-9139i-vd",
+      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO",
+      "descricao": "Squeeze 500ml de inox com pintura metalizada, tampa rosqueável e acompanha um segundo bico com mosquetão (não é térmico).",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-VERDE-7140-1690458793.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-VERDE-7140-1690458793.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/9139i",
+      "cor": "VERDE",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 5539,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "ac5d8f24-7e52-4a6a-953b-48969e2a5813",
+      "codigo_amigavel": "9139I-VM",
+      "codigo_prefixo": "9139I",
+      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-9139i-vm",
+      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO",
+      "descricao": "Squeeze 500ml de inox com pintura metalizada, tampa rosqueável e acompanha um segundo bico com mosquetão (não é térmico).",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-VERMELHO-7139-1690458793.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-VERMELHO-7139-1690458793.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/9139i",
+      "cor": "VERMELHO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 2400,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "3cf3fbc9-a8b0-45b6-8b40-bd653d7c7289",
+      "codigo_amigavel": "9139I-BCO",
+      "codigo_prefixo": "9139I",
+      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-9139i-bco",
+      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO",
+      "descricao": "Squeeze 500ml de inox com pintura metalizada, tampa rosqueável e acompanha um segundo bico com mosquetão (não é térmico).",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-BRANCO-7297-1690458791.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-BRANCO-7297-1690458791.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/9139i",
+      "cor": "BRANCO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 14519,
+      "peso": 114.0,
+      "altura": 21.5,
+      "largura": 20.8,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "a13a9e4f-4c0d-4f37-b13a-79eff9eda0c4",
+      "codigo_amigavel": "9139I-INO",
+      "codigo_prefixo": "9139I",
+      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-9139i-ino",
+      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO",
+      "descricao": "Squeeze 500ml de inox com pintura metalizada, tampa rosqueável e acompanha um segundo bico com mosquetão (não é térmico).",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-INOX-7137-1690458791.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-INOX-7137-1690458791.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/9139i",
+      "cor": "INOX",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 17009,
+      "peso": 114.0,
+      "altura": 21.5,
+      "largura": 20.8,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "5316ec67-0468-438e-a7a8-86d4d4bdfa45",
+      "codigo_amigavel": "9139I-ROS",
+      "codigo_prefixo": "9139I",
+      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-9139i-ros",
+      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO",
+      "descricao": "Squeeze 500ml de inox com pintura metalizada, tampa rosqueável e acompanha um segundo bico com mosquetão (não é térmico).",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-ROSA-7296-1690464057.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-ROSA-7296-1690464057.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/9139i",
+      "cor": "ROSA",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 7070,
+      "peso": 114.0,
+      "altura": 21.5,
+      "largura": 20.8,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "66ad99fe-f24f-4400-8651-4798ca50fddb",
+      "codigo_amigavel": "9139I-LAR",
+      "codigo_prefixo": "9139I",
+      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-9139i-lar",
+      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO",
+      "descricao": "Squeeze 500ml de inox com pintura metalizada, tampa rosqueável e acompanha um segundo bico com mosquetão (não é térmico).",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-LARANJA-8370-1690458792.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-LARANJA-8370-1690458792.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/9139i",
+      "cor": "LARANJA",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 3846,
+      "peso": 114.0,
+      "altura": 21.5,
+      "largura": 20.8,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "e86cffdd-03f5-4c54-a438-ee3f11e357fa",
+      "codigo_amigavel": "9139I",
+      "codigo_prefixo": "9139I",
+      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-9139i",
+      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO",
+      "descricao": "Squeeze 500ml de inox com pintura metalizada, tampa rosqueável e acompanha um segundo bico com mosquetão (não é térmico).",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-LARANJA-8370-1690458792.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-LARANJA-8370-1690458792.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/9139i",
+      "cor": "LARANJA",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 2,
+      "peso": 114.0,
+      "altura": 21.5,
+      "largura": 20.8,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "dfc789a8-84b2-4e0b-9902-6132a7d25403"
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "e5b15a29-c4fa-4d2b-b7e0-33772d80f6e1",
+    "nome": "Squeeze Inox 500ml",
+    "descricao_curta": "Squeeze 500ml de inox com pintura metalizada, tampa rosqueável e acompanha um segundo bico com mosquetão (não é térmico).",
+    "descricao_longa": "Squeeze 500ml de inox com pintura metalizada, tampa rosqueável e acompanha um segundo bico com mosquetão (não é térmico).\n\nMedidas de gravação (CxL): 14,3 cm x 6 cm | Peso aproximado: 142g",
+    "preco_exibicao": null,
+    "categoria": "garrafas-agua",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 10,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/9139i_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/9139i_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/9139i_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/9139i_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/9139i_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/9139i_6.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/9139i_7.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/9139i_8.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/9139i_9.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/9139i_10.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-28T00:27:09.701766+00:00",
+    "updated_at": "2026-07-28T00:27:09.701766+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/azul.jpg",
+        "referencia": "9139I-AZU"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/branco.jpg",
+        "referencia": "9139I-BCO"
+      },
+      {
+        "nome": "INOX",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/inox.jpg",
+        "referencia": "9139I-INO"
+      },
+      {
+        "nome": "LARANJA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/laranja.jpg",
+        "referencia": "9139I-LAR"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/preto.jpg",
+        "referencia": "9139I-PRE"
+      },
+      {
+        "nome": "ROSA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/rosa.jpg",
+        "referencia": "9139I-ROS"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/verde.jpg",
+        "referencia": "9139I-VD"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/9139i/vermelho.jpg",
+        "referencia": "9139I-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

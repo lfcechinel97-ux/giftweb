@@ -1,0 +1,162 @@
+{
+  "codigo_entrada": "01320",
+  "codigo_consulta": "01320",
+  "coletado_em": "2026-08-12T16:39:51.473503+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "c5f8f634-6ac5-4091-a340-ab9ade663796",
+      "codigo_amigavel": "01320-PRE",
+      "codigo_prefixo": "01320",
+      "slug": "mochila-de-nylon-usb-20l-01320-pre",
+      "nome": "MOCHILA DE NYLON USB 20L",
+      "descricao": "Mochila de nylon 20 litros com três compartimentos, sendo o principal com bolso para notebook 15,6. Com divisórias internas para acessórios, a mochila possui bolso lateral e suporte externo usb.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-PRETO-12107-1596811966.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-PRETO-12107-1596811966.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/01320",
+      "cor": "PRETO",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 36.5,
+      "estoque": 5479,
+      "peso": null,
+      "altura": 42.0,
+      "largura": 30.0,
+      "profundidade": 11.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "cc113424-e28c-4196-a77c-deec59b5e2f1",
+      "codigo_amigavel": "01320-AZU",
+      "codigo_prefixo": "01320",
+      "slug": "mochila-de-nylon-usb-20l-01320-azu",
+      "nome": "MOCHILA DE NYLON USB 20L",
+      "descricao": "Mochila de nylon 20 litros com três compartimentos, sendo o principal com bolso para notebook 15,6. Com divisórias internas para acessórios, a mochila possui bolso lateral e suporte externo usb.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-31L-USB-AZUL-12533-1611948017.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-31L-USB-AZUL-12533-1611948017.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/01320",
+      "cor": "AZUL",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 36.5,
+      "estoque": 5479,
+      "peso": null,
+      "altura": 42.0,
+      "largura": 30.0,
+      "profundidade": 11.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "82290b4e-43f2-4ccf-a119-d86443644882",
+      "codigo_amigavel": "01320-CIN",
+      "codigo_prefixo": "01320",
+      "slug": "mochila-de-nylon-usb-20l-01320-cin",
+      "nome": "MOCHILA DE NYLON USB 20L",
+      "descricao": "Mochila de nylon 20 litros com três compartimentos, sendo o principal com bolso para notebook 15,6. Com divisórias internas para acessórios, a mochila possui bolso lateral e suporte externo usb.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-21L-CINZA-12774-1716321256.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-21L-CINZA-12774-1716321256.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/01320",
+      "cor": "CINZA",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 36.5,
+      "estoque": 5479,
+      "peso": null,
+      "altura": 42.0,
+      "largura": 30.0,
+      "profundidade": 11.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "7bb25f94-47b9-4b1e-a6c9-245a527296f0",
+      "codigo_amigavel": "01320-VM",
+      "codigo_prefixo": "01320",
+      "slug": "mochila-de-nylon-usb-20l-01320-vm",
+      "nome": "MOCHILA DE NYLON USB 20L",
+      "descricao": "Mochila de nylon 20 litros com três compartimentos, sendo o principal com bolso para notebook 15,6. Com divisórias internas para acessórios, a mochila possui bolso lateral e suporte externo usb.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-20L-VERMELHO-12534-1768397610.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-20L-VERMELHO-12534-1768397610.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/01320",
+      "cor": "VERMELHO",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 36.5,
+      "estoque": 3749,
+      "peso": null,
+      "altura": 42.0,
+      "largura": 30.0,
+      "profundidade": 11.5,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "df72d265-014c-45eb-b7bf-0924563b99e6",
+    "nome": "Mochila de Nylon USB 20L",
+    "descricao_curta": "Mochila de nylon 20 litros com três compartimentos, sendo o principal com bolso para notebook 15,6.",
+    "descricao_longa": "Mochila de nylon 20 litros com três compartimentos, sendo o principal com bolso para notebook 15,6. Com divisórias internas para acessórios, a mochila possui bolso lateral e suporte externo usb.\n\nAltura: 42 cm | Largura: 30 cm | Medidas de gravação (CxL): 23 cm x 10 cm | Peso aproximado: 522g",
+    "preco_exibicao": 59.9,
+    "categoria": "mochilas-bolsa-necessaire",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 3,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/01320/01320_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/01320/01320_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/01320/01320_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/01320/01320_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/01320/01320_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/01320/01320_6.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/01320/01320_7.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/01320/01320_8.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:30:21.573569+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/01320/azul.jpg",
+        "referencia": "01320-AZU"
+      },
+      {
+        "nome": "CINZA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/01320/cinza.jpg",
+        "referencia": "01320-CIN"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/01320/preto.jpg",
+        "referencia": "01320-PRE"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/01320/vermelho.jpg",
+        "referencia": "01320-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

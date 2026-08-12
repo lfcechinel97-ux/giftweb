@@ -1,0 +1,189 @@
+{
+  "codigo_entrada": "05045",
+  "codigo_consulta": "05045",
+  "coletado_em": "2026-08-12T16:39:54.048919+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "fc6e224e-98b9-4b65-b92a-89f1b4b3291d",
+      "codigo_amigavel": "05045-AZC",
+      "codigo_prefixo": "05045",
+      "slug": "guarda-chuva-manual-com-protecao-uv-05045-azc",
+      "nome": "GUARDA-CHUVA MANUAL COM PROTEÇÃO UV",
+      "descricao": "Guarda-chuva manual de nylon com proteção UV, tecido interno em vinil. Com 8 varetas e estrutura em aço, possui botão de abertura e pegador de madeira com alça de nylon. Acompanha capa protetora.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-com-Protecao-UV-AZUL-CLARO-15879-1678214003.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-com-Protecao-UV-AZUL-CLARO-15879-1678214003.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05045",
+      "cor": "AZUL",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 20.3,
+      "estoque": 982,
+      "peso": 328.0,
+      "altura": 28.5,
+      "largura": 7.4,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "d86d3009-5d0d-4fe9-b517-f6b9179ec3aa",
+      "codigo_amigavel": "05045-LAR",
+      "codigo_prefixo": "05045",
+      "slug": "guarda-chuva-manual-com-protecao-uv-05045-lar",
+      "nome": "GUARDA-CHUVA MANUAL COM PROTEÇÃO UV",
+      "descricao": "Guarda-chuva manual de nylon com proteção UV, tecido interno em vinil. Com 8 varetas e estrutura em aço, possui botão de abertura e pegador de madeira com alça de nylon. Acompanha capa protetora.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-com-Protecao-UV-LARANJA-15881-1760104920.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-com-Protecao-UV-LARANJA-15881-1760104920.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05045",
+      "cor": "LARANJA",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 20.3,
+      "estoque": 1341,
+      "peso": 328.0,
+      "altura": 28.5,
+      "largura": 4.7,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "5cf0e15c-47b5-4097-8b89-629940fe17fc",
+      "codigo_amigavel": "05045-VD",
+      "codigo_prefixo": "05045",
+      "slug": "guarda-chuva-manual-com-protecao-uv-05045-vd",
+      "nome": "GUARDA-CHUVA MANUAL COM PROTEÇÃO UV",
+      "descricao": "Guarda-chuva manual de nylon com proteção UV, tecido interno em vinil. Com 8 varetas e estrutura em aço, possui botão de abertura e pegador de madeira com alça de nylon. Acompanha capa protetora.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-com-Protecao-UV-VERDE-15883-1678214005.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-com-Protecao-UV-VERDE-15883-1678214005.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05045",
+      "cor": "VERDE",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 20.3,
+      "estoque": 3877,
+      "peso": 328.0,
+      "altura": 28.5,
+      "largura": 4.7,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "01abe746-9f96-411e-9fb5-a07e40d4fcc0",
+      "codigo_amigavel": "05045-PRE",
+      "codigo_prefixo": "05045",
+      "slug": "guarda-chuva-manual-com-protecao-uv-05045-pre",
+      "nome": "GUARDA-CHUVA MANUAL COM PROTEÇÃO UV",
+      "descricao": "Guarda-chuva manual de nylon com proteção UV, tecido interno em vinil. Com 8 varetas e estrutura em aço, possui botão de abertura e pegador de madeira com alça de nylon. Acompanha capa protetora.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-com-Protecao-UV-PRETO-15882-1678214004.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-com-Protecao-UV-PRETO-15882-1678214004.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05045",
+      "cor": "PRETO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 20.3,
+      "estoque": 4090,
+      "peso": 328.0,
+      "altura": 28.5,
+      "largura": 4.7,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "b7cad7fb-62cf-48fa-8a97-02ec6069f2d8",
+      "codigo_amigavel": "05045-AZE",
+      "codigo_prefixo": "05045",
+      "slug": "guarda-chuva-manual-com-protecao-uv-05045-aze",
+      "nome": "GUARDA-CHUVA MANUAL COM PROTEÇÃO UV",
+      "descricao": "Guarda-chuva manual de nylon com proteção UV, tecido interno em vinil. Com 8 varetas e estrutura em aço, possui botão de abertura e pegador de madeira com alça de nylon. Acompanha capa protetora.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-com-Protecao-UV-AZUL-ESCURO-15880-1678214003.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-com-Protecao-UV-AZUL-ESCURO-15880-1678214003.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05045",
+      "cor": "AZUL",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 20.3,
+      "estoque": 4084,
+      "peso": 328.0,
+      "altura": 28.5,
+      "largura": 4.7,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "03f78314-2118-4d63-bf4b-7eef33d883fb",
+    "nome": "Guarda-chuva Manual com Proteção UV",
+    "descricao_curta": "Guarda-chuva manual de nylon com proteção UV, tecido interno em vinil.",
+    "descricao_longa": "Guarda-chuva manual de nylon com proteção UV, tecido interno em vinil. Com 8 varetas e estrutura em aço, possui botão de abertura e pegador de madeira com alça de nylon. Acompanha capa protetora.\n\nAltura: 69 cm | Largura: 4,7 cm | Medidas de gravação (CxL): 18 cm x 25 cm | Peso aproximado: 328g",
+    "preco_exibicao": 59.9,
+    "categoria": "guarda-chuvas",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 4,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05045/05045_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05045/05045_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05045/05045_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05045/05045_4.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:29:00.971796+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL CLARO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05045/azul-claro.jpg",
+        "referencia": "05045-AZC"
+      },
+      {
+        "nome": "AZUL ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05045/azul-escuro.jpg",
+        "referencia": "05045-AZE"
+      },
+      {
+        "nome": "LARANJA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05045/laranja.jpg",
+        "referencia": "05045-LAR"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05045/preto.jpg",
+        "referencia": "05045-PRE"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05045/verde.jpg",
+        "referencia": "05045-VD"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

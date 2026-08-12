@@ -1,0 +1,221 @@
+{
+  "codigo_entrada": "18650",
+  "codigo_consulta": "18650",
+  "coletado_em": "2026-08-12T16:40:06.214175+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "762fa8d9-b014-4709-a2d7-99e010fb9cff",
+      "codigo_amigavel": "18650-AZC",
+      "codigo_prefixo": "18650",
+      "slug": "necessaire-em-pu-18650-azc",
+      "nome": "NECESSAIRE EM PU",
+      "descricao": "Nécessaire de poliuretano resistente à água.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PU-impermeavel-AZUL-CLARO-14145-1648123768.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PU-impermeavel-AZUL-CLARO-14145-1648123768.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18650",
+      "cor": "AZUL",
+      "categoria": "necessaires",
+      "marca": "XBZ",
+      "preco_custo": 9.5,
+      "estoque": 3035,
+      "peso": null,
+      "altura": 9.5,
+      "largura": 18.5,
+      "profundidade": 7.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "64e43cd1-dff8-4bf2-a39f-06345813c7d5",
+      "codigo_amigavel": "18650-PRE",
+      "codigo_prefixo": "18650",
+      "slug": "necessaire-em-pu-18650-pre",
+      "nome": "NECESSAIRE EM PU",
+      "descricao": "Nécessaire de poliuretano resistente à água.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PU-impermeavel-PRETO-14147-1648123773.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PU-impermeavel-PRETO-14147-1648123773.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18650",
+      "cor": "PRETO",
+      "categoria": "necessaires",
+      "marca": "XBZ",
+      "preco_custo": 9.5,
+      "estoque": 2215,
+      "peso": null,
+      "altura": 9.5,
+      "largura": 18.5,
+      "profundidade": 7.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "6c70a69f-baa8-4b64-9e60-df9e176cd07b",
+      "codigo_amigavel": "18650-VD",
+      "codigo_prefixo": "18650",
+      "slug": "necessaire-em-pu-18650-vd",
+      "nome": "NECESSAIRE EM PU",
+      "descricao": "Nécessaire de poliuretano resistente à água.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PU-impermeavel-VERDE-14150-1648123890.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PU-impermeavel-VERDE-14150-1648123890.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18650",
+      "cor": "VERDE",
+      "categoria": "necessaires",
+      "marca": "XBZ",
+      "preco_custo": 9.5,
+      "estoque": 1389,
+      "peso": null,
+      "altura": 9.5,
+      "largura": 18.5,
+      "profundidade": 7.0,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "86b2ad84-044e-49f8-bfd4-ef0e5cba2395",
+      "codigo_amigavel": "18650-RSC",
+      "codigo_prefixo": "18650",
+      "slug": "necessaire-em-pu-18650-rsc",
+      "nome": "NECESSAIRE EM PU",
+      "descricao": "Nécessaire de poliuretano resistente à água.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PU-impermeavel-ROSA-CLARO-14148-1648123774.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PU-impermeavel-ROSA-CLARO-14148-1648123774.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18650",
+      "cor": "ROSA",
+      "categoria": "necessaires",
+      "marca": "XBZ",
+      "preco_custo": 9.5,
+      "estoque": 2796,
+      "peso": null,
+      "altura": 9.5,
+      "largura": 18.5,
+      "profundidade": 7.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "1c3ad4ee-71f1-47cc-806a-18b5ec3ac2a4",
+      "codigo_amigavel": "18650-RSE",
+      "codigo_prefixo": "18650",
+      "slug": "necessaire-em-pu-18650-rse",
+      "nome": "NECESSAIRE EM PU",
+      "descricao": "Nécessaire de poliuretano resistente à água.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PU-impermeavel-ROSA-ESCURO-14149-1648123776.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PU-impermeavel-ROSA-ESCURO-14149-1648123776.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18650",
+      "cor": "ROSA",
+      "categoria": "necessaires",
+      "marca": "XBZ",
+      "preco_custo": 9.5,
+      "estoque": 3288,
+      "peso": null,
+      "altura": 9.5,
+      "largura": 18.5,
+      "profundidade": 7.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "95d10d7e-8850-47b8-a010-33fc72a17d1b",
+      "codigo_amigavel": "18650-LIL",
+      "codigo_prefixo": "18650",
+      "slug": "necessaire-em-pu-18650-lil",
+      "nome": "NECESSAIRE EM PU",
+      "descricao": "Nécessaire de poliuretano resistente à água.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PU-impermeavel-LILAS-14146-1648123772.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PU-impermeavel-LILAS-14146-1648123772.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18650",
+      "cor": "ROXO",
+      "categoria": "necessaires",
+      "marca": "XBZ",
+      "preco_custo": 9.5,
+      "estoque": 3968,
+      "peso": null,
+      "altura": 9.5,
+      "largura": 18.5,
+      "profundidade": 7.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "c6cfe0a0-9a15-4f67-95fa-f9c6a7f67e2e",
+    "nome": "Nécessaire PU impermeável",
+    "descricao_curta": "Nécessaire de poliuretano resistente à água.",
+    "descricao_longa": "Nécessaire de poliuretano resistente à água.\n\nAltura: 9,5 cm | Largura: 18,5 cm | Medidas de gravação (CxL): 8 cm x 15,5 cm | Peso aproximado: 64g",
+    "preco_exibicao": null,
+    "categoria": "mochilas-bolsa-necessaire",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 9,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18650/18650_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18650/18650_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18650/18650_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18650/18650_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18650/18650_5.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-28T00:31:03.585883+00:00",
+    "updated_at": "2026-07-28T00:31:03.585883+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL CLARO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18650/azul-claro.jpg",
+        "referencia": "18650-AZC"
+      },
+      {
+        "nome": "LILÁS",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18650/lil-s.jpg",
+        "referencia": "18650-LIL"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18650/preto.jpg",
+        "referencia": "18650-PRE"
+      },
+      {
+        "nome": "ROSA CLARO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18650/rosa-claro.jpg",
+        "referencia": "18650-RSC"
+      },
+      {
+        "nome": "ROSA ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18650/rosa-escuro.jpg",
+        "referencia": "18650-RSE"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18650/verde.jpg",
+        "referencia": "18650-VD"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

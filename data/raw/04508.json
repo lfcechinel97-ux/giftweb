@@ -1,0 +1,159 @@
+{
+  "codigo_entrada": "04508",
+  "codigo_consulta": "04508",
+  "coletado_em": "2026-08-12T16:39:46.926361+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "404356a4-f226-43a7-8f2e-da77efab5574",
+      "codigo_amigavel": "04508-CIN",
+      "codigo_prefixo": "04508",
+      "slug": "mochila-nylon-18l-04508-cin",
+      "nome": "MOCHILA NYLON 18L",
+      "descricao": "Mochila de Nylon 18 litros com dois compartimentos, sendo principal com bolso raso para notebook 15.6. Contém bolsos laterais telados.\r\n",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Nylon-20-Litros-CINZA-19424-1718308277.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Nylon-20-Litros-CINZA-19424-1718308277.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04508",
+      "cor": "CINZA",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 3864,
+      "peso": null,
+      "altura": 41.0,
+      "largura": 29.0,
+      "profundidade": 12.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "b629dc1d-3eb3-4cfe-988a-7a71c2a09952",
+      "codigo_amigavel": "04508-AZC",
+      "codigo_prefixo": "04508",
+      "slug": "mochila-nylon-18l-04508-azc",
+      "nome": "MOCHILA NYLON 18L",
+      "descricao": "Mochila de Nylon 18 litros com dois compartimentos, sendo principal com bolso raso para notebook 15.6. Contém bolsos laterais telados.\r\n",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Nylon-20-Litros-AZUL-CLARO-19574-1720698344.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Nylon-20-Litros-AZUL-CLARO-19574-1720698344.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04508",
+      "cor": "AZUL",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 996,
+      "peso": null,
+      "altura": 41.0,
+      "largura": 29.0,
+      "profundidade": 12.0,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "eaa3cddb-734f-43b2-92c8-6a12aeecf5cf",
+      "codigo_amigavel": "04508-PRE",
+      "codigo_prefixo": "04508",
+      "slug": "mochila-nylon-18l-04508-pre",
+      "nome": "MOCHILA NYLON 18L",
+      "descricao": "Mochila de Nylon 18 litros com dois compartimentos, sendo principal com bolso raso para notebook 15.6. Contém bolsos laterais telados.\r\n",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Nylon-20-Litros-17743-1702555951.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Nylon-20-Litros-17743-1702555951.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04508",
+      "cor": "PRETO",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 2941,
+      "peso": null,
+      "altura": 41.0,
+      "largura": 29.0,
+      "profundidade": 12.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "a8473dbf-7cbf-47bf-92d2-fc41d79ab733",
+      "codigo_amigavel": "04508-AZU",
+      "codigo_prefixo": "04508",
+      "slug": "mochila-nylon-18l-04508-azu",
+      "nome": "MOCHILA NYLON 18L",
+      "descricao": "Mochila de Nylon 18 litros com dois compartimentos, sendo principal com bolso raso para notebook 15.6. Contém bolsos laterais telados.\r\n",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Nylon-20-Litros-AZUL-19423-1720698331.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Nylon-20-Litros-AZUL-19423-1720698331.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04508",
+      "cor": "AZUL",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 581,
+      "peso": null,
+      "altura": 41.0,
+      "largura": 29.0,
+      "profundidade": 12.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "e39e8160-b90c-442b-96d4-5bf65a3087fe",
+    "nome": "Mochila Nylon 18L",
+    "descricao_curta": "Mochila de Nylon 18 litros com dois compartimentos, sendo principal com bolso raso para notebook 15.6. Contém bolsos laterais telados.",
+    "descricao_longa": "Mochila de Nylon 18 litros com dois compartimentos, sendo principal com bolso raso para notebook 15.6. Contém bolsos laterais telados.\n\nAltura: 40 cm | Largura: 29 cm | Medidas de gravação (CxL): 12 cm x 22,5 cm | Peso aproximado: 348g",
+    "preco_exibicao": 59.9,
+    "categoria": "mochilas-bolsa-necessaire",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 2,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04508/04508_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04508/04508_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04508/04508_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04508/04508_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04508/04508_5.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:30:21.573569+00:00",
+    "destaque": "medio",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04508/azul.jpg",
+        "referencia": "04508-AZU"
+      },
+      {
+        "nome": "AZUL CLARO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04508/azul-claro.jpg",
+        "referencia": "04508-AZC"
+      },
+      {
+        "nome": "CINZA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04508/cinza.jpg",
+        "referencia": "04508-CIN"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04508/preto.jpg",
+        "referencia": "04508-PRE"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

@@ -1,0 +1,188 @@
+{
+  "codigo_entrada": "05046",
+  "codigo_consulta": "05046",
+  "coletado_em": "2026-08-12T16:39:54.490742+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "11677d86-8b7b-42d5-bc35-3a087b5b5327",
+      "codigo_amigavel": "05046-PRE",
+      "codigo_prefixo": "05046",
+      "slug": "guarda-chuva-05046-pre",
+      "nome": "GUARDA-CHUVA",
+      "descricao": "Guarda-chuva de poliéster de impacto impermeável com abertura automática, estrutura em aço e 8 varetas em fibra de vidro. Possui pegador plástico com botão de acionamento.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-PRETO-15895-1678214690.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-PRETO-15895-1678214690.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05046",
+      "cor": "PRETO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 20.5,
+      "estoque": 3694,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "9710c27c-52df-4a28-92c2-9f025b17ba0b",
+      "codigo_amigavel": "05046-ROX",
+      "codigo_prefixo": "05046",
+      "slug": "guarda-chuva-05046-rox",
+      "nome": "GUARDA-CHUVA",
+      "descricao": "Guarda-chuva de poliéster de impacto impermeável com abertura automática, estrutura em aço e 8 varetas em fibra de vidro. Possui pegador plástico com botão de acionamento.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-ROXO-15893-1678214690.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-ROXO-15893-1678214690.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05046",
+      "cor": "ROXO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 20.5,
+      "estoque": 498,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "d1cf62bc-896a-4b03-9892-8a9467377162",
+      "codigo_amigavel": "05046-VD",
+      "codigo_prefixo": "05046",
+      "slug": "guarda-chuva-05046-vd",
+      "nome": "GUARDA-CHUVA",
+      "descricao": "Guarda-chuva de poliéster de impacto impermeável com abertura automática, estrutura em aço e 8 varetas em fibra de vidro. Possui pegador plástico com botão de acionamento.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-VERDE-15894-1678214690.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-VERDE-15894-1678214690.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05046",
+      "cor": "VERDE",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 20.5,
+      "estoque": 6681,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "1cd9d01f-16b1-4200-9afb-1a98ad0d9f35",
+      "codigo_amigavel": "05046-AZU",
+      "codigo_prefixo": "05046",
+      "slug": "guarda-chuva-05046-azu",
+      "nome": "GUARDA-CHUVA",
+      "descricao": "Guarda-chuva de poliéster de impacto impermeável com abertura automática, estrutura em aço e 8 varetas em fibra de vidro. Possui pegador plástico com botão de acionamento.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-AZUL-15897-1678214689.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-AZUL-15897-1678214689.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05046",
+      "cor": "AZUL",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 20.5,
+      "estoque": 49,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "b86a034b-5af6-44b0-9375-7a8bdbd953e8",
+      "codigo_amigavel": "05046-VM",
+      "codigo_prefixo": "05046",
+      "slug": "guarda-chuva-05046-vm",
+      "nome": "GUARDA-CHUVA",
+      "descricao": "Guarda-chuva de poliéster de impacto impermeável com abertura automática, estrutura em aço e 8 varetas em fibra de vidro. Possui pegador plástico com botão de acionamento.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-VERMELHO-15896-1678214691.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-VERMELHO-15896-1678214691.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05046",
+      "cor": "VERMELHO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 20.5,
+      "estoque": 1143,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "6bf702c8-a658-434f-be3b-3c834cc8a068",
+    "nome": "Guarda-chuva Automático",
+    "descricao_curta": "Guarda-chuva de poliéster de impacto impermeável com abertura automática, estrutura em aço e 8 varetas em fibra de vidro.",
+    "descricao_longa": "Guarda-chuva de poliéster de impacto impermeável com abertura automática, estrutura em aço e 8 varetas em fibra de vidro. Possui pegador plástico com botão de acionamento.\n\nAltura: 84,5 cm | Largura: Pegador 10cm | Medidas de gravação (CxL): 15 cm x 30 cm | Peso aproximado: 354g",
+    "preco_exibicao": 59.9,
+    "categoria": "guarda-chuvas",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 5,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05046/05046_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05046/05046_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05046/05046_3.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-28T00:29:00.971796+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05046/azul.jpg",
+        "referencia": "05046-AZU"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05046/preto.jpg",
+        "referencia": "05046-PRE"
+      },
+      {
+        "nome": "ROXO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05046/roxo.jpg",
+        "referencia": "05046-ROX"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05046/verde.jpg",
+        "referencia": "05046-VD"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/05046/vermelho.jpg",
+        "referencia": "05046-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}
