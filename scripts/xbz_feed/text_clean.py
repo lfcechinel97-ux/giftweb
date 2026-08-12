@@ -14,15 +14,17 @@ _EMOJI_RE = re.compile(
     "]+",
     flags=re.UNICODE,
 )
-_MULTISPACE_RE = re.compile(r"[ \t]+")
-_MULTIBLANK_RE = re.compile(r"\n{3,}")
+_WHITESPACE_RE = re.compile(r"\s+")
 
 
 def limpar_texto(texto: str) -> str:
+    """Achata para uma única linha (sem \\r\\n) - o CSV vai para o Google Sheets via
+    importação, e quebras de linha dentro de um campo quebram o parser de import
+    do Sheets mesmo com o campo entre aspas (confirmado na prática em 2026-08-12:
+    virou 3 linhas soltas por produto e desalinhou todas as colunas seguintes)."""
     if not texto:
         return ""
     t = _HTML_TAG_RE.sub(" ", texto)
     t = _EMOJI_RE.sub("", t)
-    t = _MULTISPACE_RE.sub(" ", t)
-    t = _MULTIBLANK_RE.sub("\n\n", t)
+    t = _WHITESPACE_RE.sub(" ", t)
     return t.strip()

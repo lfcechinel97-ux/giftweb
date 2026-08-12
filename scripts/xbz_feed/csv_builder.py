@@ -47,7 +47,8 @@ def _montar_descricao(p: ProdutoResolvido) -> str:
     if p.cores_disponiveis:
         partes.append(f"Cores disponíveis: {', '.join(p.cores_disponiveis)}")
 
-    texto = "\n\n".join(partes)
+    # Junta tudo numa ÚNICA linha (sem \n) - ver comentário em text_clean.limpar_texto.
+    texto = limpar_texto(" | ".join(partes))
     return texto[:MAX_DESCRIPTION]
 
 
