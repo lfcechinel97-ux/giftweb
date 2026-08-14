@@ -59,7 +59,7 @@ const Index = () => {
   return (
       <div className="min-h-screen flex flex-col bg-background">
         <Helmet>
-          <title>Gift Web Brindes | Brindes Corporativos Personalizados para Empresas</title>
+          <title>Gift Web Brindes | Brindes Corporativos Personalizados</title>
           <meta name="description" content="Gift Web Brindes: mais de 3.000 brindes corporativos personalizados para empresas. Garrafas, copos, mochilas, kits e muito mais. Solicite seu orçamento!" />
           <link rel="canonical" href={SITE_URL} />
           <meta property="og:title" content="Gift Web Brindes | Brindes Corporativos Personalizados" />
