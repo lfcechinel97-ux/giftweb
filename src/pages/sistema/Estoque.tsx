@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Package, Search, Warehouse, Box } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -73,7 +73,7 @@ function EstoqueXBZ({ search, categoria }: { search: string; categoria: string }
               <div className="flex items-center gap-3 px-4 py-2.5">
                 <div className="w-9 h-9 rounded bg-secondary shrink-0 overflow-hidden">
                   {p.image_url ? (
-                    <img src={p.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    <img src={p.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <Package className="h-4 w-4 text-muted-foreground" />
@@ -136,7 +136,9 @@ function EstoqueXBZ({ search, categoria }: { search: string; categoria: string }
 // ─── Aba: Estoque Próprio ─────────────────────────────────────────────────────
 function EstoqueProprio({ search, categoria }: { search: string; categoria: string }) {
   const { parentProducts, allProducts, isLoading } = useSistemaProducts();
-  const { ajustesEstoque } = useSistema();
+  const { ajustesEstoque, ensureAjustes } = useSistema();
+  useEffect(() => { void ensureAjustes(); }, [ensureAjustes]);
+
 
   const getReserva = (produtoId: string, codigoComposto?: string): number => {
     return ajustesEstoque
@@ -213,7 +215,7 @@ function EstoqueProprio({ search, categoria }: { search: string; categoria: stri
                 <div className="flex items-center gap-3 px-4 py-2.5">
                   <div className="w-9 h-9 rounded bg-secondary shrink-0 overflow-hidden">
                     {p.image_url ? (
-                      <img src={p.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      <img src={p.image_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Package className="h-4 w-4 text-muted-foreground" />

@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { Suspense, useCallback, useEffect } from "react";
 import {
   FileText, ShoppingCart, Boxes, Package, Globe, User, Users, Settings, ChevronDown, Kanban,
 } from "lucide-react";
@@ -10,14 +10,24 @@ import {
 import { useSistema } from "@/contexts/SistemaContext";
 
 const menu = [
-  { icon: FileText, label: "Orçamentos", path: "/sistema/orcamentos" },
-  { icon: ShoppingCart, label: "Pedidos", path: "/sistema/pedidos" },
-  { icon: Kanban, label: "PCP", path: "/sistema/pcp" },
-  { icon: Boxes, label: "Estoque", path: "/sistema/estoque" },
-  { icon: Package, label: "Produtos", path: "/sistema/produtos" },
-  { icon: Users, label: "Clientes", path: "/sistema/clientes" },
-  { icon: Settings, label: "Configurações", path: "/sistema/configuracoes" },
+  { icon: FileText, label: "Orçamentos", path: "/sistema/orcamentos", chunk: () => import("./Orcamentos.tsx") },
+  { icon: ShoppingCart, label: "Pedidos", path: "/sistema/pedidos", chunk: () => import("./Pedidos.tsx") },
+  { icon: Kanban, label: "PCP", path: "/sistema/pcp", chunk: () => import("./PCP.tsx") },
+  { icon: Boxes, label: "Estoque", path: "/sistema/estoque", chunk: () => import("./Estoque.tsx") },
+  { icon: Package, label: "Produtos", path: "/sistema/produtos", chunk: () => import("./ProdutosCatalogo.tsx") },
+  { icon: Users, label: "Clientes", path: "/sistema/clientes", chunk: () => import("./Clientes.tsx") },
+  { icon: Settings, label: "Configurações", path: "/sistema/configuracoes", chunk: () => import("./Configuracoes.tsx") },
 ];
+
+/* Esqueleto de transição de rota — mantém o layout, sem tela branca */
+const RouteSkeleton = () => (
+  <div className="space-y-4">
+    <div className="animate-pulse h-8 w-64 rounded bg-muted" />
+    {[0, 1, 2].map(i => (
+      <div key={i} className="animate-pulse h-24 rounded-xl bg-muted" />
+    ))}
+  </div>
+);
 
 export default function SistemaLayout() {
   const { vendedores, currentVendedor, setCurrentVendedor, loading } = useSistema();
@@ -29,6 +39,14 @@ export default function SistemaLayout() {
   };
   const navigate = useNavigate();
   const loc = useLocation();
+  
+
+  /* Pré-carregamento no hover: SOMENTE o chunk de código da rota (leve).
+     Buscar dados por movimento de mouse multiplicava requisições sem ganho. */
+  const prefetch = useCallback((item: typeof menu[number]) => {
+    item.chunk().catch(() => undefined);
+  }, []);
+
 
   useEffect(() => {
     if (loc.pathname === "/sistema" || loc.pathname === "/sistema/") {
@@ -38,7 +56,7 @@ export default function SistemaLayout() {
 
   return (
     <div className="sistema-theme flex min-h-screen bg-background">
-      <aside className="w-[230px] min-h-screen bg-[#1C2430] text-white fixed left-0 top-0 flex flex-col z-50">
+      <aside className="w-[230px] min-h-screen bg-[#0F2A5C] text-white fixed left-0 top-0 flex flex-col z-50">
         <div className="px-5 py-6 border-b border-white/10">
           <h2 className="text-xl tracking-tight" style={{ fontFamily: "inherit", fontWeight: 600, letterSpacing: "-0.02em" }}>
             <span style={{ color: "#fff" }}>Gift</span>
@@ -52,8 +70,10 @@ export default function SistemaLayout() {
             <NavLink
               key={item.path}
               to={item.path}
+              onMouseEnter={() => prefetch(item)}
+              onFocus={() => prefetch(item)}
               className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/65 hover:bg-white/[0.06] hover:text-white transition-colors"
-              activeClassName="!text-white !bg-white/[0.08] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-[#16A34A]"
+              activeClassName="!text-white !bg-white/[0.08] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-[#2563EB]"
             >
               <item.icon className="h-4 w-4 shrink-0" />
               <span>{item.label}</span>
@@ -77,7 +97,7 @@ export default function SistemaLayout() {
         </div>
       </aside>
 
-      <div className="ml-[230px] flex-1 min-h-screen flex flex-col">
+      <div className="ml-[230px] flex-1 min-w-0 min-h-screen flex flex-col">
         <header className="h-14 bg-card border-b border-border flex items-center justify-between px-6 sticky top-0 z-40">
           <h1 className="text-sm font-semibold text-foreground">Sistema Gift Web</h1>
 
@@ -113,8 +133,10 @@ export default function SistemaLayout() {
           </DropdownMenu>
         </header>
 
-        <main className="p-6 flex-1">
-          <Outlet />
+        <main className="p-6 flex-1 min-w-0">
+          <Suspense fallback={<RouteSkeleton />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pencil, Plus, Search, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,9 @@ import { useSistema, type Cliente } from "@/contexts/SistemaContext";
 import ClienteDialog from "./ClienteDialog";
 
 export default function Clientes() {
-  const { clientes, removeCliente } = useSistema();
+  const { clientes, removeCliente, ensureClientes } = useSistema();
+  useEffect(() => { void ensureClientes(); }, [ensureClientes]);
+
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Cliente | undefined>();

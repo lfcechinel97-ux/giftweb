@@ -1,9 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag } from "lucide-react";
+import {
+  Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag, Clock, History,
+  Tag, X, MessageSquare, Send,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -11,7 +16,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { sizedImage } from "@/lib/imageSize";
 import { cn } from "@/lib/utils";
+import { Money } from "@/components/sistema/ui/Money";
+import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
+
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
@@ -25,6 +34,7 @@ interface PcpRow {
   producao_id: string;
   pedido_id: string;
   pedido_numero: string;
+  pedido_cor: string | null;
   cliente: string | null;
   produto_nome: string | null;
   mockup_url: string | null;
@@ -46,7 +56,30 @@ interface PcpRow {
   qtd_retornada: number | null;
   compra_confirmada_em: string | null;
   fornecedor_compra_id: string | null;
+  medidas_ok: boolean | null;
+  pagamento_ok: boolean | null;
+  etiqueta_ok: boolean | null;
+  coleta_solicitada_em: string | null;
+  pagamento_cartao_conferido_em: string | null;
+  pix_recebido_integral_em: string | null;
+  pagamento_nome: string | null;
+  pedido_total: number | null;
+  etapa_desde: string | null;
+  horas_na_etapa: number | null;
+  total_itens_pedido: number | null;
+  itens_enviados_pedido: number | null;
+  item_observacao: string | null;
+  pedido_observacoes: string | null;
+  tags: string[] | null;
 }
+
+interface ComentarioRow {
+  id: string;
+  mensagem: string;
+  autor_email: string | null;
+  created_at: string;
+}
+
 
 interface Fornecedor {
   id: string;
@@ -55,49 +88,153 @@ interface Fornecedor {
   telefone: string | null;
 }
 
+interface HistoricoRow {
+  id: string;
+  status_anterior: string | null;
+  status_novo: string;
+  usuario_id: string | null;
+  observacao: string | null;
+  created_at: string;
+}
+
 /* ── Status columns config ──────────────────────────────────────────────── */
 
-const STATUS_COLS: { value: PcpStatus; label: string; dot: string; header: string }[] = [
-  { value: "organizando_pedido",  label: "Organizando Pedido",     dot: "bg-gray-400",    header: "bg-gray-50 text-gray-700" },
-  { value: "pronto_producao",     label: "Pronto p/ Produção",     dot: "bg-amber-500",   header: "bg-amber-50 text-amber-700" },
-  { value: "teste_fisico",        label: "Teste Físico",           dot: "bg-violet-500",  header: "bg-violet-50 text-violet-700" },
-  { value: "preparacao",          label: "Preparação",             dot: "bg-sky-500",     header: "bg-sky-50 text-sky-700" },
-  { value: "em_producao",         label: "Em Produção",            dot: "bg-blue-600",    header: "bg-blue-50 text-blue-700" },
-  { value: "embalagem_pagamento", label: "Embalagem & Pagamento",  dot: "bg-indigo-500",  header: "bg-indigo-50 text-indigo-700" },
-  { value: "aguardando_coleta",   label: "Aguardando Coleta",      dot: "bg-teal-500",    header: "bg-teal-50 text-teal-700" },
-  { value: "enviado",             label: "Enviado",                dot: "bg-emerald-600", header: "bg-emerald-50 text-emerald-700" },
+const STATUS_COLS: { value: PcpStatus; label: string; color: string }[] = [
+  { value: "organizando_pedido",  label: "Organizando Pedido",    color: "#64748B" },
+  { value: "pronto_producao",     label: "Pronto p/ Produção",    color: "#14B8A6" },
+  { value: "teste_fisico",        label: "Teste Físico",          color: "#EAB308" },
+  { value: "preparacao",          label: "Preparação",            color: "#F97316" },
+  { value: "em_producao",         label: "Em Produção",           color: "#F97316" },
+  { value: "embalagem_pagamento", label: "Embalagem & Pagamento", color: "#EAB308" },
+  { value: "aguardando_coleta",   label: "Aguardando Coleta",     color: "#EAB308" },
+  { value: "enviado",             label: "Enviado",               color: "#16A34A" },
 ];
 
+const STATUS_MAP = Object.fromEntries(STATUS_COLS.map(c => [c.value, c])) as Record<string, typeof STATUS_COLS[number]>;
+
 const TERCEIRIZADA_TRIGGER: LocalProducao[] = ["terceirizada", "fornecedor_para_terceirizada"];
+
+/* Paleta estável por pedido (faixa de identificação) */
+const PEDIDO_PALETTE = [
+  "#2563EB", "#F97316", "#14B8A6", "#A855F7", "#EAB308",
+  "#EC4899", "#0EA5E9", "#16A34A", "#F43F5E", "#8B5CF6",
+];
+
+const corDoPedido = (row: PcpRow) => {
+  if (row.pedido_cor) return row.pedido_cor;
+  const key = row.pedido_numero || row.pedido_id || "";
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return PEDIDO_PALETTE[h % PEDIDO_PALETTE.length];
+};
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
 const prazoInfo = (dataStr: string | null) => {
-  if (!dataStr) return { border: "border-l-border", label: null as string | null, tone: "text-muted-foreground" };
+  if (!dataStr) return { label: null as string | null, tone: "text-muted-foreground" };
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
   const data = new Date(`${dataStr}T00:00:00`);
   const diffDias = Math.round((data.getTime() - hoje.getTime()) / 86400000);
-  if (diffDias < 0) return { border: "border-l-red-500", label: `${Math.abs(diffDias)}d atrasado`, tone: "text-red-600" };
-  if (diffDias <= 2) return { border: "border-l-orange-500", label: diffDias === 0 ? "Entrega hoje" : `${diffDias}d p/ entrega`, tone: "text-orange-600" };
-  return { border: "border-l-green-500", label: `${diffDias}d p/ entrega`, tone: "text-muted-foreground" };
+  if (diffDias < 0) return { label: `${Math.abs(diffDias)}d atrasado`, tone: "text-red-600" };
+  if (diffDias <= 2) return { label: diffDias === 0 ? "Entrega hoje" : `${diffDias}d p/ entrega`, tone: "text-orange-600" };
+  return { label: `${diffDias}d p/ entrega`, tone: "text-muted-foreground" };
 };
 
 const formatDate = (d: string | null) => d ? new Date(`${d}T00:00:00`).toLocaleDateString("pt-BR") : null;
+const formatDateTime = (d: string | null) => d ? new Date(d).toLocaleString("pt-BR") : "—";
+
+const tempoNaEtapa = (horas: number | null) => {
+  if (horas == null) return null;
+  if (horas < 1) return "menos de 1h nesta etapa";
+  if (horas < 24) return `${Math.floor(horas)}h nesta etapa`;
+  return `${Math.floor(horas / 24)}d nesta etapa`;
+};
+
+const tempoNaEtapaCurto = (horas: number | null) => {
+  if (horas == null) return null;
+  if (horas < 1) return "<1h";
+  if (horas < 24) return `${Math.floor(horas)}h`;
+  return `${Math.floor(horas / 24)}d`;
+};
+
+/* Limite (em horas) de permanência aceitável em cada etapa */
+const LIMITE_ETAPA: Record<PcpStatus, number> = {
+  organizando_pedido: 48,
+  pronto_producao: 48,
+  teste_fisico: 48,
+  preparacao: 72,
+  em_producao: 120,
+  embalagem_pagamento: 48,
+  aguardando_coleta: 48,
+  enviado: 10000,
+};
+
+/* ── Gates de pagamento ──────────────────────────────────────────────────── */
+
+const semAcento = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+const isPagamentoCartao = (nome: string | null | undefined) => {
+  if (!nome) return false;
+  const n = semAcento(nome);
+  return n.includes("cartao") || n.includes("credito");
+};
+
+const isPagamentoPix = (nome: string | null | undefined) =>
+  !!nome && semAcento(nome).includes("pix");
+
+const ORDEM_STATUS = STATUS_COLS.map(c => c.value);
+const idxStatus = (s: PcpStatus) => ORDEM_STATUS.indexOf(s);
+
+const precisaGateCartao = (row: PcpRow) =>
+  isPagamentoCartao(row.pagamento_nome) && !row.pagamento_cartao_conferido_em;
+
+const precisaGatePix = (row: PcpRow) =>
+  isPagamentoPix(row.pagamento_nome) && !row.pix_recebido_integral_em;
+
+const pagamentoGateOk = (row: PcpRow) => {
+  if (isPagamentoCartao(row.pagamento_nome)) return !!row.pagamento_cartao_conferido_em;
+  if (isPagamentoPix(row.pagamento_nome)) return !!row.pix_recebido_integral_em;
+  return false;
+};
+
+
+function StatusPill({ status, className }: { status: string; className?: string }) {
+  const cfg = STATUS_MAP[status];
+  if (!cfg) return null;
+  return (
+    <span
+      className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold text-white", className)}
+      style={{ backgroundColor: cfg.color }}
+    >
+      {cfg.label}
+    </span>
+  );
+}
 
 /* ── Card ────────────────────────────────────────────────────────────────── */
+/* Dimensões 1,7x maiores que a versão anterior (268 → 456px). */
 
 function PcpCard({
-  row, dragging, saving, onDragStart, onDragEnd, onSetOrigem,
+  row, indice, total, dragging, saving, atrasado, highlight,
+  onDragStart, onDragEnd, onOpen, onHover,
 }: {
   row: PcpRow;
+  indice: number;
+  total: number;
   dragging: boolean;
   saving: boolean;
+  atrasado: boolean;
+  highlight: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
-  onSetOrigem: (origem: "estoque" | "compra_especifica") => void;
+  onOpen: () => void;
+  onHover: (pedidoId: string | null) => void;
 }) {
-  const prazo = prazoInfo(row.data_entrega_item);
   const foto = row.mockup_url || row.imagem_catalogo_url;
+  const cor = corDoPedido(row);
+  const tempo = tempoNaEtapaCurto(row.horas_na_etapa);
+  const tags = row.tags ?? [];
 
   return (
     <div
@@ -108,83 +245,176 @@ function PcpCard({
         onDragStart();
       }}
       onDragEnd={onDragEnd}
+      onClick={onOpen}
+      onMouseEnter={() => onHover(row.pedido_id)}
+      onMouseLeave={() => onHover(null)}
       className={cn(
-        "bg-card border border-l-4 border-border rounded-lg shadow-sm p-3 space-y-2 cursor-grab active:cursor-grabbing select-none transition-opacity",
-        prazo.border,
+        "w-[456px] rounded-[12px] overflow-hidden cursor-pointer select-none bg-[var(--gw-surface)]",
+        "border border-[var(--gw-border)] transition-shadow hover:shadow-[var(--gw-shadow-md)]",
         dragging && "opacity-40",
         saving && "opacity-60 pointer-events-none"
       )}
+      style={{
+        boxShadow: atrasado
+          ? "0 0 0 2px var(--gw-danger)"
+          : highlight
+            ? `0 0 0 2px ${cor}`
+            : undefined,
+      }}
     >
-      <div className="flex gap-2.5">
+      {/* Camada 1 — foto */}
+      <div className="relative h-[286px] w-full">
         {foto ? (
-          <img src={foto} alt="" className="w-12 h-12 rounded-lg object-cover border border-border shrink-0" />
+          <img src={sizedImage(foto, 640)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-white" />
         ) : (
-          <span className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center shrink-0 border border-border">
-            <Package className="h-5 w-5 text-muted-foreground" />
-          </span>
-        )}
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <span className="font-mono text-[11px] font-semibold text-muted-foreground truncate">{row.pedido_numero}</span>
-            {saving && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground shrink-0" />}
+          <div className="w-full h-full bg-[var(--gw-surface-alt)] flex items-center justify-center">
+            <Package className="h-12 w-12 text-[var(--gw-text-muted)]" />
           </div>
-          <p className="text-xs text-foreground font-medium truncate">{row.cliente || "—"}</p>
-          <p className="text-sm text-foreground font-semibold leading-tight line-clamp-2">{row.produto_nome || "—"}</p>
-        </div>
-      </div>
+        )}
 
-      <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-[11px] font-medium bg-muted text-muted-foreground rounded-full px-2 py-0.5">
-          × {row.quantidade ?? 0}
-        </span>
+        {/* gradiente inferior */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-[92px] pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, rgba(11,18,32,0), rgba(11,18,32,.75))" }}
+        />
+
+        {/* etiquetas */}
+        {tags.length > 0 && (
+          <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5 max-w-[62%]">
+            {tags.slice(0, 3).map(t => (
+              <span
+                key={t}
+                className="gw-body text-white text-[12px] font-semibold rounded-[6px] px-2.5 py-[4px] truncate"
+                style={{ backgroundColor: "rgba(37,99,235,.88)", backdropFilter: "blur(8px)" }}
+              >
+                {t}
+              </span>
+            ))}
+            {tags.length > 3 && (
+              <span
+                className="gw-body text-white text-[12px] font-semibold rounded-[6px] px-2 py-[4px]"
+                style={{ backgroundColor: "rgba(11,18,32,.72)", backdropFilter: "blur(8px)" }}
+              >
+                +{tags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* técnica */}
         {row.tecnica_nome && (
-          <span className="text-[11px] font-medium bg-blue-50 text-blue-700 rounded-full px-2 py-0.5">
+          <span
+            className="gw-body absolute top-2.5 right-2.5 text-white text-[12px] font-semibold rounded-[6px] px-2.5 py-[4px] max-w-[170px] truncate"
+            style={{ backgroundColor: "rgba(11,18,32,.72)", backdropFilter: "blur(8px)" }}
+          >
             {row.tecnica_nome}
           </span>
         )}
-        {TERCEIRIZADA_TRIGGER.includes(row.local_producao) && (
-          <span className="text-[11px] font-medium bg-purple-50 text-purple-700 rounded-full px-2 py-0.5">
-            Terceirizada
+
+        {/* alerta de pagamento */}
+        {(precisaGateCartao(row) ||
+          (row.status === "embalagem_pagamento" && precisaGatePix(row))) && (
+          <span
+            className="gw-body absolute right-3 bottom-[52px] text-white text-[12px] font-bold uppercase rounded-[6px] px-2.5 py-[4px]"
+            style={{ backgroundColor: "var(--gw-warning)" }}
+          >
+            {precisaGateCartao(row) ? "Conferir Stone" : "Aguarda PIX"}
           </span>
         )}
-        <button
-          type="button"
-          onClick={() => onSetOrigem(row.origem_estoque === "estoque" ? "compra_especifica" : "estoque")}
-          title="Clique para alternar a origem do estoque"
-          className={cn(
-            "text-[11px] font-medium rounded-full px-2 py-0.5 transition-colors",
-            row.origem_estoque === "estoque"
-              ? "bg-green-100 text-green-700 hover:bg-green-200"
-              : "bg-amber-100 text-amber-700 hover:bg-amber-200"
-          )}
+
+        {/* quantidade */}
+        <span className="absolute bottom-2.5 right-3 flex items-baseline gap-1.5 text-white">
+          <span className="gw-num text-[32px] leading-none" style={{ fontWeight: 700 }}>
+            {row.quantidade ?? 0}
+          </span>
+          <span className="gw-body text-[14px] font-medium text-white/80">un</span>
+        </span>
+
+        {/* tempo na etapa */}
+        <span
+          className="gw-body absolute bottom-3.5 left-3 flex items-center gap-1.5 text-[13px] font-semibold"
+          style={{ color: atrasado ? "var(--gw-danger)" : "#FFFFFF" }}
         >
-          {row.origem_estoque === "estoque" ? "Em estoque" : "Compra específica"}
-        </button>
+          <Clock className="h-[14px] w-[14px]" /> {tempo || "—"}
+        </span>
       </div>
 
-      {row.terceirizada_nome && (
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground bg-purple-50 rounded-md px-2 py-1">
-          <span className="truncate">{row.terceirizada_nome}</span>
-          {row.previsao_retorno && <span className="shrink-0">volta {formatDate(row.previsao_retorno)}</span>}
-        </div>
-      )}
-
-      {prazo.label && (
-        <p className={cn("text-[11px] font-medium", prazo.tone)}>{prazo.label}</p>
-      )}
+      {/* Camada 2 — rodapé */}
+      <div className="relative h-[63px] bg-[var(--gw-surface)] flex items-center gap-2 pl-5 pr-3 whitespace-nowrap">
+        <span className="absolute left-0 top-0 bottom-0 w-[5px]" style={{ backgroundColor: cor }} />
+        <OrderNumber value={row.pedido_numero} className="text-[17px]" />
+        <span className="text-[var(--gw-text-muted)] text-[14px]">·</span>
+        <span className="gw-body text-[14px] font-medium text-[var(--gw-text-secondary)]">
+          Item {indice}/{total}
+        </span>
+      </div>
     </div>
   );
 }
+
+
 
 /* ── Página ──────────────────────────────────────────────────────────────── */
 
 export default function PCP() {
   const [rows, setRows] = useState<PcpRow[]>([]);
-  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
-  const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<PcpStatus | null>(null);
+  const [hoverPedido, setHoverPedido] = useState<string | null>(null);
+  const [tagsFiltro, setTagsFiltro] = useState<string[]>([]);
+  const [novaTag, setNovaTag] = useState("");
+  const [comentarios, setComentarios] = useState<ComentarioRow[]>([]);
+  const [novoComentario, setNovoComentario] = useState("");
+  const [enviandoComentario, setEnviandoComentario] = useState(false);
+  const boardRef = useRef<HTMLDivElement | null>(null);
+
+
+  /* Shift+scroll e arrastar-para-rolar (botão do meio ou esquerdo em área vazia) */
+  useEffect(() => {
+    const el = boardRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (e.shiftKey && e.deltaY !== 0) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+    let panning = false;
+    let startX = 0;
+    let startScroll = 0;
+    const onDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      /* Botão esquerdo só rola quando o clique NÃO é em um card (o card tem drag-and-drop próprio) */
+      const emCard = !!target?.closest("[draggable='true']");
+      if (e.button !== 1 && !(e.button === 0 && !emCard)) return;
+      if (e.button === 1) e.preventDefault();
+      panning = true;
+      startX = e.clientX;
+      startScroll = el.scrollLeft;
+      el.style.cursor = "grabbing";
+    };
+    const onMove = (e: MouseEvent) => {
+      if (!panning) return;
+      el.scrollLeft = startScroll - (e.clientX - startX);
+    };
+    const onUp = () => { panning = false; el.style.cursor = ""; };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("mousedown", onDown);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("mousedown", onDown);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [rows.length]);
+
+
+
+  const [detalheId, setDetalheId] = useState<string | null>(null);
+  const [historico, setHistorico] = useState<HistoricoRow[]>([]);
 
   const [terceiroModal, setTerceiroModal] = useState<{ row: PcpRow } | null>(null);
   const [modalFornecedorId, setModalFornecedorId] = useState("");
@@ -192,44 +422,89 @@ export default function PCP() {
   const [modalPrevisao, setModalPrevisao] = useState("");
   const [modalSaving, setModalSaving] = useState(false);
 
-  const loadItems = async () => {
-    const { data, error } = await supabase
-      .from("vw_pcp" as any)
-      .select("*")
-      .order("data_entrega_item", { ascending: true, nullsFirst: false });
-    if (error) {
-      console.error("[PCP] carregar itens falhou:", error);
-      toast.error(`Não foi possível carregar o PCP. ${error.message || ""}`);
-      return;
-    }
-    setRows((data as any as PcpRow[]) ?? []);
-  };
+  const [gateModal, setGateModal] = useState<{ row: PcpRow; target: PcpStatus; tipo: "cartao" | "pix" } | null>(null);
+  const [gateSaving, setGateSaving] = useState(false);
 
-  const loadFornecedores = async () => {
-    const { data, error } = await supabase
-      .from("sistema_fornecedores")
-      .select("id, nome, tipo, telefone")
-      .eq("ativo", true)
-      .order("nome");
-    if (error) {
-      console.error("[PCP] carregar fornecedores falhou:", error);
-      return;
-    }
-    setFornecedores(data ?? []);
-  };
+  /* Dados cacheados (60s): voltar ao PCP mostra o quadro na hora e revalida em 2º plano */
+  const pcpQuery = useQuery<PcpRow[]>({
+    queryKey: ["sistema", "pcp", "rows"],
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vw_pcp" as any)
+        .select("*")
+        .order("data_entrega_item", { ascending: true, nullsFirst: false });
+      if (error) {
+        console.error("[PCP] carregar itens falhou:", error);
+        toast.error(`Não foi possível carregar o PCP. ${error.message || ""}`);
+        throw error;
+      }
+      return (data as any as PcpRow[]) ?? [];
+    },
+  });
+
+  const { data: fornecedores = [] } = useQuery<Fornecedor[]>({
+    queryKey: ["sistema", "pcp", "fornecedores"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sistema_fornecedores")
+        .select("id, nome, tipo, telefone")
+        .eq("ativo", true)
+        .order("nome");
+      if (error) {
+        console.error("[PCP] carregar fornecedores falhou:", error);
+        return [];
+      }
+      return (data ?? []) as Fornecedor[];
+    },
+  });
 
   useEffect(() => {
-    (async () => {
-      setLoading(true);
-      await Promise.all([loadItems(), loadFornecedores()]);
-      setLoading(false);
-    })();
-  }, []);
+    if (pcpQuery.data) setRows(pcpQuery.data);
+  }, [pcpQuery.data]);
+
+  const loadItems = async () => {
+    const res = await pcpQuery.refetch();
+    if (res.data) setRows(res.data);
+  };
+
+  // Loading só quando não há nada em cache para mostrar
+  const loading = pcpQuery.isLoading && rows.length === 0;
+
+  const todasTags = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of rows) for (const t of r.tags ?? []) set.add(t);
+    return [...set].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [rows]);
+
+  const rowsFiltradas = useMemo(() => {
+    if (tagsFiltro.length === 0) return rows;
+    return rows.filter(r => tagsFiltro.every(t => (r.tags ?? []).includes(t)));
+  }, [rows, tagsFiltro]);
 
   const byStatus = useMemo(() => {
     const map: Record<string, PcpRow[]> = {};
     for (const col of STATUS_COLS) map[col.value] = [];
-    for (const row of rows) (map[row.status] ??= []).push(row);
+    for (const row of rowsFiltradas) (map[row.status] ??= []).push(row);
+    return map;
+  }, [rowsFiltradas]);
+
+
+  /* Índice do item dentro do pedido (Item n/total) */
+  const indices = useMemo(() => {
+    const grupos: Record<string, string[]> = {};
+    for (const r of [...rows].sort((a, b) => a.producao_id.localeCompare(b.producao_id))) {
+      (grupos[r.pedido_id] ??= []).push(r.producao_id);
+    }
+    const map: Record<string, { i: number; total: number }> = {};
+    for (const r of rows) {
+      const lista = grupos[r.pedido_id] || [];
+      map[r.producao_id] = {
+        i: lista.indexOf(r.producao_id) + 1,
+        total: r.total_itens_pedido ?? lista.length,
+      };
+    }
     return map;
   }, [rows]);
 
@@ -237,6 +512,89 @@ export default function PCP() {
     () => fornecedores.filter(f => f.tipo === "terceirizada" || f.tipo === "ambos"),
     [fornecedores]
   );
+
+  const detalhe = useMemo(
+    () => rows.find(r => r.producao_id === detalheId) ?? null,
+    [rows, detalheId]
+  );
+
+  useEffect(() => {
+    if (!detalheId) { setHistorico([]); return; }
+    (async () => {
+      const { data } = await supabase
+        .from("sistema_producao_historico")
+        .select("id, status_anterior, status_novo, usuario_id, observacao, created_at")
+        .eq("producao_item_id", detalheId)
+        .order("created_at", { ascending: false });
+      setHistorico((data as any as HistoricoRow[]) ?? []);
+    })();
+  }, [detalheId]);
+
+  const carregarComentarios = async (producaoId: string) => {
+    const { data } = await supabase
+      .from("sistema_producao_comentarios" as any)
+      .select("id, mensagem, autor_email, created_at")
+      .eq("producao_item_id", producaoId)
+      .order("created_at", { ascending: true });
+    setComentarios((data as any as ComentarioRow[]) ?? []);
+  };
+
+  useEffect(() => {
+    setNovoComentario("");
+    if (!detalheId) { setComentarios([]); return; }
+    carregarComentarios(detalheId);
+  }, [detalheId]);
+
+  const enviarComentario = async () => {
+    if (!detalhe) return;
+    const texto = novoComentario.trim();
+    if (!texto) return;
+    setEnviandoComentario(true);
+    const { data: auth } = await supabase.auth.getUser();
+    const { error } = await supabase.from("sistema_producao_comentarios" as any).insert({
+      producao_item_id: detalhe.producao_id,
+      pedido_id: detalhe.pedido_id,
+      mensagem: texto,
+      autor_id: auth?.user?.id ?? null,
+      autor_email: auth?.user?.email ?? null,
+    });
+    setEnviandoComentario(false);
+    if (error) {
+      console.error("[PCP] comentário falhou:", error);
+      toast.error(`Não foi possível enviar. ${error.message || ""}`);
+      return;
+    }
+    setNovoComentario("");
+    await carregarComentarios(detalhe.producao_id);
+  };
+
+  /* Etiquetas do item */
+  const salvarTags = async (row: PcpRow, tags: string[]) => {
+    setRows(prev => prev.map(r => (r.producao_id === row.producao_id ? { ...r, tags } : r)));
+    const { error } = await supabase
+      .from("sistema_producao_itens" as any)
+      .update({ tags })
+      .eq("id", row.producao_id);
+    if (error) {
+      console.error("[PCP] salvar etiquetas falhou:", error);
+      toast.error(`Não foi possível salvar as etiquetas. ${error.message || ""}`);
+      await loadItems();
+    }
+  };
+
+  const adicionarTag = async (row: PcpRow, valor: string) => {
+    const t = valor.trim();
+    if (!t) return;
+    const atuais = row.tags ?? [];
+    if (atuais.some(x => x.toLowerCase() === t.toLowerCase())) return;
+    await salvarTags(row, [...atuais, t]);
+  };
+
+  const removerTag = async (row: PcpRow, valor: string) => {
+    await salvarTags(row, (row.tags ?? []).filter(t => t !== valor));
+  };
+
+
 
   const applyUpdate = async (producaoId: string, patch: Record<string, any>) => {
     setSavingId(producaoId);
@@ -257,6 +615,32 @@ export default function PCP() {
     setModalPrevisao(row.previsao_retorno || "");
   };
 
+  /* Grava o gate de pagamento para todos os itens do pedido */
+  const gravarGatePedido = async (pedidoId: string, campo: "pagamento_cartao_conferido_em" | "pix_recebido_integral_em") => {
+    const agora = new Date().toISOString();
+    const patch = { [campo]: agora, pagamento_ok: true };
+    setRows(prev => prev.map(r => (r.pedido_id === pedidoId ? { ...r, ...patch } : r)));
+    const { error } = await supabase
+      .from("sistema_producao_itens" as any)
+      .update(patch)
+      .eq("pedido_id", pedidoId);
+    if (error) {
+      console.error("[PCP] gravar gate de pagamento falhou:", error);
+      toast.error(`Não foi possível registrar a confirmação. ${error.message || ""}`);
+      await loadItems();
+      return false;
+    }
+    return true;
+  };
+
+  const moverItem = (row: PcpRow, targetStatus: PcpStatus) => {
+    if (targetStatus === "preparacao" && TERCEIRIZADA_TRIGGER.includes(row.local_producao)) {
+      openTerceiroModal(row);
+      return;
+    }
+    applyUpdate(row.producao_id, { status: targetStatus });
+  };
+
   const handleDrop = (targetStatus: PcpStatus, id: string) => {
     setDragOverStatus(null);
     setDraggingId(null);
@@ -264,15 +648,37 @@ export default function PCP() {
     const row = rows.find(r => r.producao_id === id);
     if (!row || row.status === targetStatus) return;
 
-    // Preparação: se a etapa é feita por terceirizada (ou fornecedor->terceirizada),
-    // pede os dados do envio antes de mover. Se for interna, entra direto (vetorização própria).
-    if (targetStatus === "preparacao" && TERCEIRIZADA_TRIGGER.includes(row.local_producao)) {
-      openTerceiroModal(row);
+    // Gate de cartão: sair de "Pronto p/ Produção" para qualquer etapa seguinte
+    if (
+      row.status === "pronto_producao" &&
+      idxStatus(targetStatus) > idxStatus("pronto_producao") &&
+      precisaGateCartao(row)
+    ) {
+      setGateModal({ row, target: targetStatus, tipo: "cartao" });
       return;
     }
 
-    applyUpdate(id, { status: targetStatus });
+    // Gate de PIX: entrar em "Aguardando Coleta"
+    if (targetStatus === "aguardando_coleta" && precisaGatePix(row)) {
+      setGateModal({ row, target: targetStatus, tipo: "pix" });
+      return;
+    }
+
+    moverItem(row, targetStatus);
   };
+
+  const confirmarGate = async () => {
+    if (!gateModal) return;
+    setGateSaving(true);
+    const campo = gateModal.tipo === "cartao" ? "pagamento_cartao_conferido_em" : "pix_recebido_integral_em";
+    const ok = await gravarGatePedido(gateModal.row.pedido_id, campo);
+    setGateSaving(false);
+    if (!ok) { setGateModal(null); return; }
+    const alvo = gateModal;
+    setGateModal(null);
+    moverItem(alvo.row, alvo.target);
+  };
+
 
   const confirmEnvioTerceiro = async () => {
     if (!terceiroModal) return;
@@ -292,19 +698,19 @@ export default function PCP() {
     setTerceiroModal(null);
   };
 
-  const totalItens = rows.length;
+  const totalItens = rowsFiltradas.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 min-w-0">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">PCP — Produção</h2>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="gw-display">PCP — Produção</h1>
+          <p className="gw-meta">
             Acompanhe cada item de pedido pelo fluxo de produção. Arraste os cards entre as colunas.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">{totalItens} item(ns)</span>
+          <span className="gw-meta">{totalItens} item(ns)</span>
           <Button variant="outline" size="sm" onClick={() => loadItems()} disabled={loading}>
             <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
             Atualizar
@@ -312,9 +718,55 @@ export default function PCP() {
         </div>
       </div>
 
+      {/* Filtro por etiquetas */}
+      {todasTags.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="gw-label flex items-center gap-1.5">
+            <Tag className="h-3.5 w-3.5" /> Etiquetas
+          </span>
+          {todasTags.map(t => {
+            const ativo = tagsFiltro.includes(t);
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() =>
+                  setTagsFiltro(prev => (ativo ? prev.filter(x => x !== t) : [...prev, t]))
+                }
+                className={cn(
+                  "gw-body text-[13px] font-medium rounded-full px-3 py-1 border transition-colors",
+                  ativo
+                    ? "bg-[var(--gw-primary)] text-white border-transparent"
+                    : "bg-[var(--gw-surface)] text-[var(--gw-text-secondary)] border-[var(--gw-border)] hover:border-[var(--gw-border-strong)]"
+                )}
+              >
+                {t}
+              </button>
+            );
+          })}
+          {tagsFiltro.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setTagsFiltro([])}
+              className="gw-body text-[13px] text-[var(--gw-text-muted)] hover:underline"
+            >
+              limpar
+            </button>
+          )}
+        </div>
+      )}
+
       {loading ? (
-        <div className="flex items-center justify-center text-muted-foreground gap-2 py-24">
-          <Loader2 className="h-5 w-5 animate-spin" /> Carregando PCP...
+        <div className="flex gap-4 overflow-hidden">
+          {[0, 1, 2, 3].map(c => (
+            <div key={c} className="w-[490px] shrink-0 space-y-3">
+              <div className="animate-pulse h-8 rounded-lg bg-muted" />
+              {[0, 1].map(i => (
+                <div key={i} className="animate-pulse rounded-xl bg-muted" style={{ height: 349 }} />
+              ))}
+            </div>
+          ))}
+
         </div>
       ) : totalItens === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center shadow-sm">
@@ -324,53 +776,407 @@ export default function PCP() {
           <p className="text-muted-foreground">Nenhum item de produção encontrado.</p>
         </div>
       ) : (
-        <div className="flex gap-3 overflow-x-auto overflow-y-visible pb-4 items-start">
-          {STATUS_COLS.map(col => {
-            const items = byStatus[col.value] || [];
-            const isOver = dragOverStatus === col.value;
-            return (
-              <div
-                key={col.value}
-                onDragOver={e => { e.preventDefault(); setDragOverStatus(col.value); }}
-                onDragLeave={() => setDragOverStatus(prev => (prev === col.value ? null : prev))}
-                onDrop={e => {
-                  e.preventDefault();
-                  handleDrop(col.value, e.dataTransfer.getData("text/plain"));
-                }}
-                className={cn(
-                  "w-[280px] shrink-0 rounded-xl border bg-muted/20 transition-colors",
-                  isOver ? "border-primary bg-primary/5" : "border-border"
-                )}
-              >
-                <div className={cn("flex items-center justify-between px-3 py-2 rounded-t-xl sticky top-0", col.header)}>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className={cn("h-2 w-2 rounded-full shrink-0", col.dot)} />
-                    <span className="text-xs font-semibold truncate">{col.label}</span>
+        <div
+          ref={boardRef}
+          className="w-full pcp-scroll"
+          style={{
+            overflowX: "auto",
+            overflowY: "hidden",
+            width: "100%",
+            paddingBottom: 12,
+            /* Altura fixa do quadro: as colunas nunca empurram a barra para fora da tela */
+            height: "calc(100vh - 220px)",
+            minHeight: 480,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              gap: 16,
+              alignItems: "stretch",
+              width: "max-content",
+              height: "100%",
+            }}
+          >
+
+            {STATUS_COLS.map(col => {
+              const items = byStatus[col.value] || [];
+              const somaQtd = items.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
+              const isOver = dragOverStatus === col.value;
+              return (
+                <div
+                  key={col.value}
+                  onDragOver={e => { e.preventDefault(); setDragOverStatus(col.value); }}
+                  onDragLeave={() => setDragOverStatus(prev => (prev === col.value ? null : prev))}
+                  onDrop={e => {
+                    e.preventDefault();
+                    handleDrop(col.value, e.dataTransfer.getData("text/plain"));
+                  }}
+                  style={{ width: 490, flexShrink: 0, height: "100%" }}
+                  className={cn(
+                    "rounded-xl border transition-colors flex flex-col overflow-hidden",
+                    isOver ? "border-[#2563EB] bg-[#2563EB]/5" : "border-[var(--gw-border)] bg-white/60"
+                  )}
+                >
+                  <div
+                    className="flex items-center justify-between px-4 py-3 text-white shrink-0"
+                    style={{ backgroundColor: col.color }}
+                  >
+                    <span className="gw-title text-[15px] text-white truncate">{col.label}</span>
+                    <span
+                      className="gw-body text-[12px] font-semibold text-white rounded-full px-2.5 py-0.5 shrink-0"
+                      style={{ backgroundColor: "rgba(255,255,255,.22)" }}
+                    >
+
+                      {items.length} · {somaQtd}un
+                    </span>
                   </div>
-                  <span className="text-[11px] font-bold bg-white/70 rounded-full px-1.5 py-0.5 shrink-0">
-                    {items.length}
-                  </span>
+                  {/* Rolagem vertical acontece por coluna */}
+                  <div className="p-2 space-y-2 flex-1 min-h-0 overflow-y-auto pcp-col-scroll">
+
+                    {items.length === 0 ? (
+                      <div className="h-[96px] rounded-lg border border-dashed border-[var(--gw-border)] flex items-center justify-center gw-meta text-[11px] text-[var(--gw-text-muted)]">
+                        Sem itens nesta etapa
+                      </div>
+                    ) : items.map(row => (
+                      <PcpCard
+                        key={row.producao_id}
+                        row={row}
+                        indice={indices[row.producao_id]?.i ?? 1}
+                        total={indices[row.producao_id]?.total ?? 1}
+                        dragging={draggingId === row.producao_id}
+                        saving={savingId === row.producao_id}
+                        atrasado={(row.horas_na_etapa ?? 0) > (LIMITE_ETAPA[row.status] ?? 9999)}
+                        highlight={!!hoverPedido && hoverPedido === row.pedido_id}
+                        onHover={setHoverPedido}
+                        onDragStart={() => setDraggingId(row.producao_id)}
+                        onDragEnd={() => setDraggingId(null)}
+                        onOpen={() => setDetalheId(row.producao_id)}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div className="p-2 space-y-2 min-h-[80px]">
-                  {items.length === 0 ? (
-                    <div className="text-center text-[11px] text-muted-foreground/60 py-6">Vazio</div>
-                  ) : items.map(row => (
-                    <PcpCard
-                      key={row.producao_id}
-                      row={row}
-                      dragging={draggingId === row.producao_id}
-                      saving={savingId === row.producao_id}
-                      onDragStart={() => setDraggingId(row.producao_id)}
-                      onDragEnd={() => setDraggingId(null)}
-                      onSetOrigem={origem => applyUpdate(row.producao_id, { origem_estoque: origem })}
+              );
+            })}
+          </div>
+        </div>
+
+
+      )}
+
+      {/* Modal de detalhe do item */}
+      <Dialog open={!!detalhe} onOpenChange={open => !open && setDetalheId(null)}>
+        <DialogContent
+          className="p-0 gap-0 overflow-hidden rounded-[10px] border-[var(--gw-border)]"
+          style={{ maxWidth: 880, width: "94vw", maxHeight: "88vh", boxShadow: "var(--gw-shadow-lg)" }}
+        >
+          {detalhe && (
+            <div className="grid md:grid-cols-[400px_1fr] max-h-[88vh]">
+              {/* Coluna esquerda — imagens */}
+              <div className="bg-[var(--gw-surface-alt)] p-4 overflow-y-auto">
+                {detalhe.mockup_url || detalhe.imagem_catalogo_url ? (
+                  <>
+                    <img
+                      src={sizedImage(detalhe.mockup_url || detalhe.imagem_catalogo_url!, 800)}
+                      alt={detalhe.produto_nome || ""}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-[360px] object-contain bg-white rounded-lg border border-[var(--gw-border)]"
                     />
-                  ))}
+                    <a
+                      href={detalhe.mockup_url || detalhe.imagem_catalogo_url!}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-block text-[12px] font-medium text-[var(--gw-primary)] hover:underline"
+                    >
+                      Abrir imagem em tamanho original
+                    </a>
+                  </>
+                ) : (
+                  <div className="w-full h-[360px] rounded-lg bg-white border border-[var(--gw-border)] flex items-center justify-center">
+                    <Package className="h-10 w-10 text-[var(--gw-text-muted)]" />
+                  </div>
+                )}
+
+                {detalhe.mockup_url && detalhe.imagem_catalogo_url &&
+                  detalhe.imagem_catalogo_url !== detalhe.mockup_url && (
+                    <div className="mt-4">
+                      <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)] mb-1">
+                        Foto de catálogo
+                      </p>
+                      <img
+                        src={sizedImage(detalhe.imagem_catalogo_url, 320)}
+                        alt=""
+                        width={96}
+                        height={96}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-[96px] h-[96px] object-contain bg-white rounded-lg border border-[var(--gw-border)]"
+                      />
+                    </div>
+                  )}
+              </div>
+
+              {/* Coluna direita — dados */}
+              <div className="overflow-y-auto">
+                <DialogHeader className="px-5 py-4 border-b border-[var(--gw-border)] space-y-1 text-left">
+                  <DialogTitle className="flex items-center gap-3 pr-8 text-left">
+                    <OrderNumber value={detalhe.pedido_numero} />
+                    <span className="gw-title text-[15px] truncate">{detalhe.cliente || "—"}</span>
+                    <StatusPill status={detalhe.status} />
+                  </DialogTitle>
+                </DialogHeader>
+
+                {/* Produto */}
+                <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
+                  <p className="gw-label">Produto</p>
+                  <p className="gw-title text-[15px]">{detalhe.produto_nome || "—"}</p>
+                  <div className="grid grid-cols-3 gap-3 pt-1">
+                    {[
+                      ["Quantidade", `${detalhe.quantidade ?? 0} un`],
+                      ["Valor unitário", detalhe.valor_unitario != null
+                        ? detalhe.valor_unitario.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                        : "—"],
+                      ["Total", detalhe.valor_unitario != null
+                        ? (detalhe.valor_unitario * (detalhe.quantidade ?? 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                        : "—"],
+                    ].map(([k, v]) => (
+                      <div key={k}>
+                        <p className="gw-label">{k}</p>
+                        <p className="gw-body text-[13px] text-[var(--gw-text)]">{v}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Produção */}
+                <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-3">
+                  <p className="gw-label">Produção</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      ["Técnica", detalhe.tecnica_nome || "—"],
+                      ["Local de produção", detalhe.local_producao.replace(/_/g, " ")],
+                      ...(detalhe.terceirizada_nome ? [["Terceirizada", detalhe.terceirizada_nome]] : []),
+                      ...(detalhe.previsao_retorno ? [["Previsão de retorno", formatDate(detalhe.previsao_retorno) || "—"]] : []),
+                      ["Produzir até", formatDate(detalhe.data_entrega_item) || "—"],
+                      ["Despachar até", formatDate(detalhe.data_entrega_item) || "—"],
+                      ["Tempo na etapa", tempoNaEtapa(detalhe.horas_na_etapa) || "—"],
+                    ].map(([k, v]) => (
+                      <div key={k as string}>
+                        <p className="gw-label">{k}</p>
+                        <p className="gw-body text-[13px] text-[var(--gw-text)] capitalize truncate">{String(v)}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Etiquetas */}
+                  <div className="space-y-2 pt-1">
+                    <Label className="gw-label flex items-center gap-1.5">
+                      <Tag className="h-3.5 w-3.5" /> Etiquetas
+                    </Label>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {(detalhe.tags ?? []).map(t => (
+                        <span
+                          key={t}
+                          className="gw-body inline-flex items-center gap-1 text-[13px] font-medium rounded-full pl-3 pr-1.5 py-1 bg-[var(--gw-primary-soft)] text-[var(--gw-primary)]"
+                        >
+                          {t}
+                          <button
+                            type="button"
+                            onClick={() => removerTag(detalhe, t)}
+                            className="rounded-full p-0.5 hover:bg-[var(--gw-primary)]/15"
+                            aria-label={`Remover etiqueta ${t}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                      {(detalhe.tags ?? []).length === 0 && (
+                        <span className="gw-body text-[13px] text-[var(--gw-text-muted)]">Nenhuma etiqueta</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={novaTag}
+                        onChange={e => setNovaTag(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            adicionarTag(detalhe, novaTag);
+                            setNovaTag("");
+                          }
+                        }}
+                        placeholder="Nova etiqueta (ex.: Comprado XBZ)"
+                        className="h-9 max-w-[280px]"
+                        list="pcp-tags-existentes"
+                      />
+                      <datalist id="pcp-tags-existentes">
+                        {todasTags.map(t => <option key={t} value={t} />)}
+                      </datalist>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { adicionarTag(detalhe, novaTag); setNovaTag(""); }}
+                        disabled={!novaTag.trim()}
+                      >
+                        Criar
+                      </Button>
+                    </div>
+                  </div>
+
+                  {TERCEIRIZADA_TRIGGER.includes(detalhe.local_producao) && (
+                    <Button variant="outline" size="sm" onClick={() => { setDetalheId(null); openTerceiroModal(detalhe); }}>
+                      <ShoppingBag className="h-4 w-4 mr-2" /> Dados da terceirizada
+                    </Button>
+                  )}
+                </div>
+
+                {/* Observações — histórico em formato de conversa */}
+                <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-3">
+                  <p className="gw-label flex items-center gap-1.5">
+                    <MessageSquare className="h-3.5 w-3.5" /> Observações
+                  </p>
+
+                  {(detalhe.pedido_observacoes || detalhe.item_observacao) && (
+                    <div className="space-y-2">
+                      {detalhe.pedido_observacoes && (
+                        <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
+                          <p className="gw-label mb-0.5">Observação do pedido</p>
+                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
+                            {detalhe.pedido_observacoes}
+                          </p>
+                        </div>
+                      )}
+                      {detalhe.item_observacao && (
+                        <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
+                          <p className="gw-label mb-0.5">Observação do item</p>
+                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
+                            {detalhe.item_observacao}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="space-y-2 max-h-[260px] overflow-y-auto">
+                    {comentarios.length === 0 ? (
+                      <p className="gw-body text-[13px] text-[var(--gw-text-muted)]">
+                        Nenhuma mensagem ainda. Escreva a primeira abaixo.
+                      </p>
+                    ) : (
+                      comentarios.map(c => (
+                        <div
+                          key={c.id}
+                          className="rounded-[10px] bg-[var(--gw-primary-soft)]/60 border border-[var(--gw-border)] px-3 py-2"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="gw-body text-[12px] font-semibold text-[var(--gw-text-secondary)] truncate">
+                              {c.autor_email || "Sistema"}
+                            </span>
+                            <span className="gw-body text-[11px] text-[var(--gw-text-muted)] shrink-0">
+                              {new Date(c.created_at).toLocaleString("pt-BR", {
+                                day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap mt-0.5">
+                            {c.mensagem}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="flex items-end gap-2">
+                    <Textarea
+                      value={novoComentario}
+                      onChange={e => setNovoComentario(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                          e.preventDefault();
+                          enviarComentario();
+                        }
+                      }}
+                      placeholder="Escreva uma observação…"
+                      rows={2}
+                      className="text-[13px] resize-none"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={enviarComentario}
+                      disabled={enviandoComentario || !novoComentario.trim()}
+                    >
+                      {enviandoComentario
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : <Send className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+
+                {/* Checklist */}
+                {detalhe.status === "embalagem_pagamento" && (
+                  <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
+                    <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">Checklist</p>
+                    <div className="flex flex-wrap gap-4">
+                      {([
+                        ["medidas_ok", "Medidas"],
+                        ["pagamento_ok", "Pagamento"],
+                        ["etiqueta_ok", "Etiqueta"],
+                      ] as const).map(([key, label]) => {
+                        const auto = key === "pagamento_ok" && pagamentoGateOk(detalhe);
+                        return (
+                          <label key={key} className="flex items-center gap-2 text-[13px]">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-[#2563EB]"
+                              checked={!!detalhe[key] || auto}
+                              disabled={auto}
+                              onChange={e => applyUpdate(detalhe.producao_id, { [key]: e.target.checked })}
+                            />
+                            {label}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Histórico */}
+                <div className="px-5 py-4">
+                  <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)] flex items-center gap-2 mb-3">
+                    <History className="h-3.5 w-3.5" /> Histórico
+                  </p>
+                  {historico.length === 0 ? (
+                    <p className="text-[12px] text-[var(--gw-text-muted)]">Sem histórico registrado.</p>
+                  ) : (
+                    <ul className="space-y-3 border-l border-[var(--gw-border)] pl-4">
+                      {historico.map(h => (
+                        <li key={h.id} className="relative">
+                          <span
+                            className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full"
+                            style={{ backgroundColor: STATUS_MAP[h.status_novo]?.color || "var(--gw-border-strong)" }}
+                          />
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <StatusPill status={h.status_novo} />
+                            <span className="text-[11px] text-[var(--gw-text-secondary)]">
+                              {formatDateTime(h.created_at)}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[var(--gw-text-muted)] mt-0.5">
+                            {h.usuario_id ? "Responsável: usuário do sistema" : "Responsável: sistema"}
+                            {h.observacao ? ` · ${h.observacao}` : ""}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Modal: enviar para terceirizada (só quando a etapa "Preparação" é feita por terceiro) */}
       <Dialog open={!!terceiroModal} onOpenChange={open => !open && setTerceiroModal(null)}>
@@ -450,6 +1256,53 @@ export default function PCP() {
             <Button onClick={confirmEnvioTerceiro} disabled={modalSaving}>
               {modalSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Confirmar envio
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Gate de pagamento (cartão / PIX) */}
+      <Dialog open={!!gateModal} onOpenChange={open => !open && setGateModal(null)}>
+        <DialogContent style={{ maxWidth: 460 }}>
+          <DialogHeader>
+            <DialogTitle>
+              {gateModal?.tipo === "cartao" ? "Conferiu o pagamento na Stone?" : "Recebeu 100% do valor?"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {gateModal && (
+            <div className="space-y-3 py-1">
+              <div className="rounded-lg bg-[var(--gw-surface-alt)] px-3 py-2.5 space-y-1">
+                <p className="text-[13px] font-semibold text-[var(--gw-text)]">
+                  Pedido {gateModal.row.pedido_numero}
+                </p>
+                <p className="text-[12px] text-[var(--gw-text-secondary)]">
+                  {gateModal.row.cliente || "Cliente não informado"}
+                </p>
+                {gateModal.row.pagamento_nome && (
+                  <p className="text-[11px] text-[var(--gw-text-muted)]">{gateModal.row.pagamento_nome}</p>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">
+                  Valor total
+                </span>
+                <Money value={Number(gateModal.row.pedido_total ?? 0)} emphasis bold />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGateModal(null)} disabled={gateSaving}>
+              {gateModal?.tipo === "cartao" ? "Cancelar" : "Ainda não"}
+            </Button>
+            <Button
+              onClick={confirmarGate}
+              disabled={gateSaving}
+              style={{ backgroundColor: "var(--gw-primary)", color: "#fff" }}
+            >
+              {gateSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {gateModal?.tipo === "cartao" ? "Sim, pagamento confirmado" : "Sim, recebi o valor integral"}
             </Button>
           </DialogFooter>
         </DialogContent>
