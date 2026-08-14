@@ -1,0 +1,62 @@
+{
+  "codigo_entrada": "13803N",
+  "codigo_consulta": "13803N",
+  "coletado_em": "2026-08-14T08:56:57.399352+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "688acc6e-03a9-4f91-aab7-d1b63aa5dd53",
+      "codigo_amigavel": "13803N-BEG",
+      "codigo_prefixo": "13803N",
+      "slug": "sacola-de-algodao-13803n-beg",
+      "nome": "SACOLA DE ALGODÃO",
+      "descricao": "Sacola de algodão com alças costuradas na parte interna.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-Algodao-6718-1506952082.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-Algodao-6718-1506952082.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/13803",
+      "cor": "BEGE",
+      "categoria": "sacolas",
+      "marca": "XBZ",
+      "preco_custo": 5.1,
+      "estoque": 39216,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "1182338a-dc09-4281-a0eb-b3b5c02063bb",
+      "codigo_amigavel": "13803N",
+      "codigo_prefixo": "13803N",
+      "slug": "sacola-de-algodao-13803n",
+      "nome": "SACOLA DE ALGODÃO",
+      "descricao": "Sacola de algodão com alças costuradas na parte interna.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-Algodao-6718-1506952082.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-Algodao-6718-1506952082.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/13803",
+      "cor": "BEGE",
+      "categoria": "sacolas",
+      "marca": "XBZ",
+      "preco_custo": 5.1,
+      "estoque": 39216,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "688acc6e-03a9-4f91-aab7-d1b63aa5dd53"
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

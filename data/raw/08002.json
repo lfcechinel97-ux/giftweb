@@ -1,34 +1,8 @@
 {
   "codigo_entrada": "08002",
   "codigo_consulta": "08002",
-  "coletado_em": "2026-08-12T16:39:56.619460+00:00",
+  "coletado_em": "2026-08-14T08:56:47.394522+00:00",
   "products_cache_variantes": [
-    {
-      "id": "4fcac282-c3ed-46d3-a6b0-9854726b8941",
-      "codigo_amigavel": "08002-ROS",
-      "codigo_prefixo": "08002",
-      "slug": "caixa-de-som-bluetooth-tws-08002-ros",
-      "nome": "CAIXA DE SOM BLUETOOTH TWS",
-      "descricao": "Caixa de som sem fio em inox com base emborrachada. Possui entrada Micro-USB para carregamento, conexão Bluetooth 5.0 e compatibilidade com a tecnologia TWS, que permite sincronizar duas caixas de som ao mesmo tempo. Acompanha cordão de nylon e cabo Micro-USB.",
-      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-ROSA-19501-1721735086.jpg",
-      "image_urls": [
-        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-ROSA-19501-1721735086.jpg"
-      ],
-      "has_image": true,
-      "site_link": "https://www.xbzbrindes.com.br/08002",
-      "cor": "ROSA",
-      "categoria": "caixas-de-som",
-      "marca": "XBZ",
-      "preco_custo": 16.9,
-      "estoque": 353,
-      "peso": 75.0,
-      "altura": 3.5,
-      "largura": 4.9,
-      "profundidade": null,
-      "ativo": true,
-      "is_variante": true,
-      "produto_pai": null
-    },
     {
       "id": "36183532-31b0-44c6-88a0-a21e38ca370c",
       "codigo_amigavel": "08002-PRE",
@@ -151,6 +125,32 @@
       "marca": "XBZ",
       "preco_custo": 16.9,
       "estoque": 5579,
+      "peso": 75.0,
+      "altura": 3.5,
+      "largura": 4.9,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "4fcac282-c3ed-46d3-a6b0-9854726b8941",
+      "codigo_amigavel": "08002-ROS",
+      "codigo_prefixo": "08002",
+      "slug": "caixa-de-som-bluetooth-tws-08002-ros",
+      "nome": "CAIXA DE SOM BLUETOOTH TWS",
+      "descricao": "Caixa de som sem fio em inox com base emborrachada. Possui entrada Micro-USB para carregamento, conexão Bluetooth 5.0 e compatibilidade com a tecnologia TWS, que permite sincronizar duas caixas de som ao mesmo tempo. Acompanha cordão de nylon e cabo Micro-USB.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-ROSA-19501-1721735086.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-ROSA-19501-1721735086.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08002",
+      "cor": "ROSA",
+      "categoria": "caixas-de-som",
+      "marca": "XBZ",
+      "preco_custo": 16.9,
+      "estoque": 353,
       "peso": 75.0,
       "altura": 3.5,
       "largura": 4.9,

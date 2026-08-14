@@ -1,60 +1,8 @@
 {
-  "codigo_entrada": "9139i",
+  "codigo_entrada": "9139I",
   "codigo_consulta": "9139I",
-  "coletado_em": "2026-08-12T16:40:09.205276+00:00",
+  "coletado_em": "2026-08-14T08:57:15.886102+00:00",
   "products_cache_variantes": [
-    {
-      "id": "76fe0478-20c8-471e-8e18-3be251a56aa8",
-      "codigo_amigavel": "9139I-AZU",
-      "codigo_prefixo": "9139I",
-      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-azu-9139i-azu",
-      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO-AZU",
-      "descricao": "",
-      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-AZUL-7136-1690458790.jpg",
-      "image_urls": [
-        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-AZUL-7136-1690458790.jpg"
-      ],
-      "has_image": true,
-      "site_link": "https://www.xbzbrindes.com.br/9139i",
-      "cor": "AZUL",
-      "categoria": "garrafas-inox-aluminio",
-      "marca": "XBZ",
-      "preco_custo": 10.9,
-      "estoque": 11314,
-      "peso": null,
-      "altura": null,
-      "largura": null,
-      "profundidade": null,
-      "ativo": true,
-      "is_variante": true,
-      "produto_pai": null
-    },
-    {
-      "id": "539bdfdc-7680-4671-a1f2-907065f2a873",
-      "codigo_amigavel": "9139I-PRE",
-      "codigo_prefixo": "9139I",
-      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-9139i-pre",
-      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO",
-      "descricao": "Squeeze 500ml de inox com pintura metalizada, tampa rosqueável e acompanha um segundo bico com mosquetão (não é térmico).",
-      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-PRETO-7138-1690458792.jpg",
-      "image_urls": [
-        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-PRETO-7138-1690458792.jpg"
-      ],
-      "has_image": true,
-      "site_link": "https://www.xbzbrindes.com.br/9139i",
-      "cor": "PRETO",
-      "categoria": "garrafas-inox-aluminio",
-      "marca": "XBZ",
-      "preco_custo": 10.9,
-      "estoque": 18349,
-      "peso": 114.0,
-      "altura": 21.5,
-      "largura": 20.8,
-      "profundidade": null,
-      "ativo": true,
-      "is_variante": true,
-      "produto_pai": null
-    },
     {
       "id": "dfc789a8-84b2-4e0b-9902-6132a7d25403",
       "codigo_amigavel": "9139I-VD",
@@ -236,6 +184,58 @@
       "ativo": false,
       "is_variante": true,
       "produto_pai": "dfc789a8-84b2-4e0b-9902-6132a7d25403"
+    },
+    {
+      "id": "76fe0478-20c8-471e-8e18-3be251a56aa8",
+      "codigo_amigavel": "9139I-AZU",
+      "codigo_prefixo": "9139I",
+      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-azu-9139i-azu",
+      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO-AZU",
+      "descricao": "",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-AZUL-7136-1690458790.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-AZUL-7136-1690458790.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/9139i",
+      "cor": "AZUL",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 11314,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "539bdfdc-7680-4671-a1f2-907065f2a873",
+      "codigo_amigavel": "9139I-PRE",
+      "codigo_prefixo": "9139I",
+      "slug": "squeeze-inox-500ml-c-bico-e-mosquetao-9139i-pre",
+      "nome": "SQUEEZE INOX 500ML C/ BICO E MOSQUETÃO",
+      "descricao": "Squeeze 500ml de inox com pintura metalizada, tampa rosqueável e acompanha um segundo bico com mosquetão (não é térmico).",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-PRETO-7138-1690458792.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Inox-500ml-PRETO-7138-1690458792.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/9139i",
+      "cor": "PRETO",
+      "categoria": "garrafas-inox-aluminio",
+      "marca": "XBZ",
+      "preco_custo": 10.9,
+      "estoque": 18349,
+      "peso": 114.0,
+      "altura": 21.5,
+      "largura": 20.8,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
     }
   ],
   "topprodutos_curadoria": {

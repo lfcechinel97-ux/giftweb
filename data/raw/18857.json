@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "18857",
+  "codigo_consulta": "18857",
+  "coletado_em": "2026-08-14T08:57:11.389747+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "352540a7-2b3d-4519-a08d-f6cbcaac2e0a",
+      "codigo_amigavel": "18857-BEG",
+      "codigo_prefixo": "18857",
+      "slug": "marmita-hermetica-de-palha-de-trigo-18857-beg",
+      "nome": "MARMITA HERMÉTICA DE PALHA DE TRIGO",
+      "descricao": "Prática e completa, esta marmita feita em palha de trigo e polipropileno atóxico, livre de BPA e com capacidade de 900ml, possui tampa hermética que evita vazamentos e mantém os alimentos frescos por mais tempo e prontos para consumo. Com 2 divisórias internas, ela facilita a organização das refeições, separando cada item sem misturar os sabores. Na parte superior da tampa, você encontra um compartimento plástico onde ficam os talheres: garfo, faca e colher. Perfeita para levar refeições completas com facilidade e organização.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-Hermetica-de-Palha-de-Trigo-BEGE-21200-1730918766.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-Hermetica-de-Palha-de-Trigo-BEGE-21200-1730918766.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18857",
+      "cor": "BEGE",
+      "categoria": "marmitas",
+      "marca": "XBZ",
+      "preco_custo": 10.5,
+      "estoque": 19048,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

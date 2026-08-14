@@ -1,8 +1,34 @@
 {
   "codigo_entrada": "19144",
   "codigo_consulta": "19144",
-  "coletado_em": "2026-08-12T16:40:08.759756+00:00",
+  "coletado_em": "2026-08-14T08:57:15.404632+00:00",
   "products_cache_variantes": [
+    {
+      "id": "5e9c151a-86a1-49be-8b33-ecd448fb1915",
+      "codigo_amigavel": "19144-VM",
+      "codigo_prefixo": "19144",
+      "slug": "kit-executivo-2-pecas-19144-vm",
+      "nome": "KIT EXECUTIVO 2 PEÇAS",
+      "descricao": "Kit executivo composto por dois itens: uma caderneta e uma caneta. A caderneta possui capa em couro sintético, fecho magnético com detalhe metálico na aba, marca-páginas em fita de cetim e cerca de 96 folhas marfim pautadas e espaço para assinalar dias da semana e datas numéricas. A caneta metálica conta com acionamento por rotação e carga esferográfica azul de 1,0mm. Acompanha caixa em papelão com berço em plástico para guardar os itens do conjunto.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-VERMELHO-28038-1779191893.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-VERMELHO-28038-1779191893.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/19144",
+      "cor": "VERMELHO",
+      "categoria": "kit-executivo",
+      "marca": "XBZ",
+      "preco_custo": 19.9,
+      "estoque": 1139,
+      "peso": 492.0,
+      "altura": 22.3,
+      "largura": 19.7,
+      "profundidade": 2.5,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
     {
       "id": "2f915deb-86e8-494f-8c8b-07745069bbef",
       "codigo_amigavel": "19144-AZU",
@@ -53,32 +79,6 @@
       "profundidade": 2.5,
       "ativo": true,
       "is_variante": true,
-      "produto_pai": null
-    },
-    {
-      "id": "5e9c151a-86a1-49be-8b33-ecd448fb1915",
-      "codigo_amigavel": "19144-VM",
-      "codigo_prefixo": "19144",
-      "slug": "kit-executivo-2-pecas-19144-vm",
-      "nome": "KIT EXECUTIVO 2 PEÇAS",
-      "descricao": "Kit executivo composto por dois itens: uma caderneta e uma caneta. A caderneta possui capa em couro sintético, fecho magnético com detalhe metálico na aba, marca-páginas em fita de cetim e cerca de 96 folhas marfim pautadas e espaço para assinalar dias da semana e datas numéricas. A caneta metálica conta com acionamento por rotação e carga esferográfica azul de 1,0mm. Acompanha caixa em papelão com berço em plástico para guardar os itens do conjunto.",
-      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-VERMELHO-28038-1779191893.jpg",
-      "image_urls": [
-        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-VERMELHO-28038-1779191893.jpg"
-      ],
-      "has_image": true,
-      "site_link": "https://www.xbzbrindes.com.br/19144",
-      "cor": "VERMELHO",
-      "categoria": "kit-executivo",
-      "marca": "XBZ",
-      "preco_custo": 19.9,
-      "estoque": 1139,
-      "peso": 492.0,
-      "altura": 22.3,
-      "largura": 19.7,
-      "profundidade": 2.5,
-      "ativo": true,
-      "is_variante": false,
       "produto_pai": null
     }
   ],

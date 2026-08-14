@@ -1,34 +1,8 @@
 {
   "codigo_entrada": "08103",
   "codigo_consulta": "08103",
-  "coletado_em": "2026-08-12T16:39:57.160115+00:00",
+  "coletado_em": "2026-08-14T08:56:47.883450+00:00",
   "products_cache_variantes": [
-    {
-      "id": "7adb43af-293e-4827-8b66-5eafbcaca436",
-      "codigo_amigavel": "08103-AZC",
-      "codigo_prefixo": "08103",
-      "slug": "caneta-metal-touch-08103-azc",
-      "nome": "CANETA METAL TOUCH",
-      "descricao": "Para anotar cada detalhe com elegância. Nossa Caneta Metálica Touchscreen une sofisticação e praticidade em cada movimento. Com seu acabamento brilhante e acionamento por clique, ela possui carga esferográfica azul de 1.0mm, garantindo uma escrita precisa. Além disso, com a ponta touchscreen é possível utilizá-la em dispositivos eletrônicos sem tocar diretamente na tela, evitando manchas indesejadas.",
-      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneta-Metal-Touch-AZUL-CLARO-20981-1730734190.jpg",
-      "image_urls": [
-        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneta-Metal-Touch-AZUL-CLARO-20981-1730734190.jpg"
-      ],
-      "has_image": true,
-      "site_link": "https://www.xbzbrindes.com.br/08103",
-      "cor": "AZUL",
-      "categoria": "canetas",
-      "marca": "XBZ",
-      "preco_custo": 1.6,
-      "estoque": 38300,
-      "peso": null,
-      "altura": null,
-      "largura": null,
-      "profundidade": null,
-      "ativo": true,
-      "is_variante": true,
-      "produto_pai": null
-    },
     {
       "id": "1b175307-dac9-4ba6-9653-2bfd8d0a8397",
       "codigo_amigavel": "08103-ROX",
@@ -333,6 +307,32 @@
       "marca": "XBZ",
       "preco_custo": 1.6,
       "estoque": 18648,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "7adb43af-293e-4827-8b66-5eafbcaca436",
+      "codigo_amigavel": "08103-AZC",
+      "codigo_prefixo": "08103",
+      "slug": "caneta-metal-touch-08103-azc",
+      "nome": "CANETA METAL TOUCH",
+      "descricao": "Para anotar cada detalhe com elegância. Nossa Caneta Metálica Touchscreen une sofisticação e praticidade em cada movimento. Com seu acabamento brilhante e acionamento por clique, ela possui carga esferográfica azul de 1.0mm, garantindo uma escrita precisa. Além disso, com a ponta touchscreen é possível utilizá-la em dispositivos eletrônicos sem tocar diretamente na tela, evitando manchas indesejadas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneta-Metal-Touch-AZUL-CLARO-20981-1730734190.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneta-Metal-Touch-AZUL-CLARO-20981-1730734190.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08103",
+      "cor": "AZUL",
+      "categoria": "canetas",
+      "marca": "XBZ",
+      "preco_custo": 1.6,
+      "estoque": 38300,
       "peso": null,
       "altura": null,
       "largura": null,

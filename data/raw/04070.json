@@ -1,0 +1,280 @@
+{
+  "codigo_entrada": "04070",
+  "codigo_consulta": "04070",
+  "coletado_em": "2026-08-14T08:56:35.383409+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "3fa33811-cf70-44e0-8566-952b5f9f4181",
+      "codigo_amigavel": "04070-VD",
+      "codigo_prefixo": "04070",
+      "slug": "caneca-termica-700ml-04070-vd",
+      "nome": "CANECA TÉRMICA 700ML",
+      "descricao": "Caneca térmica de inox com pegador plástico, capacidade de 700ml.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-VERDE-14136-1718288884.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-VERDE-14136-1718288884.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04070",
+      "cor": "VERDE",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": null,
+      "estoque": 4822,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "c8d30ecd-2d4e-4418-bed6-6d6c5f0ffa9e",
+      "codigo_amigavel": "04070-PRE",
+      "codigo_prefixo": "04070",
+      "slug": "caneca-termica-700ml-04070-pre",
+      "nome": "CANECA TÉRMICA 700ML",
+      "descricao": "Caneca térmica de inox com pegador plástico, capacidade de 700ml.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-PRETO-14135-1649675983.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-PRETO-14135-1649675983.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04070",
+      "cor": "PRETO",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": 27.0,
+      "estoque": 7407,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "50336cc2-84b4-4467-b13e-d90e19464df6",
+      "codigo_amigavel": "04070-VM",
+      "codigo_prefixo": "04070",
+      "slug": "caneca-termica-700ml-04070-vm",
+      "nome": "CANECA TÉRMICA 700ML",
+      "descricao": "Caneca térmica de inox com pegador plástico, capacidade de 700ml.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-VERMELHO-14137-1649675983.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-VERMELHO-14137-1649675983.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04070",
+      "cor": "VERMELHO",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": 27.0,
+      "estoque": 3441,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "d66edfb2-04f0-4810-8e64-36e8b7628f0d",
+      "codigo_amigavel": "04070-CIN",
+      "codigo_prefixo": "04070",
+      "slug": "caneca-termica-700ml-04070-cin",
+      "nome": "CANECA TÉRMICA 700ML",
+      "descricao": "Caneca térmica de inox com pegador plástico, capacidade de 700ml.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-CINZA-14133-1649675982.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-CINZA-14133-1649675982.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04070",
+      "cor": "CINZA",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": 27.0,
+      "estoque": 6600,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "ac67eb8b-5b8a-4e1a-892b-bc4fd8f3b706",
+      "codigo_amigavel": "04070-AZE",
+      "codigo_prefixo": "04070",
+      "slug": "caneca-termica-700ml-04070-aze",
+      "nome": "CANECA TÉRMICA 700ML",
+      "descricao": "Caneca térmica de inox com pegador plástico, capacidade de 700ml.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-AZUL-ESCURO-19576-1720699766.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-AZUL-ESCURO-19576-1720699766.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04070",
+      "cor": "AZUL",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": 27.0,
+      "estoque": 2914,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "33c32ea7-c3c1-44ff-afd7-369db6bafe81",
+      "codigo_amigavel": "04070-AZU",
+      "codigo_prefixo": "04070",
+      "slug": "caneca-termica-700ml-04070-azu",
+      "nome": "CANECA TÉRMICA 700ML",
+      "descricao": "Caneca térmica de inox com pegador plástico, capacidade de 700ml.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-AZUL-14131-1649675982.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-AZUL-14131-1649675982.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04070",
+      "cor": "AZUL",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": 27.0,
+      "estoque": 4000,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "3d45f5e3-8f0a-4101-98fc-4b8fca44bd4a",
+      "codigo_amigavel": "04070-BCO",
+      "codigo_prefixo": "04070",
+      "slug": "caneca-termica-700ml-04070-bco",
+      "nome": "CANECA TÉRMICA 700ML",
+      "descricao": "Caneca térmica de inox com pegador plástico, capacidade de 700ml.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-BRANCO-14132-1731094469.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-BRANCO-14132-1731094469.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04070",
+      "cor": "BRANCO",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": 27.0,
+      "estoque": 7407,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "4c32d288-0ff5-4285-a5db-2e3cc777c8f9",
+      "codigo_amigavel": "04070-LAR",
+      "codigo_prefixo": "04070",
+      "slug": "caneca-termica-700ml-04070-lar",
+      "nome": "CANECA TÉRMICA 700ML",
+      "descricao": "Caneca térmica de inox com pegador plástico, capacidade de 700ml.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-LARANJA-14134-1649676018.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-LARANJA-14134-1649676018.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04070",
+      "cor": "LARANJA",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": 27.0,
+      "estoque": 3189,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "81892a04-cdb9-4ed3-8d49-ddb173bb7c58",
+    "nome": "Caneca Térmica 700ml",
+    "descricao_curta": "Caneca térmica de inox com pegador plástico, capacidade de 700ml.",
+    "descricao_longa": "Caneca térmica de inox com pegador plástico, capacidade de 700ml.\n\nAltura: 17,2 cm | Largura: 15 cm | Medidas de gravação (CxL): 12 cm x 8 cm | Peso aproximado: 355g",
+    "preco_exibicao": 59.9,
+    "categoria": "copos-cafe-cerveja",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 5,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/8904b61f-a6da-48a9-bdf0-f524e0357b55.png",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04070/04070_2.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-24T20:41:18.212565+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04070/azul.jpg",
+        "referencia": "04070-AZU"
+      },
+      {
+        "nome": "AZUL ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04070/azul-escuro.jpg",
+        "referencia": "04070-AZE"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04070/branco.jpg",
+        "referencia": "04070-BCO"
+      },
+      {
+        "nome": "CINZA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04070/cinza.jpg",
+        "referencia": "04070-CIN"
+      },
+      {
+        "nome": "LARANJA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04070/laranja.jpg",
+        "referencia": "04070-LAR"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04070/preto.jpg",
+        "referencia": "04070-PRE"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04070/verde.jpg",
+        "referencia": "04070-VD"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/04070/vermelho.jpg",
+        "referencia": "04070-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

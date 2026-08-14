@@ -1,0 +1,308 @@
+{
+  "18645L": [
+    "Sem página de produto ativa (slug='copo-termico-500ml-com-abridor-18645l', ativo=False); usando URL de categoria"
+  ],
+  "14726L": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "Sem página de produto ativa (slug='copo-termico-inox-320ml-14726l', ativo=False); usando URL de categoria",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18749": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "04080": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "13803N": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "Sem página de produto ativa (slug='sacola-de-algodao-13803n', ativo=False); usando URL de categoria",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "15452N": [
+    "Código escolhido por palpite entre 2 igualmente válidos (15452N menor/41x37cm vs 15453N maior/40,5x50cm, ambos 'SACOLA TNT METALIZADO', 11 variantes ativas cada). CONFIRME se é este que você vende.",
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18845": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "02082N": [
+    "Sem página de produto ativa (slug='sacola-de-tnt-sem-alca-02082n', ativo=False); usando URL de categoria"
+  ],
+  "18505": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "descricao ausente na API para este código",
+    "description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18986": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "sem-sku-camiseta-100-algodao-fio-30-1": [
+    "SEM SKU XBZ - não encontrado em nenhuma tabela do Supabase. id provisório 'sem-sku-camiseta-100-algodao-fio-30-1' - defina o SKU/slug real antes de publicar.",
+    "description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria",
+    "Sem página de produto nem categoria mapeada; usando URL genérica do catálogo (/produtos)",
+    "image_link vazio: produto sem foto real cadastrada"
+  ],
+  "sem-sku-camisa-gola-polo-masc-e-fem": [
+    "SEM SKU XBZ - não encontrado em nenhuma tabela do Supabase. id provisório 'sem-sku-camisa-gola-polo-masc-e-fem' - defina o SKU/slug real antes de publicar.",
+    "description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria",
+    "Sem página de produto nem categoria mapeada; usando URL genérica do catálogo (/produtos)",
+    "image_link vazio: produto sem foto real cadastrada"
+  ],
+  "sem-sku-camiseta-dry-fit": [
+    "SEM SKU XBZ - não encontrado em nenhuma tabela do Supabase. id provisório 'sem-sku-camiseta-dry-fit' - defina o SKU/slug real antes de publicar.",
+    "description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria",
+    "Sem página de produto nem categoria mapeada; usando URL genérica do catálogo (/produtos)",
+    "image_link vazio: produto sem foto real cadastrada"
+  ],
+  "14092N": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "Sem página de produto ativa (slug='caderneta-emborrachada-com-porta-caneta-14092n', ativo=False); usando URL de categoria",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "08203": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "07050": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "14728P": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "Sem página de produto ativa (slug='caderneta-percalux-14728p', ativo=False); usando URL de categoria",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "10889": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "08103": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "07048": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "ER143B": [
+    "Sem página de produto ativa (slug='caneta-metal-er143b', ativo=False); usando URL de categoria"
+  ],
+  "07447": [
+    "topprodutos_curadoria sem 'Medidas de gravação' na descricao_longa"
+  ],
+  "12089": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "01644": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "18857": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "03493": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "10071G": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "Sem página de produto ativa (slug='kit-vinho-caixa-de-papelao-2-pecas-10071g', ativo=False); usando URL de categoria",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "18583": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "sem-sku-caixa-de-som-jbl-go-3": [
+    "SEM SKU XBZ - não encontrado em nenhuma tabela do Supabase. id provisório 'sem-sku-caixa-de-som-jbl-go-3' - defina o SKU/slug real antes de publicar.",
+    "description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria",
+    "Sem página de produto nem categoria mapeada; usando URL genérica do catálogo (/produtos)",
+    "image_link vazio: produto sem foto real cadastrada"
+  ],
+  "05021": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "08219": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "12926AC": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "Sem página de produto ativa (slug='caixinha-de-som-c-ventosa-caixa-acrilica-12926ac', ativo=False); usando URL de categoria",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18753": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "01618": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18507": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18928": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18874": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18724": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "05044": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "05086": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "08295": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "07392": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "14724P": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "Sem página de produto ativa (slug='copo-termico-350ml-p-cafe-14724p', ativo=False); usando URL de categoria",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "01810": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "03007": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "01955": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "04070": [
+    "preco_custo do produto pai ausente; usado valor das variantes de cor (27.0)"
+  ],
+  "04081": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "06033": [
+    "preco_custo do produto pai ausente; usado valor das variantes de cor (36.9)"
+  ],
+  "14794": [
+    "preco_custo do produto pai ausente; usado valor mais comum entre variantes (17.6), mas variantes de cor têm custos DIFERENTES entre si [17.6, 26.0] - conferir manualmente"
+  ],
+  "04098B": [
+    "Sem página de produto ativa (slug='garrafa-termica-630ml-04098b', ativo=False); usando URL de categoria"
+  ],
+  "KIT18639": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "descricao ausente na API para este código",
+    "description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria",
+    "Sem página de produto ativa (slug='kit-garrafa-termica-kit18639', ativo=False); usando URL de categoria",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18704": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18855": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18518": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18726I": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "descricao ausente na API para este código",
+    "description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria",
+    "Sem página de produto ativa (slug='garrafa-inox-800ml-18726i', ativo=False); usando URL de categoria",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "18552": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "17011F": [
+    "Sem página de produto ativa (slug='garrafa-750ml-inox-tampa-preta-17011f', ativo=False); usando URL de categoria"
+  ],
+  "9139I": [
+    "Sem página de produto ativa (slug='squeeze-inox-500ml-c-bico-e-mosquetao-9139i', ativo=False); usando URL de categoria"
+  ],
+  "12487F": [
+    "Sem página de produto ativa (slug='squeeze-aluminio-fosco-650ml-12487f', ativo=False); usando URL de categoria"
+  ],
+  "sem-sku-copo-long-neck-3-em-1-420-ml": [
+    "SEM SKU XBZ - não encontrado em nenhuma tabela do Supabase. id provisório 'sem-sku-copo-long-neck-3-em-1-420-ml' - defina o SKU/slug real antes de publicar.",
+    "description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria",
+    "Sem página de produto nem categoria mapeada; usando URL genérica do catálogo (/produtos)",
+    "image_link vazio: produto sem foto real cadastrada"
+  ],
+  "09138": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "07047": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "01901B": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "Sem página de produto ativa (slug='mochila-couro-sintetico-usb-22l-01901b', ativo=False); usando URL de categoria",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "02066": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)",
+    "additional_image_link vazio: nenhum candidato disponível"
+  ],
+  "03034": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "06024": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "04385": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ],
+  "08229": [
+    "Sem curadoria: medidas de gravação não disponíveis na API XBZ (não preenchidas)",
+    "image_link vazio: foto baixada/normalizada em data/processed/ mas upload pendente (sem SUPABASE_SERVICE_ROLE_KEY)"
+  ]
+}

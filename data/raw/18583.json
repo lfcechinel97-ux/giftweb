@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "18583",
+  "codigo_consulta": "18583",
+  "coletado_em": "2026-08-14T08:57:05.379495+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "ecf8d43e-7b03-4b7c-82bf-f00faf3ea411",
+      "codigo_amigavel": "18583-MAD",
+      "codigo_prefixo": "18583",
+      "slug": "tabua-de-corte-c-canaleta-28x22-18583-mad",
+      "nome": "TÁBUA DE CORTE C/ CANALETA  28X22",
+      "descricao": "Tábua de corte com canaleta e acesso para gancho.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-BAMBU-12676-1761577834.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-BAMBU-12676-1761577834.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18583",
+      "cor": "MADEIRA",
+      "categoria": "tabuas-petisqueiras",
+      "marca": "XBZ",
+      "preco_custo": 10.0,
+      "estoque": 9808,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

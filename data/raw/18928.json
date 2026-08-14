@@ -1,0 +1,88 @@
+{
+  "codigo_entrada": "18928",
+  "codigo_consulta": "18928",
+  "coletado_em": "2026-08-14T08:57:13.402508+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "a76347fc-11e9-4cf6-a0f5-368911b16653",
+      "codigo_amigavel": "18928-BCO",
+      "codigo_prefixo": "18928",
+      "slug": "kit-viagem-10-pecas-18928-bco",
+      "nome": "KIT VIAGEM 10 PEÇAS",
+      "descricao": "Este kit viagem oferece organização e praticidade em 10 peças essenciais para armazenar e aplicar produtos de higiene e beleza. Com frascos produzidos em PET, o kit contém 1 frasco spray de 60ml, 1 frasco com tampa rosqueável de 60ml, 1 frasco pump de 60ml com trava, 3 potinhos de 8ml, espátula, funil, escova de cabelo e pente 2 em 1 e uma esponja de nylon com alça, ideal para uso com sabonete líquido, deixando a pele mais suave e macia. Todas as peças vêm acomodadas em um estojo de PVC com alça, garantindo fácil transporte e um cuidado ideal para viagens ou eventos longe de casa.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Viagem-10-Pecas-22671-1743712973.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Viagem-10-Pecas-22671-1743712973.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18928",
+      "cor": "BRANCO",
+      "categoria": "kit-viagem",
+      "marca": "XBZ",
+      "preco_custo": 9.5,
+      "estoque": 9626,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "300b7c52-ecd7-4e59-ad0a-4d9eef8fe87e",
+      "codigo_amigavel": "18928-ROS",
+      "codigo_prefixo": "18928",
+      "slug": "kit-viagem-10-pecas-18928-ros",
+      "nome": "KIT VIAGEM 10 PEÇAS",
+      "descricao": "Este kit viagem oferece organização e praticidade em 10 peças essenciais para armazenar e aplicar produtos de higiene e beleza. Com frascos produzidos em PET, o kit contém 1 frasco spray de 60ml, 1 frasco com tampa rosqueável de 60ml, 1 frasco pump de 60ml com trava, 3 potinhos de 8ml, espátula, funil, escova de cabelo e pente 2 em 1 e uma esponja de nylon com alça, ideal para uso com sabonete líquido, deixando a pele mais suave e macia. Todas as peças vêm acomodadas em um estojo de PVC com alça, garantindo fácil transporte e um cuidado ideal para viagens ou eventos longe de casa.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Viagem-10-Pecas-ROSA-22673-1743712984.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Viagem-10-Pecas-ROSA-22673-1743712984.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18928",
+      "cor": "ROSA",
+      "categoria": "kit-viagem",
+      "marca": "XBZ",
+      "preco_custo": 9.5,
+      "estoque": 9977,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "ce2b74be-4c60-402e-bbaf-0cd996cb1b4b",
+      "codigo_amigavel": "18928-TUR",
+      "codigo_prefixo": "18928",
+      "slug": "kit-viagem-10-pecas-18928-tur",
+      "nome": "KIT VIAGEM 10 PEÇAS",
+      "descricao": "Este kit viagem oferece organização e praticidade em 10 peças essenciais para armazenar e aplicar produtos de higiene e beleza. Com frascos produzidos em PET, o kit contém 1 frasco spray de 60ml, 1 frasco com tampa rosqueável de 60ml, 1 frasco pump de 60ml com trava, 3 potinhos de 8ml, espátula, funil, escova de cabelo e pente 2 em 1 e uma esponja de nylon com alça, ideal para uso com sabonete líquido, deixando a pele mais suave e macia. Todas as peças vêm acomodadas em um estojo de PVC com alça, garantindo fácil transporte e um cuidado ideal para viagens ou eventos longe de casa.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Viagem-10-Pecas-TURQUESA-22674-1743713006.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Viagem-10-Pecas-TURQUESA-22674-1743713006.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18928",
+      "cor": "AZUL",
+      "categoria": "kit-viagem",
+      "marca": "XBZ",
+      "preco_custo": 9.5,
+      "estoque": 4856,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

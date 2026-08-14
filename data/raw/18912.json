@@ -1,0 +1,188 @@
+{
+  "codigo_entrada": "18912",
+  "codigo_consulta": "18912",
+  "coletado_em": "2026-08-14T08:57:12.886097+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "469ee11c-d82c-4877-be59-d1082554e803",
+      "codigo_amigavel": "18912-CIN",
+      "codigo_prefixo": "18912",
+      "slug": "caneca-termica-inox-300ml-18912-cin",
+      "nome": "CANECA TÉRMICA INOX 300ML",
+      "descricao": "A companheira perfeita para manter bebidas na temperatura ideal por mais tempo. Feita em inox, com parede dupla e capacidade de até 300ml, esta caneca resistente e durável, tem tampa ajustável que evita derramamentos, trazendo ainda mais praticidade para o dia a dia.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-CINZA-21171-1730752172.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-CINZA-21171-1730752172.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18912",
+      "cor": "CHUMBO",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 8038,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "111fef0c-f767-4465-bf8c-3360d19761bf",
+      "codigo_amigavel": "18912-VD",
+      "codigo_prefixo": "18912",
+      "slug": "caneca-termica-inox-300ml-18912-vd",
+      "nome": "CANECA TÉRMICA INOX 300ML",
+      "descricao": "A companheira perfeita para manter bebidas na temperatura ideal por mais tempo. Feita em inox, com parede dupla e capacidade de até 300ml, esta caneca resistente e durável, tem tampa ajustável que evita derramamentos, trazendo ainda mais praticidade para o dia a dia.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-VERDE-21173-1730752173.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-VERDE-21173-1730752173.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18912",
+      "cor": "VERDE",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "e94d88e3-fc64-4c5d-bf84-0b25664a8175",
+      "codigo_amigavel": "18912-AZU",
+      "codigo_prefixo": "18912",
+      "slug": "caneca-termica-inox-300ml-18912-azu",
+      "nome": "CANECA TÉRMICA INOX 300ML",
+      "descricao": "A companheira perfeita para manter bebidas na temperatura ideal por mais tempo. Feita em inox, com parede dupla e capacidade de até 300ml, esta caneca resistente e durável, tem tampa ajustável que evita derramamentos, trazendo ainda mais praticidade para o dia a dia.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-AZUL-21169-1730752169.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-AZUL-21169-1730752169.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18912",
+      "cor": "AZUL",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 2595,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "f2b53994-92b5-4ff4-bd65-f324a1c05cf6",
+      "codigo_amigavel": "18912-PRE",
+      "codigo_prefixo": "18912",
+      "slug": "caneca-termica-inox-300ml-18912-pre",
+      "nome": "CANECA TÉRMICA INOX 300ML",
+      "descricao": "A companheira perfeita para manter bebidas na temperatura ideal por mais tempo. Feita em inox, com parede dupla e capacidade de até 300ml, esta caneca resistente e durável, tem tampa ajustável que evita derramamentos, trazendo ainda mais praticidade para o dia a dia.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-PRETO-21172-1730752173.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-PRETO-21172-1730752173.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18912",
+      "cor": "PRETO",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 3568,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "71a3c59d-b08e-423d-a815-48947ccb6092",
+      "codigo_amigavel": "18912-BCO",
+      "codigo_prefixo": "18912",
+      "slug": "caneca-termica-inox-300ml-18912-bco",
+      "nome": "CANECA TÉRMICA INOX 300ML",
+      "descricao": "A companheira perfeita para manter bebidas na temperatura ideal por mais tempo. Feita em inox, com parede dupla e capacidade de até 300ml, esta caneca resistente e durável, tem tampa ajustável que evita derramamentos, trazendo ainda mais praticidade para o dia a dia.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-BRANCO-21170-1730752172.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-BRANCO-21170-1730752172.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18912",
+      "cor": "BRANCO",
+      "categoria": "canecas",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 228,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "e5aaf82e-80ed-4a66-bef5-44466c6c6bf7",
+    "nome": "Caneca Térmica Inox 300ml",
+    "descricao_curta": "A companheira perfeita para manter bebidas na temperatura ideal por mais tempo.",
+    "descricao_longa": "A companheira perfeita para manter bebidas na temperatura ideal por mais tempo. Feita em inox, com parede dupla e capacidade de até 300ml, esta caneca resistente e durável, tem tampa ajustável que evita derramamentos, trazendo ainda mais praticidade para o dia a dia.\n\nAltura: 9,5 cm | Largura: 12,4 cm | Circunferência: 27,1 cm | Medidas de gravação (CxL): 7 cm x 10 cm | Peso aproximado: 217g",
+    "preco_exibicao": 59.9,
+    "categoria": "copos-cafe-cerveja",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 6,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18912/18912_1.jpg",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18912/18912_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18912/18912_3.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-23T05:49:10.850061+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18912/azul.jpg",
+        "referencia": "18912-AZU"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18912/branco.jpg",
+        "referencia": "18912-BCO"
+      },
+      {
+        "nome": "CINZA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18912/cinza.jpg",
+        "referencia": "18912-CIN"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18912/preto.jpg",
+        "referencia": "18912-PRE"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18912/verde.jpg",
+        "referencia": "18912-VD"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

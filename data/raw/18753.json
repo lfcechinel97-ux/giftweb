@@ -1,0 +1,88 @@
+{
+  "codigo_entrada": "18753",
+  "codigo_consulta": "18753",
+  "coletado_em": "2026-08-14T08:57:09.887005+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "ba847c97-631f-4273-a617-449520d60eb0",
+      "codigo_amigavel": "18753-AZU",
+      "codigo_prefixo": "18753",
+      "slug": "necessaire-de-poliester-18753-azu",
+      "nome": "NÉCESSAIRE DE POLIÉSTER",
+      "descricao": "Nécessaire confeccionada em poliéster, com detalhes em couro sintético. Possui três compartimentos com zíper. Na parte interna, contém 5 bolsos, sendo dois de tela, e alça para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Poliester-AZUL-18488-1713525967.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Poliester-AZUL-18488-1713525967.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18753",
+      "cor": "AZUL",
+      "categoria": "outros",
+      "marca": "XBZ",
+      "preco_custo": 18.9,
+      "estoque": 1464,
+      "peso": null,
+      "altura": 14.5,
+      "largura": 25.0,
+      "profundidade": 10.0,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "84e2178f-7bdb-4c24-b756-220d865f7d6e",
+      "codigo_amigavel": "18753-CIN",
+      "codigo_prefixo": "18753",
+      "slug": "necessaire-de-poliester-18753-cin",
+      "nome": "NÉCESSAIRE DE POLIÉSTER",
+      "descricao": "",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Poliester-CINZA-18404-1713525967.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Poliester-CINZA-18404-1713525967.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18753",
+      "cor": "CINZA",
+      "categoria": "outros",
+      "marca": "XBZ",
+      "preco_custo": 18.9,
+      "estoque": 9,
+      "peso": null,
+      "altura": 14.5,
+      "largura": 25.0,
+      "profundidade": 10.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "e98f0a49-e612-4030-b5c0-8fef24a9697c",
+      "codigo_amigavel": "18753-PRE",
+      "codigo_prefixo": "18753",
+      "slug": "necessaire-de-poliester-18753-pre",
+      "nome": "NÉCESSAIRE DE POLIÉSTER",
+      "descricao": "",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Poliester-PRETO-18489-1713525968.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Poliester-PRETO-18489-1713525968.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18753",
+      "cor": "PRETO",
+      "categoria": "outros",
+      "marca": "XBZ",
+      "preco_custo": 18.9,
+      "estoque": 9451,
+      "peso": null,
+      "altura": 14.5,
+      "largura": 25.0,
+      "profundidade": 10.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

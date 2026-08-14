@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "03493",
+  "codigo_consulta": "03493",
+  "coletado_em": "2026-08-14T08:56:34.882211+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "b69f5c40-3505-4f8d-99db-eaf924029967",
+      "codigo_amigavel": "03493-PRE",
+      "codigo_prefixo": "03493",
+      "slug": "kit-vinho-p-1-garrafa-03493-pre",
+      "nome": "KIT VINHO P/ 1 GARRAFA",
+      "descricao": "Kit vinho 4 peças em maleta de couro sintético. Contém saca-rolhas metálico, bico condutor com tampa, cortador de lacre e wine colar. Maleta com alça, trava de segurança e parte interna revestida de veludo com área de acomodação para garrafa.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-4-Pecas-17354d2-1696361953.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-4-Pecas-17354d2-1696361953.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/03493",
+      "cor": "PRETO",
+      "categoria": "kit-vinho",
+      "marca": "XBZ",
+      "preco_custo": 37.8,
+      "estoque": 5291,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

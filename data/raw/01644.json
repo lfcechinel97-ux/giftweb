@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "01644",
+  "codigo_consulta": "01644",
+  "coletado_em": "2026-08-14T08:56:29.028861+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "f5a1ab3e-b30d-48d4-934b-f83de508d0cd",
+      "codigo_amigavel": "01644-PRA",
+      "codigo_prefixo": "01644",
+      "slug": "kit-churrasco-na-maleta-4-pecas-01644-pra",
+      "nome": "KIT CHURRASCO NA MALETA 4 PEÇAS ",
+      "descricao": "Kit churrasco 4 peças em maleta de alumínio com travas de segurança, contém: espátula, pegador, garfo e faca em inox. Parte interna da maleta com revestimento em tnt e suportes de velcro para fixação das peças.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/1644-Kit-Churrasco-4-pecas-545.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/1644-Kit-Churrasco-4-pecas-545.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/01644",
+      "cor": "PRATA",
+      "categoria": "kit-churrasco",
+      "marca": "XBZ",
+      "preco_custo": 55.0,
+      "estoque": 3636,
+      "peso": 987.0,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

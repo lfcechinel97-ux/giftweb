@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "05021",
+  "codigo_consulta": "05021",
+  "coletado_em": "2026-08-14T08:56:39.237094+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "c9a8ba29-7240-4c05-a11c-4eae573f0630",
+      "codigo_amigavel": "05021-BCO",
+      "codigo_prefixo": "05021",
+      "slug": "fone-bluetooth-c-carregador-05021-bco",
+      "nome": "FONE BLUETOOTH C/ CARREGADOR",
+      "descricao": "Fone de ouvido bluetooth com comandos touch e case carregador de fechamento magnético. Acompanha USB Lightning. Obs.: O CARREGAMENTO MÍNIMO DO PRODUTO DEVE SER DE 2 HORAS, PRESERVANDO DESTE MODO A SAÚDE DO PRODUTO E PROLONGANDO O SEU TEMPO DE VIDA ÚTIL.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Fone-de-Ouvido-Bluetooth-Touch-com-Case-Carregador-15704d1-1674734490.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Fone-de-Ouvido-Bluetooth-Touch-com-Case-Carregador-15704d1-1674734490.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05021",
+      "cor": "BRANCO",
+      "categoria": "fones",
+      "marca": "XBZ",
+      "preco_custo": 19.99,
+      "estoque": 10005,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

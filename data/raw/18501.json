@@ -1,34 +1,8 @@
 {
   "codigo_entrada": "18501",
   "codigo_consulta": "18501",
-  "coletado_em": "2026-08-12T16:40:03.833004+00:00",
+  "coletado_em": "2026-08-14T08:57:02.377586+00:00",
   "products_cache_variantes": [
-    {
-      "id": "11dea445-b7a2-4600-8192-20cc6bc20fbf",
-      "codigo_amigavel": "18501-PRE",
-      "codigo_prefixo": "18501",
-      "slug": "necessaire-de-nylon-18501-pre",
-      "nome": "NÉCESSAIRE DE NYLON",
-      "descricao": "Este é um nécesseire versátil e no tamanho exato para guardar e levar tudo o que é mais importante para qualquer lugar. Feita em nylon resistente à água e com fechamento em zíper, também possui revestimento interno com forro em poliéster para uma camada extra de cuidado. O compartimento interno do nécessaire conta com espaço ideal para guardar desde itens de maquiagem até objetos de higiene pessoal. Além disso, ele também apresenta uma alça lateral de mão para facilitar seu transporte.",
-      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Nylon-PRETO-8385-1688042305.jpg",
-      "image_urls": [
-        "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Nylon-PRETO-8385-1688042305.jpg"
-      ],
-      "has_image": true,
-      "site_link": "http://www.xbzbrindes.com.br/18501",
-      "cor": "PRETO",
-      "categoria": "outros",
-      "marca": "XBZ",
-      "preco_custo": 8.5,
-      "estoque": 23529,
-      "peso": 70.0,
-      "altura": 12.0,
-      "largura": 20.0,
-      "profundidade": 8.5,
-      "ativo": true,
-      "is_variante": true,
-      "produto_pai": null
-    },
     {
       "id": "e8b1f266-0fb1-4df1-a965-d8d3594b46c9",
       "codigo_amigavel": "18501-AZC",
@@ -151,6 +125,32 @@
       "marca": "XBZ",
       "preco_custo": 8.5,
       "estoque": 315,
+      "peso": 70.0,
+      "altura": 12.0,
+      "largura": 20.0,
+      "profundidade": 8.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "11dea445-b7a2-4600-8192-20cc6bc20fbf",
+      "codigo_amigavel": "18501-PRE",
+      "codigo_prefixo": "18501",
+      "slug": "necessaire-de-nylon-18501-pre",
+      "nome": "NÉCESSAIRE DE NYLON",
+      "descricao": "Este é um nécesseire versátil e no tamanho exato para guardar e levar tudo o que é mais importante para qualquer lugar. Feita em nylon resistente à água e com fechamento em zíper, também possui revestimento interno com forro em poliéster para uma camada extra de cuidado. O compartimento interno do nécessaire conta com espaço ideal para guardar desde itens de maquiagem até objetos de higiene pessoal. Além disso, ele também apresenta uma alça lateral de mão para facilitar seu transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Nylon-PRETO-8385-1688042305.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Nylon-PRETO-8385-1688042305.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/18501",
+      "cor": "PRETO",
+      "categoria": "outros",
+      "marca": "XBZ",
+      "preco_custo": 8.5,
+      "estoque": 23529,
       "peso": 70.0,
       "altura": 12.0,
       "largura": 20.0,

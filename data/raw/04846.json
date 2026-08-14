@@ -1,34 +1,8 @@
 {
   "codigo_entrada": "04846",
   "codigo_consulta": "04846",
-  "coletado_em": "2026-08-12T16:39:52.007543+00:00",
+  "coletado_em": "2026-08-14T08:56:38.708306+00:00",
   "products_cache_variantes": [
-    {
-      "id": "292f11da-81c4-4b59-86ab-8641410089bd",
-      "codigo_amigavel": "04846-AZE",
-      "codigo_prefixo": "04846",
-      "slug": "bolsa-termica-7l-04846-aze",
-      "nome": "BOLSA TÉRMICA 7L",
-      "descricao": "Bolsa térmica de poliéster com dois compartimentos, capacidade de 7 litros. A bolsa possui revestimento térmico em PEVA atóxico, alça de mão, bolsos laterais telados e alça transversal.",
-      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-AZUL-ESCURO-16014-1681301150.jpg",
-      "image_urls": [
-        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-AZUL-ESCURO-16014-1681301150.jpg"
-      ],
-      "has_image": true,
-      "site_link": "https://www.xbzbrindes.com.br/04846",
-      "cor": "PRETO",
-      "categoria": "bolsas",
-      "marca": "XBZ",
-      "preco_custo": 23.5,
-      "estoque": 647,
-      "peso": null,
-      "altura": 18.0,
-      "largura": 22.5,
-      "profundidade": 15.5,
-      "ativo": true,
-      "is_variante": true,
-      "produto_pai": null
-    },
     {
       "id": "a8c29d24-8c66-4fed-9e02-f11c588b17ae",
       "codigo_amigavel": "04846-VM",
@@ -99,6 +73,32 @@
       "marca": "XBZ",
       "preco_custo": 23.5,
       "estoque": 6149,
+      "peso": null,
+      "altura": 18.0,
+      "largura": 22.5,
+      "profundidade": 15.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "292f11da-81c4-4b59-86ab-8641410089bd",
+      "codigo_amigavel": "04846-AZE",
+      "codigo_prefixo": "04846",
+      "slug": "bolsa-termica-7l-04846-aze",
+      "nome": "BOLSA TÉRMICA 7L",
+      "descricao": "Bolsa térmica de poliéster com dois compartimentos, capacidade de 7 litros. A bolsa possui revestimento térmico em PEVA atóxico, alça de mão, bolsos laterais telados e alça transversal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-AZUL-ESCURO-16014-1681301150.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-AZUL-ESCURO-16014-1681301150.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04846",
+      "cor": "PRETO",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 23.5,
+      "estoque": 647,
       "peso": null,
       "altura": 18.0,
       "largura": 22.5,

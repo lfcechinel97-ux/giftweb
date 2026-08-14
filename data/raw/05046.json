@@ -1,34 +1,8 @@
 {
   "codigo_entrada": "05046",
   "codigo_consulta": "05046",
-  "coletado_em": "2026-08-12T16:39:54.490742+00:00",
+  "coletado_em": "2026-08-14T08:56:40.726207+00:00",
   "products_cache_variantes": [
-    {
-      "id": "11677d86-8b7b-42d5-bc35-3a087b5b5327",
-      "codigo_amigavel": "05046-PRE",
-      "codigo_prefixo": "05046",
-      "slug": "guarda-chuva-05046-pre",
-      "nome": "GUARDA-CHUVA",
-      "descricao": "Guarda-chuva de poliéster de impacto impermeável com abertura automática, estrutura em aço e 8 varetas em fibra de vidro. Possui pegador plástico com botão de acionamento.",
-      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-PRETO-15895-1678214690.jpg",
-      "image_urls": [
-        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-PRETO-15895-1678214690.jpg"
-      ],
-      "has_image": true,
-      "site_link": "https://www.xbzbrindes.com.br/05046",
-      "cor": "PRETO",
-      "categoria": "guarda-chuvas",
-      "marca": "XBZ",
-      "preco_custo": 20.5,
-      "estoque": 3694,
-      "peso": null,
-      "altura": null,
-      "largura": null,
-      "profundidade": null,
-      "ativo": true,
-      "is_variante": true,
-      "produto_pai": null
-    },
     {
       "id": "9710c27c-52df-4a28-92c2-9f025b17ba0b",
       "codigo_amigavel": "05046-ROX",
@@ -125,6 +99,32 @@
       "marca": "XBZ",
       "preco_custo": 20.5,
       "estoque": 1143,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "11677d86-8b7b-42d5-bc35-3a087b5b5327",
+      "codigo_amigavel": "05046-PRE",
+      "codigo_prefixo": "05046",
+      "slug": "guarda-chuva-05046-pre",
+      "nome": "GUARDA-CHUVA",
+      "descricao": "Guarda-chuva de poliéster de impacto impermeável com abertura automática, estrutura em aço e 8 varetas em fibra de vidro. Possui pegador plástico com botão de acionamento.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-PRETO-15895-1678214690.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-PRETO-15895-1678214690.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05046",
+      "cor": "PRETO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 20.5,
+      "estoque": 3694,
       "peso": null,
       "altura": null,
       "largura": null,

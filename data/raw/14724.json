@@ -1,0 +1,313 @@
+{
+  "codigo_entrada": "14724",
+  "codigo_consulta": "14724",
+  "coletado_em": "2026-08-14T08:56:58.398444+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "6c3feb3b-e803-4106-8376-2fc3d4bb2837",
+      "codigo_amigavel": "14724-AZE",
+      "codigo_prefixo": "14724",
+      "slug": "copo-termico-500ml-p-cafe-14724-aze",
+      "nome": "COPO TÉRMICO 500ML P/ CAFÉ",
+      "descricao": "Copo térmico de inox 500ml com parede dupla, parte inferior com borracha antideslizante e tampa rosqueável com abertura de bocal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-AZUL-ESCURO-14616-1656613721.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-AZUL-ESCURO-14616-1656613721.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14724",
+      "cor": "AZUL",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 1081,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "a0adced2-ea84-44b9-bd65-628abd0ab228",
+      "codigo_amigavel": "14724-TUR",
+      "codigo_prefixo": "14724",
+      "slug": "copo-termico-500ml-p-cafe-14724-tur",
+      "nome": "COPO TÉRMICO 500ML P/ CAFÉ",
+      "descricao": "Copo térmico de inox 500ml com parede dupla, parte inferior com borracha antideslizante e tampa rosqueável com abertura de bocal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-TURQUESA-14621-1656614175.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-TURQUESA-14621-1656614175.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14724",
+      "cor": "AZUL",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 1343,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "33abe948-3a7b-42c4-838a-659e2ee1fd9c",
+      "codigo_amigavel": "14724-VM",
+      "codigo_prefixo": "14724",
+      "slug": "copo-termico-500ml-p-cafe-14724-vm",
+      "nome": "COPO TÉRMICO 500ML P/ CAFÉ",
+      "descricao": "Copo térmico de inox 500ml com parede dupla, parte inferior com borracha antideslizante e tampa rosqueável com abertura de bocal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-VERMELHO-14622-1721312608.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-VERMELHO-14622-1721312608.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14724",
+      "cor": "VERMELHO",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 694,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "ab90b8cc-f3f0-43c1-b86c-67b300f1730a",
+      "codigo_amigavel": "14724-CRE",
+      "codigo_prefixo": "14724",
+      "slug": "copo-termico-500ml-p-cafe-14724-cre",
+      "nome": "COPO TÉRMICO 500ML P/ CAFÉ",
+      "descricao": "Copo térmico de inox 500ml com parede dupla, parte inferior com borracha antideslizante e tampa rosqueável com abertura de bocal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-CREME-14617-1656614019.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-CREME-14617-1656614019.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14724",
+      "cor": "BEGE",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "12217a37-a4d0-4258-9f6e-381abc98ecf1",
+      "codigo_amigavel": "14724-MAR",
+      "codigo_prefixo": "14724",
+      "slug": "copo-termico-500ml-p-cafe-14724-mar",
+      "nome": "COPO TÉRMICO 500ML P/ CAFÉ",
+      "descricao": "Copo térmico de inox 500ml com parede dupla, parte inferior com borracha antideslizante e tampa rosqueável com abertura de bocal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-MARROM-14618-1656614103.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-MARROM-14618-1656614103.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14724",
+      "cor": "MARROM",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 1304,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "c3464a89-cd6a-49e7-af94-6bc278b23e14",
+      "codigo_amigavel": "14724-ROS",
+      "codigo_prefixo": "14724",
+      "slug": "copo-termico-500ml-p-cafe-14724-ros",
+      "nome": "COPO TÉRMICO 500ML P/ CAFÉ",
+      "descricao": "Copo térmico de inox 500ml com parede dupla, parte inferior com borracha antideslizante e tampa rosqueável com abertura de bocal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-ROSA-14619-1656614139.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-ROSA-14619-1656614139.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14724",
+      "cor": "ROSA",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 769,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "bb3c9887-e834-4c93-9e01-d8c74972a2a8",
+      "codigo_amigavel": "14724-PRE",
+      "codigo_prefixo": "14724",
+      "slug": "copo-termico-500ml-p-cafe-14724-pre",
+      "nome": "COPO TÉRMICO 500ML P/ CAFÉ",
+      "descricao": "Copo térmico de inox 500ml com parede dupla, parte inferior com borracha antideslizante e tampa rosqueável com abertura de bocal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Inox-Parede-Dupla-500ml-14313-1652368478.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Inox-Parede-Dupla-500ml-14313-1652368478.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14724",
+      "cor": "PRETO",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 8163,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "d2d5c3e4-00a6-4d35-97e5-baa2009f97c1",
+      "codigo_amigavel": "14724-BCO",
+      "codigo_prefixo": "14724",
+      "slug": "copo-termico-500ml-p-cafe-14724-bco",
+      "nome": "COPO TÉRMICO 500ML P/ CAFÉ",
+      "descricao": "Copo térmico de inox 500ml com parede dupla, parte inferior com borracha antideslizante e tampa rosqueável com abertura de bocal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-BRANCO-14518-1656613736.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-BRANCO-14518-1656613736.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14724",
+      "cor": "BRANCO",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 3289,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "99d18635-3170-429a-bd56-d51b9211c8ad",
+      "codigo_amigavel": "14724-SAL",
+      "codigo_prefixo": "14724",
+      "slug": "copo-termico-500ml-p-cafe-14724-sal",
+      "nome": "COPO TÉRMICO 500ML P/ CAFÉ",
+      "descricao": "Copo térmico de inox 500ml com parede dupla, parte inferior com borracha antideslizante e tampa rosqueável com abertura de bocal.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-SALMAO-14620-1656614157.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-SALMAO-14620-1656614157.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/14724",
+      "cor": "ROSA",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 24.5,
+      "estoque": 882,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "89699969-319d-4331-8b86-e948e57a1526",
+    "nome": "Copo Térmico Inox 500ml",
+    "descricao_curta": "Copo térmico de inox 500ml com parede dupla, parte inferior com borracha antideslizante e tampa rosqueável com abertura de bocal.",
+    "descricao_longa": "Copo térmico de inox 500ml com parede dupla, parte inferior com borracha antideslizante e tampa rosqueável com abertura de bocal.\n\nAltura: 17,2 cm | Largura: 8,9 cm | Circunferência: 28,2 cm | Medidas de gravação (CxL): 12,5 cm x 6,3 cm | Peso aproximado: 294g",
+    "preco_exibicao": 59.9,
+    "categoria": "copos-cafe-cerveja",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 7,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/89921361-1878-4065-ad55-9f5d00f57d93.png",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14724/14724_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14724/14724_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14724/14724_4.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-23T05:32:09.229027+00:00",
+    "updated_at": "2026-07-24T20:46:19.310389+00:00",
+    "destaque": "padrao",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14724/azul-escuro.jpg",
+        "referencia": "14724-AZE"
+      },
+      {
+        "nome": "BRANCO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14724/branco.jpg",
+        "referencia": "14724-BCO"
+      },
+      {
+        "nome": "CREME",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14724/creme.jpg",
+        "referencia": "14724-CRE"
+      },
+      {
+        "nome": "MARROM",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14724/marrom.jpg",
+        "referencia": "14724-MAR"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14724/preto.jpg",
+        "referencia": "14724-PRE"
+      },
+      {
+        "nome": "ROSA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14724/rosa.jpg",
+        "referencia": "14724-ROS"
+      },
+      {
+        "nome": "SALMÃO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14724/salm-o.jpg",
+        "referencia": "14724-SAL"
+      },
+      {
+        "nome": "TURQUESA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14724/turquesa.jpg",
+        "referencia": "14724-TUR"
+      },
+      {
+        "nome": "VERMELHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/14724/vermelho.jpg",
+        "referencia": "14724-VM"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

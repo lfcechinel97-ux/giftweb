@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "10889",
+  "codigo_consulta": "10889",
+  "coletado_em": "2026-08-14T08:56:53.915056+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "9cb9f2c9-c045-4e96-adb7-133c30a050d6",
+      "codigo_amigavel": "10889-PRE",
+      "codigo_prefixo": "10889",
+      "slug": "kit-caneta-e-caderneta-tipo-moleskine-10889-pre",
+      "nome": "KIT CANETA E CADERNETA TIPO MOLESKINE",
+      "descricao": "Kit executivo 2 peças em estojo de papelão com tampa e parte interna revestida de espuma. Contém: caneta metal preta com anel, detalhes em prata e escrita preta caderneta emborrachada com aproximadamente 80 folhas amarelas com pauta. Acompanha placa metálica para gravação.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-4772-1488484251.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-4772-1488484251.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/10889",
+      "cor": "PRETO",
+      "categoria": "cadernetas",
+      "marca": "XBZ",
+      "preco_custo": 22.0,
+      "estoque": 1407,
+      "peso": 235.0,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

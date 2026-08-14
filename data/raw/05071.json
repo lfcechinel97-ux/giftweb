@@ -1,34 +1,8 @@
 {
   "codigo_entrada": "05071",
   "codigo_consulta": "05071",
-  "coletado_em": "2026-08-12T16:39:55.321224+00:00",
+  "coletado_em": "2026-08-14T08:56:41.222485+00:00",
   "products_cache_variantes": [
-    {
-      "id": "d181d1e9-917d-45ab-9086-4e4952e85881",
-      "codigo_amigavel": "05071-VDC",
-      "codigo_prefixo": "05071",
-      "slug": "caderno-a5-plastico-05071-vdc",
-      "nome": "CADERNO A5 PLÁSTICO",
-      "descricao": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.",
-      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-VERDE-CLARO-16252-1734019159.jpg",
-      "image_urls": [
-        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-VERDE-CLARO-16252-1734019159.jpg"
-      ],
-      "has_image": true,
-      "site_link": "https://www.xbzbrindes.com.br/05071",
-      "cor": "VERDE",
-      "categoria": "cadernos",
-      "marca": "XBZ",
-      "preco_custo": 4.9,
-      "estoque": 3502,
-      "peso": null,
-      "altura": null,
-      "largura": null,
-      "profundidade": null,
-      "ativo": true,
-      "is_variante": true,
-      "produto_pai": null
-    },
     {
       "id": "9ad172e1-8816-4b1c-895f-599a2eae7c2c",
       "codigo_amigavel": "05071-VDE",
@@ -233,6 +207,32 @@
       "altura": 21.2,
       "largura": 15.0,
       "profundidade": 1.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "d181d1e9-917d-45ab-9086-4e4952e85881",
+      "codigo_amigavel": "05071-VDC",
+      "codigo_prefixo": "05071",
+      "slug": "caderno-a5-plastico-05071-vdc",
+      "nome": "CADERNO A5 PLÁSTICO",
+      "descricao": "Caderno A5 plástico com wire-o metálico. Capa em PP, contém aproximadamente 80 folhas brancas com pauta.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-VERDE-CLARO-16252-1734019159.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-VERDE-CLARO-16252-1734019159.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05071",
+      "cor": "VERDE",
+      "categoria": "cadernos",
+      "marca": "XBZ",
+      "preco_custo": 4.9,
+      "estoque": 3502,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
       "ativo": true,
       "is_variante": true,
       "produto_pai": null

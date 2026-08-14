@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "02066",
+  "codigo_consulta": "02066",
+  "coletado_em": "2026-08-14T08:56:31.451680+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "39bd5a98-a5ed-4383-9b5f-7cbb42fc4f92",
+      "codigo_amigavel": "02066-PRE",
+      "codigo_prefixo": "02066",
+      "slug": "mochila-nylon-poliester-02066-pre",
+      "nome": "MOCHILA NYLON POLIESTER ",
+      "descricao": "Mochila de nylon 30 litros com quatro compartimentos, sendo o principal com bolso para notebook 15,6. A mochila possui bolsos laterais em malha, duas alças de mãos e área costada com revestimento espumado.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-PRETO-7016-1677098332.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-PRETO-7016-1677098332.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02066",
+      "cor": "PRETO",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 65.0,
+      "estoque": 3077,
+      "peso": 718.0,
+      "altura": 46.0,
+      "largura": 32.0,
+      "profundidade": 23.5,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

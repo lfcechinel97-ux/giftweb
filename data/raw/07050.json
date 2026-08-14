@@ -1,0 +1,88 @@
+{
+  "codigo_entrada": "07050",
+  "codigo_consulta": "07050",
+  "coletado_em": "2026-08-14T08:56:45.234901+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "f5eacd13-16ae-4e39-90c4-9f243049a9cf",
+      "codigo_amigavel": "07050-PRE",
+      "codigo_prefixo": "07050",
+      "slug": "kit-para-anotacoes-com-caneta-07050-pre",
+      "nome": "KIT PARA ANOTAÇÕES COM CANETA",
+      "descricao": "Para quem busca registrar anotações de forma prática e acessível, nosso Kit para Anotações com Caneta é a escolha perfeita. Com aproximadamente 112 folhas amarelas pautadas e  feito em couro sintético, o kit  vem acompanhado de uma caneta metálica com carga esferográfica azul e um porta-caneta que também serve como fecho para o kit. Além disso, conta com um compartimento na parte de trás para cartões ou documentos. Prático e funcional na hora de organizar seus planejamentos!",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-para-Anotacoes-com-Caneta-PRETO-20013-1723552938.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-para-Anotacoes-com-Caneta-PRETO-20013-1723552938.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/07050",
+      "cor": "PRETO",
+      "categoria": "canetas",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 3815,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "1d0d64d1-356c-41af-9fa3-f838cb1eeae4",
+      "codigo_amigavel": "07050-VM",
+      "codigo_prefixo": "07050",
+      "slug": "kit-para-anotacoes-com-caneta-07050-vm",
+      "nome": "KIT PARA ANOTAÇÕES COM CANETA",
+      "descricao": "Para quem busca registrar anotações de forma prática e acessível, nosso Kit para Anotações com Caneta é a escolha perfeita. Com aproximadamente 112 folhas amarelas pautadas e  feito em couro sintético, o kit  vem acompanhado de uma caneta metálica com carga esferográfica azul e um porta-caneta que também serve como fecho para o kit. Além disso, conta com um compartimento na parte de trás para cartões ou documentos. Prático e funcional na hora de organizar seus planejamentos!",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-para-Anotacoes-com-Caneta-VERMELHO-20014-1723552939.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-para-Anotacoes-com-Caneta-VERMELHO-20014-1723552939.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/07050",
+      "cor": "VERMELHO",
+      "categoria": "canetas",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 1263,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "1505e4ed-c5f7-446e-8b83-4899364b9f60",
+      "codigo_amigavel": "07050-AZE",
+      "codigo_prefixo": "07050",
+      "slug": "kit-para-anotacoes-com-caneta-07050-aze",
+      "nome": "KIT PARA ANOTAÇÕES COM CANETA",
+      "descricao": "Para quem busca registrar anotações de forma prática e acessível, nosso Kit para Anotações com Caneta é a escolha perfeita. Com aproximadamente 112 folhas amarelas pautadas e  feito em couro sintético, o kit  vem acompanhado de uma caneta metálica com carga esferográfica azul e um porta-caneta que também serve como fecho para o kit. Além disso, conta com um compartimento na parte de trás para cartões ou documentos. Prático e funcional na hora de organizar seus planejamentos!",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-para-Anotacoes-com-Caneta-AZUL-ESCURO-20012-1723552938.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-para-Anotacoes-com-Caneta-AZUL-ESCURO-20012-1723552938.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/07050",
+      "cor": "AZUL",
+      "categoria": "canetas",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 7231,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

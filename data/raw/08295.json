@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "08295",
+  "codigo_consulta": "08295",
+  "coletado_em": "2026-08-14T08:56:50.411537+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "587d7a1c-f45a-4a32-9aa7-0efdf55aade3",
+      "codigo_amigavel": "08295-TRA",
+      "codigo_prefixo": "08295",
+      "slug": "kit-xicaras-de-vidro-6-pecas-08295-tra",
+      "nome": "KIT XÍCARAS DE VIDRO 6 PEÇAS",
+      "descricao": "Um kit com seis xícaras em estilo clássico para servir uma bebida quente de um jeito especial. Com capacidade máxima de 100ml, cada uma delas é feita em vidro borossilicato, matéria-prima conhecida por sua durabilidade e resistência, o que as transformam em opções excelentes para tomar aquela dose de café ou chá a qualquer hora do dia.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Xicaras-de-Vidro-6-Pecas-23315-1753123171.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Xicaras-de-Vidro-6-Pecas-23315-1753123171.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08295",
+      "cor": "TRANSPARENTE",
+      "categoria": "kits",
+      "marca": "XBZ",
+      "preco_custo": 12.5,
+      "estoque": 1264,
+      "peso": 313.0,
+      "altura": 5.0,
+      "largura": 7.8,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

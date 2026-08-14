@@ -1,0 +1,62 @@
+{
+  "codigo_entrada": "10071G",
+  "codigo_consulta": "10071G",
+  "coletado_em": "2026-08-14T08:56:53.393463+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "252deaf9-a28c-4294-96e8-64a7ab4f0512",
+      "codigo_amigavel": "10071G-PRE",
+      "codigo_prefixo": "10071G",
+      "slug": "kit-vinho-caixa-de-papelao-2-pecas-10071g-pre",
+      "nome": "KIT VINHO CAIXA DE PAPELÃO 2 PEÇAS",
+      "descricao": " Kit vinho 2 peças em estojo com tampa, contém saca-rolhas metálico com lâmina de corte e abridor de garrafa e tampa de bico. Área interna do estojo com berço de espuma. Acompanha plaquinha metálica para personalização.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-2-Pecas-23687-1751638798.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-2-Pecas-23687-1751638798.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/10071g",
+      "cor": "PRETO",
+      "categoria": "kit-vinho",
+      "marca": "XBZ",
+      "preco_custo": 13.5,
+      "estoque": 14815,
+      "peso": 203.0,
+      "altura": 15.8,
+      "largura": 13.8,
+      "profundidade": 3.1,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "21b72305-3842-4f0d-9db8-a1870c5c1eaf",
+      "codigo_amigavel": "10071G",
+      "codigo_prefixo": "10071G",
+      "slug": "kit-vinho-caixa-de-papelao-2-pecas-10071g",
+      "nome": "KIT VINHO CAIXA DE PAPELÃO 2 PEÇAS",
+      "descricao": " Kit vinho 2 peças em estojo com tampa, contém saca-rolhas metálico com lâmina de corte e abridor de garrafa e tampa de bico. Área interna do estojo com berço de espuma. Acompanha plaquinha metálica para personalização.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-2-Pecas-23687-1751638798.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-2-Pecas-23687-1751638798.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/10071g",
+      "cor": "PRETO",
+      "categoria": "kit-vinho",
+      "marca": "XBZ",
+      "preco_custo": 13.5,
+      "estoque": 14815,
+      "peso": 203.0,
+      "altura": 15.8,
+      "largura": 13.8,
+      "profundidade": 3.1,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "252deaf9-a28c-4294-96e8-64a7ab4f0512"
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

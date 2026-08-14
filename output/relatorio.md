@@ -1,38 +1,113 @@
-# Relatório — Feed Meta (catálogo WhatsApp) — XBZ Brindes
+# Relatório — Catálogo completo (20 categorias) — Feed Meta / WhatsApp Business
 
-Gerado em 2026-08-12T17:36:28.755441+00:00
+Gerado em 2026-08-14T09:01:19.713510+00:00
 
 ## Resumo
 
-- Total de códigos processados: 43
-- Total de linhas no CSV final: 40
-- Total de códigos excluídos: 3
+- Total de produtos na lista original: 101
+- Total de linhas no CSV final: 101 (nenhum produto foi excluído — todos entram no CSV mesmo sem imagem, por instrução explícita do Passo 2)
+- Códigos com SKU XBZ que precisaram do pipeline de download/normalização (sem foto curada em Storage): 53
+- Produtos sem SKU XBZ e sem correspondência por nome no Supabase: 5 (id provisório gerado, ver seção própria abaixo)
+- image_link vazio: 58 de 101
+- description com fallback fraco (nome + categoria, sem descrição real do Supabase): 8
 
-## Observações gerais
+## Validação obrigatória
 
-- additional_image_link = candidato #1 mostrado em revisao_imagens.html (1ª foto de galeria curada, ou 1ª variante de cor quando não há curadoria) - aproximação combinada com o usuário em 2026-08-12, já que não existe 'foto coletiva com todas as cores' em nenhuma fonte de dado real; será ajustado manualmente depois.
-- Campo 'material' deixado vazio para todos os produtos: nenhuma fonte (products_cache ou topprodutos_curadoria) tem uma coluna estruturada de material; o texto da descrição já menciona material quando a API/curadoria o informa em prosa.
-- price = products_cache.preco_custo × multiplicador escalonado do product-feed do site (mesma fórmula do feed do Google) × (1 - 16%).
-- SUPABASE_SERVICE_ROLE_KEY não estava configurada nesta execução: imagens novas (códigos sem curadoria) foram baixadas e normalizadas em data/processed/ mas NÃO enviadas ao bucket catalogo-meta - por isso ficaram sem image_link válido e saíram do CSV.
+- IDs duplicados: NENHUM ✓
+- Linhas com campo obrigatório vazio (id/title/description/availability/condition/link): NENHUMA ✓
+- price fora do formato exato "100.00 BRL": NENHUM ✓
+- Quebra de linha embutida em algum campo: NENHUMA ✓ (verificado por script — 101 linhas de dados = 102 linhas físicas no arquivo, cabeçalho incluso)
 
-## Códigos excluídos do CSV
+## ⚠ Decisão pendente de confirmação: "Sacola TNT Metalizada"
 
-| Código | Motivo |
+Resolvido para o código **15452N** (SACOLA TNT METALIZADO, 41×37cm, 33g) só por ser o código mais baixo entre 2 opções igualmente completas e válidas. A alternativa real é **15453N** (mesmo nome, 40,5×50cm, 42g — maior). Ambos têm 11 variantes de cor ativas. **Confirme qual você realmente vende antes de publicar** — troquei o `id` da linha correspondente na categoria "10. Sacochilas e Sacolas" se for o caso.
+
+## Produtos SEM SKU XBZ e sem correspondência no Supabase
+
+Estes 5 entraram no CSV com `id` provisório (prefixo `sem-sku-`) e `image_link` vazio. Preciso da foto real e do cadastro no Supabase antes de publicar o catálogo:
+
+| id provisório | nome |
 |---|---|
-| 08103 | campo obrigatório 'image_link' vazio |
-| 14728P | campo obrigatório 'image_link' vazio |
-| 18505 | campo obrigatório 'image_link' vazio |
+| sem-sku-camiseta-100-algodao-fio-30-1 | Camiseta 100% Algodão (fio 30.1) |
+| sem-sku-camisa-gola-polo-masc-e-fem | Camisa Gola Polo (masc. e fem.) |
+| sem-sku-camiseta-dry-fit | Camiseta Dry Fit |
+| sem-sku-caixa-de-som-jbl-go-3 | Caixa de Som JBL Go 3 |
+| sem-sku-copo-long-neck-3-em-1-420-ml | Copo Long Neck 3 em 1 420 ml |
 
-## Avisos (produto incluído no CSV, mas com ressalva)
+## Descriptions com fallback fraco (nome + categoria)
 
-| Código | Aviso |
+| id | nome | motivo |
+|---|---|---|
+| 18505 | Sacochila TNT | description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria |
+| sem-sku-camiseta-100-algodao-fio-30-1 | Camiseta 100% Algodão (fio 30.1) | description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria |
+| sem-sku-camisa-gola-polo-masc-e-fem | Camisa Gola Polo (masc. e fem.) | description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria |
+| sem-sku-camiseta-dry-fit | Camiseta Dry Fit | description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria |
+| sem-sku-caixa-de-som-jbl-go-3 | Caixa de Som JBL Go 3 | description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria |
+| KIT18639 | Kit Garrafa Térmica + Xícara | description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria |
+| 18726I | Garrafa Inox 800 ml | description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria |
+| sem-sku-copo-long-neck-3-em-1-420-ml | Copo Long Neck 3 em 1 420 ml | description fraca: sem descrição cadastrada no Supabase, usado fallback nome + categoria |
+
+## image_link vazio (58 produtos)
+
+Todos os 52 códigos com SKU que não têm foto curada no Storage já foram baixados e normalizados (1024×1024, fundo branco) em `data/processed/`, prontos para subir assim que a `SUPABASE_SERVICE_ROLE_KEY` estiver disponível — mesma situação dos 3 pendentes do lote anterior. Os 5 sem SKU e o código ambíguo da sacola (15452N, ainda sem curadoria) também estão vazios.
+
+| id | nome |
 |---|---|
-| 04098B | Sem página de produto ativa para '04098B' (slug='garrafa-termica-630ml-04098b', ativo=False); usando URL de categoria |
-| 06033 | preco_custo do produto pai ausente; usado valor das variantes de cor (36.9) |
-| 02082N | Sem página de produto ativa para '02082N' (slug='sacola-de-tnt-sem-alca-02082n', ativo=False); usando URL de categoria |
-| 07447 | topprodutos_curadoria sem 'Medidas de gravação' na descricao_longa |
-| 12487F | Sem página de produto ativa para '12487F' (slug='squeeze-aluminio-fosco-650ml-12487f', ativo=False); usando URL de categoria |
-| 14794 | preco_custo do produto pai ausente; usado valor mais comum entre variantes (17.6), mas variantes de cor têm custos DIFERENTES entre si [17.6, 26.0] - conferir manualmente |
-| 17011F | Sem página de produto ativa para '17011F' (slug='garrafa-750ml-inox-tampa-preta-17011f', ativo=False); usando URL de categoria |
-| 9139i | Sem página de produto ativa para '9139i' (slug='squeeze-inox-500ml-c-bico-e-mosquetao-9139i', ativo=False); usando URL de categoria |
-| ER143B | Sem página de produto ativa para 'ER143B' (slug='caneta-metal-er143b', ativo=False); usando URL de categoria |
+| 14726L | Copo Térmico Cuia 350 ml |
+| 18749 | Copo Térmico 400 ml c/ Caixa de Som |
+| 04080 | Copo Térmico Inox 473 ml (linha alternativa) |
+| 13803N | Sacola de Algodão |
+| 15452N | Sacola TNT Metalizada |
+| 18845 | Sacola de Lona |
+| 18505 | Sacochila TNT |
+| 18986 | Boné Poliéster Aba Curva |
+| sem-sku-camiseta-100-algodao-fio-30-1 | Camiseta 100% Algodão (fio 30.1) |
+| sem-sku-camisa-gola-polo-masc-e-fem | Camisa Gola Polo (masc. e fem.) |
+| sem-sku-camiseta-dry-fit | Camiseta Dry Fit |
+| 14092N | Caderneta Moleskine c/ Pauta |
+| 08203 | Caderno Fichário PU |
+| 07050 | Kit para Anotações c/ Caneta |
+| 14728P | Caderneta Percalux |
+| 10889 | Kit Executivo Caderneta + Caneta |
+| 08103 | Caneta Metal Touch |
+| 07048 | Kit Executivo Ecológico 3 Peças |
+| 12089 | Kit Talheres p/ Churrasco 8 Peças |
+| 01644 | Kit Churrasco na Maleta 4 Peças |
+| 18857 | Marmita Hermética Palha de Trigo c/ Talher |
+| 03493 | Kit Vinho p/ 1 Garrafa |
+| 10071G | Kit Vinho 2 Peças |
+| 18583 | Tábua de Corte c/ Canaleta |
+| sem-sku-caixa-de-som-jbl-go-3 | Caixa de Som JBL Go 3 |
+| 05021 | Fone Bluetooth c/ Case Carregador |
+| 08219 | Power Bank 10.000 mAh |
+| 12926AC | Caixa de Som Multimídia à Prova d'Água |
+| 18753 | Necessaire de Poliéster |
+| 01618 | Porta Joias |
+| 18507 | Necessaire Organizadora |
+| 18928 | Kit Viagem 10 Peças |
+| 18874 | Kit Pincel Maquiagem 5 Peças |
+| 18724 | Kit Manicure 16 Peças |
+| 05044 | Guarda-Chuva Automático |
+| 05086 | Guarda-Chuva c/ Proteção UV |
+| 08295 | Kit Xícara + Pires Cerâmica |
+| 07392 | Caneca Inox 180 ml c/ Tampa |
+| 14724P | Copo Térmico 350 ml p/ Café |
+| 01810 | Mouse Pad c/ Almofada |
+| 03007 | Mouse Pad Ergonômico |
+| 01955 | Chaveiro Metal Retangular |
+| 04081 | Caneca Térmica 350 ml |
+| KIT18639 | Kit Garrafa Térmica + Xícara |
+| 18704 | Garrafa Térmica 1 Litro |
+| 18855 | Garrafa Térmica Inox 850 ml |
+| 18518 | Garrafa Térmica 780 ml |
+| 18726I | Garrafa Inox 800 ml |
+| 18552 | Garrafa Inox 750 ml |
+| sem-sku-copo-long-neck-3-em-1-420-ml | Copo Long Neck 3 em 1 420 ml |
+| 09138 | Squeeze Alumínio 420 ml c/ Mosquetão |
+| 07047 | Garrafa Alumínio 630 ml |
+| 01901B | Mochila Couro Sintético USB 22 L |
+| 02066 | Mochila Nylon/Poliéster 28 L |
+| 03034 | Mochila de Nylon USB 21 L (linha superior) |
+| 06024 | Bolsa Térmica 6 L |
+| 04385 | Bolsa Térmica 9 L |
+| 08229 | Bolsa Esportiva Poliéster 26 L |

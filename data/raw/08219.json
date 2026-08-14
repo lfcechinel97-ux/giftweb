@@ -1,0 +1,88 @@
+{
+  "codigo_entrada": "08219",
+  "codigo_consulta": "08219",
+  "coletado_em": "2026-08-14T08:56:49.393697+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "385f257f-374e-4f9c-b0b6-3e0abbc83226",
+      "codigo_amigavel": "08219-PRE",
+      "codigo_prefixo": "08219",
+      "slug": "power-bank-10-000mah-multissaidas-08219-pre",
+      "nome": "POWER BANK 10.000MAH MULTISSAÍDAS",
+      "descricao": "Nosso power bank 10.000mAh 4 em 1 é uma solução prática e eficiente para manter os dispositivos sempre carregados, mesmo quando estiver em movimento. Feito em plástico, possui cabos acoplados com saídas para: Lightning, tipo-C, micro-USB e USB. Apresenta entradas USB-C e micro-USB dedicados apenas para a recarga do aparelho, além de suporte lateral para celular integrado, além de duas lanternas para situações de emergência. Sua entrada micro-USB 5V=2.1A e saída USB 5V=2.1A, oferece um desempenh",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Lanterna-e-Multissaidas-PRETO-22598-1742589224.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Lanterna-e-Multissaidas-PRETO-22598-1742589224.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08219",
+      "cor": "PRETO",
+      "categoria": "power-banks",
+      "marca": "XBZ",
+      "preco_custo": 54.9,
+      "estoque": 27,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "d647ef69-a71a-41f3-8da8-be88fe473cce",
+      "codigo_amigavel": "08219-BCO",
+      "codigo_prefixo": "08219",
+      "slug": "power-bank-10-000mah-multissaidas-08219-bco",
+      "nome": "POWER BANK 10.000MAH MULTISSAÍDAS",
+      "descricao": "Nosso power bank 10.000mAh 4 em 1 é uma solução prática e eficiente para manter os dispositivos sempre carregados, mesmo quando estiver em movimento. Feito em plástico, possui cabos acoplados com saídas para: Lightning, tipo-C, micro-USB e USB. Apresenta entradas USB-C e micro-USB dedicados apenas para a recarga do aparelho, além de suporte lateral para celular integrado, além de duas lanternas para situações de emergência. Sua entrada micro-USB 5V=2.1A e saída USB 5V=2.1A, oferece um desempenh",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Lanterna-e-Multissaidas-22594-1742588703.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Lanterna-e-Multissaidas-22594-1742588703.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08219",
+      "cor": "BRANCO",
+      "categoria": "power-banks",
+      "marca": "XBZ",
+      "preco_custo": 54.9,
+      "estoque": 33,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "5cd6e7f0-b115-4fa6-8907-171d3136f60f",
+      "codigo_amigavel": "08219-VM",
+      "codigo_prefixo": "08219",
+      "slug": "power-bank-10-000mah-multissaidas-08219-vm",
+      "nome": "POWER BANK 10.000MAH MULTISSAÍDAS",
+      "descricao": "Nosso power bank 10.000mAh 4 em 1 é uma solução prática e eficiente para manter os dispositivos sempre carregados, mesmo quando estiver em movimento. Feito em plástico, possui cabos acoplados com saídas para: Lightning, tipo-C, micro-USB e USB. Apresenta entradas USB-C e micro-USB dedicados apenas para a recarga do aparelho, além de suporte lateral para celular integrado, além de duas lanternas para situações de emergência. Sua entrada micro-USB 5V=2.1A e saída USB 5V=2.1A, oferece um desempenh",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Lanterna-e-Multissaidas-VERMELHO-22597-1742589224.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Lanterna-e-Multissaidas-VERMELHO-22597-1742589224.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08219",
+      "cor": "VERMELHO",
+      "categoria": "power-banks",
+      "marca": "XBZ",
+      "preco_custo": 54.9,
+      "estoque": 3643,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

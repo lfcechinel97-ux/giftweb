@@ -1,0 +1,406 @@
+{
+  "codigo_entrada": "18645L",
+  "codigo_consulta": "18645L",
+  "coletado_em": "2026-08-14T08:57:06.376875+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "914cbbca-cf7b-4bd6-a2c0-303471825839",
+      "codigo_amigavel": "18645L",
+      "codigo_prefixo": "18645L",
+      "slug": "copo-termico-500ml-com-abridor-18645l",
+      "nome": "COPO TÉRMICO 500ML COM ABRIDOR",
+      "descricao": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.\r\n\r\n\r\n\r\n",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-VERDE-CLARO-26781-1767035729.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-VERDE-CLARO-26781-1767035729.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18645l",
+      "cor": "VERDE",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 9394,
+      "peso": null,
+      "altura": 17.1,
+      "largura": 9.1,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "bc333fd6-07f0-4454-b651-c130fc684e63"
+    },
+    {
+      "id": "bc333fd6-07f0-4454-b651-c130fc684e63",
+      "codigo_amigavel": "18645L-VD",
+      "codigo_prefixo": "18645L",
+      "slug": "copo-termico-500ml-liso-c-abridor-18645l-vd",
+      "nome": "COPO TÉRMICO 500ML *LISO C/ ABRIDOR",
+      "descricao": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-VERDE-14070-1655126974.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-VERDE-14070-1655126974.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18645l",
+      "cor": "VERDE",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": null,
+      "estoque": 11173,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "b60be334-a3da-428e-99bd-9c6526da17d6",
+      "codigo_amigavel": "18645L-BC2",
+      "codigo_prefixo": "18645L",
+      "slug": "copo-termico-500ml-liso-c-abridor-18645l-bc2",
+      "nome": "COPO TÉRMICO 500ML *LISO C/ ABRIDOR",
+      "descricao": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-BRANCO-2-14482-1655126989.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-BRANCO-2-14482-1655126989.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18645l",
+      "cor": "BRANCO",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 11173,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "938b2fd8-ec23-44a5-9070-b2f314965e63",
+      "codigo_amigavel": "18645L-VM1",
+      "codigo_prefixo": "18645L",
+      "slug": "copo-termico-500ml-liso-c-abridor-18645l-vm1",
+      "nome": "COPO TÉRMICO 500ML *LISO C/ ABRIDOR",
+      "descricao": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-VERMELHO-1-14071-1718113639.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-VERMELHO-1-14071-1718113639.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18645l",
+      "cor": "VERMELHO",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "afe01793-4bb5-4ebe-93b6-d01cee5d2d4c",
+      "codigo_amigavel": "18645L-VM2",
+      "codigo_prefixo": "18645L",
+      "slug": "copo-termico-500ml-liso-c-abridor-18645l-vm2",
+      "nome": "COPO TÉRMICO 500ML *LISO C/ ABRIDOR",
+      "descricao": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-VERMELHO-2-19375-1718113653.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-VERMELHO-2-19375-1718113653.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18645l",
+      "cor": "VERMELHO",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 11173,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "624fa319-5686-4eff-83ed-6fcb88093072",
+      "codigo_amigavel": "18645L-INO",
+      "codigo_prefixo": "18645L",
+      "slug": "copo-termico-500ml-liso-c-abridor-18645l-ino",
+      "nome": "COPO TÉRMICO 500ML *LISO C/ ABRIDOR",
+      "descricao": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-INOX-22391-1740582310.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-INOX-22391-1740582310.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18645l",
+      "cor": "INOX",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 11173,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "68a57be7-b96a-4c99-8546-91b87b95d1c1",
+      "codigo_amigavel": "18645L-VIN",
+      "codigo_prefixo": "18645L",
+      "slug": "copo-termico-500ml-liso-c-abridor-18645l-vin",
+      "nome": "COPO TÉRMICO 500ML *LISO C/ ABRIDOR",
+      "descricao": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-VINHO-23516-1750079129.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-VINHO-23516-1750079129.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18645l",
+      "cor": "VERMELHO",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "3502c246-d9b8-4c3d-94a1-d25ef7523f77",
+      "codigo_amigavel": "18645L-AZE",
+      "codigo_prefixo": "18645L",
+      "slug": "copo-termico-500ml-liso-c-abridor-18645l-aze",
+      "nome": "COPO TÉRMICO 500ML *LISO C/ ABRIDOR",
+      "descricao": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-17687-26141-1762340598.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-17687-26141-1762340598.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18645l",
+      "cor": "AZUL",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 11173,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "5c5191c3-775b-4049-98b4-9062612e4c43",
+      "codigo_amigavel": "18645L-AZ1",
+      "codigo_prefixo": "18645L",
+      "slug": "copo-termico-500ml-liso-c-abridor-18645l-az1",
+      "nome": "COPO TÉRMICO 500ML *LISO C/ ABRIDOR",
+      "descricao": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-AZUL-1-15078-1668448140.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-AZUL-1-15078-1668448140.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18645l",
+      "cor": "AZUL",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 11173,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "814b81ce-14d0-49d8-a469-670459adaedb",
+      "codigo_amigavel": "18645L-CIN",
+      "codigo_prefixo": "18645L",
+      "slug": "copo-termico-500ml-liso-c-abridor-18645l-cin",
+      "nome": "COPO TÉRMICO 500ML *LISO C/ ABRIDOR",
+      "descricao": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-CINZA-18086-1704891934.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-CINZA-18086-1704891934.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18645l",
+      "cor": "CINZA",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 8690,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "e55e4101-1dfa-4970-9d0a-bb3a155369d8",
+      "codigo_amigavel": "18645L-PRE",
+      "codigo_prefixo": "18645L",
+      "slug": "copo-termico-500ml-liso-c-abridor-18645l-pre",
+      "nome": "COPO TÉRMICO 500ML *LISO C/ ABRIDOR",
+      "descricao": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-PRETO-14068-1655126973.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-PRETO-14068-1655126973.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18645l",
+      "cor": "PRETO",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 11173,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "0b18defa-8d05-4448-af01-1f3e723c9c8b",
+      "codigo_amigavel": "18645L-VDC",
+      "codigo_prefixo": "18645L",
+      "slug": "copo-termico-500ml-com-abridor-18645l-vdc",
+      "nome": "COPO TÉRMICO 500ML COM ABRIDOR",
+      "descricao": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.\r\n\r\n\r\n\r\n",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-VERDE-CLARO-26781-1767035729.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-VERDE-CLARO-26781-1767035729.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18645l",
+      "cor": "VERDE",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 17.9,
+      "estoque": 7670,
+      "peso": null,
+      "altura": 17.1,
+      "largura": 9.1,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": {
+    "id": "0260fe4a-3067-4cda-839d-59647b3e6961",
+    "nome": "Copo Térmico 500ml com Abridor",
+    "descricao_curta": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.",
+    "descricao_longa": "Copo térmico de inox com acabamento liso e capacidade 500ml, material livre de BPA. Contém tampa com abridor.\n\nAltura: 17,1 cm | Largura: 9,1 cm | Circunferência: 29,3 cm | Medidas de gravação (CxL): 12 cm x 6 cm | Peso aproximado: 268g",
+    "preco_exibicao": 59.9,
+    "categoria": "copos-cafe-cerveja",
+    "moq": 20,
+    "mais_vendido": false,
+    "ordem": 2,
+    "imagem_principal": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/4a3c9692-5827-4d79-b123-1de30a77b36b.png",
+    "imagem_hover": null,
+    "galeria": [
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/18645l_2.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/18645l_3.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/18645l_4.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/18645l_5.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/18645l_6.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/18645l_7.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/18645l_8.jpg",
+      "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/18645l_9.jpg"
+    ],
+    "ativo": true,
+    "created_at": "2026-07-22T20:21:23.105572+00:00",
+    "updated_at": "2026-07-24T20:26:04.244782+00:00",
+    "destaque": "medio",
+    "imagem_editorial": null,
+    "cores": [
+      {
+        "nome": "AZUL 1",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/azul-1.jpg",
+        "referencia": "18645L-AZ1"
+      },
+      {
+        "nome": "AZUL ESCURO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/azul-escuro.jpg",
+        "referencia": "18645L-AZE"
+      },
+      {
+        "nome": "BRANCO 2",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/branco-2.jpg",
+        "referencia": "18645L-BC2"
+      },
+      {
+        "nome": "CINZA",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/cinza.jpg",
+        "referencia": "18645L-CIN"
+      },
+      {
+        "nome": "INOX",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/inox.jpg",
+        "referencia": "18645L-INO"
+      },
+      {
+        "nome": "PRETO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/preto.jpg",
+        "referencia": "18645L-PRE"
+      },
+      {
+        "nome": "VERDE",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/verde.jpg",
+        "referencia": "18645L-VD"
+      },
+      {
+        "nome": "VERDE CLARO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/verde-claro.jpg",
+        "referencia": "18645L-VDC"
+      },
+      {
+        "nome": "VERMELHO 1",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/vermelho-1.jpg",
+        "referencia": "18645L-VM1"
+      },
+      {
+        "nome": "VERMELHO 2",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/vermelho-2.jpg",
+        "referencia": "18645L-VM2"
+      },
+      {
+        "nome": "VINHO",
+        "imagem": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/site-images/topprodutos/18645l/vinho.jpg",
+        "referencia": "18645L-VIN"
+      }
+    ]
+  },
+  "encontrado_api": true,
+  "encontrado_curadoria": true
+}

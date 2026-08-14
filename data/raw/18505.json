@@ -1,34 +1,8 @@
 {
   "codigo_entrada": "18505",
   "codigo_consulta": "18505",
-  "coletado_em": "2026-08-12T16:40:04.337381+00:00",
+  "coletado_em": "2026-08-14T08:57:02.878685+00:00",
   "products_cache_variantes": [
-    {
-      "id": "34be5ea6-c216-4b8d-84dc-0bf83b4e0c60",
-      "codigo_amigavel": "18505-BCO",
-      "codigo_prefixo": "18505",
-      "slug": "sacochila-tnt-18505-bco",
-      "nome": "SACOCHILA TNT",
-      "descricao": "Mochila saco em tnt.",
-      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-TNT-BRANCO-21033-1728911271.jpg",
-      "image_urls": [
-        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-TNT-BRANCO-21033-1728911271.jpg"
-      ],
-      "has_image": true,
-      "site_link": "https://www.xbzbrindes.com.br/18505_",
-      "cor": "BRANCO",
-      "categoria": "mochilas-e-sacochilas",
-      "marca": "XBZ",
-      "preco_custo": 2.2,
-      "estoque": 5104,
-      "peso": null,
-      "altura": 39.0,
-      "largura": 33.0,
-      "profundidade": null,
-      "ativo": true,
-      "is_variante": true,
-      "produto_pai": null
-    },
     {
       "id": "8236c616-7279-4f35-bb58-c313f3fd981f",
       "codigo_amigavel": "18505-VM",
@@ -125,6 +99,32 @@
       "marca": "XBZ",
       "preco_custo": 2.2,
       "estoque": 13192,
+      "peso": null,
+      "altura": 39.0,
+      "largura": 33.0,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "34be5ea6-c216-4b8d-84dc-0bf83b4e0c60",
+      "codigo_amigavel": "18505-BCO",
+      "codigo_prefixo": "18505",
+      "slug": "sacochila-tnt-18505-bco",
+      "nome": "SACOCHILA TNT",
+      "descricao": "Mochila saco em tnt.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-TNT-BRANCO-21033-1728911271.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-TNT-BRANCO-21033-1728911271.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18505_",
+      "cor": "BRANCO",
+      "categoria": "mochilas-e-sacochilas",
+      "marca": "XBZ",
+      "preco_custo": 2.2,
+      "estoque": 5104,
       "peso": null,
       "altura": 39.0,
       "largura": 33.0,

@@ -1,0 +1,88 @@
+{
+  "codigo_entrada": "03007",
+  "codigo_consulta": "03007",
+  "coletado_em": "2026-08-14T08:56:33.776308+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "12529f1c-bcd3-4cf1-9ec0-18a318d501d3",
+      "codigo_amigavel": "03007-PRE",
+      "codigo_prefixo": "03007",
+      "slug": "mouse-pad-ergonomico-03007-pre",
+      "nome": "MOUSE PAD ERGONÔMICO",
+      "descricao": "O mouse pad ergonômico ideal para deixar a rotina diária mais confortável. Feito em Neoprene, que proporciona fácil deslizar do mouse sobre ele, também conta com um apoio de espuma para o punho que ajuda a prevenir possíveis lesões por esforço repetitivo ao longo de uma rotina prolongada trabalho ou estudos. Sua base possui textura antiderrapante para proporcionar o uso muito mais estável do mouse pad em superfícies planas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mouse-Pad-PRETO-11543-1581342562.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mouse-Pad-PRETO-11543-1581342562.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/03007",
+      "cor": "PRETO",
+      "categoria": "mouse-pads",
+      "marca": "XBZ",
+      "preco_custo": 4.5,
+      "estoque": 0,
+      "peso": 25.0,
+      "altura": 23.3,
+      "largura": 20.0,
+      "profundidade": 1.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "be61e7c6-3c4f-47f5-bf29-3c06bd61c40b",
+      "codigo_amigavel": "03007-VM",
+      "codigo_prefixo": "03007",
+      "slug": "mouse-pad-ergonomico-03007-vm",
+      "nome": "MOUSE PAD ERGONÔMICO",
+      "descricao": "O mouse pad ergonômico ideal para deixar a rotina diária mais confortável. Feito em Neoprene, que proporciona fácil deslizar do mouse sobre ele, também conta com um apoio de espuma para o punho que ajuda a prevenir possíveis lesões por esforço repetitivo ao longo de uma rotina prolongada trabalho ou estudos. Sua base possui textura antiderrapante para proporcionar o uso muito mais estável do mouse pad em superfícies planas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mouse-Pad-VERMELHO-11544-1581342593.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mouse-Pad-VERMELHO-11544-1581342593.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/03007",
+      "cor": "VERMELHO",
+      "categoria": "mouse-pads",
+      "marca": "XBZ",
+      "preco_custo": 4.5,
+      "estoque": 2,
+      "peso": 25.0,
+      "altura": 23.3,
+      "largura": 20.0,
+      "profundidade": 1.5,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "3f70e02f-a621-4d1c-9124-1eb283bfcf56",
+      "codigo_amigavel": "03007-AZU",
+      "codigo_prefixo": "03007",
+      "slug": "mouse-pad-ergonomico-03007-azu",
+      "nome": "MOUSE PAD ERGONÔMICO",
+      "descricao": "O mouse pad ergonômico ideal para deixar a rotina diária mais confortável. Feito em Neoprene, que proporciona fácil deslizar do mouse sobre ele, também conta com um apoio de espuma para o punho que ajuda a prevenir possíveis lesões por esforço repetitivo ao longo de uma rotina prolongada trabalho ou estudos. Sua base possui textura antiderrapante para proporcionar o uso muito mais estável do mouse pad em superfícies planas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mouse-Pad-Ergonomico-11541-1652812151.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mouse-Pad-Ergonomico-11541-1652812151.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/03007",
+      "cor": "AZUL",
+      "categoria": "mouse-pads",
+      "marca": "XBZ",
+      "preco_custo": 4.5,
+      "estoque": 0,
+      "peso": 25.0,
+      "altura": 23.3,
+      "largura": 20.0,
+      "profundidade": 1.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}
