@@ -13,6 +13,7 @@ for _stream in (sys.stdout, sys.stderr):
 
 ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT / ".env")
+load_dotenv(ROOT / ".env.local", override=True)  # secrets locais, nunca commitados
 
 SUPABASE_URL = os.environ["VITE_SUPABASE_URL"].rstrip("/")
 SUPABASE_ANON_KEY = os.environ["VITE_SUPABASE_PUBLISHABLE_KEY"]

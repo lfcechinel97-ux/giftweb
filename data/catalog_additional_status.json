@@ -9,24 +9,24 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\14726L-2.jpg",
     "sha256": "c304a139585e4e2871ee59b3fe161a01bb9d75f72cd760616196f88a38973f8a",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/14726L-2-v1.jpg",
+    "upload_pendente": false
   },
   "18749": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18749-2.jpg",
     "sha256": "f69ff112273a09ec3dfb0a766f778662de86d663b543677e13badea0503fd12d",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18749-2-v1.jpg",
+    "upload_pendente": false
   },
   "04080": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04080-2.jpg",
     "sha256": "f50bb6b9fa8947ffc6c43457b3f5db56c61c71f57a2c98729ab819d49c97f836",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04080-2-v1.jpg",
+    "upload_pendente": false
   },
   "13803N": {},
   "15452N": {
@@ -34,8 +34,8 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\15452N-2.jpg",
     "sha256": "9cbcd323343272366a82667bdc3345d0f84ca9af4ceef4ab30ac66421c32c844",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/15452N-2-v1.jpg",
+    "upload_pendente": false
   },
   "18601": {
     "ok": true,
@@ -47,8 +47,8 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18845-2.jpg",
     "sha256": "5424d05263a34a7ac97c7e31565d1302a11d0ae4d928ce35748a544704cd583f",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18845-2-v1.jpg",
+    "upload_pendente": false
   },
   "04399": {
     "ok": true,
@@ -65,40 +65,40 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18505-2.jpg",
     "sha256": "c169bf271be95bb35609c8ef5238135a44dbea98e90bbed1b2ab17067acbc032",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18505-2-v1.jpg",
+    "upload_pendente": false
   },
   "18986": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18986-2.jpg",
     "sha256": "a3e4d6b616d1bc0f7250263cd57dc3012a6be70d9b1583030df2ffac57680bc0",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18986-2-v1.jpg",
+    "upload_pendente": false
   },
   "14092N": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\14092N-2.jpg",
     "sha256": "bae2798faf16043cb0e6c76a31ea5f46e42d045a0055043b52fa96646cddba14",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/14092N-2-v1.jpg",
+    "upload_pendente": false
   },
   "08203": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\08203-2.jpg",
     "sha256": "5b68e7125be1ebe255a1a6d6c26527b1526832fcc75a318bb12c3008da5b9ccc",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/08203-2-v1.jpg",
+    "upload_pendente": false
   },
   "07050": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\07050-2.jpg",
     "sha256": "3865e04fb21257b82a513d310ff1fbcae89dd4e6b05d7ac1bec12ab5084894f9",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/07050-2-v1.jpg",
+    "upload_pendente": false
   },
   "05071": {
     "ok": true,
@@ -115,8 +115,8 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\14728P-2.jpg",
     "sha256": "04563fbeea918454fd937a1563c898af7b76325d671554f1cb6f38297aec57c3",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/14728P-2-v1.jpg",
+    "upload_pendente": false
   },
   "10889": {},
   "08103": {
@@ -124,8 +124,8 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\08103-2.jpg",
     "sha256": "c93fc7c6bfcbfaf2cfcfe1f7a321c0ea74d1d65b7cf6ce2a261d14837f5dd039",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/08103-2-v1.jpg",
+    "upload_pendente": false
   },
   "19029": {
     "ok": true,
@@ -175,16 +175,16 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\08219-2.jpg",
     "sha256": "27df4acc6ab2c1e0f675b0ac6e7050e8244a27576367fdfb1da485d844bf7ddf",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/08219-2-v1.jpg",
+    "upload_pendente": false
   },
   "12926AC": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\12926AC-2.jpg",
     "sha256": "26f39c58b0e324d3a44fd6b2e1a96126820f200a49588d86a7d0b7048163310a",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/12926AC-2-v1.jpg",
+    "upload_pendente": false
   },
   "06052": {
     "ok": true,
@@ -206,24 +206,24 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18753-2.jpg",
     "sha256": "b7716853921e6caddd39895a3057c4338099aafa852b778834a22d2658df1934",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18753-2-v1.jpg",
+    "upload_pendente": false
   },
   "01618": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\01618-2.jpg",
     "sha256": "19809c3390232249929872bf3a6b180d4b65b542737a9f45f1427d2efa7c7671",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/01618-2-v1.jpg",
+    "upload_pendente": false
   },
   "18507": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18507-2.jpg",
     "sha256": "44cd5a826fa82568b9cde5eb844d1d66aa27989d76035c79be5d20abea100f8a",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18507-2-v1.jpg",
+    "upload_pendente": false
   },
   "18516": {
     "ok": true,
@@ -240,32 +240,32 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18928-2.jpg",
     "sha256": "7634cc1f265d9abb096ed34e40db683ade0231b114774907c304c2a58060d892",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18928-2-v1.jpg",
+    "upload_pendente": false
   },
   "18874": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18874-2.jpg",
     "sha256": "9320d2531fd1bf245c200b7217af2734fe273af1642cb84a181d0bb9b8e27d9c",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18874-2-v1.jpg",
+    "upload_pendente": false
   },
   "18724": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18724-2.jpg",
     "sha256": "fea40720d555fe6f4575b63c76a6d124eea8c404f4edd83fe951e77fe0f562b8",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18724-2-v1.jpg",
+    "upload_pendente": false
   },
   "05044": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\05044-2.jpg",
     "sha256": "37cd18eda8f6156db046680bfa672cff5a8dc363db1490d5e92f0e6ee54170b6",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/05044-2-v1.jpg",
+    "upload_pendente": false
   },
   "02075": {
     "ok": true,
@@ -277,8 +277,8 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\05086-2.jpg",
     "sha256": "a6f70353908114df60c287e133212ab896e96f8d1d1112ac51a03e726993c0e6",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/05086-2-v1.jpg",
+    "upload_pendente": false
   },
   "05198": {
     "ok": true,
@@ -307,8 +307,8 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\14724P-2.jpg",
     "sha256": "4ca346a1324668e523ee7552334f0643e9c5ea1de8e7c3350bbf829a24fa735f",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/14724P-2-v1.jpg",
+    "upload_pendente": false
   },
   "14724": {
     "ok": true,
@@ -320,16 +320,16 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\01810-2.jpg",
     "sha256": "5e96f9c0af5eb79b5280def86bd9586660a644dbe60c16c946a08eb72b838e13",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/01810-2-v1.jpg",
+    "upload_pendente": false
   },
   "03007": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\03007-2.jpg",
     "sha256": "b8fe513ccc2daf985532818da38949cf22d88dffca205590820e7fc2d2d3d236",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/03007-2-v1.jpg",
+    "upload_pendente": false
   },
   "01955": {},
   "04070": {
@@ -347,8 +347,8 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04081-2.jpg",
     "sha256": "ad9c574b78d2e4f9de4154886e797b16963519e6ffca68bd83dafab5d220a2bc",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04081-2-v1.jpg",
+    "upload_pendente": false
   },
   "06033": {
     "ok": true,
@@ -375,32 +375,32 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\KIT18639-2.jpg",
     "sha256": "6ca5bb67ba8561ddde5365611a46135211f9cc5707fc1a857c507c1484c67a63",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/KIT18639-2-v1.jpg",
+    "upload_pendente": false
   },
   "18704": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18704-2.jpg",
     "sha256": "10a317ef426e4ea75c92cf85e560ce8ac388d318e0d34c53ba7f0f219b5d0656",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18704-2-v1.jpg",
+    "upload_pendente": false
   },
   "18855": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18855-2.jpg",
     "sha256": "6ce2394f296eafa855f67ac250b94fe5f4692031c9b5271c6ce382e3fa126c08",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18855-2-v1.jpg",
+    "upload_pendente": false
   },
   "18518": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18518-2.jpg",
     "sha256": "e01e4e0ca02b9fd16d341b699ddcdd33bacbddcbdd244ea80052212b780ffa05",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18518-2-v1.jpg",
+    "upload_pendente": false
   },
   "08331": {
     "ok": true,
@@ -412,16 +412,16 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18726I-2.jpg",
     "sha256": "88c1cbab16cb7d00b8c3f8b6bbba2e44cdc9ffe0547e331d6942684f27670d15",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18726I-2-v1.jpg",
+    "upload_pendente": false
   },
   "18552": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18552-2.jpg",
     "sha256": "6f0f109dc1b515038b6751cb94b61fd178934afbf9ecf09b039c0abc98c8d112",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18552-2-v1.jpg",
+    "upload_pendente": false
   },
   "17011F": {
     "ok": true,
@@ -448,16 +448,16 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\09138-2.jpg",
     "sha256": "c0c74ea1eaf7e0893021145e86537897a88c9abde29cedfe14389b7cb42019e8",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/09138-2-v1.jpg",
+    "upload_pendente": false
   },
   "07047": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\07047-2.jpg",
     "sha256": "2fe8133eb0480049673528d6e015251b8e89208033ebb701a7c00ecd331ed2a8",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/07047-2-v1.jpg",
+    "upload_pendente": false
   },
   "09072": {
     "ok": true,
@@ -479,8 +479,8 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\01901B-2.jpg",
     "sha256": "24bed6c9b785f3c50a38545e23aebea8d65329bf6095deea1de441403ba692fd",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/01901B-2-v1.jpg",
+    "upload_pendente": false
   },
   "02066": {},
   "03034": {
@@ -488,8 +488,8 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\03034-2.jpg",
     "sha256": "6d0297dfe2745c78efe40efc19553826d5290224ffb1139132d9634b243a6a6a",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/03034-2-v1.jpg",
+    "upload_pendente": false
   },
   "04508": {
     "ok": true,
@@ -506,16 +506,16 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\06024-2.jpg",
     "sha256": "4b1aae8e784116650321a3aa4ac7a3dd5affdbf839c4ed85edda46c38764ce2c",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/06024-2-v1.jpg",
+    "upload_pendente": false
   },
   "04385": {
     "ok": true,
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04385-2.jpg",
     "sha256": "a90a211a7419245f2d7c1e582e5f7c8223d670a5593d86cd993ae24d134e077a",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04385-2-v1.jpg",
+    "upload_pendente": false
   },
   "02596": {
     "ok": true,
@@ -527,8 +527,8 @@
     "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\08229-2.jpg",
     "sha256": "9bb43c6678371d3c94e5a61687c55177306e33bc3884b6d2b5953c50b0020650",
     "reaproveitada": false,
-    "url": null,
-    "upload_pendente": true
+    "url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/08229-2-v1.jpg",
+    "upload_pendente": false
   },
   "04846": {
     "ok": true,
