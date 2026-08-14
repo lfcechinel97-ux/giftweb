@@ -20,6 +20,9 @@ SUPABASE_ANON_KEY = os.environ["VITE_SUPABASE_PUBLISHABLE_KEY"]
 # Não existe no .env do projeto (é um secret de servidor) - precisa ser
 # fornecida via variável de ambiente na hora de rodar o script.
 SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip() or None
+# Alternativa ao service role key direto: chama a Edge Function upload-catalog-image,
+# que roda dentro do Lovable Cloud e já tem acesso à service role key internamente.
+CATALOG_UPLOAD_SECRET = os.environ.get("CATALOG_UPLOAD_SECRET", "").strip() or None
 
 DATA_DIR = ROOT / "data"
 RAW_DIR = DATA_DIR / "raw"
