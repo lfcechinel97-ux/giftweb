@@ -70,13 +70,13 @@ const Footer = () => {
             </div>
 
             <div className="flex gap-2.5 mt-5">
-              <a href={linkInsta} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#22C55E]/40 transition-colors">
+              <a href={linkInsta} target="_blank" rel="noreferrer" aria-label="Instagram da Gift Web Brindes" className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#22C55E]/40 transition-colors">
                 <Instagram size={16} strokeWidth={1.5} />
               </a>
-              <a href={linkFb} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#22C55E]/40 transition-colors">
+              <a href={linkFb} target="_blank" rel="noreferrer" aria-label="Facebook da Gift Web Brindes" className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#22C55E]/40 transition-colors">
                 <Facebook size={16} strokeWidth={1.5} />
               </a>
-              <a href={linkWa} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#22C55E]/40 transition-colors">
+              <a href={linkWa} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp da Gift Web Brindes" className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center text-[#9CA3AF] hover:text-white hover:border-[#22C55E]/40 transition-colors">
                 <WhatsAppIcon size={16} />
               </a>
             </div>
