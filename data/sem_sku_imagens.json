@@ -1,0 +1,62 @@
+{
+  "sem-sku-camisa-gola-polo-masc-e-fem": {
+    "slot1": {
+      "ok": true,
+      "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\sem-sku-camisa-gola-polo-masc-e-fem-1.jpg",
+      "sha256": "b2bd54ffc43b35fbb36d03fd8efe13184c4e12cd70d35cecd8093ff8ea459b12"
+    },
+    "slot2": {
+      "ok": true,
+      "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\sem-sku-camisa-gola-polo-masc-e-fem-2.jpg",
+      "sha256": "b2bd54ffc43b35fbb36d03fd8efe13184c4e12cd70d35cecd8093ff8ea459b12"
+    }
+  },
+  "sem-sku-camiseta-dry-fit": {
+    "slot1": {
+      "ok": true,
+      "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\sem-sku-camiseta-dry-fit-1.jpg",
+      "sha256": "3f7c7f7dccc6f52197f1e626e707f4dddee1cd440f3780800ac50b385b611e2a"
+    },
+    "slot2": {
+      "ok": true,
+      "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\sem-sku-camiseta-dry-fit-2.jpg",
+      "sha256": "3f7c7f7dccc6f52197f1e626e707f4dddee1cd440f3780800ac50b385b611e2a"
+    }
+  },
+  "sem-sku-camiseta-100-algodao-fio-30-1": {
+    "slot1": {
+      "ok": true,
+      "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\sem-sku-camiseta-100-algodao-fio-30-1-1.jpg",
+      "sha256": "d57dbe817b97c72d00d1c22a8a2fcd283724927c3624ffc2c5f65b275d627b71"
+    },
+    "slot2": {
+      "ok": true,
+      "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\sem-sku-camiseta-100-algodao-fio-30-1-2.jpg",
+      "sha256": "d57dbe817b97c72d00d1c22a8a2fcd283724927c3624ffc2c5f65b275d627b71"
+    }
+  },
+  "sem-sku-caixa-de-som-jbl-go-3": {
+    "slot1": {
+      "ok": true,
+      "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\sem-sku-caixa-de-som-jbl-go-3-1.jpg",
+      "sha256": "61ec9aefeed3e5b4ef1dd606f71590fc38c31071f3ff608284bf8906ba5f123f"
+    },
+    "slot2": {
+      "ok": true,
+      "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\sem-sku-caixa-de-som-jbl-go-3-2.jpg",
+      "sha256": "61ec9aefeed3e5b4ef1dd606f71590fc38c31071f3ff608284bf8906ba5f123f"
+    }
+  },
+  "sem-sku-copo-long-neck-3-em-1-420-ml": {
+    "slot1": {
+      "ok": true,
+      "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\sem-sku-copo-long-neck-3-em-1-420-ml-1.jpg",
+      "sha256": "f5322071284b85e609969a5e6c25ebb45cd015fc37cf07b28277e7e56b2925e8"
+    },
+    "slot2": {
+      "ok": true,
+      "local_path": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\sem-sku-copo-long-neck-3-em-1-420-ml-2.jpg",
+      "sha256": "f5322071284b85e609969a5e6c25ebb45cd015fc37cf07b28277e7e56b2925e8"
+    }
+  }
+}

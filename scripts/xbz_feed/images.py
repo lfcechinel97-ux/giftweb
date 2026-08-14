@@ -29,6 +29,10 @@ _XBZ_DIR_RE = re.compile(r"(/img/produtos/)(\d+)(/)")
 _DIR_FALLBACK_ORDER = ["3", "2", "1"]  # 3 = 1000x1000 (maior confirmada na Fase 0), depois menor
 MIN_LADO_PX = 500
 
+LOGO_PATH = config.ROOT / "public" / "logos" / "giftweb-logo.png"
+LOGO_ESCALA = 0.16  # logo ocupa ~16% da largura do canvas
+LOGO_MARGEM = 0.03  # 3% de margem da borda
+
 MANIFEST: dict = {}
 if config.MANIFEST_FILE.exists():
     MANIFEST = json.loads(config.MANIFEST_FILE.read_text(encoding="utf-8"))
@@ -148,6 +152,75 @@ def _normalizar_para_canvas(img: Image.Image, tamanho: int = 1024, margem_pct: f
     offset = ((tamanho - novo_w) // 2, (tamanho - novo_h) // 2)
     canvas.paste(img_redim, offset)
     return canvas
+
+
+def _aplicar_logo(canvas: Image.Image) -> Image.Image:
+    """Cola a logo Gift Web (public/logos/giftweb-logo.png) no canto inferior direito,
+    respeitando a transparência do PNG."""
+    if not LOGO_PATH.exists():
+        raise FileNotFoundError(f"Logo não encontrada em {LOGO_PATH}")
+    logo = Image.open(LOGO_PATH).convert("RGBA")
+    tamanho_canvas = canvas.size[0]
+    largura_logo = round(tamanho_canvas * LOGO_ESCALA)
+    escala = largura_logo / logo.width
+    logo_redim = logo.resize((largura_logo, round(logo.height * escala)), Image.LANCZOS)
+    margem_px = round(tamanho_canvas * LOGO_MARGEM)
+    pos = (tamanho_canvas - logo_redim.width - margem_px, tamanho_canvas - logo_redim.height - margem_px)
+    resultado = canvas.convert("RGBA")
+    resultado.alpha_composite(logo_redim, dest=pos)
+    return resultado.convert("RGB")
+
+
+def processar_imagem_local(codigo: str, slot: int, caminho_local: str, aplicar_logo: bool = False) -> ImagemProcessada:
+    """Processa uma imagem já em disco (fornecida pelo usuário, não baixada da XBZ):
+    mesma classificação/normalização de processar_imagem_nao_curada, com opção de
+    marca d'água da logo Gift Web."""
+    print(f"[IMAGES] {codigo}: processando imagem local slot {slot} de {caminho_local}")
+    with open(caminho_local, "rb") as f:
+        conteudo = f.read()
+
+    img = Image.open(io.BytesIO(conteudo))
+    largura, altura = img.size
+    menor_lado = min(largura, altura)
+    print(f"[IMAGES] {codigo}: {largura}x{altura}")
+
+    if menor_lado < MIN_LADO_PX:
+        print(f"[IMAGES] {codigo}: REPROVADA_TAMANHO (menor lado {menor_lado}px < {MIN_LADO_PX}px)")
+        return ImagemProcessada(
+            codigo=codigo, slot=slot, ok=False,
+            motivo_reprovacao=f"REPROVADA_TAMANHO: menor lado {menor_lado}px < {MIN_LADO_PX}px",
+            largura_original=largura, altura_original=altura, fonte_url=caminho_local,
+        )
+
+    suspeita, detalhe = _classificar_watermark(img)
+
+    canvas = _normalizar_para_canvas(img)
+    if aplicar_logo:
+        canvas = _aplicar_logo(canvas)
+
+    buf = io.BytesIO()
+    canvas.save(buf, format="JPEG", quality=85)
+    dados_finais = buf.getvalue()
+    if len(dados_finais) / (1024 * 1024) >= 8:
+        for q in (75, 65, 55):
+            buf = io.BytesIO()
+            canvas.save(buf, format="JPEG", quality=q)
+            dados_finais = buf.getvalue()
+            if len(dados_finais) / (1024 * 1024) < 8:
+                break
+
+    local_path = config.PROCESSED_DIR / f"{codigo}-{slot}.jpg"
+    local_path.write_bytes(dados_finais)
+    sha = hashlib.sha256(dados_finais).hexdigest()
+    print(f"[IMAGES] {codigo}: normalizada{'​+logo' if aplicar_logo else ''} -> {local_path.name} "
+          f"({len(dados_finais)/1024:.0f} KB, sha256={sha[:12]}...)")
+
+    return ImagemProcessada(
+        codigo=codigo, slot=slot, ok=True,
+        watermark_suspeito=suspeita, watermark_detalhe=detalhe,
+        largura_original=largura, altura_original=altura,
+        local_path=str(local_path), sha256=sha, fonte_url=caminho_local,
+    )
 
 
 def processar_imagem_nao_curada(codigo: str, slot: int, candidata: ImagemCandidata) -> ImagemProcessada:
