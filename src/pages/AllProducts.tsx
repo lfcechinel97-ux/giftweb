@@ -95,6 +95,23 @@ const AllProducts = () => {
         <title>Todos os Produtos | Gift Web Brindes Personalizados</title>
         <meta name="description" content="Catálogo completo de brindes personalizados para empresas. Preços para atacado." />
         <link rel="canonical" href={`${SITE_URL}/produtos${page > 1 ? `?page=${page}` : ""}`} />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "Todos os Produtos",
+          description: "Catálogo completo de brindes personalizados para empresas.",
+          url: `${SITE_URL}/produtos`,
+          mainEntity: {
+            "@type": "ItemList",
+            numberOfItems: products.length,
+            itemListElement: products.map((p: any, i: number) => ({
+              "@type": "ListItem",
+              position: (page - 1) * PAGE_SIZE + i + 1,
+              name: p.nome,
+              url: `${SITE_URL}/produto/${p.slug}`,
+            })),
+          },
+        })}</script>
       </Helmet>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />

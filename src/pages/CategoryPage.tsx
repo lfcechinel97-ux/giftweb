@@ -143,6 +143,22 @@ const CategoryPage = () => {
         <title>{collection ? `Brindes para ${collection.nome} | Gift Web Brindes` : `${categoryLabel} Personalizados | Gift Web Brindes`}</title>
         <meta name="description" content={collection ? (collection.descricao ?? `Presentes e brindes personalizados selecionados para ${collection.nome}.`) : `${categoryLabel} personalizados para empresas. Catálogo com preços para atacado.`} />
         <link rel="canonical" href={canonicalUrl} />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: collection ? collection.nome : categoryLabel,
+          url: `${SITE_URL}/categoria/${category}`,
+          mainEntity: {
+            "@type": "ItemList",
+            numberOfItems: products.length,
+            itemListElement: products.map((p: any, i: number) => ({
+              "@type": "ListItem",
+              position: (page - 1) * PAGE_SIZE + i + 1,
+              name: p.nome,
+              url: `${SITE_URL}/produto/${p.slug}`,
+            })),
+          },
+        })}</script>
       </Helmet>
 
       <div className="min-h-screen flex flex-col bg-background">

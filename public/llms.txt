@@ -1,0 +1,25 @@
+# Gift Web Brindes
+
+> Fornecedora brasileira de brindes corporativos personalizados para empresas: garrafas, copos, mochilas, canetas, cadernos, kits e mais, com orçamento por WhatsApp.
+
+## Páginas
+
+- [Início](/): Visão geral da Gift Web Brindes e categorias em destaque.
+- [Todos os produtos](/produtos): Catálogo completo de brindes personalizados.
+- [Catálogo](/catalogo): Catálogo B2B para montar orçamento.
+- [Top produtos](/topprodutos): Seleção dos brindes mais pedidos.
+- [Top 10 por categoria](/top10produtos): Ranking dos 10 mais pedidos em cada categoria.
+
+## Categorias
+
+- [Garrafas e squeezes](/categoria/garrafas-e-squeezes): Garrafas térmicas e squeezes personalizados.
+- [Copos e canecas](/categoria/copos-e-canecas): Copos térmicos e canecas personalizadas.
+- [Mochilas e sacochilas](/categoria/mochilas-e-sacochilas): Mochilas e sacochilas com a sua marca.
+- [Canetas](/categoria/canetas): Canetas personalizadas para eventos e brindes.
+- [Kits](/categoria/kits): Kits churrasco, vinho e presentes corporativos.
+
+## Opcional
+
+- [Política de privacidade](/politica-de-privacidade): Como tratamos dados pessoais.
+- [Termos de uso](/termos-de-uso): Condições de uso do site.
+- [Trocas e devoluções](/politica-de-trocas-e-devolucoes): Regras de troca e devolução.
