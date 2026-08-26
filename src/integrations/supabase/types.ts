@@ -400,6 +400,184 @@ export type Database = {
         }
         Relationships: []
       }
+      sistema_calcme_item_arquivos: {
+        Row: {
+          calcme_item_id: string
+          categoria: string | null
+          created_at: string
+          file_hash: string | null
+          file_name: string | null
+          id: string
+          is_operation_file: boolean
+          is_order_file: boolean
+          is_production_file: boolean
+          item_id: string
+          pedido_id: string
+          raw: Json | null
+          updated_at: string
+        }
+        Insert: {
+          calcme_item_id: string
+          categoria?: string | null
+          created_at?: string
+          file_hash?: string | null
+          file_name?: string | null
+          id?: string
+          is_operation_file?: boolean
+          is_order_file?: boolean
+          is_production_file?: boolean
+          item_id: string
+          pedido_id: string
+          raw?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          calcme_item_id?: string
+          categoria?: string | null
+          created_at?: string
+          file_hash?: string | null
+          file_name?: string | null
+          id?: string
+          is_operation_file?: boolean
+          is_order_file?: boolean
+          is_production_file?: boolean
+          item_id?: string
+          pedido_id?: string
+          raw?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_calcme_item_arquivos_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_calcme_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_calcme_item_arquivos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_calcme_item_arquivos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pcp"
+            referencedColumns: ["pedido_id"]
+          },
+        ]
+      }
+      sistema_calcme_itens: {
+        Row: {
+          calcme_item_id: string
+          calcme_item_idint: number | null
+          calcme_produto_id: string | null
+          calcme_produto_idint: number | null
+          created_at: string
+          descricao: string | null
+          id: string
+          item_id: string | null
+          nome: string | null
+          observacoes: string | null
+          pedido_id: string
+          quantidade: number | null
+          raw: Json | null
+          updated_at: string
+          valor_total: number | null
+          valor_unitario: number | null
+        }
+        Insert: {
+          calcme_item_id: string
+          calcme_item_idint?: number | null
+          calcme_produto_id?: string | null
+          calcme_produto_idint?: number | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          item_id?: string | null
+          nome?: string | null
+          observacoes?: string | null
+          pedido_id: string
+          quantidade?: number | null
+          raw?: Json | null
+          updated_at?: string
+          valor_total?: number | null
+          valor_unitario?: number | null
+        }
+        Update: {
+          calcme_item_id?: string
+          calcme_item_idint?: number | null
+          calcme_produto_id?: string | null
+          calcme_produto_idint?: number | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          item_id?: string | null
+          nome?: string | null
+          observacoes?: string | null
+          pedido_id?: string
+          quantidade?: number | null
+          raw?: Json | null
+          updated_at?: string
+          valor_total?: number | null
+          valor_unitario?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_calcme_itens_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_calcme_itens_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pcp"
+            referencedColumns: ["pedido_id"]
+          },
+        ]
+      }
+      sistema_calcme_sync_log: {
+        Row: {
+          detalhes: Json | null
+          errors: number
+          found: number
+          id: string
+          ignored: number
+          imported: number
+          status: string
+          synced_at: string
+          updated: number
+        }
+        Insert: {
+          detalhes?: Json | null
+          errors?: number
+          found?: number
+          id?: string
+          ignored?: number
+          imported?: number
+          status?: string
+          synced_at?: string
+          updated?: number
+        }
+        Update: {
+          detalhes?: Json | null
+          errors?: number
+          found?: number
+          id?: string
+          ignored?: number
+          imported?: number
+          status?: string
+          synced_at?: string
+          updated?: number
+        }
+        Relationships: []
+      }
       sistema_clientes: {
         Row: {
           contatos: Json
@@ -939,6 +1117,13 @@ export type Database = {
       }
       sistema_pedidos: {
         Row: {
+          calcme_data_entrega: string | null
+          calcme_order_id: string | null
+          calcme_order_idint: number | null
+          calcme_raw: Json | null
+          calcme_status: string | null
+          calcme_synced_at: string | null
+          calcme_vendedor_nome: string | null
           cliente_id: string | null
           cliente_snapshot: Json | null
           contato_email: string | null
@@ -965,6 +1150,13 @@ export type Database = {
           vendedor_id: string | null
         }
         Insert: {
+          calcme_data_entrega?: string | null
+          calcme_order_id?: string | null
+          calcme_order_idint?: number | null
+          calcme_raw?: Json | null
+          calcme_status?: string | null
+          calcme_synced_at?: string | null
+          calcme_vendedor_nome?: string | null
           cliente_id?: string | null
           cliente_snapshot?: Json | null
           contato_email?: string | null
@@ -991,6 +1183,13 @@ export type Database = {
           vendedor_id?: string | null
         }
         Update: {
+          calcme_data_entrega?: string | null
+          calcme_order_id?: string | null
+          calcme_order_idint?: number | null
+          calcme_raw?: Json | null
+          calcme_status?: string | null
+          calcme_synced_at?: string | null
+          calcme_vendedor_nome?: string | null
           cliente_id?: string | null
           cliente_snapshot?: Json | null
           contato_email?: string | null

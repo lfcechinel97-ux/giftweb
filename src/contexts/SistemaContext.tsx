@@ -175,6 +175,12 @@ export interface Pedido {
   prazoProducaoDias?: number;
   dataProduzirAte?: string;
   dataDespacharAte?: string;
+  /* Integração Calcme (presentes só em pedidos importados) */
+  calcmeOrderId?: string | null;
+  calcmeOrderIdint?: number | null;
+  calcmeStatus?: string | null;
+  calcmeVendedorNome?: string | null;
+  calcmeDataEntrega?: string | null;
 }
 
 export interface StockAdjustment {
@@ -343,6 +349,11 @@ const mapPedido = (r: any): Pedido => ({
   prazoProducaoDias: r.prazo_producao_dias ?? undefined,
   dataProduzirAte: r.data_produzir_ate ?? undefined,
   dataDespacharAte: r.data_despachar_ate ?? undefined,
+  calcmeOrderId: r.calcme_order_id ?? undefined,
+  calcmeOrderIdint: r.calcme_order_idint ?? undefined,
+  calcmeStatus: r.calcme_status ?? undefined,
+  calcmeVendedorNome: r.calcme_vendedor_nome ?? undefined,
+  calcmeDataEntrega: r.calcme_data_entrega ?? undefined,
 });
 const pedidoToDb = (p: Partial<Pedido>): any => {
   const out: any = {};
