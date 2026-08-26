@@ -390,10 +390,28 @@ serve(async (req: Request) => {
       detalhes,
     });
 
+    // Diagnóstico extra: amostra crua de tarefas (para mapear onde o Calcme
+    // expõe anexos — o DTO documentado não inclui attachments na leitura)
+    let tasksSample: any = undefined;
+    if (debugIdInt !== null) {
+      try {
+        const t = await calcmeGet(token, `/api/open/v1/tasks?page=0&size=5`);
+        const content: any[] = t?.data?.content ?? [];
+        tasksSample = {
+          total: t?.data?.totalElements ?? null,
+          campos: content[0] ? Object.keys(content[0]) : [],
+          amostra: content.slice(0, 3),
+        };
+      } catch (e) {
+        tasksSample = { erro: (e as Error).message };
+      }
+    }
+
     return json({
       ...summary,
       detalhes: (detalhes.erros.length || detalhes.avisos.length) ? detalhes : undefined,
       debug: debugIdInt !== null ? (debugEntry ?? { idInt: debugIdInt, encontradoNaListagem: false }) : undefined,
+      tasksSample,
     });
   } catch (e) {
     // Erro fatal (API fora, autenticação recusada etc.)
