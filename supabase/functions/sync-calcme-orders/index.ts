@@ -231,7 +231,6 @@ serve(async (req: Request) => {
         const { data: existingItems } = await supabase
           .from("sistema_calcme_itens")
           .select("calcme_item_id, item_id")
-          .eq("calcme_item_id", "neq", "")
           .in("calcme_item_id", rawItems.map((i) => String(i?.id ?? "")).filter(Boolean));
         const stableId = new Map<string, string>();
         for (const r of existingItems ?? []) {
