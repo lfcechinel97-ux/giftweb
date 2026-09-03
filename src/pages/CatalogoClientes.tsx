@@ -2,6 +2,9 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { WHATSAPP_NUMERO, ESTILO_CATALOGO } from "./catalogoClientes.styles";
+import {
+  brl, brlPartes, faixasDoProduto, indiceDaFaixa, type ProdutoComPreco,
+} from "@/lib/catalogoPrecos";
 
 /**
  * Catálogo enviado por link no WhatsApp.
@@ -14,7 +17,7 @@ import { WHATSAPP_NUMERO, ESTILO_CATALOGO } from "./catalogoClientes.styles";
  */
 
 interface Cor { n: string; h: string | string[]; }
-interface Produto {
+interface Produto extends ProdutoComPreco {
   id: string; codigo: string; nome: string;
   categoria: string; categoria_rotulo: string | null;
   grupo: string | null; grupo_rotulo: string | null;
@@ -26,7 +29,12 @@ interface ItemCarrinho { codigo: string; nome: string; img: string | null; qtd: 
 
 const QTD_INICIAL = 10;
 const PASSO = 5;
-const ATALHOS = [50, 100];
+/** Atalhos batem com os minimos das faixas: clicar leva direto ao preco daquela linha. */
+const ATALHOS = [
+  { qtd: 20, rotulo: "20 un." },
+  { qtd: 50, rotulo: "50 un." },
+  { qtd: 100, rotulo: "100+ un.", melhor: true },
+];
 const MAX_BOLINHAS = 6;
 
 const BENEFICIOS = [
@@ -36,8 +44,6 @@ const BENEFICIOS = [
   { t: "Pedido a partir de 10 un.", d: "Quantidade mínima acessível para começar" },
 ];
 
-const brl = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const norm = (t: string) =>
   t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const corCss = (h: string | string[]) =>
@@ -71,6 +77,20 @@ const Card = memo(function Card({
   // alguma regra do site vencia a especificidade e a troca nao acontecia.
   const [mostrandoAlt, setMostrandoAlt] = useState(false);
   const temSegunda = !!p.imagem_secundaria_url;
+
+  // Produto sem as tres faixas configuradas cai no "a partir de" de antes.
+  const faixas = faixasDoProduto(p);
+  const iAtiva = faixas ? indiceDaFaixa(qtd) : -1;
+  const ultima = faixas ? faixas.length - 1 : -1;
+  // Linha de apoio sempre presente: some/aparecer empurraria o card e mexeria
+  // na altura da linha inteira do grid a cada clique de quantidade.
+  const dica = !faixas
+    ? null
+    : iAtiva < 0
+      ? `Preço de tabela a partir de ${faixas[0].min} un.`
+      : iAtiva < ultima
+        ? `Leve ${faixas[iAtiva + 1].min} un. e pague ${brl(faixas[iAtiva + 1].valor)}`
+        : "Você está no melhor preço";
 
   return (
     <article className="gwc-card">
@@ -121,15 +141,41 @@ const Card = memo(function Card({
             {p.cores.length > MAX_BOLINHAS && <u>+{p.cores.length - MAX_BOLINHAS}</u>}
           </div>
         )}
-        <div className="gwc-price">
-          <small>A partir de</small>
-          <b>{p.preco != null ? brl(p.preco) : "sob consulta"}</b>
-        </div>
+        {faixas ? (
+          <>
+            <div className={`gwc-faixas ${faixas.some((f) => f.valor >= 100) ? "compacta" : ""}`}>
+              {faixas.map((f, i) => (
+                // Clicavel: quem toca no preco espera levar a quantidade junto.
+                <button
+                  key={f.min}
+                  type="button"
+                  aria-pressed={i === iAtiva}
+                  className={`${f.melhor ? "best " : ""}${i === iAtiva ? "on" : ""}`}
+                  onClick={() => onQtd(f.min)}
+                >
+                  <span>{f.rotulo}</span>
+                  <b><i>R$</i>{brlPartes(f.valor).valor}</b>
+                  {f.melhor && <em>Melhor preço</em>}
+                </button>
+              ))}
+            </div>
+            <p className={`gwc-dica ${iAtiva === ultima ? "top" : ""}`}>{dica}</p>
+          </>
+        ) : (
+          <div className="gwc-price">
+            <small>A partir de</small>
+            <b>{p.preco != null ? brl(p.preco) : "sob consulta"}</b>
+          </div>
+        )}
         <div className="gwc-actions">
           <div className="gwc-chips">
-            {ATALHOS.map((v) => (
-              <button key={v} className={qtd === v ? "on" : ""} onClick={() => onQtd(v)}>
-                {v} un
+            {ATALHOS.map((a) => (
+              <button
+                key={a.qtd}
+                className={`${a.melhor ? "best " : ""}${qtd === a.qtd ? "on" : ""}`}
+                onClick={() => onQtd(a.qtd)}
+              >
+                {a.rotulo}
               </button>
             ))}
           </div>

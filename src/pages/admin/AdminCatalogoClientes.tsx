@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   Search, Save, X, Upload, Plus, Trash2, Eye, EyeOff, Star, Loader2, ExternalLink,
+  AlertTriangle,
 } from "lucide-react";
+import { FAIXAS, brl, faixasDoProduto, type CampoFaixa } from "@/lib/catalogoPrecos";
 
 export interface CorVariacao {
   n: string;
@@ -23,6 +25,10 @@ export interface CatalogoItem {
   grupo: string | null;
   grupo_rotulo: string | null;
   preco: number | null;
+  /** Faixas por quantidade. Opcionais: a coluna so existe depois da migration. */
+  preco_20?: number | null;
+  preco_50?: number | null;
+  preco_100?: number | null;
   imagem_url: string | null;
   imagem_secundaria_url: string | null;
   cores: CorVariacao[];
@@ -58,6 +64,13 @@ export default function AdminCatalogoClientes() {
   const [editando, setEditando] = useState<CatalogoItem | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [enviandoFoto, setEnviandoFoto] = useState<"principal" | "secundaria" | null>(null);
+  /**
+   * As colunas de faixa vem de uma migration que roda separada (Lovable Cloud
+   * nao aplica migration por push). Enquanto ela nao rodar, o select nao traz
+   * esses campos - e mandar eles no update faria TODO salvamento falhar. Por
+   * isso o admin detecta a coluna em vez de assumir que ela existe.
+   */
+  const [temFaixas, setTemFaixas] = useState(true);
 
   const carregar = async () => {
     setCarregando(true);
@@ -68,7 +81,9 @@ export default function AdminCatalogoClientes() {
     if (error) {
       toast.error("Erro ao carregar: " + error.message);
     } else {
-      setItens((data as unknown as CatalogoItem[]) ?? []);
+      const linhas = (data as unknown as CatalogoItem[]) ?? [];
+      setItens(linhas);
+      if (linhas.length) setTemFaixas("preco_20" in linhas[0]);
     }
     setCarregando(false);
   };
@@ -114,6 +129,13 @@ export default function AdminCatalogoClientes() {
         grupo: editando.grupo,
         grupo_rotulo: editando.grupo_rotulo,
         preco: editando.preco,
+        ...(temFaixas
+          ? {
+              preco_20: editando.preco_20 ?? null,
+              preco_50: editando.preco_50 ?? null,
+              preco_100: editando.preco_100 ?? null,
+            }
+          : {}),
         imagem_url: editando.imagem_url,
         imagem_secundaria_url: editando.imagem_secundaria_url,
         cores: editando.cores,
@@ -284,14 +306,24 @@ export default function AdminCatalogoClientes() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 mt-auto pt-2">
-                  <span className="text-sm font-bold text-green-700">
-                    {item.preco != null
-                      ? item.preco.toLocaleString("pt-BR", {
-                          style: "currency",
-                          currency: "BRL",
-                        })
-                      : "—"}
-                  </span>
+                  {faixasDoProduto(item) ? (
+                    <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
+                      {brl(item.preco_20!)}
+                      <span className="mx-1 text-muted-foreground/60">→</span>
+                      <span className="text-sm font-bold text-green-700">
+                        {brl(item.preco_100!)}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-sm font-bold text-green-700">
+                      {item.preco != null
+                        ? item.preco.toLocaleString("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          })
+                        : "—"}
+                    </span>
+                  )}
                   <div className="ml-auto flex gap-1">
                     <Button size="sm" variant="ghost" onClick={() => alternarAtivo(item)}>
                       {item.ativo ? (
@@ -358,7 +390,7 @@ export default function AdminCatalogoClientes() {
                     className="mt-1.5"
                   />
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    Aparece como "a partir de"
+                    Só aparece ("a partir de") quando não há preço por faixa
                   </p>
                 </div>
                 <div>
@@ -373,6 +405,66 @@ export default function AdminCatalogoClientes() {
                   />
                   <p className="text-[11px] text-muted-foreground mt-1">Menor aparece antes</p>
                 </div>
+              </div>
+
+              {/* Precos por faixa: e o que o cliente ve no card. O campo
+                  "Preco exibido" acima so entra em acao quando as tres faixas
+                  estao vazias. */}
+              <div className="rounded-lg border p-4">
+                <div className="flex items-baseline justify-between">
+                  <Label className="text-sm">Preço por quantidade</Label>
+                  <span className="text-[11px] text-muted-foreground">
+                    100+ un. = melhor preço
+                  </span>
+                </div>
+
+                {temFaixas ? (
+                  <>
+                    <div className="grid grid-cols-3 gap-2 mt-3">
+                      {FAIXAS.map((f) => {
+                        const melhor = f.campo === "preco_100";
+                        return (
+                          <div key={f.campo}>
+                            <Label
+                              className={`text-[11px] ${melhor ? "text-green-700 font-semibold" : "text-muted-foreground"}`}
+                            >
+                              {f.rotulo}
+                            </Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="—"
+                              value={editando[f.campo as CampoFaixa] ?? ""}
+                              onChange={(e) =>
+                                setEditando({
+                                  ...editando,
+                                  [f.campo]:
+                                    e.target.value === "" ? null : Number(e.target.value),
+                                })
+                              }
+                              className={`mt-1 ${melhor ? "border-green-500 focus-visible:ring-green-500" : ""}`}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-2">
+                      {faixasDoProduto(editando)
+                        ? "O card mostra as três faixas lado a lado."
+                        : "Preencha as três para o card mostrar a escada de preço. Com alguma vazia, ele volta a exibir apenas o “Preço exibido” acima."}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-[11px] text-amber-700 mt-2 flex gap-1.5">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-px" />
+                    <span>
+                      As colunas de preço por faixa ainda não existem no banco. Rode a
+                      migration <code>20260903210000_catalogo_precos_faixa.sql</code> no SQL
+                      editor do Lovable Cloud para liberar esta seção.
+                    </span>
+                  </p>
+                )}
               </div>
 
               <div>

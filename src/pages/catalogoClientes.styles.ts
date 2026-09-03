@@ -143,6 +143,79 @@ export const ESTILO_CATALOGO = `
 .gwc-price small{font-size:10px;color:var(--muted);white-space:nowrap;font-weight:500}
 .gwc-price b{font-size:19px;font-weight:800;color:var(--navy-800);letter-spacing:-.035em;
   line-height:1.1}
+/* Escada de preco por volume. Tres colunas fixas em qualquer largura: virar
+   lista vertical no celular dobraria a altura do card, e a leitura lado a lado
+   e justamente o que faz o desconto por volume ficar obvio num relance.
+   Por isso o "R$" vai num <i> menor - e o que sobra de espaco em card de 2
+   colunas em tela de 360px. */
+/* minmax(0,1fr) e nao 1fr: com 1fr o min-content do selo "MELHOR PRECO"
+   empurrava a terceira coluna e as tres ficavam de larguras diferentes,
+   estourando o card. */
+.gwc-faixas{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:3px;margin-top:1px;padding-top:9px;align-items:stretch}
+.gwc-faixas>button{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  gap:1px;padding:5px 2px 5px;border-radius:8px;border:1px solid var(--line);background:#f7f9fc;
+  text-align:center;transition:border-color .15s,background .15s,box-shadow .15s}
+@media(hover:hover){.gwc-faixas>button:hover{border-color:var(--navy-600)}
+  .gwc-faixas>button.best:hover{border-color:var(--green-600)}}
+.gwc-faixas>button:active{transform:scale(.97)}
+.gwc-faixas span{font-size:9.5px;font-weight:700;color:var(--muted);white-space:nowrap;
+  letter-spacing:-.01em;line-height:1.1}
+.gwc-faixas b{font-size:12.5px;font-weight:800;color:var(--navy-800);white-space:nowrap;
+  letter-spacing:-.04em;line-height:1.15;font-variant-numeric:tabular-nums}
+.gwc-faixas b i{font-style:normal;font-size:8px;font-weight:700;color:var(--muted);
+  margin-right:2px;vertical-align:.08em;letter-spacing:0}
+/* Preco de tres digitos (12 dos 124 produtos) nao cabe na coluna no fonte
+   normal - encolhe so nesses cards em vez de rebaixar todos. */
+.gwc-faixas.compacta b{font-size:11px;letter-spacing:-.05em}
+.gwc-faixas.compacta .best b{font-size:11.5px}
+.gwc-faixas.compacta b i{font-size:7px}
+/* Selo como fita sobre a borda de cima, em vez de terceira linha dentro da
+   celula: fora do fluxo ele nao alonga o card e pode ser mais largo que a
+   coluna, que a 50px nao caberia "MELHOR PRECO" legivel. */
+.gwc-faixas em{position:absolute;top:-9px;right:0;font-style:normal;font-size:7.5px;
+  font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;
+  background:var(--green-600);color:#fff;border-radius:20px;padding:1.5px 6px;line-height:1.35;
+  box-shadow:0 1px 2px rgba(18,134,47,.30)}
+/* 100+ ja nasce destacada, mesmo sem estar selecionada */
+.gwc-faixas .best{background:#effbf1;border-color:#a8e0b4;position:relative}
+.gwc-faixas .best b{color:var(--green-700);font-size:13.5px}
+/* faixa que vale para a quantidade escolhida agora */
+.gwc-faixas .on{border-color:var(--navy-600);background:#fff;
+  box-shadow:0 0 0 1px var(--navy-600) inset}
+.gwc-faixas .best.on{border-color:var(--green-600);background:#e6f8ea;
+  box-shadow:0 0 0 1px var(--green-600) inset}
+/* Linha de apoio de altura fixa: ela troca de texto conforme a quantidade
+   (proximo degrau / melhor preco atingido) em vez de sumir, senao o card
+   mudaria de altura a cada clique. */
+.gwc-dica{margin:-2px 0 0;font-size:9.5px;line-height:1.25;min-height:1.25em;color:var(--muted);
+  font-weight:600;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gwc-dica.top{color:var(--green-700)}
+.gwc-chips button.best{background:#effbf1;border-color:#a8e0b4;color:var(--green-700)}
+.gwc-chips button.best.on{background:var(--green-600);border-color:var(--green-600);color:#fff}
+/* Card muito estreito (2 colunas em telas <=380px): reduz fonte e respiro em
+   vez de quebrar as tres colunas. */
+@media(max-width:380px){
+  .gwc-faixas{gap:2px}
+  .gwc-faixas>div{padding:3px 1px 4px}
+  .gwc-faixas span{font-size:8.5px}
+  .gwc-faixas b{font-size:11px}
+  .gwc-faixas .best b{font-size:11.5px}
+  .gwc-faixas em{font-size:7px;padding:1px 4px}
+  .gwc-chips button{font-size:10px}
+}
+/* Telas antigas de 320px deixam so ~38px por coluna. Aqui o preco encolhe mais
+   um degrau e, nos 12 produtos de valor com tres digitos ("R$ 334,00"), o
+   simbolo sai e fica so o numero - o rotulo da coluna ja diz que e preco.
+   Melhor perder o "R$" nesses casos do que cortar o valor. */
+@media(max-width:340px){
+  .gwc-faixas b{font-size:10.5px}
+  .gwc-faixas .best b{font-size:11px}
+  .gwc-faixas b i{font-size:6.5px;margin-right:1px}
+  .gwc-faixas.compacta b{font-size:10px;letter-spacing:-.045em}
+  .gwc-faixas.compacta .best b{font-size:10.5px}
+  .gwc-faixas.compacta b i{display:none}
+}
 .gwc-actions{margin-top:auto;display:flex;flex-direction:column;gap:6px}
 .gwc-chips{display:flex;gap:5px}
 .gwc-chips button{flex:1;height:27px;border-radius:7px;background:#f4f7fb;border:1px solid var(--line);
