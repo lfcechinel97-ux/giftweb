@@ -766,7 +766,13 @@ def main():
     print(f"[HTML] {len(produtos)} produtos, {len(categorias)} categorias")
     html = montar_html(produtos, categorias)
     OUT.write_text(html, encoding="utf-8")
+    # copia para public/ para ser publicado junto com o site: o visualizador de
+    # documentos do WhatsApp NAO executa JavaScript, entao mandar o .html como
+    # anexo nao funciona - o cliente precisa receber um link.
+    publico = RAIZ / "public" / "catalogo.html"
+    publico.write_text(html, encoding="utf-8")
     print(f"[HTML] Gerado {OUT} ({OUT.stat().st_size / 1024 / 1024:.2f} MB)")
+    print(f"[HTML] Copiado para {publico} -> https://www.giftwebbrindes.com.br/catalogo.html")
 
 
 if __name__ == "__main__":
