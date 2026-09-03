@@ -104,8 +104,21 @@ export const ESTILO_CATALOGO = `
     transform:translateY(-2px)}
 }
 /* fundo levissimo na foto pra produto branco nao sumir no card branco */
-.gwc-ph{position:relative;aspect-ratio:1;background:#fafbfd;padding:9px}
+.gwc-ph{position:relative;aspect-ratio:1;background:#fafbfd;padding:9px;overflow:hidden}
 .gwc-ph img{width:100%;height:100%;object-fit:contain}
+/* Segunda foto sobreposta em cross-fade. A opacidade de .f1/.f2 vem inline do
+   React (ver Card), aqui fica so o posicionamento e a transicao. */
+.gwc-ph.tem2{cursor:pointer}
+.gwc-ph .f1,.gwc-ph .f2{transition:opacity .28s ease}
+.gwc-ph .f2{position:absolute;inset:9px;width:calc(100% - 18px);height:calc(100% - 18px)}
+/* selo discreto avisando que existe uma segunda foto - sem ele o toque no
+   celular seria uma funcao escondida */
+.gwc-lupa{position:absolute;right:7px;bottom:7px;z-index:2;display:flex;align-items:center;gap:3px;
+  background:rgba(255,255,255,.92);color:var(--navy-600);border:1px solid var(--line);
+  border-radius:20px;padding:2px 7px 2px 5px;font-size:10px;font-weight:800;
+  box-shadow:0 1px 3px rgba(9,36,60,.10);transition:opacity .2s}
+.gwc-lupa svg{width:11px;height:11px}
+@media(hover:hover){.gwc-card:hover .gwc-lupa{opacity:0}}
 /* Badge em ambar, nao em verde: o verde fica reservado so pra acao (Adicionar).
    Duas coisas no mesmo verde competem e nenhuma se destaca. */
 .gwc-tag{position:absolute;top:8px;left:8px;background:var(--amber-bg);color:var(--amber);
@@ -114,10 +127,16 @@ export const ESTILO_CATALOGO = `
 .gwc-info{padding:10px 11px 11px;display:flex;flex-direction:column;flex:1;gap:7px}
 .gwc-info h3{font-size:12.5px;font-weight:500;line-height:1.35;color:var(--ink-2);min-height:2.7em;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.gwc-cores{display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-height:14px}
-.gwc-cores i{width:13px;height:13px;border-radius:50%;
-  box-shadow:0 0 0 1px rgba(9,36,60,.18) inset,0 1px 2px rgba(9,36,60,.12)}
-.gwc-cores u{font-size:10px;color:var(--muted);text-decoration:none;font-weight:600}
+/* Bolinhas maiores e com anel branco + sombra: a 13px chapadas elas sumiam
+   no card. O anel separa a cor do fundo e vale principalmente pras claras
+   (branco, off white), que antes ficavam invisiveis. */
+.gwc-cores{display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-height:19px}
+.gwc-cores i{width:18px;height:18px;border-radius:50%;flex:none;
+  box-shadow:0 0 0 2px #fff inset,0 0 0 1px rgba(9,36,60,.22),0 1px 3px rgba(9,36,60,.20);
+  transition:transform .15s}
+@media(hover:hover){.gwc-cores i:hover{transform:scale(1.18)}}
+.gwc-cores u{font-size:10.5px;color:var(--ink-2);text-decoration:none;font-weight:800;
+  background:#eef2f7;border-radius:20px;padding:2px 6px;line-height:1.1}
 /* Preco e o elemento mais escaneado do card: maior, mais escuro e com o
    "A partir de" bem apagado, pra hierarquia ficar obvia num relance. */
 .gwc-price{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;margin-top:1px}

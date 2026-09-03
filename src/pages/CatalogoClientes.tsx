@@ -18,7 +18,8 @@ interface Produto {
   id: string; codigo: string; nome: string;
   categoria: string; categoria_rotulo: string | null;
   grupo: string | null; grupo_rotulo: string | null;
-  preco: number | null; imagem_url: string | null;
+  preco: number | null;
+  imagem_url: string | null; imagem_secundaria_url: string | null;
   cores: Cor[]; destaque: boolean; ordem: number;
 }
 interface ItemCarrinho { codigo: string; nome: string; img: string | null; qtd: number; }
@@ -43,6 +44,17 @@ const corCss = (h: string | string[]) =>
   Array.isArray(h) ? `linear-gradient(135deg, ${h[0]} 0 50%, ${h[1]} 50% 100%)` : h;
 
 /**
+ * Em celular o navegador dispara mouseenter junto do toque, o que brigaria com
+ * o clique e cancelaria a troca de foto. Marcando o primeiro toque real, o
+ * hover passa a valer so onde de fato existe mouse.
+ */
+let _usouToque = false;
+if (typeof window !== "undefined") {
+  window.addEventListener("touchstart", () => { _usouToque = true; }, { once: true, passive: true });
+}
+const usouToque = () => _usouToque;
+
+/**
  * Card fica FORA do componente da pagina de proposito. Declarado dentro, o
  * React trata como um tipo novo a cada render e remonta os 128 cards a cada
  * tecla digitada na busca ou clique de quantidade - o que alem de lento
@@ -54,11 +66,50 @@ const Card = memo(function Card({
   p: Produto; qtd: number; marcado: boolean;
   onQtd: (v: number) => void; onAdd: () => void;
 }) {
+  // Um unico estado controla qual foto aparece, alimentado por hover (mouse) e
+  // por toque (celular). A opacidade vai inline de proposito: com classe + CSS
+  // alguma regra do site vencia a especificidade e a troca nao acontecia.
+  const [mostrandoAlt, setMostrandoAlt] = useState(false);
+  const temSegunda = !!p.imagem_secundaria_url;
+
   return (
     <article className="gwc-card">
-      <div className="gwc-ph">
+      <div
+        className={`gwc-ph ${temSegunda ? "tem2" : ""}`}
+        onMouseEnter={temSegunda && !usouToque() ? () => setMostrandoAlt(true) : undefined}
+        onMouseLeave={temSegunda && !usouToque() ? () => setMostrandoAlt(false) : undefined}
+        onClick={temSegunda ? () => setMostrandoAlt((v) => !v) : undefined}
+      >
         {p.destaque && <span className="gwc-tag">Mais vendido</span>}
-        {p.imagem_url && <img src={p.imagem_url} alt={p.nome} loading="lazy" />}
+        {p.imagem_url && (
+          <img
+            className="f1"
+            src={p.imagem_url}
+            alt={p.nome}
+            loading="lazy"
+            style={{ opacity: mostrandoAlt ? 0 : 1 }}
+          />
+        )}
+        {temSegunda && (
+          <img
+            className="f2"
+            src={p.imagem_secundaria_url!}
+            alt=""
+            loading="lazy"
+            style={{ opacity: mostrandoAlt ? 1 : 0 }}
+          />
+        )}
+        {temSegunda && (
+          <span className="gwc-lupa" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+            2
+          </span>
+        )}
       </div>
       <div className="gwc-info">
         <h3>{p.nome}</h3>
