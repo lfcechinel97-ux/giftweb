@@ -1,0 +1,402 @@
+[
+ {
+  "codigo": "18962",
+  "nome": "Mochila Térmica 18L",
+  "categoria": "MOCHILAS, BOLSAS TÉRMICAS E MALAS",
+  "categoria_rotulo": "Mochilas, Bolsas e Malas",
+  "grupo": "bolsas-termicas",
+  "grupo_rotulo": "Bolsas Térmicas",
+  "custo": 33.8,
+  "cores": [
+   {
+    "n": "Azul",
+    "h": "#3B82F6"
+   },
+   {
+    "n": "Cinza",
+    "h": "#6B7280"
+   },
+   {
+    "n": "Preto",
+    "h": "#111827"
+   }
+  ],
+  "local_1": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18962-1.jpg",
+  "local_2": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18962-2.jpg",
+  "url_1": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Termica-18L-AZUL-25576-1761048818.jpg",
+  "url_2": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Termica-18L-25575d1-1760613815.jpg",
+  "storage_1": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18962-1-799459f5.jpg",
+  "storage_2": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18962-2-e6c75a66.jpg"
+ },
+ {
+  "codigo": "18967",
+  "nome": "Bolsa Térmica 5L",
+  "categoria": "MOCHILAS, BOLSAS TÉRMICAS E MALAS",
+  "categoria_rotulo": "Mochilas, Bolsas e Malas",
+  "grupo": "bolsas-termicas",
+  "grupo_rotulo": "Bolsas Térmicas",
+  "custo": 6.9,
+  "cores": [
+   {
+    "n": "Preto",
+    "h": "#111827"
+   },
+   {
+    "n": "Rosa",
+    "h": "#EC4899"
+   },
+   {
+    "n": "Vermelho",
+    "h": "#EF4444"
+   },
+   {
+    "n": "Cinza",
+    "h": "#6B7280"
+   },
+   {
+    "n": "Azul",
+    "h": "#3B82F6"
+   }
+  ],
+  "local_1": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18967-1.jpg",
+  "local_2": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18967-2.jpg",
+  "url_1": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-5L-VERMELHO-25001-1768394786.jpg",
+  "url_2": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-5-Litros-23904d1-1752860530.jpg",
+  "storage_1": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18967-1-b83b9526.jpg",
+  "storage_2": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18967-2-5d7abbe8.jpg"
+ },
+ {
+  "codigo": "04846",
+  "nome": "Bolsa Térmica 7L",
+  "categoria": "MOCHILAS, BOLSAS TÉRMICAS E MALAS",
+  "categoria_rotulo": "Mochilas, Bolsas e Malas",
+  "grupo": "bolsas-termicas",
+  "grupo_rotulo": "Bolsas Térmicas",
+  "custo": 23.5,
+  "cores": [
+   {
+    "n": "Preto",
+    "h": "#111827"
+   }
+  ],
+  "local_1": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04846-1.jpg",
+  "local_2": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04846-2.jpg",
+  "url_1": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-VERMELHO-16058-1681300005.jpg",
+  "url_2": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-7-Litros-16013d1-1678993675.jpg",
+  "storage_1": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04846-1-71240a90.jpg",
+  "storage_2": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04846-2-10be806f.jpg"
+ },
+ {
+  "codigo": "09150",
+  "nome": "Bolsa Térmica 33 Litros",
+  "categoria": "MOCHILAS, BOLSAS TÉRMICAS E MALAS",
+  "categoria_rotulo": "Mochilas, Bolsas e Malas",
+  "grupo": "bolsas-termicas",
+  "grupo_rotulo": "Bolsas Térmicas",
+  "custo": 87.9,
+  "cores": [
+   {
+    "n": "Preto",
+    "h": "#111827"
+   }
+  ],
+  "local_1": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\09150-1.jpg",
+  "local_2": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\09150-2.jpg",
+  "url_1": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-33-Litros-PRETO-25170-1759410156.jpg",
+  "url_2": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-33-Litros-25169d1-1759410147.jpg",
+  "storage_1": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/09150-1-ea11ff96.jpg",
+  "storage_2": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/09150-2-38d73121.jpg"
+ },
+ {
+  "codigo": "18961",
+  "nome": "Bolsa Térmica 20 Litros",
+  "categoria": "MOCHILAS, BOLSAS TÉRMICAS E MALAS",
+  "categoria_rotulo": "Mochilas, Bolsas e Malas",
+  "grupo": "bolsas-termicas",
+  "grupo_rotulo": "Bolsas Térmicas",
+  "custo": 32.5,
+  "cores": [
+   {
+    "n": "Azul",
+    "h": "#3B82F6"
+   },
+   {
+    "n": "Preto",
+    "h": "#111827"
+   },
+   {
+    "n": "Cinza",
+    "h": "#6B7280"
+   }
+  ],
+  "local_1": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18961-1.jpg",
+  "local_2": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18961-2.jpg",
+  "url_1": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-20-Litros-AZUL-ESCURO-24254-1755698290.jpg",
+  "url_2": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-20-Litros-24253d1-1755698338.jpg",
+  "storage_1": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18961-1-6d7aebac.jpg",
+  "storage_2": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18961-2-70184913.jpg"
+ },
+ {
+  "codigo": "04098",
+  "nome": "Garrafa Térmica 700Ml",
+  "categoria": "COPOS, GARRAFAS E CANECAS",
+  "categoria_rotulo": "Copos, Garrafas e Canecas",
+  "grupo": "garrafas",
+  "grupo_rotulo": "Garrafas",
+  "custo": 31.9,
+  "cores": [
+   {
+    "n": "Preto",
+    "h": "#111827"
+   },
+   {
+    "n": "Rosa",
+    "h": "#EC4899"
+   },
+   {
+    "n": "Verde",
+    "h": "#22C55E"
+   },
+   {
+    "n": "Amarelo",
+    "h": "#EAB308"
+   },
+   {
+    "n": "Laranja",
+    "h": "#F97316"
+   },
+   {
+    "n": "Branco",
+    "h": "#F9FAFB"
+   },
+   {
+    "n": "Azul",
+    "h": "#3B82F6"
+   },
+   {
+    "n": "Chumbo",
+    "h": "#4B5563"
+   }
+  ],
+  "local_1": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04098-1.jpg",
+  "local_2": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04098-2.jpg",
+  "url_1": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-650ml-VERDE-15778-1675168477.jpg",
+  "url_2": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-650ml-14993d1-1675168456.jpg",
+  "storage_1": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04098-1-e0ddad57.jpg",
+  "storage_2": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04098-2-d6fd8682.jpg"
+ },
+ {
+  "codigo": "04014",
+  "nome": "Copo Térmico",
+  "categoria": "COPOS, GARRAFAS E CANECAS",
+  "categoria_rotulo": "Copos, Garrafas e Canecas",
+  "grupo": "copos-e-canecas",
+  "grupo_rotulo": "Copos e Canecas",
+  "custo": 24.5,
+  "cores": [
+   {
+    "n": "Branco",
+    "h": "#F9FAFB"
+   },
+   {
+    "n": "Laranja",
+    "h": "#F97316"
+   },
+   {
+    "n": "Azul",
+    "h": "#3B82F6"
+   },
+   {
+    "n": "Dourado",
+    "h": "#D4A15A"
+   },
+   {
+    "n": "Vermelho",
+    "h": "#EF4444"
+   },
+   {
+    "n": "Preto",
+    "h": "#111827"
+   },
+   {
+    "n": "Rosa",
+    "h": "#EC4899"
+   },
+   {
+    "n": "Verde",
+    "h": "#22C55E"
+   },
+   {
+    "n": "Amarelo",
+    "h": "#EAB308"
+   }
+  ],
+  "local_1": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04014-1.jpg",
+  "local_2": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04014-2.jpg",
+  "url_1": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-380ml-Multiuso-VERDE-17072-1693256219.jpg",
+  "url_2": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-380ml-Multiuso-17064d1-1693255735.jpg",
+  "storage_1": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04014-1-3eb13d70.jpg",
+  "storage_2": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04014-2-bace65fd.jpg"
+ },
+ {
+  "codigo": "14724",
+  "nome": "Copo Térmico 500Ml P/ Café",
+  "categoria": "COPOS, GARRAFAS E CANECAS",
+  "categoria_rotulo": "Copos, Garrafas e Canecas",
+  "grupo": "copos-e-canecas",
+  "grupo_rotulo": "Copos e Canecas",
+  "custo": 24.5,
+  "cores": [
+   {
+    "n": "Azul",
+    "h": "#3B82F6"
+   },
+   {
+    "n": "Vermelho",
+    "h": "#EF4444"
+   },
+   {
+    "n": "Bege",
+    "h": "#E8D9BE"
+   },
+   {
+    "n": "Marrom",
+    "h": "#92400E"
+   },
+   {
+    "n": "Rosa",
+    "h": "#EC4899"
+   },
+   {
+    "n": "Preto",
+    "h": "#111827"
+   },
+   {
+    "n": "Branco",
+    "h": "#F9FAFB"
+   }
+  ],
+  "local_1": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\14724-1.jpg",
+  "local_2": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\14724-2.jpg",
+  "url_1": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-VERMELHO-14622-1721312608.jpg",
+  "url_2": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-500ml-14313d1-1656614228.jpg",
+  "storage_1": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/14724-1-e10cfc9a.jpg",
+  "storage_2": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/14724-2-672d4ec8.jpg"
+ },
+ {
+  "codigo": "04081",
+  "nome": "Caneca Termica 350Ml",
+  "categoria": "COPOS, GARRAFAS E CANECAS",
+  "categoria_rotulo": "Copos, Garrafas e Canecas",
+  "grupo": "copos-e-canecas",
+  "grupo_rotulo": "Copos e Canecas",
+  "custo": 24.5,
+  "cores": [
+   {
+    "n": "Azul",
+    "h": "#3B82F6"
+   },
+   {
+    "n": "Verde",
+    "h": "#22C55E"
+   },
+   {
+    "n": "Vermelho",
+    "h": "#EF4444"
+   },
+   {
+    "n": "Preto",
+    "h": "#111827"
+   },
+   {
+    "n": "Branco",
+    "h": "#F9FAFB"
+   }
+  ],
+  "local_1": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04081-1.jpg",
+  "local_2": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04081-2.jpg",
+  "url_1": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-VERDE-14294-1758656580.jpg",
+  "url_2": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-14290d1-1764334673.jpg",
+  "storage_1": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04081-1-74ef2ae1.jpg",
+  "storage_2": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04081-2-cb2a9f4b.jpg"
+ },
+ {
+  "codigo": "18587",
+  "nome": "Tábua De Corte",
+  "categoria": "MARMITAS E TÁBUAS DE MADEIRA",
+  "categoria_rotulo": "Marmitas e Tábuas",
+  "grupo": "tabuas",
+  "grupo_rotulo": "Tábuas",
+  "custo": 11.0,
+  "cores": [
+   {
+    "n": "Madeira",
+    "h": "#B98B57"
+   }
+  ],
+  "local_1": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18587-1.jpg",
+  "local_2": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18587-2.jpg",
+  "url_1": "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-12652-1614608269.jpg",
+  "url_2": "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-12652d1-1614608270.jpg",
+  "storage_1": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18587-1-ec039013.jpg",
+  "storage_2": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18587-2-9c61de50.jpg"
+ },
+ {
+  "codigo": "18608",
+  "nome": "Tábua P/ Corte C/ Canaleta 30*40Cm",
+  "categoria": "MARMITAS E TÁBUAS DE MADEIRA",
+  "categoria_rotulo": "Marmitas e Tábuas",
+  "grupo": "tabuas",
+  "grupo_rotulo": "Tábuas",
+  "custo": 21.0,
+  "cores": [
+   {
+    "n": "Madeira",
+    "h": "#B98B57"
+   }
+  ],
+  "local_1": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18608-1.jpg",
+  "local_2": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18608-2.jpg",
+  "url_1": "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-13520-1638186534.jpg",
+  "url_2": "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-13520d1-1638186579.jpg",
+  "storage_1": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18608-1-f6fdd58a.jpg",
+  "storage_2": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18608-2-d6f178de.jpg"
+ },
+ {
+  "codigo": "18507",
+  "nome": "Necessaire Organizadora",
+  "categoria": "NECESSAIRES, PORTA JOIAS E KIT MANICURE",
+  "categoria_rotulo": "Necessaires e Porta Joias",
+  "grupo": "necessaires-e-porta-joias",
+  "grupo_rotulo": "Necessaires e Porta Joias",
+  "custo": 18.9,
+  "cores": [
+   {
+    "n": "Rosa",
+    "h": "#EC4899"
+   },
+   {
+    "n": "Cinza",
+    "h": "#6B7280"
+   },
+   {
+    "n": "Preto",
+    "h": "#111827"
+   },
+   {
+    "n": "Azul",
+    "h": "#3B82F6"
+   },
+   {
+    "n": "Laranja",
+    "h": "#F97316"
+   }
+  ],
+  "local_1": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18507-1.jpg",
+  "local_2": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18507-2.jpg",
+  "url_1": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-Nylon-Oxford-AZUL-8334-1719588663.jpg",
+  "url_2": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-Nylon-Oxford-8332d1-1552073339.jpg",
+  "storage_1": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18507-1-10d8df48.jpg",
+  "storage_2": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18507-2-f436389d.jpg"
+ }
+]

@@ -8,7 +8,7 @@ import {
   Search, Save, X, Upload, Plus, Trash2, Eye, EyeOff, Star, Loader2, ExternalLink,
   AlertTriangle,
 } from "lucide-react";
-import { FAIXAS, brl, faixasDoProduto, type CampoFaixa } from "@/lib/catalogoPrecos";
+import { CAMPOS_FAIXA, QTD_PADRAO, brl, faixasDoProduto } from "@/lib/catalogoPrecos";
 
 export interface CorVariacao {
   n: string;
@@ -26,9 +26,9 @@ export interface CatalogoItem {
   grupo_rotulo: string | null;
   preco: number | null;
   /** Faixas por quantidade. Opcionais: a coluna so existe depois da migration. */
-  preco_20?: number | null;
-  preco_50?: number | null;
-  preco_100?: number | null;
+  faixa1_qtd?: number | null; faixa1_preco?: number | null;
+  faixa2_qtd?: number | null; faixa2_preco?: number | null;
+  faixa3_qtd?: number | null; faixa3_preco?: number | null;
   imagem_url: string | null;
   imagem_secundaria_url: string | null;
   cores: CorVariacao[];
@@ -83,7 +83,7 @@ export default function AdminCatalogoClientes() {
     } else {
       const linhas = (data as unknown as CatalogoItem[]) ?? [];
       setItens(linhas);
-      if (linhas.length) setTemFaixas("preco_20" in linhas[0]);
+      if (linhas.length) setTemFaixas("faixa1_preco" in linhas[0]);
     }
     setCarregando(false);
   };
@@ -131,9 +131,12 @@ export default function AdminCatalogoClientes() {
         preco: editando.preco,
         ...(temFaixas
           ? {
-              preco_20: editando.preco_20 ?? null,
-              preco_50: editando.preco_50 ?? null,
-              preco_100: editando.preco_100 ?? null,
+              faixa1_qtd: editando.faixa1_qtd ?? null,
+              faixa1_preco: editando.faixa1_preco ?? null,
+              faixa2_qtd: editando.faixa2_qtd ?? null,
+              faixa2_preco: editando.faixa2_preco ?? null,
+              faixa3_qtd: editando.faixa3_qtd ?? null,
+              faixa3_preco: editando.faixa3_preco ?? null,
             }
           : {}),
         imagem_url: editando.imagem_url,
@@ -308,10 +311,10 @@ export default function AdminCatalogoClientes() {
                 <div className="flex items-center gap-2 mt-auto pt-2">
                   {faixasDoProduto(item) ? (
                     <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
-                      {brl(item.preco_20!)}
+                      {item.faixa1_qtd ?? QTD_PADRAO[0]}+ {brl(item.faixa1_preco!)}
                       <span className="mx-1 text-muted-foreground/60">→</span>
                       <span className="text-sm font-bold text-green-700">
-                        {brl(item.preco_100!)}
+                        {item.faixa3_qtd ?? QTD_PADRAO[2]}+ {brl(item.faixa3_preco!)}
                       </span>
                     </span>
                   ) : (
@@ -421,29 +424,48 @@ export default function AdminCatalogoClientes() {
                 {temFaixas ? (
                   <>
                     <div className="grid grid-cols-3 gap-2 mt-3">
-                      {FAIXAS.map((f) => {
-                        const melhor = f.campo === "preco_100";
+                      {CAMPOS_FAIXA.map((c, i) => {
+                        const melhor = i === CAMPOS_FAIXA.length - 1;
                         return (
-                          <div key={f.campo}>
+                          <div
+                            key={c.preco}
+                            className={`rounded-md p-2 ${melhor ? "bg-green-50 ring-1 ring-green-200" : "bg-muted/50"}`}
+                          >
+                            <Label className="text-[10px] text-muted-foreground">
+                              A partir de (un.)
+                            </Label>
+                            <Input
+                              type="number"
+                              step="1"
+                              min="1"
+                              placeholder={String(QTD_PADRAO[i])}
+                              value={editando[c.qtd] ?? ""}
+                              onChange={(e) =>
+                                setEditando({
+                                  ...editando,
+                                  [c.qtd]: e.target.value === "" ? null : Number(e.target.value),
+                                })
+                              }
+                              className="mt-1 h-8"
+                            />
                             <Label
-                              className={`text-[11px] ${melhor ? "text-green-700 font-semibold" : "text-muted-foreground"}`}
+                              className={`text-[10px] mt-2 block ${melhor ? "text-green-700 font-semibold" : "text-muted-foreground"}`}
                             >
-                              {f.rotulo}
+                              {melhor ? "Melhor preço (R$)" : "Preço (R$)"}
                             </Label>
                             <Input
                               type="number"
                               step="0.01"
                               min="0"
                               placeholder="—"
-                              value={editando[f.campo as CampoFaixa] ?? ""}
+                              value={editando[c.preco] ?? ""}
                               onChange={(e) =>
                                 setEditando({
                                   ...editando,
-                                  [f.campo]:
-                                    e.target.value === "" ? null : Number(e.target.value),
+                                  [c.preco]: e.target.value === "" ? null : Number(e.target.value),
                                 })
                               }
-                              className={`mt-1 ${melhor ? "border-green-500 focus-visible:ring-green-500" : ""}`}
+                              className={`mt-1 h-8 ${melhor ? "border-green-500 focus-visible:ring-green-500" : ""}`}
                             />
                           </div>
                         );
@@ -451,8 +473,8 @@ export default function AdminCatalogoClientes() {
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-2">
                       {faixasDoProduto(editando)
-                        ? "O card mostra as três faixas lado a lado."
-                        : "Preencha as três para o card mostrar a escada de preço. Com alguma vazia, ele volta a exibir apenas o “Preço exibido” acima."}
+                        ? `O card mostra as três faixas lado a lado e começa em ${editando.faixa1_qtd ?? QTD_PADRAO[0]} un.`
+                        : "Preencha os três preços, em quantidades crescentes, para o card mostrar a escada. Faltando algum, ele volta a exibir só o “Preço exibido” acima."}
                     </p>
                   </>
                 ) : (
@@ -460,7 +482,7 @@ export default function AdminCatalogoClientes() {
                     <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-px" />
                     <span>
                       As colunas de preço por faixa ainda não existem no banco. Rode a
-                      migration <code>20260903210000_catalogo_precos_faixa.sql</code> no SQL
+                      migration <code>20260904094500_catalogo_faixas_por_produto.sql</code> no SQL
                       editor do Lovable Cloud para liberar esta seção.
                     </span>
                   </p>

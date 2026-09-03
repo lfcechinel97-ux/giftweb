@@ -1,0 +1,834 @@
+[
+ {
+  "codigo": "14794",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-400ml-com-Display-LED-15010d1-1662670538.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\14794-2.jpg",
+  "sha256": "ec9fa087c2d82d228f265756bf4dfa01e8d1327f18d8ccd22c903769de674691",
+  "watermark": false,
+  "nome": "Garrafa Led Termometro 500 Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/14794-2-ec9fa087.jpg"
+ },
+ {
+  "codigo": "06033",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-1-2L-16950d1-1716388358.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\06033-2.jpg",
+  "sha256": "c61184492e160e2c958467f224375464c6e1db1c212ce9ad4692d45b93b767ff",
+  "watermark": false,
+  "nome": "Garrafa Quencher 1,2L",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/06033-2-c6118449.jpg"
+ },
+ {
+  "codigo": "18921",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-de-Aluminio-600ml-22788d1-1744210847.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18921-2.jpg",
+  "sha256": "f75685e71e07f1cf2b5e504e14d8be42093be78400c87b183f28d4d49036c384",
+  "watermark": false,
+  "nome": "Squeeze Alumínio 600Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18921-2-f75685e7.jpg"
+ },
+ {
+  "codigo": "18645L",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-500ml-com-Abridor-13922d1-1732048753.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18645L-2.jpg",
+  "sha256": "48854a70516247f81f5ec7562d81a75f0fbe5813900033b5b925652d3da0ad6a",
+  "watermark": false,
+  "nome": "Copo Térmico 473mL C/ Abridor",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18645L-2-48854a70.jpg"
+ },
+ {
+  "codigo": "03006A",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Fibra-de-Bambu-350ml-17772d1-1774459038.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\03006A-2.jpg",
+  "sha256": "158ef01079dc993125897577dfb645f7116c814afed0d6ecc6b1882bf8a722d4",
+  "watermark": false,
+  "nome": "Copo Fibra De Bambu 350Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/03006A-2-158ef010.jpg"
+ },
+ {
+  "codigo": "14726L",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Termico-Inox-320ml-14314d1-1779996020.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\14726L-2.jpg",
+  "sha256": "7245bf83110357434175e7adc9f16fe45a8646e29d804f66cf02af5fb38b037f",
+  "watermark": false,
+  "nome": "Copo Térmico Inox 320Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/14726L-2-7245bf83.jpg"
+ },
+ {
+  "codigo": "06096",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Vidro-Parede-Dupla-160ml-18635d1-1712002014.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\06096-2.jpg",
+  "sha256": "c019cf01abbe734c60eec666241cdfe8e6bfc80f150611b7b0cdf9ab272a6e0f",
+  "watermark": false,
+  "nome": "Copo Vidro Parede Dupla 160Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/06096-2-c019cf01.jpg"
+ },
+ {
+  "codigo": "12487F",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-600ml-Aluminio-162d1-1563376143.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\12487F-2.jpg",
+  "sha256": "f624bcb80b7aca605ed187251516b35ac4a67b9ba83e8d10c19122e5704f1fe6",
+  "watermark": false,
+  "nome": "Squeeze Aluminio Fosco 650Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/12487F-2-f624bcb8.jpg"
+ },
+ {
+  "codigo": "02112",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Metal-400ml-7614d1-1629822136.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\02112-2.jpg",
+  "sha256": "106fe2124090b1835a9bdd48fa2168037dbd449a0bb12ed2b72ca95c89af7938",
+  "watermark": false,
+  "nome": "Garrafa Térmica 400Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/02112-2-106fe212.jpg"
+ },
+ {
+  "codigo": "18695",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Plastica-600ml-15088d1-1664542449.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18695-2.jpg",
+  "sha256": "208d7781f83d93ef307e3c41ee002d638b26893723c7dc3e1f53b2cd8b436584",
+  "watermark": false,
+  "nome": "Garrafa Plástica 600Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18695-2-208d7781.jpg"
+ },
+ {
+  "codigo": "09138",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Squeeze-Aluminio-420ml-16523d1-1689076951.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\09138-2.jpg",
+  "sha256": "bb92e3efb8fdfa73392c9daf13437a4db106588f4f3a0c202b27eebc0e7290a1",
+  "watermark": false,
+  "nome": "Squeeze Alumínio 420Ml C/ Mosquetão",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/09138-2-bb92e3ef.jpg"
+ },
+ {
+  "codigo": "18552",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-11100d1-1733768436.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18552-2.jpg",
+  "sha256": "bdc42fc93ae315bdc05899f000b9c8db31acae8369a7703747cc12522cd2e590",
+  "watermark": false,
+  "nome": "Garrafa Inox 750Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18552-2-bdc42fc9.jpg"
+ },
+ {
+  "codigo": "17011F",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Inox-750ml-8207d1-1783001731.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\17011F-2.jpg",
+  "sha256": "4651efadc8e38fb1627f4249537e60051624c8feab06bd977ec747073eb5c5a4",
+  "watermark": true,
+  "nome": "Garrafa 750Ml Inox",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/17011F-2-4651efad.jpg"
+ },
+ {
+  "codigo": "18855",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-850ml-21075d1-1730984890.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18855-2.jpg",
+  "sha256": "0ef330c4e9572936a9810a217cdf6f06d3e332bb5b8cf007fbf8d686d98ba937",
+  "watermark": false,
+  "nome": "Garrafa Térmica Inox 850Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18855-2-0ef330c4.jpg"
+ },
+ {
+  "codigo": "08195",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Garrafa-Termica-Inox-550ml-22695d1-1744125415.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\08195-2.jpg",
+  "sha256": "b72f6c8a36e9b29f25389fe906918b04108b72f8e0e88ef5271b3f40148b0d98",
+  "watermark": false,
+  "nome": "Garrafa Térmica Inox 550Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/08195-2-b72f6c8a.jpg"
+ },
+ {
+  "codigo": "07392",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-180ml-Inox-246d1-1535728477.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\07392-2.jpg",
+  "sha256": "c140c363b5055263dafa11bbed1fc11d2f74c1d945e93647196fff7b12e6850d",
+  "watermark": true,
+  "nome": "Caneca Inox 180Ml C/ Tampa",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/07392-2-c140c363.jpg"
+ },
+ {
+  "codigo": "04070",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-700ml-14130d1-1728586056.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04070-2.jpg",
+  "sha256": "af23e60eb15fc7c8fe9159eef22e8bd5361c8d83af9d420a3711c6d9193c9d5a",
+  "watermark": true,
+  "nome": "Caneca Térmica 700Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04070-2-af23e60e.jpg"
+ },
+ {
+  "codigo": "18912",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneca-Termica-Inox-350ml-21168d1-1730985221.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18912-2.jpg",
+  "sha256": "99890aebe53070f25d4ac653a1b4554b2b9d4493a7b9cc642f984132229a9c2c",
+  "watermark": false,
+  "nome": "Caneca Térmica Inox 300Ml",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18912-2-99890aeb.jpg"
+ },
+ {
+  "codigo": "01320",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-20L-12105d1-1768397610.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\01320-2.jpg",
+  "sha256": "8184f2ea842ebf8b484a9a4fb5f09d0eaa8e25fc8931ab5fb8b6ac79b819684f",
+  "watermark": false,
+  "nome": "Mochila De Nylon Usb 20L",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/01320-2-8184f2ea.jpg"
+ },
+ {
+  "codigo": "18539",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-Dobravel-25-Litros-10648d1-1610555337.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18539-2.jpg",
+  "sha256": "0aa2268a979d4f1b9db4793f0a4f969164f0084f2674207e9efa5e9e909427d8",
+  "watermark": false,
+  "nome": "Mochila De Nylon Dobrável 21L",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18539-2-0aa2268a.jpg"
+ },
+ {
+  "codigo": "02105",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Nylon-17-Litros-13561d1-1638185238.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\02105-2.jpg",
+  "sha256": "d1134bb9fe974b7055602e29f477b73000ef6296fca63db450047e2ea80378bb",
+  "watermark": false,
+  "nome": "Mochila Nylon 17L",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/02105-2-d1134bb9.jpg"
+ },
+ {
+  "codigo": "02066",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Nylon-Poliester-7015d1-1597259781.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\02066-2.jpg",
+  "sha256": "80c58695cab54f424744be51116d5e0498d7c9de5fb85b75f1e48d82cf944767",
+  "watermark": false,
+  "nome": "Mochila Nylon Poliester",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/02066-2-80c58695.jpg"
+ },
+ {
+  "codigo": "18601",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-Saco-Impermeavel-13278d1-1628283728.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18601-2.jpg",
+  "sha256": "ef1bcdf3a1b2d5c6dc64629b833d461995e8ea9bf0154a02af432ef7de8bf6ce",
+  "watermark": true,
+  "nome": "Sacochila Poliéster",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18601-2-ef1bcdf3.jpg"
+ },
+ {
+  "codigo": "01326",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mochila-de-Nylon-USB-20L-13158d1-1779732243.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\01326-2.jpg",
+  "sha256": "4140ac3b51eaddf62aa7b680d88237de27e9d2aec293b3c0226f9352d8b09c56",
+  "watermark": false,
+  "nome": "Mochila De Nylon Usb 20L",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/01326-2-4140ac3b.jpg"
+ },
+ {
+  "codigo": "02596",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-12-Litros-17364d1-1698081706.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\02596-2.jpg",
+  "sha256": "63ce31f7627ac4aec0fb7b0e69f9508978f5ebf814e8c8dd56eba62c018a9897",
+  "watermark": false,
+  "nome": "Bolsa Térmica 15L",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/02596-2-63ce31f7.jpg"
+ },
+ {
+  "codigo": "02697",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-12-Litros-18788d1-1712004138.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\02697-2.jpg",
+  "sha256": "a1e237d5c65636c8706417c31fbe92b6f84a17ec14ba2b2134d5a2ce3f9ffeb6",
+  "watermark": false,
+  "nome": "Bolsa Térmica 17L",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/02697-2-a1e237d5.jpg"
+ },
+ {
+  "codigo": "06070P",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mala-de-Bordo-30-Litros-18426d1-1710155588.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\06070P-2.jpg",
+  "sha256": "4d4ba6d83c45956e07c84dc88fda86e37e5518b3da0a24db24ccb292803fd243",
+  "watermark": false,
+  "nome": "Mala De Bordo 30 Litros",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/06070P-2-4d4ba6d8.jpg"
+ },
+ {
+  "codigo": "08242",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mala-de-viagem-39-Litros-21940d1-1736247711.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\08242-2.jpg",
+  "sha256": "7c5bae50427254e8cf15cecb45783701fc276ce00fa64ec731469849be99c509",
+  "watermark": false,
+  "nome": "Mala De Viagem 37L",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/08242-2-7c5bae50.jpg"
+ },
+ {
+  "codigo": "18516",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Nylon-8942d1-1547124465.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18516-2.jpg",
+  "sha256": "fa7288f244b5576f6fd804f05d61aade3a050a1e9e45ba276f34f120b00cb93b",
+  "watermark": true,
+  "nome": "Necessaire Em Poliester Impermeável",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18516-2-fa7288f2.jpg"
+ },
+ {
+  "codigo": "18501",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Nylon-8381d1-1543952521.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18501-2.jpg",
+  "sha256": "ac9724c838076f7cdf7e9e61abc4f569616ead2dc8ded4b7c28c9015c89a0991",
+  "watermark": false,
+  "nome": "Nécessaire De Nylon",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18501-2-ac9724c8.jpg"
+ },
+ {
+  "codigo": "01228P",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-PVC-Impermeavel-com-Plaquinha-8276d1-1633524215.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\01228P-2.jpg",
+  "sha256": "471a6b11b8e2f4c6473a6fcfdab953cf24507edff93fc98e36354c8bade6a8ff",
+  "watermark": false,
+  "nome": "Necessaire Pvc Impermeável C/ Plaquinha",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/01228P-2-471a6b11.jpg"
+ },
+ {
+  "codigo": "18753",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Necessaire-de-Poliester-18403d1-1713526015.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18753-2.jpg",
+  "sha256": "ed3ef893aa9f00b1a9705146ff6e15b5ab521e0b70acdc5982f380d5f94a5b3a",
+  "watermark": false,
+  "nome": "Nécessaire De Poliéster",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18753-2-ed3ef893.jpg"
+ },
+ {
+  "codigo": "01622B",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Porta-Joias-20681d1-1772828041.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\01622B-2.jpg",
+  "sha256": "eaf16459576206c1261137ceb62d7f6f41bd8fe30ddb281be541ba2ee415b5a5",
+  "watermark": false,
+  "nome": "Porta Joias",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/01622B-2-eaf16459.jpg"
+ },
+ {
+  "codigo": "08142",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Porta-Joias-com-Espelho-21217d1-1752152393.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\08142-2.jpg",
+  "sha256": "94d884d329d2d1a99f0b06ea28f52eba029df9354b9bec713b832a8779b42a9a",
+  "watermark": false,
+  "nome": "Porta-Joias Com Espelho",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/08142-2-94d884d3.jpg"
+ },
+ {
+  "codigo": "18717",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Porta-Joias-16688d1-1690475154.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18717-2.jpg",
+  "sha256": "9b41b74bf0b2c0ae523fb507a260d537791b072faeeb0c60226ff301c0038daf",
+  "watermark": true,
+  "nome": "Porta Joias",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18717-2-9b41b74b.jpg"
+ },
+ {
+  "codigo": "18724",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Manicure-16-Pecas-16934d1-1693838093.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18724-2.jpg",
+  "sha256": "be3fca62e9ae91cec35788996b1aeef6f0e527ea96b2ef0af1b502a8a299d9cc",
+  "watermark": false,
+  "nome": "Kit Manicure 16 Peças",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18724-2-be3fca62.jpg"
+ },
+ {
+  "codigo": "18900",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Manicure-10-Pecas-22074d1-1737738201.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18900-2.jpg",
+  "sha256": "15d99c5b993b2d9ff877bfc3a5c6758e552ba901be59314f7b21347b9b4008c9",
+  "watermark": false,
+  "nome": "Kit Manicure 10 Peças",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18900-2-15d99c5b.jpg"
+ },
+ {
+  "codigo": "03009",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderneta-Tipo-Moleskine-11548d1-1581345935.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\03009-2.jpg",
+  "sha256": "0a74bba55b6eeb05001e3cb1bbfdb26fedb8b0b8ce06b84a9d18a938de2b9032",
+  "watermark": true,
+  "nome": "Caderneta Emborrachada",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/03009-2-0a74bba5.jpg"
+ },
+ {
+  "codigo": "05067",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderneta-Emborrachada-16145d1-1764331972.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\05067-2.jpg",
+  "sha256": "e3cf91508937e179bb723a4fbeb3c860d2f1cc29c168fd34feb849cf577d37d4",
+  "watermark": false,
+  "nome": "Caderneta Emborrachada",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/05067-2-e3cf9150.jpg"
+ },
+ {
+  "codigo": "14092N",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderneta-Emborrachada-com-Porta-Caneta-14389d1-1661514661.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\14092N-2.jpg",
+  "sha256": "a06ff290813d61d7fd8221e4bdf4c08cae12548fe23454ff25237465bc2bba15",
+  "watermark": false,
+  "nome": "Caderneta Emborrachada Com Porta Caneta",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/14092N-2-a06ff290.jpg"
+ },
+ {
+  "codigo": "05071",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caderno-A5-Plastico-16155d1-1734019159.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\05071-2.jpg",
+  "sha256": "00429a17905696e084cb4bb9cb16b57e20f735c67fdef343d67a09df30b56517",
+  "watermark": false,
+  "nome": "Caderno A5 Plástico",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/05071-2-00429a17.jpg"
+ },
+ {
+  "codigo": "06098",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bloco-de-Anotacoes-com-Caneta-18769d1-1711464127.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\06098-2.jpg",
+  "sha256": "51238158139c8da6e1eecd978cac3795168fc2de6c90dcdd4a57e6aa74a7ac24",
+  "watermark": true,
+  "nome": "Bloco De Anotações Com Caneta",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/06098-2-51238158.jpg"
+ },
+ {
+  "codigo": "12638",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneta-Plastica-Touch-663d1-1765901808.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\12638-2.jpg",
+  "sha256": "4f1be0ab504dbba2c4e57e1fa1ca2eb283e171b920ded8a16bacdc4d2112ef3b",
+  "watermark": false,
+  "nome": "Caneta Plástica Touch",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/12638-2-4f1be0ab.jpg"
+ },
+ {
+  "codigo": "ER143B",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneta-Metal-519d1-1691701019.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\ER143B-2.jpg",
+  "sha256": "7c5a91e1390049572336c0331da9f3efa00777e03163739ac99f60efed4e8b97",
+  "watermark": false,
+  "nome": "Caneta Metal",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/ER143B-2-7c5a91e1.jpg"
+ },
+ {
+  "codigo": "13499B",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneta-Plastica-Touch-com-Suporte-12422d1-1636124215.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\13499B-2.jpg",
+  "sha256": "5e2a897dad7aa608f4f7e27bf24230c435d1512d4c692893db2e1dc017cdf2f9",
+  "watermark": false,
+  "nome": "Caneta Plastica C/ Suporte E Touch",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/13499B-2-5e2a897d.jpg"
+ },
+ {
+  "codigo": "05015B",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caneta-Metal-Touch-17461d1-1699473845.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\05015B-2.jpg",
+  "sha256": "70781d19f2caee50b6e9cea49b235329a7291039e22c7a50a7d4f85cd3329782",
+  "watermark": false,
+  "nome": "Caneta Metal Touch",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/05015B-2-70781d19.jpg"
+ },
+ {
+  "codigo": "09824",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Chaveiro-Metal-Abridor-744d1-1765976738.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\09824-2.jpg",
+  "sha256": "19978f814c0c7dd0db1c6605e5615ed4095d8b9d520636bac247c871e42c9ce3",
+  "watermark": false,
+  "nome": "Chaveiro Metal Abridor",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/09824-2-19978f81.jpg"
+ },
+ {
+  "codigo": "01955",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Chaveiro-Metal-502d1-1486984222.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\01955-2.jpg",
+  "sha256": "a1bdcfd49969dad47a525346f31a7043c028e6c2147918af87d60d158ff70935",
+  "watermark": false,
+  "nome": "Chaveiro Metal Retangular",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/01955-2-a1bdcfd4.jpg"
+ },
+ {
+  "codigo": "08232",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Chaveiro-Trena-Plastico-2-Metros-22878d1-1744644629.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\08232-2.jpg",
+  "sha256": "4feabf2c1b98dc5d8ee8c099d776a457507ca9ef94ed743f6f86684029e55bdc",
+  "watermark": false,
+  "nome": "Chaveiro Trena Plástico 2 Metros",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/08232-2-4feabf2c.jpg"
+ },
+ {
+  "codigo": "01812",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mouse-Pad-8555d1-1539088383.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\01812-2.jpg",
+  "sha256": "68eb26397b5caca7d2dee0544917396b6ea791ea27c6280a0deefc4ba19c4c9c",
+  "watermark": false,
+  "nome": "Mouse Pad",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/01812-2-68eb2639.jpg"
+ },
+ {
+  "codigo": "03007",
+  "ok": false,
+  "motivo": "sem galeria na pagina do produto",
+  "nome": "Mouse Pad Ergonômico"
+ },
+ {
+  "codigo": "01810",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mouse-Pad-ergonomico-11531d1-1626283918.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\01810-2.jpg",
+  "sha256": "cc34c2673eecb1e52d2962ea7ac6da1bce5aaa96b88825fe1aa4049e72c6451c",
+  "watermark": false,
+  "nome": "Mouse Pad C/ Almofada",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/01810-2-cc34c267.jpg"
+ },
+ {
+  "codigo": "07048B",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-Ecologico-3-Pecas-20836d1-1728069680.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\07048B-2.jpg",
+  "sha256": "2154a2f2cf404866cea419e2aa1d7816cd890cafa1724d68b40db0733e851d9c",
+  "watermark": false,
+  "nome": "Kit Executivo Ecológico 3 Peças",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/07048B-2-2154a2f2.jpg"
+ },
+ {
+  "codigo": "08254",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-22506d1-1742589397.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\08254-2.jpg",
+  "sha256": "f5b0ba1b84242b5c42ac71d9418aa091442c422211ce967fa6adfae79a2e422d",
+  "watermark": false,
+  "nome": "Kit Executivo 2 Peças",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/08254-2-f5b0ba1b.jpg"
+ },
+ {
+  "codigo": "19029",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-2-Pecas-26205d1-1763407084.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\19029-2.jpg",
+  "sha256": "d921f54e95ff0ef61f40abff50ad7376fff8abe73d8527b4e1a58e0ab787b30c",
+  "watermark": false,
+  "nome": "Kit Executivo 2 Peças",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/19029-2-d921f54e.jpg"
+ },
+ {
+  "codigo": "04362",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Multimidia-13751d1-1640624327.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04362-2.jpg",
+  "sha256": "2aea14dd759661cba77b595437e0b25dd3569dfaaeaea644472cf8f7dda9ab24",
+  "watermark": false,
+  "nome": "Caixa De Som Multimídia",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04362-2-2aea14dd.jpg"
+ },
+ {
+  "codigo": "08002",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Bluetooth-TWS-19498d1-1722338981.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\08002-2.jpg",
+  "sha256": "d3fbece9f6a35ac09c8b46b2b70af4f27215dc76a5583c21cba24e8da80f1b63",
+  "watermark": false,
+  "nome": "Caixa De Som Bluetooth Tws",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/08002-2-d3fbece9.jpg"
+ },
+ {
+  "codigo": "12789",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Fone-de-ouvido-133d1-1479753112.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\12789-2.jpg",
+  "sha256": "82c5b9a2e817aced06a5cadd5815b22cf4f24e81c83200407c2300091a1998aa",
+  "watermark": false,
+  "nome": "Fone De Ouvido C/ Microfone -Bco/Bco",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/12789-2-82c5b9a2.jpg"
+ },
+ {
+  "codigo": "06064",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Fone-de-Ouvido-Bluetooth-Touch-com-Case-Carregador-18413d1-1710939182.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\06064-2.jpg",
+  "sha256": "3af0d8991929716bfcc1e78c37207719287206ad8826ae3c3899148232fa9bf4",
+  "watermark": false,
+  "nome": "Fone De Ouvido Bluetooth Touch Com Case Carregador",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/06064-2-3af0d899.jpg"
+ },
+ {
+  "codigo": "05048",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Fone-de-Ouvido-Bluetooth-Touch-com-Case-Carregador-15947d1-1681301396.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\05048-2.jpg",
+  "sha256": "15e2211940043ea15c8ed8b5f8c5fdda4c7099f05f4dedf02ef3870cb217379f",
+  "watermark": false,
+  "nome": "Fone De Ouvido Bluetooth",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/05048-2-15e22119.jpg"
+ },
+ {
+  "codigo": "09145",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Carregamento-via-Inducao-ou-via-Cabo-25095d1-1758228419.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\09145-2.jpg",
+  "sha256": "dd383dac34c53f3ed5d39ab6a35f0a007d05dbd21baea4ec420559990e71d923",
+  "watermark": false,
+  "nome": "Power Bank 10.000Mah Com Carregamento Via Indução Ou Via Cabo",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/09145-2-dd383dac.jpg"
+ },
+ {
+  "codigo": "08188",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Indicador-LED-22932d1-1744809736.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\08188-2.jpg",
+  "sha256": "6f64672b7c492d2736f3ba68932b398548e7e95dc26fcb3afe59b5a1e8625262",
+  "watermark": false,
+  "nome": "Power Bank 10.000Mah Com Indicador Led",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/08188-2-6f64672b.jpg"
+ },
+ {
+  "codigo": "18537G",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-TNT-Metalizada-10108d1-1601650657.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18537G-2.jpg",
+  "sha256": "28042448ce9fdeb7c84508d3f1146065ef2a9a4e357270ed37c321f4d9d01ed5",
+  "watermark": false,
+  "nome": "Sacola Em Tnt Revestida C/ Plastico",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18537G-2-28042448.jpg"
+ },
+ {
+  "codigo": "13780",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-TNT-com-Alca-7072d1-1520364798.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\13780-2.jpg",
+  "sha256": "b06a26fb3850f649b4060ae8d2abdb24dfe9c6e11bbcda1c474bd155c059a609",
+  "watermark": false,
+  "nome": "Sacola Tnt Com Alça",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/13780-2-b06a26fb.jpg"
+ },
+ {
+  "codigo": "13803N",
+  "ok": false,
+  "motivo": "sem galeria na pagina do produto",
+  "nome": "Sacola De Algodão"
+ },
+ {
+  "codigo": "18537P",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-TNT-Metalizada-11263d1-1574780104.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18537P-2.jpg",
+  "sha256": "30b0dadf156a1da8dff2aea0c37461ec9a9231e9be6e56c070e346ac9c786f58",
+  "watermark": false,
+  "nome": "Sacola Em Tnt Revestida C/ Plastico",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18537P-2-30b0dadf.jpg"
+ },
+ {
+  "codigo": "13781N",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-TNT-15309d1-1744203166.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\13781N-2.jpg",
+  "sha256": "02882425c943ac8279ace10575fed2f51d256f64706844a260a78b029d1e5115",
+  "watermark": true,
+  "nome": "Sacola De Tnt",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/13781N-2-02882425.jpg"
+ },
+ {
+  "codigo": "04399",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Sacola-de-Algodao-18383d1-1709227444.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\04399-2.jpg",
+  "sha256": "5b6874e9198597edf4c075b0cb3684f675a5392a107986c7f1fc691abb4b6c4f",
+  "watermark": false,
+  "nome": "Sacola De Algodão",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/04399-2-5b6874e9.jpg"
+ },
+ {
+  "codigo": "07447",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-churrasco-2-pecas-782d1-1480014761.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\07447-2.jpg",
+  "sha256": "3d96901e2c19fd574fe2c0bfd191c2d1a6eacf535e438619af39b6a063e5233c",
+  "watermark": false,
+  "nome": "Kit Churrasco No Estojo C/ 2 Pçs",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/07447-2-3d96901e.jpg"
+ },
+ {
+  "codigo": "01644",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Churrasco-4-pecas-545d1-1641916251.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\01644-2.jpg",
+  "sha256": "260b9739f6266d2b1c34a00bafe718a071c1237078fe63f5c497279487713909",
+  "watermark": true,
+  "nome": "Kit Churrasco Na Maleta 4 Peças",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/01644-2-260b9739.jpg"
+ },
+ {
+  "codigo": "18891",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Churrasco-3-Pecas-21753d1-1733345766.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18891-2.jpg",
+  "sha256": "689026bb16fd0ca9c3f69c1f961d106f84a76b67e5fdae408dcc560f5aac4769",
+  "watermark": false,
+  "nome": "Kit Churrasco 3 Peças",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18891-2-689026bb.jpg"
+ },
+ {
+  "codigo": "18621",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Saca-Rolhas-Metal-com-2-Estagios-13362d1-1678211639.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18621-2.jpg",
+  "sha256": "57212c2c5a4faf76a9acdaf41fc03cb04f3295502d012a8336144dffb2aabc22",
+  "watermark": false,
+  "nome": "Saca Rolhas",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18621-2-57212c2c.jpg"
+ },
+ {
+  "codigo": "10071G",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-2-Pecas-23687d1-1751639610.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\10071G-2.jpg",
+  "sha256": "fbc8210660baf7aa655cf971da63e7d0070d3fef8e38d48ea095e10f63743ac9",
+  "watermark": true,
+  "nome": "Kit Vinho Caixa De Papelão 2 Peças",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/10071G-2-fbc82106.jpg"
+ },
+ {
+  "codigo": "03493",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-4-Pecas-17354d1-1696361880.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\03493-2.jpg",
+  "sha256": "3456d34681ef5f7c300a5cd5c42e1b3be3fda5cb978df9e4dd3a497ca85a0846",
+  "watermark": false,
+  "nome": "Kit Vinho P/ 1 Garrafa",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/03493-2-3456d346.jpg"
+ },
+ {
+  "codigo": "11870",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-Garrafa-5-pecas-229d1-1536941652.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\11870-2.jpg",
+  "sha256": "3b7087f9f00f34c3c54a4796e34da895c11f63c09b8d5769d1aee80b3971465f",
+  "watermark": true,
+  "nome": "Kit Vinho 5Pçs Formato Garrafa",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/11870-2-3b7087f9.jpg"
+ },
+ {
+  "codigo": "10695",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Saca-Rolhas-Metal-549d1-1525097338.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\10695-2.jpg",
+  "sha256": "824aea0190c23306f36dbe97a304fed3f89588c4e74e50edfe14927db6408803",
+  "watermark": false,
+  "nome": "Saca Rolhas Metálico",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/10695-2-824aea01.jpg"
+ },
+ {
+  "codigo": "18857",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-Hermetica-de-Palha-de-Trigo-21199d1-1730986848.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18857-2.jpg",
+  "sha256": "72806b299187a2efc5550cf4a5e6e843e0b08034768ad4ecbf27130efc177a50",
+  "watermark": false,
+  "nome": "Marmita Hermética De Palha De Trigo",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18857-2-72806b29.jpg"
+ },
+ {
+  "codigo": "18858",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-Hermetica-Plastica-1L-21196d1-1730985062.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18858-2.jpg",
+  "sha256": "093d15d1c1f8d42ac2a3a7fb0c6551d6c6fcf85f0573c52fe3df3eb668cb3105",
+  "watermark": false,
+  "nome": "Marmita Hermética Plástica 1L",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18858-2-093d15d1.jpg"
+ },
+ {
+  "codigo": "18629",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Queijo-3-Pecas-13762d1-1731353803.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\18629-2.jpg",
+  "sha256": "6fb1957947e751d52f5a0466d58ccd62121c2542fd4cae1f62db5b65a7b5b325",
+  "watermark": false,
+  "nome": "Kit Queijo 2 Peças + Tábua Redonda",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/18629-2-6fb19579.jpg"
+ },
+ {
+  "codigo": "02075",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-7039d1-1516131029.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\02075-2.jpg",
+  "sha256": "284072c61aa5bad17e6b45b452578a7e74ec872e6b124bfbf886b00264b6205a",
+  "watermark": false,
+  "nome": "Guarda-Chuva Automático",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/02075-2-284072c6.jpg"
+ },
+ {
+  "codigo": "05198",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-Chuva-Manual-18616d1-1744144249.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\05198-2.jpg",
+  "sha256": "19797d77d36d4cbfcb27b04bd73cca94f2a777c76d23fffd9f709834c989f617",
+  "watermark": false,
+  "nome": "Guarda-Chuva Manual",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/05198-2-19797d77.jpg"
+ },
+ {
+  "codigo": "02078",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Invertido-7050d1-1516276825.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\02078-2.jpg",
+  "sha256": "ddcb2454cd877fdda6f8c97232ce1f930a76405ec3ce3de086fe32149b0f5a31",
+  "watermark": false,
+  "nome": "Guarda-Chuva Invertido",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/02078-2-ddcb2454.jpg"
+ },
+ {
+  "codigo": "05045",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Manual-com-Protecao-UV-15878d1-1678301383.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\05045-2.jpg",
+  "sha256": "11ca6443e8d64c3db06949a1321496cd6855e85f81941d182989f3f3f75a557f",
+  "watermark": true,
+  "nome": "Guarda-Chuva Manual Com Proteção Uv",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/05045-2-11ca6443.jpg"
+ },
+ {
+  "codigo": "06063",
+  "ok": true,
+  "url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Automatico-18608d1-1712003698.jpg",
+  "local": "C:\\Users\\User\\Desktop\\giftweb\\data\\processed\\06063-2.jpg",
+  "sha256": "62ece544642106b309533718339aaadfa06b1d4d8a0d85208fc2fb3a2218a8a5",
+  "watermark": false,
+  "nome": "Guarda-Chuva Automático c/ Proteção UV",
+  "storage_url": "https://ozkbfxvouxgsdthnweyr.supabase.co/storage/v1/object/public/catalogo-meta/06063-2-62ece544.jpg"
+ }
+]

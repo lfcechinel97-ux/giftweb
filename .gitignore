@@ -34,3 +34,6 @@ data/mockups/
 data/catalogo_fotos/
 data/banners/*.png
 data/fonts/caveat-latin.woff2
+
+# cache do HTML das paginas do fornecedor (galeria_site.py) - so cache, refaz sozinho
+data/raw_site/

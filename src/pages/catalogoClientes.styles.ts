@@ -191,8 +191,6 @@ export const ESTILO_CATALOGO = `
 .gwc-dica{margin:-2px 0 0;font-size:9.5px;line-height:1.25;min-height:1.25em;color:var(--muted);
   font-weight:600;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gwc-dica.top{color:var(--green-700)}
-.gwc-chips button.best{background:#effbf1;border-color:#a8e0b4;color:var(--green-700)}
-.gwc-chips button.best.on{background:var(--green-600);border-color:var(--green-600);color:#fff}
 /* Card muito estreito (2 colunas em telas <=380px): reduz fonte e respiro em
    vez de quebrar as tres colunas. */
 @media(max-width:380px){
@@ -202,7 +200,6 @@ export const ESTILO_CATALOGO = `
   .gwc-faixas b{font-size:11px}
   .gwc-faixas .best b{font-size:11.5px}
   .gwc-faixas em{font-size:7px;padding:1px 4px}
-  .gwc-chips button{font-size:10px}
 }
 /* Telas antigas de 320px deixam so ~38px por coluna. Aqui o preco encolhe mais
    um degrau e, nos 12 produtos de valor com tres digitos ("R$ 334,00"), o
@@ -217,11 +214,6 @@ export const ESTILO_CATALOGO = `
   .gwc-faixas.compacta b i{display:none}
 }
 .gwc-actions{margin-top:auto;display:flex;flex-direction:column;gap:6px}
-.gwc-chips{display:flex;gap:5px}
-.gwc-chips button{flex:1;height:27px;border-radius:7px;background:#f4f7fb;border:1px solid var(--line);
-  color:var(--navy-600);font-size:11px;font-weight:700;transition:.15s}
-@media(hover:hover){.gwc-chips button:hover{border-color:var(--navy-600)}}
-.gwc-chips button.on{background:var(--navy-600);border-color:var(--navy-600);color:#fff}
 .gwc-qty{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);
   border-radius:9px;height:34px;padding:0 2px}
 .gwc-qty button{width:32px;height:30px;display:grid;place-items:center;color:var(--navy-600);

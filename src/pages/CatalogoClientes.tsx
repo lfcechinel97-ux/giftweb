@@ -3,7 +3,8 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { WHATSAPP_NUMERO, ESTILO_CATALOGO } from "./catalogoClientes.styles";
 import {
-  brl, brlPartes, faixasDoProduto, indiceDaFaixa, type ProdutoComPreco,
+  brl, brlPartes, faixasDoProduto, indiceDaFaixa, passoDaQuantidade,
+  quantidadeInicial, type ProdutoComPreco,
 } from "@/lib/catalogoPrecos";
 
 /**
@@ -25,23 +26,16 @@ interface Produto extends ProdutoComPreco {
   imagem_url: string | null; imagem_secundaria_url: string | null;
   cores: Cor[]; destaque: boolean; ordem: number;
 }
-interface ItemCarrinho { codigo: string; nome: string; img: string | null; qtd: number; }
+/** passo viaja junto: no carrinho nao ha mais o produto para recalcular. */
+interface ItemCarrinho { codigo: string; nome: string; img: string | null; qtd: number; passo: number; }
 
-const QTD_INICIAL = 10;
-const PASSO = 5;
-/** Atalhos batem com os minimos das faixas: clicar leva direto ao preco daquela linha. */
-const ATALHOS = [
-  { qtd: 20, rotulo: "20 un." },
-  { qtd: 50, rotulo: "50 un." },
-  { qtd: 100, rotulo: "100+ un.", melhor: true },
-];
 const MAX_BOLINHAS = 6;
 
 const BENEFICIOS = [
   { t: "Personalização inclusa", d: "Arte e gravação já no valor do produto" },
   { t: "Entrega para todo o Brasil", d: "Envio para qualquer cidade, com prazo confirmado" },
   { t: "Atendimento consultivo", d: "A gente ajuda a escolher o brinde certo" },
-  { t: "Pedido a partir de 10 un.", d: "Quantidade mínima acessível para começar" },
+  { t: "Pedido a partir de 20 un.", d: "Quantidade mínima acessível para começar" },
 ];
 
 const norm = (t: string) =>
@@ -77,10 +71,11 @@ const Card = memo(function Card({
   // alguma regra do site vencia a especificidade e a troca nao acontecia.
   const [mostrandoAlt, setMostrandoAlt] = useState(false);
   const temSegunda = !!p.imagem_secundaria_url;
+  const passo = passoDaQuantidade(p);
 
   // Produto sem as tres faixas configuradas cai no "a partir de" de antes.
   const faixas = faixasDoProduto(p);
-  const iAtiva = faixas ? indiceDaFaixa(qtd) : -1;
+  const iAtiva = faixas ? indiceDaFaixa(faixas, qtd) : -1;
   const ultima = faixas ? faixas.length - 1 : -1;
   // Linha de apoio sempre presente: some/aparecer empurraria o card e mexeria
   // na altura da linha inteira do grid a cada clique de quantidade.
@@ -168,21 +163,10 @@ const Card = memo(function Card({
           </div>
         )}
         <div className="gwc-actions">
-          <div className="gwc-chips">
-            {ATALHOS.map((a) => (
-              <button
-                key={a.qtd}
-                className={`${a.melhor ? "best " : ""}${qtd === a.qtd ? "on" : ""}`}
-                onClick={() => onQtd(a.qtd)}
-              >
-                {a.rotulo}
-              </button>
-            ))}
-          </div>
           <div className="gwc-qty">
-            <button onClick={() => onQtd(qtd - PASSO)} aria-label="Menos">−</button>
+            <button onClick={() => onQtd(qtd - passo)} aria-label="Menos">−</button>
             <span>{qtd} <i>un</i></span>
-            <button onClick={() => onQtd(qtd + PASSO)} aria-label="Mais">+</button>
+            <button onClick={() => onQtd(qtd + passo)} aria-label="Mais">+</button>
           </div>
           <button className={`gwc-add ${marcado ? "ok" : ""}`} onClick={onAdd}>
             {marcado ? "Adicionado ✓" : "Adicionar"}
@@ -289,19 +273,22 @@ export default function CatalogoClientes() {
   };
   const totalVisiveis = produtos.filter(passaNoFiltro).length;
 
-  const qtdDe = (codigo: string) => qtds[codigo] ?? QTD_INICIAL;
-  const setQtd = (codigo: string, v: number) =>
-    setQtds((q) => ({ ...q, [codigo]: Math.max(QTD_INICIAL, v) }));
+  // A quantidade inicial e o minimo do proprio produto: 20 un. no geral, 100
+  // em caneta, sacola e chaveiro, onde o fornecedor so vende a partir dai.
+  const qtdDe = (p: Produto) => qtds[p.codigo] ?? quantidadeInicial(p);
+  const setQtd = (p: Produto, v: number) =>
+    setQtds((q) => ({ ...q, [p.codigo]: Math.max(quantidadeInicial(p), v) }));
 
   const adicionar = (p: Produto) => {
-    const q = qtdDe(p.codigo);
+    const q = qtdDe(p);
     setCarrinho((c) => {
       const ex = c.find((i) => i.codigo === p.codigo);
       return ex
         ? c.map((i) => (i.codigo === p.codigo ? { ...i, qtd: i.qtd + q } : i))
-        : [...c, { codigo: p.codigo, nome: p.nome, img: p.imagem_url, qtd: q }];
+        : [...c, { codigo: p.codigo, nome: p.nome, img: p.imagem_url, qtd: q,
+                   passo: passoDaQuantidade(p) }];
     });
-    setQtds((s) => ({ ...s, [p.codigo]: QTD_INICIAL }));
+    setQtds((s) => ({ ...s, [p.codigo]: quantidadeInicial(p) }));
     setAdicionado(p.codigo);
     setTimeout(() => setAdicionado(null), 1200);
     setToast(`${q} unidades adicionadas`);
@@ -332,9 +319,9 @@ export default function CatalogoClientes() {
 
   const cardProps = (p: Produto) => ({
     p,
-    qtd: qtdDe(p.codigo),
+    qtd: qtdDe(p),
     marcado: adicionado === p.codigo,
-    onQtd: (v: number) => setQtd(p.codigo, v),
+    onQtd: (v: number) => setQtd(p, v),
     onAdd: () => adicionar(p),
   });
 
@@ -487,9 +474,9 @@ export default function CatalogoClientes() {
                     <h4>{i.nome}</h4>
                     <div className="r">
                       <div className="q">
-                        <button onClick={() => mudarQtdCarrinho(i.codigo, i.qtd - PASSO)}>−</button>
+                        <button onClick={() => mudarQtdCarrinho(i.codigo, i.qtd - i.passo)}>−</button>
                         <span>{i.qtd}</span>
-                        <button onClick={() => mudarQtdCarrinho(i.codigo, i.qtd + PASSO)}>+</button>
+                        <button onClick={() => mudarQtdCarrinho(i.codigo, i.qtd + i.passo)}>+</button>
                       </div>
                       <button className="rm" onClick={() => mudarQtdCarrinho(i.codigo, 0)}>remover</button>
                     </div>
