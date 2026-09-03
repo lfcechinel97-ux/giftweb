@@ -603,6 +603,8 @@ function dicaStories(){
 montar();
 renderCarrinho();
 dicaStories();
+/* garante topo mesmo se imagens carregarem depois e deslocarem o layout */
+window.addEventListener('load', function(){ window.scrollTo(0, 0); });
 })();
 </script>
 </body>
