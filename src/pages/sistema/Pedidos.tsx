@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Search, Filter, Printer, Trash2, Copy, MoreHorizontal, ChevronDown, Pencil,
-  ChevronLeft, ChevronRight, X, ShoppingCart,
+  ChevronLeft, ChevronRight, X, ShoppingCart, RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -87,6 +87,52 @@ export default function Pedidos() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [prazoDraft, setPrazoDraft] = useState<Record<string, string>>({});
+
+  /* ── Integração Calcme (Etapa 1: importação de pedidos) ─────────────── */
+  const qc = useQueryClient();
+  const [syncing, setSyncing] = useState(false);
+  const { data: lastCalcmeSync } = useQuery({
+    queryKey: ["sistema", "calcme", "last-sync"],
+    staleTime: 30 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("sistema_calcme_sync_log")
+        .select("synced_at,status,found,imported,updated,ignored,errors")
+        .order("synced_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const handleSyncCalcme = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-calcme-orders");
+      if (error) throw error;
+      const r = data as {
+        success: boolean; imported?: number; updated?: number; ignored?: number;
+        errors?: number; error?: string;
+      } | null;
+      if (!r?.success) {
+        toast.error(`Sincronização Calcme falhou: ${r?.error || "erro desconhecido"}`);
+      } else if ((r.errors ?? 0) > 0) {
+        toast.warning(`Calcme: ${r.imported} importados, ${r.updated} atualizados, ${r.ignored} ignorados, ${r.errors} erro(s).`);
+      } else {
+        toast.success(`Calcme: ${r.imported} importados, ${r.updated} atualizados, ${r.ignored} ignorados.`);
+      }
+      await qc.invalidateQueries({ queryKey: ["sistema", "calcme", "last-sync"] });
+      await qc.invalidateQueries({ queryKey: ["sistema", "pedidos"] });
+      await refreshPedidos({
+        status: filtroStatus, search: busca,
+        dataInicio: dataInicio || null, dataFim: dataFim || null, page, pageSize,
+      });
+    } catch (e: unknown) {
+      toast.error(`Sincronização Calcme falhou: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setSyncing(false);
+    }
+  };
   /* Progresso de produção (sistema_producao_itens) — cacheado 60s */
   const { data: progresso = {} } = useQuery<Record<string, { enviados: number; total: number }>>({
     queryKey: ["sistema", "pedidos", "progresso"],
@@ -215,12 +261,31 @@ export default function Pedidos() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h2 className="gw-display">Pedidos</h2>
           <p className="gw-meta">Pedidos gerados a partir de orçamentos aprovados.</p>
         </div>
-        <span className="gw-meta">{listLoading ? "Atualizando..." : `${pedidosTotal} pedido(s) • página ${currentPage} de ${totalPages}`}</span>
+        <div className="flex items-center gap-4">
+          {lastCalcmeSync && (
+            <span className="gw-meta text-right leading-tight">
+              Última sincronização Calcme: {new Date(lastCalcmeSync.synced_at).toLocaleString("pt-BR")}
+              <br />
+              {lastCalcmeSync.imported} importados • {lastCalcmeSync.updated} atualizados • {lastCalcmeSync.ignored} ignorados • {lastCalcmeSync.errors} erros
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleSyncCalcme}
+            disabled={syncing}
+            className="inline-flex items-center gap-2 h-9 px-4 rounded-[8px] text-[13px] font-semibold text-white disabled:opacity-60"
+            style={{ background: "var(--gw-success)" }}
+          >
+            <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Sincronizando..." : "Sincronizar Calcme"}
+          </button>
+          <span className="gw-meta">{listLoading ? "Atualizando..." : `${pedidosTotal} pedido(s) • página ${currentPage} de ${totalPages}`}</span>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -302,8 +367,19 @@ export default function Pedidos() {
                 <OrderNumber value={p.numero} />
 
                 <span className="flex flex-col min-w-0">
-                  <span className="gw-title truncate text-[15px]" style={{ fontWeight: 700 }}>
-                    {getClienteNome(p)}
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className="gw-title truncate text-[15px]" style={{ fontWeight: 700 }}>
+                      {getClienteNome(p)}
+                    </span>
+                    {p.calcmeOrderId && (
+                      <span
+                        className="inline-flex items-center h-[18px] px-[7px] rounded-full text-[10px] font-bold tracking-wide shrink-0"
+                        style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
+                        title={`Pedido importado do Calcme${p.calcmeOrderIdint ? ` #${p.calcmeOrderIdint}` : ""}${p.calcmeStatus ? ` — ${p.calcmeStatus}` : ""}`}
+                      >
+                        CALCME
+                      </span>
+                    )}
                   </span>
                   {itens.length > 1 && prog && prog.total > 0 && (
                     <span className="gw-meta">{prog.enviados}/{prog.total} itens enviados</span>
@@ -442,8 +518,13 @@ export default function Pedidos() {
 
                   {/* Metadados */}
                   <div className="grid grid-cols-6 gap-4 items-start">
-                    <MetaField label="Vendedor" value={getVendedorNome(p.vendedorId)} />
-                    <MetaField label="Transportadora" value={getTransportadoraNome(p.transportadoraId)} />
+                    <MetaField
+                      label="Vendedor"
+                      value={p.vendedorId ? getVendedorNome(p.vendedorId) : (p.calcmeVendedorNome || "—")}
+                    />
+                    {p.calcmeStatus
+                      ? <MetaField label="Status Calcme" value={p.calcmeStatus} />
+                      : <MetaField label="Transportadora" value={getTransportadoraNome(p.transportadoraId)} />}
                     <MetaField label="Criado em" value={new Date(p.createdAt).toLocaleDateString("pt-BR")} />
                     <MetaField
                       label="Despachar até"

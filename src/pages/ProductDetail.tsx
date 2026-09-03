@@ -360,6 +360,7 @@ const ProductDetail = () => {
                   <button
                     onClick={(e) => { e.stopPropagation(); setLbActive(activeImg); setLightbox(true); }}
                     className="absolute bottom-3 left-3 w-8 h-8 rounded-lg bg-white/90 border border-border flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+                    aria-label="Ampliar imagem"
                     title="Ampliar imagem"
                   >
                   <ZoomIn className="w-4 h-4 text-muted-foreground" />
@@ -757,6 +758,7 @@ const ProductDetail = () => {
               onClick={() => setLightbox(false)}
             >
               <button
+                aria-label="Fechar imagem"
                 className="absolute top-4 right-4 z-[201] w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
                 onClick={() => setLightbox(false)}
               >
@@ -765,6 +767,7 @@ const ProductDetail = () => {
 
               {lbImages.length > 1 && (
                 <button
+                  aria-label="Imagem anterior"
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
                   onClick={goPrev}
                 >
@@ -784,6 +787,7 @@ const ProductDetail = () => {
                       <button
                         key={i}
                         onClick={() => setLbActive(i)}
+                        aria-label={`Ver imagem ${i + 1}`}
                         className="w-2 h-2 rounded-full transition-all duration-150"
                         style={{ backgroundColor: i === safeLbActive ? 'white' : 'rgba(255,255,255,0.3)' }}
                       />
@@ -794,6 +798,7 @@ const ProductDetail = () => {
 
               {lbImages.length > 1 && (
                 <button
+                  aria-label="Próxima imagem"
                   className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors"
                   onClick={goNext}
                 >

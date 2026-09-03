@@ -202,7 +202,7 @@ const Header = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full rounded-[10px] border border-border bg-card py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-text-meta focus:outline-none focus:ring-2 focus:ring-green-cta/40"
               />
-              <button type="submit" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-meta">
+              <button type="submit" aria-label="Buscar" className="absolute left-3 top-1/2 -translate-y-1/2 text-text-meta">
                 <Search size={16} />
               </button>
             </form>
@@ -222,6 +222,8 @@ const Header = () => {
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}
+              aria-expanded={mobileOpen}
               className="lg:hidden text-white p-1 z-[110] relative"
             >
               {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -329,7 +331,7 @@ const Header = () => {
             <span className="font-extrabold font-serif text-3xl text-white">Gift Web</span>
             <span className="text-xs font-semibold text-green-cta ml-1">B R I N D E S</span>
           </a>
-          <button onClick={() => setMobileOpen(false)} className="text-white p-1">
+          <button onClick={() => setMobileOpen(false)} aria-label="Fechar menu" className="text-white p-1">
             <X size={26} />
           </button>
         </div>
@@ -343,7 +345,7 @@ const Header = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full rounded-[10px] border border-white/20 bg-white/10 py-3 pl-10 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-green-cta/40"
             />
-            <button type="submit" className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">
+            <button type="submit" aria-label="Buscar" className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">
               <Search size={16} />
             </button>
           </form>
@@ -426,6 +428,7 @@ const Header = () => {
       {/* Floating hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
+        aria-label="Abrir menu"
         className={`lg:hidden fixed top-3 right-4 z-[60] rounded-full w-10 h-10 flex items-center justify-center bg-navy/90 backdrop-blur-sm border border-white/10 text-white shadow-lg transition-all duration-300 ${
           hidden && !mobileOpen ? "opacity-100 translate-y-0" : "opacity-0 pointer-events-none -translate-y-2"
         }`}

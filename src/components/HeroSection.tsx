@@ -381,16 +381,16 @@ const HeroSection = () => {
             )}
           </div>
 
-          <button onClick={prevSlide} className="absolute left-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 text-white transition-all duration-200 hover:border-green-cta hover:bg-green-cta md:left-4 md:h-10 md:w-10" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <button onClick={prevSlide} aria-label="Anterior" className="absolute left-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 text-white transition-all duration-200 hover:border-green-cta hover:bg-green-cta md:left-4 md:h-10 md:w-10" style={{ background: "rgba(255,255,255,0.08)" }}>
             <ChevronLeft size={22} />
           </button>
-          <button onClick={nextSlide} className="absolute right-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 text-white transition-all duration-200 hover:border-green-cta hover:bg-green-cta md:right-4 md:h-10 md:w-10" style={{ background: "rgba(255,255,255,0.08)" }}>
+          <button onClick={nextSlide} aria-label="Próximo" className="absolute right-2 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 text-white transition-all duration-200 hover:border-green-cta hover:bg-green-cta md:right-4 md:h-10 md:w-10" style={{ background: "rgba(255,255,255,0.08)" }}>
             <ChevronRight size={22} />
           </button>
 
           <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-2 md:bottom-6">
             {slides.map((_, i) => (
-              <button key={i} onClick={() => setCurrentSlide(i)} className={`h-2.5 rounded-full transition-all duration-300 md:h-3 ${i === currentSlide ? "w-5 bg-green-cta md:w-6" : "w-2.5 bg-white/40 hover:bg-white/60 md:w-3"}`} />
+              <button key={i} onClick={() => setCurrentSlide(i)} aria-label={`Ir para o banner ${i + 1}`} className={`h-2.5 rounded-full transition-all duration-300 md:h-3 ${i === currentSlide ? "w-5 bg-green-cta md:w-6" : "w-2.5 bg-white/40 hover:bg-white/60 md:w-3"}`} />
             ))}
           </div>
         </div>
