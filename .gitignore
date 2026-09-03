@@ -32,3 +32,5 @@ __pycache__/
 # Mockups gerados (regeraveis via scripts/gerar_mockups.py)
 data/mockups/
 data/catalogo_fotos/
+data/banners/*.png
+data/fonts/caveat-latin.woff2
