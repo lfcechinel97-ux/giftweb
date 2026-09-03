@@ -1,0 +1,88 @@
+{
+  "codigo_entrada": "02078",
+  "codigo_consulta": "02078",
+  "coletado_em": "2026-09-03T02:32:29.561413+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "28555533-b9c8-42a3-aaa0-ba8de2af2854",
+      "codigo_amigavel": "02078-AZE",
+      "codigo_prefixo": "02078",
+      "slug": "guarda-chuva-invertido-02078-aze",
+      "nome": "GUARDA-CHUVA INVERTIDO",
+      "descricao": "Guarda-chuva invertido com forro interno. Tecido de nylon impermeável preto, possui um mecanismo inovador permitindo que o usuário não se molhe ao entrar e sair de ambientes devido sua abertura invertida, quando feito o movimento para fechar as varetas inverterão para cima criando um formato circular impedindo a chuva de atingir o usuário, podendo ?segurar? a chuva enquanto entra/sai de um ambiente e depois virando o guarda-chuva irá escorrer a água. Forro interno para preservação das 8 varetas, evitando contato com a água e assim prolongando seu tempo de uso sem enferrujar. Ao impulsionar o fechamento invertido fica mais rápido e prático o modo de secar e ser guardado, pode ser apoiado no chão que permanecerá em pé para escorrer a água. Pegador plástico fosco em formato C, botão acionador vermelho e fita com velcro(contorno marrom) para lacre.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Invertido-AZUL-20968-1727874096.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Invertido-AZUL-20968-1727874096.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02078",
+      "cor": "AZUL",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 29.5,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "91c79c09-a82d-4bbc-81c0-f893467ede8b",
+      "codigo_amigavel": "02078-BCO",
+      "codigo_prefixo": "02078",
+      "slug": "guarda-chuva-invertido-02078-bco",
+      "nome": "GUARDA-CHUVA INVERTIDO",
+      "descricao": "Guarda-chuva invertido com forro interno. Tecido de nylon impermeável preto, possui um mecanismo inovador permitindo que o usuário não se molhe ao entrar e sair de ambientes devido sua abertura invertida, quando feito o movimento para fechar as varetas inverterão para cima criando um formato circular impedindo a chuva de atingir o usuário, podendo ?segurar? a chuva enquanto entra/sai de um ambiente e depois virando o guarda-chuva irá escorrer a água. Forro interno para preservação das 8 varetas, evitando contato com a água e assim prolongando seu tempo de uso sem enferrujar. Ao impulsionar o fechamento invertido fica mais rápido e prático o modo de secar e ser guardado, pode ser apoiado no chão que permanecerá em pé para escorrer a água. Pegador plástico fosco em formato C, botão acionador vermelho e fita com velcro(contorno marrom) para lacre.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Invertido-BRANCO-25563-1759523596.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Invertido-BRANCO-25563-1759523596.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02078",
+      "cor": "BRANCO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 29.5,
+      "estoque": 3436,
+      "peso": 519.0,
+      "altura": 79.5,
+      "largura": 9.4,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "6a17a31d-f7ef-466d-b8cc-0ffac2991bc3",
+      "codigo_amigavel": "02078-PRE",
+      "codigo_prefixo": "02078",
+      "slug": "guarda-chuva-invertido-02078-pre",
+      "nome": "GUARDA-CHUVA INVERTIDO",
+      "descricao": "Guarda-chuva invertido com forro interno. Tecido de nylon impermeável preto, possui um mecanismo inovador permitindo que o usuário não se molhe ao entrar e sair de ambientes devido sua abertura invertida, quando feito o movimento para fechar as varetas inverterão para cima criando um formato circular impedindo a chuva de atingir o usuário, podendo ?segurar? a chuva enquanto entra/sai de um ambiente e depois virando o guarda-chuva irá escorrer a água. Forro interno para preservação das 8 varetas, evitando contato com a água e assim prolongando seu tempo de uso sem enferrujar. Ao impulsionar o fechamento invertido fica mais rápido e prático o modo de secar e ser guardado, pode ser apoiado no chão que permanecerá em pé para escorrer a água. Pegador plástico fosco em formato C, botão acionador vermelho e fita com velcro(contorno marrom) para lacre.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Invertido-7050-1516276822.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Guarda-chuva-Invertido-7050-1516276822.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02078",
+      "cor": "PRETO",
+      "categoria": "guarda-chuvas",
+      "marca": "XBZ",
+      "preco_custo": 29.5,
+      "estoque": 6780,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

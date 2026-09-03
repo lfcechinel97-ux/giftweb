@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "05065",
+  "codigo_consulta": "05065",
+  "coletado_em": "2026-09-03T02:32:09.058158+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "753c6713-f55f-40a1-b3a9-16f5bc6ac33a",
+      "codigo_amigavel": "05065-KRA",
+      "codigo_prefixo": "05065",
+      "slug": "bloco-de-anotacoes-c-auto-adesivos-05065-kra",
+      "nome": "BLOCO DE ANOTAÇÕES C/ AUTO ADESIVOS",
+      "descricao": "Bloco de anotações ecológico com autoadesivos, régua e caneta, feito em kraft. Contém folha com régua 13 cm, cinco autoadesivos com aproximadamente 13 folhas, bloco com aproximadamente 69 folhas brancas com pauta, porta caneta elástico e acompanha caneta de papelão com detalhes plásticos, carga esferográfica azul 1.0mm e acionamento por clique.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bloco-de-Anotacoes-com-Autoadesivos-e-Caneta-KRAFT-16132-1681307061.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bloco-de-Anotacoes-com-Autoadesivos-e-Caneta-KRAFT-16132-1681307061.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05065",
+      "cor": "KRAFT",
+      "categoria": "blocos",
+      "marca": "XBZ",
+      "preco_custo": 4.5,
+      "estoque": 44444,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

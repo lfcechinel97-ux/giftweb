@@ -1,0 +1,88 @@
+{
+  "codigo_entrada": "08188",
+  "codigo_consulta": "08188",
+  "coletado_em": "2026-09-03T02:32:20.536169+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "cb8f2a67-cbd8-4173-ab14-5a4794cd6811",
+      "codigo_amigavel": "08188-BCO",
+      "codigo_prefixo": "08188",
+      "slug": "power-bank-10-000mah-com-indicador-led-08188-bco",
+      "nome": "POWER BANK 10.000MAH COM INDICADOR LED",
+      "descricao": "Power bank com estrutura em plástico com potência de 10.000mAh e quatro luzes de LED para indicar o status de carga. Possui quatro entradas diferentes: duas portas USB, uma porta Micro USB e outra USB-C, esta dedicada para a recarga do carregador portátil.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Indicador-LED-22932-1744808836.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Indicador-LED-22932-1744808836.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08188",
+      "cor": "BRANCO",
+      "categoria": "power-banks",
+      "marca": "XBZ",
+      "preco_custo": 54.9,
+      "estoque": 2571,
+      "peso": 243.0,
+      "altura": 14.0,
+      "largura": 7.0,
+      "profundidade": 1.5,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "14622439-5f64-4bea-ae40-af3e669bdf63",
+      "codigo_amigavel": "08188-VM",
+      "codigo_prefixo": "08188",
+      "slug": "power-bank-10-000mah-com-indicador-led-08188-vm",
+      "nome": "POWER BANK 10.000MAH COM INDICADOR LED",
+      "descricao": "Power bank com estrutura em plástico com potência de 10.000mAh e quatro luzes de LED para indicar o status de carga. Possui quatro entradas diferentes: duas portas USB, uma porta Micro USB e outra USB-C, esta dedicada para a recarga do carregador portátil.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Indicador-LED-VERMELHO-22935-1744808865.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Indicador-LED-VERMELHO-22935-1744808865.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08188",
+      "cor": "VERMELHO",
+      "categoria": "power-banks",
+      "marca": "XBZ",
+      "preco_custo": 54.9,
+      "estoque": 3643,
+      "peso": 243.0,
+      "altura": 14.0,
+      "largura": 7.0,
+      "profundidade": 1.5,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "ae4bf9d6-f036-42aa-b09c-6cf04cf7759b",
+      "codigo_amigavel": "08188-PRE",
+      "codigo_prefixo": "08188",
+      "slug": "power-bank-10-000mah-com-indicador-led-08188-pre",
+      "nome": "POWER BANK 10.000MAH COM INDICADOR LED",
+      "descricao": "Power bank com estrutura em plástico com potência de 10.000mAh e quatro luzes de LED para indicar o status de carga. Possui quatro entradas diferentes: duas portas USB, uma porta Micro USB e outra USB-C, esta dedicada para a recarga do carregador portátil.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Indicador-LED-PRETO-22934-1744808851.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Indicador-LED-PRETO-22934-1744808851.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08188",
+      "cor": "PRETO",
+      "categoria": "power-banks",
+      "marca": "XBZ",
+      "preco_custo": 54.9,
+      "estoque": 1348,
+      "peso": 243.0,
+      "altura": 14.0,
+      "largura": 7.0,
+      "profundidade": 7.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

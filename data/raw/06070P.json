@@ -1,0 +1,62 @@
+{
+  "codigo_entrada": "06070P",
+  "codigo_consulta": "06070P",
+  "coletado_em": "2026-09-03T02:32:00.815534+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "ce208220-c7bc-4abd-8cdc-68e0b2b7c5a6",
+      "codigo_amigavel": "06070P",
+      "codigo_prefixo": "06070P",
+      "slug": "mala-de-bordo-30-litros-06070p",
+      "nome": "MALA DE BORDO 30 LITROS",
+      "descricao": "Mala de bordo 30 litros com padrão ANAC (Agência Nacional de Aviação Civil), confeccionada em poliéster de alta qualidade, com cadeado numérico TSA. Possui etiquetas de identificação embutidas na mala, sendo uma integrada ao cadeado e outra na parte de trás da mala, acoplada por estojo em couro sintético. Três compartimentos, bolso telado, cinta compressora para roupas, alça de mão em poliéster, puxador retrátil com regulagem de tamanho, zíper expansível e quatro rodinhas 360º.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mala-de-Bordo-30-Litros-PRETO-18427-1710155590.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mala-de-Bordo-30-Litros-PRETO-18427-1710155590.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/06070p",
+      "cor": "PRETO",
+      "categoria": "malas",
+      "marca": "XBZ",
+      "preco_custo": 167.0,
+      "estoque": 785,
+      "peso": null,
+      "altura": 37.0,
+      "largura": 27.0,
+      "profundidade": 19.0,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "55972b9f-0f9d-47c3-8a03-a4ca37da6efe"
+    },
+    {
+      "id": "55972b9f-0f9d-47c3-8a03-a4ca37da6efe",
+      "codigo_amigavel": "06070P-PRE",
+      "codigo_prefixo": "06070P",
+      "slug": "mala-de-bordo-30-litros-06070p-pre",
+      "nome": "MALA DE BORDO 30 LITROS",
+      "descricao": "Mala de bordo 30 litros com padrão ANAC (Agência Nacional de Aviação Civil), confeccionada em poliéster de alta qualidade, com cadeado numérico TSA. Possui etiquetas de identificação embutidas na mala, sendo uma integrada ao cadeado e outra na parte de trás da mala, acoplada por estojo em couro sintético. Três compartimentos, bolso telado, cinta compressora para roupas, alça de mão em poliéster, puxador retrátil com regulagem de tamanho, zíper expansível e quatro rodinhas 360º.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Mala-de-Bordo-30-Litros-PRETO-18427-1710155590.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Mala-de-Bordo-30-Litros-PRETO-18427-1710155590.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/06070p",
+      "cor": "PRETO",
+      "categoria": "malas",
+      "marca": "XBZ",
+      "preco_custo": 167.0,
+      "estoque": 1198,
+      "peso": null,
+      "altura": 37.0,
+      "largura": 27.0,
+      "profundidade": 19.0,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

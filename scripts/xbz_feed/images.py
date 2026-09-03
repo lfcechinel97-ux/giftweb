@@ -287,9 +287,16 @@ def _proxima_versao_disponivel(codigo: str, slot: int, sha256_novo: str) -> tupl
     return entrada["versao"] + 1, False
 
 
-def enviar_para_storage(processada: ImagemProcessada, service_client: SupabaseREST) -> str | None:
+def enviar_para_storage(processada: ImagemProcessada, service_client: SupabaseREST | None = None,
+                         usar_edge_function: bool | None = None) -> str | None:
+    """Sobe pro bucket catalogo-meta com versionamento idempotente (manifest por
+    codigo-slot). Por padrão usa a Edge Function upload-catalog-image (único
+    caminho que realmente funciona neste projeto - service_role key direta não
+    está disponível). Passe service_client para o caminho antigo (direto)."""
     if not processada.ok or not processada.local_path:
         return None
+    if usar_edge_function is None:
+        usar_edge_function = service_client is None
     versao, ja_atualizado = _proxima_versao_disponivel(processada.codigo, processada.slot, processada.sha256)
     nome_arquivo = f"{processada.codigo}-{processada.slot}-v{versao}.jpg"
 
@@ -301,8 +308,12 @@ def enviar_para_storage(processada: ImagemProcessada, service_client: SupabaseRE
 
     dados = open(processada.local_path, "rb").read()
     print(f"[IMAGES] {processada.codigo}: enviando {nome_arquivo} para bucket {config.STORAGE_BUCKET}...")
-    service_client.storage_upload(config.STORAGE_BUCKET, nome_arquivo, dados, "image/jpeg", upsert=False)
-    url = public_storage_url(config.STORAGE_BUCKET, nome_arquivo)
+    if usar_edge_function:
+        from .upload_via_function import upload_bytes
+        url = upload_bytes(nome_arquivo, dados, "image/jpeg")
+    else:
+        service_client.storage_upload(config.STORAGE_BUCKET, nome_arquivo, dados, "image/jpeg", upsert=False)
+        url = public_storage_url(config.STORAGE_BUCKET, nome_arquivo)
 
     MANIFEST[f"{processada.codigo}-{processada.slot}"] = {
         "versao": versao, "sha256": processada.sha256, "arquivo": nome_arquivo, "url": url,

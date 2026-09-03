@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "11870",
+  "codigo_consulta": "11870",
+  "coletado_em": "2026-09-03T02:32:24.525339+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "a59e863b-e342-461e-9d35-d0329d16f46c",
+      "codigo_amigavel": "11870-PRE",
+      "codigo_prefixo": "11870",
+      "slug": "kit-vinho-5pcs-formato-garrafa-11870-pre",
+      "nome": "KIT VINHO 5PÇS FORMATO GARRAFA",
+      "descricao": "Kit vinho formato garrafa com 5 peças: tampa de bico, wine collar, bico condutor com tampa, saca-rolhas metálico com lâmina de corte e abridor de garrafa e cortador de lacre. Estojo com fechamento imantado e área interna com berço de espuma.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-Garrafa-5-pecas-PRETO-3598-1536941653.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-Garrafa-5-pecas-PRETO-3598-1536941653.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/11870",
+      "cor": "PRETO",
+      "categoria": "kit-vinho",
+      "marca": "XBZ",
+      "preco_custo": 24.9,
+      "estoque": 8032,
+      "peso": 445.0,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "06096",
+  "codigo_consulta": "06096",
+  "coletado_em": "2026-09-03T02:31:48.013224+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "2b825ff2-cfd5-4b6b-9e3c-3e0746f1e925",
+      "codigo_amigavel": "06096-BCO",
+      "codigo_prefixo": "06096",
+      "slug": "copo-vidro-parede-dupla-160ml-06096-bco",
+      "nome": "COPO VIDRO PAREDE DUPLA 160ML",
+      "descricao": "Copo de vidro borossilicato parede dupla com capacidade para 160ml.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Vidro-Parede-Dupla-160ml-TRANSPARENTE-18636-1713794443.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Vidro-Parede-Dupla-160ml-TRANSPARENTE-18636-1713794443.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/06096",
+      "cor": "TRANSPARENTE",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 7.5,
+      "estoque": 20129,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

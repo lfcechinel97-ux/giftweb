@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "04067",
+  "codigo_consulta": "04067",
+  "coletado_em": "2026-09-03T02:32:16.291976+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "e9d3d810-44d7-4bde-bb20-6678e4c22d30",
+      "codigo_amigavel": "04067-BCO",
+      "codigo_prefixo": "04067",
+      "slug": "caixa-de-som-com-luminaria-04067-bco",
+      "nome": "CAIXA DE SOM COM LUMINÁRIA",
+      "descricao": "Caixa de som multimídia sem fio com iluminação em LED acionada por toque. Com estrutura em plástico resistente, apresenta painel de botões para troca de faixas e alternância dos modos Bluetooth, Rádio FM e reprodução de MP3 via pen drive ou cartão MicroSD via entradas USB e cartão de memória, além de base com alça de alumínio para transporte. Acompanha cabo USB-C e cabo Auxiliar P2.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Multimidia-com-Luminaria-13875-1640696765.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Multimidia-com-Luminaria-13875-1640696765.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04067",
+      "cor": "BRANCO",
+      "categoria": "caixas-de-som",
+      "marca": "XBZ",
+      "preco_custo": 26.9,
+      "estoque": 1,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

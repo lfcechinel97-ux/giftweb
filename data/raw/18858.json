@@ -1,0 +1,88 @@
+{
+  "codigo_entrada": "18858",
+  "codigo_consulta": "18858",
+  "coletado_em": "2026-09-03T02:32:27.050302+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "92d0aa66-b544-4e7f-bd2b-e106aed4b7e9",
+      "codigo_amigavel": "18858-MAR",
+      "codigo_prefixo": "18858",
+      "slug": "marmita-hermetica-plastica-1l-18858-mar",
+      "nome": "MARMITA HERMÉTICA PLÁSTICA 1L",
+      "descricao": "Ideal para refeições práticas e bem organizadas, essa marmita de 1L feita em polipropileno atóxico, livre de BPA, possui uma tampa hermética que evita vazamentos e mantém a frescura dos alimentos. Suas 3 divisórias internas, permitem a separação de cada item sem misturar os sabores. Na parte superior da tampa, um compartimento com visor plástico transparente guarda os talheres ? garfo, faca e colher ? para acesso rápido e prático. A escolha perfeita para quem valoriza praticidade e organização na hora das refeições!",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-Hermetica-Plastica-1L-MARROM-21198-1730918851.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-Hermetica-Plastica-1L-MARROM-21198-1730918851.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18858",
+      "cor": "MARROM",
+      "categoria": "marmitas",
+      "marca": "XBZ",
+      "preco_custo": 13.9,
+      "estoque": 8718,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "6da1d0a1-842b-452f-82e0-9d1a9955c457",
+      "codigo_amigavel": "18858-AZU",
+      "codigo_prefixo": "18858",
+      "slug": "marmita-hermetica-plastica-1l-18858-azu",
+      "nome": "MARMITA HERMÉTICA PLÁSTICA 1L",
+      "descricao": "Ideal para refeições práticas e bem organizadas, essa marmita de 1L feita em polipropileno atóxico, livre de BPA, possui uma tampa hermética que evita vazamentos e mantém a frescura dos alimentos. Suas 3 divisórias internas, permitem a separação de cada item sem misturar os sabores. Na parte superior da tampa, um compartimento com visor plástico transparente guarda os talheres ? garfo, faca e colher ? para acesso rápido e prático. A escolha perfeita para quem valoriza praticidade e organização na hora das refeições!",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-Hermetica-Plastica-1L-AZUL-21197-1730918851.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-Hermetica-Plastica-1L-AZUL-21197-1730918851.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18858",
+      "cor": "AZUL",
+      "categoria": "marmitas",
+      "marca": "XBZ",
+      "preco_custo": 13.9,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "96c89725-902a-4c9d-aee1-12bc7b6827bc",
+      "codigo_amigavel": "18858-BEG",
+      "codigo_prefixo": "18858",
+      "slug": "marmita-hermetica-plastica-1l-18858-beg",
+      "nome": "MARMITA HERMÉTICA PLÁSTICA 1L",
+      "descricao": "Ideal para refeições práticas e bem organizadas, essa marmita de 1L feita em polipropileno atóxico, livre de BPA, possui uma tampa hermética que evita vazamentos e mantém a frescura dos alimentos. Suas 3 divisórias internas, permitem a separação de cada item sem misturar os sabores. Na parte superior da tampa, um compartimento com visor plástico transparente guarda os talheres ? garfo, faca e colher ? para acesso rápido e prático. A escolha perfeita para quem valoriza praticidade e organização na hora das refeições!",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-Hermetica-Plastica-1L-BEGE-27549-1772647525.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-Hermetica-Plastica-1L-BEGE-27549-1772647525.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18858",
+      "cor": "BEGE",
+      "categoria": "marmitas",
+      "marca": "XBZ",
+      "preco_custo": 13.9,
+      "estoque": 639,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

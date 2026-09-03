@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "02250",
+  "codigo_consulta": "02250",
+  "coletado_em": "2026-09-03T02:32:23.053246+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "07bde4e8-007a-4f36-9784-5437a387e11b",
+      "codigo_amigavel": "02250-PRE",
+      "codigo_prefixo": "02250",
+      "slug": "kit-churrasco-5-pecas-02250-pre",
+      "nome": "KIT CHURRASCO 5 PEÇAS",
+      "descricao": "Kit churrasco 5 peças em estojo de nylon com alça e parte interna com elástico para fixar as peças. Possui tábua de madeira com canaleta, três facas de corte e tesoura.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Churrasco-5-Pecas-17824-1701372943.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Churrasco-5-Pecas-17824-1701372943.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/02250",
+      "cor": "PRETO",
+      "categoria": "kit-churrasco",
+      "marca": "XBZ",
+      "preco_custo": 45.0,
+      "estoque": -622,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

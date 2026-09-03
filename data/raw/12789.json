@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "12789",
+  "codigo_consulta": "12789",
+  "coletado_em": "2026-09-03T02:32:18.297130+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "e37c3fe9-6570-4856-805f-6e52d76127fe",
+      "codigo_amigavel": "12789-BCO/BCO",
+      "codigo_prefixo": "12789",
+      "slug": "fone-de-ouvido-c-microfone-bco-bco-12789-bco-bco",
+      "nome": "FONE DE OUVIDO C/ MICROFONE -BCO/BCO",
+      "descricao": "Fone de ouvido estéreo com microfone e controle de volume. Fone de ouvido plástico na cor branca, entrada P2, possui indicativo L(left) e R(right) na área interna do fone, detalhes internos vazados no fone(possibilita a visão da tela de proteção), microfone acoplado no suporte com desenho indicativo e no verso do suporte controle de volume com desenho indicativo ? e +. Acompanha embalagem plástica branca com tampa acrílica transparente. OBS.: Botões de volumes funcionam apenas em aparelhos da linha APPLE.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Fone-de-ouvido-134-1474997069.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Fone-de-ouvido-134-1474997069.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/12789",
+      "cor": "BRANCO",
+      "categoria": "fones",
+      "marca": "XBZ",
+      "preco_custo": 4.99,
+      "estoque": 40080,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

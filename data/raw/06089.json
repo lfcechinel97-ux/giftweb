@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "06089",
+  "codigo_consulta": "06089",
+  "coletado_em": "2026-09-03T02:32:26.527425+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "094d342e-1baf-44b4-bfe9-1b791e376eeb",
+      "codigo_amigavel": "06089-BEG",
+      "codigo_prefixo": "06089",
+      "slug": "marmita-fibra-trigo-06089-beg",
+      "nome": "MARMITA FIBRA TRIGO",
+      "descricao": "Marmita em fibra de trigo com tampa de bambu de 1 litro. Possui elástico para um transporte seguro. Acompanha garfo, faca e colher. Obs: O tempo de aquecimento no micro-ondas não deve ultrapassar 3 minutos.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-Fibra-Trigo-BEGE-18620-1711986401.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-Fibra-Trigo-BEGE-18620-1711986401.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/06089",
+      "cor": "BEGE",
+      "categoria": "marmitas",
+      "marca": "XBZ",
+      "preco_custo": 11.9,
+      "estoque": 16807,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

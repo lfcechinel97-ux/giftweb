@@ -1,0 +1,88 @@
+{
+  "codigo_entrada": "04357",
+  "codigo_consulta": "04357",
+  "coletado_em": "2026-09-03T02:31:59.116517+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "2042fb47-8979-46a1-9a7b-420bc37a3117",
+      "codigo_amigavel": "04357-CIN",
+      "codigo_prefixo": "04357",
+      "slug": "bolsa-termica-10l-04357-cin",
+      "nome": "BOLSA TÉRMICA 10L",
+      "descricao": "Bolsa térmica de nylon 10 litros com dois compartimentos e bolsos laterais em malha. Compartimento principal com revestimento térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-10-Litros-CINZA-13606-1638185934.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-10-Litros-CINZA-13606-1638185934.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04357",
+      "cor": "CINZA",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 25.0,
+      "estoque": 8000,
+      "peso": null,
+      "altura": 17.5,
+      "largura": 24.0,
+      "profundidade": 16.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "053ef246-debd-4203-95ce-b658f654baa9",
+      "codigo_amigavel": "04357-AZU",
+      "codigo_prefixo": "04357",
+      "slug": "bolsa-termica-10l-04357-azu",
+      "nome": "BOLSA TÉRMICA 10L",
+      "descricao": "Bolsa térmica de nylon 10 litros com dois compartimentos e bolsos laterais em malha. Compartimento principal com revestimento térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-10-Litros-AZUL-13605-1638185871.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-10-Litros-AZUL-13605-1638185871.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04357",
+      "cor": "AZUL",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 25.0,
+      "estoque": 8000,
+      "peso": null,
+      "altura": 17.5,
+      "largura": 24.0,
+      "profundidade": 16.0,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "679c2eb3-8246-43b6-a7d8-e1606e0d4b84",
+      "codigo_amigavel": "04357-PRE",
+      "codigo_prefixo": "04357",
+      "slug": "bolsa-termica-10l-04357-pre",
+      "nome": "BOLSA TÉRMICA 10L",
+      "descricao": "Bolsa térmica de nylon 10 litros com dois compartimentos e bolsos laterais em malha. Compartimento principal com revestimento térmico.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-10-Litros-PRETO-13607-1638185950.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bolsa-Termica-10-Litros-PRETO-13607-1638185950.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04357",
+      "cor": "PRETO",
+      "categoria": "bolsas",
+      "marca": "XBZ",
+      "preco_custo": 25.0,
+      "estoque": 8000,
+      "peso": null,
+      "altura": 17.5,
+      "largura": 24.0,
+      "profundidade": 16.0,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

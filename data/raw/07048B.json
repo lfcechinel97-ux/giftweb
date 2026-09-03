@@ -1,0 +1,62 @@
+{
+  "codigo_entrada": "07048B",
+  "codigo_consulta": "07048B",
+  "coletado_em": "2026-09-03T02:32:14.966041+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "119af9d0-8345-40d2-b420-50580fad9d8c",
+      "codigo_amigavel": "07048B",
+      "codigo_prefixo": "07048B",
+      "slug": "kit-executivo-ecologico-3-pecas-07048b",
+      "nome": "KIT EXECUTIVO ECOLÓGICO 3 PEÇAS",
+      "descricao": "Kit composto por 3 peças: sendo uma caderneta de bambu com capa dura, contendo aproximadamente 70 folhas brancas pautadas, uma caneta de bambu com clipe metálico e um chaveiro de bambu com detalhe em metal. Item perfeito para quem busca elegância, sustentabilidade e o toque natural que só o bambu proporciona.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-Ecologico-3-Pecas-BEGE-20837-1728069680.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-Ecologico-3-Pecas-BEGE-20837-1728069680.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/07048b",
+      "cor": "BAMBU",
+      "categoria": "kit-executivo",
+      "marca": "XBZ",
+      "preco_custo": 21.9,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "8c411409-f2c2-43b8-ab74-140e0ea8f827"
+    },
+    {
+      "id": "8c411409-f2c2-43b8-ab74-140e0ea8f827",
+      "codigo_amigavel": "07048B-BEG",
+      "codigo_prefixo": "07048B",
+      "slug": "kit-executivo-ecologico-3-pecas-07048b-beg",
+      "nome": "KIT EXECUTIVO ECOLÓGICO 3 PEÇAS",
+      "descricao": "Kit composto por 3 peças: sendo uma caderneta de bambu com capa dura, contendo aproximadamente 70 folhas brancas pautadas, uma caneta de bambu com clipe metálico e um chaveiro de bambu com detalhe em metal. Item perfeito para quem busca elegância, sustentabilidade e o toque natural que só o bambu proporciona.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-Ecologico-3-Pecas-BEGE-20837-1728069680.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Executivo-Ecologico-3-Pecas-BEGE-20837-1728069680.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/07048b",
+      "cor": "BAMBU",
+      "categoria": "kit-executivo",
+      "marca": "XBZ",
+      "preco_custo": 21.9,
+      "estoque": 9132,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

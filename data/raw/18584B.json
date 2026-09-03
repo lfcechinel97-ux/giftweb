@@ -1,0 +1,62 @@
+{
+  "codigo_entrada": "18584B",
+  "codigo_consulta": "18584B",
+  "coletado_em": "2026-09-03T02:32:27.516333+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "ed2d3eee-dccf-41a1-90e8-395469155e3f",
+      "codigo_amigavel": "18584B-BMB",
+      "codigo_prefixo": "18584B",
+      "slug": "tabua-de-corte-com-canaleta-18584b-bmb",
+      "nome": "TÁBUA DE CORTE COM CANALETA",
+      "descricao": "Tábua de corte em bambu com canaleta e acesso para gancho.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-21014-1728391199.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-21014-1728391199.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18584b",
+      "cor": "BAMBU",
+      "categoria": "tabuas-petisqueiras",
+      "marca": "XBZ",
+      "preco_custo": 9.0,
+      "estoque": 0,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "7ab1c393-eb31-47c0-b9fd-5fd9b1431704",
+      "codigo_amigavel": "18584B",
+      "codigo_prefixo": "18584B",
+      "slug": "tabua-de-corte-com-canaleta-18584b",
+      "nome": "TÁBUA DE CORTE COM CANALETA",
+      "descricao": "Tábua de corte em bambu com canaleta e acesso para gancho.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-21014-1728391199.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-21014-1728391199.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/18584b",
+      "cor": "BAMBU",
+      "categoria": "tabuas-petisqueiras",
+      "marca": "XBZ",
+      "preco_custo": 9.0,
+      "estoque": 14444,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "ed2d3eee-dccf-41a1-90e8-395469155e3f"
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

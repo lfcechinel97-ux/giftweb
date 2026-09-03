@@ -1,0 +1,62 @@
+{
+  "codigo_entrada": "18591B",
+  "codigo_consulta": "18591B",
+  "coletado_em": "2026-09-03T02:32:28.012166+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "0c83b293-e67c-4479-96f1-3c3ce34543ac",
+      "codigo_amigavel": "18591B",
+      "codigo_prefixo": "18591B",
+      "slug": "tabua-de-corte-com-canaleta-18591b",
+      "nome": "TÁBUA DE CORTE COM CANALETA",
+      "descricao": "Nossa tábua de corte em bambu é resistente e conta com uma canaleta que evita o desperdício de líquidos, mantendo a bancada sempre limpa. Possui furo lateral, que facilita o manuseio e também permite pendurá-la, otimizando espaço. Além de funcional, seu design natural traz um toque sofisticado para qualquer ambiente. Perfeita para cortar carnes, frutas e legumes, essa tábua é a escolha ideal para quem valoriza qualidade e praticidade na cozinha! ",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-22492-1740671360.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-22492-1740671360.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08317",
+      "cor": "MADEIRA",
+      "categoria": "tabuas-petisqueiras",
+      "marca": "XBZ",
+      "preco_custo": 9.9,
+      "estoque": 2,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "b876caa8-436e-4602-8f4e-98f537d65470"
+    },
+    {
+      "id": "b876caa8-436e-4602-8f4e-98f537d65470",
+      "codigo_amigavel": "18591B-MAD",
+      "codigo_prefixo": "18591B",
+      "slug": "tabua-de-corte-com-canaleta-18591b-mad",
+      "nome": "TÁBUA DE CORTE COM CANALETA",
+      "descricao": "Nossa tábua de corte em bambu é resistente e conta com uma canaleta que evita o desperdício de líquidos, mantendo a bancada sempre limpa. Possui furo lateral, que facilita o manuseio e também permite pendurá-la, otimizando espaço. Além de funcional, seu design natural traz um toque sofisticado para qualquer ambiente. Perfeita para cortar carnes, frutas e legumes, essa tábua é a escolha ideal para quem valoriza qualidade e praticidade na cozinha! ",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-22492-1740671360.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Tabua-de-Corte-com-Canaleta-22492-1740671360.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08317",
+      "cor": "MADEIRA",
+      "categoria": "tabuas-petisqueiras",
+      "marca": "XBZ",
+      "preco_custo": 9.9,
+      "estoque": 5509,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "06094",
+  "codigo_consulta": "06094",
+  "coletado_em": "2026-09-03T02:31:45.100041+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "b558724d-c683-4e65-b646-7d94c4a7bb1f",
+      "codigo_amigavel": "06094-TRA",
+      "codigo_prefixo": "06094",
+      "slug": "copo-vidro-parede-dupla-80ml-06094-tra",
+      "nome": "COPO VIDRO PAREDE DUPLA 80ML",
+      "descricao": "Copo de vidro borossilicato parede dupla com capacidade para 80ml.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Vidro-Parede-Dupla-80ml-TRANSPARENTE-18639-1713796384.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Copo-Vidro-Parede-Dupla-80ml-TRANSPARENTE-18639-1713796384.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/06094",
+      "cor": "TRANSPARENTE",
+      "categoria": "copos",
+      "marca": "XBZ",
+      "preco_custo": 7.2,
+      "estoque": 27529,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

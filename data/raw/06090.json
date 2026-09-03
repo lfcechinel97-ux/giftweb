@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "06090",
+  "codigo_consulta": "06090",
+  "coletado_em": "2026-09-03T02:32:26.008762+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "166d9a32-2dc3-4605-af7b-78c0fe63ce39",
+      "codigo_amigavel": "06090-BEG",
+      "codigo_prefixo": "06090",
+      "slug": "marmita-dupla-fibra-bambu-06090-beg",
+      "nome": "MARMITA DUPLA FIBRA BAMBU",
+      "descricao": "Marmita dupla em fibra de trigo livre de BPA, sendo um compartimento de 600ml com tampa de bambu e outro compartimento de 500ml com suporte para talheres de fibra de trigo. Possui uma  divisória removível e elástico para um transporte seguro. Acompanha garfo, faca e colher. Obs: O tempo de aquecimento no micro-ondas não deve ultrapassar 3 minutos.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-dupla-Fibra-Bambu-BEGE-18645-1711986509.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Marmita-dupla-Fibra-Bambu-BEGE-18645-1711986509.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/06090",
+      "cor": "BEGE",
+      "categoria": "marmitas",
+      "marca": "XBZ",
+      "preco_custo": 14.9,
+      "estoque": 2807,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

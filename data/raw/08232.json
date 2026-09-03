@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "08232",
+  "codigo_consulta": "08232",
+  "coletado_em": "2026-09-03T02:32:13.090259+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "b2e7f581-c5f4-43af-9c4f-0aeb2f94665e",
+      "codigo_amigavel": "08232-BCO",
+      "codigo_prefixo": "08232",
+      "slug": "chaveiro-trena-plastico-2-metros-08232-bco",
+      "nome": "CHAVEIRO TRENA PLÁSTICO 2 METROS",
+      "descricao": "Chaveiro trena em plástico com argola metálica e fita de aço para medição com alcance de até 2 metros e marcações em pés e polegadas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Chaveiro-Trena-Plastico-2-Metros-22878-1744644590.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Chaveiro-Trena-Plastico-2-Metros-22878-1744644590.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08232",
+      "cor": "BRANCO",
+      "categoria": "chaveiros",
+      "marca": "XBZ",
+      "preco_custo": 2.2,
+      "estoque": 26287,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

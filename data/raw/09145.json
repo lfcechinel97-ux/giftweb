@@ -1,0 +1,62 @@
+{
+  "codigo_entrada": "09145",
+  "codigo_consulta": "09145",
+  "coletado_em": "2026-09-03T02:32:20.022903+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "535cb45f-5fb4-4d0a-afd8-e09a7c224325",
+      "codigo_amigavel": "09145-PRE",
+      "codigo_prefixo": "09145",
+      "slug": "power-bank-10-000mah-com-carregamento-via-inducao-ou-via-cabo-09145-pre",
+      "nome": "POWER BANK 10.000MAH COM CARREGAMENTO VIA INDUÇÃO OU VIA CABO",
+      "descricao": "Power Bank em plástico com capacidade de 10.000mAh. Possui quatro cabos integrados com saídas para Lightning, USB-C, Micro-USB e USB, além de área de recarga por indução magnética para dispositivos compatíveis e lanterna de LED. Conta ainda com entradas USB-A e USB-C para recarga do próprio aparelho e alça de tecido sintético para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Carregamento-via-Inducao-ou-via-Cabo-PRETO-25097-1758228420.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Carregamento-via-Inducao-ou-via-Cabo-PRETO-25097-1758228420.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09145",
+      "cor": "PRETO",
+      "categoria": "power-banks",
+      "marca": "XBZ",
+      "preco_custo": 54.9,
+      "estoque": 3643,
+      "peso": 234.0,
+      "altura": 14.0,
+      "largura": 6.8,
+      "profundidade": 2.1,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "08898dc5-2392-4914-b2ce-057d6cc05f58",
+      "codigo_amigavel": "09145-BCO",
+      "codigo_prefixo": "09145",
+      "slug": "power-bank-10-000mah-com-carregamento-via-inducao-ou-via-cabo-09145-bco",
+      "nome": "POWER BANK 10.000MAH COM CARREGAMENTO VIA INDUÇÃO OU VIA CABO",
+      "descricao": "Power Bank em plástico com capacidade de 10.000mAh. Possui quatro cabos integrados com saídas para Lightning, USB-C, Micro-USB e USB, além de área de recarga por indução magnética para dispositivos compatíveis e lanterna de LED. Conta ainda com entradas USB-A e USB-C para recarga do próprio aparelho e alça de tecido sintético para transporte.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Carregamento-via-Inducao-ou-via-Cabo-BRANCO-25096-1758228419.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Power-Bank-10-000mAh-com-Carregamento-via-Inducao-ou-via-Cabo-BRANCO-25096-1758228419.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/09145",
+      "cor": "BRANCO",
+      "categoria": "power-banks",
+      "marca": "XBZ",
+      "preco_custo": 54.9,
+      "estoque": 3643,
+      "peso": 234.0,
+      "altura": 14.0,
+      "largura": 6.8,
+      "profundidade": 2.1,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

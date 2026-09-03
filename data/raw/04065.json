@@ -1,0 +1,62 @@
+{
+  "codigo_entrada": "04065",
+  "codigo_consulta": "04065",
+  "coletado_em": "2026-09-03T02:32:17.813161+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "18bb009c-97de-4127-b80b-4ab74925497e",
+      "codigo_amigavel": "04065-PRE",
+      "codigo_prefixo": "04065",
+      "slug": "caixa-de-som-multimidia-com-relogio-04065-pre",
+      "nome": "CAIXA DE SOM MULTIMÍDIA COM RELÓGIO",
+      "descricao": "Caixa de som multimídia com estrutura em plástico e metal, suporte retrátil para celular, display em LED e painel de botões para controlar o aparelho. Possui conexão Bluetooth 5.0 e entradas para cabo auxiliar P2 e cartão TF (microSD), permitindo a reprodução de arquivos MP3. Acompanha cabo Micro USB para a recarga do dispositivo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Multimidia-com-Relogio-13502-1636647525.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Multimidia-com-Relogio-13502-1636647525.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04065",
+      "cor": "PRETO",
+      "categoria": "caixas-de-som",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 4054,
+      "peso": 224.0,
+      "altura": 6.3,
+      "largura": 15.6,
+      "profundidade": 4.1,
+      "ativo": true,
+      "is_variante": true,
+      "produto_pai": null
+    },
+    {
+      "id": "4222a170-e809-42cd-9b4c-2ebd7255b3d4",
+      "codigo_amigavel": "04065-BCO",
+      "codigo_prefixo": "04065",
+      "slug": "caixa-de-som-multimidia-com-relogio-04065-bco",
+      "nome": "CAIXA DE SOM MULTIMÍDIA COM RELÓGIO",
+      "descricao": "Caixa de som multimídia com estrutura em plástico e metal, suporte retrátil para celular, display em LED e painel de botões para controlar o aparelho. Possui conexão Bluetooth 5.0 e entradas para cabo auxiliar P2 e cartão TF (microSD), permitindo a reprodução de arquivos MP3. Acompanha cabo Micro USB para a recarga do dispositivo.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Multimidia-com-Relogio-13502d4-1636647697.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-Multimidia-com-Relogio-13502d4-1636647697.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/04065",
+      "cor": "BRANCO",
+      "categoria": "caixas-de-som",
+      "marca": "XBZ",
+      "preco_custo": 31.9,
+      "estoque": 2328,
+      "peso": 224.0,
+      "altura": 6.3,
+      "largura": 15.6,
+      "profundidade": 4.1,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

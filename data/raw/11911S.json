@@ -1,0 +1,62 @@
+{
+  "codigo_entrada": "11911S",
+  "codigo_consulta": "11911S",
+  "coletado_em": "2026-09-03T02:32:08.554045+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "ba1222ea-5bc0-4352-ae64-06b43282b4e4",
+      "codigo_amigavel": "11911S-KRA",
+      "codigo_prefixo": "11911S",
+      "slug": "bloco-de-anotacoes-c-auto-adesivo-11911s-kra",
+      "nome": "BLOCO DE ANOTAÇÕES C/ AUTO-ADESIVO",
+      "descricao": "Bloco de anotações ecológico, material em kraft. Possui uma trava na própria capa,  cinco blocos autoadesivos coloridos com aproximadamente 25 folhinhas , bloco autoadesivo amarelo com aproximadamente 25 folhas e bloco grande com aproximadamente 70 folhas. OBS.: IMAGEM MERAMENTE ILUSTRATIVA, não acompanha caneta!",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bloco-de-Anotacoes-com-Post-it-6066-1540651122.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bloco-de-Anotacoes-com-Post-it-6066-1540651122.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/11911s",
+      "cor": "KRAFT",
+      "categoria": "blocos",
+      "marca": "XBZ",
+      "preco_custo": 3.5,
+      "estoque": 57143,
+      "peso": 79.0,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    },
+    {
+      "id": "9a74c686-7fcf-4c99-a7a5-f85413a44ef2",
+      "codigo_amigavel": "11911S",
+      "codigo_prefixo": "11911S",
+      "slug": "bloco-de-anotacoes-c-auto-adesivo-11911s",
+      "nome": "BLOCO DE ANOTAÇÕES C/ AUTO-ADESIVO",
+      "descricao": "Bloco de anotações ecológico, material em kraft. Possui uma trava na própria capa,  cinco blocos autoadesivos coloridos com aproximadamente 25 folhinhas , bloco autoadesivo amarelo com aproximadamente 25 folhas e bloco grande com aproximadamente 70 folhas. OBS.: IMAGEM MERAMENTE ILUSTRATIVA, não acompanha caneta!",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Bloco-de-Anotacoes-com-Post-it-6066-1540651122.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Bloco-de-Anotacoes-com-Post-it-6066-1540651122.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/11911s",
+      "cor": "KRAFT",
+      "categoria": "blocos",
+      "marca": "XBZ",
+      "preco_custo": 3.5,
+      "estoque": 57143,
+      "peso": 79.0,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "ba1222ea-5bc0-4352-ae64-06b43282b4e4"
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

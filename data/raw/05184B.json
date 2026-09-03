@@ -1,0 +1,62 @@
+{
+  "codigo_entrada": "05184B",
+  "codigo_consulta": "05184B",
+  "coletado_em": "2026-09-03T02:32:23.575082+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "19282122-04f3-4a75-ada2-954bd16c05c0",
+      "codigo_amigavel": "05184B",
+      "codigo_prefixo": "05184B",
+      "slug": "kit-churrasco-8-pecas-05184b",
+      "nome": "KIT CHURRASCO 8 PEÇAS",
+      "descricao": "Kit churrasco 8 peças em estojo de nylon. Contém espátula, garfo, faca, pegador, saleiro, paliteiro, luva e avental (também utilizado como estojo). Talheres de inox com acabamento de madeira e avental de nylon com alça ajustável ? possui botão e alça com fivela para lacre.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Churrasco-8-Pecas-PRETO-22510-1769094619.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Churrasco-8-Pecas-PRETO-22510-1769094619.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05184b",
+      "cor": "PRETO",
+      "categoria": "kit-churrasco",
+      "marca": "XBZ",
+      "preco_custo": 47.5,
+      "estoque": 4211,
+      "peso": 1005.0,
+      "altura": 47.0,
+      "largura": 9.0,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "c316ac29-8d0b-4d3f-bc93-19c3228b7038"
+    },
+    {
+      "id": "c316ac29-8d0b-4d3f-bc93-19c3228b7038",
+      "codigo_amigavel": "05184B-PRE",
+      "codigo_prefixo": "05184B",
+      "slug": "kit-churrasco-8-pecas-05184b-pre",
+      "nome": "KIT CHURRASCO 8 PEÇAS",
+      "descricao": "Kit churrasco 8 peças em estojo de nylon. Contém espátula, garfo, faca, pegador, saleiro, paliteiro, luva e avental (também utilizado como estojo). Talheres de inox com acabamento de madeira e avental de nylon com alça ajustável ? possui botão e alça com fivela para lacre.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Churrasco-8-Pecas-PRETO-22510-1769094619.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Churrasco-8-Pecas-PRETO-22510-1769094619.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/05184b",
+      "cor": "PRETO",
+      "categoria": "kit-churrasco",
+      "marca": "XBZ",
+      "preco_custo": 47.5,
+      "estoque": 4211,
+      "peso": 1005.0,
+      "altura": 47.0,
+      "largura": 9.0,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

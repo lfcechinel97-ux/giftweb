@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "08255",
+  "codigo_consulta": "08255",
+  "coletado_em": "2026-09-03T02:32:15.787256+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "5c5f163e-8119-4559-be6e-426a0abb6628",
+      "codigo_amigavel": "08255-PRE",
+      "codigo_prefixo": "08255",
+      "slug": "kit-executivo-2-pecas-08255-pre",
+      "nome": "KIT EXECUTIVO 2 PEÇAS",
+      "descricao": "Anote tudo e organize os cartões com o nosso Kit Executivo! Ele vem com uma caneta metálica super sofisticada de 1.0mm na cor preta e um caderno fichário de aproximadamente 96 folhas removíveis, ou seja, dá para trocar, reorganizar e deixar tudo do seu jeito! Os seis anéis garantem praticidade, e a capa dura em couro sintético traz aquele toque elegante durante os registros e planejamentos. E tem mais! São quatro espaços para cartões, sendo um com visor transparente, espaço para guardar anotações, suporte para caneta e fechamento em elástico para manter tudo seguro.  Para um toque exclusivo, ainda acompanha uma plaquinha para personalização e embalagem. ",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/kit-Executivo-2-Pecas-PRETO-22402-1740514652.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/kit-Executivo-2-Pecas-PRETO-22402-1740514652.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/08255",
+      "cor": "PRETO",
+      "categoria": "kit-executivo",
+      "marca": "XBZ",
+      "preco_custo": 35.0,
+      "estoque": 4710,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

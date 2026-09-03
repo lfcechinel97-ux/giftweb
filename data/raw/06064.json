@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "06064",
+  "codigo_consulta": "06064",
+  "coletado_em": "2026-09-03T02:32:19.194636+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "dd9e892f-7c05-4d57-8f8f-7bc11c08469d",
+      "codigo_amigavel": "06064-BCO",
+      "codigo_prefixo": "06064",
+      "slug": "fone-de-ouvido-bluetooth-touch-com-case-carregador-06064-bco",
+      "nome": "FONE DE OUVIDO BLUETOOTH TOUCH COM CASE CARREGADOR",
+      "descricao": "Fone de ouvido bluetooth com comandos touch e case carregador de fechamento magnético. Acompanha USB Lightning e cordão de nylon com clipe integrado que facilita a fixação em mochilas e bolsas.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Fone-de-Ouvido-Bluetooth-Touch-com-Case-Carregador-BRANCO-18414-1710939190.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Fone-de-Ouvido-Bluetooth-Touch-com-Case-Carregador-BRANCO-18414-1710939190.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/06064",
+      "cor": "BRANCO",
+      "categoria": "fones",
+      "marca": "XBZ",
+      "preco_custo": 21.9,
+      "estoque": 9132,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

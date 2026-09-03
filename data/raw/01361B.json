@@ -1,0 +1,62 @@
+{
+  "codigo_entrada": "01361B",
+  "codigo_consulta": "01361B",
+  "coletado_em": "2026-09-03T02:32:05.689898+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "58ba1807-fa41-4b07-8654-58e0a86f0f74",
+      "codigo_amigavel": "01361B",
+      "codigo_prefixo": "01361B",
+      "slug": "kit-manicure-7-pecas-01361b",
+      "nome": "KIT MANICURE 7 PEÇAS",
+      "descricao": "Kit manicure 7 peças em estojo de couro sintético. Possui: dois cortadores de unhas, tesoura, lixa, pinça, empurrador de cutícula e espátula para ouvido.   Parte interna de TNT com suporte de couro sintético para fixar as peças. Para abrir o estojo basta apertar o botão central.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Manicure-7-Pecas-18018-1705937876.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Manicure-7-Pecas-18018-1705937876.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/01361b",
+      "cor": "PRETO",
+      "categoria": "kit-manicure",
+      "marca": "XBZ",
+      "preco_custo": 6.9,
+      "estoque": 11382,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": false,
+      "is_variante": true,
+      "produto_pai": "3420346b-a415-4451-902a-ab47d2adf67c"
+    },
+    {
+      "id": "3420346b-a415-4451-902a-ab47d2adf67c",
+      "codigo_amigavel": "01361B-PRE",
+      "codigo_prefixo": "01361B",
+      "slug": "kit-manicure-7-pecas-01361b-pre",
+      "nome": "KIT MANICURE 7 PEÇAS",
+      "descricao": "Kit manicure 7 peças em estojo de couro sintético. Possui: dois cortadores de unhas, tesoura, lixa, pinça, empurrador de cutícula e espátula para ouvido.   Parte interna de TNT com suporte de couro sintético para fixar as peças. Para abrir o estojo basta apertar o botão central.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Manicure-7-Pecas-18018-1705937876.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Manicure-7-Pecas-18018-1705937876.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/01361b",
+      "cor": "PRETO",
+      "categoria": "kit-manicure",
+      "marca": "XBZ",
+      "preco_custo": 6.9,
+      "estoque": 1617,
+      "peso": null,
+      "altura": null,
+      "largura": null,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

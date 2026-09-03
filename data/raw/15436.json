@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "15436",
+  "codigo_consulta": "15436",
+  "coletado_em": "2026-09-03T02:32:01.707801+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "e71642ca-8e56-4ba0-9b55-435746170d9e",
+      "codigo_amigavel": "15436-INO",
+      "codigo_prefixo": "15436",
+      "slug": "balanca-digital-para-mala-15436-ino",
+      "nome": "BALANÇA DIGITAL PARA MALA",
+      "descricao": "Balança digital para medição de malas e bagagens em geral. Possui capacidade máxima de 50 kg e estrutura em plástico e metal, além de visor em LCD para exibição do peso e cinto de nylon com gancho para fixação da bagagem. Funciona por uma bateria CR2032 inclusa.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Balanca-Digital-para-Mala-INOX-28185-1776176326.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Balanca-Digital-para-Mala-INOX-28185-1776176326.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/15436",
+      "cor": "INOX",
+      "categoria": "malas",
+      "marca": "XBZ",
+      "preco_custo": 19.7,
+      "estoque": 0,
+      "peso": 87.0,
+      "altura": 3.4,
+      "largura": 14.7,
+      "profundidade": 2.9,
+      "ativo": false,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

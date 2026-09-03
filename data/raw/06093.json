@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "06093",
+  "codigo_consulta": "06093",
+  "coletado_em": "2026-09-03T02:32:17.290022+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "51213a24-0cb3-4df5-aa67-1d6fcd525279",
+      "codigo_amigavel": "06093-BCO",
+      "codigo_prefixo": "06093",
+      "slug": "caixa-de-som-com-carregador-inducao-06093-bco",
+      "nome": "CAIXA DE SOM COM CARREGADOR INDUÇÃO",
+      "descricao": "Caixa de som multimídia com estrutura em plástico e espaço para carregamento de dispositivos por indução. Possui conectividade Bluetooth 5.2, rádio FM, entrada auxiliar P2, entrada USB-C para recarga, além de portas USB-A e TF para reprodução de arquivos MP3 via pen drives e cartões microSD. Conta ainda com iluminação ajustável em LED. Acompanha cabo USB-C para recarga da caixa.\r\n\r\n\r\nObs.:o produto possui bateria interna para funcionamento próprio. A função de carregamento por indução (tecnolog",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-com-Carregador-Inducao-BRANCO-18630-1719849689.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Caixa-de-Som-com-Carregador-Inducao-BRANCO-18630-1719849689.jpg"
+      ],
+      "has_image": true,
+      "site_link": "https://www.xbzbrindes.com.br/06093",
+      "cor": "BRANCO",
+      "categoria": "caixas-de-som",
+      "marca": "XBZ",
+      "preco_custo": 47.9,
+      "estoque": 3580,
+      "peso": 645.0,
+      "altura": 21.9,
+      "largura": 23.0,
+      "profundidade": 8.0,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}

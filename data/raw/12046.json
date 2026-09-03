@@ -1,0 +1,36 @@
+{
+  "codigo_entrada": "12046",
+  "codigo_consulta": "12046",
+  "coletado_em": "2026-09-03T02:32:25.011247+00:00",
+  "products_cache_variantes": [
+    {
+      "id": "f0af3283-da7c-4e67-afa2-233ec222a1aa",
+      "codigo_amigavel": "12046-PRE",
+      "codigo_prefixo": "12046",
+      "slug": "kit-vinho-xadrez-4-pcs-12046-pre",
+      "nome": "KIT VINHO XADREZ 4 PÇS",
+      "descricao": "Kit vinho 4 peças em estojo tabuleiro de xadrez. Contém wine collar, tampa de bico, bico condutor com tampa e saca-rolhas metálico com lâmina de corte e abridor de garrafa. Estojo com trava de segurança e área interna com berço de espuma, acompanham 32 peças de xadrez e plaquinha metálica para personalização.",
+      "image_url": "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-Xadrez-4-pecas-PRETO-3592-1538047737.jpg",
+      "image_urls": [
+        "https://cdn.xbzbrindes.com.br/img/produtos/3/Kit-Vinho-Xadrez-4-pecas-PRETO-3592-1538047737.jpg"
+      ],
+      "has_image": true,
+      "site_link": "http://www.xbzbrindes.com.br/12046",
+      "cor": "PRETO",
+      "categoria": "kit-vinho",
+      "marca": "XBZ",
+      "preco_custo": 35.0,
+      "estoque": 5714,
+      "peso": 487.0,
+      "altura": 2.0,
+      "largura": 6.0,
+      "profundidade": null,
+      "ativo": true,
+      "is_variante": false,
+      "produto_pai": null
+    }
+  ],
+  "topprodutos_curadoria": null,
+  "encontrado_api": true,
+  "encontrado_curadoria": false
+}
