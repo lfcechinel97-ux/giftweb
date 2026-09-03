@@ -53,6 +53,7 @@ const AdminCatalogs = lazyRetry(() => import("./pages/admin/AdminCatalogs.tsx"))
 const AdminClientes = lazyRetry(() => import("./pages/admin/AdminClientes.tsx"));
 const AdminFooter = lazyRetry(() => import("./pages/admin/AdminFooter.tsx"));
 const AdminTopProdutos = lazyRetry(() => import("./pages/admin/AdminTopProdutos.tsx"));
+const AdminCatalogoClientes = lazyRetry(() => import("./pages/admin/AdminCatalogoClientes.tsx"));
 const AdminTopProdutosCategorias = lazyRetry(() => import("./pages/admin/AdminTopProdutosCategorias.tsx"));
 const AdminGuard = lazyRetry(() => import("./components/admin/AdminGuard.tsx"));
 const PrivacyPage = lazyRetry(() => import("./pages/PrivacyPage.tsx"));
@@ -63,6 +64,7 @@ const WhatsAppPrivacyPage = lazyRetry(() => import("./pages/WhatsAppPrivacyPage.
 const WhatsAppTermsPage = lazyRetry(() => import("./pages/WhatsAppTermsPage.tsx"));
 const DataDeletionPage = lazyRetry(() => import("./pages/DataDeletionPage.tsx"));
 const CatalogPage = lazyRetry(() => import("./pages/CatalogPage.tsx"));
+const CatalogoClientes = lazyRetry(() => import("./pages/CatalogoClientes.tsx"));
 const CatalogProductDetail = lazyRetry(() => import("./pages/CatalogProductDetail.tsx"));
 const TopProdutos = lazyRetry(() => import("./pages/TopProdutos.tsx"));
 const Top10Produtos = lazyRetry(() => import("./pages/Top10Produtos.tsx"));
@@ -130,6 +132,7 @@ const App = () => (
                 <Route path="clientes" element={<AdminClientes />} />
                 <Route path="rodape" element={<AdminFooter />} />
                 <Route path="topprodutos" element={<AdminTopProdutos />} />
+                <Route path="catalogo-clientes" element={<AdminCatalogoClientes />} />
                 <Route path="topprodutos/categorias" element={<AdminTopProdutosCategorias />} />
                 <Route path="destaques" element={<div className="text-muted-foreground">Página de Destaques (em breve)</div>} />
               </Route>
@@ -137,6 +140,7 @@ const App = () => (
               <Route path="/produto/:slug" element={<ProductDetail />} />
               <Route path="/produtos" element={<AllProducts />} />
               <Route path="/catalogo" element={<CatalogPage />} />
+              <Route path="/catalogo-clientes" element={<CatalogoClientes />} />
               <Route path="/catalogo/produto/:slug" element={<CatalogProductDetail />} />
               <Route path="/topprodutos" element={<TopProdutos />} />
               <Route path="/top10produtos" element={<Top10Produtos />} />
