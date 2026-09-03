@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { WHATSAPP_NUMERO, ESTILO_CATALOGO } from "./catalogoClientes.styles";
@@ -41,6 +41,74 @@ const norm = (t: string) =>
   t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 const corCss = (h: string | string[]) =>
   Array.isArray(h) ? `linear-gradient(135deg, ${h[0]} 0 50%, ${h[1]} 50% 100%)` : h;
+
+/**
+ * Card fica FORA do componente da pagina de proposito. Declarado dentro, o
+ * React trata como um tipo novo a cada render e remonta os 128 cards a cada
+ * tecla digitada na busca ou clique de quantidade - o que alem de lento
+ * derrubava os handlers no meio da interacao.
+ */
+const Card = memo(function Card({
+  p, qtd, marcado, onQtd, onAdd,
+}: {
+  p: Produto; qtd: number; marcado: boolean;
+  onQtd: (v: number) => void; onAdd: () => void;
+}) {
+  return (
+    <article className="gwc-card">
+      <div className="gwc-ph">
+        {p.destaque && <span className="gwc-tag">Mais vendido</span>}
+        {p.imagem_url && <img src={p.imagem_url} alt={p.nome} loading="lazy" />}
+      </div>
+      <div className="gwc-info">
+        <h3>{p.nome}</h3>
+        {p.cores?.length >= 2 && (
+          <div className="gwc-cores">
+            {p.cores.slice(0, MAX_BOLINHAS).map((c, i) => (
+              <i key={i} title={c.n} style={{ background: corCss(c.h) }} />
+            ))}
+            {p.cores.length > MAX_BOLINHAS && <u>+{p.cores.length - MAX_BOLINHAS}</u>}
+          </div>
+        )}
+        <div className="gwc-price">
+          <small>A partir de</small>
+          <b>{p.preco != null ? brl(p.preco) : "sob consulta"}</b>
+        </div>
+        <div className="gwc-actions">
+          <div className="gwc-chips">
+            {ATALHOS.map((v) => (
+              <button key={v} className={qtd === v ? "on" : ""} onClick={() => onQtd(v)}>
+                {v} un
+              </button>
+            ))}
+          </div>
+          <div className="gwc-qty">
+            <button onClick={() => onQtd(qtd - PASSO)} aria-label="Menos">−</button>
+            <span>{qtd} <i>un</i></span>
+            <button onClick={() => onQtd(qtd + PASSO)} aria-label="Mais">+</button>
+          </div>
+          <button className={`gwc-add ${marcado ? "ok" : ""}`} onClick={onAdd}>
+            {marcado ? "Adicionado ✓" : "Adicionar"}
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+});
+
+const Beneficios = () => (
+  <div className="gwc-benband">
+    <div className="gwc-bh">POR QUE COMPRAR NA GIFT WEB</div>
+    <div className="gwc-bens">
+      {BENEFICIOS.map((b) => (
+        <div className="gwc-ben" key={b.t}>
+          <strong>{b.t}</strong>
+          <span>{b.d}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
 
 export default function CatalogoClientes() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -165,62 +233,13 @@ export default function CatalogoClientes() {
     }, 40);
   };
 
-  const Card = ({ p }: { p: Produto }) => (
-    <article className="gwc-card">
-      <div className="gwc-ph">
-        {p.destaque && <span className="gwc-tag">Mais vendido</span>}
-        {p.imagem_url && <img src={p.imagem_url} alt={p.nome} loading="lazy" />}
-      </div>
-      <div className="gwc-info">
-        <h3>{p.nome}</h3>
-        {p.cores?.length >= 2 && (
-          <div className="gwc-cores">
-            {p.cores.slice(0, MAX_BOLINHAS).map((c, i) => (
-              <i key={i} title={c.n} style={{ background: corCss(c.h) }} />
-            ))}
-            {p.cores.length > MAX_BOLINHAS && <u>+{p.cores.length - MAX_BOLINHAS}</u>}
-          </div>
-        )}
-        <div className="gwc-price">
-          <small>A partir de</small>
-          <b>{p.preco != null ? brl(p.preco) : "sob consulta"}</b>
-        </div>
-        <div className="gwc-actions">
-          <div className="gwc-chips">
-            {ATALHOS.map((v) => (
-              <button key={v} className={qtdDe(p.codigo) === v ? "on" : ""}
-                onClick={() => setQtd(p.codigo, v)}>{v} un</button>
-            ))}
-          </div>
-          <div className="gwc-qty">
-            <button onClick={() => setQtd(p.codigo, qtdDe(p.codigo) - PASSO)} aria-label="Menos">−</button>
-            <span>{qtdDe(p.codigo)} <i>un</i></span>
-            <button onClick={() => setQtd(p.codigo, qtdDe(p.codigo) + PASSO)} aria-label="Mais">+</button>
-          </div>
-          <button
-            className={`gwc-add ${adicionado === p.codigo ? "ok" : ""}`}
-            onClick={() => adicionar(p)}
-          >
-            {adicionado === p.codigo ? "Adicionado ✓" : "Adicionar"}
-          </button>
-        </div>
-      </div>
-    </article>
-  );
-
-  const Beneficios = () => (
-    <div className="gwc-benband">
-      <div className="gwc-bh">POR QUE COMPRAR NA GIFT WEB</div>
-      <div className="gwc-bens">
-        {BENEFICIOS.map((b) => (
-          <div className="gwc-ben" key={b.t}>
-            <strong>{b.t}</strong>
-            <span>{b.d}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  const cardProps = (p: Produto) => ({
+    p,
+    qtd: qtdDe(p.codigo),
+    marcado: adicionado === p.codigo,
+    onQtd: (v: number) => setQtd(p.codigo, v),
+    onAdd: () => adicionar(p),
+  });
 
   return (
     <>
@@ -299,7 +318,7 @@ export default function CatalogoClientes() {
                       onClick={() => caroRef.current?.scrollBy({ left: -caroRef.current.clientWidth * 0.8, behavior: "smooth" })}
                       aria-label="Anterior">‹</button>
                     <div className="gwc-caro" ref={caroRef}>
-                      {destaques.map((p) => <Card key={p.id} p={p} />)}
+                      {destaques.map((p) => <Card key={p.id} {...cardProps(p)} />)}
                     </div>
                     <button className="gwc-caroarrow r"
                       onClick={() => caroRef.current?.scrollBy({ left: caroRef.current.clientWidth * 0.8, behavior: "smooth" })}
@@ -319,7 +338,7 @@ export default function CatalogoClientes() {
                         <span>{itens.length} {itens.length === 1 ? "item" : "itens"}</span>
                       </div>
                       <div className="gwc-grid">
-                        {itens.map((p) => <Card key={p.id} p={p} />)}
+                        {itens.map((p) => <Card key={p.id} {...cardProps(p)} />)}
                       </div>
                     </section>
                     {!filtrando && i % 3 === 2 && i < secoes.length - 1 && <Beneficios />}

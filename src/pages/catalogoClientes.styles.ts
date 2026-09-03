@@ -10,14 +10,17 @@ export const WHATSAPP_NUMERO = "5548996652844";
 
 export const ESTILO_CATALOGO = `
 .gwc{--navy-800:#07253f;--navy-700:#0b3159;--navy-600:#0f4a80;
-  --green-600:#1b7f1b;--green-500:#2fae2e;
+  --green-600:#12862f;--green-700:#0d6b25;--green-500:#2fae2e;
+  --amber:#B45309;--amber-bg:#FEF3C7;
   --line:#e2e9f1;--ink:#0f2438;--ink-2:#3c5165;--muted:#66798e;
   --r:14px;--h:56px;
   background:#fff;color:var(--ink);min-height:100vh;
   font:400 15px/1.5 'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif}
 .gwc *{box-sizing:border-box}
 .gwc img{display:block;max-width:100%}
-.gwc button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+/* :where() zera a especificidade do reset. Sem isso, ".gwc button" (0,1,1)
+   sobrescrevia ".gwc-add" (0,1,0) e o botao verde saia transparente. */
+.gwc :where(button){font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 .gwc h1,.gwc h2,.gwc h3{letter-spacing:-.02em;margin:0}
 
 .gwc-header{position:fixed;top:0;left:0;right:0;z-index:60;background:var(--navy-800);
@@ -63,8 +66,13 @@ export const ESTILO_CATALOGO = `
 .gwc-filtro button{margin-left:auto;color:var(--navy-600);font-size:12px;font-weight:700}
 
 .gwc section{margin:20px 0 0}
-.gwc-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:0 12px 10px}
-.gwc-head h2{font-size:clamp(16px,3.7vw,20px);font-weight:800;color:var(--navy-800)}
+/* Barra verde antes do titulo: da ritmo a rolagem e marca onde comeca cada
+   secao sem precisar de linha divisoria. */
+.gwc-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 12px 11px}
+.gwc-head h2{font-size:clamp(16px,3.7vw,20px);font-weight:800;color:var(--navy-800);
+  display:flex;align-items:center;gap:9px}
+.gwc-head h2::before{content:'';width:4px;height:1em;border-radius:2px;background:var(--green-500);
+  flex:none}
 .gwc-head span{font-size:12px;color:var(--muted);white-space:nowrap}
 
 .gwc-carowrap{position:relative}
@@ -85,26 +93,42 @@ export const ESTILO_CATALOGO = `
 @media(min-width:900px){.gwc-grid{grid-template-columns:repeat(4,1fr)}}
 @media(min-width:1120px){.gwc-grid{grid-template-columns:repeat(5,1fr)}}
 
-.gwc-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
-  display:flex;flex-direction:column;position:relative}
-.gwc-ph{position:relative;aspect-ratio:1;background:#fff;padding:9px}
+/* Card como objeto tocavel: sombra suave em vez de borda chapada, e leve
+   elevacao no hover. Cartao chapado em fundo branco some da tela. */
+.gwc-card{background:#fff;border:1px solid #edf1f6;border-radius:var(--r);overflow:hidden;
+  display:flex;flex-direction:column;position:relative;
+  box-shadow:0 1px 2px rgba(9,36,60,.05),0 3px 10px rgba(9,36,60,.05);
+  transition:box-shadow .18s,transform .18s}
+@media(hover:hover){
+  .gwc-card:hover{box-shadow:0 2px 6px rgba(9,36,60,.08),0 10px 24px rgba(9,36,60,.10);
+    transform:translateY(-2px)}
+}
+/* fundo levissimo na foto pra produto branco nao sumir no card branco */
+.gwc-ph{position:relative;aspect-ratio:1;background:#fafbfd;padding:9px}
 .gwc-ph img{width:100%;height:100%;object-fit:contain}
-.gwc-tag{position:absolute;top:8px;left:8px;background:var(--green-600);color:#fff;font-size:9.5px;
-  font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:3px 7px;border-radius:5px;z-index:2}
-.gwc-info{padding:9px 11px 11px;display:flex;flex-direction:column;flex:1;gap:8px}
-.gwc-info h3{font-size:12.5px;font-weight:500;line-height:1.35;color:var(--ink);min-height:2.7em;
+/* Badge em ambar, nao em verde: o verde fica reservado so pra acao (Adicionar).
+   Duas coisas no mesmo verde competem e nenhuma se destaca. */
+.gwc-tag{position:absolute;top:8px;left:8px;background:var(--amber-bg);color:var(--amber);
+  font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+  padding:3px 7px;border-radius:5px;z-index:2;border:1px solid rgba(180,83,9,.18)}
+.gwc-info{padding:10px 11px 11px;display:flex;flex-direction:column;flex:1;gap:7px}
+.gwc-info h3{font-size:12.5px;font-weight:500;line-height:1.35;color:var(--ink-2);min-height:2.7em;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .gwc-cores{display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-height:14px}
 .gwc-cores i{width:13px;height:13px;border-radius:50%;
   box-shadow:0 0 0 1px rgba(9,36,60,.18) inset,0 1px 2px rgba(9,36,60,.12)}
 .gwc-cores u{font-size:10px;color:var(--muted);text-decoration:none;font-weight:600}
-.gwc-price{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap}
-.gwc-price small{font-size:10.5px;color:var(--muted);white-space:nowrap}
-.gwc-price b{font-size:16px;font-weight:800;color:var(--navy-700);letter-spacing:-.02em}
+/* Preco e o elemento mais escaneado do card: maior, mais escuro e com o
+   "A partir de" bem apagado, pra hierarquia ficar obvia num relance. */
+.gwc-price{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;margin-top:1px}
+.gwc-price small{font-size:10px;color:var(--muted);white-space:nowrap;font-weight:500}
+.gwc-price b{font-size:19px;font-weight:800;color:var(--navy-800);letter-spacing:-.035em;
+  line-height:1.1}
 .gwc-actions{margin-top:auto;display:flex;flex-direction:column;gap:6px}
 .gwc-chips{display:flex;gap:5px}
-.gwc-chips button{flex:1;height:26px;border-radius:7px;background:#f4f7fb;border:1px solid var(--line);
+.gwc-chips button{flex:1;height:27px;border-radius:7px;background:#f4f7fb;border:1px solid var(--line);
   color:var(--navy-600);font-size:11px;font-weight:700;transition:.15s}
+@media(hover:hover){.gwc-chips button:hover{border-color:var(--navy-600)}}
 .gwc-chips button.on{background:var(--navy-600);border-color:var(--navy-600);color:#fff}
 .gwc-qty{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);
   border-radius:9px;height:34px;padding:0 2px}
@@ -113,9 +137,12 @@ export const ESTILO_CATALOGO = `
 .gwc-qty span{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;
   min-width:4ch;text-align:center}
 .gwc-qty span i{font-style:normal;font-size:10px;color:var(--muted);font-weight:600}
-.gwc-add{height:36px;border-radius:9px;background:var(--green-600);color:#fff;font-size:12.5px;
-  font-weight:700;display:grid;place-items:center;transition:.15s}
-.gwc-add.ok{background:var(--navy-600)}
+.gwc-add{height:38px;border-radius:9px;background:var(--green-600);color:#fff;font-size:13px;
+  font-weight:800;display:grid;place-items:center;transition:background .15s,transform .12s,box-shadow .15s;
+  box-shadow:0 1px 2px rgba(18,134,47,.28),0 3px 8px rgba(18,134,47,.20);letter-spacing:.01em}
+@media(hover:hover){.gwc-add:hover{background:var(--green-700)}}
+.gwc-add:active{transform:scale(.97)}
+.gwc-add.ok{background:var(--navy-600);box-shadow:none}
 
 .gwc-benband{margin:24px 12px 0;background:#fff;border:1px solid var(--line);
   border-radius:var(--r);overflow:hidden}
