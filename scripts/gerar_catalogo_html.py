@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.xbz_feed.cores import cores_do_produto
 from scripts.xbz_feed.story_groups import GRUPOS, gerar_icone, grupo_do_produto, slug
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -127,6 +128,7 @@ def carregar_produtos() -> tuple[list[dict], list[str]]:
             "g": slug(grupo) if grupo else "",
             "p": round(custo * MULTIPLICADOR, 2),
             "top": r["origem"] == "Meus Vendidos",
+            "cor": cores_do_produto(RAIZ / "data" / "raw" / f"{cod}.json"),
             "img": b64(foto),
         })
 
@@ -316,6 +318,9 @@ section{margin:20px 0 0}
 .card .info{padding:9px 11px 11px;display:flex;flex-direction:column;flex:1;gap:8px}
 .card h3{margin:0;font-size:12.5px;font-weight:500;line-height:1.35;color:var(--ink);
   min-height:2.7em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cores{display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-height:14px}
+.cores i{width:13px;height:13px;border-radius:50%;box-shadow:0 0 0 1px rgba(9,36,60,.18) inset,0 1px 2px rgba(9,36,60,.12)}
+.cores u{font-size:10px;color:var(--muted);text-decoration:none;font-weight:600;margin-left:1px}
 .price{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap}
 .price small{font-size:10.5px;color:var(--muted);white-space:nowrap}
 .price b{font-size:16px;font-weight:800;color:var(--navy-700);letter-spacing:-.02em}
@@ -554,6 +559,7 @@ function cardHTML(p){
     + '<div class="ph">' + (p.dest ? '<span class="tag">Mais vendido</span>' : '')
     + '<img src="data:image/jpeg;base64,'+p.img+'" alt="'+esc(p.n)+'" loading="lazy"></div>'
     + '<div class="info"><h3>'+esc(p.n)+'</h3>'
+    + coresHTML(p.cor)
     + '<div class="price"><small>A partir de</small><b>'+brl(p.p)+'</b></div>'
     + '<div class="actions"><div class="chips">'+chips+'</div>'
     + '<div class="qty"><button data-act="dec" aria-label="Menos">&minus;</button>'
@@ -562,6 +568,23 @@ function cardHTML(p){
     + '<button class="add" data-act="add">Adicionar</button>'
     + '</div></div></article>';
 }
+/* Bolinhas de cor. So aparece com 2+ cores - uma bolinha sozinha nao informa
+   nada e so polui o card. Acima de 6 cores mostra "+N" pra nao quebrar a linha. */
+var MAX_BOLINHAS = 6;
+function coresHTML(cores){
+  if(!cores || cores.length < 2) return '';
+  var mostra = cores.slice(0, MAX_BOLINHAS);
+  var extra = cores.length - mostra.length;
+  var bolinhas = mostra.map(function(c){
+    var fundo = Array.isArray(c.h)
+      ? 'linear-gradient(135deg,'+c.h[0]+' 0 50%,'+c.h[1]+' 50% 100%)'
+      : c.h;
+    return '<i style="background:'+fundo+'" title="'+esc(c.n)+'"></i>';
+  }).join('');
+  return '<div class="cores">' + bolinhas
+    + (extra > 0 ? '<u>+'+extra+'</u>' : '') + '</div>';
+}
+
 function lerQtd(card){ return parseInt(card.querySelector('.qv').textContent, 10) || QTD_INI; }
 function escreverQtd(card, v){
   card.querySelector('.qv').innerHTML = v + ' <i>un</i>';
