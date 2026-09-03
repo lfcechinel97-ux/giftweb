@@ -28,3 +28,6 @@ dist-ssr
 data/api_xbz_fulltext.txt
 __pycache__/
 *.pyc
+
+# Mockups gerados (regeraveis via scripts/gerar_mockups.py)
+data/mockups/
