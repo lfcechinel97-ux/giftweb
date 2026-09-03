@@ -206,23 +206,6 @@ const CatalogPage = () => {
               <p className="text-[11px] md:text-xs text-white/60 italic mt-1.5">
                 Valores de referência. Melhores condições pelo WhatsApp
               </p>
-              <button
-                type="button"
-                onClick={() =>
-                  handleFilterChange({
-                    colecao: filters.colecao === "dia-dos-pais" ? null : "dia-dos-pais",
-                    categoria: null,
-                  })
-                }
-                className="mt-3 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wide transition-all"
-                style={{
-                  backgroundColor: filters.colecao === "dia-dos-pais" ? "hsl(217 91% 60%)" : "rgba(59,130,246,0.15)",
-                  color: filters.colecao === "dia-dos-pais" ? "#fff" : "hsl(217 91% 70%)",
-                  border: "1px solid hsl(217 91% 60% / 0.4)",
-                }}
-              >
-                <span>★</span> Coleção Dia dos Pais
-              </button>
             </div>
           </section>
 

@@ -30,7 +30,8 @@ WHATSAPP = "5548996652844"
 MULTIPLICADOR = 2.5
 QTD_INICIAL, QTD_PASSO, QTD_ATALHOS = 10, 5, (50, 100)
 
-BANNERS = ["banner_1_desk.jpg", "banner_2_desk.jpg", "banner_3_desk.jpg"]
+# banner_1 e o de Dia dos Pais (sazonal) - removido a pedido do usuario.
+BANNERS = ["banner_2_desk.jpg", "banner_3_desk.jpg"]
 
 # Custos ausentes no CSV, recuperados de products_cache (API XBZ).
 # 14794 tem variantes com custos diferentes (17.60 e 26.00) - usado o mais comum.

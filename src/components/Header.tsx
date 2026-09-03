@@ -301,13 +301,6 @@ const Header = () => {
               <Link to="/categoria/kit-churrasco" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
                 Kit Churrasco
               </Link>
-              <Link
-                to="/categoria/dia-dos-pais"
-                className="px-4 py-3 text-[13px] font-black uppercase transition-colors duration-200 hover:brightness-110"
-                style={{ color: "hsl(217 91% 60%)" }}
-              >
-                Dia dos Pais
-              </Link>
               <Link to="/catalogo" className="px-4 py-3 text-[13px] font-bold uppercase text-muted-foreground hover:text-green-cta transition-colors duration-200">
                 Catálogo
               </Link>
@@ -359,15 +352,6 @@ const Header = () => {
           >
             <Menu size={18} className="text-green-cta" />
             Todos Brindes
-          </Link>
-          <Link
-            to="/categoria/dia-dos-pais"
-            onClick={() => setMobileOpen(false)}
-            className="flex items-center gap-3 py-4 text-base font-black uppercase border-b border-white/10"
-            style={{ color: "hsl(217 91% 60%)" }}
-          >
-            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: "hsl(217 91% 60%)" }} />
-            Dia dos Pais
           </Link>
           <Link
             to="/catalogo"
