@@ -30,8 +30,9 @@ WHATSAPP = "5548996652844"
 MULTIPLICADOR = 2.5
 QTD_INICIAL, QTD_PASSO, QTD_ATALHOS = 10, 5, (50, 100)
 
-# banner_1 e o de Dia dos Pais (sazonal) - removido a pedido do usuario.
-BANNERS = ["banner_2_desk.jpg", "banner_3_desk.jpg"]
+# Banner proprio do catalogo (2:1). Os banners do site sao 1.4:1 e ficavam
+# altos demais no desktop, empurrando o conteudo pra fora da primeira tela.
+BANNERS = ["banner_catalogo.jpg"]
 
 # Custos ausentes no CSV, recuperados de products_cache (API XBZ).
 # 14794 tem variantes com custos diferentes (17.60 e 26.00) - usado o mais comum.
@@ -234,10 +235,18 @@ header{position:fixed;top:0;left:0;right:0;z-index:60;background:var(--navy-800)
 main{padding-top:calc(var(--h) + env(safe-area-inset-top));max-width:1280px;margin:0 auto}
 
 /* BANNER */
-.bwrap{position:relative;margin:10px 12px 0;border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.bwrap{position:relative;margin:10px 12px 0;border-radius:var(--r);overflow:hidden;
+  box-shadow:var(--sh);background:#000c20}
 .btrack{display:flex;transition:transform .45s cubic-bezier(.4,0,.2,1)}
 .bslide{min-width:100%}
-.bslide img{width:100%;height:auto;aspect-ratio:1486/1058;object-fit:cover}
+.bslide img{width:100%;height:auto;aspect-ratio:1774/887;object-fit:cover}
+/* No desktop a arte e limitada em altura e centralizada; o fundo #000c20 e a
+   propria cor da borda da imagem, entao as laterais somem visualmente. Sem
+   isso o banner ocupava a tela inteira e escondia o catalogo. */
+@media(min-width:760px){
+  .bslide{display:flex;align-items:center;justify-content:center}
+  .bslide img{aspect-ratio:auto;height:clamp(200px,23vw,300px);width:auto;max-width:100%;object-fit:contain}
+}
 .bdots{position:absolute;bottom:9px;left:0;right:0;display:flex;justify-content:center;gap:6px}
 .bdots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.55);transition:.3s;
   box-shadow:0 1px 3px rgba(0,0,0,.3)}
@@ -747,6 +756,12 @@ $('#q').addEventListener('input', function(){
 
 /* ---------- BANNER ---------- */
 var bi = 0, nb = __NBANNERS__, dots = $('#bdots');
+if(nb < 2){
+  /* um banner so: sem setas, sem dots e sem autoplay */
+  dots.style.display = 'none';
+  $('#bprev').style.display = 'none';
+  $('#bnext').style.display = 'none';
+}
 dots.innerHTML = Array.from({length: nb}, function(_, k){
   return '<i class="'+(k === 0 ? 'on' : '')+'"></i>'; }).join('');
 function goB(i){
@@ -759,8 +774,8 @@ $('#bprev').addEventListener('click', function(){ goB(bi - 1); reiniciar(); });
 dots.addEventListener('click', function(e){
   var i = [].indexOf.call(dots.children, e.target);
   if(i > -1){ goB(i); reiniciar(); } });
-var auto = setInterval(function(){ goB(bi + 1); }, 5500);
-function reiniciar(){ clearInterval(auto); auto = setInterval(function(){ goB(bi + 1); }, 5500); }
+var auto = nb > 1 ? setInterval(function(){ goB(bi + 1); }, 5500) : null;
+function reiniciar(){ if(!auto) return; clearInterval(auto); auto = setInterval(function(){ goB(bi + 1); }, 5500); }
 
 $('#cnext').addEventListener('click', function(){
   var c = $('#caro'); c.scrollBy({ left: c.clientWidth * 0.8, behavior: 'smooth' }); });
