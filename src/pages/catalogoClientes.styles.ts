@@ -273,12 +273,20 @@ export const ESTILO_CATALOGO = `
 .gwc-ci .q button{width:26px;height:26px;display:grid;place-items:center;color:var(--navy-600);font-size:15px}
 .gwc-ci .q span{font-size:12px;font-weight:700;min-width:3ch;text-align:center;font-variant-numeric:tabular-nums}
 .gwc-ci .rm{font-size:10.5px;color:#b3261e;text-decoration:underline}
+/* unitario e subtotal do item, na linha de baixo para nao espremer o seletor */
+.gwc-ci .v{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  border-top:1px dashed var(--line);padding-top:6px}
+.gwc-ci .v span{font-size:10.5px;color:var(--muted);font-weight:600}
+.gwc-ci .v b{font-size:14px;font-weight:800;color:var(--navy-800);
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .gwc-empty{text-align:center;color:var(--muted);padding:50px 20px;font-size:13.5px}
 .gwc-df{border-top:1px solid var(--line);background:#fff;padding:14px;
   padding-bottom:calc(14px + env(safe-area-inset-bottom))}
 .gwc-resumo{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px}
 .gwc-resumo span{font-size:12.5px;color:var(--ink-2)}
-.gwc-resumo b{font-size:19px;color:var(--navy-800);font-weight:800}
+.gwc-resumo b{font-size:19px;color:var(--navy-800);font-weight:800;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.gwc-parcial{margin:-6px 0 11px;font-size:10.5px;color:var(--muted);text-align:right}
 .gwc-wa{width:100%;height:47px;border-radius:11px;background:var(--green-600);color:#fff;
   font-size:14.5px;font-weight:700;display:flex;align-items:center;justify-content:center;
   gap:9px;text-decoration:none}

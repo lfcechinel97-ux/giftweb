@@ -3,8 +3,8 @@ import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { WHATSAPP_NUMERO, ESTILO_CATALOGO } from "./catalogoClientes.styles";
 import {
-  brl, brlPartes, faixasDoProduto, indiceDaFaixa, passoDaQuantidade,
-  quantidadeInicial, type ProdutoComPreco,
+  type FaixaPreco, brl, brlPartes, faixasDoProduto, indiceDaFaixa,
+  passoDaQuantidade, quantidadeInicial, type ProdutoComPreco,
 } from "@/lib/catalogoPrecos";
 
 /**
@@ -13,8 +13,10 @@ import {
  * Le direto de catalogo_clientes, entao tudo que for editado em
  * /admin/catalogo-clientes aparece aqui na hora, sem deploy.
  *
- * O carrinho vive so em memoria de proposito: nao guarda preco porque o valor
- * do card e "a partir de" e o fechamento acontece com o consultor no WhatsApp.
+ * O carrinho vive so em memoria de proposito (nada de storage). Ele carrega a
+ * ESCADA de cada item, nao um preco fechado: mudar a quantidade dentro do
+ * carrinho pode trocar o degrau, e um preco copiado na hora de adicionar
+ * ficaria defasado - o cliente veria um valor e o consultor outro.
  */
 
 interface Cor { n: string; h: string | string[]; }
@@ -26,10 +28,27 @@ interface Produto extends ProdutoComPreco {
   imagem_url: string | null; imagem_secundaria_url: string | null;
   cores: Cor[]; destaque: boolean; ordem: number;
 }
-/** passo viaja junto: no carrinho nao ha mais o produto para recalcular. */
-interface ItemCarrinho { codigo: string; nome: string; img: string | null; qtd: number; passo: number; }
+/** passo e faixas viajam junto: no carrinho nao ha mais o produto para consultar. */
+interface ItemCarrinho {
+  codigo: string; nome: string; img: string | null; qtd: number; passo: number;
+  /** null no produto sem escada configurada - fica "sob consulta". */
+  faixas: FaixaPreco[] | null;
+}
 
 const MAX_BOLINHAS = 6;
+/**
+ * Teto do texto do wa.me ja codificado. O limite real varia por aparelho e
+ * versao do WhatsApp; abaixo disso nao vi truncamento em lugar nenhum, e passar
+ * dele corta o fim da mensagem - justo onde fica o total.
+ */
+const MAX_TEXTO_WA = 1800;
+
+/**
+ * toLocaleString devolve "R$" e o numero separados por espaco NAO-QUEBRAVEL
+ * (U+00A0). Na URL isso vira %C2%A0 e, dependendo do aparelho, aparece como
+ * caractere estranho no WhatsApp. Troca por espaco comum antes de codificar.
+ */
+const moeda = (v: number) => brl(v).replace(/\u00a0/g, " ");
 
 const BENEFICIOS = [
   { t: "Personalização inclusa", d: "Arte e gravação já no valor do produto" },
@@ -53,6 +72,17 @@ if (typeof window !== "undefined") {
   window.addEventListener("touchstart", () => { _usouToque = true; }, { once: true, passive: true });
 }
 const usouToque = () => _usouToque;
+
+/** Unitario do item para a quantidade atual, ou null se nao ha degrau para ela. */
+const unitarioDoItem = (i: ItemCarrinho): number | null => {
+  if (!i.faixas) return null;
+  const k = indiceDaFaixa(i.faixas, i.qtd);
+  return k < 0 ? null : i.faixas[k].valor;
+};
+const subtotalDoItem = (i: ItemCarrinho): number | null => {
+  const u = unitarioDoItem(i);
+  return u === null ? null : u * i.qtd;
+};
 
 /**
  * Card fica FORA do componente da pagina de proposito. Declarado dentro, o
@@ -286,27 +316,79 @@ export default function CatalogoClientes() {
       return ex
         ? c.map((i) => (i.codigo === p.codigo ? { ...i, qtd: i.qtd + q } : i))
         : [...c, { codigo: p.codigo, nome: p.nome, img: p.imagem_url, qtd: q,
-                   passo: passoDaQuantidade(p) }];
+                   passo: passoDaQuantidade(p), faixas: faixasDoProduto(p) }];
     });
     setQtds((s) => ({ ...s, [p.codigo]: quantidadeInicial(p) }));
     setAdicionado(p.codigo);
     setTimeout(() => setAdicionado(null), 1200);
     setToast(`${q} unidades adicionadas`);
   };
+  // O "-" para no minimo do produto em vez de descer ate 1: abaixo do primeiro
+  // degrau nao existe preco de tabela, e a linha ficaria sem valor no meio de um
+  // carrinho somado. Para tirar o item existe o "remover" (que manda 0).
   const mudarQtdCarrinho = (codigo: string, nova: number) =>
     setCarrinho((c) =>
-      nova < 1 ? c.filter((i) => i.codigo !== codigo)
-               : c.map((i) => (i.codigo === codigo ? { ...i, qtd: nova } : i)));
+      nova < 1
+        ? c.filter((i) => i.codigo !== codigo)
+        : c.map((i) =>
+            i.codigo === codigo
+              ? { ...i, qtd: Math.max(i.faixas?.[0].min ?? 1, nova) }
+              : i));
   const totalItens = carrinho.reduce((s, i) => s + i.qtd, 0);
+  const totalValor = carrinho.reduce((s, i) => s + (subtotalDoItem(i) ?? 0), 0);
+  const semPreco = carrinho.filter((i) => subtotalDoItem(i) === null).length;
 
   const linkWhatsApp = useMemo(() => {
     if (!carrinho.length) return "#";
-    const linhas = carrinho.map((i) => `- ${i.nome} (cod ${i.codigo}) | ${i.qtd} un`);
-    const msg =
-      `Olá! Tenho interesse nestes brindes:\n\n${linhas.join("\n")}` +
-      `\n\nTotal: ${totalItens} unidades.\nPoderia me passar o valor?`;
-    return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(msg)}`;
-  }, [carrinho, totalItens]);
+
+    // Uma linha por item, detalhada. Se o carrinho crescer a ponto de a URL
+    // passar do limite seguro, cai para a forma curta (so quantidade e
+    // subtotal) - vale perder o "x unitario" e nao perder o fim da mensagem.
+    const linha = (i: ItemCarrinho, curta: boolean) => {
+      const u = unitarioDoItem(i);
+      const sub = subtotalDoItem(i);
+      const cabeca = `- ${i.nome} (cod ${i.codigo}): ${i.qtd} un`;
+      if (u === null || sub === null) return `${cabeca} - valor sob consulta`;
+      return curta
+        ? `${cabeca} - ${moeda(sub)}`
+        : `${cabeca} x ${moeda(u)} = ${moeda(sub)}`;
+    };
+
+    const resumo =
+      totalValor > 0
+        ? `Total: ${totalItens} un - ${moeda(totalValor)}` +
+          (semPreco
+            ? ` (+ ${semPreco} ${semPreco === 1 ? "item" : "itens"} sob consulta)`
+            : "")
+        : `Total: ${totalItens} un`;
+
+    const montar = (linhas: string[], escondidos: number) => {
+      const lista = escondidos
+        ? [...linhas, `- ... e mais ${escondidos} ${escondidos === 1 ? "item" : "itens"}`]
+        : linhas;
+      return (
+        `Olá! Tenho interesse nestes brindes:\n\n${lista.join("\n")}\n\n${resumo}\n` +
+        `Valores do catálogo por faixa de quantidade, a confirmar com o consultor.`
+      );
+    };
+    const cabe = (t: string) => encodeURIComponent(t).length <= MAX_TEXTO_WA;
+
+    // 1) tudo detalhado; 2) tudo em forma curta; 3) forma curta cortando itens do
+    // fim ate caber. O total e a linha de fecho entram em todas as formas: se
+    // algo tem de se perder, que sejam os itens do meio, nunca o valor total.
+    const detalhado = montar(carrinho.map((i) => linha(i, false)), 0);
+    if (cabe(detalhado)) {
+      return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(detalhado)}`;
+    }
+    const curtas = carrinho.map((i) => linha(i, true));
+    let n = curtas.length;
+    let texto = montar(curtas, 0);
+    while (n > 1 && !cabe(texto)) {
+      n -= 1;
+      texto = montar(curtas.slice(0, n), curtas.length - n);
+    }
+    return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(texto)}`;
+  }, [carrinho, totalItens, totalValor, semPreco]);
 
   const selecionarGrupo = (slug: string) => {
     setGrupoAtivo((g) => (g === slug ? null : slug));
@@ -480,6 +562,16 @@ export default function CatalogoClientes() {
                       </div>
                       <button className="rm" onClick={() => mudarQtdCarrinho(i.codigo, 0)}>remover</button>
                     </div>
+                    <div className="v">
+                      {subtotalDoItem(i) !== null ? (
+                        <>
+                          <span>{brl(unitarioDoItem(i)!)} /un</span>
+                          <b>{brl(subtotalDoItem(i)!)}</b>
+                        </>
+                      ) : (
+                        <span>valor sob consulta</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))
@@ -487,9 +579,14 @@ export default function CatalogoClientes() {
           </div>
           <div className="gwc-df">
             <div className="gwc-resumo">
-              <span>Total de itens</span>
-              <b>{totalItens} {totalItens === 1 ? "unidade" : "unidades"}</b>
+              <span>{totalItens} {totalItens === 1 ? "unidade" : "unidades"}</span>
+              <b>{totalValor > 0 ? brl(totalValor) : "sob consulta"}</b>
             </div>
+            {semPreco > 0 && totalValor > 0 && (
+              <p className="gwc-parcial">
+                + {semPreco} {semPreco === 1 ? "item" : "itens"} sob consulta
+              </p>
+            )}
             <a
               className="gwc-wa"
               href={linkWhatsApp}
@@ -499,7 +596,7 @@ export default function CatalogoClientes() {
             >
               Finalizar no WhatsApp
             </a>
-            <p className="gwc-hint">Você recebe o valor conforme a quantidade<br />direto com um consultor</p>
+            <p className="gwc-hint">Valores do catálogo por faixa de quantidade<br />frete e prazo confirmados com o consultor</p>
           </div>
         </aside>
 
