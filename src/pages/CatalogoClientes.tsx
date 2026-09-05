@@ -1,5 +1,6 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { WHATSAPP_NUMERO, ESTILO_CATALOGO } from "./catalogoClientes.styles";
 import {
@@ -235,7 +236,21 @@ export default function CatalogoClientes() {
   const [erro, setErro] = useState<string | null>(null);
 
   const [busca, setBusca] = useState("");
-  const [grupoAtivo, setGrupoAtivo] = useState<string | null>(null);
+  /**
+   * A categoria selecionada mora na URL (?grupo=garrafas), nao em estado
+   * local: assim da para mandar no WhatsApp um link que ja abre na secao
+   * certa, e o voltar do celular desfaz o filtro em vez de sair do catalogo.
+   */
+  const [params, setParams] = useSearchParams();
+  const grupoNaUrl = params.get("grupo");
+  const setGrupoAtivo = (slug: string | null) => {
+    const novo = new URLSearchParams(params);
+    if (slug) novo.set("grupo", slug);
+    else novo.delete("grupo");
+    // replace: filtrar nao e navegacao nova, entao nao empilha uma entrada no
+    // historico a cada toque nos stories
+    setParams(novo, { replace: true });
+  };
   const [qtds, setQtds] = useState<Record<string, number>>({});
   const [carrinho, setCarrinho] = useState<ItemCarrinho[]>([]);
   const [drawerAberto, setDrawerAberto] = useState(false);
@@ -309,6 +324,17 @@ export default function CatalogoClientes() {
     const t = setTimeout(() => setToast(null), 1900);
     return () => clearTimeout(t);
   }, [toast]);
+
+  /**
+   * Slug desconhecido na URL (link antigo, categoria renomeada, erro de
+   * digitacao) e tratado como ausente: melhor abrir o catalogo inteiro do que
+   * uma pagina vazia sem explicacao. So valida depois que os produtos chegam,
+   * senao o filtro sumiria durante o carregamento.
+   */
+  const grupoAtivo =
+    !grupoNaUrl || (produtos.length && !produtos.some((p) => p.grupo === grupoNaUrl))
+      ? null
+      : grupoNaUrl;
 
   const grupos = useMemo(() => {
     const mapa = new Map<string, { slug: string; rot: string; n: number }>();
@@ -433,7 +459,7 @@ export default function CatalogoClientes() {
   }, [carrinho, totalItens, totalValor, semPreco]);
 
   const selecionarGrupo = (slug: string) => {
-    setGrupoAtivo((g) => (g === slug ? null : slug));
+    setGrupoAtivo(grupoAtivo === slug ? null : slug);
     setBusca("");
     setTimeout(() => {
       const el = storiesRef.current;
