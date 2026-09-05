@@ -109,12 +109,20 @@ const Card = memo(function Card({
   const ultima = faixas ? faixas.length - 1 : -1;
   // Linha de apoio sempre presente: some/aparecer empurraria o card e mexeria
   // na altura da linha inteira do grid a cada clique de quantidade.
+  // Aponta o proximo degrau MAIS BARATO, nao simplesmente o seguinte: ha
+  // produto com dois degraus no mesmo valor (o chaveiro 09824 cobra R$ 1,99
+  // tanto a 100 quanto a 200 un.), e ali "Leve 200 un. e pague R$ 1,99" seria
+  // um convite a pagar o mesmo preco.
+  const proximo =
+    faixas && iAtiva >= 0
+      ? faixas.slice(iAtiva + 1).find((f) => f.valor < faixas[iAtiva].valor)
+      : undefined;
   const dica = !faixas
     ? null
     : iAtiva < 0
       ? `Preço de tabela a partir de ${faixas[0].min} un.`
-      : iAtiva < ultima
-        ? `Leve ${faixas[iAtiva + 1].min} un. e pague ${brl(faixas[iAtiva + 1].valor)}`
+      : proximo
+        ? `Leve ${proximo.min} un. e pague ${brl(proximo.valor)}`
         : "Você está no melhor preço";
 
   return (
