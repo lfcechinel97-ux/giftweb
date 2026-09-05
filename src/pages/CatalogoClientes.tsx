@@ -245,17 +245,51 @@ export default function CatalogoClientes() {
   const caroRef = useRef<HTMLDivElement>(null);
   const storiesRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * Busca no primeiro render e sempre que a aba volta a ficar visivel.
+   *
+   * O catalogo e um link que o cliente recebe no WhatsApp e costuma deixar
+   * aberto por horas. Buscando so na montagem, um preco alterado no /admin nao
+   * chegava a quem ja estava com a pagina aberta - ele seguia vendo o valor de
+   * quando abriu. A janela de 30s evita repetir a consulta a cada alt-tab.
+   */
   useEffect(() => {
-    (async () => {
+    let vivo = true;
+    let ultimaBusca = 0;
+
+    const buscar = async (primeira: boolean) => {
+      ultimaBusca = Date.now();
       const { data, error } = await supabase
         .from("catalogo_clientes" as never)
         .select("*")
         .eq("ativo", true)
         .order("ordem", { ascending: true });
-      if (error) setErro(error.message);
-      else setProdutos((data as unknown as Produto[]) ?? []);
-      setCarregando(false);
-    })();
+      if (!vivo) return;
+      // numa rebusca, uma falha de rede nao derruba o catalogo que ja esta na
+      // tela: mantem o que tem e tenta de novo no proximo foco
+      if (error) {
+        if (primeira) setErro(error.message);
+      } else {
+        setProdutos((data as unknown as Produto[]) ?? []);
+        setErro(null);
+      }
+      if (primeira) setCarregando(false);
+    };
+
+    buscar(true);
+
+    const aoVoltar = () => {
+      if (document.visibilityState === "visible" && Date.now() - ultimaBusca > 30_000) {
+        buscar(false);
+      }
+    };
+    document.addEventListener("visibilitychange", aoVoltar);
+    window.addEventListener("focus", aoVoltar);
+    return () => {
+      vivo = false;
+      document.removeEventListener("visibilitychange", aoVoltar);
+      window.removeEventListener("focus", aoVoltar);
+    };
   }, []);
 
   /* dica de rolagem nos stories, igual a versao estatica */
