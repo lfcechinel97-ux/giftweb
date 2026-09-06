@@ -1,7 +1,7 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Suspense, useCallback, useEffect } from "react";
 import {
-  FileText, ShoppingCart, Boxes, Package, Globe, User, Users, Settings, ChevronDown, Kanban,
+  FileText, ShoppingCart, Boxes, Package, Globe, User, Users, Settings, ChevronDown, Kanban, LayoutDashboard, Wallet,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -10,6 +10,8 @@ import {
 import { useSistema } from "@/contexts/SistemaContext";
 
 const menu = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/sistema/dashboard", chunk: () => import("./Dashboard.tsx") },
+  { icon: Wallet, label: "Fluxo de vendas", path: "/sistema/vendas", chunk: () => import("./Vendas.tsx") },
   { icon: FileText, label: "Orçamentos", path: "/sistema/orcamentos", chunk: () => import("./Orcamentos.tsx") },
   { icon: ShoppingCart, label: "Pedidos", path: "/sistema/pedidos", chunk: () => import("./Pedidos.tsx") },
   { icon: Kanban, label: "PCP", path: "/sistema/pcp", chunk: () => import("./PCP.tsx") },
@@ -50,7 +52,7 @@ export default function SistemaLayout() {
 
   useEffect(() => {
     if (loc.pathname === "/sistema" || loc.pathname === "/sistema/") {
-      navigate("/sistema/orcamentos", { replace: true });
+      navigate("/sistema/dashboard", { replace: true });
     }
   }, [loc.pathname, navigate]);
 

@@ -69,6 +69,8 @@ const CatalogProductDetail = lazyRetry(() => import("./pages/CatalogProductDetai
 const TopProdutos = lazyRetry(() => import("./pages/TopProdutos.tsx"));
 const Top10Produtos = lazyRetry(() => import("./pages/Top10Produtos.tsx"));
 const SistemaLayout = lazyRetry(() => import("./pages/sistema/SistemaLayout.tsx"));
+const SistemaDashboard = lazyRetry(() => import("./pages/sistema/Dashboard.tsx"));
+const SistemaVendas = lazyRetry(() => import("./pages/sistema/Vendas.tsx"));
 const SistemaOrcamentos = lazyRetry(() => import("./pages/sistema/Orcamentos.tsx"));
 const SistemaOrcamentoForm = lazyRetry(() => import("./pages/sistema/OrcamentoForm.tsx"));
 const SistemaPedidos = lazyRetry(() => import("./pages/sistema/Pedidos.tsx"));
@@ -162,7 +164,9 @@ const App = () => (
               <Route path="/termos-de-servico-whatsapp" element={<WhatsAppTermsPage />} />
               <Route path="/exclusao-de-dados" element={<DataDeletionPage />} />
               <Route path="/sistema" element={<AdminGuard><SistemaProvider><SistemaLayout /></SistemaProvider></AdminGuard>}>
-                <Route index element={<SistemaOrcamentos />} />
+                <Route index element={<SistemaDashboard />} />
+                <Route path="dashboard" element={<SistemaDashboard />} />
+                <Route path="vendas" element={<SistemaVendas />} />
                 <Route path="orcamentos" element={<SistemaOrcamentos />} />
                 <Route path="orcamentos/novo" element={<SistemaOrcamentoForm />} />
                 <Route path="orcamentos/:id" element={<SistemaOrcamentoForm />} />
