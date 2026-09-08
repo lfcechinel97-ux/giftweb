@@ -183,6 +183,33 @@ serve(async (req: Request) => {
 
     await upsertEmLotes(supabase, "sistema_calcme_vendas", linhasVenda, "calcme_order_id");
 
+    // ---- Pedidos recuperados do relatório ---------------------------------
+    // 19 pedidos existem no Calcme mas não constam de /orders (conferido: não
+    // é paginação, e /orders/{idInt} dá 404 porque a rota exige o id em hash).
+    // Eles foram carregados do relatório exportado, com calcme_order_id
+    // 'rel-<numero>'. Se a API voltar a devolvê-los, a versão do relatório
+    // vira duplicata e some daqui — o registro da API é a fonte melhor.
+    const numerosDaApi = linhasVenda
+      .map((v) => v.calcme_order_idint)
+      .filter((n): n is number => typeof n === "number");
+    if (numerosDaApi.length > 0) {
+      const { data: duplicados } = await supabase
+        .from("sistema_calcme_vendas")
+        .select("id, calcme_order_idint")
+        .like("calcme_order_id", "rel-%")
+        .in("calcme_order_idint", numerosDaApi);
+      if (duplicados && duplicados.length > 0) {
+        await supabase
+          .from("sistema_calcme_vendas")
+          .delete()
+          .in("id", duplicados.map((d) => d.id));
+        detalhes.avisos.push(
+          `${duplicados.length} pedido(s) do relatório foram substituídos pela versão da API: ` +
+          duplicados.map((d) => d.calcme_order_idint).join(", "),
+        );
+      }
+    }
+
     // =================================================================
     // 2) Itens dos pedidos do período (base do CMV)
     // =================================================================
