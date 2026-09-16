@@ -196,19 +196,19 @@ input[type="range"]::-moz-range-thumb {
   /* Espelha --gw-bg (#EEF2F8). O shadcn precisa do triplete HSL cru, então o
      valor aparece duas vezes; se mudar um, mude o outro. */
   --background: 216 42% 95%;      /* = --gw-bg */
-  --foreground: 218 69% 20%;      /* = --gw-text (#102A56), azul-marinho */
+  --foreground: 220 64% 33%;      /* = --gw-text (#1E4189), azul de leitura */
   --card: 0 0% 100%;
-  --card-foreground: 218 69% 20%;
+  --card-foreground: 220 64% 33%;
   --popover: 0 0% 100%;
-  --popover-foreground: 218 69% 20%;
+  --popover-foreground: 220 64% 33%;
   --primary: 221 83% 53%;         /* #2563EB */
   --primary-foreground: 0 0% 100%;
   --secondary: 220 30% 96%;
-  --secondary-foreground: 218 69% 20%;
+  --secondary-foreground: 220 64% 33%;
   --muted: 220 30% 96%;
   --muted-foreground: 220 9% 46%; /* #6B7280 */
   --accent: 220 30% 96%;
-  --accent-foreground: 218 69% 20%;
+  --accent-foreground: 220 64% 33%;
   --border: 223 45% 93%;          /* #E4E9F5 */
   --input: 223 45% 93%;
   --ring: 221 83% 53%;
@@ -292,10 +292,12 @@ input[type="range"]::-moz-range-thumb {
   --gw-sidebar-hover: rgba(255,255,255,.07);
   --gw-sidebar-active: #2563EB;
 
-  /* Texto — azul-marinho, nunca preto. Preto puro sobre branco vibra e
-     briga com o azul da marca; o marinho assenta e mantem o conjunto frio. */
-  --gw-text: #102A56;
-  --gw-text-secondary: #45567C;
+  /* Texto — AZUL de verdade, não um marinho tão escuro que lê como preto.
+     #102A56 tinha 20% de luminosidade e o olho registrava preto; #1E4189 fica
+     em 33% e a matiz aparece. Contraste sobre branco: 9.67:1 no principal e
+     6.68:1 no secundário, folgado acima de AA. */
+  --gw-text: #1E4189;
+  --gw-text-secondary: #3E5B96;
   --gw-text-muted: #68769A;
   /* Rótulo de coluna (QTD/UNIT./TOTAL): mudo, mas puxado para o azul, para
      a linha do item ficar na mesma família do resto. 4.88:1 sobre branco —
