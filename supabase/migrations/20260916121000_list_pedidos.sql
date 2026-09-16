@@ -99,7 +99,9 @@ begin
       )
   ),
   pagina as (
-    select id from filtrados order by created_at desc limit v_size offset v_offset
+    -- Desempate por id: sem ele, pedidos com o mesmo created_at saem em ordem
+    -- arbitraria e o OFFSET repete linha numa pagina e pula em outra.
+    select id from filtrados order by created_at desc, id desc limit v_size offset v_offset
   ),
   -- Itens SO dos pedidos desta pagina, ja com o status individual, o
   -- rotulo/cor do catalogo, a linha de personalizacao e a contagem de

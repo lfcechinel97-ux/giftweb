@@ -545,10 +545,14 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       queryKey: ["sistema", "pedidos", "list", opts ?? null],
       staleTime: 60 * 1000,
       queryFn: () => {
+        /* Desempate por id: sem ele, pedidos com o mesmo created_at saem em
+           ordem arbitrária a cada consulta — e como a paginação é por OFFSET,
+           isso faz linha aparecer duas vezes numa página e sumir de outra. */
         let q = supabase
           .from("sistema_pedidos")
           .select("*", { count: "exact" })
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false });
         // Filtros ANTES do recorte da página
         if (opts?.status && opts.status !== "todos") q = q.eq("status", opts.status);
         if (opts?.dataInicio) q = q.gte("created_at", `${opts.dataInicio}T00:00:00`);
