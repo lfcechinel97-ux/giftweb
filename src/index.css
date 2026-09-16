@@ -296,7 +296,11 @@ input[type="range"]::-moz-range-thumb {
      briga com o azul da marca; o marinho assenta e mantem o conjunto frio. */
   --gw-text: #102A56;
   --gw-text-secondary: #45567C;
-  --gw-text-muted: #68769A;   /* 4.5:1 sobre branco — e quem pinta os rótulos QTD/UNIT./TOTAL, que são texto pequeno e precisam de AA */
+  --gw-text-muted: #68769A;
+  /* Rótulo de coluna (QTD/UNIT./TOTAL): mudo, mas puxado para o azul, para
+     a linha do item ficar na mesma família do resto. 4.88:1 sobre branco —
+     é texto pequeno, então precisa de AA cheio. */
+  --gw-text-label: #5E70A0;   /* 4.5:1 sobre branco — e quem pinta os rótulos QTD/UNIT./TOTAL, que são texto pequeno e precisam de AA */
 
   /* ── Azul: dois tons ───────────────────────────────────────────────────
      `vivid` é o azul de AÇÃO — botão primário, item ativo do menu, barra da
@@ -372,7 +376,7 @@ input[type="range"]::-moz-range-thumb {
 .gw-title { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-size: 18px; font-weight: 600; letter-spacing: -0.015em; color: var(--gw-text); }
 .gw-body { font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 400; letter-spacing: -0.006em; color: var(--gw-text); }
 .gw-body-strong { font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: -0.006em; color: var(--gw-text); }
-.gw-label { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gw-text-muted); }
+.gw-label { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gw-text-label); }
 .gw-meta { font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 400; letter-spacing: -0.003em; color: var(--gw-text-secondary); }
 /* Números de pedido/orçamento e nomes: display font */
 .gw-num { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -407,7 +411,7 @@ input[type="range"]::-moz-range-thumb {
 .gw-qtd {
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   font-size: 17px; font-weight: 700; letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums; color: var(--gw-text);
+  font-variant-numeric: tabular-nums; color: var(--gw-blue-vivid);
 }
 .gw-contador {
   font-family: 'Inter', system-ui, sans-serif;

@@ -640,12 +640,17 @@ export default function Orcamentos() {
                 ) : o.itens.map((item, idx) => (
                   <div
                     key={idx}
-                    className="grid grid-cols-[104px_minmax(0,1fr)_78px_112px_132px] items-center gap-4 px-4 py-3"
+                    className="px-4 py-2.5"
                     style={{ borderTop: idx === 0 ? undefined : "2px solid var(--gw-bg)" }}
                   >
+                    {/* max-w puxa o bloco numérico para perto do produto. Sem
+                        ele, o nome ocupa toda a sobra e os números vão parar na
+                        borda do cartão, longe do que descrevem. A régua acima
+                        continua na largura cheia. */}
+                    <div className="grid grid-cols-[104px_minmax(0,1fr)_84px_116px_140px] items-center gap-3 max-w-[790px]">
                     <Thumb size="lg" className="!h-[104px] !w-[104px] !rounded-[12px]" src={item.mockupImagem || item.imagem} alt={item.nome} />
                     <span className="flex flex-col min-w-0 gap-0.5">
-                      <span className="gw-title text-[14px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
+                      <span className="gw-title text-[14.5px] truncate" style={{ fontWeight: 700 }}>{item.nome}</span>
                       {item.observacao && (
                         <span className="text-[12.5px] truncate" style={{ color: "var(--gw-text-secondary)" }}>{item.observacao}</span>
                       )}
@@ -665,6 +670,7 @@ export default function Orcamentos() {
                       <span className="gw-label">Total</span>
                       <span className="gw-valor">{brlOrc(item.precoUnitario * item.quantidade)}</span>
                     </span>
+                    </div>
                   </div>
                 ))}
               </div>
