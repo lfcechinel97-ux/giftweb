@@ -14,7 +14,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { OrderNumber, Thumb, Money, StatusBadge } from "@/components/sistema/ui";
-import { statusInfo, slugGravavel, COLAPSA_SEM_MIGRATION } from "@/lib/statusPedido";
+import { statusInfo } from "@/lib/statusPedido";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSistema, clienteDisplay, type Pedido, type PedidoItem, type QuoteItem } from "@/contexts/SistemaContext";
@@ -176,15 +176,12 @@ const PedidoForm: React.FC = () => {
     setProducao(prev => prev.map(r => (r.id === row.id ? { ...r, status: slug } : r)));
     const { error } = await supabase
       .from("sistema_producao_itens")
-      .update({ status: slugGravavel(slug) })
+      .update({ status: slug })
       .eq("id", row.id);
     if (error) {
       setProducao(prev => prev.map(r => (r.id === row.id ? { ...r, status: anterior } : r)));
       toast.error(`Não foi possível mudar a etapa. ${error.message || ""}`);
       return;
-    }
-    if (COLAPSA_SEM_MIGRATION.has(slug)) {
-      toast.warning(`"${statusInfo(slug).nome}" ainda não tem valor próprio no banco — aplique a migration do catálogo de status.`);
     }
   };
 

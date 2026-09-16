@@ -2,7 +2,7 @@ import { ChevronDown } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { statusInfo, opcoesStatus, fundoSuave } from "@/lib/statusPedido";
+import { statusInfo, opcoesStatus, fundoSuave, textoForte } from "@/lib/statusPedido";
 import { cn } from "@/lib/utils";
 
 /**
@@ -43,7 +43,7 @@ export function StatusBadge({
 
   const estilo = {
     background: fundoSuave(info.cor),
-    color: info.corTexto,
+    color: textoForte(info.cor),
     border: `1px solid ${fundoSuave(info.cor, 28)}`,
     fontWeight: 600,
   } as const;

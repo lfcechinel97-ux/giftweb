@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
+import { carregarCatalogoStatus } from "@/lib/statusPedido";
 
 // Helper: surface DB write errors to the user (otherwise inserts fail silently and data "disappears" on reload)
 const reportDbError = (label: string) => (res: any) => {
@@ -169,7 +170,8 @@ export interface Pedido {
   prazoEntrega?: number;
   pagamentoId?: string;
   observacoes?: string;
-  status: "novo" | "producao" | "pronto" | "enviado" | "entregue" | "cancelado";
+  /** slug de sistema_status — catálogo editável, não união fechada. */
+  status: string;
   createdAt: string;
   updatedAt: string;
   prazoProducaoDias?: number;
@@ -628,6 +630,11 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         transportadoras: arr<any>(bootstrap.transportadoras).map(mapTransp),
         origens: arr<any>(bootstrap.origens).map(mapOrigem),
       }));
+
+      /* Catálogo de status editável (sistema_status): carregado uma vez por
+         sessão, junto do bootstrap. Sem isso as telas usam a semente de
+         src/lib/statusPedido.ts e não enxergam status criados pelo usuário. */
+      void carregarCatalogoStatus();
 
       reconcileCurrentVendedor(vendedores);
       loadedRef.current = true;

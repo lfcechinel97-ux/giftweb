@@ -20,7 +20,7 @@ import { sizedImage } from "@/lib/imageSize";
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/sistema/ui/Money";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
-import { COLUNAS_PCP, corDaColuna } from "@/lib/statusPedido";
+import { COLUNAS_PCP, corDaColuna, statusCanonicoDaColuna, colunaDoStatus } from "@/lib/statusPedido";
 
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
@@ -42,7 +42,10 @@ interface PcpRow {
   imagem_catalogo_url: string | null;
   quantidade: number | null;
   valor_unitario: number | null;
-  status: PcpStatus;
+  status: string;
+  coluna_pcp: string | null;
+  status_nome: string | null;
+  status_cor: string | null;
   local_producao: LocalProducao;
   origem_estoque: "estoque" | "compra_especifica";
   data_entrega_item: string | null;
@@ -313,7 +316,7 @@ function PcpCard({
 
         {/* alerta de pagamento */}
         {(precisaGateCartao(row) ||
-          (row.status === "embalagem_pagamento" && precisaGatePix(row))) && (
+          (colunaDoStatus(row) === "embalagem_pagamento" && precisaGatePix(row))) && (
           <span
             className="gw-body absolute right-3 bottom-[52px] text-white text-[12px] font-bold uppercase rounded-[6px] px-2.5 py-[4px]"
             style={{ backgroundColor: "var(--gw-warning)" }}
@@ -486,7 +489,11 @@ export default function PCP() {
   const byStatus = useMemo(() => {
     const map: Record<string, PcpRow[]> = {};
     for (const col of STATUS_COLS) map[col.value] = [];
-    for (const row of rowsFiltradas) (map[row.status] ??= []).push(row);
+    /* Agrupa por COLUNA, não por status: status e coluna são vocabulários
+       diferentes desde o catálogo editável. "conferir_pagamentos" é status e
+       cai na coluna "embalagem_pagamento" — agrupar por status faria o card
+       sumir do quadro. */
+    for (const row of rowsFiltradas) (map[colunaDoStatus(row)] ??= []).push(row);
     return map;
   }, [rowsFiltradas]);
 
@@ -638,7 +645,9 @@ export default function PCP() {
       openTerceiroModal(row);
       return;
     }
-    applyUpdate(row.producao_id, { status: targetStatus });
+    /* Grava o STATUS canônico da coluna. targetStatus é nome de coluna
+       ("em_producao"); o banco espera slug de status ("a_produzir"). */
+    applyUpdate(row.producao_id, { status: statusCanonicoDaColuna(targetStatus) });
   };
 
   const handleDrop = (targetStatus: PcpStatus, id: string) => {
@@ -646,11 +655,11 @@ export default function PCP() {
     setDraggingId(null);
     if (!id) return;
     const row = rows.find(r => r.producao_id === id);
-    if (!row || row.status === targetStatus) return;
+    if (!row || colunaDoStatus(row) === targetStatus) return;
 
     // Gate de cartão: sair de "Pronto p/ Produção" para qualquer etapa seguinte
     if (
-      row.status === "pronto_producao" &&
+      colunaDoStatus(row) === "pronto_producao" &&
       idxStatus(targetStatus) > idxStatus("pronto_producao") &&
       precisaGateCartao(row)
     ) {

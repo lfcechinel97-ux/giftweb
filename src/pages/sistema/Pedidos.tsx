@@ -15,7 +15,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { OrderNumber, MetaField, Thumb, Money, StatusBadge } from "@/components/sistema/ui";
-import { statusInfo, opcoesStatus, slugGravavel, COLAPSA_SEM_MIGRATION } from "@/lib/statusPedido";
+import { statusInfo, opcoesStatus } from "@/lib/statusPedido";
 import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaContext";
 import { supabase } from "@/integrations/supabase/client";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
@@ -183,7 +183,7 @@ export default function Pedidos() {
 
     const { error } = await supabase
       .from("sistema_producao_itens")
-      .update({ status: slugGravavel(slug) })
+      .update({ status: slug })
       .eq("pedido_id", pedidoId)
       .eq("item_id", itemId);
 
@@ -192,9 +192,6 @@ export default function Pedidos() {
         old ? { ...old, porItem: { ...old.porItem, [itemId]: anterior ?? "" } } : old);
       toast.error(`Não foi possível mudar o status do item. ${error.message || ""}`);
       return;
-    }
-    if (COLAPSA_SEM_MIGRATION.has(slug)) {
-      toast.warning(`"${statusInfo(slug).nome}" ainda não tem valor próprio no banco — aplique a migration do catálogo de status para ele parar de voltar.`);
     }
   };
 
