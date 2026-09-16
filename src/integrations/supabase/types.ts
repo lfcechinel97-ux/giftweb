@@ -32,6 +32,84 @@ export type Database = {
         }
         Relationships: []
       }
+      catalogo_clientes: {
+        Row: {
+          ativo: boolean
+          categoria: string
+          categoria_rotulo: string | null
+          codigo: string
+          cores: Json
+          created_at: string
+          destaque: boolean
+          faixa1_preco: number | null
+          faixa1_qtd: number | null
+          faixa2_preco: number | null
+          faixa2_qtd: number | null
+          faixa3_preco: number | null
+          faixa3_qtd: number | null
+          grupo: string | null
+          grupo_rotulo: string | null
+          id: string
+          imagem_secundaria_url: string | null
+          imagem_url: string | null
+          nome: string
+          ordem: number
+          preco: number | null
+          subcategoria: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria: string
+          categoria_rotulo?: string | null
+          codigo: string
+          cores?: Json
+          created_at?: string
+          destaque?: boolean
+          faixa1_preco?: number | null
+          faixa1_qtd?: number | null
+          faixa2_preco?: number | null
+          faixa2_qtd?: number | null
+          faixa3_preco?: number | null
+          faixa3_qtd?: number | null
+          grupo?: string | null
+          grupo_rotulo?: string | null
+          id?: string
+          imagem_secundaria_url?: string | null
+          imagem_url?: string | null
+          nome: string
+          ordem?: number
+          preco?: number | null
+          subcategoria?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string
+          categoria_rotulo?: string | null
+          codigo?: string
+          cores?: Json
+          created_at?: string
+          destaque?: boolean
+          faixa1_preco?: number | null
+          faixa1_qtd?: number | null
+          faixa2_preco?: number | null
+          faixa2_qtd?: number | null
+          faixa3_preco?: number | null
+          faixa3_qtd?: number | null
+          grupo?: string | null
+          grupo_rotulo?: string | null
+          id?: string
+          imagem_secundaria_url?: string | null
+          imagem_url?: string | null
+          nome?: string
+          ordem?: number
+          preco?: number | null
+          subcategoria?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       homepage_featured_showcase: {
         Row: {
           badge_text: string | null
@@ -578,6 +656,165 @@ export type Database = {
         }
         Relationships: []
       }
+      sistema_calcme_venda_itens: {
+        Row: {
+          calcme_item_id: string
+          calcme_produto_id: string | null
+          comissao_pct: number | null
+          created_at: string
+          custo_unitario: number | null
+          id: string
+          imposto_pct: number | null
+          produto_nome: string | null
+          quantidade: number
+          raw: Json | null
+          taxa_cartao_pct: number | null
+          terceirizada_unit: number | null
+          updated_at: string
+          valor_total: number
+          valor_unitario: number
+          venda_id: string
+        }
+        Insert: {
+          calcme_item_id: string
+          calcme_produto_id?: string | null
+          comissao_pct?: number | null
+          created_at?: string
+          custo_unitario?: number | null
+          id?: string
+          imposto_pct?: number | null
+          produto_nome?: string | null
+          quantidade?: number
+          raw?: Json | null
+          taxa_cartao_pct?: number | null
+          terceirizada_unit?: number | null
+          updated_at?: string
+          valor_total?: number
+          valor_unitario?: number
+          venda_id: string
+        }
+        Update: {
+          calcme_item_id?: string
+          calcme_produto_id?: string | null
+          comissao_pct?: number | null
+          created_at?: string
+          custo_unitario?: number | null
+          id?: string
+          imposto_pct?: number | null
+          produto_nome?: string | null
+          quantidade?: number
+          raw?: Json | null
+          taxa_cartao_pct?: number | null
+          terceirizada_unit?: number | null
+          updated_at?: string
+          valor_total?: number
+          valor_unitario?: number
+          venda_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_calcme_venda_itens_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_calcme_vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sistema_calcme_vendas: {
+        Row: {
+          calcme_order_id: string
+          calcme_order_idint: number | null
+          canal: string | null
+          cancelado: boolean
+          cliente_nome: string | null
+          comissao_pct: number | null
+          conferido_em: string | null
+          conferido_por: string | null
+          created_at: string
+          data: string | null
+          id: string
+          imposto_pct: number | null
+          itens_sincronizados_em: string | null
+          meio_pagamento_id: string | null
+          observacoes: string | null
+          pedido_id: string | null
+          raw: Json | null
+          status_titulo: string | null
+          synced_at: string
+          taxa_cartao_pct: number | null
+          valor_total: number
+        }
+        Insert: {
+          calcme_order_id: string
+          calcme_order_idint?: number | null
+          canal?: string | null
+          cancelado?: boolean
+          cliente_nome?: string | null
+          comissao_pct?: number | null
+          conferido_em?: string | null
+          conferido_por?: string | null
+          created_at?: string
+          data?: string | null
+          id?: string
+          imposto_pct?: number | null
+          itens_sincronizados_em?: string | null
+          meio_pagamento_id?: string | null
+          observacoes?: string | null
+          pedido_id?: string | null
+          raw?: Json | null
+          status_titulo?: string | null
+          synced_at?: string
+          taxa_cartao_pct?: number | null
+          valor_total?: number
+        }
+        Update: {
+          calcme_order_id?: string
+          calcme_order_idint?: number | null
+          canal?: string | null
+          cancelado?: boolean
+          cliente_nome?: string | null
+          comissao_pct?: number | null
+          conferido_em?: string | null
+          conferido_por?: string | null
+          created_at?: string
+          data?: string | null
+          id?: string
+          imposto_pct?: number | null
+          itens_sincronizados_em?: string | null
+          meio_pagamento_id?: string | null
+          observacoes?: string | null
+          pedido_id?: string | null
+          raw?: Json | null
+          status_titulo?: string | null
+          synced_at?: string
+          taxa_cartao_pct?: number | null
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_calcme_vendas_meio_pagamento_id_fkey"
+            columns: ["meio_pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_meios_pagamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_calcme_vendas_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_calcme_vendas_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pcp"
+            referencedColumns: ["pedido_id"]
+          },
+        ]
+      }
       sistema_clientes: {
         Row: {
           contatos: Json
@@ -722,6 +959,221 @@ export type Database = {
           },
         ]
       }
+      sistema_custo_produto: {
+        Row: {
+          atualizado_por: string | null
+          calcme_produto_id: string | null
+          created_at: string
+          custo_unitario: number
+          id: string
+          nome_chave: string | null
+          observacoes: string | null
+          origem: string
+          produto_nome: string
+          updated_at: string
+        }
+        Insert: {
+          atualizado_por?: string | null
+          calcme_produto_id?: string | null
+          created_at?: string
+          custo_unitario: number
+          id?: string
+          nome_chave?: string | null
+          observacoes?: string | null
+          origem?: string
+          produto_nome: string
+          updated_at?: string
+        }
+        Update: {
+          atualizado_por?: string | null
+          calcme_produto_id?: string | null
+          created_at?: string
+          custo_unitario?: number
+          id?: string
+          nome_chave?: string | null
+          observacoes?: string | null
+          origem?: string
+          produto_nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sistema_despesa_categorias: {
+        Row: {
+          ativo: boolean
+          cor: string | null
+          created_at: string
+          deduzida_na_venda: boolean
+          grupo: string
+          id: string
+          nome: string
+          ordem: number
+        }
+        Insert: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          deduzida_na_venda?: boolean
+          grupo?: string
+          id?: string
+          nome: string
+          ordem?: number
+        }
+        Update: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          deduzida_na_venda?: boolean
+          grupo?: string
+          id?: string
+          nome?: string
+          ordem?: number
+        }
+        Relationships: []
+      }
+      sistema_despesas: {
+        Row: {
+          calcme_bill_id: string | null
+          categoria_id: string | null
+          created_at: string
+          criado_por: string | null
+          data: string
+          descricao: string
+          documento: string | null
+          fornecedor_id: string | null
+          id: string
+          meio_pagamento_id: string | null
+          observacoes: string | null
+          origem: string
+          pago: boolean
+          updated_at: string
+          valor: number
+          venda_id: string | null
+        }
+        Insert: {
+          calcme_bill_id?: string | null
+          categoria_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data?: string
+          descricao: string
+          documento?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          meio_pagamento_id?: string | null
+          observacoes?: string | null
+          origem?: string
+          pago?: boolean
+          updated_at?: string
+          valor: number
+          venda_id?: string | null
+        }
+        Update: {
+          calcme_bill_id?: string | null
+          categoria_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data?: string
+          descricao?: string
+          documento?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          meio_pagamento_id?: string | null
+          observacoes?: string | null
+          origem?: string
+          pago?: boolean
+          updated_at?: string
+          valor?: number
+          venda_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_despesas_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_despesa_categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_despesas_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_despesas_meio_pagamento_id_fkey"
+            columns: ["meio_pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_meios_pagamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_despesas_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_calcme_vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sistema_financeiro_config: {
+        Row: {
+          comissao_pct: number
+          id: boolean
+          imposto_pct: number
+          taxa_cartao_pct: number
+          updated_at: string
+        }
+        Insert: {
+          comissao_pct?: number
+          id?: boolean
+          imposto_pct?: number
+          taxa_cartao_pct?: number
+          updated_at?: string
+        }
+        Update: {
+          comissao_pct?: number
+          id?: boolean
+          imposto_pct?: number
+          taxa_cartao_pct?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sistema_financeiro_sync_log: {
+        Row: {
+          contas: number
+          detalhes: Json | null
+          errors: number
+          id: string
+          itens: number
+          status: string
+          synced_at: string
+          vendas: number
+        }
+        Insert: {
+          contas?: number
+          detalhes?: Json | null
+          errors?: number
+          id?: string
+          itens?: number
+          status: string
+          synced_at?: string
+          vendas?: number
+        }
+        Update: {
+          contas?: number
+          detalhes?: Json | null
+          errors?: number
+          id?: string
+          itens?: number
+          status?: string
+          synced_at?: string
+          vendas?: number
+        }
+        Relationships: []
+      }
       sistema_fornecedores: {
         Row: {
           ativo: boolean
@@ -832,6 +1284,7 @@ export type Database = {
           id: string
           meta: Json | null
           nome: string
+          taxa_pct: number
           updated_at: string
         }
         Insert: {
@@ -840,6 +1293,7 @@ export type Database = {
           id?: string
           meta?: Json | null
           nome: string
+          taxa_pct?: number
           updated_at?: string
         }
         Update: {
@@ -848,9 +1302,48 @@ export type Database = {
           id?: string
           meta?: Json | null
           nome?: string
+          taxa_pct?: number
           updated_at?: string
         }
         Relationships: []
+      }
+      sistema_orcamento: {
+        Row: {
+          categoria_id: string
+          competencia: string
+          created_at: string
+          id: string
+          observacoes: string | null
+          previsto: number
+          updated_at: string
+        }
+        Insert: {
+          categoria_id: string
+          competencia: string
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          previsto?: number
+          updated_at?: string
+        }
+        Update: {
+          categoria_id?: string
+          competencia?: string
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          previsto?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_orcamento_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_despesa_categorias"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sistema_orcamentos: {
         Row: {
@@ -1495,6 +1988,69 @@ export type Database = {
           },
         ]
       }
+      sistema_recebimentos: {
+        Row: {
+          calcme_bill_id: string | null
+          created_at: string
+          criado_por: string | null
+          data: string
+          descricao: string | null
+          documento: string | null
+          id: string
+          meio_pagamento_id: string | null
+          observacoes: string | null
+          origem: string
+          updated_at: string
+          valor: number
+          venda_id: string | null
+        }
+        Insert: {
+          calcme_bill_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data?: string
+          descricao?: string | null
+          documento?: string | null
+          id?: string
+          meio_pagamento_id?: string | null
+          observacoes?: string | null
+          origem?: string
+          updated_at?: string
+          valor: number
+          venda_id?: string | null
+        }
+        Update: {
+          calcme_bill_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data?: string
+          descricao?: string | null
+          documento?: string | null
+          id?: string
+          meio_pagamento_id?: string | null
+          observacoes?: string | null
+          origem?: string
+          updated_at?: string
+          valor?: number
+          venda_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_recebimentos_meio_pagamento_id_fkey"
+            columns: ["meio_pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_meios_pagamento"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_recebimentos_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_calcme_vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sistema_tecnicas: {
         Row: {
           ativo: boolean
@@ -1833,6 +2389,62 @@ export type Database = {
       }
     }
     Views: {
+      sistema_venda_item_resultado: {
+        Row: {
+          calcme_item_id: string | null
+          calcme_produto_id: string | null
+          comissao_pct: number | null
+          comissao_valor: number | null
+          custo_fonte: string | null
+          custo_total: number | null
+          custo_unitario: number | null
+          id: string | null
+          imposto_pct: number | null
+          imposto_valor: number | null
+          lucro: number | null
+          produto_nome: string | null
+          quantidade: number | null
+          sem_custo: boolean | null
+          taxa_cartao_pct: number | null
+          taxa_cartao_valor: number | null
+          terceirizada_total: number | null
+          terceirizada_unit: number | null
+          valor_total: number | null
+          valor_unitario: number | null
+          venda_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_calcme_venda_itens_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_calcme_vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sistema_venda_resultado: {
+        Row: {
+          cmv: number | null
+          comissao: number | null
+          imposto: number | null
+          itens_sem_custo: number | null
+          itens_total: number | null
+          lucro: number | null
+          taxa_cartao: number | null
+          terceirizada: number | null
+          venda_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_calcme_venda_itens_venda_id_fkey"
+            columns: ["venda_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_calcme_vendas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vw_fora_de_casa: {
         Row: {
           alerta: string | null
@@ -2060,6 +2672,10 @@ export type Database = {
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       sistema_cor_pedido: { Args: { p_numero: string }; Returns: string }
+      sistema_dashboard_financeiro: {
+        Args: { p_fim?: string; p_inicio?: string }
+        Returns: Json
+      }
       sistema_get_bootstrap: { Args: never; Returns: Json }
       sistema_get_custom_product_variants: {
         Args: { p_parent_id: string }
@@ -2086,6 +2702,17 @@ export type Database = {
       sistema_next_pedido_numero: { Args: never; Returns: string }
       sistema_search_products: {
         Args: { p_page?: number; p_page_size?: number; p_search?: string }
+        Returns: Json
+      }
+      sistema_venda_detalhe: { Args: { p_venda_id: string }; Returns: Json }
+      sistema_vendas_conferencia: {
+        Args: {
+          p_busca?: string
+          p_fim?: string
+          p_inicio?: string
+          p_limite?: number
+          p_status?: string
+        }
         Returns: Json
       }
       sistema_verificar_senha_exclusao: {

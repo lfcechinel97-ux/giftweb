@@ -18,21 +18,28 @@ import { SistemaProvider } from "@/contexts/SistemaContext";
  */
 const lazyRetry = (factory: () => Promise<{ default: React.ComponentType<any> }>) =>
   lazy(() =>
-    factory().catch(async (err) => {
+    factory().catch(async () => {
+      // Espera um pouco (rede instável) e tenta de novo
+      await new Promise((r) => setTimeout(r, 600));
       try {
         return await factory();
       } catch {
+        // Chunk antigo não existe mais no servidor: recarrega a página uma vez
         const KEY = "chunk_reload_at";
         const last = Number(sessionStorage.getItem(KEY) || 0);
         if (Date.now() - last > 15000) {
           sessionStorage.setItem(KEY, String(Date.now()));
+          const url = new URL(window.location.href);
+          url.searchParams.set("_r", String(Date.now()));
+          window.location.replace(url.toString());
+        } else {
           window.location.reload();
-          return new Promise<never>(() => {});
         }
-        throw err;
+        return new Promise<never>(() => {});
       }
     }),
   );
+
 
 // Lazy-loaded routes
 const AdminSync = lazyRetry(() => import("./pages/AdminSync.tsx"));
