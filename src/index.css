@@ -196,19 +196,19 @@ input[type="range"]::-moz-range-thumb {
   /* Espelha --gw-bg (#EEF2F8). O shadcn precisa do triplete HSL cru, então o
      valor aparece duas vezes; se mudar um, mude o outro. */
   --background: 216 42% 95%;      /* = --gw-bg */
-  --foreground: 222 47% 11%;      /* #0F172A */
+  --foreground: 218 69% 20%;      /* = --gw-text (#102A56), azul-marinho */
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 218 69% 20%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
+  --popover-foreground: 218 69% 20%;
   --primary: 221 83% 53%;         /* #2563EB */
   --primary-foreground: 0 0% 100%;
   --secondary: 220 30% 96%;
-  --secondary-foreground: 222 47% 11%;
+  --secondary-foreground: 218 69% 20%;
   --muted: 220 30% 96%;
   --muted-foreground: 220 9% 46%; /* #6B7280 */
   --accent: 220 30% 96%;
-  --accent-foreground: 222 47% 11%;
+  --accent-foreground: 218 69% 20%;
   --border: 223 45% 93%;          /* #E4E9F5 */
   --input: 223 45% 93%;
   --ring: 221 83% 53%;
@@ -230,7 +230,7 @@ input[type="range"]::-moz-range-thumb {
   font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: #0F172A;
+  color: var(--gw-text);
 }
 .sistema-theme label { font-weight: 500; }
 .sistema-theme p, .sistema-theme span, .sistema-theme td, .sistema-theme input, .sistema-theme textarea { font-weight: 400; }
@@ -292,10 +292,11 @@ input[type="range"]::-moz-range-thumb {
   --gw-sidebar-hover: rgba(255,255,255,.07);
   --gw-sidebar-active: #2563EB;
 
-  /* Texto */
-  --gw-text: #0B1220;
-  --gw-text-secondary: #47536B;
-  --gw-text-muted: #8A96A6;
+  /* Texto — azul-marinho, nunca preto. Preto puro sobre branco vibra e
+     briga com o azul da marca; o marinho assenta e mantem o conjunto frio. */
+  --gw-text: #102A56;
+  --gw-text-secondary: #45567C;
+  --gw-text-muted: #68769A;   /* 4.5:1 sobre branco — e quem pinta os rótulos QTD/UNIT./TOTAL, que são texto pequeno e precisam de AA */
 
   /* ── Azul: dois tons ───────────────────────────────────────────────────
      `vivid` é o azul de AÇÃO — botão primário, item ativo do menu, barra da

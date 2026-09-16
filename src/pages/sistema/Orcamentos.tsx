@@ -634,19 +634,16 @@ export default function Orcamentos() {
               </div>
 
               {/* Coluna 2: itens */}
-              <div
-                className="flex flex-col"
-                style={{ padding: "var(--gw-pad-card-sm)", gap: 10, background: "var(--gw-surface-alt)" }}
-              >
+              <div className="flex flex-col" style={{ background: "var(--gw-surface)" }}>
                 {o.itens.length === 0 ? (
                   <ItensSkeleton />
                 ) : o.itens.map((item, idx) => (
                   <div
                     key={idx}
-                    className="grid grid-cols-[80px_minmax(0,1fr)_78px_112px_132px] items-center gap-3 p-3 rounded-[12px]"
-                    style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-hairline)" }}
+                    className="grid grid-cols-[104px_minmax(0,1fr)_78px_112px_132px] items-center gap-4 px-4 py-3"
+                    style={{ borderTop: idx === 0 ? undefined : "2px solid var(--gw-bg)" }}
                   >
-                    <Thumb size="lg" className="!h-[72px] !w-[72px] !rounded-[10px]" src={item.mockupImagem || item.imagem} alt={item.nome} />
+                    <Thumb size="lg" className="!h-[104px] !w-[104px] !rounded-[12px]" src={item.mockupImagem || item.imagem} alt={item.nome} />
                     <span className="flex flex-col min-w-0 gap-0.5">
                       <span className="gw-title text-[14px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
                       {item.observacao && (

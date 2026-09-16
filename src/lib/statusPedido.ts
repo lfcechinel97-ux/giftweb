@@ -112,7 +112,7 @@ export const fundoSuave = (cor: string, pct = 12) =>
  * criar — uma lista de variantes escritas à mão só cobriria as 14 iniciais.
  */
 export const textoForte = (cor: string) =>
-  `color-mix(in srgb, ${cor} 72%, #0B1220)`;
+  `color-mix(in srgb, ${cor} 72%, #102A56)`;
 
 /**
  * As 8 colunas do Kanban do PCP, na ordem do fluxo do galpão.

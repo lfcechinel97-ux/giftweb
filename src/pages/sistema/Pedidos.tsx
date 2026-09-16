@@ -326,9 +326,19 @@ export default function Pedidos() {
   ].filter(Boolean) as { key: string; label: string; clear: () => void }[];
 
   return (
-    <div className="space-y-5">
-      {/* Cabeçalho */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+    <div className="space-y-4">
+      {/* Painel de controle — titulo, abas e filtros num cartao branco so,
+          para o topo da pagina ter o mesmo peso dos cartoes da lista. */}
+      <div
+        className="flex flex-col"
+        style={{
+          background: "var(--gw-surface)",
+          border: "1px solid var(--gw-border)",
+          borderRadius: "var(--gw-radius-lg)",
+          boxShadow: "var(--gw-shadow-sm)",
+        }}
+      >
+      <div className="flex items-start justify-between gap-4 flex-wrap" style={{ padding: "var(--gw-pad-card)", paddingBottom: 12 }}>
         <div>
           <h2 className="gw-display" style={{ fontSize: 28 }}>Pedidos</h2>
           <p className="gw-meta">Pedidos gerados a partir de orçamentos aprovados.</p>
@@ -359,7 +369,10 @@ export default function Pedidos() {
       </div>
 
       {/* Abas por etapa */}
-      <div className="flex items-center gap-1 overflow-x-auto" style={{ borderBottom: "1px solid var(--gw-border)" }}>
+      <div
+        className="flex items-center gap-1 overflow-x-auto"
+        style={{ paddingLeft: "var(--gw-pad-card)", paddingRight: "var(--gw-pad-card)", borderBottom: "1px solid var(--gw-border)" }}
+      >
         {ABAS.map(a => {
           const ativa = aba === a.id;
           return (
@@ -391,7 +404,7 @@ export default function Pedidos() {
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2" style={{ padding: "var(--gw-pad-card)" }}>
         <div className="relative flex-1 min-w-[260px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--gw-text-muted)" }} />
           <Input
@@ -435,6 +448,7 @@ export default function Pedidos() {
         <span className="gw-meta w-full text-right lg:w-auto lg:ml-auto">
           {listLoading ? "Atualizando..." : `${pedidosTotal} pedido(s) • página ${currentPage} de ${totalPages}`}
         </span>
+      </div>
       </div>
 
       {chips.length > 0 && (
@@ -548,10 +562,7 @@ export default function Pedidos() {
               </div>
 
               {/* ── Coluna 2: itens ─────────────────────────────────────── */}
-              <div
-                className="flex flex-col"
-                style={{ padding: "var(--gw-pad-card-sm)", gap: 10, background: "var(--gw-surface-alt)" }}
-              >
+              <div className="flex flex-col" style={{ background: "var(--gw-surface)" }}>
                 {itens.length === 0 ? (
                   <div className="flex-1 flex items-center justify-center py-8 gw-meta">
                     Nenhum item neste pedido. Abra “Editar pedido” para adicionar.
@@ -559,10 +570,10 @@ export default function Pedidos() {
                 ) : itens.map((item, idx) => (
                   <div
                     key={item.id || idx}
-                    className="grid grid-cols-[80px_minmax(0,1fr)_78px_112px_132px] items-center gap-3 p-3 rounded-[12px]"
-                    style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-hairline)" }}
+                    className="grid grid-cols-[104px_minmax(0,1fr)_78px_112px_132px] items-center gap-4 px-4 py-3"
+                    style={{ borderTop: idx === 0 ? undefined : "2px solid var(--gw-bg)" }}
                   >
-                    <Thumb size="lg" className="!h-[72px] !w-[72px] !rounded-[10px]" src={item.mockupImagem || item.imagem} alt={item.nome} />
+                    <Thumb size="lg" className="!h-[104px] !w-[104px] !rounded-[12px]" src={item.mockupImagem || item.imagem} alt={item.nome} />
 
                     <span className="flex flex-col min-w-0 gap-1">
                       <span className="gw-title text-[14px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
