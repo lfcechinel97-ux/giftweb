@@ -13,7 +13,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { OrderNumber, Thumb, Money } from "@/components/sistema/ui";
+import { OrderNumber, Thumb, Money, StatusBadge } from "@/components/sistema/ui";
+import { statusInfo, slugGravavel, COLAPSA_SEM_MIGRATION } from "@/lib/statusPedido";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useSistema, clienteDisplay, type Pedido, type PedidoItem, type QuoteItem } from "@/contexts/SistemaContext";
@@ -31,18 +32,7 @@ const num = (v: unknown) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-/* Etapas do PCP em que o item já saiu da fase inicial */
-const PCP_LABEL: Record<string, string> = {
-  organizando_pedido: "Organizando Pedido",
-  pronto_producao: "Pronto p/ Produção",
-  teste_fisico: "Teste Físico",
-  preparacao: "Preparação",
-  em_producao: "Em Produção",
-  embalagem_pagamento: "Embalagem & Pagamento",
-  aguardando_coleta: "Aguardando Coleta",
-  enviado: "Enviado",
-  cancelado: "Cancelado",
-};
+/* Rótulos e cores de etapa vêm de src/lib/statusPedido.ts */
 
 type ProducaoRow = { id: string; item_id: string; status: string };
 
@@ -169,8 +159,34 @@ const PedidoForm: React.FC = () => {
     return () => { cancel = true; };
   }, [id]);
 
+  /* Sem linha de produção o item não tem etapa — devolver um status inventado
+     mentiria na tela. O badge mostra "Sem status" e o backfill da migration
+     20260916130000 resolve a origem. */
   const statusDoItem = (itemId: string) =>
-    producao.find(r => r.item_id === itemId)?.status || "organizando_pedido";
+    producao.find(r => r.item_id === itemId)?.status;
+
+  /* Troca a etapa do item: grava só aquela linha, otimista. */
+  const alterarStatusItem = async (itemId: string, slug: string) => {
+    const row = producao.find(r => r.item_id === itemId);
+    if (!row) {
+      toast.error("Este item ainda não tem linha de produção. Rode a migration de backfill.");
+      return;
+    }
+    const anterior = row.status;
+    setProducao(prev => prev.map(r => (r.id === row.id ? { ...r, status: slug } : r)));
+    const { error } = await supabase
+      .from("sistema_producao_itens")
+      .update({ status: slugGravavel(slug) })
+      .eq("id", row.id);
+    if (error) {
+      setProducao(prev => prev.map(r => (r.id === row.id ? { ...r, status: anterior } : r)));
+      toast.error(`Não foi possível mudar a etapa. ${error.message || ""}`);
+      return;
+    }
+    if (COLAPSA_SEM_MIGRATION.has(slug)) {
+      toast.warning(`"${statusInfo(slug).nome}" ainda não tem valor próprio no banco — aplique a migration do catálogo de status.`);
+    }
+  };
 
   const subtotal = useMemo(
     () => itens.reduce((s, i) => s + (num(i.total) || num(i.quantidade) * num(i.precoUnitario)), 0),
@@ -203,12 +219,15 @@ const PedidoForm: React.FC = () => {
 
   const pedirRemocao = (item: PedidoItem) => {
     const st = statusDoItem(item.id);
-    if (st === "enviado") {
+    const coluna = st ? statusInfo(st).colunaPcp : "organizando_pedido";
+    if (coluna === "enviado") {
       toast.error("Item já enviado: não pode ser excluído. Use “Cancelar item”.");
       return;
     }
-    if (st !== "organizando_pedido") {
-      setConfirmRemove({ item, etapa: PCP_LABEL[st] || st });
+    /* Item sem linha de produção nunca entrou no chão de fábrica — sai sem
+       confirmação, igual a um que ainda está sendo organizado. */
+    if (coluna !== "organizando_pedido") {
+      setConfirmRemove({ item, etapa: statusInfo(st).nome });
       return;
     }
     setItens(prev => prev.filter(i => i.id !== item.id));
@@ -254,6 +273,7 @@ const PedidoForm: React.FC = () => {
       contato_telefone: contatoTelefone || null,
       contato_email: contatoEmail || null,
       vendedor_id: vendedorId || null,
+      status: pedido.status,
       itens: itens as never,
       subtotal,
       frete_tipo: freteTipo || null,
@@ -373,9 +393,21 @@ const PedidoForm: React.FC = () => {
           </button>
           <div>
             <h2 className="gw-display">Editar pedido</h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <OrderNumber value={pedido.numero} />
-              <span className="gw-meta">{clienteNome ? clienteDisplay(clienteNome) : "Sem cliente"}</span>
+              {/* Pedido importado não tem cliente vinculado — o Calcme só manda
+                  o nome. Mostrar "Sem cliente" escondia o nome que existe. */}
+              <span className="gw-meta">
+                {clienteNome
+                  ? clienteDisplay(clienteNome)
+                  : (pedido.clienteSnapshot?.nome || pedido.contatoNome || "Sem cliente")}
+              </span>
+              <StatusBadge
+                status={pedido.status}
+                nivel="pedido"
+                size="sm"
+                onSelect={slug => setPedido(p => (p ? { ...p, status: slug as Pedido["status"] } : p))}
+              />
             </div>
           </div>
         </div>
@@ -417,8 +449,8 @@ const PedidoForm: React.FC = () => {
             return (
               <div
                 key={item.id}
-                className="grid grid-cols-[72px_1fr_150px_110px_110px_90px] items-center gap-3 p-2 rounded-lg"
-                style={{ border: "1px solid var(--gw-border)", opacity: cancelado ? 0.5 : 1 }}
+                className="grid grid-cols-[72px_1fr_200px_96px_116px_88px] items-center gap-3 p-2 rounded-lg"
+                style={{ border: "1px solid var(--gw-hairline)", opacity: cancelado ? 0.5 : 1 }}
               >
                 <button
                   type="button"
@@ -441,17 +473,30 @@ const PedidoForm: React.FC = () => {
                 </button>
                 <div className="min-w-0 flex flex-col gap-1">
                   <div className="gw-title text-[13.5px] truncate" style={{ fontWeight: 600 }}>{item.nome}</div>
-                  <Input
+                  {/* Edição no lugar: sem moldura até o foco, para a linha não
+                      virar um campo vazio gigante quando não há personalização
+                      (que é o caso de todo item vindo do Calcme). */}
+                  <input
                     value={item.observacao ?? ""}
                     onChange={e => {
                       const v = e.target.value;
                       setItens(prev => prev.map(i => (i.id === item.id ? { ...i, observacao: v } : i)));
                     }}
-                    placeholder="Personalização — ex.: DTF Têxtil, Laser, cor, nomes da gravação"
-                    className="h-7 text-[12px]"
+                    placeholder="+ personalização — DTF, laser, cor, nomes da gravação"
+                    className="h-6 -ml-1 px-1 w-full rounded text-[12px] bg-transparent border border-transparent
+                               hover:border-[var(--gw-border)] focus:border-[var(--gw-primary)] focus:bg-[var(--gw-surface)]
+                               focus:outline-none transition-colors placeholder:text-[var(--gw-text-muted)]"
+                    style={{ color: "var(--gw-text-secondary)" }}
                   />
                 </div>
-                <span className="gw-meta">{cancelado ? "Cancelado" : (PCP_LABEL[st] || st)}</span>
+                <span onClick={e => e.stopPropagation()}>
+                  <StatusBadge
+                    status={cancelado ? "cancelado" : st}
+                    nivel="item"
+                    size="sm"
+                    onSelect={cancelado ? undefined : slug => alterarStatusItem(item.id, slug)}
+                  />
+                </span>
                 <Input
                   type="number"
                   min={1}

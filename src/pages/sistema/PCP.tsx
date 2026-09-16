@@ -20,6 +20,7 @@ import { sizedImage } from "@/lib/imageSize";
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/sistema/ui/Money";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
+import { COLUNAS_PCP, corDaColuna } from "@/lib/statusPedido";
 
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
@@ -99,16 +100,15 @@ interface HistoricoRow {
 
 /* ── Status columns config ──────────────────────────────────────────────── */
 
-const STATUS_COLS: { value: PcpStatus; label: string; color: string }[] = [
-  { value: "organizando_pedido",  label: "Organizando Pedido",    color: "#64748B" },
-  { value: "pronto_producao",     label: "Pronto p/ Produção",    color: "#14B8A6" },
-  { value: "teste_fisico",        label: "Teste Físico",          color: "#EAB308" },
-  { value: "preparacao",          label: "Preparação",            color: "#F97316" },
-  { value: "em_producao",         label: "Em Produção",           color: "#F97316" },
-  { value: "embalagem_pagamento", label: "Embalagem & Pagamento", color: "#EAB308" },
-  { value: "aguardando_coleta",   label: "Aguardando Coleta",     color: "#EAB308" },
-  { value: "enviado",             label: "Enviado",               color: "#16A34A" },
-];
+/* Colunas e cores vêm de src/lib/statusPedido.ts — mesma fonte que a lista de
+   Pedidos e o Editar Pedido usam. Antes o PCP tinha paleta própria, com três
+   colunas repetindo a mesma cor. */
+const STATUS_COLS: { value: PcpStatus; label: string; color: string }[] =
+  COLUNAS_PCP.map(c => ({
+    value: c.coluna as PcpStatus,
+    label: c.rotulo,
+    color: corDaColuna(c.coluna),
+  }));
 
 const STATUS_MAP = Object.fromEntries(STATUS_COLS.map(c => [c.value, c])) as Record<string, typeof STATUS_COLS[number]>;
 

@@ -86,6 +86,36 @@ export function opcoesStatus(nivel: "pedido" | "item"): StatusInfo[] {
 export const fundoSuave = (cor: string, pct = 12) =>
   `color-mix(in srgb, ${cor} ${pct}%, #FFFFFF)`;
 
+/**
+ * As 8 colunas do Kanban do PCP, na ordem do fluxo do galpão.
+ *
+ * Diferente dos status, as colunas são ESTRUTURAIS — fazem parte do layout do
+ * quadro e não são editáveis pelo usuário. Cada uma tem um status canônico: é
+ * ele que dá a cor da coluna e é o valor gravado quando um card é arrastado
+ * para lá.
+ *
+ * A cor sai daqui para o PCP parar de ter paleta própria. Na tabela antiga do
+ * PCP, `preparacao` e `em_producao` dividiam o mesmo laranja, e `teste_fisico`,
+ * `embalagem_pagamento` e `aguardando_coleta` dividiam o mesmo amarelo — três
+ * colunas visualmente idênticas, o oposto de cor que informa.
+ */
+export const COLUNAS_PCP = [
+  { coluna: "organizando_pedido",  rotulo: "Organizando Pedido",    canonico: "organizando_anotacoes" },
+  { coluna: "pronto_producao",     rotulo: "Pronto p/ Produção",    canonico: "imprimir_ordem_producao" },
+  { coluna: "teste_fisico",        rotulo: "Teste Físico",          canonico: "aguardando_teste" },
+  { coluna: "preparacao",          rotulo: "Preparação",            canonico: "preparar_dtf" },
+  { coluna: "em_producao",         rotulo: "Em Produção",           canonico: "a_produzir" },
+  { coluna: "embalagem_pagamento", rotulo: "Embalagem & Pagamento", canonico: "inserir_medidas" },
+  { coluna: "aguardando_coleta",   rotulo: "Aguardando Coleta",     canonico: "aguardando_coleta" },
+  { coluna: "enviado",             rotulo: "Enviado",               canonico: "coletado_enviado" },
+] as const;
+
+/** Cor da coluna = cor do seu status canônico. */
+export const corDaColuna = (coluna: string): string => {
+  const c = COLUNAS_PCP.find(x => x.coluna === coluna);
+  return c ? statusInfo(c.canonico).cor : DESCONHECIDO.cor;
+};
+
 /* ──────────────────────────────────────────────────────────────────────────
    PONTE TEMPORÁRIA — apagar quando 20260916120000_status_catalogo.sql rodar.
 
