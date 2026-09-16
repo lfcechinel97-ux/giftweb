@@ -1241,7 +1241,7 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
             disabled={!selectedProduct || quantidade <= 0}
             className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50"
           >
-            {item ? "Salvar Alterações" : "Adicionar ao Orçamento"}
+            {item ? "Salvar Alterações" : "Adicionar item"}
           </button>
         </div>
       </div>
