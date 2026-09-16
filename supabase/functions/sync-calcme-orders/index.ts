@@ -48,6 +48,25 @@ const norm = (s: unknown): string =>
 
 const ALLOWED_NORM = new Set(ALLOWED_STATUS_TITLES.map(norm));
 
+/**
+ * O Calcme lança o frete como se fosse um PRODUTO do pedido ("Frete FOB",
+ * "Frete CIF", "Frete a combinar"). Aqui esses itens saem da lista de produtos
+ * e viram o valor de frete do pedido: não aparecem como produto na tela, não
+ * geram card no PCP e não entram na contagem de itens.
+ *
+ * O item original continua espelhado em sistema_calcme_itens — nada se perde.
+ */
+const FRETE_RE = /(^|\s)fretes?(\s|$)/;
+const ehItemFrete = (it: unknown): boolean =>
+  FRETE_RE.test(norm((it as { produtoNome?: unknown })?.produtoNome));
+
+/** "Frete FOB" -> "FOB" (a tela mostra "Frete (FOB)"). */
+const tipoDoFrete = (it: unknown): string | null => {
+  const bruto = String((it as { produtoNome?: unknown })?.produtoNome ?? "").trim();
+  const resto = bruto.replace(/^\s*fretes?\s*/i, "").trim();
+  return resto || null;
+};
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -237,8 +256,18 @@ serve(async (req: Request) => {
           if (r.calcme_item_id && r.item_id) stableId.set(r.calcme_item_id, r.item_id);
         }
 
+        // Separa frete dos produtos ANTES de montar o jsonb (ver FRETE_RE)
+        const itensFrete = rawItems.filter(ehItemFrete);
+        const itensProduto = rawItems.filter((it) => !ehItemFrete(it));
+        const freteValor = itensFrete.reduce((soma, it) => {
+          const qtd = Number(it?.quantidade ?? 0) || 0;
+          const vUnit = Number(it?.valorUnit ?? 0) || 0;
+          return soma + (Number(it?.valorTotal ?? qtd * vUnit) || 0);
+        }, 0);
+        const freteTipo = itensFrete.length > 0 ? tipoDoFrete(itensFrete[0]) : null;
+
         // Monta o jsonb itens (fonte da UI de pedidos e do futuro PCP)
-        const itensJsonb = rawItems.map((it) => {
+        const itensJsonb = itensProduto.map((it) => {
           const calcmeItemId = String(it?.id ?? "");
           const itemUuid = stableId.get(calcmeItemId) ?? crypto.randomUUID();
           if (calcmeItemId) stableId.set(calcmeItemId, itemUuid);
@@ -264,11 +293,18 @@ serve(async (req: Request) => {
           .eq("calcme_order_id", calcmeOrderId)
           .maybeSingle();
 
+        // O Calcme devolve só o NOME do cliente no detalhe do pedido — sem id
+        // nem documento para casar com sistema_clientes. Guardamos o snapshot
+        // para a tela ter o que mostrar enquanto o vínculo não existe.
+        const clienteNome = detail?.clienteNome ?? ord?.clienteNome ?? null;
+
         const payload: Record<string, unknown> = {
-          contato_nome: detail?.clienteNome ?? ord?.clienteNome ?? null,
+          contato_nome: clienteNome,
+          cliente_snapshot: clienteNome ? { nome: clienteNome, origem: "calcme" } : null,
           observacoes: detail?.observacoes ?? null,
-          subtotal: valorTotal,
-          frete_valor: 0,
+          subtotal: valorTotal - freteValor,
+          frete_tipo: freteTipo,
+          frete_valor: freteValor,
           total: valorTotal,
           itens: itensJsonb,
           calcme_order_id: calcmeOrderId,

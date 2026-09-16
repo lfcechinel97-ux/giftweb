@@ -269,12 +269,19 @@ input[type="range"]::-moz-range-thumb {
 
 /* ===== Design System /sistema — tokens (não aplicados às telas ainda) ===== */
 :root {
-  /* Superfícies e estrutura */
-  --gw-bg: #F7F8FA;
+  /* Superfícies e estrutura
+     Três níveis com distância suficiente para o cartão branco destacar do
+     fundo sem precisar de sombra pesada: fundo levemente mais frio e fundo. */
+  --gw-bg: #F1F4F9;
   --gw-surface: #FFFFFF;
-  --gw-surface-alt: #F2F4F7;
-  --gw-border: #E3E8EF;
-  --gw-border-strong: #CDD5E0;
+  --gw-surface-alt: #F6F8FB;
+
+  /* Linhas — hairline é o separador DENTRO do cartão (linhas de tabela), quase
+     imperceptível de perto e suficiente para o olho seguir a linha. border é a
+     borda do próprio cartão. strong só para divisor estrutural. */
+  --gw-hairline: #EEF1F6;
+  --gw-border: #E4E9F0;
+  --gw-border-strong: #D3DAE5;
   --gw-sidebar: #0D2340;
   --gw-sidebar-hover: #16345C;
   --gw-sidebar-active: #1E4A80;
@@ -309,10 +316,11 @@ input[type="range"]::-moz-range-thumb {
   --gw-stage-enviado: #0EA36B;
   --gw-stage-cancelado: #E5484D;
 
-  /* Sombras */
-  --gw-shadow-sm: 0 1px 2px rgba(11,18,32,.06);
-  --gw-shadow-md: 0 4px 12px rgba(11,18,32,.08);
-  --gw-shadow-lg: 0 16px 48px rgba(11,18,32,.16);
+  /* Sombras — elevação curta e de baixa opacidade; a separação vem da cor de
+     fundo e da borda, não de sombra borrada. */
+  --gw-shadow-sm: 0 1px 1px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.03);
+  --gw-shadow-md: 0 2px 4px rgba(16,24,40,.05), 0 6px 16px rgba(16,24,40,.06);
+  --gw-shadow-lg: 0 12px 32px rgba(16,24,40,.12);
 
   /* Raio e densidade */
   --gw-radius-sm: 6px;
@@ -322,13 +330,21 @@ input[type="range"]::-moz-range-thumb {
   --gw-control-h: 36px;
 }
 
-/* Escala tipográfica */
-.gw-display { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: var(--gw-text); }
+/* Escala tipográfica
+   Inter é variável (opsz 14..32): `font-optical-sizing: auto` faz o desenho da
+   letra se ajustar ao tamanho — em 11px abre o espacejamento e engrossa o
+   traço, em 24px afina. É o que separa "fonte bonita" de "fonte bem usada".
+   `cv05` dá o l com cauda, que desfaz a confusão l/I nos nomes de produto. */
+.sistema-theme {
+  font-optical-sizing: auto;
+  font-feature-settings: 'cv05' 1;
+}
+.gw-display { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -0.021em; color: var(--gw-text); }
 .gw-title { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-size: 18px; font-weight: 600; letter-spacing: -0.015em; color: var(--gw-text); }
-.gw-body { font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 400; letter-spacing: 0; color: var(--gw-text); }
-.gw-body-strong { font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 500; color: var(--gw-text); }
-.gw-label { font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gw-text-secondary); }
-.gw-meta { font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 400; color: var(--gw-text-secondary); }
+.gw-body { font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 400; letter-spacing: -0.006em; color: var(--gw-text); }
+.gw-body-strong { font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: -0.006em; color: var(--gw-text); }
+.gw-label { font-family: 'Inter', system-ui, sans-serif; font-size: 10.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--gw-text-muted); }
+.gw-meta { font-family: 'Inter', system-ui, sans-serif; font-size: 12px; font-weight: 400; letter-spacing: -0.003em; color: var(--gw-text-secondary); }
 /* Números de pedido/orçamento e nomes: display font */
 .gw-num { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-weight: 600; font-variant-numeric: tabular-nums; }
 /* Valores/números tabulares em Inter */

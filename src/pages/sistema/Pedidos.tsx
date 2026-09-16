@@ -14,7 +14,8 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { OrderNumber, MetaField, Thumb, Money } from "@/components/sistema/ui";
+import { OrderNumber, MetaField, Thumb, Money, StatusBadge } from "@/components/sistema/ui";
+import { statusInfo, opcoesStatus, slugGravavel, COLAPSA_SEM_MIGRATION } from "@/lib/statusPedido";
 import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaContext";
 import { supabase } from "@/integrations/supabase/client";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
@@ -23,26 +24,8 @@ import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 
 type PedidoStatus = Pedido["status"];
 
-const STATUS_OPTS: PedidoStatus[] = ["novo", "producao", "pronto", "enviado", "entregue", "cancelado"];
-
-const STATUS_LABEL: Record<PedidoStatus, string> = {
-  novo: "Novo",
-  producao: "Em produção",
-  pronto: "Pronto",
-  enviado: "Enviado",
-  entregue: "Entregue",
-  cancelado: "Cancelado",
-};
-
-/** Cor cheia (sólida) de cada etapa — nunca cinza sobre cinza. */
-const STATUS_SOLID: Record<PedidoStatus, string> = {
-  novo: "var(--gw-indigo)",
-  producao: "var(--gw-stage-producao)",
-  pronto: "var(--gw-stage-pronto)",
-  enviado: "var(--gw-stage-enviado)",
-  entregue: "var(--gw-success)",
-  cancelado: "var(--gw-stage-cancelado)",
-};
+/* Rótulos e cores vêm de src/lib/statusPedido.ts — fonte única, compartilhada
+   com o item e preparada para virar a tabela `sistema_status`. */
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
 
@@ -66,6 +49,22 @@ const num = (v: unknown) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 };
+
+/* Colunas da tabela de itens — cabeçalho e linhas compartilham a MESMA grade,
+   senão os números desalinham do rótulo. Ordem igual à do Calcme: miniatura,
+   etapa do item, produto, números. O layout antigo usava thumb de 160px e não
+   tinha coluna de etapa: linha de ~190px de altura, quase toda vazia. */
+const ITEM_COLS = "grid-cols-[72px_212px_minmax(0,1fr)_80px_116px_132px]";
+
+/** Par rótulo/valor do rodapé do pedido, em linha. */
+const Legenda = ({ rotulo, children }: { rotulo: string; children: React.ReactNode }) => (
+  <span className="inline-flex items-baseline gap-1.5 min-w-0">
+    <span className="gw-label shrink-0">{rotulo}</span>
+    <span className="text-[13px] truncate" style={{ color: "var(--gw-text)", fontWeight: 500 }}>
+      {children}
+    </span>
+  </span>
+);
 
 /* ── Component ───────────────────────────────────────────────────────────── */
 
@@ -133,31 +132,80 @@ export default function Pedidos() {
       setSyncing(false);
     }
   };
-  /* Progresso de produção (sistema_producao_itens) — cacheado 60s */
-  const { data: progresso = {} } = useQuery<Record<string, { enviados: number; total: number }>>({
-    queryKey: ["sistema", "pedidos", "progresso"],
+  /* Status de produção POR ITEM, só dos pedidos da página.
+     Antes esta query trazia a tabela sistema_producao_itens inteira, sem filtro
+     nem limite, só para montar o contador "x/y" — e o contador comparava com
+     'expedido'/'enviado_terceiro', valores que a migration 09 eliminou, então
+     vivia mostrando 0. */
+  const pedidoIds = useMemo(
+    () => pedidos.map(p => p.id).sort(),
+    [pedidos],
+  );
+
+  const producaoKey = useMemo(
+    () => ["sistema", "pedidos", "producao", pedidoIds] as const,
+    [pedidoIds],
+  );
+
+  const { data: producao } = useQuery({
+    queryKey: producaoKey,
+    enabled: pedidoIds.length > 0,
     staleTime: 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("sistema_producao_itens")
-        .select("pedido_id,status");
-      if (error || !data) return {};
-      const acc: Record<string, { enviados: number; total: number }> = {};
-      for (const r of data as { pedido_id: string; status: string }[]) {
-        const e = acc[r.pedido_id] ?? { enviados: 0, total: 0 };
-        e.total += 1;
-        if (r.status === "expedido" || r.status === "enviado_terceiro") e.enviados += 1;
-        acc[r.pedido_id] = e;
+        .select("pedido_id,item_id,status")
+        .in("pedido_id", pedidoIds);
+      const vazio = { porItem: {} as Record<string, string>, porPedido: {} as Record<string, { enviados: number; total: number }> };
+      if (error || !data) return vazio;
+
+      const porItem: Record<string, string> = {};
+      const porPedido: Record<string, { enviados: number; total: number }> = {};
+      for (const r of data as { pedido_id: string; item_id: string; status: string }[]) {
+        porItem[r.item_id] = r.status;
+        const acc = porPedido[r.pedido_id] ?? { enviados: 0, total: 0 };
+        acc.total += 1;
+        if (statusInfo(r.status).colunaPcp === "enviado") acc.enviados += 1;
+        porPedido[r.pedido_id] = acc;
       }
-      return acc;
+      return { porItem, porPedido };
     },
   });
 
+  const statusDoItem = (itemId?: string) => (itemId ? producao?.porItem[itemId] : undefined);
+
+  /* Grava o status de UM item: atualização otimista da própria linha, sem
+     recarregar a lista (requisito de invalidação pontual). */
+  const alterarStatusItem = async (pedidoId: string, itemId: string, slug: string) => {
+    const anterior = producao?.porItem[itemId];
+    qc.setQueryData(producaoKey, (old: typeof producao) =>
+      old ? { ...old, porItem: { ...old.porItem, [itemId]: slug } } : old);
+
+    const { error } = await supabase
+      .from("sistema_producao_itens")
+      .update({ status: slugGravavel(slug) })
+      .eq("pedido_id", pedidoId)
+      .eq("item_id", itemId);
+
+    if (error) {
+      qc.setQueryData(producaoKey, (old: typeof producao) =>
+        old ? { ...old, porItem: { ...old.porItem, [itemId]: anterior ?? "" } } : old);
+      toast.error(`Não foi possível mudar o status do item. ${error.message || ""}`);
+      return;
+    }
+    if (COLAPSA_SEM_MIGRATION.has(slug)) {
+      toast.warning(`"${statusInfo(slug).nome}" ainda não tem valor próprio no banco — aplique a migration do catálogo de status para ele parar de voltar.`);
+    }
+  };
+
+  /* Pedidos importados do Calcme não têm cliente cadastrado: o Calcme devolve
+     só o nome. Cai no snapshot e, para os que foram importados antes de o
+     snapshot existir, no contato. */
   const getClienteNome = (p: Pedido) => {
     const c = clientes.find(cli => cli.id === p.clienteId);
     const nome = clienteDisplay(c);
     if (nome !== "—") return nome;
-    return p.clienteSnapshot?.nome || "—";
+    return p.clienteSnapshot?.nome || p.contatoNome || "—";
   };
 
   const getVendedorNome = (id?: string) => vendedores.find(v => v.id === id)?.nome || "—";
@@ -240,7 +288,9 @@ export default function Pedidos() {
   };
 
   const dateTone = (iso: string, status: PedidoStatus): "default" | "warning" | "danger" => {
-    if (status === "entregue" || status === "enviado" || status === "cancelado") return "default";
+    /* Pedido que já saiu ou foi cancelado não tem prazo a cobrar. */
+    const coluna = statusInfo(status).colunaPcp;
+    if (coluna === "enviado" || coluna === "cancelado") return "default";
     const diff = Math.ceil((new Date(`${iso.slice(0, 10)}T23:59:59`).getTime() - Date.now()) / 86400000);
     if (diff < 0) return "danger";
     if (diff <= 2) return "warning";
@@ -253,7 +303,7 @@ export default function Pedidos() {
   const chips: { key: string; label: string; clear: () => void }[] = [
     busca ? { key: "busca", label: `Busca: ${busca}`, clear: () => setBusca("") } : null,
     filtroStatus !== "todos"
-      ? { key: "status", label: `Status: ${STATUS_LABEL[filtroStatus as PedidoStatus]}`, clear: () => setFiltroStatus("todos") }
+      ? { key: "status", label: `Status: ${statusInfo(filtroStatus).nome}`, clear: () => setFiltroStatus("todos") }
       : null,
     dataInicio ? { key: "de", label: `De: ${dateBR(dataInicio)}`, clear: () => setDataInicio("") } : null,
     dataFim ? { key: "ate", label: `Até: ${dateBR(dataFim)}`, clear: () => setDataFim("") } : null,
@@ -309,8 +359,13 @@ export default function Pedidos() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos os status</SelectItem>
-            {STATUS_OPTS.map(s => (
-              <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>
+            {opcoesStatus("pedido").map(s => (
+              <SelectItem key={s.slug} value={s.slug}>
+                <span className="inline-flex items-center gap-2">
+                  <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ background: s.cor }} />
+                  {s.nome}
+                </span>
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -346,7 +401,7 @@ export default function Pedidos() {
           </div>
         ) : pageItems.map(p => {
           const itens = Array.isArray(p.itens) ? p.itens : [];
-          const prog = progresso[p.id];
+          const prog = producao?.porPedido[p.id];
           const { prazo, despachar, produzir } = getDatas(p);
           const subtotal = itens.length > 0
             ? itens.reduce((s, i) => s + itemTotal(i), 0)
@@ -388,28 +443,13 @@ export default function Pedidos() {
 
                 <span className="gw-meta">{new Date(p.createdAt).toLocaleDateString("pt-BR")}</span>
 
-                {/* StatusPill sólido clicável */}
+                {/* Status geral do pedido */}
                 <div onClick={e => e.stopPropagation()}>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1.5 h-[26px] px-[12px] rounded-full text-[12px] whitespace-nowrap text-white"
-                        style={{ background: STATUS_SOLID[p.status], fontWeight: 700 }}
-                      >
-                        {STATUS_LABEL[p.status]}
-                        <ChevronDown className="h-3.5 w-3.5 opacity-90" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-44">
-                      {STATUS_OPTS.map(s => (
-                        <DropdownMenuItem key={s} onClick={() => updatePedido(p.id, { status: s })}>
-                          <span className="inline-block h-2 w-2 rounded-full mr-2" style={{ background: STATUS_SOLID[s] }} />
-                          {STATUS_LABEL[s]}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <StatusBadge
+                    status={p.status}
+                    nivel="pedido"
+                    onSelect={slug => updatePedido(p.id, { status: slug as PedidoStatus })}
+                  />
                 </div>
 
                 <span className="text-right">
@@ -463,34 +503,43 @@ export default function Pedidos() {
                   <div className="rounded-lg overflow-x-auto" style={{ border: "1px solid var(--gw-border)" }}>
                     <div className="min-w-[760px]">
                     <div
-                      className="grid grid-cols-[176px_1fr_80px_110px_130px] items-center gap-3 px-3 h-9"
-                      style={{ background: "var(--gw-primary-soft)" }}
+                      className={`grid ${ITEM_COLS} items-center gap-3 px-3 h-8`}
+                      style={{ background: "var(--gw-surface-alt)", borderBottom: "1px solid var(--gw-hairline)" }}
                     >
                       <span />
-                      <span className="gw-label" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Produto</span>
-                      <span className="gw-label text-right" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Qtd</span>
-                      <span className="gw-label text-right" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Unit.</span>
-                      <span className="gw-label text-right" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Total</span>
+                      <span className="gw-label">Etapa</span>
+                      <span className="gw-label">Produto</span>
+                      <span className="gw-label text-right">Qtd</span>
+                      <span className="gw-label text-right">Unit.</span>
+                      <span className="gw-label text-right">Total</span>
                     </div>
                     {itens.length === 0 ? (
                       <div className="px-3 py-6 text-center gw-meta">Este pedido não possui itens registrados.</div>
                     ) : itens.map((item, idx) => (
                       <div
                         key={item.id || idx}
-                        className="grid grid-cols-[176px_1fr_80px_110px_130px] items-center gap-3 px-3 py-4"
-                        style={{ background: idx % 2 === 1 ? "color-mix(in srgb, var(--gw-surface-alt) 40%, var(--gw-surface))" : "var(--gw-surface)" }}
+                        className={`grid ${ITEM_COLS} items-center gap-3 px-3 py-2.5`}
+                        style={{ borderTop: idx === 0 ? undefined : "1px solid var(--gw-hairline)" }}
                       >
-                        <Thumb size="xl" src={item.mockupImagem || item.imagem} alt={item.nome} />
-                        <span className="flex flex-col min-w-0 leading-tight">
-                          <span className="gw-title text-[13px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
+                        <Thumb size="md" src={item.mockupImagem || item.imagem} alt={item.nome} />
+                        <span className="min-w-0" onClick={e => e.stopPropagation()}>
+                          <StatusBadge
+                            status={statusDoItem(item.id)}
+                            nivel="item"
+                            size="sm"
+                            onSelect={slug => alterarStatusItem(p.id, item.id, slug)}
+                          />
+                        </span>
+                        <span className="flex flex-col min-w-0 leading-snug">
+                          <span className="gw-title text-[14px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
                           {item.observacao && (
                             <span className="text-[12px] truncate" style={{ color: "var(--gw-text-secondary)" }}>{item.observacao}</span>
                           )}
                           {item.codigoComposto && (
-                            <span className="gw-tnum text-[11px]" style={{ color: "var(--gw-text-secondary)" }}>{item.codigoComposto}</span>
+                            <span className="gw-tnum text-[11px]" style={{ color: "var(--gw-text-muted)" }}>{item.codigoComposto}</span>
                           )}
                         </span>
-                        <span className="text-right gw-tnum text-[13px]" style={{ color: "var(--gw-text)" }}>{num(item.quantidade)}</span>
+                        <span className="text-right gw-tnum text-[14px]" style={{ color: "var(--gw-text)", fontWeight: 600 }}>{num(item.quantidade)}</span>
                         <span className="text-right"><Money value={num(item.precoUnitario)} /></span>
                         <span className="text-right"><Money value={itemTotal(item)} emphasis /></span>
                       </div>
@@ -498,42 +547,55 @@ export default function Pedidos() {
                     </div>
                   </div>
 
-                  {/* Totais */}
-                  <div className="h-11 rounded-lg px-4 flex items-center justify-end gap-6" style={{ background: "var(--gw-primary-soft)" }}>
-                    <span className="flex items-center gap-2">
-                      <span className="gw-label" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Subtotal</span>
-                      <Money value={subtotal} />
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <span className="gw-label" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>
-                        Frete{p.freteTipo ? ` (${p.freteTipo})` : ""}
+                  {/* Totais — o total do pedido já está no cabeçalho do grupo.
+                      Esta faixa só existe quando há frete para decompor; sem
+                      frete ela repetia o mesmo número três vezes por pedido. */}
+                  {num(p.freteValor) > 0 && (
+                    <div className="h-9 px-3 flex items-center justify-end gap-5">
+                      <span className="flex items-center gap-2">
+                        <span className="gw-label">Subtotal</span>
+                        <Money value={subtotal} />
                       </span>
-                      <Money value={num(p.freteValor)} />
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <span className="gw-label" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Total</span>
-                      <Money value={num(p.total) || total} emphasis bold />
-                    </span>
-                  </div>
+                      <span className="flex items-center gap-2">
+                        <span className="gw-label">Frete{p.freteTipo ? ` (${p.freteTipo})` : ""}</span>
+                        <Money value={num(p.freteValor)} />
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <span className="gw-label">Total</span>
+                        <Money value={num(p.total) || total} emphasis bold />
+                      </span>
+                    </div>
+                  )}
 
-                  {/* Metadados */}
-                  <div className="grid grid-cols-6 gap-4 items-start">
-                    <MetaField
-                      label="Vendedor"
-                      value={p.vendedorId ? getVendedorNome(p.vendedorId) : (p.calcmeVendedorNome || "—")}
-                    />
-                    {p.calcmeStatus
-                      ? <MetaField label="Status Calcme" value={p.calcmeStatus} />
-                      : <MetaField label="Transportadora" value={getTransportadoraNome(p.transportadoraId)} />}
-                    <MetaField label="Criado em" value={new Date(p.createdAt).toLocaleDateString("pt-BR")} />
-                    <MetaField
-                      label="Despachar até"
-                      value={dateBR(despachar)}
-                      tone={dateTone(despachar, p.status)}
-                    />
-                    <div className="flex flex-col gap-[2px]">
-                      <span className="gw-label">Prazo de produção</span>
-                      <span className="flex items-center gap-1.5">
+                  {/* Rodapé — uma linha de legenda, não seis colunas.
+                      "Criado em" saiu: a data já está no cabeçalho do grupo.
+                      O nome do contato saiu quando é igual ao do cliente, que é
+                      o caso de todo pedido vindo do Calcme. */}
+                  <div
+                    className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-2.5"
+                    style={{ borderTop: "1px solid var(--gw-hairline)" }}
+                  >
+                    <Legenda rotulo="Vendedor">
+                      {p.vendedorId ? getVendedorNome(p.vendedorId) : (p.calcmeVendedorNome || "—")}
+                    </Legenda>
+
+                    <Legenda rotulo={p.calcmeStatus ? "Status Calcme" : "Transportadora"}>
+                      {p.calcmeStatus || getTransportadoraNome(p.transportadoraId)}
+                    </Legenda>
+
+                    <Legenda rotulo="Despachar até">
+                      <span style={{
+                        color: dateTone(despachar, p.status) === "danger" ? "var(--gw-danger)"
+                          : dateTone(despachar, p.status) === "warning" ? "var(--gw-warning)"
+                          : undefined,
+                        fontWeight: dateTone(despachar, p.status) === "default" ? 500 : 600,
+                      }}>
+                        {dateBR(despachar)}
+                      </span>
+                    </Legenda>
+
+                    <Legenda rotulo="Prazo">
+                      <span className="inline-flex items-center gap-1.5">
                         <input
                           type="number"
                           min={0}
@@ -541,31 +603,29 @@ export default function Pedidos() {
                           onChange={e => setPrazoDraft(d => ({ ...d, [p.id]: e.target.value }))}
                           onBlur={e => { commitPrazo(p, e.target.value); setPrazoDraft(d => { const n = { ...d }; delete n[p.id]; return n; }); }}
                           onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                          className="h-8 w-[56px] rounded-md px-2 gw-tnum text-[13px]"
+                          className="h-7 w-[48px] rounded-md px-1.5 gw-tnum text-[13px] text-center"
                           style={{ border: "1px solid var(--gw-border)", color: "var(--gw-text)" }}
                         />
-                        <span className="gw-meta">dias</span>
+                        <span className="gw-meta">dias · produzir até {dateBR(produzir)}</span>
                       </span>
-                      <span className="gw-meta">Produzir até {dateBR(produzir)}</span>
-                    </div>
-                    <div className="flex flex-col gap-[2px] min-w-0">
-                      <span className="gw-label">Contato</span>
-                      <span className="gw-body truncate" style={{ color: "var(--gw-text)" }}>
-                        {p.contatoNome || "—"}
-                      </span>
-                      {p.contatoTelefone && (
-                        <a
-                          href={waLink(p.contatoTelefone)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[13px] font-medium"
-                          style={{ color: "var(--gw-success)" }}
-                        >
-                          <img src="/logos/whatsapp-white.svg" alt="" width={14} height={14} loading="lazy" decoding="async" />
-                          {p.contatoTelefone}
-                        </a>
-                      )}
-                    </div>
+                    </Legenda>
+
+                    {p.contatoNome && p.contatoNome !== getClienteNome(p) && (
+                      <Legenda rotulo="Contato">{p.contatoNome}</Legenda>
+                    )}
+
+                    {p.contatoTelefone && (
+                      <a
+                        href={waLink(p.contatoTelefone)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-[13px] font-medium ml-auto"
+                        style={{ color: "var(--gw-success)" }}
+                      >
+                        <img src="/logos/whatsapp-white.svg" alt="" width={14} height={14} loading="lazy" decoding="async" />
+                        {p.contatoTelefone}
+                      </a>
+                    )}
                   </div>
               </div>
             </div>

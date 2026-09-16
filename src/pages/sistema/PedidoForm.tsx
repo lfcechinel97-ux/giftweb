@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Plus, Trash2, Pencil, AlertTriangle, Lock } from "lucide-react";
+import { ChevronLeft, Plus, Trash2, Pencil, AlertTriangle, Lock, Camera, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import { useSistema, clienteDisplay, type Pedido, type PedidoItem, type QuoteIte
 import { useSistemaProducts } from "./useSistemaProducts";
 import { ItemDialog } from "./OrcamentoForm";
 import { registrarAuditoria } from "@/lib/auditoria";
+import { uploadMockup } from "@/lib/uploadMockup";
 import { useUserRole } from "@/hooks/useUserRole";
 
 const brl = (v: number) =>
@@ -85,6 +86,37 @@ const PedidoForm: React.FC = () => {
 
   const hydrated = useRef(false);
   const itensOriginais = useRef<PedidoItem[]>([]);
+
+  /* ── Foto do item ───────────────────────────────────────────────────────
+     Clicar na miniatura anexa ou substitui a foto daquele item. A imagem vai
+     para o bucket `mockups` e o jsonb guarda só a URL; a view vw_pcp lê esse
+     mesmo campo (`item->>'mockupImagem'`), então a foto aparece no card do PCP
+     assim que o pedido é salvo. */
+  const fotoInputRef = useRef<HTMLInputElement>(null);
+  const itemAlvoFoto = useRef<string | null>(null);
+  const [enviandoFoto, setEnviandoFoto] = useState<string | null>(null);
+
+  const escolherFoto = (itemId: string) => {
+    itemAlvoFoto.current = itemId;
+    fotoInputRef.current?.click();
+  };
+
+  const handleFotoItem = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const itemId = itemAlvoFoto.current;
+    e.target.value = "";
+    if (!file || !itemId) return;
+    setEnviandoFoto(itemId);
+    try {
+      const url = await uploadMockup(file, id);
+      setItens(prev => prev.map(i => (i.id === itemId ? { ...i, mockupImagem: url } : i)));
+      toast.success("Foto anexada. Salve o pedido para publicá-la no PCP.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível enviar a foto.");
+    } finally {
+      setEnviandoFoto(null);
+    }
+  };
 
   /* ── Carrega pedido e linhas de produção ────────────────────────────── */
   useEffect(() => {
@@ -370,6 +402,14 @@ const PedidoForm: React.FC = () => {
           </Button>
         </div>
 
+        <input
+          ref={fotoInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          className="hidden"
+          onChange={handleFotoItem}
+        />
+
         <div className="space-y-2">
           {itens.map(item => {
             const st = statusDoItem(item.id);
@@ -377,13 +417,39 @@ const PedidoForm: React.FC = () => {
             return (
               <div
                 key={item.id}
-                className="grid grid-cols-[64px_1fr_150px_110px_110px_90px] items-center gap-3 p-2 rounded-lg"
+                className="grid grid-cols-[72px_1fr_150px_110px_110px_90px] items-center gap-3 p-2 rounded-lg"
                 style={{ border: "1px solid var(--gw-border)", opacity: cancelado ? 0.5 : 1 }}
               >
-                <Thumb src={item.mockupImagem || item.imagem} alt={item.nome} size="sm" />
-                <div className="min-w-0">
+                <button
+                  type="button"
+                  onClick={() => escolherFoto(item.id)}
+                  disabled={enviandoFoto === item.id}
+                  title={item.mockupImagem ? "Trocar a foto deste item" : "Anexar foto deste item"}
+                  className="relative group h-14 w-14 rounded-lg overflow-hidden shrink-0"
+                >
+                  <Thumb src={item.mockupImagem || item.imagem} alt={item.nome} size="md" />
+                  <span
+                    className={`absolute inset-0 flex items-center justify-center transition-opacity ${
+                      enviandoFoto === item.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    }`}
+                    style={{ background: "rgba(15,42,92,0.62)" }}
+                  >
+                    {enviandoFoto === item.id
+                      ? <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      : <Camera className="h-4 w-4 text-white" />}
+                  </span>
+                </button>
+                <div className="min-w-0 flex flex-col gap-1">
                   <div className="gw-title text-[13.5px] truncate" style={{ fontWeight: 600 }}>{item.nome}</div>
-                  {item.observacao && <div className="gw-meta truncate">{item.observacao}</div>}
+                  <Input
+                    value={item.observacao ?? ""}
+                    onChange={e => {
+                      const v = e.target.value;
+                      setItens(prev => prev.map(i => (i.id === item.id ? { ...i, observacao: v } : i)));
+                    }}
+                    placeholder="Personalização — ex.: DTF Têxtil, Laser, cor, nomes da gravação"
+                    className="h-7 text-[12px]"
+                  />
                 </div>
                 <span className="gw-meta">{cancelado ? "Cancelado" : (PCP_LABEL[st] || st)}</span>
                 <Input

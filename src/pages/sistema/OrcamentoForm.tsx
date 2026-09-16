@@ -10,6 +10,7 @@ import ClienteDialog from "./ClienteDialog";
 import { useSistemaProducts } from "./useSistemaProducts";
 import { getEffectiveUnitPrice, getNormalizedPriceRows } from "@/utils/price";
 import { cnpjMask, cpfMask } from "./cnpj";
+import { uploadMockup } from "@/lib/uploadMockup";
 import { gerarPDFOrcamento } from "./pdf";
 
 const FRETE_TIPOS = [
@@ -920,12 +921,21 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
     setPrecoManual(false);
   };
 
-  const handleMockupUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /* Vai para o bucket `mockups` e guarda só a URL. Gravar base64 no jsonb
+     inchava cada pedido em megabytes — ver src/lib/uploadMockup.ts. */
+  const [enviandoMockup, setEnviandoMockup] = useState(false);
+  const handleMockupUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setMockupImagem(reader.result as string);
-    reader.readAsDataURL(file);
+    e.target.value = "";
+    setEnviandoMockup(true);
+    try {
+      setMockupImagem(await uploadMockup(file));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao enviar a imagem.");
+    } finally {
+      setEnviandoMockup(false);
+    }
   };
 
   const handleSalvar = () => {
@@ -1098,9 +1108,11 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="px-3 py-1.5 border rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1"
+                        disabled={enviandoMockup}
+                        className="px-3 py-1.5 border rounded-lg text-sm hover:bg-gray-50 flex items-center gap-1 disabled:opacity-60"
                       >
-                        <Upload className="w-4 h-4" /> {mockupImagem ? "Trocar" : "Enviar mockup"}
+                        <Upload className="w-4 h-4" />
+                        {enviandoMockup ? "Enviando..." : mockupImagem ? "Trocar" : "Enviar mockup"}
                       </button>
                       {mockupImagem && (
                         <button
