@@ -68,11 +68,14 @@ export default function SistemaLayout() {
 
   return (
     <div className="sistema-theme flex min-h-screen bg-background">
-      <aside className="w-[230px] min-h-screen bg-[#0F2A5C] text-white fixed left-0 top-0 flex flex-col z-50">
+      <aside
+        className="w-[230px] min-h-screen text-white fixed left-0 top-0 flex flex-col z-50"
+        style={{ background: "var(--gw-sidebar)" }}
+      >
         <div className="px-5 py-6 border-b border-white/10">
           <h2 className="text-xl tracking-tight" style={{ fontFamily: "inherit", fontWeight: 600, letterSpacing: "-0.02em" }}>
             <span style={{ color: "#fff" }}>Gift</span>
-            <span style={{ color: "#60A5FA" }}>Web</span>
+            <span style={{ color: "var(--gw-blue-vivid)" }}>Web</span>
           </h2>
           <p className="text-xs text-white/40 mt-0.5">Sistema do Vendedor</p>
         </div>
@@ -84,8 +87,8 @@ export default function SistemaLayout() {
               to={item.path}
               onMouseEnter={() => prefetch(item)}
               onFocus={() => prefetch(item)}
-              className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/65 hover:bg-white/[0.06] hover:text-white transition-colors"
-              activeClassName="!text-white !bg-white/[0.08] before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-[#2563EB]"
+              className="relative flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[14px] font-medium text-white/70 hover:bg-[var(--gw-sidebar-hover)] hover:text-white transition-colors"
+              activeClassName="!text-white !font-semibold gw-nav-ativo"
             >
               <item.icon className="h-4 w-4 shrink-0" />
               <span>{item.label}</span>
@@ -107,7 +110,7 @@ export default function SistemaLayout() {
         {/* Card de rodapé da barra lateral */}
         <div className="px-3 pb-3">
           <div className="rounded-[12px] p-4 bg-white/[0.06] border border-white/10">
-            <BarChart3 className="h-5 w-5 mb-2" style={{ color: "#60A5FA" }} />
+            <BarChart3 className="h-5 w-5 mb-2" style={{ color: "var(--gw-blue-vivid)" }} />
             <p className="text-[13px] font-semibold leading-snug text-white">
               Mais vendas<br />para a sua empresa
             </p>

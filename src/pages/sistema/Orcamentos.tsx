@@ -1,4 +1,5 @@
 import { OrderNumber, StatusPill, MetaField, Thumb, Money, type GwStage } from "@/components/sistema/ui";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -6,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Check, Filter, Plus, Search, Trash2, FileText, Package, Printer, X, MoreHorizontal,
-  Pencil, ChevronDown, ChevronLeft, ChevronRight,
+  Pencil, ChevronDown, ChevronLeft, ChevronRight, CalendarDays, Truck, Phone, User,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,9 @@ import {
 import { gerarPDFOrcamento } from "./pdf";
 import { supabase } from "@/integrations/supabase/client";
 
+
+const brlOrc = (v: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number.isFinite(v) ? v : 0);
 
 const STATUS_OPTS: OrcamentoStatus[] = ["aberto", "aprovado", "cancelado"];
 
@@ -523,90 +527,179 @@ export default function Orcamentos() {
             Nenhum orçamento. Clique em "Novo Orçamento".
           </div>
         ) : pageItems.map(o => {
+          const totalOrc = calcOrcTotal(o);
+          const vendedor = getVendedorNome(o.vendedorId);
+          const criado = new Date(o.createdAt);
           return (
             <div
               key={o.id}
-              className="rounded-[12px] overflow-hidden"
-              style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border-strong)", boxShadow: "var(--gw-shadow-sm)" }}
+              className="grid grid-cols-[312px_minmax(0,1fr)_262px] overflow-hidden"
+              style={{
+                background: "var(--gw-surface)",
+                border: "1px solid var(--gw-border)",
+                borderRadius: "var(--gw-radius-lg)",
+                boxShadow: "var(--gw-shadow-sm)",
+              }}
             >
-              {/* Cabeçalho do orçamento */}
+              {/* Coluna 1: identificacao */}
               <div
-                className="grid grid-cols-[88px_1fr_100px_140px_120px_140px] items-center gap-3 px-4 h-[56px]"
-                style={{ background: "var(--gw-surface-alt)", borderBottom: "1px solid var(--gw-border)" }}
+                className="relative flex flex-col gap-3"
+                style={{ padding: "var(--gw-pad-card)", borderRight: "1px solid var(--gw-hairline)" }}
               >
-                <OrderNumber value={o.numero} />
-                <span className="gw-title truncate text-[15px]" style={{ fontWeight: 700 }}>{getClienteNome(o)}</span>
-                <span className="gw-meta">{new Date(o.createdAt).toLocaleDateString("pt-BR")}</span>
-                <div onClick={e => e.stopPropagation()}>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1.5 h-[26px] px-[12px] rounded-full text-[12px] whitespace-nowrap"
-                        style={{
-                          background: `color-mix(in srgb, ${STATUS_SOLID[o.status]} 12%, #FFFFFF)`,
-                          color: STATUS_SOLID[o.status],
-                          border: `1px solid color-mix(in srgb, ${STATUS_SOLID[o.status]} 30%, #FFFFFF)`,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {o.status === "aprovado" && <Check className="h-3.5 w-3.5" />}
-                        {statusStyles[o.status].label}
-                        <ChevronDown className="h-3.5 w-3.5 opacity-80" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-40">
-                      {STATUS_OPTS.map(s => (
-                        <DropdownMenuItem key={s} onClick={() => handleStatusChange(o, s)}>
-                          <span className="inline-block h-2 w-2 rounded-full mr-2" style={{ background: STATUS_SOLID[s] }} />
-                          {statusStyles[s].label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                <span className="text-right">
-                  <Money value={calcOrcTotal(o)} emphasis bold />
-                </span>
-                <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
-                  {o.status === "aberto" && (
-                    <button
-                      type="button"
-                      onClick={() => handleAprovar(o.id)}
-                      className="inline-flex items-center h-8 px-3 rounded-md text-[13px] font-semibold text-white transition-colors"
-                      style={{ background: "var(--gw-success)" }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "#0C8D5C")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "var(--gw-success)")}
-                    >
-                      <Check className="h-3.5 w-3.5 mr-1" /> Aprovar
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    aria-label="Editar"
-                    onClick={() => void abrirEdicao(o)}
+                <span className="absolute left-0 top-0 bottom-0 w-[4px]" style={{ background: STATUS_SOLID[o.status] }} />
 
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-full transition-colors"
-                    style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="gw-num text-[15px]" style={{ color: "var(--gw-text)", fontWeight: 700 }}>
+                    {o.numero}
+                  </span>
+                  <div onClick={e => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 h-[22px] px-2.5 rounded-full text-[11px] whitespace-nowrap"
+                          style={{
+                            background: `color-mix(in srgb, ${STATUS_SOLID[o.status]} 12%, #FFFFFF)`,
+                            color: `color-mix(in srgb, ${STATUS_SOLID[o.status]} 72%, #0B1220)`,
+                            border: `1px solid color-mix(in srgb, ${STATUS_SOLID[o.status]} 28%, #FFFFFF)`,
+                            fontWeight: 600,
+                          }}
+                        >
+                          <span className="inline-block h-[6px] w-[6px] rounded-full" style={{ background: STATUS_SOLID[o.status] }} />
+                          {statusStyles[o.status].label}
+                          <ChevronDown className="h-3 w-3 opacity-60" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-44">
+                        {STATUS_OPTS.map(st => (
+                          <DropdownMenuItem key={st} onClick={() => handleStatusChange(o, st)} className="gap-2">
+                            <span className="inline-block h-2 w-2 rounded-full" style={{ background: STATUS_SOLID[st] }} />
+                            {statusStyles[st].label}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+
+                <span className="gw-title text-[17px] leading-tight truncate" style={{ fontWeight: 700 }}>
+                  {getClienteNome(o)}
+                </span>
+
+                <div className="flex flex-col gap-1.5 mt-0.5">
+                  <span className="flex items-center gap-2 min-w-0">
+                    <CalendarDays className="h-[15px] w-[15px] shrink-0" style={{ color: "var(--gw-text-muted)" }} />
+                    <span className="text-[13px] truncate" style={{ color: "var(--gw-text)" }}>
+                      <span className="gw-tnum">{criado.toLocaleDateString("pt-BR")}</span>
+                      <span className="gw-tnum ml-1.5" style={{ color: "var(--gw-text-muted)" }}>
+                        {criado.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <span className="ml-1.5 gw-meta">Criado</span>
+                    </span>
+                  </span>
+
+                  {o.transportadoraId && (
+                    <span className="flex items-center gap-2 min-w-0">
+                      <Truck className="h-[15px] w-[15px] shrink-0" style={{ color: "var(--gw-text-muted)" }} />
+                      <span className="text-[13px] truncate" style={{ color: "var(--gw-text)" }}>
+                        {getTransportadoraNome(o.transportadoraId)}
+                      </span>
+                    </span>
+                  )}
+
+                  {(o.contatoNome || o.contatoTelefone) && (
+                    <span className="flex items-center gap-2 min-w-0">
+                      <Phone className="h-[15px] w-[15px] shrink-0" style={{ color: "var(--gw-text-muted)" }} />
+                      <span className="text-[13px] truncate" style={{ color: "var(--gw-text)" }}>
+                        {o.contatoNome || o.contatoTelefone}
+                      </span>
+                    </span>
+                  )}
+
+                  {vendedor && vendedor !== "\u2014" && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          className="inline-flex items-center justify-center h-7 w-7 rounded-full cursor-default shrink-0 self-start"
+                          style={{ background: "var(--gw-blue-soft)", color: "var(--gw-blue-deep)" }}
+                          aria-label={`Vendedor: ${vendedor}`}
+                        >
+                          <User className="h-[15px] w-[15px]" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">{vendedor}</TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+              </div>
+
+              {/* Coluna 2: itens */}
+              <div
+                className="flex flex-col"
+                style={{ padding: "var(--gw-pad-card-sm)", gap: 10, background: "var(--gw-surface-alt)" }}
+              >
+                {o.itens.length === 0 ? (
+                  <ItensSkeleton />
+                ) : o.itens.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="grid grid-cols-[80px_minmax(0,1fr)_78px_112px_132px] items-center gap-3 p-3 rounded-[12px]"
+                    style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-hairline)" }}
                   >
-                    <Pencil className="h-4 w-4" />
-                  </button>
+                    <Thumb size="lg" className="!h-[72px] !w-[72px] !rounded-[10px]" src={item.mockupImagem || item.imagem} alt={item.nome} />
+                    <span className="flex flex-col min-w-0 gap-0.5">
+                      <span className="gw-title text-[14px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
+                      {item.observacao && (
+                        <span className="text-[12.5px] truncate" style={{ color: "var(--gw-text-secondary)" }}>{item.observacao}</span>
+                      )}
+                      {item.codigoComposto && (
+                        <span className="gw-tnum text-[11px]" style={{ color: "var(--gw-text-muted)" }}>{item.codigoComposto}</span>
+                      )}
+                    </span>
+                    <span className="flex flex-col items-end gap-0.5">
+                      <span className="gw-label">Qtd</span>
+                      <span className="gw-qtd">{item.quantidade}</span>
+                    </span>
+                    <span className="flex flex-col items-end gap-0.5">
+                      <span className="gw-label">Unit.</span>
+                      <span className="gw-valor-sm">{brlOrc(item.precoUnitario)}</span>
+                    </span>
+                    <span className="flex flex-col items-end gap-0.5">
+                      <span className="gw-label">Total</span>
+                      <span className="gw-valor">{brlOrc(item.precoUnitario * item.quantidade)}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Coluna 3: total e acoes */}
+              <div
+                className="flex flex-col gap-3"
+                style={{ padding: "var(--gw-pad-card)", borderLeft: "1px solid var(--gw-hairline)" }}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="flex flex-col gap-0.5 min-w-0">
+                    <span className="gw-label">Total do orçamento</span>
+                    <span className="gw-valor-xl">{brlOrc(totalOrc)}</span>
+                    {Number(o.freteValor) > 0 && (
+                      <span className="gw-meta mt-0.5">
+                        Frete{o.freteTipo ? ` (${o.freteTipo})` : ""} {brlOrc(Number(o.freteValor))}
+                      </span>
+                    )}
+                  </span>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label="Mais ações"
-                        className="inline-flex items-center justify-center h-8 w-8 rounded-full transition-colors hover:bg-[var(--gw-primary-soft)] hover:text-[var(--gw-primary)]"
-                        style={{ color: "var(--gw-text-secondary)" }}
-                      >
+                      <button type="button" aria-label="Mais ações"
+                        className="inline-flex items-center justify-center h-7 w-7 rounded-full shrink-0 transition-colors hover:bg-[var(--gw-surface-alt)]"
+                        style={{ color: "var(--gw-text-secondary)" }}>
                         <MoreHorizontal className="h-4 w-4" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem onClick={() => void abrirEdicao(o)} style={{ color: "var(--gw-primary)" }}>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem onClick={() => void abrirEdicao(o)}>
                         <FileText className="h-3.5 w-3.5 mr-2" /> Editar
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleImprimir(o)} style={{ color: "var(--gw-violet)" }}>
+                      <DropdownMenuItem onClick={() => handleImprimir(o)}>
                         <Printer className="h-3.5 w-3.5 mr-2" /> Imprimir
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setDeleteId(o.id)} style={{ color: "var(--gw-danger)" }}>
@@ -615,75 +708,27 @@ export default function Orcamentos() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-              </div>
 
-              {/* Conteúdo do orçamento (sempre visível) */}
-              <div className="px-4 pb-4 pt-3 space-y-3" style={{ background: "var(--gw-surface)" }}>
-                  {/* Itens */}
-                  <div className="rounded-lg overflow-x-auto" style={{ border: "1px solid var(--gw-border)" }}>
-                    <div className="min-w-[760px]">
-                    <div
-                      className="grid grid-cols-[176px_1fr_80px_110px_130px] items-center gap-3 px-3 h-9"
-                      style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
-                    >
-                      <span />
-                      <span className="gw-label" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Produto</span>
-                      <span className="gw-label text-right" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Qtd</span>
-                      <span className="gw-label text-right" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Unit.</span>
-                      <span className="gw-label text-right" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Total</span>
-                    </div>
-                    {o.itens.length === 0 ? (
-                      <ItensSkeleton />
-                    ) : o.itens.map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="grid grid-cols-[176px_1fr_80px_110px_130px] items-center gap-3 px-3 py-4"
-                        style={{ background: idx % 2 === 1 ? "color-mix(in srgb, var(--gw-surface-alt) 40%, var(--gw-surface))" : "var(--gw-surface)" }}
-                      >
-                        <Thumb size="xl" src={item.mockupImagem || item.imagem} alt={item.nome} />
-                        <span className="flex flex-col min-w-0 leading-tight">
-                          <span className="gw-title text-[12.5px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
-                          {item.observacao && (
-                            <span className="text-[12px] truncate" style={{ color: "var(--gw-text-secondary)" }}>{item.observacao}</span>
-                          )}
-                          {item.codigoComposto && (
-                            <span className="gw-tnum text-[11px]" style={{ color: "var(--gw-text-muted)" }}>{item.codigoComposto}</span>
-                          )}
-                        </span>
-                        <span className="text-right gw-tnum text-[13px]" style={{ color: "var(--gw-text)" }}>{item.quantidade}</span>
-                        <span className="text-right"><Money value={item.precoUnitario} /></span>
-                        <span className="text-right"><Money value={item.precoUnitario * item.quantidade} emphasis /></span>
-                      </div>
-                    ))}
-                    </div>
-                  </div>
-
-                  {/* Totais */}
-                  <div
-                    className="h-11 rounded-lg px-4 flex items-center justify-end gap-6"
-                    style={{ background: "var(--gw-primary-soft)" }}
+                {o.status === "aberto" && (
+                  <button
+                    type="button"
+                    onClick={() => handleAprovar(o.id)}
+                    className="inline-flex items-center justify-center gap-2 h-11 rounded-[10px] text-[14px] font-semibold text-white transition-colors"
+                    style={{ background: "var(--gw-success)" }}
                   >
-                    <span className="flex items-center gap-2">
-                      <span className="gw-label" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Subtotal</span>
-                      <Money value={o.itens.length > 0 ? calcSubtotal(o) : Number(o.subtotal || 0)} />
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <span className="gw-label" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Frete{o.freteTipo ? ` (${o.freteTipo})` : ""}</span>
-                      <Money value={Number(o.freteValor) || 0} />
-                    </span>
-                    <span className="flex items-center gap-2">
-                      <span className="gw-label" style={{ color: "var(--gw-primary)", fontWeight: 700 }}>Total</span>
-                      <Money value={calcOrcTotal(o)} emphasis bold />
-                    </span>
-                  </div>
-
-                  {/* Metadados */}
-                  <div className="h-14 grid grid-cols-4 gap-4 items-center">
-                    <MetaField label="Vendedor" value={getVendedorNome(o.vendedorId)} />
-                    <MetaField label="Transportadora" value={getTransportadoraNome(o.transportadoraId)} />
-                    <MetaField label="Criado em" value={new Date(o.createdAt).toLocaleDateString("pt-BR")} />
-                    <MetaField label="Contato" value={o.contatoNome || o.contatoTelefone || "—"} />
-                  </div>
+                    <Check className="h-4 w-4" /> Aprovar orçamento
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void abrirEdicao(o)}
+                  className="inline-flex items-center justify-center gap-2 h-11 rounded-[10px] text-[14px] font-semibold transition-colors"
+                  style={o.status === "aberto"
+                    ? { background: "var(--gw-blue-soft)", color: "var(--gw-blue-deep)" }
+                    : { background: "var(--gw-blue-vivid)", color: "#fff" }}
+                >
+                  <Pencil className="h-4 w-4" /> Editar orçamento
+                </button>
               </div>
             </div>
           );

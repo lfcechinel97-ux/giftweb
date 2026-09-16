@@ -15,7 +15,8 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Thumb, Money, StatusBadge } from "@/components/sistema/ui";
+import { Thumb, StatusBadge } from "@/components/sistema/ui";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { statusInfo, opcoesStatus } from "@/lib/statusPedido";
 import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +47,9 @@ const num = (v: unknown) => {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 };
+
+const brl = (v: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
 
 /**
  * Abas do topo. Cada uma agrupa várias etapas pela COLUNA do PCP — assim um
@@ -346,7 +350,7 @@ export default function Pedidos() {
             onClick={handleNovoPedido}
             disabled={criandoPedido}
             className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] text-[14px] font-semibold text-white disabled:opacity-60"
-            style={{ background: "var(--gw-primary)", boxShadow: "var(--gw-shadow-sm)" }}
+            style={{ background: "var(--gw-blue-vivid)", boxShadow: "0 2px 8px rgba(37,99,235,.28)" }}
           >
             <Plus className="h-4 w-4" />
             {criandoPedido ? "Criando..." : "Novo pedido"}
@@ -373,7 +377,7 @@ export default function Pedidos() {
             >
               {a.rotulo}
               <span
-                className="inline-flex items-center justify-center h-[20px] min-w-[20px] px-1.5 rounded-full text-[11px] font-semibold gw-tnum"
+                className="gw-contador inline-flex items-center justify-center h-[22px] min-w-[22px] px-2 rounded-full"
                 style={{
                   background: ativa ? "var(--gw-primary-soft)" : "var(--gw-surface-alt)",
                   color: ativa ? "var(--gw-primary)" : "var(--gw-text-muted)",
@@ -467,13 +471,21 @@ export default function Pedidos() {
           return (
             <div
               key={p.id}
-              className="grid grid-cols-[300px_minmax(0,1fr)_248px] rounded-[14px] overflow-hidden"
-              style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)", boxShadow: "var(--gw-shadow-sm)" }}
+              className="grid grid-cols-[312px_minmax(0,1fr)_262px] overflow-hidden"
+              style={{
+                background: "var(--gw-surface)",
+                border: "1px solid var(--gw-border)",
+                borderRadius: "var(--gw-radius-lg)",
+                boxShadow: "var(--gw-shadow-sm)",
+              }}
             >
               {/* ── Coluna 1: identificação ─────────────────────────────── */}
-              <div className="relative p-4 flex flex-col gap-2.5" style={{ borderRight: "1px solid var(--gw-hairline)" }}>
+              <div
+                className="relative flex flex-col gap-3"
+                style={{ padding: "var(--gw-pad-card)", borderRight: "1px solid var(--gw-hairline)" }}
+              >
                 {/* Barra da etapa — a cor do status também marca a lateral */}
-                <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: info.cor }} />
+                <span className="absolute left-0 top-0 bottom-0 w-[4px]" style={{ background: info.cor }} />
 
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="gw-num text-[15px]" style={{ color: "var(--gw-text)", fontWeight: 700 }}>
@@ -518,12 +530,28 @@ export default function Pedidos() {
                     </Linha>
                   )}
 
-                  {vendedor && <Linha icone={UserIcon}>{vendedor}</Linha>}
+                  {vendedor && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          className="inline-flex items-center justify-center h-7 w-7 rounded-full cursor-default shrink-0 self-start"
+                          style={{ background: "var(--gw-blue-soft)", color: "var(--gw-blue-deep)" }}
+                          aria-label={`Vendedor: ${vendedor}`}
+                        >
+                          <UserIcon className="h-[15px] w-[15px]" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="right">{vendedor}</TooltipContent>
+                    </Tooltip>
+                  )}
                 </div>
               </div>
 
               {/* ── Coluna 2: itens ─────────────────────────────────────── */}
-              <div className="p-3 flex flex-col gap-2" style={{ background: "var(--gw-surface-alt)" }}>
+              <div
+                className="flex flex-col"
+                style={{ padding: "var(--gw-pad-card-sm)", gap: 10, background: "var(--gw-surface-alt)" }}
+              >
                 {itens.length === 0 ? (
                   <div className="flex-1 flex items-center justify-center py-8 gw-meta">
                     Nenhum item neste pedido. Abra “Editar pedido” para adicionar.
@@ -531,10 +559,10 @@ export default function Pedidos() {
                 ) : itens.map((item, idx) => (
                   <div
                     key={item.id || idx}
-                    className="grid grid-cols-[72px_minmax(0,1fr)_72px_104px_120px] items-center gap-3 p-2.5 rounded-[10px]"
+                    className="grid grid-cols-[80px_minmax(0,1fr)_78px_112px_132px] items-center gap-3 p-3 rounded-[12px]"
                     style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-hairline)" }}
                   >
-                    <Thumb size="lg" className="!h-[64px] !w-[64px]" src={item.mockupImagem || item.imagem} alt={item.nome} />
+                    <Thumb size="lg" className="!h-[72px] !w-[72px] !rounded-[10px]" src={item.mockupImagem || item.imagem} alt={item.nome} />
 
                     <span className="flex flex-col min-w-0 gap-1">
                       <span className="gw-title text-[14px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
@@ -554,24 +582,27 @@ export default function Pedidos() {
                     </span>
 
                     <Numero rotulo="Qtd">
-                      <span className="gw-tnum text-[14px]" style={{ color: "var(--gw-text)", fontWeight: 600 }}>
-                        {num(item.quantidade)}
-                      </span>
+                      <span className="gw-qtd">{num(item.quantidade)}</span>
                     </Numero>
-                    <Numero rotulo="Unit."><Money value={num(item.precoUnitario)} /></Numero>
-                    <Numero rotulo="Total"><Money value={itemTotal(item)} emphasis /></Numero>
+                    <Numero rotulo="Unit.">
+                      <span className="gw-valor-sm">{brl(num(item.precoUnitario))}</span>
+                    </Numero>
+                    <Numero rotulo="Total">
+                      <span className="gw-valor">{brl(itemTotal(item))}</span>
+                    </Numero>
                   </div>
                 ))}
               </div>
 
               {/* ── Coluna 3: total e ações ─────────────────────────────── */}
-              <div className="p-4 flex flex-col gap-3" style={{ borderLeft: "1px solid var(--gw-hairline)" }}>
+              <div
+                className="flex flex-col gap-3"
+                style={{ padding: "var(--gw-pad-card)", borderLeft: "1px solid var(--gw-hairline)" }}
+              >
                 <div className="flex items-start justify-between gap-2">
                   <span className="flex flex-col gap-0.5 min-w-0">
                     <span className="gw-label">Total do pedido</span>
-                    <span className="gw-num text-[22px] leading-tight" style={{ color: "var(--gw-text)", fontWeight: 700 }}>
-                      {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(num(p.total))}
-                    </span>
+                    <span className="gw-valor-xl">{brl(num(p.total))}</span>
                   </span>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -598,16 +629,16 @@ export default function Pedidos() {
                 <button
                   type="button"
                   onClick={() => navigate(`/sistema/pedidos/${p.id}`)}
-                  className="inline-flex items-center justify-center gap-2 h-10 rounded-[10px] text-[14px] font-semibold text-white"
-                  style={{ background: "var(--gw-primary)" }}
+                  className="inline-flex items-center justify-center gap-2 h-11 rounded-[10px] text-[14px] font-semibold text-white transition-colors"
+                  style={{ background: "var(--gw-blue-vivid)" }}
                 >
                   Ver detalhes <ArrowRight className="h-4 w-4" />
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate(`/sistema/pedidos/${p.id}`)}
-                  className="inline-flex items-center justify-center gap-2 h-10 rounded-[10px] text-[14px] font-medium"
-                  style={{ border: "1px solid var(--gw-border)", color: "var(--gw-text-secondary)" }}
+                  className="inline-flex items-center justify-center gap-2 h-11 rounded-[10px] text-[14px] font-medium transition-colors"
+                  style={{ background: "var(--gw-blue-soft)", color: "var(--gw-blue-deep)" }}
                 >
                   <Pencil className="h-4 w-4" /> Editar pedido
                 </button>

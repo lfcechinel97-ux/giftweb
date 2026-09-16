@@ -193,7 +193,9 @@ input[type="range"]::-moz-range-thumb {
 
 /* ===== Sistema (painel do vendedor) — tema visual isolado ===== */
 .sistema-theme {
-  --background: 222 44% 97%;      /* #F5F7FB */
+  /* Espelha --gw-bg (#EEF2F8). O shadcn precisa do triplete HSL cru, então o
+     valor aparece duas vezes; se mudar um, mude o outro. */
+  --background: 216 42% 95%;      /* = --gw-bg */
   --foreground: 222 47% 11%;      /* #0F172A */
   --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
@@ -269,32 +271,51 @@ input[type="range"]::-moz-range-thumb {
 
 /* ===== Design System /sistema — tokens (não aplicados às telas ainda) ===== */
 :root {
-  /* Superfícies e estrutura
-     Três níveis com distância suficiente para o cartão branco destacar do
-     fundo sem precisar de sombra pesada: fundo levemente mais frio e fundo. */
-  --gw-bg: #F1F4F9;
+  /* Superfícies — o branco puro é RESERVADO para o que deve saltar (cartão de
+     pedido, painel). O fundo da página é frio e levemente mais escuro para o
+     cartão flutuar sem depender de sombra pesada. `alt` é o leito neutro
+     DENTRO do cartão (faixa de itens), entre os dois. */
+  --gw-bg: #EEF2F8;
   --gw-surface: #FFFFFF;
-  --gw-surface-alt: #F6F8FB;
+  --gw-surface-alt: #F5F8FC;
 
-  /* Linhas — hairline é o separador DENTRO do cartão (linhas de tabela), quase
-     imperceptível de perto e suficiente para o olho seguir a linha. border é a
-     borda do próprio cartão. strong só para divisor estrutural. */
-  --gw-hairline: #EEF1F6;
-  --gw-border: #E4E9F0;
-  --gw-border-strong: #D3DAE5;
-  --gw-sidebar: #0D2340;
-  --gw-sidebar-hover: #16345C;
-  --gw-sidebar-active: #1E4A80;
+  /* Linhas — hairline é o separador DENTRO do cartão, quase imperceptível de
+     perto e suficiente para o olho seguir a linha. border é a borda do próprio
+     cartão. strong só para divisor estrutural. */
+  --gw-hairline: #EDF1F7;
+  --gw-border: #E1E7F0;
+  --gw-border-strong: #CFD8E6;
+
+  /* Barra lateral — navy sólido e profundo, para o azul vibrante do item ativo
+     ter onde brilhar. */
+  --gw-sidebar: #0E2450;
+  --gw-sidebar-hover: rgba(255,255,255,.07);
+  --gw-sidebar-active: #2563EB;
 
   /* Texto */
   --gw-text: #0B1220;
   --gw-text-secondary: #47536B;
   --gw-text-muted: #8A96A6;
 
-  /* Ação e feedback */
-  --gw-primary: #2C5FF6;
-  --gw-primary-hover: #1E4BD8;
-  --gw-primary-soft: #EDF2FF;
+  /* ── Azul: dois tons ───────────────────────────────────────────────────
+     `vivid` é o azul de AÇÃO — botão primário, item ativo do menu, barra da
+     aba selecionada, contador. `deep` é o azul de LEITURA — texto, ícone e
+     número sobre fundo claro, onde o vivid cansaria a vista.
+
+     Contraste sobre branco (WCAG AA pede 4.5:1 em texto normal):
+       vivid #2563EB → 5.17:1  ✓ AA
+       deep  #1D4ED8 → 6.98:1  ✓ AAA
+     E branco sobre vivid → 5.17:1 ✓ AA, que é o caso do botão primário. */
+  --gw-blue-vivid: #2563EB;
+  --gw-blue-vivid-hover: #1D4ED8;
+  --gw-blue-deep: #1D4ED8;
+  --gw-blue-soft: #EAF1FF;
+  --gw-blue-soft-strong: #D8E5FF;
+
+  /* Aliases mantidos: o resto do sistema já referencia --gw-primary. */
+  --gw-primary: var(--gw-blue-vivid);
+  --gw-primary-hover: var(--gw-blue-vivid-hover);
+  --gw-primary-soft: var(--gw-blue-soft);
   --gw-violet: #7C5CFF;
   --gw-indigo: #5B52E8;
   --gw-violet-soft: #F1EDFF;
@@ -325,9 +346,16 @@ input[type="range"]::-moz-range-thumb {
   /* Raio e densidade */
   --gw-radius-sm: 6px;
   --gw-radius-md: 10px;
+  --gw-radius-lg: 16px;      /* cartão de pedido / painel */
   --gw-radius-pill: 999px;
   --gw-row-h: 56px;
-  --gw-control-h: 36px;
+  --gw-control-h: 40px;
+
+  /* Respiro — o padding interno do cartão em um lugar só, para a densidade
+     mudar no sistema inteiro de uma vez. */
+  --gw-pad-card: 20px;
+  --gw-pad-card-sm: 14px;
+  --gw-gap-card: 16px;
 }
 
 /* Escala tipográfica
@@ -349,3 +377,46 @@ input[type="range"]::-moz-range-thumb {
 .gw-num { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; font-weight: 600; font-variant-numeric: tabular-nums; }
 /* Valores/números tabulares em Inter */
 .gw-tnum { font-family: 'Inter', system-ui, sans-serif; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* ── Escala de NÚMEROS ─────────────────────────────────────────────────────
+   Número é o que o time lê primeiro em cada cartão: quanto, quantos, quantas
+   etapas. Por isso tem escala própria, sempre acima do texto ao redor e
+   sempre tabular — em coluna, dígito tem que alinhar com dígito.
+
+   .gw-valor-xl  total do pedido, o ponto focal do cartão
+   .gw-valor     total de um item
+   .gw-valor-sm  unitário, subordinado
+   .gw-qtd       quantidade
+   .gw-contador  contador das abas e chips                                  */
+.gw-valor-xl {
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  font-size: 27px; font-weight: 800; letter-spacing: -0.028em; line-height: 1.1;
+  font-variant-numeric: tabular-nums; color: var(--gw-text);
+}
+.gw-valor {
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  font-size: 16px; font-weight: 700; letter-spacing: -0.018em;
+  font-variant-numeric: tabular-nums; color: var(--gw-text);
+}
+.gw-valor-sm {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px; font-weight: 600; letter-spacing: -0.008em;
+  font-variant-numeric: tabular-nums; color: var(--gw-text-secondary);
+}
+.gw-qtd {
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  font-size: 17px; font-weight: 700; letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums; color: var(--gw-text);
+}
+.gw-contador {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12.5px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Item ativo do menu lateral — azul vibrante sólido, texto branco.
+   Vive no CSS e não no componente porque NavLink recebe só o nome da classe. */
+.gw-nav-ativo {
+  background: var(--gw-sidebar-active) !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, .35);
+}
