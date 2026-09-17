@@ -139,6 +139,12 @@ const TAG_TESTE_ENVIADO = "TESTE ENVIADO";
 const TAG_TESTE_APROVADO = "TESTE APROVADO";
 const TAG_PRODUZIR_MIDIA = "PRODUZIR + MÍDIA";
 
+/* "Ele também já coloca a tag de transportadora tipo: Coleta Braspress,
+   Coleta Melhor Envio, Envio por Lalamove." — fixas por enquanto (as 3 que
+   o usuário deu); o campo de texto livre no popup cobre o que fugir da
+   lista sem exigir cadastro prévio, igual ao nome de terceirizada. */
+const TRANSPORTADORA_OPCOES = ["Coleta Braspress", "Coleta Melhor Envio", "Envio por Lalamove"];
+
 /* Paleta estável por pedido (faixa de identificação) */
 const PEDIDO_PALETTE = [
   "#2563EB", "#F97316", "#14B8A6", "#A855F7", "#EAB308",
@@ -519,6 +525,19 @@ export default function PCP() {
 
   const [gateModal, setGateModal] = useState<{ row: PcpRow; target: PcpStatus; tipo: "cartao" | "pix" } | null>(null);
   const [gateSaving, setGateSaving] = useState(false);
+
+  /* Popup de Expedição — abre quando o item arrastado fecha o conjunto
+     (todos os itens do pedido chegam na coluna "aguardando_coleta" de uma
+     vez). Volumes ficam no PEDIDO (sistema_pedidos.volumes), não no item:
+     é a caixa física que carrega o pedido inteiro, não uma peça sozinha. */
+  const [expedicaoModal, setExpedicaoModal] = useState<{ row: PcpRow; target: PcpStatus } | null>(null);
+  const [expedicaoVolumes, setExpedicaoVolumes] = useState<
+    { comprimento: string; altura: string; largura: string; peso: string }[]
+  >([{ comprimento: "", altura: "", largura: "", peso: "" }]);
+  const [expedicaoPago, setExpedicaoPago] = useState<"sim" | "nao" | null>(null);
+  const [expedicaoTransportadora, setExpedicaoTransportadora] = useState("");
+  const [expedicaoTransportadoraLivre, setExpedicaoTransportadoraLivre] = useState("");
+  const [expedicaoSaving, setExpedicaoSaving] = useState(false);
 
   /* Anexos do PCP (teste físico + produção concluída) */
   const testeInputRef = useRef<HTMLInputElement | null>(null);
@@ -943,6 +962,21 @@ export default function PCP() {
       return;
     }
 
+    /* "o pedido só abre o popup das medidas quando TODOS os produtos do
+       pedido estão na expedição" — este item ainda não está lá (a checagem
+       de coluna já passou acima), então +1 sobre o que a view já contou
+       diz se ele fecha o conjunto. Se ainda falta item de fora, só move
+       este, sem popup — os volumes só fazem sentido com o pacote inteiro
+       reunido. */
+    if (targetStatus === "aguardando_coleta") {
+      const totalPedido = row.total_itens_pedido ?? 1;
+      const jaNaExpedicao = row.itens_expedicao_pedido ?? 0;
+      if (jaNaExpedicao + 1 >= totalPedido) {
+        setExpedicaoModal({ row, target: targetStatus });
+        return;
+      }
+    }
+
     moverItem(row, targetStatus);
   };
 
@@ -994,6 +1028,82 @@ export default function PCP() {
     setModalSaving(false);
     setTerceiroModal(null);
   };
+
+  /* ── Popup de Expedição ────────────────────────────────────────────── */
+  const addVolume = () =>
+    setExpedicaoVolumes(prev => [...prev, { comprimento: "", altura: "", largura: "", peso: "" }]);
+
+  const removerVolume = (idx: number) =>
+    setExpedicaoVolumes(prev => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== idx)));
+
+  const setVolumeCampo = (idx: number, campo: "comprimento" | "altura" | "largura" | "peso", valor: string) =>
+    setExpedicaoVolumes(prev => prev.map((v, i) => (i === idx ? { ...v, [campo]: valor } : v)));
+
+  const confirmarExpedicao = async () => {
+    if (!expedicaoModal) return;
+
+    // "Pago 100%?" é obrigatório — sem resposta, nem tenta salvar.
+    if (expedicaoPago === null) {
+      toast.error("Confirme se o pedido foi pago 100% antes de continuar.");
+      return;
+    }
+    const transp = expedicaoTransportadoraLivre.trim() || expedicaoTransportadora;
+    if (!transp) {
+      toast.error("Informe a transportadora.");
+      return;
+    }
+    const volumesNumericos = expedicaoVolumes.map(v => ({
+      comprimento: Number(v.comprimento) || 0,
+      altura: Number(v.altura) || 0,
+      largura: Number(v.largura) || 0,
+      peso: Number(v.peso) || 0,
+    }));
+    if (volumesNumericos.some(v => !v.comprimento || !v.altura || !v.largura || !v.peso)) {
+      toast.error("Preencha comprimento, altura, largura e peso de cada volume.");
+      return;
+    }
+
+    setExpedicaoSaving(true);
+    const { row, target } = expedicaoModal;
+
+    const { error } = await supabase
+      .from("sistema_pedidos")
+      .update({
+        volumes: volumesNumericos,
+        pago_integral: expedicaoPago === "sim",
+        pago_integral_em: new Date().toISOString(),
+        pago_integral_por: currentVendedor?.id ?? null,
+      } as any)
+      .eq("id", row.pedido_id);
+
+    if (error) {
+      console.error("[PCP] gravar expedição falhou:", error);
+      toast.error(`Não foi possível salvar a expedição. ${error.message || ""}`);
+      setExpedicaoSaving(false);
+      return;
+    }
+
+    // Transportadora vira etiqueta em TODOS os itens do pedido — é o pacote
+    // inteiro que vai com aquela transportadora, não só o item arrastado.
+    const itensDoPedido = rows.filter(r => r.pedido_id === row.pedido_id);
+    for (const item of itensDoPedido) await adicionarTag(item, transp);
+
+    await mudarStatus(row.producao_id, statusCanonicoDaColuna(target));
+
+    setExpedicaoSaving(false);
+    setExpedicaoModal(null);
+    toast.success("Expedição registrada: volumes, pagamento e transportadora salvos.");
+  };
+
+  /* Reseta o formulário sempre que o popup abre para um pedido novo —
+     senão os volumes digitados no pedido anterior vazariam para este. */
+  useEffect(() => {
+    if (!expedicaoModal) return;
+    setExpedicaoVolumes([{ comprimento: "", altura: "", largura: "", peso: "" }]);
+    setExpedicaoPago(null);
+    setExpedicaoTransportadora("");
+    setExpedicaoTransportadoraLivre("");
+  }, [expedicaoModal]);
 
   const totalItens = rowsFiltradas.length;
 
@@ -1735,6 +1845,149 @@ export default function PCP() {
             >
               {gateSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               {gateModal?.tipo === "cartao" ? "Sim, pagamento confirmado" : "Sim, recebi o valor integral"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Popup de Expedição — abre quando o item arrastado fecha o pedido
+          inteiro na coluna. Volumes (L/A/P/peso), "Pago 100%?" obrigatório,
+          e transportadora, tudo de uma vez. */}
+      <Dialog open={!!expedicaoModal} onOpenChange={open => !open && !expedicaoSaving && setExpedicaoModal(null)}>
+        <DialogContent style={{ maxWidth: 560 }}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Boxes className="h-5 w-5 text-primary" />
+              Expedição — Pedido {expedicaoModal?.row.pedido_numero}
+            </DialogTitle>
+          </DialogHeader>
+
+          {expedicaoModal && (
+            <div className="space-y-4 py-1 max-h-[65vh] overflow-y-auto pr-1">
+              <p className="text-[12px] text-[var(--gw-text-muted)]">
+                Todos os {expedicaoModal.row.total_itens_pedido ?? 1} itens deste pedido chegaram na expedição.
+                Registre os volumes antes de liberar para a coleta.
+              </p>
+
+              {/* Volumes */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <Label>Volumes ({expedicaoVolumes.length})</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addVolume}>
+                    + Adicionar volume
+                  </Button>
+                </div>
+                {expedicaoVolumes.map((v, idx) => (
+                  <div key={idx} className="rounded-lg border border-[var(--gw-border)] p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[12px] font-semibold text-[var(--gw-text-secondary)]">
+                        Volume {idx + 1}
+                      </span>
+                      {expedicaoVolumes.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removerVolume(idx)}
+                          className="text-[11px] text-[var(--gw-danger)] hover:underline"
+                        >
+                          Remover
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {([
+                        ["comprimento", "Compr. (cm)"],
+                        ["altura", "Altura (cm)"],
+                        ["largura", "Largura (cm)"],
+                        ["peso", "Peso (kg)"],
+                      ] as const).map(([campo, label]) => (
+                        <div key={campo} className="space-y-1">
+                          <Label className="text-[11px]">{label}</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            step="0.1"
+                            value={v[campo]}
+                            onChange={e => setVolumeCampo(idx, campo, e.target.value)}
+                            className="h-8 text-[13px]"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pago 100%? — obrigatório, ação do vendedor */}
+              <div className="space-y-1.5">
+                <Label>Pago 100%? <span className="text-[var(--gw-danger)]">*</span></Label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setExpedicaoPago("sim")}
+                    className={cn(
+                      "flex-1 h-9 rounded-lg text-[13px] font-semibold border transition-colors",
+                      expedicaoPago === "sim"
+                        ? "text-white border-transparent"
+                        : "bg-[var(--gw-surface)] text-[var(--gw-text-secondary)] border-[var(--gw-border)]"
+                    )}
+                    style={expedicaoPago === "sim" ? { backgroundColor: "var(--gw-success)" } : undefined}
+                  >
+                    Sim, pago integralmente
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExpedicaoPago("nao")}
+                    className={cn(
+                      "flex-1 h-9 rounded-lg text-[13px] font-semibold border transition-colors",
+                      expedicaoPago === "nao"
+                        ? "text-white border-transparent"
+                        : "bg-[var(--gw-surface)] text-[var(--gw-text-secondary)] border-[var(--gw-border)]"
+                    )}
+                    style={expedicaoPago === "nao" ? { backgroundColor: "var(--gw-danger)" } : undefined}
+                  >
+                    Ainda não
+                  </button>
+                </div>
+              </div>
+
+              {/* Transportadora */}
+              <div className="space-y-1.5">
+                <Label>Transportadora</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {TRANSPORTADORA_OPCOES.map(op => (
+                    <button
+                      key={op}
+                      type="button"
+                      onClick={() => { setExpedicaoTransportadora(op); setExpedicaoTransportadoraLivre(""); }}
+                      className={cn(
+                        "h-8 px-3 rounded-full text-[12px] font-semibold border transition-colors",
+                        expedicaoTransportadora === op
+                          ? "text-white border-transparent"
+                          : "bg-[var(--gw-surface)] text-[var(--gw-text-secondary)] border-[var(--gw-border)]"
+                      )}
+                      style={expedicaoTransportadora === op ? { backgroundColor: corDaTag(op) } : undefined}
+                    >
+                      {op}
+                    </button>
+                  ))}
+                </div>
+                <Input
+                  value={expedicaoTransportadoraLivre}
+                  onChange={e => { setExpedicaoTransportadoraLivre(e.target.value); if (e.target.value) setExpedicaoTransportadora(""); }}
+                  placeholder="Ou digite outra transportadora"
+                  className="h-9"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setExpedicaoModal(null)} disabled={expedicaoSaving}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmarExpedicao} disabled={expedicaoSaving}>
+              {expedicaoSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar expedição
             </Button>
           </DialogFooter>
         </DialogContent>
