@@ -112,21 +112,22 @@ export default function Pedidos() {
 
   const qc = useQueryClient();
 
-  /* Contagem por aba. Traz SÓ a coluna status — a agregação por coluna do PCP
-     não existe no PostgREST. Quando o volume crescer isso deve virar um
-     `count(*) group by` dentro de sistema_list_pedidos. */
+  /* Contagem por aba — já agregada no servidor (sistema_contar_pedidos_por_coluna,
+     migration 20260917140000). Antes trazia `select status` de TODOS os
+     pedidos e somava na tela: com 44 pedidos era barato, mas crescia sem
+     limite — era a única contagem do sistema sem corte nenhum. A RPC
+     devolve no máximo 8 linhas (uma por coluna do board), não uma por pedido. */
   const { data: contagens = {} } = useQuery<Record<AbaId, number>>({
     queryKey: ["sistema", "pedidos", "contagem-abas"],
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await supabase.from("sistema_pedidos").select("status");
+      const { data, error } = await supabase.rpc("sistema_contar_pedidos_por_coluna" as any);
       const zero = Object.fromEntries(ABAS.map(a => [a.id, 0])) as Record<AbaId, number>;
       if (error || !data) return zero;
-      for (const r of data as { status: string }[]) {
-        const coluna = statusInfo(r.status).colunaPcp;
-        zero.todos += 1;
+      for (const r of data as { coluna_pcp: string; total: number }[]) {
+        zero.todos += r.total;
         for (const a of ABAS) {
-          if (a.colunas && (a.colunas as readonly string[]).includes(coluna)) zero[a.id] += 1;
+          if (a.colunas && (a.colunas as readonly string[]).includes(r.coluna_pcp)) zero[a.id] += r.total;
         }
       }
       return zero;

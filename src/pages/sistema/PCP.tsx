@@ -552,9 +552,19 @@ export default function PCP() {
     queryKey: ["sistema", "pcp", "rows"],
     staleTime: 60 * 1000,
     queryFn: async () => {
+      /* Sem filtro, o board carrega TODO item de produção que já existiu,
+         pra sempre — inclusive o que já foi "Coletado e enviado" há meses.
+         Hoje são só 88 linhas (não dói), mas é a única query do sistema
+         sem paginação nem corte, e cresce sem limite. Corta o que já saiu
+         há mais de 14 dias: continua tudo visível enquanto for recente
+         (times ainda quer ver o que "acabou de sair"), sem acumular pra
+         sempre. Itens em qualquer OUTRA coluna sempre aparecem — só quem
+         já terminou o fluxo é que expira do board. */
+      const cortaEnviadoAntes = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
       const { data, error } = await supabase
         .from("vw_pcp" as any)
         .select("*")
+        .or(`coluna_pcp.neq.enviado,etapa_desde.gte.${cortaEnviadoAntes}`)
         .order("data_entrega_item", { ascending: true, nullsFirst: false });
       if (error) {
         console.error("[PCP] carregar itens falhou:", error);
