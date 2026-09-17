@@ -1482,29 +1482,16 @@ export default function PCP() {
                 <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
                   <p className="gw-label">Produto</p>
                   <p className="gw-title text-[15px]">{detalhe.produto_nome || "—"}</p>
-                  <div className="grid grid-cols-3 gap-3 pt-1">
-                    {[
-                      ["Quantidade", `${detalhe.quantidade ?? 0} un`],
-                      ["Valor unitário", detalhe.valor_unitario != null
-                        ? detalhe.valor_unitario.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-                        : "—"],
-                      ["Total", detalhe.valor_unitario != null
-                        ? (detalhe.valor_unitario * (detalhe.quantidade ?? 0)).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-                        : "—"],
-                    ].map(([k, v]) => (
-                      <div key={k}>
-                        <p className="gw-label">{k}</p>
-                        <p className="gw-body text-[13px] text-[var(--gw-text)]">{v}</p>
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
-                {/* Produção */}
+                {/* Produção — valor/total removidos daqui (não são
+                    informação operacional pra produção); quantidade entra
+                    junto com técnica/local/prazo, tudo que a produção usa. */}
                 <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-3">
                   <p className="gw-label">Produção</p>
                   <div className="grid grid-cols-2 gap-3">
                     {[
+                      ["Quantidade", `${detalhe.quantidade ?? 0} un`],
                       ["Técnica", detalhe.tecnica_nome || "—"],
                       ["Local de produção", detalhe.local_producao.replace(/_/g, " ")],
                       ...((detalhe.terceirizada_nome || detalhe.terceirizada_nome_livre)
