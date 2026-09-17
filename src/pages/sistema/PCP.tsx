@@ -20,7 +20,9 @@ import { sizedImage } from "@/lib/imageSize";
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/sistema/ui/Money";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
-import { COLUNAS_PCP, corDaColuna, statusCanonicoDaColuna, colunaDoStatus } from "@/lib/statusPedido";
+import { COLUNAS_PCP, corDaColuna, statusCanonicoDaColuna, colunaDoStatus, statusInfo } from "@/lib/statusPedido";
+import { useSistema } from "@/contexts/SistemaContext";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 
 /* ── Types ───────────────────────────────────────────────────────────────── */
@@ -75,6 +77,16 @@ interface PcpRow {
   item_observacao: string | null;
   pedido_observacoes: string | null;
   tags: string[] | null;
+  item_criado_em: string | null;
+  terceirizada_nome_livre: string | null;
+  teste_anexo_url: string | null;
+  teste_enviado_em: string | null;
+  producao_anexo_url: string | null;
+  producao_anexo_tipo: "foto" | "video" | null;
+  producao_anexo_em: string | null;
+  itens_expedicao_pedido: number | null;
+  pedido_volumes: unknown;
+  pedido_pago_integral: boolean | null;
 }
 
 interface ComentarioRow {
@@ -94,9 +106,11 @@ interface Fornecedor {
 
 interface HistoricoRow {
   id: string;
+  producao_item_id: string;
   status_anterior: string | null;
   status_novo: string;
   usuario_id: string | null;
+  vendedor_id: string | null;
   observacao: string | null;
   created_at: string;
 }
@@ -160,6 +174,19 @@ const tempoNaEtapaCurto = (horas: number | null) => {
   return `${Math.floor(horas / 24)}d`;
 };
 
+/* Timer 2 — desde que o item ENTROU no sistema (item_criado_em), não desde a
+   última mudança de etapa. Formato "Xd Yh" quando passa de 1 dia, senão só
+   horas — mais discreto que o timer de etapa, que é o que importa primeiro. */
+const tempoTotalCurto = (criadoEm: string | null) => {
+  if (!criadoEm) return null;
+  const horas = (Date.now() - new Date(criadoEm).getTime()) / 3600000;
+  if (horas < 1) return "<1h";
+  if (horas < 24) return `${Math.floor(horas)}h`;
+  const dias = Math.floor(horas / 24);
+  const resto = Math.floor(horas % 24);
+  return resto > 0 ? `${dias}d ${resto}h` : `${dias}d`;
+};
+
 /* Limite (em horas) de permanência aceitável em cada etapa */
 const LIMITE_ETAPA: Record<PcpStatus, number> = {
   organizando_pedido: 48,
@@ -202,15 +229,22 @@ const pagamentoGateOk = (row: PcpRow) => {
 };
 
 
-function StatusPill({ status, className }: { status: string; className?: string }) {
-  const cfg = STATUS_MAP[status];
-  if (!cfg) return null;
+/* Bug pré-existente: usava STATUS_MAP, que só conhece as 8 COLUNAS do
+   board (organizando_pedido, pronto_producao, ...). Os 3 lugares que
+   chamam <StatusPill> sempre passaram um STATUS de verdade (15 valores
+   possíveis no catálogo, ex.: "aguardando_mercadoria") — nunca batia com
+   STATUS_MAP, então o badge nunca aparecia (renderizava null sem erro
+   nenhum, por isso passou despercebido). statusInfo() resolve qualquer
+   slug do catálogo, com fallback "Sem status" pro que não reconhecer. */
+function StatusPill({ status, className }: { status: string | null; className?: string }) {
+  if (!status) return null;
+  const info = statusInfo(status);
   return (
     <span
       className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold text-white", className)}
-      style={{ backgroundColor: cfg.color }}
+      style={{ backgroundColor: info.cor }}
     >
-      {cfg.label}
+      {info.nome}
     </span>
   );
 }
@@ -237,6 +271,7 @@ function PcpCard({
   const foto = row.mockup_url || row.imagem_catalogo_url;
   const cor = corDoPedido(row);
   const tempo = tempoNaEtapaCurto(row.horas_na_etapa);
+  const tempoTotal = tempoTotalCurto(row.item_criado_em);
   const tags = row.tags ?? [];
 
   return (
@@ -325,30 +360,48 @@ function PcpCard({
           </span>
         )}
 
-        {/* quantidade */}
-        <span className="absolute bottom-2.5 right-3 flex items-baseline gap-1.5 text-white">
-          <span className="gw-num text-[32px] leading-none" style={{ fontWeight: 700 }}>
+        {/* quantidade — fundo sólido de propósito: o gradiente do rodapé da
+            foto nem sempre escurece o suficiente perto do canto quando a foto
+            é clara ali, e "24 un" precisa ser legível sempre, não só às vezes. */}
+        <span
+          className="absolute bottom-2.5 right-3 flex items-baseline gap-1.5 text-white rounded-[8px] pl-2.5 pr-3 py-1"
+          style={{ backgroundColor: "rgba(11,18,32,.82)", backdropFilter: "blur(8px)" }}
+        >
+          <span className="gw-num text-[26px] leading-none" style={{ fontWeight: 700 }}>
             {row.quantidade ?? 0}
           </span>
-          <span className="gw-body text-[14px] font-medium text-white/80">un</span>
+          <span className="gw-body text-[13px] font-medium text-white/80">un</span>
         </span>
 
-        {/* tempo na etapa */}
-        <span
-          className="gw-body absolute bottom-3.5 left-3 flex items-center gap-1.5 text-[13px] font-semibold"
-          style={{ color: atrasado ? "var(--gw-danger)" : "#FFFFFF" }}
-        >
-          <Clock className="h-[14px] w-[14px]" /> {tempo || "—"}
+        {/* Timer 1 (etapa atual) + Timer 2 (total desde a criação) — o
+            segundo é mais discreto (menor, opacidade reduzida), como pedido:
+            o que importa primeiro é quanto tempo o item está TRAVADO aqui. */}
+        <span className="absolute bottom-3.5 left-3 flex flex-col gap-0.5">
+          <span
+            className="gw-body flex items-center gap-1.5 text-[13px] font-semibold"
+            style={{ color: atrasado ? "var(--gw-danger)" : "#FFFFFF" }}
+          >
+            <Clock className="h-[14px] w-[14px]" /> {tempo || "—"}
+          </span>
+          {tempoTotal && (
+            <span className="gw-body flex items-center gap-1.5 text-[11px] font-medium text-white/60">
+              <History className="h-[11px] w-[11px]" /> {tempoTotal} no total
+            </span>
+          )}
         </span>
       </div>
 
       {/* Camada 2 — rodapé */}
-      <div className="relative h-[63px] bg-[var(--gw-surface)] flex items-center gap-2 pl-5 pr-3 whitespace-nowrap">
-        <span className="absolute left-0 top-0 bottom-0 w-[5px]" style={{ backgroundColor: cor }} />
-        <OrderNumber value={row.pedido_numero} className="text-[17px]" />
-        <span className="text-[var(--gw-text-muted)] text-[14px]">·</span>
-        <span className="gw-body text-[14px] font-medium text-[var(--gw-text-secondary)]">
+      <div className="relative h-[63px] bg-[var(--gw-surface)] flex items-center gap-2 pl-5 pr-3 overflow-hidden">
+        <span className="absolute left-0 top-0 bottom-0 w-[5px] shrink-0" style={{ backgroundColor: cor }} />
+        <OrderNumber value={row.pedido_numero} className="text-[17px] shrink-0" />
+        <span className="text-[var(--gw-text-muted)] text-[14px] shrink-0">·</span>
+        <span className="gw-body text-[14px] font-medium text-[var(--gw-text-secondary)] shrink-0">
           Item {indice}/{total}
+        </span>
+        <span className="text-[var(--gw-text-muted)] text-[14px] shrink-0">·</span>
+        <span className="gw-body text-[14px] font-semibold text-[var(--gw-text)] truncate">
+          {row.produto_nome || "—"}
         </span>
       </div>
     </div>
@@ -360,6 +413,13 @@ function PcpCard({
 /* ── Página ──────────────────────────────────────────────────────────────── */
 
 export default function PCP() {
+  /* "Vendedor selecionado" é a única identidade individual que existe hoje
+     — o sistema roda com um único login compartilhado (ver migration
+     20260917130000). É essa identidade que carimba o histórico, não
+     auth.uid(), que é sempre a mesma pessoa fisicamente logada. */
+  const { vendedores, currentVendedor } = useSistema();
+  const vendedorNome = (id: string | null) => vendedores.find(v => v.id === id)?.nome || null;
+
   const [rows, setRows] = useState<PcpRow[]>([]);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -421,6 +481,7 @@ export default function PCP() {
 
   const [terceiroModal, setTerceiroModal] = useState<{ row: PcpRow } | null>(null);
   const [modalFornecedorId, setModalFornecedorId] = useState("");
+  const [modalTerceirizadaLivre, setModalTerceirizadaLivre] = useState("");
   const [modalQtdEnviada, setModalQtdEnviada] = useState("");
   const [modalPrevisao, setModalPrevisao] = useState("");
   const [modalSaving, setModalSaving] = useState(false);
@@ -474,6 +535,84 @@ export default function PCP() {
 
   // Loading só quando não há nada em cache para mostrar
   const loading = pcpQuery.isLoading && rows.length === 0;
+
+  /* ── Realtime ──────────────────────────────────────────────────────────
+     Sem isto, mudar a etapa de um item numa aba só aparecia para outras
+     abas/pessoas depois de um refresh manual (staleTime de 60s do React
+     Query). Agora: mudança no banco -> todo mundo vê na hora, sem recarregar
+     a página -- inclusive o próprio timer da nova etapa já nasce zerado.
+
+     `sistema_producao_itens` é a tabela CRUA, não a view `vw_pcp`: o
+     payload não traz produto_nome/mockup_url/cliente (esses só existem na
+     view, calculados a partir do jsonb do pedido). Por isso o merge só
+     atualiza os campos que existem em ambas — o resto da linha (foto, nome
+     do produto, cliente) não muda quando o status muda, então não precisa
+     vir de novo. */
+  const detalheIdRef = useRef<string | null>(null);
+  useEffect(() => { detalheIdRef.current = detalheId; }, [detalheId]);
+
+  useEffect(() => {
+    const canal: RealtimeChannel = supabase
+      .channel("pcp-ao-vivo")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "sistema_producao_itens" },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            const idRemovido = (payload.old as { id?: string })?.id;
+            if (idRemovido) setRows(prev => prev.filter(r => r.producao_id !== idRemovido));
+            return;
+          }
+          const novo = payload.new as Record<string, unknown>;
+          const id = novo.id as string;
+          setRows(prev => {
+            const existe = prev.some(r => r.producao_id === id);
+            if (!existe) {
+              // Item novo (pedido recém-criado): o merge não tem produto_nome
+              // nem foto, que só a view resolve — busca a linha completa.
+              void loadItems();
+              return prev;
+            }
+            const statusNovo = String(novo.status ?? "");
+            const info = statusInfo(statusNovo);
+            return prev.map(r => (r.producao_id !== id ? r : {
+              ...r,
+              status: statusNovo,
+              status_nome: info.nome,
+              status_cor: info.cor,
+              coluna_pcp: info.colunaPcp,
+              local_producao: (novo.local_producao as PcpRow["local_producao"]) ?? r.local_producao,
+              tags: (novo.tags as string[] | null) ?? r.tags,
+              medidas_ok: (novo.medidas_ok as boolean | null) ?? r.medidas_ok,
+              pagamento_ok: (novo.pagamento_ok as boolean | null) ?? r.pagamento_ok,
+              etiqueta_ok: (novo.etiqueta_ok as boolean | null) ?? r.etiqueta_ok,
+              terceirizada_id: (novo.terceirizada_id as string | null) ?? r.terceirizada_id,
+              terceirizada_nome_livre: (novo.terceirizada_nome_livre as string | null) ?? r.terceirizada_nome_livre,
+              qtd_enviada: (novo.qtd_enviada as number | null) ?? r.qtd_enviada,
+              previsao_retorno: (novo.previsao_retorno as string | null) ?? r.previsao_retorno,
+              teste_anexo_url: (novo.teste_anexo_url as string | null) ?? r.teste_anexo_url,
+              teste_enviado_em: (novo.teste_enviado_em as string | null) ?? r.teste_enviado_em,
+              producao_anexo_url: (novo.producao_anexo_url as string | null) ?? r.producao_anexo_url,
+              producao_anexo_tipo: (novo.producao_anexo_tipo as PcpRow["producao_anexo_tipo"]) ?? r.producao_anexo_tipo,
+              etapa_desde: statusNovo === r.status ? r.etapa_desde : new Date().toISOString(),
+              horas_na_etapa: statusNovo === r.status ? r.horas_na_etapa : 0,
+            }));
+          });
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "sistema_producao_historico" },
+        (payload) => {
+          const linha = payload.new as HistoricoRow;
+          if (linha.producao_item_id !== detalheIdRef.current) return;
+          setHistorico(prev => [linha, ...prev]);
+        },
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(canal); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const todasTags = useMemo(() => {
     const set = new Set<string>();
@@ -530,7 +669,7 @@ export default function PCP() {
     (async () => {
       const { data } = await supabase
         .from("sistema_producao_historico")
-        .select("id, status_anterior, status_novo, usuario_id, observacao, created_at")
+        .select("id, producao_item_id, status_anterior, status_novo, usuario_id, vendedor_id, observacao, created_at")
         .eq("producao_item_id", detalheId)
         .order("created_at", { ascending: false });
       setHistorico((data as any as HistoricoRow[]) ?? []);
@@ -618,6 +757,7 @@ export default function PCP() {
   const openTerceiroModal = (row: PcpRow) => {
     setTerceiroModal({ row });
     setModalFornecedorId(row.terceirizada_id || "");
+    setModalTerceirizadaLivre(row.terceirizada_nome_livre || "");
     setModalQtdEnviada(String(row.quantidade ?? ""));
     setModalPrevisao(row.previsao_retorno || "");
   };
@@ -640,6 +780,29 @@ export default function PCP() {
     return true;
   };
 
+  /* Muda o status via RPC (não `.update()` direto): o servidor carimba o
+     vendedor selecionado na MESMA linha de histórico que o gatilho acabou
+     de criar, num único round-trip — sem isso haveria uma corrida entre
+     "salvar o status" e "salvar quem mudou", e a mudança que já sai
+     otimista na tela podia registrar o responsável errado se duas pessoas
+     mexessem em itens diferentes ao mesmo tempo. */
+  const mudarStatus = async (producaoId: string, status: string, observacao?: string) => {
+    setSavingId(producaoId);
+    setRows(prev => prev.map(r => (r.producao_id === producaoId ? { ...r, status } : r)));
+    const { error } = await supabase.rpc("sistema_mudar_status_producao" as any, {
+      p_producao_id: producaoId,
+      p_status: status,
+      p_vendedor_id: currentVendedor?.id ?? null,
+      p_observacao: observacao ?? null,
+    });
+    setSavingId(null);
+    if (error) {
+      console.error("[PCP] mudar status falhou:", error);
+      toast.error(`Não foi possível salvar. ${error.message || ""}`);
+      await loadItems();
+    }
+  };
+
   const moverItem = (row: PcpRow, targetStatus: PcpStatus) => {
     if (targetStatus === "preparacao" && TERCEIRIZADA_TRIGGER.includes(row.local_producao)) {
       openTerceiroModal(row);
@@ -647,7 +810,7 @@ export default function PCP() {
     }
     /* Grava o STATUS canônico da coluna. targetStatus é nome de coluna
        ("em_producao"); o banco espera slug de status ("a_produzir"). */
-    applyUpdate(row.producao_id, { status: statusCanonicoDaColuna(targetStatus) });
+    mudarStatus(row.producao_id, statusCanonicoDaColuna(targetStatus));
   };
 
   const handleDrop = (targetStatus: PcpStatus, id: string) => {
@@ -691,18 +854,36 @@ export default function PCP() {
 
   const confirmEnvioTerceiro = async () => {
     if (!terceiroModal) return;
-    if (!modalFornecedorId) {
-      toast.error("Selecione a terceirizada");
+    const fornecedor = terceirizadas.find(f => f.id === modalFornecedorId);
+    const nomeLivre = modalTerceirizadaLivre.trim();
+    if (!modalFornecedorId && !nomeLivre) {
+      toast.error("Selecione uma terceirizada cadastrada ou digite o nome dela");
       return;
     }
     setModalSaving(true);
+
+    /* Duas chamadas de propósito: a RPC muda o status (e carimba
+       vendedor+histórico); o patch comum grava os dados da terceirizada,
+       que não fazem parte do vocabulário de status.
+       "preparacao" aqui é o nome da COLUNA, não um status — o valor
+       gravável é o status canônico dela (statusCanonicoDaColuna). Gravar a
+       string "preparacao" direto violava a FK de sistema_status; ninguém
+       tinha notado porque este caminho não tinha sido testado com dado
+       real ainda. */
+    await mudarStatus(terceiroModal.row.producao_id, statusCanonicoDaColuna("preparacao"));
     await applyUpdate(terceiroModal.row.producao_id, {
-      status: "preparacao",
-      terceirizada_id: modalFornecedorId,
+      terceirizada_id: modalFornecedorId || null,
+      terceirizada_nome_livre: fornecedor ? null : (nomeLivre || null),
       qtd_enviada: modalQtdEnviada ? Number(modalQtdEnviada) : null,
       previsao_retorno: modalPrevisao || null,
       enviado_terceiro_em: new Date().toISOString(),
     });
+
+    // "que depois de respondido vai criar uma tag" — o nome da terceirizada
+    // vira etiqueta do item, visível no card sem abrir o detalhe.
+    const nomeParaTag = fornecedor?.nome || nomeLivre;
+    if (nomeParaTag) await adicionarTag(terceiroModal.row, nomeParaTag);
+
     setModalSaving(false);
     setTerceiroModal(null);
   };
@@ -965,7 +1146,8 @@ export default function PCP() {
                     {[
                       ["Técnica", detalhe.tecnica_nome || "—"],
                       ["Local de produção", detalhe.local_producao.replace(/_/g, " ")],
-                      ...(detalhe.terceirizada_nome ? [["Terceirizada", detalhe.terceirizada_nome]] : []),
+                      ...((detalhe.terceirizada_nome || detalhe.terceirizada_nome_livre)
+                        ? [["Terceirizada", detalhe.terceirizada_nome || detalhe.terceirizada_nome_livre]] : []),
                       ...(detalhe.previsao_retorno ? [["Previsão de retorno", formatDate(detalhe.previsao_retorno) || "—"]] : []),
                       ["Produzir até", formatDate(detalhe.data_entrega_item) || "—"],
                       ["Despachar até", formatDate(detalhe.data_entrega_item) || "—"],
@@ -1164,16 +1346,22 @@ export default function PCP() {
                         <li key={h.id} className="relative">
                           <span
                             className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full"
-                            style={{ backgroundColor: STATUS_MAP[h.status_novo]?.color || "var(--gw-border-strong)" }}
+                            style={{ backgroundColor: statusInfo(h.status_novo).cor }}
                           />
                           <div className="flex items-center gap-2 flex-wrap">
+                            {h.status_anterior && (
+                              <>
+                                <StatusPill status={h.status_anterior} className="opacity-60" />
+                                <span className="text-[11px] text-[var(--gw-text-muted)]">→</span>
+                              </>
+                            )}
                             <StatusPill status={h.status_novo} />
                             <span className="text-[11px] text-[var(--gw-text-secondary)]">
                               {formatDateTime(h.created_at)}
                             </span>
                           </div>
                           <p className="text-[11px] text-[var(--gw-text-muted)] mt-0.5">
-                            {h.usuario_id ? "Responsável: usuário do sistema" : "Responsável: sistema"}
+                            Alterado por: {vendedorNome(h.vendedor_id) || "não identificado"}
                             {h.observacao ? ` · ${h.observacao}` : ""}
                           </p>
                         </li>
@@ -1211,7 +1399,7 @@ export default function PCP() {
 
               <div className="space-y-1.5">
                 <Label>Terceirizada</Label>
-                <Select value={modalFornecedorId} onValueChange={setModalFornecedorId}>
+                <Select value={modalFornecedorId} onValueChange={v => { setModalFornecedorId(v); setModalTerceirizadaLivre(""); }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione a terceirizada" />
                   </SelectTrigger>
@@ -1234,6 +1422,15 @@ export default function PCP() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Ou digite o nome (se não estiver cadastrada)</Label>
+                <Input
+                  value={modalTerceirizadaLivre}
+                  onChange={e => { setModalTerceirizadaLivre(e.target.value); if (e.target.value) setModalFornecedorId(""); }}
+                  placeholder="Ex.: Gráfica São Jorge"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
