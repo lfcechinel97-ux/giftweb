@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag, Clock, History,
-  Tag, X, MessageSquare, Send,
+  Tag, X, MessageSquare, Send, Camera, Video, CheckCircle2, Upload, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { sizedImage } from "@/lib/imageSize";
+import { uploadAnexoPcp, MockupUploadError } from "@/lib/uploadMockup";
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/sistema/ui/Money";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
@@ -131,11 +132,34 @@ const STATUS_MAP = Object.fromEntries(STATUS_COLS.map(c => [c.value, c])) as Rec
 
 const TERCEIRIZADA_TRIGGER: LocalProducao[] = ["terceirizada", "fornecedor_para_terceirizada"];
 
+/* Etiquetas automáticas do fluxo de teste físico. Nomes fixos de propósito
+   (não são texto livre do vendedor) — o botão "Aprovar teste" procura essa
+   string exata pra decidir se mostra ou não. */
+const TAG_TESTE_ENVIADO = "TESTE ENVIADO";
+const TAG_TESTE_APROVADO = "TESTE APROVADO";
+const TAG_PRODUZIR_MIDIA = "PRODUZIR + MÍDIA";
+
 /* Paleta estável por pedido (faixa de identificação) */
 const PEDIDO_PALETTE = [
   "#2563EB", "#F97316", "#14B8A6", "#A855F7", "#EAB308",
   "#EC4899", "#0EA5E9", "#16A34A", "#F43F5E", "#8B5CF6",
 ];
+
+/* Paleta de etiquetas — cor viva, sólida, com texto branco. Mesmos 15 tons já
+   validados em src/lib/statusPedido.ts (todos >= 4.5:1 de contraste contra
+   branco), reaproveitados aqui: tag é texto livre, sem cor própria salva no
+   banco, então a cor precisa ser determinística a partir do próprio texto —
+   a mesma etiqueta sempre cai na mesma cor, em qualquer card. */
+const TAG_PALETTE = [
+  "#64748B", "#0B7CAF", "#A36907", "#9E42F6", "#C026D3", "#8452F5", "#2563EB",
+  "#1D4ED8", "#0B8177", "#05875F", "#12883E", "#9D6B03", "#15803D", "#166534", "#DC2626",
+];
+
+const corDaTag = (texto: string) => {
+  let h = 0;
+  for (let i = 0; i < texto.length; i++) h = (h * 31 + texto.charCodeAt(i)) >>> 0;
+  return TAG_PALETTE[h % TAG_PALETTE.length];
+};
 
 const corDoPedido = (row: PcpRow) => {
   if (row.pedido_cor) return row.pedido_cor;
@@ -323,7 +347,7 @@ function PcpCard({
               <span
                 key={t}
                 className="gw-body text-white text-[12px] font-semibold rounded-[6px] px-2.5 py-[4px] truncate"
-                style={{ backgroundColor: "rgba(37,99,235,.88)", backdropFilter: "blur(8px)" }}
+                style={{ backgroundColor: corDaTag(t) }}
               >
                 {t}
               </span>
@@ -373,13 +397,20 @@ function PcpCard({
           <span className="gw-body text-[13px] font-medium text-white/80">un</span>
         </span>
 
-        {/* Timer 1 (etapa atual) + Timer 2 (total desde a criação) — o
-            segundo é mais discreto (menor, opacidade reduzida), como pedido:
-            o que importa primeiro é quanto tempo o item está TRAVADO aqui. */}
-        <span className="absolute bottom-3.5 left-3 flex flex-col gap-0.5">
+        {/* Timer 1 (etapa atual) + Timer 2 (total desde a criação) — mesmo
+            tratamento de fundo sólido da badge de quantidade: o gradiente do
+            rodapé nem sempre escurece o bastante perto do canto esquerdo
+            quando a foto é clara ali, e o número precisa ser legível sempre,
+            não só quando a foto colabora. Timer 2 fica discreto (menor,
+            opacidade reduzida) dentro do mesmo bloco — o que importa
+            primeiro é quanto tempo o item está TRAVADO na etapa atual. */}
+        <span
+          className="absolute bottom-2.5 left-3 flex flex-col gap-0.5 rounded-[8px] px-2.5 py-1.5"
+          style={{ backgroundColor: "rgba(11,18,32,.82)", backdropFilter: "blur(8px)" }}
+        >
           <span
             className="gw-body flex items-center gap-1.5 text-[13px] font-semibold"
-            style={{ color: atrasado ? "var(--gw-danger)" : "#FFFFFF" }}
+            style={{ color: atrasado ? "#FF8A8A" : "#FFFFFF" }}
           >
             <Clock className="h-[14px] w-[14px]" /> {tempo || "—"}
           </span>
@@ -488,6 +519,14 @@ export default function PCP() {
 
   const [gateModal, setGateModal] = useState<{ row: PcpRow; target: PcpStatus; tipo: "cartao" | "pix" } | null>(null);
   const [gateSaving, setGateSaving] = useState(false);
+
+  /* Anexos do PCP (teste físico + produção concluída) */
+  const testeInputRef = useRef<HTMLInputElement | null>(null);
+  const producaoAnexoInputRef = useRef<HTMLInputElement | null>(null);
+  const testeAlvoRef = useRef<PcpRow | null>(null);
+  const producaoAnexoAlvoRef = useRef<PcpRow | null>(null);
+  const [enviandoTeste, setEnviandoTeste] = useState(false);
+  const [enviandoProducaoAnexo, setEnviandoProducaoAnexo] = useState(false);
 
   /* Dados cacheados (60s): voltar ao PCP mostra o quadro na hora e revalida em 2º plano */
   const pcpQuery = useQuery<PcpRow[]>({
@@ -740,6 +779,74 @@ export default function PCP() {
     await salvarTags(row, (row.tags ?? []).filter(t => t !== valor));
   };
 
+  /* ── Anexo de teste físico ────────────────────────────────────────────
+     "vai ter um campo no produto escrito 'teste' onde a produção anexa a
+     foto p/ vendedor baixar e mandar p cliente. nesse mesmo tempo,
+     automaticamente se a produção adiciona o anexo, já adiciona a tag
+     TESTE ENVIADO". Reenviar um teste novo LIMPA a aprovação anterior — faz
+     sentido: se a foto mudou, a aprovação antiga não vale mais pra essa. */
+  const abrirSeletorTeste = (row: PcpRow) => {
+    testeAlvoRef.current = row;
+    testeInputRef.current?.click();
+  };
+
+  const handleAnexoTeste = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const row = testeAlvoRef.current;
+    e.target.value = "";
+    if (!file || !row) return;
+    setEnviandoTeste(true);
+    try {
+      const { url } = await uploadAnexoPcp(file, row.producao_id, "teste");
+      await applyUpdate(row.producao_id, { teste_anexo_url: url, teste_enviado_em: new Date().toISOString() });
+      const semAprovado = (row.tags ?? []).filter(t => t !== TAG_TESTE_APROVADO && t !== TAG_PRODUZIR_MIDIA);
+      await salvarTags(row, [...new Set([...semAprovado, TAG_TESTE_ENVIADO])]);
+      toast.success("Teste anexado. Baixe e mande para o cliente aprovar.");
+    } catch (err) {
+      toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o anexo.");
+    } finally {
+      setEnviandoTeste(false);
+    }
+  };
+
+  /* "se aprovado, ele altera a tag de teste enviado p/ TESTE APROVADO e
+     junto também automaticamente aparece a tag PRODUZIR + MÍDIA" — ação do
+     vendedor, não da produção (é ele quem sabe se o cliente aprovou). */
+  const aprovarTeste = async (row: PcpRow) => {
+    const outras = (row.tags ?? []).filter(t => t !== TAG_TESTE_ENVIADO);
+    await salvarTags(row, [...new Set([...outras, TAG_TESTE_APROVADO, TAG_PRODUZIR_MIDIA])]);
+    toast.success("Teste aprovado. A produção já vê a etiqueta de \"pode produzir\".");
+  };
+
+  /* ── Anexo de produção concluída (foto ou vídeo) ──────────────────────
+     "Quando está no processo de produzir, abre um novo campo p/ anexo que
+     suporte foto ou vídeo que a produção anexa do pedido 100% feito". */
+  const abrirSeletorProducaoAnexo = (row: PcpRow) => {
+    producaoAnexoAlvoRef.current = row;
+    producaoAnexoInputRef.current?.click();
+  };
+
+  const handleAnexoProducao = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const row = producaoAnexoAlvoRef.current;
+    e.target.value = "";
+    if (!file || !row) return;
+    setEnviandoProducaoAnexo(true);
+    try {
+      const { url, tipo } = await uploadAnexoPcp(file, row.producao_id, "producao");
+      await applyUpdate(row.producao_id, {
+        producao_anexo_url: url,
+        producao_anexo_tipo: tipo,
+        producao_anexo_em: new Date().toISOString(),
+      });
+      toast.success(`${tipo === "video" ? "Vídeo" : "Foto"} anexado. Baixe e mande para o cliente.`);
+    } catch (err) {
+      toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o anexo.");
+    } finally {
+      setEnviandoProducaoAnexo(false);
+    }
+  };
+
 
 
   const applyUpdate = async (producaoId: string, patch: Record<string, any>) => {
@@ -892,6 +999,12 @@ export default function PCP() {
 
   return (
     <div className="space-y-4 min-w-0">
+      {/* Inputs de arquivo escondidos — acionados pelos botões de anexo do
+          modal de detalhe. Ficam montados sempre (não só quando o modal está
+          aberto) pra não perder a seleção do usuário entre o clique e o
+          re-render. */}
+      <input ref={testeInputRef} type="file" accept="image/*" className="hidden" onChange={handleAnexoTeste} />
+      <input ref={producaoAnexoInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleAnexoProducao} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="gw-display">PCP — Produção</h1>
@@ -924,11 +1037,10 @@ export default function PCP() {
                   setTagsFiltro(prev => (ativo ? prev.filter(x => x !== t) : [...prev, t]))
                 }
                 className={cn(
-                  "gw-body text-[13px] font-medium rounded-full px-3 py-1 border transition-colors",
-                  ativo
-                    ? "bg-[var(--gw-primary)] text-white border-transparent"
-                    : "bg-[var(--gw-surface)] text-[var(--gw-text-secondary)] border-[var(--gw-border)] hover:border-[var(--gw-border-strong)]"
+                  "gw-body text-[13px] font-semibold rounded-full px-3 py-1 border transition-colors",
+                  !ativo && "bg-[var(--gw-surface)] text-[var(--gw-text-secondary)] border-[var(--gw-border)] hover:border-[var(--gw-border-strong)]"
                 )}
+                style={ativo ? { backgroundColor: corDaTag(t), color: "#fff", borderColor: "transparent" } : undefined}
               >
                 {t}
               </button>
@@ -1169,13 +1281,14 @@ export default function PCP() {
                       {(detalhe.tags ?? []).map(t => (
                         <span
                           key={t}
-                          className="gw-body inline-flex items-center gap-1 text-[13px] font-medium rounded-full pl-3 pr-1.5 py-1 bg-[var(--gw-primary-soft)] text-[var(--gw-primary)]"
+                          className="gw-body inline-flex items-center gap-1 text-[13px] font-semibold rounded-full pl-3 pr-1.5 py-1 text-white"
+                          style={{ backgroundColor: corDaTag(t) }}
                         >
                           {t}
                           <button
                             type="button"
                             onClick={() => removerTag(detalhe, t)}
-                            className="rounded-full p-0.5 hover:bg-[var(--gw-primary)]/15"
+                            className="rounded-full p-0.5 hover:bg-white/20"
                             aria-label={`Remover etiqueta ${t}`}
                           >
                             <X className="h-3 w-3" />
@@ -1221,6 +1334,119 @@ export default function PCP() {
                     </Button>
                   )}
                 </div>
+
+                {/* Teste físico — só aparece na etapa certa, ou depois de já
+                    ter anexo (pra continuar visível como registro). */}
+                {(detalhe.coluna_pcp === "teste_fisico" || detalhe.teste_anexo_url) && (
+                  <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2.5">
+                    <p className="gw-label flex items-center gap-1.5">
+                      <Camera className="h-3.5 w-3.5" /> Teste físico
+                    </p>
+                    {detalhe.teste_anexo_url ? (
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={sizedImage(detalhe.teste_anexo_url, 96)}
+                          alt="Foto do teste"
+                          className="w-16 h-16 rounded-lg object-cover border border-[var(--gw-border)] shrink-0"
+                        />
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <p className="text-[12px] text-[var(--gw-text-muted)]">
+                            Enviado {formatDateTime(detalhe.teste_enviado_em)}
+                          </p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <a
+                              href={detalhe.teste_anexo_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-[12px] font-medium text-[var(--gw-primary)] hover:underline"
+                            >
+                              <Download className="h-3 w-3" /> Baixar para enviar ao cliente
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => abrirSeletorTeste(detalhe)}
+                              disabled={enviandoTeste}
+                              className="text-[12px] font-medium text-[var(--gw-text-secondary)] hover:underline disabled:opacity-50"
+                            >
+                              Trocar foto
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={() => abrirSeletorTeste(detalhe)} disabled={enviandoTeste}>
+                        {enviandoTeste ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                        Anexar foto do teste
+                      </Button>
+                    )}
+
+                    {/* Aprovação é ação do VENDEDOR (ele que sabe se o cliente
+                        aprovou), não da produção. */}
+                    {(detalhe.tags ?? []).includes(TAG_TESTE_APROVADO) ? (
+                      <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: "var(--gw-success)" }}>
+                        <CheckCircle2 className="h-4 w-4" /> Teste aprovado pelo cliente
+                      </span>
+                    ) : (detalhe.tags ?? []).includes(TAG_TESTE_ENVIADO) && (
+                      <Button size="sm" onClick={() => aprovarTeste(detalhe)} style={{ backgroundColor: "var(--gw-success)" }}>
+                        <CheckCircle2 className="h-4 w-4 mr-2" /> Cliente aprovou o teste
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                {/* Produção concluída — foto ou vídeo do pedido 100% pronto. */}
+                {(detalhe.coluna_pcp === "em_producao" || detalhe.producao_anexo_url) && (
+                  <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2.5">
+                    <p className="gw-label flex items-center gap-1.5">
+                      <Video className="h-3.5 w-3.5" /> Produção concluída (foto ou vídeo)
+                    </p>
+                    {detalhe.producao_anexo_url ? (
+                      <div className="flex items-center gap-3">
+                        {detalhe.producao_anexo_tipo === "video" ? (
+                          <video
+                            src={detalhe.producao_anexo_url}
+                            className="w-16 h-16 rounded-lg object-cover border border-[var(--gw-border)] shrink-0 bg-black"
+                            muted
+                          />
+                        ) : (
+                          <img
+                            src={sizedImage(detalhe.producao_anexo_url, 96)}
+                            alt="Produto pronto"
+                            className="w-16 h-16 rounded-lg object-cover border border-[var(--gw-border)] shrink-0"
+                          />
+                        )}
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <p className="text-[12px] text-[var(--gw-text-muted)]">
+                            Enviado {formatDateTime(detalhe.producao_anexo_em)}
+                          </p>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <a
+                              href={detalhe.producao_anexo_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-[12px] font-medium text-[var(--gw-primary)] hover:underline"
+                            >
+                              <Download className="h-3 w-3" /> Baixar para enviar ao cliente
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => abrirSeletorProducaoAnexo(detalhe)}
+                              disabled={enviandoProducaoAnexo}
+                              className="text-[12px] font-medium text-[var(--gw-text-secondary)] hover:underline disabled:opacity-50"
+                            >
+                              Trocar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button variant="outline" size="sm" onClick={() => abrirSeletorProducaoAnexo(detalhe)} disabled={enviandoProducaoAnexo}>
+                        {enviandoProducaoAnexo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                        Anexar foto ou vídeo
+                      </Button>
+                    )}
+                  </div>
+                )}
 
                 {/* Observações — histórico em formato de conversa */}
                 <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-3">
