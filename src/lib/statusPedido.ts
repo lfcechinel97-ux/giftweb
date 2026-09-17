@@ -32,17 +32,17 @@ export interface StatusInfo {
 
 const SEMENTE: StatusInfo[] = [
   { slug: "organizando_anotacoes",   nome: "Organizando anotações",      cor: "#64748B", colunaPcp: "organizando_pedido",  escopo: "ambos",  ordem: 10 },
-  { slug: "imprimir_ordem_producao", nome: "Imprimir ordem de produção", cor: "#0EA5E9", colunaPcp: "pronto_producao",     escopo: "ambos",  ordem: 20 },
-  { slug: "aguardando_mercadoria",   nome: "Aguardando mercadoria",      cor: "#F59E0B", colunaPcp: "pronto_producao",     escopo: "ambos",  ordem: 30 },
-  { slug: "aguardando_teste",        nome: "Aguardando teste laser/DTF", cor: "#A855F7", colunaPcp: "teste_fisico",        escopo: "ambos",  ordem: 40 },
+  { slug: "imprimir_ordem_producao", nome: "Imprimir ordem de produção", cor: "#0B7CAF", colunaPcp: "pronto_producao",     escopo: "ambos",  ordem: 20 },
+  { slug: "aguardando_mercadoria",   nome: "Aguardando mercadoria",      cor: "#A36907", colunaPcp: "pronto_producao",     escopo: "ambos",  ordem: 30 },
+  { slug: "aguardando_teste",        nome: "Aguardando teste laser/DTF", cor: "#9E42F6", colunaPcp: "teste_fisico",        escopo: "ambos",  ordem: 40 },
   { slug: "aguardando_aprovacao_teste", nome: "Aguardando aprovação teste", cor: "#C026D3", colunaPcp: "teste_fisico",     escopo: "ambos",  ordem: 45 },
-  { slug: "preparar_dtf",            nome: "Preparar DTF/vetorização",   cor: "#8B5CF6", colunaPcp: "preparacao",          escopo: "ambos",  ordem: 50 },
+  { slug: "preparar_dtf",            nome: "Preparar DTF/vetorização",   cor: "#8452F5", colunaPcp: "preparacao",          escopo: "ambos",  ordem: 50 },
   { slug: "a_produzir",              nome: "A produzir",                 cor: "#2563EB", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 60 },
   { slug: "a_produzir_terceirizada", nome: "A produzir terceirizada",    cor: "#1D4ED8", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 70 },
-  { slug: "inserir_medidas",         nome: "Inserir medidas",            cor: "#0D9488", colunaPcp: "embalagem_pagamento", escopo: "ambos",  ordem: 80 },
-  { slug: "conferir_pagamentos",     nome: "Conferir pagamentos",        cor: "#059669", colunaPcp: "embalagem_pagamento", escopo: "ambos",  ordem: 90 },
-  { slug: "enviar_etiqueta",         nome: "Enviar etiqueta/expedição",  cor: "#16A34A", colunaPcp: "embalagem_pagamento", escopo: "ambos",  ordem: 100 },
-  { slug: "aguardando_coleta",       nome: "Aguardando coleta",          cor: "#CA8A04", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 110 },
+  { slug: "inserir_medidas",         nome: "Inserir medidas",            cor: "#0B8177", colunaPcp: "embalagem_pagamento", escopo: "ambos",  ordem: 80 },
+  { slug: "conferir_pagamentos",     nome: "Conferir pagamentos",        cor: "#05875F", colunaPcp: "embalagem_pagamento", escopo: "ambos",  ordem: 90 },
+  { slug: "enviar_etiqueta",         nome: "Enviar etiqueta/expedição",  cor: "#12883E", colunaPcp: "embalagem_pagamento", escopo: "ambos",  ordem: 100 },
+  { slug: "aguardando_coleta",       nome: "Aguardando coleta",          cor: "#9D6B03", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 110 },
   { slug: "coletado_enviado",        nome: "Coletado e enviado",         cor: "#15803D", colunaPcp: "enviado",             escopo: "ambos",  ordem: 120 },
   { slug: "entregue",                nome: "Entregue",                   cor: "#166534", colunaPcp: "enviado",             escopo: "pedido", ordem: 130 },
   { slug: "cancelado",               nome: "Cancelado",                  cor: "#DC2626", colunaPcp: "cancelado",           escopo: "ambos",  ordem: 140 },
@@ -101,19 +101,6 @@ export function statusInfo(slug?: string | null): StatusInfo {
 export function opcoesStatus(nivel: "pedido" | "item"): StatusInfo[] {
   return catalogo.filter(s => s.escopo === "ambos" || s.escopo === nivel);
 }
-
-/** Fundo suave do badge, derivado da cor cheia. */
-export const fundoSuave = (cor: string, pct = 12) =>
-  `color-mix(in srgb, ${cor} ${pct}%, #FFFFFF)`;
-
-/**
- * Variante escura da cor, legível como texto sobre o fundo suave.
- *
- * Derivada em vez de tabelada porque o usuário escolhe a cor de status que
- * criar — uma lista de variantes escritas à mão só cobriria as 14 iniciais.
- */
-export const textoForte = (cor: string) =>
-  `color-mix(in srgb, ${cor} 72%, #1E4189)`;
 
 /**
  * As 8 colunas do Kanban do PCP, na ordem do fluxo do galpão.

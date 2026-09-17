@@ -2,17 +2,18 @@ import { ChevronDown } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { statusInfo, opcoesStatus, fundoSuave, textoForte } from "@/lib/statusPedido";
+import { statusInfo, opcoesStatus } from "@/lib/statusPedido";
 import { cn } from "@/lib/utils";
 
 /**
- * Badge de status — bolinha cheia na cor da etapa, fundo suave da mesma matiz,
- * texto na variante escura.
+ * Badge de status — preenchimento SÓLIDO na cor da etapa, texto branco.
  *
- * Preenchimento sólido com texto branco foi descartado de propósito: metade das
- * cores do fluxo (âmbar, teal, amarelo) não chega a 3:1 com branco em cima. O
- * fundo suave mantém a cor legível em qualquer etapa e não grita numa lista com
- * dezenas de linhas.
+ * Antes usava fundo suave + texto escuro (mais "seguro" tipograficamente),
+ * mas o usuário pediu cor viva de propósito: é o primeiro coisa que o olho
+ * deve achar na linha, e pastel some no meio da tela. Como contrapartida,
+ * as cores do catálogo (`src/lib/statusPedido.ts`) foram escurecidas até
+ * todas passarem de 4.5:1 contra branco — a cor continua saturada, só não
+ * tão clara a ponto do texto branco sumir em cima dela.
  */
 
 interface StatusBadgeProps {
@@ -32,20 +33,15 @@ export function StatusBadge({
 
   const corpo = (
     <>
-      <span
-        className="inline-block h-[6px] w-[6px] rounded-full shrink-0"
-        style={{ background: info.cor }}
-      />
       <span className="truncate">{info.nome}</span>
-      {onSelect && <ChevronDown className="h-3 w-3 shrink-0 opacity-60" />}
+      {onSelect && <ChevronDown className="h-3 w-3 shrink-0 opacity-90" />}
     </>
   );
 
   const estilo = {
-    background: fundoSuave(info.cor),
-    color: textoForte(info.cor),
-    border: `1px solid ${fundoSuave(info.cor, 28)}`,
-    fontWeight: 600,
+    background: info.cor,
+    color: "#FFFFFF",
+    fontWeight: 700,
   } as const;
 
   const classes = cn(
@@ -61,7 +57,7 @@ export function StatusBadge({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button type="button" className={cn(classes, "transition-shadow hover:shadow-[var(--gw-shadow-sm)]")} style={estilo}>
+        <button type="button" className={cn(classes, "transition-opacity hover:opacity-90")} style={estilo}>
           {corpo}
         </button>
       </DropdownMenuTrigger>
