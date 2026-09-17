@@ -13,6 +13,9 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  Sheet, SheetContent, SheetHeader, SheetTitle,
+} from "@/components/ui/sheet";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +42,7 @@ interface PcpRow {
   pedido_id: string;
   pedido_numero: string;
   pedido_cor: string | null;
+  pedido_vendedor_id: string | null;
   cliente: string | null;
   produto_nome: string | null;
   mockup_url: string | null;
@@ -161,7 +165,54 @@ const TAG_PALETTE = [
   "#1D4ED8", "#0B8177", "#05875F", "#12883E", "#9D6B03", "#15803D", "#166534", "#DC2626",
 ];
 
+/* Paleta EXATA de etiquetas fixas do fluxo (cores dadas pelo usuário) —
+   tag que bate literalmente com uma destas usa a cor exata; texto livre
+   (nome de terceirizada, nome de transportadora fora da lista) continua
+   caindo no hash determinístico acima. "TERCEIRIZADA: X" é reconhecida
+   pelo prefixo, não pelo texto inteiro (o nome muda por pedido). */
+const TAG_COR_EXATA: Record<string, string> = {
+  "COMPRADO XBZ": "#2563EB",
+  "COMPRADO CHINA": "#7C3AED",
+  "TESTE ENVIADO": "#A855F7",
+  "TESTE APROVADO": "#22C55E",
+  "PRODUZIR + MÍDIA": "#F97316",
+  "LASER": "#16A34A",
+  "DTF UV": "#2563EB",
+  "TERCEIRIZADA": "#F97316",
+  "MÍDIA ENVIADA": "#06B6D4",
+  "PAGO 100%": "#22C55E",
+  "PAGAMENTO PENDENTE": "#EF4444",
+  "COLETADO": "#22C55E",
+  "ENVIADO": "#22C55E",
+  "COLETA BRASPRESS": "#2563EB",
+  "BRASPRESS": "#2563EB",
+  "COLETA MELHOR ENVIO": "#7C3AED",
+  "MELHOR ENVIO": "#7C3AED",
+  "ENVIO POR LALAMOVE": "#F97316",
+  "LALAMOVE": "#F97316",
+};
+
+/* Ordem de prioridade quando o card tem mais etiquetas do que cabe —
+   mostra as primeiras da lista e agrupa o resto em "+N" (hover revela). */
+const TAG_PRIORIDADE = [
+  "URGENTE", "TESTE APROVADO", "TESTE ENVIADO", "PRODUZIR + MÍDIA",
+  "COMPRADO XBZ", "COMPRADO CHINA", "TERCEIRIZADA", "LASER", "DTF UV",
+  "BRASPRESS", "MELHOR ENVIO", "LALAMOVE",
+];
+
+const prioridadeDaTag = (texto: string) => {
+  const t = texto.toUpperCase();
+  const i = TAG_PRIORIDADE.findIndex(p => t.startsWith(p) || t.includes(p));
+  return i === -1 ? TAG_PRIORIDADE.length : i;
+};
+
+const ordenarTagsPorPrioridade = (tags: string[]) =>
+  [...tags].sort((a, b) => prioridadeDaTag(a) - prioridadeDaTag(b));
+
 const corDaTag = (texto: string) => {
+  const exata = TAG_COR_EXATA[texto.toUpperCase()];
+  if (exata) return exata;
+  if (texto.toUpperCase().startsWith("TERCEIRIZADA")) return TAG_COR_EXATA["TERCEIRIZADA"];
   let h = 0;
   for (let i = 0; i < texto.length; i++) h = (h * 31 + texto.charCodeAt(i)) >>> 0;
   return TAG_PALETTE[h % TAG_PALETTE.length];
@@ -282,9 +333,34 @@ function StatusPill({ status, className }: { status: string | null; className?: 
 /* ── Card ────────────────────────────────────────────────────────────────── */
 /* Dimensões 1,7x maiores que a versão anterior (268 → 456px). */
 
+/** Iniciais do vendedor pro avatar (sem foto cadastrada ainda no sistema). */
+const iniciaisVendedor = (nome: string | null) => {
+  if (!nome) return "?";
+  const partes = nome.trim().split(/\s+/);
+  return ((partes[0]?.[0] ?? "") + (partes[1]?.[0] ?? "")).toUpperCase() || "?";
+};
+
+function VendedorAvatar({ nome }: { nome: string | null }) {
+  if (!nome) return null;
+  const cor = corDaTag(nome);
+  return (
+    <span
+      className="group/av relative shrink-0 h-[24px] w-[24px] rounded-full flex items-center justify-center text-white text-[10px] font-bold select-none"
+      style={{ backgroundColor: cor }}
+    >
+      {iniciaisVendedor(nome)}
+      <span
+        className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-[6px] bg-[#0F172A] text-white text-[11px] font-medium px-2 py-1 opacity-0 group-hover/av:opacity-100 transition-opacity z-10"
+      >
+        Vendedor / {nome}
+      </span>
+    </span>
+  );
+}
+
 function PcpCard({
-  row, indice, total, dragging, saving, atrasado, highlight,
-  onDragStart, onDragEnd, onOpen, onHover,
+  row, indice, total, dragging, saving, atrasado, highlight, comFotos, vendedorNome,
+  onDragStart, onDragEnd, onOpen, onHover, onComprado,
 }: {
   row: PcpRow;
   indice: number;
@@ -293,16 +369,54 @@ function PcpCard({
   saving: boolean;
   atrasado: boolean;
   highlight: boolean;
+  comFotos: boolean;
+  vendedorNome: string | null;
   onDragStart: () => void;
   onDragEnd: () => void;
   onOpen: () => void;
   onHover: (pedidoId: string | null) => void;
+  onComprado: (row: PcpRow, origem: "XBZ" | "CHINA") => void;
 }) {
   const foto = row.mockup_url || row.imagem_catalogo_url;
   const cor = corDoPedido(row);
   const tempo = tempoNaEtapaCurto(row.horas_na_etapa);
   const tempoTotal = tempoTotalCurto(row.item_criado_em);
-  const tags = row.tags ?? [];
+  const tagsOrdenadas = ordenarTagsPorPrioridade(row.tags ?? []);
+  const tagsVisiveis = tagsOrdenadas.slice(0, 3);
+  const tagsOcultas = tagsOrdenadas.slice(3);
+
+  const Etiquetas = tagsOrdenadas.length > 0 && (
+    <div className="flex flex-wrap gap-1 max-w-full">
+      {tagsVisiveis.map(t => (
+        <span
+          key={t}
+          className="gw-body text-white text-[10px] leading-none rounded-[5px] px-[6px] py-[4px] truncate max-w-[150px]"
+          style={{ backgroundColor: corDaTag(t), fontWeight: 700 }}
+        >
+          {t}
+        </span>
+      ))}
+      {tagsOcultas.length > 0 && (
+        <span
+          className="group/tags relative gw-body text-white text-[10px] leading-none rounded-[5px] px-[6px] py-[4px]"
+          style={{ backgroundColor: "rgba(15,23,42,.72)", fontWeight: 700 }}
+        >
+          +{tagsOcultas.length}
+          <span className="pointer-events-none absolute left-0 top-full mt-1 hidden group-hover/tags:flex flex-col gap-1 rounded-[6px] bg-[#0F172A] p-1.5 z-10 w-max max-w-[220px]">
+            {tagsOcultas.map(t => (
+              <span
+                key={t}
+                className="text-white text-[10px] rounded-[4px] px-[6px] py-[3px]"
+                style={{ backgroundColor: corDaTag(t), fontWeight: 700 }}
+              >
+                {t}
+              </span>
+            ))}
+          </span>
+        </span>
+      )}
+    </div>
+  );
 
   return (
     <div
@@ -317,7 +431,7 @@ function PcpCard({
       onMouseEnter={() => onHover(row.pedido_id)}
       onMouseLeave={() => onHover(null)}
       className={cn(
-        "w-[456px] rounded-[12px] overflow-hidden cursor-pointer select-none bg-[var(--gw-surface)]",
+        "w-[300px] rounded-[10px] overflow-hidden cursor-pointer select-none bg-white",
         "border border-[var(--gw-border)] transition-shadow hover:shadow-[var(--gw-shadow-md)]",
         dragging && "opacity-40",
         saving && "opacity-60 pointer-events-none"
@@ -330,116 +444,94 @@ function PcpCard({
             : undefined,
       }}
     >
-      {/* Camada 1 — foto */}
-      <div className="relative h-[286px] w-full">
-        {foto ? (
-          <img src={sizedImage(foto, 640)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-white" />
-        ) : (
-          <div className="w-full h-full bg-[var(--gw-surface-alt)] flex items-center justify-center">
-            <Package className="h-12 w-12 text-[var(--gw-text-muted)]" />
-          </div>
-        )}
-
-        {/* gradiente inferior */}
-        <div
-          className="absolute inset-x-0 bottom-0 h-[92px] pointer-events-none"
-          style={{ background: "linear-gradient(to bottom, rgba(11,18,32,0), rgba(11,18,32,.75))" }}
-        />
-
-        {/* etiquetas */}
-        {tags.length > 0 && (
-          <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5 max-w-[62%]">
-            {tags.slice(0, 3).map(t => (
-              <span
-                key={t}
-                className="gw-body text-white text-[12px] font-semibold rounded-[6px] px-2.5 py-[4px] truncate"
-                style={{ backgroundColor: corDaTag(t) }}
-              >
-                {t}
-              </span>
-            ))}
-            {tags.length > 3 && (
-              <span
-                className="gw-body text-white text-[12px] font-semibold rounded-[6px] px-2 py-[4px]"
-                style={{ backgroundColor: "rgba(11,18,32,.72)", backdropFilter: "blur(8px)" }}
-              >
-                +{tags.length - 3}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* técnica */}
-        {row.tecnica_nome && (
-          <span
-            className="gw-body absolute top-2.5 right-2.5 text-white text-[12px] font-semibold rounded-[6px] px-2.5 py-[4px] max-w-[170px] truncate"
-            style={{ backgroundColor: "rgba(11,18,32,.72)", backdropFilter: "blur(8px)" }}
-          >
-            {row.tecnica_nome}
-          </span>
-        )}
-
-        {/* alerta de pagamento */}
-        {(precisaGateCartao(row) ||
-          (colunaDoStatus(row) === "embalagem_pagamento" && precisaGatePix(row))) && (
-          <span
-            className="gw-body absolute right-3 bottom-[52px] text-white text-[12px] font-bold uppercase rounded-[6px] px-2.5 py-[4px]"
-            style={{ backgroundColor: "var(--gw-warning)" }}
-          >
-            {precisaGateCartao(row) ? "Conferir Stone" : "Aguarda PIX"}
-          </span>
-        )}
-
-        {/* quantidade — fundo sólido de propósito: o gradiente do rodapé da
-            foto nem sempre escurece o suficiente perto do canto quando a foto
-            é clara ali, e "24 un" precisa ser legível sempre, não só às vezes. */}
-        <span
-          className="absolute bottom-2.5 right-3 flex items-baseline gap-1.5 text-white rounded-[8px] pl-2.5 pr-3 py-1"
-          style={{ backgroundColor: "rgba(11,18,32,.82)", backdropFilter: "blur(8px)" }}
-        >
-          <span className="gw-num text-[26px] leading-none" style={{ fontWeight: 700 }}>
-            {row.quantidade ?? 0}
-          </span>
-          <span className="gw-body text-[13px] font-medium text-white/80">un</span>
-        </span>
-
-        {/* Timer 1 (etapa atual) + Timer 2 (total desde a criação) — mesmo
-            tratamento de fundo sólido da badge de quantidade: o gradiente do
-            rodapé nem sempre escurece o bastante perto do canto esquerdo
-            quando a foto é clara ali, e o número precisa ser legível sempre,
-            não só quando a foto colabora. Timer 2 fica discreto (menor,
-            opacidade reduzida) dentro do mesmo bloco — o que importa
-            primeiro é quanto tempo o item está TRAVADO na etapa atual. */}
-        <span
-          className="absolute bottom-2.5 left-3 flex flex-col gap-0.5 rounded-[8px] px-2.5 py-1.5"
-          style={{ backgroundColor: "rgba(11,18,32,.82)", backdropFilter: "blur(8px)" }}
-        >
-          <span
-            className="gw-body flex items-center gap-1.5 text-[13px] font-semibold"
-            style={{ color: atrasado ? "#FF8A8A" : "#FFFFFF" }}
-          >
-            <Clock className="h-[14px] w-[14px]" /> {tempo || "—"}
-          </span>
-          {tempoTotal && (
-            <span className="gw-body flex items-center gap-1.5 text-[11px] font-medium text-white/60">
-              <History className="h-[11px] w-[11px]" /> {tempoTotal} no total
-            </span>
-          )}
-        </span>
-      </div>
-
-      {/* Camada 2 — rodapé */}
-      <div className="relative h-[63px] bg-[var(--gw-surface)] flex items-center gap-2 pl-5 pr-3 overflow-hidden">
-        <span className="absolute left-0 top-0 bottom-0 w-[5px] shrink-0" style={{ backgroundColor: cor }} />
-        <OrderNumber value={row.pedido_numero} className="text-[17px] shrink-0" />
-        <span className="text-[var(--gw-text-muted)] text-[14px] shrink-0">·</span>
-        <span className="gw-body text-[14px] font-medium text-[var(--gw-text-secondary)] shrink-0">
+      {/* Cabeçalho — pedido / item / vendedor */}
+      <div className="flex items-center gap-1.5 pl-3 pr-2.5 pt-2.5 pb-1.5">
+        <span className="h-[7px] w-[7px] rounded-full shrink-0" style={{ backgroundColor: cor }} />
+        <OrderNumber value={row.pedido_numero} className="text-[13px] shrink-0" />
+        <span className="text-[var(--gw-text-muted)] text-[12px] shrink-0">·</span>
+        <span className="gw-body text-[12px] font-medium text-[var(--gw-text-secondary)] shrink-0">
           Item {indice}/{total}
         </span>
-        <span className="text-[var(--gw-text-muted)] text-[14px] shrink-0">·</span>
-        <span className="gw-body text-[14px] font-semibold text-[var(--gw-text)] truncate">
+        <span className="flex-1" />
+        <VendedorAvatar nome={vendedorNome} />
+      </div>
+
+      {/* Imagem (modo "com fotos") */}
+      {comFotos && (
+        <div className="relative h-[150px] w-full mx-0">
+          {foto ? (
+            <img src={sizedImage(foto, 480)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-[var(--gw-surface-alt)]" />
+          ) : (
+            <div className="w-full h-full bg-[var(--gw-surface-alt)] flex items-center justify-center">
+              <Package className="h-9 w-9 text-[var(--gw-text-muted)]" />
+            </div>
+          )}
+          {tagsOrdenadas.length > 0 && (
+            <div className="absolute top-1.5 left-1.5 right-1.5">{Etiquetas}</div>
+          )}
+          {(precisaGateCartao(row) ||
+            (colunaDoStatus(row) === "embalagem_pagamento" && precisaGatePix(row))) && (
+            <span
+              className="gw-body absolute right-1.5 bottom-1.5 text-white text-[10px] font-bold uppercase rounded-[5px] px-2 py-[3px]"
+              style={{ backgroundColor: "var(--gw-warning)" }}
+            >
+              {precisaGateCartao(row) ? "Conferir Stone" : "Aguarda PIX"}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Info — nome, tags (modo sem fotos), quantidade, timers */}
+      <div className="px-3 pt-2 pb-2.5 space-y-1.5">
+        <p className="gw-body text-[13px] font-semibold text-[#0F172A] truncate" title={row.produto_nome || undefined}>
           {row.produto_nome || "—"}
-        </span>
+        </p>
+
+        {!comFotos && tagsOrdenadas.length > 0 && Etiquetas}
+
+        <div className="flex items-center justify-between">
+          <span className="gw-num text-[16px] leading-none text-[#0F172A]" style={{ fontWeight: 700 }}>
+            {row.quantidade ?? 0} <span className="text-[12px] font-medium text-[var(--gw-text-secondary)]">un.</span>
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2.5 pt-0.5">
+          <span
+            className="gw-body flex items-center gap-1 text-[11px] font-semibold"
+            style={{ color: atrasado ? "var(--gw-danger)" : "var(--gw-text-secondary)" }}
+          >
+            <Clock className="h-[12px] w-[12px]" /> {tempo || "—"} na etapa
+          </span>
+          {tempoTotal && (
+            <span className="gw-body flex items-center gap-1 text-[11px] text-[var(--gw-text-muted)]">
+              <History className="h-[11px] w-[11px]" /> {tempoTotal} total
+            </span>
+          )}
+        </div>
+
+        {/* Registrar compra — só na etapa "Aguardando mercadoria", só até
+            existir uma das duas tags (registrado uma vez, some da tela). */}
+        {row.status === "aguardando_mercadoria" &&
+          !(row.tags ?? []).some(t => t === "COMPRADO XBZ" || t === "COMPRADO CHINA") && (
+            <div className="flex items-center gap-1.5 pt-1" onClick={e => e.stopPropagation()}>
+              <button
+                type="button"
+                onClick={() => onComprado(row, "XBZ")}
+                className="flex-1 h-6 rounded-[5px] text-white text-[10px] font-bold"
+                style={{ backgroundColor: "#2563EB" }}
+              >
+                Comprado XBZ
+              </button>
+              <button
+                type="button"
+                onClick={() => onComprado(row, "CHINA")}
+                className="flex-1 h-6 rounded-[5px] text-white text-[10px] font-bold"
+                style={{ backgroundColor: "#7C3AED" }}
+              >
+                Comprado China
+              </button>
+            </div>
+          )}
       </div>
     </div>
   );
@@ -463,6 +555,14 @@ export default function PCP() {
   const [dragOverStatus, setDragOverStatus] = useState<PcpStatus | null>(null);
   const [hoverPedido, setHoverPedido] = useState<string | null>(null);
   const [tagsFiltro, setTagsFiltro] = useState<string[]>([]);
+  /* "Com fotos / Sem fotos" — preferência por usuário, local ao navegador
+     (não é dado do pedido, é jeito de olhar o quadro). */
+  const [comFotos, setComFotos] = useState<boolean>(() => {
+    try { return localStorage.getItem("pcp_com_fotos") !== "0"; } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("pcp_com_fotos", comFotos ? "1" : "0"); } catch { /* noop */ }
+  }, [comFotos]);
   const [novaTag, setNovaTag] = useState("");
   const [comentarios, setComentarios] = useState<ComentarioRow[]>([]);
   const [novoComentario, setNovoComentario] = useState("");
@@ -808,6 +908,14 @@ export default function PCP() {
     await salvarTags(row, (row.tags ?? []).filter(t => t !== valor));
   };
 
+  /* "poder registrar a compra: comprado xbz / comprado china... cria
+     automaticamente uma tag sobre a imagem" — ação de um clique, sem popup:
+     é só marcar que a compra já foi feita e qual fornecedor. */
+  const registrarCompra = async (row: PcpRow, origem: "XBZ" | "CHINA") => {
+    await adicionarTag(row, origem === "XBZ" ? "COMPRADO XBZ" : "COMPRADO CHINA");
+    await applyUpdate(row.producao_id, { compra_confirmada_em: new Date().toISOString() });
+  };
+
   /* ── Anexo de teste físico ────────────────────────────────────────────
      "vai ter um campo no produto escrito 'teste' onde a produção anexa a
      foto p/ vendedor baixar e mandar p cliente. nesse mesmo tempo,
@@ -1133,6 +1241,24 @@ export default function PCP() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <div className="flex items-center rounded-[8px] border border-[var(--gw-border)] overflow-hidden text-[12px] font-semibold">
+            <button
+              type="button"
+              onClick={() => setComFotos(true)}
+              className={cn("px-3 py-1.5 transition-colors", comFotos ? "text-white" : "bg-white text-[var(--gw-text-secondary)]")}
+              style={comFotos ? { backgroundColor: "var(--gw-primary)" } : undefined}
+            >
+              Com fotos
+            </button>
+            <button
+              type="button"
+              onClick={() => setComFotos(false)}
+              className={cn("px-3 py-1.5 transition-colors", !comFotos ? "text-white" : "bg-white text-[var(--gw-text-secondary)]")}
+              style={!comFotos ? { backgroundColor: "var(--gw-primary)" } : undefined}
+            >
+              Sem fotos
+            </button>
+          </div>
           <span className="gw-meta">{totalItens} item(ns)</span>
           <Button variant="outline" size="sm" onClick={() => loadItems()} disabled={loading}>
             <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
@@ -1181,10 +1307,10 @@ export default function PCP() {
       {loading ? (
         <div className="flex gap-4 overflow-hidden">
           {[0, 1, 2, 3].map(c => (
-            <div key={c} className="w-[490px] shrink-0 space-y-3">
+            <div key={c} className="w-[328px] shrink-0 space-y-3">
               <div className="animate-pulse h-8 rounded-lg bg-muted" />
               {[0, 1].map(i => (
-                <div key={i} className="animate-pulse rounded-xl bg-muted" style={{ height: 349 }} />
+                <div key={i} className="animate-pulse rounded-xl bg-muted" style={{ height: 230 }} />
               ))}
             </div>
           ))}
@@ -1234,7 +1360,7 @@ export default function PCP() {
                     e.preventDefault();
                     handleDrop(col.value, e.dataTransfer.getData("text/plain"));
                   }}
-                  style={{ width: 490, flexShrink: 0, height: "100%" }}
+                  style={{ width: 328, flexShrink: 0, height: "100%" }}
                   className={cn(
                     "rounded-xl border transition-colors flex flex-col overflow-hidden",
                     isOver ? "border-[#2563EB] bg-[#2563EB]/5" : "border-[var(--gw-border)] bg-white/60"
@@ -1250,7 +1376,7 @@ export default function PCP() {
                       style={{ backgroundColor: "rgba(255,255,255,.22)" }}
                     >
 
-                      {items.length} · {somaQtd}un
+                      {items.length} {items.length === 1 ? "item" : "itens"} · {somaQtd} un.
                     </span>
                   </div>
                   {/* Rolagem vertical acontece por coluna */}
@@ -1270,7 +1396,10 @@ export default function PCP() {
                         saving={savingId === row.producao_id}
                         atrasado={(row.horas_na_etapa ?? 0) > (LIMITE_ETAPA[row.status] ?? 9999)}
                         highlight={!!hoverPedido && hoverPedido === row.pedido_id}
+                        comFotos={comFotos}
+                        vendedorNome={vendedorNome(row.pedido_vendedor_id)}
                         onHover={setHoverPedido}
+                        onComprado={registrarCompra}
                         onDragStart={() => setDraggingId(row.producao_id)}
                         onDragEnd={() => setDraggingId(null)}
                         onOpen={() => setDetalheId(row.producao_id)}
@@ -1286,16 +1415,16 @@ export default function PCP() {
 
       )}
 
-      {/* Modal de detalhe do item */}
-      <Dialog open={!!detalhe} onOpenChange={open => !open && setDetalheId(null)}>
-        <DialogContent
-          className="p-0 gap-0 overflow-hidden rounded-[10px] border-[var(--gw-border)]"
-          style={{ maxWidth: 880, width: "94vw", maxHeight: "88vh", boxShadow: "var(--gw-shadow-lg)" }}
+      {/* Painel de detalhe do item — slide-over lateral, não navega de página */}
+      <Sheet open={!!detalhe} onOpenChange={open => !open && setDetalheId(null)}>
+        <SheetContent
+          side="right"
+          className="p-0 gap-0 overflow-hidden border-l-[var(--gw-border)] w-[94vw] sm:max-w-[720px]"
         >
           {detalhe && (
-            <div className="grid md:grid-cols-[400px_1fr] max-h-[88vh]">
-              {/* Coluna esquerda — imagens */}
-              <div className="bg-[var(--gw-surface-alt)] p-4 overflow-y-auto">
+            <div className="grid grid-rows-[auto_1fr] h-full overflow-hidden">
+              {/* Imagem — topo do painel (não é mais coluna, é linha) */}
+              <div className="bg-[var(--gw-surface-alt)] p-4">
                 {detalhe.mockup_url || detalhe.imagem_catalogo_url ? (
                   <>
                     <img
@@ -1303,7 +1432,7 @@ export default function PCP() {
                       alt={detalhe.produto_nome || ""}
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-[360px] object-contain bg-white rounded-lg border border-[var(--gw-border)]"
+                      className="w-full h-[220px] object-contain bg-white rounded-lg border border-[var(--gw-border)]"
                     />
                     <a
                       href={detalhe.mockup_url || detalhe.imagem_catalogo_url!}
@@ -1315,7 +1444,7 @@ export default function PCP() {
                     </a>
                   </>
                 ) : (
-                  <div className="w-full h-[360px] rounded-lg bg-white border border-[var(--gw-border)] flex items-center justify-center">
+                  <div className="w-full h-[220px] rounded-lg bg-white border border-[var(--gw-border)] flex items-center justify-center">
                     <Package className="h-10 w-10 text-[var(--gw-text-muted)]" />
                   </div>
                 )}
@@ -1339,15 +1468,15 @@ export default function PCP() {
                   )}
               </div>
 
-              {/* Coluna direita — dados */}
-              <div className="overflow-y-auto">
-                <DialogHeader className="px-5 py-4 border-b border-[var(--gw-border)] space-y-1 text-left">
-                  <DialogTitle className="flex items-center gap-3 pr-8 text-left">
+              {/* Dados — rola independente da imagem */}
+              <div className="overflow-y-auto min-h-0">
+                <SheetHeader className="px-5 py-4 border-b border-[var(--gw-border)] space-y-1 text-left">
+                  <SheetTitle className="flex items-center gap-3 pr-8 text-left">
                     <OrderNumber value={detalhe.pedido_numero} />
                     <span className="gw-title text-[15px] truncate">{detalhe.cliente || "—"}</span>
                     <StatusPill status={detalhe.status} />
-                  </DialogTitle>
-                </DialogHeader>
+                  </SheetTitle>
+                </SheetHeader>
 
                 {/* Produto */}
                 <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
@@ -1718,8 +1847,8 @@ export default function PCP() {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Modal: enviar para terceirizada (só quando a etapa "Preparação" é feita por terceiro) */}
       <Dialog open={!!terceiroModal} onOpenChange={open => !open && setTerceiroModal(null)}>
