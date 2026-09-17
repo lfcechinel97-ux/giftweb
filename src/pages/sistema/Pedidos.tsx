@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Search, SlidersHorizontal, Printer, Trash2, Copy, MoreHorizontal, Pencil,
-  ChevronLeft, ChevronRight, X, ShoppingCart, RefreshCw, Plus, ArrowRight,
+  ChevronLeft, ChevronRight, X, ShoppingCart, Plus, ArrowRight,
   CalendarDays, CreditCard, User as UserIcon, CheckCircle2, CircleDashed,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -111,38 +111,6 @@ export default function Pedidos() {
   const [criandoPedido, setCriandoPedido] = useState(false);
 
   const qc = useQueryClient();
-  const [syncing, setSyncing] = useState(false);
-  const { data: lastCalcmeSync } = useQuery({
-    queryKey: ["sistema", "calcme", "last-sync"],
-    staleTime: 30 * 1000,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("sistema_calcme_sync_log")
-        .select("synced_at,imported,updated,ignored,errors")
-        .order("synced_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    },
-  });
-
-  const handleSyncCalcme = async () => {
-    setSyncing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("sync-calcme-orders");
-      if (error) throw error;
-      const r = data as { success: boolean; imported?: number; updated?: number; ignored?: number; errors?: number; error?: string } | null;
-      if (!r?.success) toast.error(`Sincronização Calcme falhou: ${r?.error || "erro desconhecido"}`);
-      else toast.success(`Calcme: ${r.imported} importados, ${r.updated} atualizados, ${r.ignored} ignorados.`);
-      await qc.invalidateQueries({ queryKey: ["sistema", "calcme", "last-sync"] });
-      await qc.invalidateQueries({ queryKey: ["sistema", "pedidos"] });
-      await refreshPedidos({ status: filtroStatus, search: busca, dataInicio: dataInicio || null, dataFim: dataFim || null, page, pageSize });
-    } catch (e: unknown) {
-      toast.error(`Sincronização Calcme falhou: ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-      setSyncing(false);
-    }
-  };
 
   /* Contagem por aba. Traz SÓ a coluna status — a agregação por coluna do PCP
      não existe no PostgREST. Quando o volume crescer isso deve virar um
@@ -344,17 +312,6 @@ export default function Pedidos() {
           <p className="gw-meta">Pedidos gerados a partir de orçamentos aprovados.</p>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleSyncCalcme}
-            disabled={syncing}
-            title={lastCalcmeSync ? `Última sincronização: ${new Date(lastCalcmeSync.synced_at).toLocaleString("pt-BR")}` : undefined}
-            className="inline-flex items-center gap-2 h-10 px-3.5 rounded-[10px] text-[13px] font-semibold disabled:opacity-60"
-            style={{ border: "1px solid var(--gw-border)", color: "var(--gw-text-secondary)" }}
-          >
-            <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Sincronizando..." : "Calcme"}
-          </button>
           <button
             type="button"
             onClick={handleNovoPedido}

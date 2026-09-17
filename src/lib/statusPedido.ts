@@ -35,6 +35,7 @@ const SEMENTE: StatusInfo[] = [
   { slug: "imprimir_ordem_producao", nome: "Imprimir ordem de produção", cor: "#0EA5E9", colunaPcp: "pronto_producao",     escopo: "ambos",  ordem: 20 },
   { slug: "aguardando_mercadoria",   nome: "Aguardando mercadoria",      cor: "#F59E0B", colunaPcp: "pronto_producao",     escopo: "ambos",  ordem: 30 },
   { slug: "aguardando_teste",        nome: "Aguardando teste laser/DTF", cor: "#A855F7", colunaPcp: "teste_fisico",        escopo: "ambos",  ordem: 40 },
+  { slug: "aguardando_aprovacao_teste", nome: "Aguardando aprovação teste", cor: "#C026D3", colunaPcp: "teste_fisico",     escopo: "ambos",  ordem: 45 },
   { slug: "preparar_dtf",            nome: "Preparar DTF/vetorização",   cor: "#8B5CF6", colunaPcp: "preparacao",          escopo: "ambos",  ordem: 50 },
   { slug: "a_produzir",              nome: "A produzir",                 cor: "#2563EB", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 60 },
   { slug: "a_produzir_terceirizada", nome: "A produzir terceirizada",    cor: "#1D4ED8", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 70 },
