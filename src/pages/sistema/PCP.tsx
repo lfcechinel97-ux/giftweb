@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag, Clock, History,
@@ -18,6 +18,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { supabase } from "@/integrations/supabase/client";
 import { sizedImage } from "@/lib/imageSize";
 import { uploadAnexoPcp, MockupUploadError } from "@/lib/uploadMockup";
@@ -358,6 +360,59 @@ function VendedorAvatar({ nome }: { nome: string | null }) {
   );
 }
 
+/** Combobox de etiquetas — busca no catálogo mestre; só oferece "criar
+    nova" quando o texto digitado não bate com nenhuma existente
+    (case-insensitive), pra não nascer duplicidade tipo "XBZ"/"xbz". */
+function EtiquetaCombobox({ opcoes, onSelect }: { opcoes: string[]; onSelect: (nome: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [busca, setBusca] = useState("");
+  const buscaLimpa = busca.trim();
+  const existeExata = opcoes.some(o => o.toLowerCase() === buscaLimpa.toLowerCase());
+  const filtradas = opcoes.filter(o => o.toLowerCase().includes(buscaLimpa.toLowerCase()));
+
+  const escolher = (nome: string) => {
+    onSelect(nome);
+    setBusca("");
+    setOpen(false);
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="h-9">
+          <Tag className="h-3.5 w-3.5 mr-1.5" /> Adicionar etiqueta
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[280px] p-0" align="start">
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Buscar ou criar etiqueta…"
+            value={busca}
+            onValueChange={setBusca}
+          />
+          <CommandList>
+            {filtradas.length === 0 && !buscaLimpa && (
+              <CommandEmpty>Nenhuma etiqueta ainda.</CommandEmpty>
+            )}
+            <CommandGroup>
+              {filtradas.map(o => (
+                <CommandItem key={o} value={o} onSelect={() => escolher(o)}>
+                  {o}
+                </CommandItem>
+              ))}
+              {buscaLimpa && !existeExata && (
+                <CommandItem value={`__criar__${buscaLimpa}`} onSelect={() => escolher(buscaLimpa)}>
+                  Criar etiqueta "{buscaLimpa}"
+                </CommandItem>
+              )}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function PcpCard({
   row, indice, total, dragging, saving, atrasado, highlight, comFotos, vendedorNome,
   onDragStart, onDragEnd, onOpen, onHover, onComprado,
@@ -548,6 +603,7 @@ export default function PCP() {
      auth.uid(), que é sempre a mesma pessoa fisicamente logada. */
   const { vendedores, currentVendedor } = useSistema();
   const vendedorNome = (id: string | null) => vendedores.find(v => v.id === id)?.nome || null;
+  const queryClient = useQueryClient();
 
   const [rows, setRows] = useState<PcpRow[]>([]);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -563,7 +619,6 @@ export default function PCP() {
   useEffect(() => {
     try { localStorage.setItem("pcp_com_fotos", comFotos ? "1" : "0"); } catch { /* noop */ }
   }, [comFotos]);
-  const [novaTag, setNovaTag] = useState("");
   const [comentarios, setComentarios] = useState<ComentarioRow[]>([]);
   const [novoComentario, setNovoComentario] = useState("");
   const [enviandoComentario, setEnviandoComentario] = useState(false);
@@ -692,6 +747,24 @@ export default function PCP() {
     },
   });
 
+  /* Catálogo mestre de etiquetas (sistema_etiquetas) — se a migration
+     ainda não rodou no banco, a tabela não existe: cai no catch e o
+     combobox simplesmente nasce vazio (comportamento normal de "sem
+     etiquetas ainda"), sem quebrar o resto da página. */
+  const { data: etiquetasMestre = [] } = useQuery<{ nome: string }[]>({
+    queryKey: ["sistema", "pcp", "etiquetas-mestre"],
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("sistema_etiquetas")
+        .select("nome")
+        .eq("ativo", true)
+        .order("nome");
+      if (error) return [];
+      return (data ?? []) as { nome: string }[];
+    },
+  });
+
   useEffect(() => {
     if (pcpQuery.data) setRows(pcpQuery.data);
   }, [pcpQuery.data]);
@@ -782,11 +855,16 @@ export default function PCP() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /* Filtro do board = catálogo mestre + qualquer etiqueta que ainda não
+     tenha sido migrada pra lá (ex.: banco sem a migration aplicada
+     ainda) — nunca menos completo que a versão só-dos-cards-carregados
+     que existia antes. */
   const todasTags = useMemo(() => {
     const set = new Set<string>();
+    for (const e of etiquetasMestre) set.add(e.nome);
     for (const r of rows) for (const t of r.tags ?? []) set.add(t);
     return [...set].sort((a, b) => a.localeCompare(b, "pt-BR"));
-  }, [rows]);
+  }, [rows, etiquetasMestre]);
 
   const rowsFiltradas = useMemo(() => {
     if (tagsFiltro.length === 0) return rows;
@@ -896,9 +974,32 @@ export default function PCP() {
     }
   };
 
+  /* Resolve contra o catálogo mestre (sistema_etiquetas) antes de criar
+     etiqueta nova — é isso que impede "Comprado XBZ" e "comprado xbz"
+     virarem duas etiquetas diferentes. Se já existe (mesmo nome, sem
+     diferenciar maiúsc/minúsc), reusa a grafia canônica do catálogo; só
+     cria uma linha nova se realmente não existir ainda. */
+  const resolverOuCriarEtiquetaMestre = async (texto: string): Promise<string> => {
+    const existente = etiquetasMestre.find(e => e.nome.toLowerCase() === texto.toLowerCase());
+    if (existente) return existente.nome;
+    const { data, error } = await (supabase as any)
+      .from("sistema_etiquetas")
+      .insert({ nome: texto })
+      .select("nome")
+      .single();
+    if (!error && data) {
+      queryClient.invalidateQueries({ queryKey: ["sistema", "pcp", "etiquetas-mestre"] });
+      return (data as { nome: string }).nome;
+    }
+    // Conflito (outra aba criou ao mesmo tempo) ou tabela ainda não migrada
+    // no banco — segue com o texto digitado, sem travar a ação do usuário.
+    return texto;
+  };
+
   const adicionarTag = async (row: PcpRow, valor: string) => {
-    const t = valor.trim();
-    if (!t) return;
+    const bruto = valor.trim();
+    if (!bruto) return;
+    const t = await resolverOuCriarEtiquetaMestre(bruto);
     const atuais = row.tags ?? [];
     if (atuais.some(x => x.toLowerCase() === t.toLowerCase())) return;
     await salvarTags(row, [...atuais, t]);
@@ -1535,33 +1636,10 @@ export default function PCP() {
                         <span className="gw-body text-[13px] text-[var(--gw-text-muted)]">Nenhuma etiqueta</span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={novaTag}
-                        onChange={e => setNovaTag(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            adicionarTag(detalhe, novaTag);
-                            setNovaTag("");
-                          }
-                        }}
-                        placeholder="Nova etiqueta (ex.: Comprado XBZ)"
-                        className="h-9 max-w-[280px]"
-                        list="pcp-tags-existentes"
-                      />
-                      <datalist id="pcp-tags-existentes">
-                        {todasTags.map(t => <option key={t} value={t} />)}
-                      </datalist>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => { adicionarTag(detalhe, novaTag); setNovaTag(""); }}
-                        disabled={!novaTag.trim()}
-                      >
-                        Criar
-                      </Button>
-                    </div>
+                    <EtiquetaCombobox
+                      opcoes={todasTags}
+                      onSelect={nome => adicionarTag(detalhe, nome)}
+                    />
                   </div>
 
                   {TERCEIRIZADA_TRIGGER.includes(detalhe.local_producao) && (
