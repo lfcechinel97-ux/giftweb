@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag, Clock, History,
-  Tag, X, MessageSquare, Send, Camera, Video, CheckCircle2, Upload, Download,
+  Tag, X, MessageSquare, Send, Camera, Video, CheckCircle2, Upload, Download, Paperclip, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,9 +20,10 @@ import {
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { sizedImage } from "@/lib/imageSize";
-import { uploadAnexoPcp, MockupUploadError } from "@/lib/uploadMockup";
+import { uploadAnexoPcp, uploadAnexoGenerico, MockupUploadError } from "@/lib/uploadMockup";
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/sistema/ui/Money";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
@@ -121,6 +122,29 @@ interface HistoricoRow {
   observacao: string | null;
   created_at: string;
 }
+
+type AnexoCategoria = "logo" | "mockup" | "teste" | "producao" | "etiqueta" | "nota_fiscal" | "outro";
+
+interface AnexoRow {
+  id: string;
+  producao_item_id: string;
+  categoria: AnexoCategoria;
+  tipo: "foto" | "video" | "pdf" | "outro";
+  url: string;
+  nome_arquivo: string | null;
+  vendedor_id: string | null;
+  created_at: string;
+}
+
+const ANEXO_CATEGORIA_LABEL: Record<AnexoCategoria, string> = {
+  logo: "Logo",
+  mockup: "Mockup",
+  teste: "Teste",
+  producao: "Produção",
+  etiqueta: "Etiqueta",
+  nota_fiscal: "Nota fiscal",
+  outro: "Outro",
+};
 
 /* ── Status columns config ──────────────────────────────────────────────── */
 
@@ -567,7 +591,7 @@ function PcpCard({
         {/* Registrar compra — só na etapa "Aguardando mercadoria", só até
             existir uma das duas tags (registrado uma vez, some da tela). */}
         {row.status === "aguardando_mercadoria" &&
-          !(row.tags ?? []).some(t => t === "COMPRADO XBZ" || t === "COMPRADO CHINA") && (
+          !(row.tags ?? []).some(t => t.toUpperCase() === "COMPRADO XBZ" || t.toUpperCase() === "COMPRADO CHINA") && (
             <div className="flex items-center gap-1.5 pt-1" onClick={e => e.stopPropagation()}>
               <button
                 type="button"
@@ -701,6 +725,13 @@ export default function PCP() {
   const producaoAnexoAlvoRef = useRef<PcpRow | null>(null);
   const [enviandoTeste, setEnviandoTeste] = useState(false);
   const [enviandoProducaoAnexo, setEnviandoProducaoAnexo] = useState(false);
+
+  /* Anexos genéricos (seção "Anexos") — categoria escolhida antes do
+     arquivo, guardada em ref pro handler do <input type=file> saber
+     onde categorizar quando o navegador dispara o onChange. */
+  const anexoGenericoInputRef = useRef<HTMLInputElement | null>(null);
+  const anexoGenericoAlvoRef = useRef<{ row: PcpRow; categoria: AnexoCategoria } | null>(null);
+  const [enviandoAnexoGenerico, setEnviandoAnexoGenerico] = useState(false);
 
   /* Dados cacheados (60s): voltar ao PCP mostra o quadro na hora e revalida em 2º plano */
   const pcpQuery = useQuery<PcpRow[]>({
@@ -922,6 +953,23 @@ export default function PCP() {
     })();
   }, [detalheId]);
 
+  /* Anexos genéricos do item — se a migration ainda não rodou, a query
+     falha e a lista fica vazia (mesma degradação graciosa das etiquetas). */
+  const [anexos, setAnexos] = useState<AnexoRow[]>([]);
+  const carregarAnexos = async (producaoId: string) => {
+    const { data, error } = await (supabase as any)
+      .from("sistema_producao_anexos")
+      .select("id, producao_item_id, categoria, tipo, url, nome_arquivo, vendedor_id, created_at")
+      .eq("producao_item_id", producaoId)
+      .order("created_at", { ascending: false });
+    if (error) { setAnexos([]); return; }
+    setAnexos((data as AnexoRow[]) ?? []);
+  };
+  useEffect(() => {
+    if (!detalheId) { setAnexos([]); return; }
+    carregarAnexos(detalheId);
+  }, [detalheId]);
+
   const carregarComentarios = async (producaoId: string) => {
     const { data } = await supabase
       .from("sistema_producao_comentarios" as any)
@@ -1023,6 +1071,25 @@ export default function PCP() {
      automaticamente se a produção adiciona o anexo, já adiciona a tag
      TESTE ENVIADO". Reenviar um teste novo LIMPA a aprovação anterior — faz
      sentido: se a foto mudou, a aprovação antiga não vale mais pra essa. */
+  /* Grava na tabela de anexos genéricos, além do campo automatizado
+     (teste_anexo_url/producao_anexo_url) — não substitui a automação de
+     tags, só espelha pra a seção "Anexos" mostrar tudo num lugar só.
+     Se a migration ainda não rodou, falha em silêncio (não bloqueia o
+     upload real, que já foi salvo no campo automatizado). */
+  const registrarAnexoGenerico = async (
+    row: PcpRow, categoria: AnexoCategoria, tipo: AnexoRow["tipo"], url: string, nomeArquivo?: string,
+  ): Promise<boolean> => {
+    const { error } = await (supabase as any).from("sistema_producao_anexos").insert({
+      producao_item_id: row.producao_id,
+      pedido_id: row.pedido_id,
+      categoria, tipo, url,
+      nome_arquivo: nomeArquivo ?? null,
+      vendedor_id: currentVendedor?.id ?? null,
+    });
+    if (detalheIdRef.current === row.producao_id) await carregarAnexos(row.producao_id);
+    return !error;
+  };
+
   const abrirSeletorTeste = (row: PcpRow) => {
     testeAlvoRef.current = row;
     testeInputRef.current?.click();
@@ -1039,6 +1106,7 @@ export default function PCP() {
       await applyUpdate(row.producao_id, { teste_anexo_url: url, teste_enviado_em: new Date().toISOString() });
       const semAprovado = (row.tags ?? []).filter(t => t !== TAG_TESTE_APROVADO && t !== TAG_PRODUZIR_MIDIA);
       await salvarTags(row, [...new Set([...semAprovado, TAG_TESTE_ENVIADO])]);
+      await registrarAnexoGenerico(row, "teste", "foto", url, file.name);
       toast.success("Teste anexado. Baixe e mande para o cliente aprovar.");
     } catch (err) {
       toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o anexo.");
@@ -1077,6 +1145,7 @@ export default function PCP() {
         producao_anexo_tipo: tipo,
         producao_anexo_em: new Date().toISOString(),
       });
+      await registrarAnexoGenerico(row, "producao", tipo, url, file.name);
       toast.success(`${tipo === "video" ? "Vídeo" : "Foto"} anexado. Baixe e mande para o cliente.`);
     } catch (err) {
       toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o anexo.");
@@ -1085,7 +1154,37 @@ export default function PCP() {
     }
   };
 
+  const removerAnexo = async (anexo: AnexoRow) => {
+    setAnexos(prev => prev.filter(a => a.id !== anexo.id));
+    const { error } = await (supabase as any).from("sistema_producao_anexos").delete().eq("id", anexo.id);
+    if (error) {
+      toast.error(`Não foi possível remover o anexo. ${error.message || ""}`);
+      await carregarAnexos(anexo.producao_item_id);
+    }
+  };
 
+  const abrirSeletorAnexoGenerico = (row: PcpRow, categoria: AnexoCategoria) => {
+    anexoGenericoAlvoRef.current = { row, categoria };
+    anexoGenericoInputRef.current?.click();
+  };
+
+  const handleAnexoGenerico = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const alvo = anexoGenericoAlvoRef.current;
+    e.target.value = "";
+    if (!file || !alvo) return;
+    setEnviandoAnexoGenerico(true);
+    try {
+      const { url, tipo } = await uploadAnexoGenerico(file, alvo.row.producao_id, alvo.categoria);
+      const ok = await registrarAnexoGenerico(alvo.row, alvo.categoria, tipo, url, file.name);
+      if (ok) toast.success("Anexo adicionado.");
+      else toast.error("O arquivo foi enviado, mas o catálogo de anexos ainda não existe no banco (rode a migration).");
+    } catch (err) {
+      toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o anexo.");
+    } finally {
+      setEnviandoAnexoGenerico(false);
+    }
+  };
 
   const applyUpdate = async (producaoId: string, patch: Record<string, any>) => {
     setSavingId(producaoId);
@@ -1334,6 +1433,7 @@ export default function PCP() {
           re-render. */}
       <input ref={testeInputRef} type="file" accept="image/*" className="hidden" onChange={handleAnexoTeste} />
       <input ref={producaoAnexoInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleAnexoProducao} />
+      <input ref={anexoGenericoInputRef} type="file" accept="image/*,video/*,application/pdf" className="hidden" onChange={handleAnexoGenerico} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="gw-display">PCP — Produção</h1>
@@ -1647,6 +1747,67 @@ export default function PCP() {
                       <ShoppingBag className="h-4 w-4 mr-2" /> Dados da terceirizada
                     </Button>
                   )}
+                </div>
+
+                {/* Anexos genéricos — logo, mockup, etiqueta, nota fiscal e
+                    qualquer outro arquivo do item, centralizados num lugar
+                    só (independente da automação de teste/produção abaixo,
+                    que continua funcionando do jeito que já funcionava). */}
+                <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2.5">
+                  <p className="gw-label flex items-center gap-1.5">
+                    <Paperclip className="h-3.5 w-3.5" /> Anexos
+                  </p>
+                  {anexos.length === 0 ? (
+                    <p className="gw-body text-[13px] text-[var(--gw-text-muted)]">Nenhum anexo ainda.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {anexos.map(a => (
+                        <div key={a.id} className="flex items-center gap-2.5 rounded-[8px] border border-[var(--gw-border)] px-2.5 py-2">
+                          {a.tipo === "foto" ? (
+                            <img src={sizedImage(a.url, 80)} alt="" className="w-9 h-9 rounded object-cover border border-[var(--gw-border)] shrink-0" />
+                          ) : a.tipo === "video" ? (
+                            <Video className="h-9 w-9 p-2 rounded bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)] shrink-0" />
+                          ) : (
+                            <FileText className="h-9 w-9 p-2 rounded bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)] shrink-0" />
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[12px] font-semibold text-[var(--gw-text)] truncate">
+                              {ANEXO_CATEGORIA_LABEL[a.categoria]}{a.nome_arquivo ? ` · ${a.nome_arquivo}` : ""}
+                            </p>
+                            <p className="text-[11px] text-[var(--gw-text-muted)]">
+                              {vendedorNome(a.vendedor_id) || "não identificado"} · {formatDateTime(a.created_at)}
+                            </p>
+                          </div>
+                          <a href={a.url} target="_blank" rel="noreferrer" className="shrink-0 text-[var(--gw-primary)]" aria-label="Abrir anexo">
+                            <Download className="h-4 w-4" />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => removerAnexo(a)}
+                            className="shrink-0 text-[var(--gw-text-muted)] hover:text-[var(--gw-danger)]"
+                            aria-label="Remover anexo"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" disabled={enviandoAnexoGenerico}>
+                        {enviandoAnexoGenerico ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                        Adicionar anexo
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {(Object.keys(ANEXO_CATEGORIA_LABEL) as AnexoCategoria[]).map(cat => (
+                        <DropdownMenuItem key={cat} onClick={() => abrirSeletorAnexoGenerico(detalhe, cat)}>
+                          {ANEXO_CATEGORIA_LABEL[cat]}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
 
                 {/* Teste físico — só aparece na etapa certa, ou depois de já

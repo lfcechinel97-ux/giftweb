@@ -80,3 +80,39 @@ export async function uploadAnexoPcp(
   const { data } = supabase.storage.from("mockups").getPublicUrl(path);
   return { url: data.publicUrl, tipo: file.type.startsWith("video/") ? "video" : "foto" };
 }
+
+/**
+ * Anexos genéricos do item (seção "Anexos" do PCP) — mesmo bucket `mockups`,
+ * mas aceita também PDF (etiqueta, nota fiscal) além de foto/vídeo. Separado
+ * de `uploadAnexoPcp` de propósito: aquele alimenta a automação de tags
+ * (TESTE ENVIADO / MÍDIA ENVIADA) e não pode mudar de contrato; este é só
+ * armazenamento, sem side-effect nenhum.
+ */
+const TIPOS_ANEXO_GENERICO_OK = /^(image\/(jpe?g|png|webp|heic)|video\/(mp4|quicktime|webm)|application\/pdf)$/i;
+
+export async function uploadAnexoGenerico(
+  file: File,
+  producaoId: string,
+  categoria: string,
+): Promise<{ url: string; tipo: "foto" | "video" | "pdf" }> {
+  if (!TIPOS_ANEXO_GENERICO_OK.test(file.type)) {
+    throw new MockupUploadError("Formato não suportado. Use JPG, PNG, WebP, HEIC, MP4, MOV, WebM ou PDF.");
+  }
+  if (file.size > MAX_BYTES_ANEXO) {
+    const mb = (file.size / 1024 / 1024).toFixed(1);
+    throw new MockupUploadError(`Arquivo de ${mb} MB excede o limite de 60 MB.`);
+  }
+
+  const ext = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const path = `pcp/anexos/${producaoId}/${categoria}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from("mockups")
+    .upload(path, file, { upsert: false, contentType: file.type });
+
+  if (error) throw new MockupUploadError(error.message);
+
+  const { data } = supabase.storage.from("mockups").getPublicUrl(path);
+  const tipo = file.type === "application/pdf" ? "pdf" : file.type.startsWith("video/") ? "video" : "foto";
+  return { url: data.publicUrl, tipo };
+}
