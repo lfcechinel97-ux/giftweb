@@ -2405,6 +2405,27 @@ export default function PCP() {
                     </div>
                   )}
 
+                  {/* Despacho — nota fiscal + etiqueta de envio + transportadora.
+                      Mesma ação do botão no card, só que acessível também
+                      por quem já está com o painel aberto (não só arrastando
+                      no quadro). */}
+                  {detalhe.coluna_pcp === "aguardando_coleta" && (
+                    <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
+                      <p className="gw-label flex items-center gap-1.5">
+                        <Boxes className="h-3.5 w-3.5" /> Despacho
+                      </p>
+                      {(detalhe.tags ?? []).some(t => t.toUpperCase().startsWith(TAG_DESPACHAR_PREFIXO)) ? (
+                        <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: "var(--gw-success)" }}>
+                          <CheckCircle2 className="h-4 w-4" /> Despacho confirmado
+                        </span>
+                      ) : (
+                        <Button size="sm" onClick={() => { setDetalheId(null); abrirDespachoModal(detalhe); }} style={{ backgroundColor: "#0EA5E9" }}>
+                          <Upload className="h-4 w-4 mr-2" /> Anexar nota fiscal e etiqueta
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
                   {/* Anexos do PCP — logo, mockup, etiqueta, nota fiscal e
                       qualquer outro arquivo adicionado aqui (independente da
                       automação de teste/produção, que continua funcionando
