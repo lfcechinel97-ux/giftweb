@@ -34,7 +34,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 type PcpStatus =
   | "organizando_pedido" | "pronto_producao" | "aguardando_mercadoria"
   | "teste_fisico" | "teste_enviado" | "preparacao"
-  | "em_producao" | "em_producao_terceirizada" | "produzido"
+  | "em_producao" | "em_producao_terceirizada"
   | "aguardando_coleta" | "enviado";
 
 type LocalProducao = "interna" | "terceirizada" | "fornecedor_para_terceirizada";
@@ -169,6 +169,10 @@ const TERCEIRIZADA_TRIGGER: LocalProducao[] = ["terceirizada", "fornecedor_para_
 const TAG_TESTE_ENVIADO = "TESTE ENVIADO";
 const TAG_TESTE_APROVADO = "TESTE APROVADO";
 const TAG_PRODUZIR_MIDIA = "PRODUZIR + MÍDIA";
+/* "depois que adicionou a imagem ou vídeo do produto produzido, pode sair
+   as tags anteriores e aparecer somente PRODUZIDO" — troca completa, não
+   acumula com as tags do fluxo de teste. */
+const TAG_PRODUZIDO = "PRODUZIDO";
 
 /* "Ele também já coloca a tag de transportadora tipo: Coleta Braspress,
    Coleta Melhor Envio, Envio por Lalamove." — fixas por enquanto (as 3 que
@@ -203,6 +207,7 @@ const TAG_COR_EXATA: Record<string, string> = {
   "TESTE ENVIADO": "#A855F7",
   "TESTE APROVADO": "#22C55E",
   "PRODUZIR + MÍDIA": "#F97316",
+  "PRODUZIDO": "#16A34A",
   "LASER": "#16A34A",
   "DTF UV": "#2563EB",
   "TERCEIRIZADA": "#F97316",
@@ -295,6 +300,15 @@ const tempoTotalCurto = (criadoEm: string | null) => {
   return resto > 0 ? `${dias}d ${resto}h` : `${dias}d`;
 };
 
+/* Resumo compacto dos volumes da expedição — "2 volumes · 12kg" — pra
+   caber numa linha do card sem precisar abrir o detalhe. */
+const resumoVolumes = (volumes: unknown): string | null => {
+  if (!Array.isArray(volumes) || volumes.length === 0) return null;
+  const pesoTotal = volumes.reduce((s: number, v: any) => s + (Number(v?.peso) || 0), 0);
+  const qtd = volumes.length;
+  return `${qtd} ${qtd === 1 ? "volume" : "volumes"}${pesoTotal > 0 ? ` · ${pesoTotal}kg` : ""}`;
+};
+
 /* Limite (em horas) de permanência aceitável em cada etapa */
 const LIMITE_ETAPA: Record<PcpStatus, number> = {
   organizando_pedido: 48,
@@ -305,7 +319,6 @@ const LIMITE_ETAPA: Record<PcpStatus, number> = {
   preparacao: 72,
   em_producao: 120,
   em_producao_terceirizada: 168,
-  produzido: 48,
   aguardando_coleta: 48,
   enviado: 10000,
 };
@@ -591,6 +604,14 @@ function PcpCard({
             </span>
           )}
         </div>
+
+        {/* Volumes da expedição — pra o vendedor não precisar abrir o
+            card só pra ver quantos volumes e o peso. */}
+        {colunaDoStatus(row) === "aguardando_coleta" && resumoVolumes(row.pedido_volumes) && (
+          <div className="flex items-center gap-1 text-[11px] font-medium text-[var(--gw-text-secondary)]">
+            <Boxes className="h-[12px] w-[12px]" /> {resumoVolumes(row.pedido_volumes)}
+          </div>
+        )}
 
         {/* Registrar compra — só na etapa "Aguardando mercadoria", só até
             existir uma das duas tags (registrado uma vez, some da tela). */}
@@ -1159,7 +1180,34 @@ export default function PCP() {
         producao_anexo_em: new Date().toISOString(),
       });
       await registrarAnexoGenerico(row, "producao", tipo, url, file.name);
-      toast.success(`${tipo === "video" ? "Vídeo" : "Foto"} anexado. Baixe e mande para o cliente.`);
+      /* "pode sair as tags anteriores e aparecer somente PRODUZIDO. e já
+         vai direto pra expedição" — troca as tags do fluxo de teste pela
+         tag final e avança o card sozinho, sem precisar arrastar.
+         Usa uma cópia local do row (com a mídia já "anexada" nela) em vez
+         de reler `rows` do estado — o state ainda não tinha sido
+         commitado quando esse código roda logo após o applyUpdate, o que
+         faria os gates abaixo verem o item como se a mídia não existisse. */
+      const semFluxoTeste = (row.tags ?? []).filter(
+        t => t !== TAG_TESTE_ENVIADO && t !== TAG_TESTE_APROVADO && t !== TAG_PRODUZIR_MIDIA,
+      );
+      const tagsFinais = [...new Set([...semFluxoTeste, TAG_PRODUZIDO])];
+      await salvarTags(row, tagsFinais);
+      const rowAtualizada: PcpRow = { ...row, producao_anexo_url: url, tags: tagsFinais };
+
+      if (colunaDoStatus(row) === "em_producao" || colunaDoStatus(row) === "em_producao_terceirizada") {
+        if (precisaGatePix(rowAtualizada)) {
+          setGateModal({ row: rowAtualizada, target: "aguardando_coleta", tipo: "pix" });
+        } else {
+          const totalPedido = row.total_itens_pedido ?? 1;
+          const jaNaExpedicao = row.itens_expedicao_pedido ?? 0;
+          if (jaNaExpedicao + 1 >= totalPedido) {
+            setExpedicaoModal({ row: rowAtualizada, target: "aguardando_coleta" });
+          } else {
+            await mudarStatus(row.producao_id, statusCanonicoDaColuna("aguardando_coleta"));
+          }
+        }
+      }
+      toast.success(`${tipo === "video" ? "Vídeo" : "Foto"} anexado. Indo para Expedição.`);
     } catch (err) {
       toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o anexo.");
     } finally {
@@ -1296,11 +1344,24 @@ export default function PCP() {
       return;
     }
 
-    /* "Produzido: uma vez que a produção esteja 100% concluída e a mídia
-       final anexada" — sem a mídia de produção anexada, o item não pode
-       ser considerado pronto. */
-    if (targetStatus === "produzido" && !row.producao_anexo_url) {
-      toast.error("Anexe a foto/vídeo da produção concluída antes de mover para Produzido.");
+    /* Sem coluna "Produzido" própria: a mídia de produção é o que garante
+       que o item terminou antes de ir pra Expedição — arrastar direto de
+       uma coluna de produção sem anexo não pode pular essa checagem
+       (o caminho normal é anexar a mídia, que já move sozinho). */
+    if (
+      targetStatus === "aguardando_coleta" &&
+      (colunaDoStatus(row) === "em_producao" || colunaDoStatus(row) === "em_producao_terceirizada") &&
+      !row.producao_anexo_url
+    ) {
+      toast.error("Anexe a foto/vídeo da produção concluída antes de mover para Expedição.");
+      return;
+    }
+
+    /* "só sai do Aguardando Teste e vai pra Teste Enviado se anexar o
+       teste" — sem o anexo, arrastar manualmente pra qualquer coluna
+       seguinte fica bloqueado; só some com a foto/vídeo do teste. */
+    if (colunaDoStatus(row) === "teste_fisico" && targetStatus !== "teste_fisico" && !row.teste_anexo_url) {
+      toast.error("Anexe o teste físico antes de mover este item.");
       return;
     }
 
@@ -1317,6 +1378,16 @@ export default function PCP() {
         setExpedicaoModal({ row, target: targetStatus });
         return;
       }
+    }
+
+    /* "depois que a mercadoria já está aguardando teste, a tag comprado
+       xbz já pode sair automaticamente" — cumpriu o propósito (avisar que
+       a compra foi feita), não precisa mais poluir o card daqui em diante. */
+    if (colunaDoStatus(row) === "aguardando_mercadoria" && targetStatus !== "aguardando_mercadoria") {
+      const semCompra = (row.tags ?? []).filter(
+        t => t.toUpperCase() !== "COMPRADO XBZ" && t.toUpperCase() !== "COMPRADO CHINA",
+      );
+      if (semCompra.length !== (row.tags ?? []).length) void salvarTags(row, semCompra);
     }
 
     moverItem(row, targetStatus);
