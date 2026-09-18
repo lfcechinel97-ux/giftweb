@@ -20,7 +20,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { sizedImage } from "@/lib/imageSize";
-import { uploadAnexoPcp, uploadAnexoGenerico, MockupUploadError } from "@/lib/uploadMockup";
+import { uploadAnexoPcp, uploadAnexoGenerico, uploadArquivoPedido, MockupUploadError } from "@/lib/uploadMockup";
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/sistema/ui/Money";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
@@ -32,9 +32,9 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
 type PcpStatus =
-  | "organizando_pedido" | "pronto_producao" | "aguardando_mercadoria"
-  | "teste_fisico" | "teste_enviado" | "preparacao"
-  | "em_producao" | "em_producao_terceirizada"
+  | "organizando_pedido" | "aguardando_mercadoria"
+  | "teste_fisico" | "teste_enviado"
+  | "em_producao"
   | "aguardando_coleta" | "enviado";
 
 type LocalProducao = "interna" | "terceirizada" | "fornecedor_para_terceirizada";
@@ -93,7 +93,9 @@ interface PcpRow {
   producao_anexo_em: string | null;
   itens_expedicao_pedido: number | null;
   pedido_volumes: unknown;
+  pedido_volumes_responsavel: string | null;
   pedido_pago_integral: boolean | null;
+  pedido_comprovante_pagamento_url: string | null;
   arte_anexo_url: string | null;
   pedido_anexos: { url: string; nome: string; criadoEm: string }[] | null;
 }
@@ -163,16 +165,25 @@ const STATUS_MAP = Object.fromEntries(STATUS_COLS.map(c => [c.value, c])) as Rec
 
 const TERCEIRIZADA_TRIGGER: LocalProducao[] = ["terceirizada", "fornecedor_para_terceirizada"];
 
-/* Etiquetas automáticas do fluxo de teste físico. Nomes fixos de propósito
-   (não são texto livre do vendedor) — o botão "Aprovar teste" procura essa
-   string exata pra decidir se mostra ou não. */
+/* Etiquetas automáticas do fluxo — nomes fixos de propósito (não são texto
+   livre do vendedor), o código procura essas strings exatas pra decidir o
+   que mostrar/esconder em cada etapa. */
 const TAG_TESTE_ENVIADO = "TESTE ENVIADO";
+const TAG_TESTE_REFEITO = "TESTE REFEITO";
 const TAG_TESTE_APROVADO = "TESTE APROVADO";
-const TAG_PRODUZIR_MIDIA = "PRODUZIR + MÍDIA";
-/* "depois que adicionou a imagem ou vídeo do produto produzido, pode sair
-   as tags anteriores e aparecer somente PRODUZIDO" — troca completa, não
-   acumula com as tags do fluxo de teste. */
-const TAG_PRODUZIDO = "PRODUZIDO";
+const TAG_TESTE_RECUSADO = "TESTE RECUSADO";
+const TAG_PROD_GALPAO = "PROD. GALPÃO";
+const TAG_TERCEIRIZADA_PREFIXO = "TERCEIRIZADA";
+const TAG_COBRAR_RESTANTE = "COBRAR 50% RESTANTE";
+const TAG_PAGO_CARTAO = "PAGO CARTÃO";
+const TAG_DESPACHAR_PREFIXO = "DESPACHAR";
+
+/* Tags do fluxo de teste — todas se excluem mutuamente, nunca coexistem no
+   mesmo card (uma etapa por vez). */
+const TAGS_FLUXO_TESTE = [TAG_TESTE_ENVIADO, TAG_TESTE_REFEITO, TAG_TESTE_APROVADO, TAG_TESTE_RECUSADO];
+/* Tags de pagamento/expedição — também se excluem mutuamente; "todas as
+   tags saem" ao confirmar o despacho vira só isso: filtrar essas fora. */
+const TAGS_EXPEDICAO = [TAG_COBRAR_RESTANTE, TAG_PAGO_CARTAO];
 
 /* "Ele também já coloca a tag de transportadora tipo: Coleta Braspress,
    Coleta Melhor Envio, Envio por Lalamove." — fixas por enquanto (as 3 que
@@ -203,14 +214,21 @@ const TAG_PALETTE = [
    pelo prefixo, não pelo texto inteiro (o nome muda por pedido). */
 const TAG_COR_EXATA: Record<string, string> = {
   "COMPRADO XBZ": "#2563EB",
-  "COMPRADO CHINA": "#7C3AED",
+  "COMPRADO SP": "#7C3AED",
+  "COMPRADO CHINA": "#7C3AED", // legado — tags já gravadas com esse texto continuam coloridas
   "TESTE ENVIADO": "#A855F7",
+  "TESTE REFEITO": "#8452F5",
   "TESTE APROVADO": "#22C55E",
+  "TESTE RECUSADO": "#EF4444",
+  "PROD. GALPÃO": "#2563EB",
+  "TERCEIRIZADA": "#F97316",
+  "COBRAR 50% RESTANTE": "#EF4444",
+  "PAGO CARTÃO": "#22C55E",
+  "DESPACHAR": "#0EA5E9",
   "PRODUZIR + MÍDIA": "#F97316",
   "PRODUZIDO": "#16A34A",
   "LASER": "#16A34A",
   "DTF UV": "#2563EB",
-  "TERCEIRIZADA": "#F97316",
   "MÍDIA ENVIADA": "#06B6D4",
   "PAGO 100%": "#22C55E",
   "PAGAMENTO PENDENTE": "#EF4444",
@@ -227,8 +245,10 @@ const TAG_COR_EXATA: Record<string, string> = {
 /* Ordem de prioridade quando o card tem mais etiquetas do que cabe —
    mostra as primeiras da lista e agrupa o resto em "+N" (hover revela). */
 const TAG_PRIORIDADE = [
-  "URGENTE", "TESTE APROVADO", "TESTE ENVIADO", "PRODUZIR + MÍDIA",
-  "COMPRADO XBZ", "COMPRADO CHINA", "TERCEIRIZADA", "LASER", "DTF UV",
+  "URGENTE", "TESTE RECUSADO", "COBRAR 50% RESTANTE", "DESPACHAR",
+  "TESTE APROVADO", "TESTE REFEITO", "TESTE ENVIADO",
+  "PROD. GALPÃO", "TERCEIRIZADA", "PAGO CARTÃO",
+  "COMPRADO XBZ", "COMPRADO SP", "COMPRADO CHINA", "LASER", "DTF UV",
   "BRASPRESS", "MELHOR ENVIO", "LALAMOVE",
 ];
 
@@ -244,7 +264,8 @@ const ordenarTagsPorPrioridade = (tags: string[]) =>
 const corDaTag = (texto: string) => {
   const exata = TAG_COR_EXATA[texto.toUpperCase()];
   if (exata) return exata;
-  if (texto.toUpperCase().startsWith("TERCEIRIZADA")) return TAG_COR_EXATA["TERCEIRIZADA"];
+  if (texto.toUpperCase().startsWith(TAG_TERCEIRIZADA_PREFIXO)) return TAG_COR_EXATA["TERCEIRIZADA"];
+  if (texto.toUpperCase().startsWith(TAG_DESPACHAR_PREFIXO)) return TAG_COR_EXATA["DESPACHAR"];
   let h = 0;
   for (let i = 0; i < texto.length; i++) h = (h * 31 + texto.charCodeAt(i)) >>> 0;
   return TAG_PALETTE[h % TAG_PALETTE.length];
@@ -309,18 +330,33 @@ const resumoVolumes = (volumes: unknown): string | null => {
   return `${qtd} ${qtd === 1 ? "volume" : "volumes"}${pesoTotal > 0 ? ` · ${pesoTotal}kg` : ""}`;
 };
 
-/* Limite (em horas) de permanência aceitável em cada etapa */
-const LIMITE_ETAPA: Record<PcpStatus, number> = {
-  organizando_pedido: 48,
-  pronto_producao: 48,
-  aguardando_mercadoria: 72,
-  teste_fisico: 48,
-  teste_enviado: 72,
-  preparacao: 72,
-  em_producao: 120,
-  em_producao_terceirizada: 168,
-  aguardando_coleta: 48,
-  enviado: 10000,
+/* Alerta de tempo — regra ÚNICA pra todas as etapas (pedido explícito do
+   usuário, substitui os limites variados por coluna de antes):
+     > 72 horas ÚTEIS (só dias de semana contam) na mesma etapa -> texto
+       vermelho.
+     > 5 dias CORRIDOS na mesma etapa -> fundo vermelho, número branco
+       (mais grave, se sobrepõe ao alerta de texto). */
+const LIMITE_ATENCAO_HORAS_UTEIS = 72;
+const LIMITE_CRITICO_DIAS_CORRIDOS = 5;
+
+/* Conta só as horas de dia útil (seg-sex) entre `desde` e agora —
+   aproximação por hora corrida dentro de dias úteis, não por horário
+   comercial exato (8h-18h): o que importa é não deixar um fim de semana
+   inteiro contar como "tempo parado" igual a um dia de trabalho. */
+const horasUteisDesde = (desde: string | null): number => {
+  if (!desde) return 0;
+  const inicio = new Date(desde).getTime();
+  const fim = Date.now();
+  if (!Number.isFinite(inicio) || fim <= inicio) return 0;
+  const totalHoras = Math.min((fim - inicio) / 3600000, 24 * 60); // corte de segurança: 60 dias
+  let horasUteis = 0;
+  const cursor = new Date(inicio);
+  for (let i = 0; i < totalHoras; i++) {
+    const diaSemana = cursor.getDay();
+    if (diaSemana !== 0 && diaSemana !== 6) horasUteis++;
+    cursor.setTime(cursor.getTime() + 3600000);
+  }
+  return horasUteis;
 };
 
 /* ── Gates de pagamento ──────────────────────────────────────────────────── */
@@ -455,8 +491,8 @@ function EtiquetaCombobox({ opcoes, onSelect }: { opcoes: string[]; onSelect: (n
 }
 
 function PcpCard({
-  row, indice, total, dragging, saving, atrasado, highlight, comFotos, vendedorNome,
-  onDragStart, onDragEnd, onOpen, onHover, onComprado,
+  row, indice, total, dragging, saving, atrasado, critico, highlight, comFotos, vendedorNome,
+  onDragStart, onDragEnd, onOpen, onHover, onComprado, onDespachar,
 }: {
   row: PcpRow;
   indice: number;
@@ -464,6 +500,7 @@ function PcpCard({
   dragging: boolean;
   saving: boolean;
   atrasado: boolean;
+  critico: boolean;
   highlight: boolean;
   comFotos: boolean;
   vendedorNome: string | null;
@@ -471,7 +508,8 @@ function PcpCard({
   onDragEnd: () => void;
   onOpen: () => void;
   onHover: (pedidoId: string | null) => void;
-  onComprado: (row: PcpRow, origem: "XBZ" | "CHINA") => void;
+  onComprado: (row: PcpRow, origem: "XBZ" | "SP") => void;
+  onDespachar: (row: PcpRow) => void;
 }) {
   const foto = row.mockup_url || row.imagem_catalogo_url;
   const cor = corDoPedido(row);
@@ -594,7 +632,11 @@ function PcpCard({
         <div className="flex items-center gap-2.5 pt-0.5">
           <span
             className="gw-body flex items-center gap-1 text-[11px] font-semibold"
-            style={{ color: atrasado ? "var(--gw-danger)" : "var(--gw-text-secondary)" }}
+            style={
+              critico
+                ? { color: "#FFFFFF", backgroundColor: "var(--gw-danger)", borderRadius: 5, padding: "2px 6px" }
+                : { color: atrasado ? "var(--gw-danger)" : "var(--gw-text-secondary)" }
+            }
           >
             <Clock className="h-[12px] w-[12px]" /> {tempo || "—"} na etapa
           </span>
@@ -613,10 +655,24 @@ function PcpCard({
           </div>
         )}
 
+        {/* "Confirmar despacho" — só na Expedição, só até a tag DESPACHAR
+            já existir (ação feita uma vez por item). */}
+        {colunaDoStatus(row) === "aguardando_coleta" &&
+          !(row.tags ?? []).some(t => t.toUpperCase().startsWith(TAG_DESPACHAR_PREFIXO)) && (
+            <button
+              type="button"
+              onClick={e => { e.stopPropagation(); onDespachar(row); }}
+              className="h-6 rounded-[5px] text-white text-[10px] font-bold"
+              style={{ backgroundColor: "#0EA5E9" }}
+            >
+              Confirmar despacho
+            </button>
+          )}
+
         {/* Registrar compra — só na etapa "Aguardando mercadoria", só até
             existir uma das duas tags (registrado uma vez, some da tela). */}
         {row.status === "aguardando_mercadoria" &&
-          !(row.tags ?? []).some(t => t.toUpperCase() === "COMPRADO XBZ" || t.toUpperCase() === "COMPRADO CHINA") && (
+          !(row.tags ?? []).some(t => t.toUpperCase() === "COMPRADO XBZ" || t.toUpperCase() === "COMPRADO SP") && (
             <div className="flex items-center gap-1.5 pt-1" onClick={e => e.stopPropagation()}>
               <button
                 type="button"
@@ -628,11 +684,11 @@ function PcpCard({
               </button>
               <button
                 type="button"
-                onClick={() => onComprado(row, "CHINA")}
+                onClick={() => onComprado(row, "SP")}
                 className="flex-1 h-6 rounded-[5px] text-white text-[10px] font-bold"
                 style={{ backgroundColor: "#7C3AED" }}
               >
-                Comprado China
+                Comprado SP
               </button>
             </div>
           )}
@@ -720,11 +776,22 @@ export default function PCP() {
   const [detalheId, setDetalheId] = useState<string | null>(null);
   const [historico, setHistorico] = useState<HistoricoRow[]>([]);
 
-  const [terceiroModal, setTerceiroModal] = useState<{ row: PcpRow } | null>(null);
+  /* Popup obrigatório ao sair de "Organizando Anotações" pra "Aguardando
+     Mercadoria": comprovante de pagamento anexado OU confirmação manual
+     ("CONFIRMADO MARLON") — vale pro PEDIDO inteiro, não item por item. */
+  const [pagamentoPedidoModal, setPagamentoPedidoModal] = useState<{ row: PcpRow; target: PcpStatus } | null>(null);
+  const [pagamentoPedidoSaving, setPagamentoPedidoSaving] = useState(false);
+  const comprovanteInputRef = useRef<HTMLInputElement | null>(null);
+  const [enviandoComprovante, setEnviandoComprovante] = useState(false);
+
+  /* Popup obrigatório ao entrar em "Aguardando Teste": produção no galpão
+     ou terceirizada (com nome, se terceirizada) — a resposta vira tag,
+     não muda mais a coluna (galpão/terceirizada não são mais colunas
+     separadas). */
+  const [galpaoTerceirizadaModal, setGalpaoTerceirizadaModal] = useState<{ row: PcpRow; target: PcpStatus } | null>(null);
+  const [modalTipoProducao, setModalTipoProducao] = useState<"galpao" | "terceirizada">("galpao");
   const [modalFornecedorId, setModalFornecedorId] = useState("");
   const [modalTerceirizadaLivre, setModalTerceirizadaLivre] = useState("");
-  const [modalQtdEnviada, setModalQtdEnviada] = useState("");
-  const [modalPrevisao, setModalPrevisao] = useState("");
   const [modalSaving, setModalSaving] = useState(false);
 
   const [gateModal, setGateModal] = useState<{ row: PcpRow; target: PcpStatus; tipo: "cartao" | "pix" } | null>(null);
@@ -733,15 +800,29 @@ export default function PCP() {
   /* Popup de Expedição — abre quando o item arrastado fecha o conjunto
      (todos os itens do pedido chegam na coluna "aguardando_coleta" de uma
      vez). Volumes ficam no PEDIDO (sistema_pedidos.volumes), não no item:
-     é a caixa física que carrega o pedido inteiro, não uma peça sozinha. */
+     é a caixa física que carrega o pedido inteiro, não uma peça sozinha.
+     Só pede volumes + responsável -- pagamento e transportadora saíram
+     daqui (pagamento agora é tag automática; transportadora é perguntada
+     só no "Confirmar despacho", junto da nota fiscal/etiqueta). */
   const [expedicaoModal, setExpedicaoModal] = useState<{ row: PcpRow; target: PcpStatus } | null>(null);
   const [expedicaoVolumes, setExpedicaoVolumes] = useState<
     { comprimento: string; altura: string; largura: string; peso: string }[]
   >([{ comprimento: "", altura: "", largura: "", peso: "" }]);
-  const [expedicaoPago, setExpedicaoPago] = useState<"sim" | "nao" | null>(null);
-  const [expedicaoTransportadora, setExpedicaoTransportadora] = useState("");
-  const [expedicaoTransportadoraLivre, setExpedicaoTransportadoraLivre] = useState("");
+  const [expedicaoResponsavel, setExpedicaoResponsavel] = useState("");
   const [expedicaoSaving, setExpedicaoSaving] = useState(false);
+
+  /* "Confirmar despacho" — ação separada dentro de Expedição: nota fiscal +
+     etiqueta anexadas + transportadora informada. Ao confirmar, TODAS as
+     tags do item saem e só fica "DESPACHAR + transportadora". */
+  const [despachoModal, setDespachoModal] = useState<{ row: PcpRow } | null>(null);
+  const [despachoTransportadora, setDespachoTransportadora] = useState("");
+  const [despachoTransportadoraLivre, setDespachoTransportadoraLivre] = useState("");
+  const [despachoNotaFiscalUrl, setDespachoNotaFiscalUrl] = useState<string | null>(null);
+  const [despachoEtiquetaUrl, setDespachoEtiquetaUrl] = useState<string | null>(null);
+  const [despachoSaving, setDespachoSaving] = useState(false);
+  const [enviandoDespachoArquivo, setEnviandoDespachoArquivo] = useState<"nota_fiscal" | "etiqueta" | null>(null);
+  const despachoNotaFiscalInputRef = useRef<HTMLInputElement | null>(null);
+  const despachoEtiquetaInputRef = useRef<HTMLInputElement | null>(null);
 
   /* Anexos do PCP (teste físico + produção concluída) */
   const testeInputRef = useRef<HTMLInputElement | null>(null);
@@ -1085,9 +1166,10 @@ export default function PCP() {
   /* "poder registrar a compra: comprado xbz / comprado china... cria
      automaticamente uma tag sobre a imagem" — ação de um clique, sem popup:
      é só marcar que a compra já foi feita e qual fornecedor. */
-  const registrarCompra = async (row: PcpRow, origem: "XBZ" | "CHINA") => {
-    await adicionarTag(row, origem === "XBZ" ? "COMPRADO XBZ" : "COMPRADO CHINA");
+  const registrarCompra = async (row: PcpRow, origem: "XBZ" | "SP") => {
+    await adicionarTag(row, origem === "XBZ" ? "COMPRADO XBZ" : "COMPRADO SP");
     await applyUpdate(row.producao_id, { compra_confirmada_em: new Date().toISOString() });
+    await registrarNotaHistorico(row, `Compra registrada: ${origem === "XBZ" ? "Comprado XBZ" : "Comprado SP"}`);
   };
 
   /* ── Anexo de teste físico ────────────────────────────────────────────
@@ -1129,8 +1211,12 @@ export default function PCP() {
     try {
       const { url } = await uploadAnexoPcp(file, row.producao_id, "teste");
       await applyUpdate(row.producao_id, { teste_anexo_url: url, teste_enviado_em: new Date().toISOString() });
-      const semAprovado = (row.tags ?? []).filter(t => t !== TAG_TESTE_APROVADO && t !== TAG_PRODUZIR_MIDIA);
-      await salvarTags(row, [...new Set([...semAprovado, TAG_TESTE_ENVIADO])]);
+      /* "caso anexem um novo teste depois, sai a tag TESTE RECUSADO pra
+         TESTE REFEITO" — se já tinha sido recusado, essa é a segunda (ou
+         mais) tentativa; senão é a primeira, TESTE ENVIADO mesmo. */
+      const jaFoiRecusado = (row.tags ?? []).includes(TAG_TESTE_RECUSADO);
+      const semFluxoTeste = (row.tags ?? []).filter(t => !TAGS_FLUXO_TESTE.includes(t));
+      await salvarTags(row, [...new Set([...semFluxoTeste, jaFoiRecusado ? TAG_TESTE_REFEITO : TAG_TESTE_ENVIADO])]);
       await registrarAnexoGenerico(row, "teste", "foto", url, file.name);
       /* Anexar o teste move o card de "Aguardando Teste" pra "Teste
          Enviado" -- as duas colunas existem justamente pra separar
@@ -1139,7 +1225,7 @@ export default function PCP() {
          Teste (reenviar um teste novo mais adiante no fluxo não deve
          voltar o card pra trás). */
       if (colunaDoStatus(row) === "teste_fisico") {
-        await mudarStatus(row.producao_id, statusCanonicoDaColuna("teste_enviado"));
+        await mudarStatus(row.producao_id, statusCanonicoDaColuna("teste_enviado"), "Teste físico anexado");
       }
       toast.success("Teste anexado. Baixe e mande para o cliente aprovar.");
     } catch (err) {
@@ -1149,13 +1235,24 @@ export default function PCP() {
     }
   };
 
-  /* "se aprovado, ele altera a tag de teste enviado p/ TESTE APROVADO e
-     junto também automaticamente aparece a tag PRODUZIR + MÍDIA" — ação do
+  /* "se aprovar ele vai para a coluna A PRODUZIR e continua com a tag
+     (galpão ou terceirizada) e adiciona também TESTE APROVADO" — ação do
      vendedor, não da produção (é ele quem sabe se o cliente aprovou). */
   const aprovarTeste = async (row: PcpRow) => {
-    const outras = (row.tags ?? []).filter(t => t !== TAG_TESTE_ENVIADO);
-    await salvarTags(row, [...new Set([...outras, TAG_TESTE_APROVADO, TAG_PRODUZIR_MIDIA])]);
-    toast.success("Teste aprovado. A produção já vê a etiqueta de \"pode produzir\".");
+    const semFluxoTeste = (row.tags ?? []).filter(t => !TAGS_FLUXO_TESTE.includes(t));
+    await salvarTags(row, [...new Set([...semFluxoTeste, TAG_TESTE_APROVADO])]);
+    await mudarStatus(row.producao_id, statusCanonicoDaColuna("em_producao"), "Teste aprovado pelo cliente");
+    toast.success("Teste aprovado. Item movido para A Produzir.");
+  };
+
+  /* "se reprovado, volta para a coluna Aguardando Teste e adiciona a tag
+     TESTE RECUSADO" — mantém a tag de galpão/terceirizada, só troca o
+     status do teste. */
+  const reprovarTeste = async (row: PcpRow) => {
+    const semFluxoTeste = (row.tags ?? []).filter(t => !TAGS_FLUXO_TESTE.includes(t));
+    await salvarTags(row, [...new Set([...semFluxoTeste, TAG_TESTE_RECUSADO])]);
+    await mudarStatus(row.producao_id, statusCanonicoDaColuna("teste_fisico"), "Teste recusado pelo cliente");
+    toast.success("Teste recusado. Item voltou para Aguardando Teste.");
   };
 
   /* ── Anexo de produção concluída (foto ou vídeo) ──────────────────────
@@ -1180,21 +1277,19 @@ export default function PCP() {
         producao_anexo_em: new Date().toISOString(),
       });
       await registrarAnexoGenerico(row, "producao", tipo, url, file.name);
-      /* "pode sair as tags anteriores e aparecer somente PRODUZIDO. e já
-         vai direto pra expedição" — troca as tags do fluxo de teste pela
-         tag final e avança o card sozinho, sem precisar arrastar.
-         Usa uma cópia local do row (com a mídia já "anexada" nela) em vez
-         de reler `rows` do estado — o state ainda não tinha sido
-         commitado quando esse código roda logo após o applyUpdate, o que
-         faria os gates abaixo verem o item como se a mídia não existisse. */
-      const semFluxoTeste = (row.tags ?? []).filter(
-        t => t !== TAG_TESTE_ENVIADO && t !== TAG_TESTE_APROVADO && t !== TAG_PRODUZIR_MIDIA,
-      );
-      const tagsFinais = [...new Set([...semFluxoTeste, TAG_PRODUZIDO])];
-      await salvarTags(row, tagsFinais);
+      /* "assim que adicionado automaticamente ele já vai para a coluna de
+         Expedição" — mantém a tag de galpão/terceirizada e TESTE APROVADO
+         (histórico de como chegou até aqui), só limpa o que já não serve
+         mais (ENVIADO/REFEITO, caso sobrado). Usa uma cópia local do row
+         (com a mídia já "anexada" nela) em vez de reler `rows` do estado —
+         o state ainda não tinha sido commitado quando esse código roda
+         logo após o applyUpdate, o que faria os gates abaixo verem o item
+         como se a mídia não existisse. */
+      const tagsFinais = (row.tags ?? []).filter(t => t !== TAG_TESTE_ENVIADO && t !== TAG_TESTE_REFEITO);
+      if (tagsFinais.length !== (row.tags ?? []).length) await salvarTags(row, tagsFinais);
       const rowAtualizada: PcpRow = { ...row, producao_anexo_url: url, tags: tagsFinais };
 
-      if (colunaDoStatus(row) === "em_producao" || colunaDoStatus(row) === "em_producao_terceirizada") {
+      if (colunaDoStatus(row) === "em_producao") {
         if (precisaGatePix(rowAtualizada)) {
           setGateModal({ row: rowAtualizada, target: "aguardando_coleta", tipo: "pix" });
         } else {
@@ -1203,7 +1298,7 @@ export default function PCP() {
           if (jaNaExpedicao + 1 >= totalPedido) {
             setExpedicaoModal({ row: rowAtualizada, target: "aguardando_coleta" });
           } else {
-            await mudarStatus(row.producao_id, statusCanonicoDaColuna("aguardando_coleta"));
+            await mudarStatus(row.producao_id, statusCanonicoDaColuna("aguardando_coleta"), "Mídia de produção anexada");
           }
         }
       }
@@ -1259,12 +1354,11 @@ export default function PCP() {
     }
   };
 
-  const openTerceiroModal = (row: PcpRow) => {
-    setTerceiroModal({ row });
+  const openGalpaoTerceirizadaModal = (row: PcpRow, target: PcpStatus) => {
+    setGalpaoTerceirizadaModal({ row, target });
+    setModalTipoProducao(row.local_producao === "interna" ? "galpao" : "terceirizada");
     setModalFornecedorId(row.terceirizada_id || "");
     setModalTerceirizadaLivre(row.terceirizada_nome_livre || "");
-    setModalQtdEnviada(String(row.quantidade ?? ""));
-    setModalPrevisao(row.previsao_retorno || "");
   };
 
   /* Grava o gate de pagamento para todos os itens do pedido */
@@ -1308,14 +1402,28 @@ export default function PCP() {
     }
   };
 
-  const moverItem = (row: PcpRow, targetStatus: PcpStatus) => {
-    /* "A Produzir — Terceirizada: dragging here opens a MANDATORY popup" —
-       vale pra qualquer item, não só o que já estava marcado como
-       terceirizado antes (é essa arrastada que decide isso agora). */
-    if (targetStatus === "em_producao_terceirizada") {
-      openTerceiroModal(row);
-      return;
+  /* "quero que o histórico seja bem detalhado" — para ações que não mudam
+     de coluna (registrar compra, confirmar despacho, anexar arquivo) o
+     RPC de mudar status não serve (não há status novo pra gravar); grava
+     uma linha de histórico direto, sem mudar nada além do registro. */
+  const registrarNotaHistorico = async (row: PcpRow, texto: string) => {
+    const { data, error } = await supabase.from("sistema_producao_historico").insert({
+      producao_item_id: row.producao_id,
+      status_anterior: null,
+      status_novo: row.status,
+      vendedor_id: currentVendedor?.id ?? null,
+      observacao: texto,
+    } as any).select("id").single();
+    if (!error && detalheIdRef.current === row.producao_id && data) {
+      setHistorico(prev => [{
+        id: (data as any).id, producao_item_id: row.producao_id, status_anterior: null,
+        status_novo: row.status, usuario_id: null, vendedor_id: currentVendedor?.id ?? null,
+        observacao: texto, created_at: new Date().toISOString(),
+      }, ...prev]);
     }
+  };
+
+  const moverItem = (row: PcpRow, targetStatus: PcpStatus) => {
     /* Grava o STATUS canônico da coluna. targetStatus é nome de coluna
        ("em_producao"); o banco espera slug de status ("a_produzir"). */
     mudarStatus(row.producao_id, statusCanonicoDaColuna(targetStatus));
@@ -1328,13 +1436,20 @@ export default function PCP() {
     const row = rows.find(r => r.producao_id === id);
     if (!row || colunaDoStatus(row) === targetStatus) return;
 
-    // Gate de cartão: sair de "Pronto p/ Produção" para qualquer etapa seguinte
-    if (
-      colunaDoStatus(row) === "pronto_producao" &&
-      idxStatus(targetStatus) > idxStatus("pronto_producao") &&
-      precisaGateCartao(row)
-    ) {
-      setGateModal({ row, target: targetStatus, tipo: "cartao" });
+    /* "para ir p/ aguardando mercadoria abre um popup e o vendedor tem
+       que anexar o comprovante de pagamento ou clicar em CONFIRMADO
+       MARLON" — vale pro pedido inteiro, não item por item. */
+    if (colunaDoStatus(row) === "organizando_pedido" && targetStatus === "aguardando_mercadoria") {
+      setPagamentoPedidoModal({ row, target: targetStatus });
+      return;
+    }
+
+    /* "assim que a produção arrasta o produto para aguardando teste,
+       automaticamente já abre um popup perguntando se o teste vai ser
+       feito no galpão ou na terceirizada" — a resposta vira tag, a
+       coluna final é sempre "teste_fisico". */
+    if (targetStatus === "teste_fisico" && colunaDoStatus(row) !== "teste_enviado") {
+      openGalpaoTerceirizadaModal(row, targetStatus);
       return;
     }
 
@@ -1344,22 +1459,18 @@ export default function PCP() {
       return;
     }
 
-    /* Sem coluna "Produzido" própria: a mídia de produção é o que garante
-       que o item terminou antes de ir pra Expedição — arrastar direto de
-       uma coluna de produção sem anexo não pode pular essa checagem
-       (o caminho normal é anexar a mídia, que já move sozinho). */
-    if (
-      targetStatus === "aguardando_coleta" &&
-      (colunaDoStatus(row) === "em_producao" || colunaDoStatus(row) === "em_producao_terceirizada") &&
-      !row.producao_anexo_url
-    ) {
+    /* A mídia de produção é o que garante que o item terminou antes de ir
+       pra Expedição — arrastar direto de "A Produzir" sem anexo não pode
+       pular essa checagem (o caminho normal é anexar a mídia, que já move
+       sozinho). */
+    if (targetStatus === "aguardando_coleta" && colunaDoStatus(row) === "em_producao" && !row.producao_anexo_url) {
       toast.error("Anexe a foto/vídeo da produção concluída antes de mover para Expedição.");
       return;
     }
 
     /* "só sai do Aguardando Teste e vai pra Teste Enviado se anexar o
        teste" — sem o anexo, arrastar manualmente pra qualquer coluna
-       seguinte fica bloqueado; só some com a foto/vídeo do teste. */
+       seguinte fica bloqueado; só avança com a foto/vídeo do teste. */
     if (colunaDoStatus(row) === "teste_fisico" && targetStatus !== "teste_fisico" && !row.teste_anexo_url) {
       toast.error("Anexe o teste físico antes de mover este item.");
       return;
@@ -1385,7 +1496,7 @@ export default function PCP() {
        a compra foi feita), não precisa mais poluir o card daqui em diante. */
     if (colunaDoStatus(row) === "aguardando_mercadoria" && targetStatus !== "aguardando_mercadoria") {
       const semCompra = (row.tags ?? []).filter(
-        t => t.toUpperCase() !== "COMPRADO XBZ" && t.toUpperCase() !== "COMPRADO CHINA",
+        t => t.toUpperCase() !== "COMPRADO XBZ" && t.toUpperCase() !== "COMPRADO SP",
       );
       if (semCompra.length !== (row.tags ?? []).length) void salvarTags(row, semCompra);
     }
@@ -1406,37 +1517,79 @@ export default function PCP() {
   };
 
 
-  const confirmEnvioTerceiro = async () => {
-    if (!terceiroModal) return;
+  /* "resposta se torna uma tag como TERCEIRIZADA + nome ou PROD. GALPÃO.
+     e a tag COMPRADO já sai automaticamente" — confirma o local de
+     produção e move pra Aguardando Teste. */
+  const confirmarGalpaoTerceirizada = async () => {
+    if (!galpaoTerceirizadaModal) return;
+    const { row, target } = galpaoTerceirizadaModal;
     const fornecedor = terceirizadas.find(f => f.id === modalFornecedorId);
     const nomeLivre = modalTerceirizadaLivre.trim();
-    if (!modalFornecedorId && !nomeLivre) {
+    if (modalTipoProducao === "terceirizada" && !modalFornecedorId && !nomeLivre) {
       toast.error("Selecione uma terceirizada cadastrada ou digite o nome dela");
       return;
     }
     setModalSaving(true);
 
-    /* Duas chamadas de propósito: a RPC muda o status (e carimba
-       vendedor+histórico); o patch comum grava os dados da terceirizada,
-       que não fazem parte do vocabulário de status.
-       "em_producao_terceirizada" aqui é o nome da COLUNA, não um status —
-       o valor gravável é o status canônico dela (statusCanonicoDaColuna). */
-    await mudarStatus(terceiroModal.row.producao_id, statusCanonicoDaColuna("em_producao_terceirizada"));
-    await applyUpdate(terceiroModal.row.producao_id, {
-      terceirizada_id: modalFornecedorId || null,
-      terceirizada_nome_livre: fornecedor ? null : (nomeLivre || null),
-      qtd_enviada: modalQtdEnviada ? Number(modalQtdEnviada) : null,
-      previsao_retorno: modalPrevisao || null,
-      enviado_terceiro_em: new Date().toISOString(),
+    const localProducao: LocalProducao = modalTipoProducao === "galpao" ? "interna" : "terceirizada";
+    await applyUpdate(row.producao_id, {
+      local_producao: localProducao,
+      terceirizada_id: modalTipoProducao === "terceirizada" ? (modalFornecedorId || null) : null,
+      terceirizada_nome_livre: modalTipoProducao === "terceirizada" ? (fornecedor ? null : (nomeLivre || null)) : null,
     });
 
-    // "que depois de respondido vai criar uma tag" — o nome da terceirizada
-    // vira etiqueta do item, visível no card sem abrir o detalhe.
-    const nomeParaTag = fornecedor?.nome || nomeLivre;
-    if (nomeParaTag) await adicionarTag(terceiroModal.row, nomeParaTag);
+    const semCompra = (row.tags ?? []).filter(
+      t => t.toUpperCase() !== "COMPRADO XBZ" && t.toUpperCase() !== "COMPRADO SP",
+    );
+    const nomeTerceirizada = fornecedor?.nome || nomeLivre;
+    const novaTag = modalTipoProducao === "galpao" ? TAG_PROD_GALPAO : `${TAG_TERCEIRIZADA_PREFIXO} + ${nomeTerceirizada}`;
+    await salvarTags(row, [...new Set([...semCompra, novaTag])]);
+
+    await mudarStatus(row.producao_id, statusCanonicoDaColuna(target), `Produção definida: ${novaTag}`);
 
     setModalSaving(false);
-    setTerceiroModal(null);
+    setGalpaoTerceirizadaModal(null);
+  };
+
+  /* ── Popup de pagamento (Organizando Anotações -> Aguardando Mercadoria) */
+  const handleComprovanteUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !pagamentoPedidoModal) return;
+    setEnviandoComprovante(true);
+    try {
+      const { url } = await uploadArquivoPedido(file, pagamentoPedidoModal.row.pedido_id);
+      await confirmarPagamentoPedido(url);
+    } catch (err) {
+      toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o comprovante.");
+    } finally {
+      setEnviandoComprovante(false);
+    }
+  };
+
+  const confirmarPagamentoPedido = async (comprovanteUrl?: string) => {
+    if (!pagamentoPedidoModal) return;
+    const { row, target } = pagamentoPedidoModal;
+    setPagamentoPedidoSaving(true);
+
+    const { error } = await supabase
+      .from("sistema_pedidos")
+      .update({ comprovante_pagamento_url: comprovanteUrl ?? "confirmado-manualmente" } as any)
+      .eq("id", row.pedido_id);
+    if (error) {
+      console.error("[PCP] gravar comprovante falhou:", error);
+      toast.error(`Não foi possível salvar. ${error.message || ""}`);
+      setPagamentoPedidoSaving(false);
+      return;
+    }
+
+    await mudarStatus(
+      row.producao_id, statusCanonicoDaColuna(target),
+      comprovanteUrl ? "Comprovante de pagamento anexado" : "Pagamento confirmado manualmente",
+    );
+    setPagamentoPedidoSaving(false);
+    setPagamentoPedidoModal(null);
+    toast.success("Pagamento confirmado. Item movido para Aguardando Mercadoria.");
   };
 
   /* ── Popup de Expedição ────────────────────────────────────────────── */
@@ -1451,15 +1604,8 @@ export default function PCP() {
 
   const confirmarExpedicao = async () => {
     if (!expedicaoModal) return;
-
-    // "Pago 100%?" é obrigatório — sem resposta, nem tenta salvar.
-    if (expedicaoPago === null) {
-      toast.error("Confirme se o pedido foi pago 100% antes de continuar.");
-      return;
-    }
-    const transp = expedicaoTransportadoraLivre.trim() || expedicaoTransportadora;
-    if (!transp) {
-      toast.error("Informe a transportadora.");
+    if (!expedicaoResponsavel.trim()) {
+      toast.error("Informe o nome do responsável pela medição.");
       return;
     }
     const volumesNumericos = expedicaoVolumes.map(v => ({
@@ -1480,9 +1626,7 @@ export default function PCP() {
       .from("sistema_pedidos")
       .update({
         volumes: volumesNumericos,
-        pago_integral: expedicaoPago === "sim",
-        pago_integral_em: new Date().toISOString(),
-        pago_integral_por: currentVendedor?.id ?? null,
+        volumes_responsavel: expedicaoResponsavel.trim(),
       } as any)
       .eq("id", row.pedido_id);
 
@@ -1493,16 +1637,30 @@ export default function PCP() {
       return;
     }
 
-    // Transportadora vira etiqueta em TODOS os itens do pedido — é o pacote
-    // inteiro que vai com aquela transportadora, não só o item arrastado.
-    const itensDoPedido = rows.filter(r => r.pedido_id === row.pedido_id);
-    for (const item of itensDoPedido) await adicionarTag(item, transp);
+    /* "dependendo do pagamento que o vendedor colocou aparecerão novas
+       tags" — PIX 50%+50% cobra o restante, cartão (qualquer parcelamento)
+       já está pago. A medida também vira tag, pro vendedor não precisar
+       abrir o card pra ver. Tudo isso em TODOS os itens do pedido, não só
+       o que foi arrastado — é o pacote inteiro que vai junto. */
+    const nome = row.pagamento_nome;
+    const tagPagamento = isPagamentoCartao(nome)
+      ? TAG_PAGO_CARTAO
+      : (isPagamentoPix(nome) && semAcento(nome ?? "").includes("50"))
+        ? TAG_COBRAR_RESTANTE
+        : null;
+    const tagVolumes = resumoVolumes(volumesNumericos)?.toUpperCase() ?? null;
 
-    await mudarStatus(row.producao_id, statusCanonicoDaColuna(target));
+    const itensDoPedido = rows.filter(r => r.pedido_id === row.pedido_id);
+    for (const item of itensDoPedido) {
+      if (tagPagamento) await adicionarTag(item, tagPagamento);
+      if (tagVolumes) await adicionarTag(item, tagVolumes);
+    }
+
+    await mudarStatus(row.producao_id, statusCanonicoDaColuna(target), `Expedição registrada por ${expedicaoResponsavel.trim()}`);
 
     setExpedicaoSaving(false);
     setExpedicaoModal(null);
-    toast.success("Expedição registrada: volumes, pagamento e transportadora salvos.");
+    toast.success("Expedição registrada: volumes e responsável salvos.");
   };
 
   /* Reseta o formulário sempre que o popup abre para um pedido novo —
@@ -1510,10 +1668,53 @@ export default function PCP() {
   useEffect(() => {
     if (!expedicaoModal) return;
     setExpedicaoVolumes([{ comprimento: "", altura: "", largura: "", peso: "" }]);
-    setExpedicaoPago(null);
-    setExpedicaoTransportadora("");
-    setExpedicaoTransportadoraLivre("");
-  }, [expedicaoModal]);
+    setExpedicaoResponsavel(currentVendedor?.nome ?? "");
+  }, [expedicaoModal, currentVendedor]);
+
+  /* ── "Confirmar despacho" — nota fiscal + etiqueta + transportadora.
+     Ao confirmar, TODAS as tags do item saem e só fica "DESPACHAR + nome
+     da transportadora" — é a última coisa que o vendedor precisa ver no
+     card antes da coleta de verdade acontecer (que aí sim move pra
+     "Coletado e Enviado", arrastando manualmente). ────────────────────── */
+  const abrirDespachoModal = (row: PcpRow) => {
+    setDespachoModal({ row });
+    setDespachoTransportadora("");
+    setDespachoTransportadoraLivre("");
+    setDespachoNotaFiscalUrl(null);
+    setDespachoEtiquetaUrl(null);
+  };
+
+  const handleDespachoArquivo = async (e: React.ChangeEvent<HTMLInputElement>, tipo: "nota_fiscal" | "etiqueta") => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !despachoModal) return;
+    setEnviandoDespachoArquivo(tipo);
+    try {
+      const { url } = await uploadArquivoPedido(file, despachoModal.row.pedido_id);
+      if (tipo === "nota_fiscal") setDespachoNotaFiscalUrl(url); else setDespachoEtiquetaUrl(url);
+      await registrarAnexoGenerico(despachoModal.row, tipo, "pdf", url, file.name);
+    } catch (err) {
+      toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o arquivo.");
+    } finally {
+      setEnviandoDespachoArquivo(null);
+    }
+  };
+
+  const confirmarDespacho = async () => {
+    if (!despachoModal) return;
+    const transp = despachoTransportadoraLivre.trim() || despachoTransportadora;
+    if (!transp) { toast.error("Informe a transportadora."); return; }
+    if (!despachoNotaFiscalUrl) { toast.error("Anexe a nota fiscal."); return; }
+    if (!despachoEtiquetaUrl) { toast.error("Anexe a etiqueta de envio."); return; }
+
+    setDespachoSaving(true);
+    const { row } = despachoModal;
+    await salvarTags(row, [`${TAG_DESPACHAR_PREFIXO} ${transp}`]);
+    await registrarNotaHistorico(row, `Despacho confirmado: nota fiscal e etiqueta anexadas, transportadora ${transp}`);
+    setDespachoSaving(false);
+    setDespachoModal(null);
+    toast.success("Despacho confirmado.");
+  };
 
   const totalItens = rowsFiltradas.length;
 
@@ -1663,7 +1864,7 @@ export default function PCP() {
                     className="flex items-center justify-between px-4 py-3 text-white shrink-0"
                     style={{ backgroundColor: col.color }}
                   >
-                    <span className="gw-title text-[15px] text-white truncate">{col.label}</span>
+                    <span className="gw-title text-[15px] text-white truncate" style={{ fontWeight: 700 }}>{col.label}</span>
                     <span
                       className="gw-body text-[12px] font-semibold text-white rounded-full px-2.5 py-0.5 shrink-0"
                       style={{ backgroundColor: "rgba(255,255,255,.22)" }}
@@ -1687,12 +1888,14 @@ export default function PCP() {
                         total={indices[row.producao_id]?.total ?? 1}
                         dragging={draggingId === row.producao_id}
                         saving={savingId === row.producao_id}
-                        atrasado={(row.horas_na_etapa ?? 0) > (LIMITE_ETAPA[row.status] ?? 9999)}
+                        atrasado={horasUteisDesde(row.etapa_desde) > LIMITE_ATENCAO_HORAS_UTEIS}
+                        critico={(row.horas_na_etapa ?? 0) / 24 > LIMITE_CRITICO_DIAS_CORRIDOS}
                         highlight={!!hoverPedido && hoverPedido === row.pedido_id}
                         comFotos={comFotos}
                         vendedorNome={vendedorNome(row.pedido_vendedor_id)}
                         onHover={setHoverPedido}
                         onComprado={registrarCompra}
+                        onDespachar={abrirDespachoModal}
                         onDragStart={() => setDraggingId(row.producao_id)}
                         onDragEnd={() => setDraggingId(null)}
                         onOpen={() => setDetalheId(row.producao_id)}
@@ -1792,7 +1995,11 @@ export default function PCP() {
                       ))}
                     </div>
                     {TERCEIRIZADA_TRIGGER.includes(detalhe.local_producao) && (
-                      <Button variant="outline" size="sm" onClick={() => { setDetalheId(null); openTerceiroModal(detalhe); }}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => { setDetalheId(null); openGalpaoTerceirizadaModal(detalhe, colunaDoStatus(detalhe) as PcpStatus); }}
+                      >
                         <ShoppingBag className="h-4 w-4 mr-2" /> Dados da terceirizada
                       </Button>
                     )}
@@ -1879,16 +2086,25 @@ export default function PCP() {
                         </Button>
                       )}
 
-                      {/* Aprovação é ação do VENDEDOR (ele que sabe se o cliente
-                          aprovou), não da produção. */}
+                      {/* Aprovação/recusa é ação do VENDEDOR (ele que sabe se o
+                          cliente aprovou), não da produção. */}
                       {(detalhe.tags ?? []).includes(TAG_TESTE_APROVADO) ? (
                         <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: "var(--gw-success)" }}>
                           <CheckCircle2 className="h-4 w-4" /> Teste aprovado pelo cliente
                         </span>
-                      ) : (detalhe.tags ?? []).includes(TAG_TESTE_ENVIADO) && (
-                        <Button size="sm" onClick={() => aprovarTeste(detalhe)} style={{ backgroundColor: "var(--gw-success)" }}>
-                          <CheckCircle2 className="h-4 w-4 mr-2" /> Cliente aprovou o teste
-                        </Button>
+                      ) : (detalhe.tags ?? []).includes(TAG_TESTE_RECUSADO) ? (
+                        <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: "var(--gw-danger)" }}>
+                          <X className="h-4 w-4" /> Teste recusado — anexe um novo teste quando refeito
+                        </span>
+                      ) : ((detalhe.tags ?? []).includes(TAG_TESTE_ENVIADO) || (detalhe.tags ?? []).includes(TAG_TESTE_REFEITO)) && (
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" onClick={() => aprovarTeste(detalhe)} style={{ backgroundColor: "var(--gw-success)" }}>
+                            <CheckCircle2 className="h-4 w-4 mr-2" /> Cliente aprovou
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => reprovarTeste(detalhe)} style={{ color: "var(--gw-danger)", borderColor: "var(--gw-danger)" }}>
+                            <X className="h-4 w-4 mr-2" /> Cliente recusou
+                          </Button>
+                        </div>
                       )}
                     </div>
                   )}
@@ -2213,93 +2429,218 @@ export default function PCP() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal: enviar para terceirizada (obrigatório ao arrastar pra "A Produzir — Terceirizada") */}
-      <Dialog open={!!terceiroModal} onOpenChange={open => !open && setTerceiroModal(null)}>
+      {/* Modal: galpão ou terceirizada (obrigatório ao entrar em "Aguardando Teste") */}
+      <Dialog open={!!galpaoTerceirizadaModal} onOpenChange={open => !open && setGalpaoTerceirizadaModal(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ShoppingBag className="h-5 w-5 text-primary" />
-              Enviar para terceirizada
+              Onde o teste vai ser feito?
             </DialogTitle>
           </DialogHeader>
 
-          {terceiroModal && (
+          {galpaoTerceirizadaModal && (
             <div className="space-y-4 py-2">
               <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
                 <Layers className="h-4 w-4 text-muted-foreground shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{terceiroModal.row.produto_nome}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{galpaoTerceirizadaModal.row.produto_nome}</p>
                   <p className="text-xs text-muted-foreground">
-                    Pedido {terceiroModal.row.pedido_numero} · {terceiroModal.row.cliente}
+                    Pedido {galpaoTerceirizadaModal.row.pedido_numero} · {galpaoTerceirizadaModal.row.cliente}
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <Label>Terceirizada</Label>
-                <Select value={modalFornecedorId} onValueChange={v => { setModalFornecedorId(v); setModalTerceirizadaLivre(""); }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a terceirizada" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {terceirizadas.length === 0 ? (
-                      <div className="px-3 py-2 text-sm text-muted-foreground">
-                        Nenhuma terceirizada cadastrada
-                      </div>
-                    ) : terceirizadas.map(f => (
-                      <SelectItem key={f.id} value={f.id}>
-                        <span className="flex items-center gap-2">
-                          {f.nome}
-                          {f.telefone && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                              <Phone className="h-3 w-3" /> {f.telefone}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setModalTipoProducao("galpao")}
+                  className={cn(
+                    "h-16 rounded-lg text-sm font-semibold border transition-colors",
+                    modalTipoProducao === "galpao" ? "text-white border-transparent" : "bg-white text-foreground border-border",
+                  )}
+                  style={modalTipoProducao === "galpao" ? { backgroundColor: "#2563EB" } : undefined}
+                >
+                  Produção no Galpão
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalTipoProducao("terceirizada")}
+                  className={cn(
+                    "h-16 rounded-lg text-sm font-semibold border transition-colors",
+                    modalTipoProducao === "terceirizada" ? "text-white border-transparent" : "bg-white text-foreground border-border",
+                  )}
+                  style={modalTipoProducao === "terceirizada" ? { backgroundColor: "#F97316" } : undefined}
+                >
+                  Terceirizada
+                </button>
+              </div>
+
+              {modalTipoProducao === "terceirizada" && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label>Terceirizada</Label>
+                    <Select value={modalFornecedorId} onValueChange={v => { setModalFornecedorId(v); setModalTerceirizadaLivre(""); }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a terceirizada" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {terceirizadas.length === 0 ? (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">
+                            Nenhuma terceirizada cadastrada
+                          </div>
+                        ) : terceirizadas.map(f => (
+                          <SelectItem key={f.id} value={f.id}>
+                            <span className="flex items-center gap-2">
+                              {f.nome}
+                              {f.telefone && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                                  <Phone className="h-3 w-3" /> {f.telefone}
+                                </span>
+                              )}
                             </span>
-                          )}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div className="space-y-1.5">
-                <Label>Ou digite o nome (se não estiver cadastrada)</Label>
-                <Input
-                  value={modalTerceirizadaLivre}
-                  onChange={e => { setModalTerceirizadaLivre(e.target.value); if (e.target.value) setModalFornecedorId(""); }}
-                  placeholder="Ex.: Gráfica São Jorge"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label>Quantidade enviada</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={modalQtdEnviada}
-                    onChange={e => setModalQtdEnviada(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Previsão de retorno</Label>
-                  <Input
-                    type="date"
-                    value={modalPrevisao}
-                    onChange={e => setModalPrevisao(e.target.value)}
-                  />
-                </div>
-              </div>
+                  <div className="space-y-1.5">
+                    <Label>Ou digite o nome (se não estiver cadastrada)</Label>
+                    <Input
+                      value={modalTerceirizadaLivre}
+                      onChange={e => { setModalTerceirizadaLivre(e.target.value); if (e.target.value) setModalFornecedorId(""); }}
+                      placeholder="Ex.: Gráfica São Jorge"
+                    />
+                  </div>
+                </>
+              )}
             </div>
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTerceiroModal(null)} disabled={modalSaving}>
+            <Button variant="outline" onClick={() => setGalpaoTerceirizadaModal(null)} disabled={modalSaving}>
               Cancelar
             </Button>
-            <Button onClick={confirmEnvioTerceiro} disabled={modalSaving}>
+            <Button onClick={confirmarGalpaoTerceirizada} disabled={modalSaving}>
               {modalSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Confirmar envio
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: pagamento (obrigatório ao sair de "Organizando Anotações" pra "Aguardando Mercadoria") */}
+      <Dialog open={!!pagamentoPedidoModal} onOpenChange={open => !open && !pagamentoPedidoSaving && setPagamentoPedidoModal(null)}>
+        <DialogContent style={{ maxWidth: 460 }}>
+          <DialogHeader>
+            <DialogTitle>Confirmar pagamento do pedido</DialogTitle>
+          </DialogHeader>
+          {pagamentoPedidoModal && (
+            <div className="space-y-3 py-1">
+              <p className="text-[13px] text-[var(--gw-text-secondary)]">
+                Pedido {pagamentoPedidoModal.row.pedido_numero} — anexe o comprovante de pagamento ou confirme manualmente.
+              </p>
+              <input ref={comprovanteInputRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleComprovanteUpload} />
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => comprovanteInputRef.current?.click()}
+                disabled={enviandoComprovante || pagamentoPedidoSaving}
+              >
+                {enviandoComprovante ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                Anexar comprovante de pagamento
+              </Button>
+              <div className="flex items-center gap-2">
+                <div className="h-px flex-1 bg-border" /><span className="text-[11px] text-muted-foreground">ou</span><div className="h-px flex-1 bg-border" />
+              </div>
+              <Button
+                className="w-full"
+                style={{ backgroundColor: "var(--gw-success)" }}
+                onClick={() => confirmarPagamentoPedido()}
+                disabled={pagamentoPedidoSaving}
+              >
+                {pagamentoPedidoSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                CONFIRMADO MARLON
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: confirmar despacho (nota fiscal + etiqueta + transportadora, dentro de Expedição) */}
+      <Dialog open={!!despachoModal} onOpenChange={open => !open && !despachoSaving && setDespachoModal(null)}>
+        <DialogContent style={{ maxWidth: 480 }}>
+          <DialogHeader>
+            <DialogTitle>Confirmar despacho — Pedido {despachoModal?.row.pedido_numero}</DialogTitle>
+          </DialogHeader>
+          {despachoModal && (
+            <div className="space-y-3 py-1">
+              <input
+                ref={despachoNotaFiscalInputRef}
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={e => handleDespachoArquivo(e, "nota_fiscal")}
+              />
+              <input
+                ref={despachoEtiquetaInputRef}
+                type="file"
+                accept="image/*,application/pdf"
+                className="hidden"
+                onChange={e => handleDespachoArquivo(e, "etiqueta")}
+              />
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => despachoNotaFiscalInputRef.current?.click()}
+                disabled={enviandoDespachoArquivo === "nota_fiscal"}
+              >
+                {enviandoDespachoArquivo === "nota_fiscal" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                {despachoNotaFiscalUrl ? "Nota fiscal anexada ✓" : "Anexar nota fiscal"}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => despachoEtiquetaInputRef.current?.click()}
+                disabled={enviandoDespachoArquivo === "etiqueta"}
+              >
+                {enviandoDespachoArquivo === "etiqueta" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                {despachoEtiquetaUrl ? "Etiqueta anexada ✓" : "Anexar etiqueta de envio"}
+              </Button>
+
+              <div className="space-y-1.5">
+                <Label>Transportadora</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {TRANSPORTADORA_OPCOES.map(op => (
+                    <button
+                      key={op}
+                      type="button"
+                      onClick={() => { setDespachoTransportadora(op); setDespachoTransportadoraLivre(""); }}
+                      className={cn(
+                        "h-8 px-3 rounded-full text-[12px] font-semibold border transition-colors",
+                        despachoTransportadora === op ? "text-white border-transparent" : "bg-white text-foreground border-border",
+                      )}
+                      style={despachoTransportadora === op ? { backgroundColor: corDaTag(op) } : undefined}
+                    >
+                      {op}
+                    </button>
+                  ))}
+                </div>
+                <Input
+                  value={despachoTransportadoraLivre}
+                  onChange={e => { setDespachoTransportadoraLivre(e.target.value); if (e.target.value) setDespachoTransportadora(""); }}
+                  placeholder="Ou digite outra transportadora"
+                  className="h-9"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDespachoModal(null)} disabled={despachoSaving}>Cancelar</Button>
+            <Button onClick={confirmarDespacho} disabled={despachoSaving}>
+              {despachoSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar despacho
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2419,64 +2760,13 @@ export default function PCP() {
                 ))}
               </div>
 
-              {/* Pago 100%? — obrigatório, ação do vendedor */}
+              {/* Responsável pela medição */}
               <div className="space-y-1.5">
-                <Label>Pago 100%? <span className="text-[var(--gw-danger)]">*</span></Label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setExpedicaoPago("sim")}
-                    className={cn(
-                      "flex-1 h-9 rounded-lg text-[13px] font-semibold border transition-colors",
-                      expedicaoPago === "sim"
-                        ? "text-white border-transparent"
-                        : "bg-[var(--gw-surface)] text-[var(--gw-text-secondary)] border-[var(--gw-border)]"
-                    )}
-                    style={expedicaoPago === "sim" ? { backgroundColor: "var(--gw-success)" } : undefined}
-                  >
-                    Sim, pago integralmente
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setExpedicaoPago("nao")}
-                    className={cn(
-                      "flex-1 h-9 rounded-lg text-[13px] font-semibold border transition-colors",
-                      expedicaoPago === "nao"
-                        ? "text-white border-transparent"
-                        : "bg-[var(--gw-surface)] text-[var(--gw-text-secondary)] border-[var(--gw-border)]"
-                    )}
-                    style={expedicaoPago === "nao" ? { backgroundColor: "var(--gw-danger)" } : undefined}
-                  >
-                    Ainda não
-                  </button>
-                </div>
-              </div>
-
-              {/* Transportadora */}
-              <div className="space-y-1.5">
-                <Label>Transportadora</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {TRANSPORTADORA_OPCOES.map(op => (
-                    <button
-                      key={op}
-                      type="button"
-                      onClick={() => { setExpedicaoTransportadora(op); setExpedicaoTransportadoraLivre(""); }}
-                      className={cn(
-                        "h-8 px-3 rounded-full text-[12px] font-semibold border transition-colors",
-                        expedicaoTransportadora === op
-                          ? "text-white border-transparent"
-                          : "bg-[var(--gw-surface)] text-[var(--gw-text-secondary)] border-[var(--gw-border)]"
-                      )}
-                      style={expedicaoTransportadora === op ? { backgroundColor: corDaTag(op) } : undefined}
-                    >
-                      {op}
-                    </button>
-                  ))}
-                </div>
+                <Label>Responsável pela medição <span className="text-[var(--gw-danger)]">*</span></Label>
                 <Input
-                  value={expedicaoTransportadoraLivre}
-                  onChange={e => { setExpedicaoTransportadoraLivre(e.target.value); if (e.target.value) setExpedicaoTransportadora(""); }}
-                  placeholder="Ou digite outra transportadora"
+                  value={expedicaoResponsavel}
+                  onChange={e => setExpedicaoResponsavel(e.target.value)}
+                  placeholder="Nome de quem mediu/embalou"
                   className="h-9"
                 />
               </div>
