@@ -33,15 +33,16 @@ export interface StatusInfo {
 const SEMENTE: StatusInfo[] = [
   { slug: "organizando_anotacoes",   nome: "Organizando anotações",      cor: "#64748B", colunaPcp: "organizando_pedido",  escopo: "ambos",  ordem: 10 },
   { slug: "imprimir_ordem_producao", nome: "Imprimir ordem de produção", cor: "#0B7CAF", colunaPcp: "pronto_producao",     escopo: "ambos",  ordem: 20 },
-  { slug: "aguardando_mercadoria",   nome: "Aguardando mercadoria",      cor: "#A36907", colunaPcp: "pronto_producao",     escopo: "ambos",  ordem: 30 },
+  { slug: "aguardando_mercadoria",   nome: "Aguardando mercadoria",      cor: "#A36907", colunaPcp: "aguardando_mercadoria", escopo: "ambos", ordem: 30 },
   { slug: "aguardando_teste",        nome: "Aguardando teste laser/DTF", cor: "#9E42F6", colunaPcp: "teste_fisico",        escopo: "ambos",  ordem: 40 },
-  { slug: "aguardando_aprovacao_teste", nome: "Aguardando aprovação teste", cor: "#C026D3", colunaPcp: "teste_fisico",     escopo: "ambos",  ordem: 45 },
+  { slug: "aguardando_aprovacao_teste", nome: "Teste enviado",           cor: "#C026D3", colunaPcp: "teste_enviado",       escopo: "ambos",  ordem: 45 },
   { slug: "preparar_dtf",            nome: "Preparar DTF/vetorização",   cor: "#8452F5", colunaPcp: "preparacao",          escopo: "ambos",  ordem: 50 },
   { slug: "a_produzir",              nome: "A produzir",                 cor: "#2563EB", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 60 },
-  { slug: "a_produzir_terceirizada", nome: "A produzir terceirizada",    cor: "#1D4ED8", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 70 },
-  { slug: "inserir_medidas",         nome: "Inserir medidas",            cor: "#0B8177", colunaPcp: "embalagem_pagamento", escopo: "ambos",  ordem: 80 },
-  { slug: "conferir_pagamentos",     nome: "Conferir pagamentos",        cor: "#05875F", colunaPcp: "embalagem_pagamento", escopo: "ambos",  ordem: 90 },
-  { slug: "enviar_etiqueta",         nome: "Enviar etiqueta/expedição",  cor: "#12883E", colunaPcp: "embalagem_pagamento", escopo: "ambos",  ordem: 100 },
+  { slug: "a_produzir_terceirizada", nome: "A produzir terceirizada",    cor: "#1D4ED8", colunaPcp: "em_producao_terceirizada", escopo: "ambos", ordem: 70 },
+  { slug: "produzido",               nome: "Produzido",                  cor: "#22C55E", colunaPcp: "produzido",           escopo: "ambos",  ordem: 75 },
+  { slug: "inserir_medidas",         nome: "Inserir medidas",            cor: "#0B8177", colunaPcp: "produzido",           escopo: "ambos",  ordem: 80 },
+  { slug: "conferir_pagamentos",     nome: "Conferir pagamentos",        cor: "#05875F", colunaPcp: "produzido",           escopo: "ambos",  ordem: 90 },
+  { slug: "enviar_etiqueta",         nome: "Enviar etiqueta/expedição",  cor: "#12883E", colunaPcp: "produzido",           escopo: "ambos",  ordem: 100 },
   { slug: "aguardando_coleta",       nome: "Aguardando coleta",          cor: "#9D6B03", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 110 },
   { slug: "coletado_enviado",        nome: "Coletado e enviado",         cor: "#15803D", colunaPcp: "enviado",             escopo: "ambos",  ordem: 120 },
   { slug: "entregue",                nome: "Entregue",                   cor: "#166534", colunaPcp: "enviado",             escopo: "pedido", ordem: 130 },
@@ -109,15 +110,25 @@ export function opcoesStatus(nivel: "pedido" | "item"): StatusInfo[] {
  * quadro e não são editáveis. Cada uma tem um status canônico: é ele que dá a
  * cor da coluna e é o valor gravado quando um card é arrastado para lá.
  */
+/* Fluxo completo (evolução de 17/09/2026): Aguardando Mercadoria ->
+   Aguardando Teste -> Teste Enviado -> Preparação -> A Produzir
+   (Galpão / Terceirizada, agora colunas separadas) -> Produzido ->
+   Expedição -> Coletado e Enviado. As colunas "organizando_pedido" e
+   "pronto_producao" (etapas administrativas anteriores à produção em
+   si) são preservadas do jeito que já funcionavam -- o pedido do
+   usuário foi evoluir o fluxo, não apagar o que já existe. */
 export const COLUNAS_PCP = [
-  { coluna: "organizando_pedido",  rotulo: "Organizando Pedido",    canonico: "organizando_anotacoes" },
-  { coluna: "pronto_producao",     rotulo: "Pronto p/ Produção",    canonico: "imprimir_ordem_producao" },
-  { coluna: "teste_fisico",        rotulo: "Teste Físico",          canonico: "aguardando_teste" },
-  { coluna: "preparacao",          rotulo: "Preparação",            canonico: "preparar_dtf" },
-  { coluna: "em_producao",         rotulo: "Em Produção",           canonico: "a_produzir" },
-  { coluna: "embalagem_pagamento", rotulo: "Embalagem & Pagamento", canonico: "inserir_medidas" },
-  { coluna: "aguardando_coleta",   rotulo: "Aguardando Coleta",     canonico: "aguardando_coleta" },
-  { coluna: "enviado",             rotulo: "Enviado",               canonico: "coletado_enviado" },
+  { coluna: "organizando_pedido",       rotulo: "Organizando Pedido",       canonico: "organizando_anotacoes" },
+  { coluna: "pronto_producao",          rotulo: "Pronto p/ Produção",       canonico: "imprimir_ordem_producao" },
+  { coluna: "aguardando_mercadoria",    rotulo: "Aguardando Mercadoria",    canonico: "aguardando_mercadoria" },
+  { coluna: "teste_fisico",             rotulo: "Aguardando Teste",         canonico: "aguardando_teste" },
+  { coluna: "teste_enviado",            rotulo: "Teste Enviado",            canonico: "aguardando_aprovacao_teste" },
+  { coluna: "preparacao",               rotulo: "Preparação",               canonico: "preparar_dtf" },
+  { coluna: "em_producao",              rotulo: "A Produzir — Galpão",      canonico: "a_produzir" },
+  { coluna: "em_producao_terceirizada", rotulo: "A Produzir — Terceirizada", canonico: "a_produzir_terceirizada" },
+  { coluna: "produzido",                rotulo: "Produzido",                canonico: "produzido" },
+  { coluna: "aguardando_coleta",        rotulo: "Expedição",                canonico: "aguardando_coleta" },
+  { coluna: "enviado",                  rotulo: "Coletado e Enviado",       canonico: "coletado_enviado" },
 ] as const;
 
 /** Cor da coluna = cor do seu status canônico. */

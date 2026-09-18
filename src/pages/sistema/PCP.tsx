@@ -35,8 +35,10 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
 type PcpStatus =
-  | "organizando_pedido" | "pronto_producao" | "teste_fisico" | "preparacao"
-  | "em_producao" | "embalagem_pagamento" | "aguardando_coleta" | "enviado";
+  | "organizando_pedido" | "pronto_producao" | "aguardando_mercadoria"
+  | "teste_fisico" | "teste_enviado" | "preparacao"
+  | "em_producao" | "em_producao_terceirizada" | "produzido"
+  | "aguardando_coleta" | "enviado";
 
 type LocalProducao = "interna" | "terceirizada" | "fornecedor_para_terceirizada";
 
@@ -298,10 +300,13 @@ const tempoTotalCurto = (criadoEm: string | null) => {
 const LIMITE_ETAPA: Record<PcpStatus, number> = {
   organizando_pedido: 48,
   pronto_producao: 48,
+  aguardando_mercadoria: 72,
   teste_fisico: 48,
+  teste_enviado: 72,
   preparacao: 72,
   em_producao: 120,
-  embalagem_pagamento: 48,
+  em_producao_terceirizada: 168,
+  produzido: 48,
   aguardando_coleta: 48,
   enviado: 10000,
 };
@@ -549,7 +554,7 @@ function PcpCard({
             <div className="absolute top-1.5 left-1.5 right-1.5">{Etiquetas}</div>
           )}
           {(precisaGateCartao(row) ||
-            (colunaDoStatus(row) === "embalagem_pagamento" && precisaGatePix(row))) && (
+            (colunaDoStatus(row) === "produzido" && precisaGatePix(row))) && (
             <span
               className="gw-body absolute right-1.5 bottom-1.5 text-white text-[10px] font-bold uppercase rounded-[5px] px-2 py-[3px]"
               style={{ backgroundColor: "var(--gw-warning)" }}
@@ -907,7 +912,7 @@ export default function PCP() {
     for (const col of STATUS_COLS) map[col.value] = [];
     /* Agrupa por COLUNA, não por status: status e coluna são vocabulários
        diferentes desde o catálogo editável. "conferir_pagamentos" é status e
-       cai na coluna "embalagem_pagamento" — agrupar por status faria o card
+       cai na coluna "produzido" — agrupar por status faria o card
        sumir do quadro. */
     for (const row of rowsFiltradas) (map[colunaDoStatus(row)] ??= []).push(row);
     return map;
@@ -1107,6 +1112,15 @@ export default function PCP() {
       const semAprovado = (row.tags ?? []).filter(t => t !== TAG_TESTE_APROVADO && t !== TAG_PRODUZIR_MIDIA);
       await salvarTags(row, [...new Set([...semAprovado, TAG_TESTE_ENVIADO])]);
       await registrarAnexoGenerico(row, "teste", "foto", url, file.name);
+      /* Anexar o teste move o card de "Aguardando Teste" pra "Teste
+         Enviado" -- as duas colunas existem justamente pra separar
+         quem ainda não tem teste feito de quem já mandou e espera
+         resposta do cliente. Só avança se ainda estava em Aguardando
+         Teste (reenviar um teste novo mais adiante no fluxo não deve
+         voltar o card pra trás). */
+      if (colunaDoStatus(row) === "teste_fisico") {
+        await mudarStatus(row.producao_id, statusCanonicoDaColuna("teste_enviado"));
+      }
       toast.success("Teste anexado. Baixe e mande para o cliente aprovar.");
     } catch (err) {
       toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o anexo.");
@@ -1248,7 +1262,10 @@ export default function PCP() {
   };
 
   const moverItem = (row: PcpRow, targetStatus: PcpStatus) => {
-    if (targetStatus === "preparacao" && TERCEIRIZADA_TRIGGER.includes(row.local_producao)) {
+    /* "A Produzir — Terceirizada: dragging here opens a MANDATORY popup" —
+       vale pra qualquer item, não só o que já estava marcado como
+       terceirizado antes (é essa arrastada que decide isso agora). */
+    if (targetStatus === "em_producao_terceirizada") {
       openTerceiroModal(row);
       return;
     }
@@ -1277,6 +1294,14 @@ export default function PCP() {
     // Gate de PIX: entrar em "Aguardando Coleta"
     if (targetStatus === "aguardando_coleta" && precisaGatePix(row)) {
       setGateModal({ row, target: targetStatus, tipo: "pix" });
+      return;
+    }
+
+    /* "Produzido: uma vez que a produção esteja 100% concluída e a mídia
+       final anexada" — sem a mídia de produção anexada, o item não pode
+       ser considerado pronto. */
+    if (targetStatus === "produzido" && !row.producao_anexo_url) {
+      toast.error("Anexe a foto/vídeo da produção concluída antes de mover para Produzido.");
       return;
     }
 
@@ -1324,12 +1349,9 @@ export default function PCP() {
     /* Duas chamadas de propósito: a RPC muda o status (e carimba
        vendedor+histórico); o patch comum grava os dados da terceirizada,
        que não fazem parte do vocabulário de status.
-       "preparacao" aqui é o nome da COLUNA, não um status — o valor
-       gravável é o status canônico dela (statusCanonicoDaColuna). Gravar a
-       string "preparacao" direto violava a FK de sistema_status; ninguém
-       tinha notado porque este caminho não tinha sido testado com dado
-       real ainda. */
-    await mudarStatus(terceiroModal.row.producao_id, statusCanonicoDaColuna("preparacao"));
+       "em_producao_terceirizada" aqui é o nome da COLUNA, não um status —
+       o valor gravável é o status canônico dela (statusCanonicoDaColuna). */
+    await mudarStatus(terceiroModal.row.producao_id, statusCanonicoDaColuna("em_producao_terceirizada"));
     await applyUpdate(terceiroModal.row.producao_id, {
       terceirizada_id: modalFornecedorId || null,
       terceirizada_nome_livre: fornecedor ? null : (nomeLivre || null),
@@ -1869,8 +1891,12 @@ export default function PCP() {
                   </div>
                 )}
 
-                {/* Produção concluída — foto ou vídeo do pedido 100% pronto. */}
-                {(detalhe.coluna_pcp === "em_producao" || detalhe.producao_anexo_url) && (
+                {/* Produção concluída — foto ou vídeo do pedido 100% pronto.
+                    Aparece nas duas colunas de produção (galpão e
+                    terceirizada) e também em Produzido, pra poder trocar o
+                    anexo depois se precisar. */}
+                {(detalhe.coluna_pcp === "em_producao" || detalhe.coluna_pcp === "em_producao_terceirizada" ||
+                  detalhe.coluna_pcp === "produzido" || detalhe.producao_anexo_url) && (
                   <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2.5">
                     <p className="gw-label flex items-center gap-1.5">
                       <Video className="h-3.5 w-3.5" /> Produção concluída (foto ou vídeo)
@@ -2076,7 +2102,7 @@ export default function PCP() {
         </SheetContent>
       </Sheet>
 
-      {/* Modal: enviar para terceirizada (só quando a etapa "Preparação" é feita por terceiro) */}
+      {/* Modal: enviar para terceirizada (obrigatório ao arrastar pra "A Produzir — Terceirizada") */}
       <Dialog open={!!terceiroModal} onOpenChange={open => !open && setTerceiroModal(null)}>
         <DialogContent>
           <DialogHeader>
