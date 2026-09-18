@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -21,6 +21,7 @@ import { statusInfo, opcoesStatus } from "@/lib/statusPedido";
 import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaContext";
 import { supabase } from "@/integrations/supabase/client";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
 type PedidoStatus = Pedido["status"];
 
@@ -226,6 +227,42 @@ export default function Pedidos() {
     }, 250);
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [busca, filtroStatus, dataInicio, dataFim, page, pageSize, refreshPedidos]);
+
+  /* Atualização automática — "tem que ter atualização automática dos
+     pedidos, não ter que ficar clicando no atualizar". Mesmo padrão de
+     canal do PCP: qualquer INSERT/UPDATE/DELETE em sistema_pedidos (ou
+     mudança de etapa de item em sistema_producao_itens, que também
+     aparece nesta lista) recarrega a página atual com os filtros de
+     agora, sem precisar de clique. Os filtros ficam numa ref pra o canal
+     não precisar reabrir toda vez que o usuário muda uma busca. */
+  const filtrosAtuaisRef = useRef({ filtroStatus, busca, dataInicio, dataFim, page, pageSize });
+  useEffect(() => {
+    filtrosAtuaisRef.current = { filtroStatus, busca, dataInicio, dataFim, page, pageSize };
+  }, [filtroStatus, busca, dataInicio, dataFim, page, pageSize]);
+
+  useEffect(() => {
+    let debounce: number | undefined;
+    const recarregar = () => {
+      window.clearTimeout(debounce);
+      debounce = window.setTimeout(() => {
+        const f = filtrosAtuaisRef.current;
+        void refreshPedidos({
+          status: f.filtroStatus, search: f.busca,
+          dataInicio: f.dataInicio || null, dataFim: f.dataFim || null,
+          page: f.page, pageSize: f.pageSize,
+        });
+        void qc.invalidateQueries({ queryKey: ["sistema", "pedidos", "contagem-abas"] });
+        void qc.invalidateQueries({ queryKey: ["sistema", "pedidos", "producao"] });
+      }, 400);
+    };
+    const canal: RealtimeChannel = supabase
+      .channel("pedidos-ao-vivo")
+      .on("postgres_changes", { event: "*", schema: "public", table: "sistema_pedidos" }, recarregar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "sistema_producao_itens" }, recarregar)
+      .subscribe();
+    return () => { window.clearTimeout(debounce); void supabase.removeChannel(canal); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* A aba filtra a página já carregada — não é filtro de servidor, porque
      agrupa várias etapas e o backend só entende um status por vez. */

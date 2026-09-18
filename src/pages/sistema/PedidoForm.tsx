@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSistema, clienteDisplay, type Pedido, type PedidoItem, type QuoteItem } from "@/contexts/SistemaContext";
 import { useSistemaProducts } from "./useSistemaProducts";
 import { ItemDialog } from "./OrcamentoForm";
+import ClienteDialog from "./ClienteDialog";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { uploadMockup, uploadArquivoPedido, MockupUploadError } from "@/lib/uploadMockup";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -88,6 +89,7 @@ const PedidoForm: React.FC = () => {
   const [pagamentoId, setPagamentoId] = useState("");
   const [prazoEntrega, setPrazoEntrega] = useState(0);
   const [prazoProducaoDias, setPrazoProducaoDias] = useState(15);
+  const [dataDespacharAte, setDataDespacharAte] = useState("");
   const [observacoes, setObservacoes] = useState("");
 
   /* Anexos gerais do pedido (briefing, arte solta, logo) — array jsonb em
@@ -97,6 +99,7 @@ const PedidoForm: React.FC = () => {
   const anexoGeralInputRef = useRef<HTMLInputElement>(null);
   const [enviandoAnexoGeral, setEnviandoAnexoGeral] = useState(false);
 
+  const [showClienteDialog, setShowClienteDialog] = useState(false);
   const [showItemDialog, setShowItemDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<QuoteItem | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -242,6 +245,7 @@ const PedidoForm: React.FC = () => {
         setPrazoEntrega(mapped.prazoEntrega || 0);
         setPrazoProducaoDias(mapped.prazoProducaoDias ?? 15);
         setObservacoes(mapped.observacoes || "");
+        setDataDespacharAte(mapped.dataDespacharAte ? mapped.dataDespacharAte.slice(0, 10) : "");
         setAnexosGerais(((p as any).anexos as AnexoGeral[] | null) ?? []);
       }
       setCarregando(false);
@@ -279,7 +283,10 @@ const PedidoForm: React.FC = () => {
     () => itens.reduce((s, i) => s + (num(i.total) || num(i.quantidade) * num(i.precoUnitario)), 0),
     [itens],
   );
-  const total = subtotal + num(freteValor);
+  /* CIF = frete por conta do vendedor, já embutido no preço do produto —
+     não soma de novo no total. FOB = comprador paga o frete à parte, esse
+     sim entra na conta. */
+  const total = subtotal + (freteTipo === "FOB" ? num(freteValor) : 0);
 
   /* ── Itens ──────────────────────────────────────────────────────────── */
   const abrirNovoItem = () => { setEditingItem(null); setEditingItemId(null); setShowItemDialog(true); };
@@ -370,6 +377,7 @@ const PedidoForm: React.FC = () => {
       prazo_entrega: prazoEntrega || null,
       pagamento_id: pagamentoId || null,
       prazo_producao_dias: prazoProducaoDias,
+      data_despachar_ate: dataDespacharAte || null,
       observacoes: observacoes || null,
       anexos: anexosGerais as never,
       updated_at: new Date().toISOString(),
@@ -518,12 +526,25 @@ const PedidoForm: React.FC = () => {
         <div className="grid gap-3 md:grid-cols-3">
           <label className="space-y-1">
             <span className="gw-label">Cliente</span>
-            <Select value={clienteId} onValueChange={setClienteId}>
-              <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
-              <SelectContent>
-                {clientes.map(c => <SelectItem key={c.id} value={c.id}>{clienteDisplay(c)}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-1.5">
+              <Select value={clienteId} onValueChange={setClienteId}>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {clientes.map(c => <SelectItem key={c.id} value={c.id}>{clienteDisplay(c)}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                onClick={() => setShowClienteDialog(true)}
+                aria-label="Novo cliente"
+                title="Novo cliente"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </label>
           <label className="space-y-1">
             <span className="gw-label">Vendedor</span>
@@ -663,9 +684,27 @@ const PedidoForm: React.FC = () => {
                     </button>
                   </div>
 
-                  <span className="text-right shrink-0 w-24">
-                    <Money value={num(item.total) || num(item.quantidade) * num(item.precoUnitario)} />
-                  </span>
+                  <div className="text-right shrink-0 w-28 space-y-0.5">
+                    <div className="flex items-center justify-end gap-1">
+                      <span className="text-[11px] text-[var(--gw-text-muted)]">R$</span>
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={item.precoUnitario}
+                        onChange={e => {
+                          const preco = Math.max(0, Number(e.target.value) || 0);
+                          setItens(prev => prev.map(i => i.id === item.id
+                            ? { ...i, precoUnitario: preco, total: num(i.quantidade) * preco } : i));
+                        }}
+                        className="h-7 w-20 text-right px-1.5 text-[12px]"
+                      />
+                    </div>
+                    <Money
+                      value={num(item.total) || num(item.quantidade) * num(item.precoUnitario)}
+                      className="text-[12px]"
+                    />
+                  </div>
 
                   <div className="flex items-center justify-end gap-1 shrink-0">
                     <button
@@ -785,6 +824,11 @@ const PedidoForm: React.FC = () => {
               <Input className="h-9" type="number" value={prazoEntrega}
                 onChange={e => setPrazoEntrega(Number(e.target.value) || 0)} />
             </label>
+            <label className="space-y-1 block">
+              <span className="gw-label">Despachar até</span>
+              <Input className="h-9" type="date" value={dataDespacharAte}
+                onChange={e => setDataDespacharAte(e.target.value)} />
+            </label>
           </div>
         </SectionCard>
 
@@ -867,6 +911,14 @@ const PedidoForm: React.FC = () => {
           <span className="gw-meta text-[11px]">PNG, JPG, PDF, AI, CDR, EPS, SVG (máx. 30 MB)</span>
         </button>
       </SectionCard>
+
+      {showClienteDialog && (
+        <ClienteDialog
+          open={showClienteDialog}
+          onOpenChange={setShowClienteDialog}
+          onSaved={c => { setClienteId(c.id); setShowClienteDialog(false); }}
+        />
+      )}
 
       {showItemDialog && (
         <ItemDialog
