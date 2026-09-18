@@ -96,6 +96,7 @@ interface PcpRow {
   pedido_volumes_responsavel: string | null;
   pedido_pago_integral: boolean | null;
   pedido_comprovante_pagamento_url: string | null;
+  item_volumes: { responsavel: string; itens: { comprimento: number; altura: number; largura: number; peso: number }[] } | null;
   arte_anexo_url: string | null;
   pedido_anexos: { url: string; nome: string; criadoEm: string }[] | null;
 }
@@ -330,6 +331,21 @@ const resumoVolumes = (volumes: unknown): string | null => {
   return `${qtd} ${qtd === 1 ? "volume" : "volumes"}${pesoTotal > 0 ? ` · ${pesoTotal}kg` : ""}`;
 };
 
+/* "os volumes que a produção preencheu acaba se tornando cada volume
+   uma tag. TAG1 2V 50x40x30 / 7KG TAG2 1V 30x54x84 / 4KG" — agrupa
+   volumes com as MESMAS dimensões/peso numa tag só, contando quantos
+   são iguais; dimensões diferentes viram tags separadas. */
+const agruparVolumesEmTags = (
+  volumes: { comprimento: number; altura: number; largura: number; peso: number }[],
+): string[] => {
+  const grupos = new Map<string, number>();
+  for (const v of volumes) {
+    const chave = `${v.comprimento}X${v.altura}X${v.largura} / ${v.peso}KG`;
+    grupos.set(chave, (grupos.get(chave) ?? 0) + 1);
+  }
+  return [...grupos.entries()].map(([medidas, qtd]) => `${qtd}V ${medidas}`);
+};
+
 /* Alerta de tempo — regra ÚNICA pra todas as etapas (pedido explícito do
    usuário, substitui os limites variados por coluna de antes):
      > 72 horas ÚTEIS (só dias de semana contam) na mesma etapa -> texto
@@ -524,7 +540,7 @@ function PcpCard({
       {tagsVisiveis.map(t => (
         <span
           key={t}
-          className="gw-body text-white text-[10px] leading-none rounded-[5px] px-[6px] py-[4px] truncate max-w-[150px]"
+          className="gw-body text-white text-[10px] leading-none rounded-[5px] px-[6px] py-[4px] whitespace-nowrap"
           style={{ backgroundColor: corDaTag(t), fontWeight: 700 }}
         >
           {t}
@@ -603,15 +619,6 @@ function PcpCard({
           {tagsOrdenadas.length > 0 && (
             <div className="absolute top-1.5 left-1.5 right-1.5">{Etiquetas}</div>
           )}
-          {(precisaGateCartao(row) ||
-            (colunaDoStatus(row) === "produzido" && precisaGatePix(row))) && (
-            <span
-              className="gw-body absolute right-1.5 bottom-1.5 text-white text-[10px] font-bold uppercase rounded-[5px] px-2 py-[3px]"
-              style={{ backgroundColor: "var(--gw-warning)" }}
-            >
-              {precisaGateCartao(row) ? "Conferir Stone" : "Aguarda PIX"}
-            </span>
-          )}
         </div>
       )}
 
@@ -647,11 +654,11 @@ function PcpCard({
           )}
         </div>
 
-        {/* Volumes da expedição — pra o vendedor não precisar abrir o
-            card só pra ver quantos volumes e o peso. */}
-        {colunaDoStatus(row) === "aguardando_coleta" && resumoVolumes(row.pedido_volumes) && (
+        {/* Volumes da expedição — já aparecem como tag também (pedido do
+            usuário), essa linha só reforça o peso total de forma curta. */}
+        {colunaDoStatus(row) === "aguardando_coleta" && resumoVolumes(row.item_volumes?.itens) && (
           <div className="flex items-center gap-1 text-[11px] font-medium text-[var(--gw-text-secondary)]">
-            <Boxes className="h-[12px] w-[12px]" /> {resumoVolumes(row.pedido_volumes)}
+            <Boxes className="h-[12px] w-[12px]" /> {resumoVolumes(row.item_volumes?.itens)}
           </div>
         )}
 
@@ -793,9 +800,6 @@ export default function PCP() {
   const [modalFornecedorId, setModalFornecedorId] = useState("");
   const [modalTerceirizadaLivre, setModalTerceirizadaLivre] = useState("");
   const [modalSaving, setModalSaving] = useState(false);
-
-  const [gateModal, setGateModal] = useState<{ row: PcpRow; target: PcpStatus; tipo: "cartao" | "pix" } | null>(null);
-  const [gateSaving, setGateSaving] = useState(false);
 
   /* Popup de Expedição — abre quando o item arrastado fecha o conjunto
      (todos os itens do pedido chegam na coluna "aguardando_coleta" de uma
@@ -1016,6 +1020,22 @@ export default function PCP() {
        cai na coluna "produzido" — agrupar por status faria o card
        sumir do quadro. */
     for (const row of rowsFiltradas) (map[colunaDoStatus(row)] ??= []).push(row);
+    /* "é importante que os produtos do mesmo pedido, se estiverem na
+       mesma coluna, sempre fiquem juntos" — agrupa por pedido_id
+       preservando a ordem original de quem chegou primeiro (não
+       reordena por prazo/data, só agrupa os irmãos ao lado um do
+       outro). */
+    for (const col of Object.keys(map)) {
+      const primeiraAparicao = new Map<string, number>();
+      map[col].forEach((r, i) => {
+        if (!primeiraAparicao.has(r.pedido_id)) primeiraAparicao.set(r.pedido_id, i);
+      });
+      map[col] = [...map[col]].sort((a, b) => {
+        const pa = primeiraAparicao.get(a.pedido_id)!;
+        const pb = primeiraAparicao.get(b.pedido_id)!;
+        return pa !== pb ? pa - pb : 0;
+      });
+    }
     return map;
   }, [rowsFiltradas]);
 
@@ -1289,18 +1309,14 @@ export default function PCP() {
       if (tagsFinais.length !== (row.tags ?? []).length) await salvarTags(row, tagsFinais);
       const rowAtualizada: PcpRow = { ...row, producao_anexo_url: url, tags: tagsFinais };
 
+      /* Sem pergunta de pagamento aqui — essa decisão é do VENDEDOR, não
+         da produção; o pagamento agora vira tag automática no popup de
+         Expedição (COBRAR 50% RESTANTE / PAGO CARTÃO), sem interromper
+         quem está anexando a mídia. Cada item abre seu próprio popup de
+         volumes — não espera mais o pedido inteiro chegar junto, porque
+         uma caixa pode não levar todos os itens do pedido. */
       if (colunaDoStatus(row) === "em_producao") {
-        if (precisaGatePix(rowAtualizada)) {
-          setGateModal({ row: rowAtualizada, target: "aguardando_coleta", tipo: "pix" });
-        } else {
-          const totalPedido = row.total_itens_pedido ?? 1;
-          const jaNaExpedicao = row.itens_expedicao_pedido ?? 0;
-          if (jaNaExpedicao + 1 >= totalPedido) {
-            setExpedicaoModal({ row: rowAtualizada, target: "aguardando_coleta" });
-          } else {
-            await mudarStatus(row.producao_id, statusCanonicoDaColuna("aguardando_coleta"), "Mídia de produção anexada");
-          }
-        }
+        setExpedicaoModal({ row: rowAtualizada, target: "aguardando_coleta" });
       }
       toast.success(`${tipo === "video" ? "Vídeo" : "Foto"} anexado. Indo para Expedição.`);
     } catch (err) {
@@ -1362,23 +1378,6 @@ export default function PCP() {
   };
 
   /* Grava o gate de pagamento para todos os itens do pedido */
-  const gravarGatePedido = async (pedidoId: string, campo: "pagamento_cartao_conferido_em" | "pix_recebido_integral_em") => {
-    const agora = new Date().toISOString();
-    const patch = { [campo]: agora, pagamento_ok: true };
-    setRows(prev => prev.map(r => (r.pedido_id === pedidoId ? { ...r, ...patch } : r)));
-    const { error } = await supabase
-      .from("sistema_producao_itens" as any)
-      .update(patch)
-      .eq("pedido_id", pedidoId);
-    if (error) {
-      console.error("[PCP] gravar gate de pagamento falhou:", error);
-      toast.error(`Não foi possível registrar a confirmação. ${error.message || ""}`);
-      await loadItems();
-      return false;
-    }
-    return true;
-  };
-
   /* Muda o status via RPC (não `.update()` direto): o servidor carimba o
      vendedor selecionado na MESMA linha de histórico que o gatilho acabou
      de criar, num único round-trip — sem isso haveria uma corrida entre
@@ -1453,12 +1452,6 @@ export default function PCP() {
       return;
     }
 
-    // Gate de PIX: entrar em "Aguardando Coleta"
-    if (targetStatus === "aguardando_coleta" && precisaGatePix(row)) {
-      setGateModal({ row, target: targetStatus, tipo: "pix" });
-      return;
-    }
-
     /* A mídia de produção é o que garante que o item terminou antes de ir
        pra Expedição — arrastar direto de "A Produzir" sem anexo não pode
        pular essa checagem (o caminho normal é anexar a mídia, que já move
@@ -1476,19 +1469,12 @@ export default function PCP() {
       return;
     }
 
-    /* "o pedido só abre o popup das medidas quando TODOS os produtos do
-       pedido estão na expedição" — este item ainda não está lá (a checagem
-       de coluna já passou acima), então +1 sobre o que a view já contou
-       diz se ele fecha o conjunto. Se ainda falta item de fora, só move
-       este, sem popup — os volumes só fazem sentido com o pacote inteiro
-       reunido. */
+    /* Cada item abre seu próprio popup de volumes/expedição — não espera
+       mais o pedido inteiro chegar junto (uma caixa pode não levar todos
+       os itens do pedido). */
     if (targetStatus === "aguardando_coleta") {
-      const totalPedido = row.total_itens_pedido ?? 1;
-      const jaNaExpedicao = row.itens_expedicao_pedido ?? 0;
-      if (jaNaExpedicao + 1 >= totalPedido) {
-        setExpedicaoModal({ row, target: targetStatus });
-        return;
-      }
+      setExpedicaoModal({ row, target: targetStatus });
+      return;
     }
 
     /* "depois que a mercadoria já está aguardando teste, a tag comprado
@@ -1503,19 +1489,6 @@ export default function PCP() {
 
     moverItem(row, targetStatus);
   };
-
-  const confirmarGate = async () => {
-    if (!gateModal) return;
-    setGateSaving(true);
-    const campo = gateModal.tipo === "cartao" ? "pagamento_cartao_conferido_em" : "pix_recebido_integral_em";
-    const ok = await gravarGatePedido(gateModal.row.pedido_id, campo);
-    setGateSaving(false);
-    if (!ok) { setGateModal(null); return; }
-    const alvo = gateModal;
-    setGateModal(null);
-    moverItem(alvo.row, alvo.target);
-  };
-
 
   /* "resposta se torna uma tag como TERCEIRIZADA + nome ou PROD. GALPÃO.
      e a tag COMPRADO já sai automaticamente" — confirma o local de
@@ -1602,6 +1575,48 @@ export default function PCP() {
   const setVolumeCampo = (idx: number, campo: "comprimento" | "altura" | "largura" | "peso", valor: string) =>
     setExpedicaoVolumes(prev => prev.map((v, i) => (i === idx ? { ...v, [campo]: valor } : v)));
 
+  /* Tag de pagamento automática — PIX 50%+50% cobra o restante, cartão
+     (qualquer parcelamento) já está pago. Não pergunta mais nada pro
+     vendedor, só lê a condição de pagamento que já está no pedido. */
+  const tagPagamentoDoPedido = (nome: string | null) =>
+    isPagamentoCartao(nome)
+      ? TAG_PAGO_CARTAO
+      : (isPagamentoPix(nome) && semAcento(nome ?? "").includes("50"))
+        ? TAG_COBRAR_RESTANTE
+        : null;
+
+  /* "na transferência do a produzir para expedição, todas as tags são
+     excluídas" — troca completa, não acumula com o que o item tinha
+     (galpão/terceirizada, teste aprovado etc.): só o que interessa pra
+     quem vai embalar/despachar. */
+  const aplicarVolumesNoItem = async (
+    row: PcpRow, target: PcpStatus,
+    volumesPayload: { responsavel: string; itens: { comprimento: number; altura: number; largura: number; peso: number }[] },
+    observacaoHistorico: string,
+  ) => {
+    setExpedicaoSaving(true);
+    const { error } = await supabase
+      .from("sistema_producao_itens" as any)
+      .update({ volumes: volumesPayload })
+      .eq("id", row.producao_id);
+    if (error) {
+      console.error("[PCP] gravar volumes falhou:", error);
+      toast.error(`Não foi possível salvar a expedição. ${error.message || ""}`);
+      setExpedicaoSaving(false);
+      return;
+    }
+
+    const tagPagamento = tagPagamentoDoPedido(row.pagamento_nome);
+    const tagsVolumes = agruparVolumesEmTags(volumesPayload.itens);
+    await salvarTags(row, [...(tagPagamento ? [tagPagamento] : []), ...tagsVolumes]);
+
+    await mudarStatus(row.producao_id, statusCanonicoDaColuna(target), observacaoHistorico);
+
+    setExpedicaoSaving(false);
+    setExpedicaoModal(null);
+    toast.success("Expedição registrada.");
+  };
+
   const confirmarExpedicao = async () => {
     if (!expedicaoModal) return;
     if (!expedicaoResponsavel.trim()) {
@@ -1619,48 +1634,24 @@ export default function PCP() {
       return;
     }
 
-    setExpedicaoSaving(true);
     const { row, target } = expedicaoModal;
+    await aplicarVolumesNoItem(
+      row, target,
+      { responsavel: expedicaoResponsavel.trim(), itens: volumesNumericos },
+      `Expedição registrada por ${expedicaoResponsavel.trim()}`,
+    );
+  };
 
-    const { error } = await supabase
-      .from("sistema_pedidos")
-      .update({
-        volumes: volumesNumericos,
-        volumes_responsavel: expedicaoResponsavel.trim(),
-      } as any)
-      .eq("id", row.pedido_id);
-
-    if (error) {
-      console.error("[PCP] gravar expedição falhou:", error);
-      toast.error(`Não foi possível salvar a expedição. ${error.message || ""}`);
-      setExpedicaoSaving(false);
-      return;
-    }
-
-    /* "dependendo do pagamento que o vendedor colocou aparecerão novas
-       tags" — PIX 50%+50% cobra o restante, cartão (qualquer parcelamento)
-       já está pago. A medida também vira tag, pro vendedor não precisar
-       abrir o card pra ver. Tudo isso em TODOS os itens do pedido, não só
-       o que foi arrastado — é o pacote inteiro que vai junto. */
-    const nome = row.pagamento_nome;
-    const tagPagamento = isPagamentoCartao(nome)
-      ? TAG_PAGO_CARTAO
-      : (isPagamentoPix(nome) && semAcento(nome ?? "").includes("50"))
-        ? TAG_COBRAR_RESTANTE
-        : null;
-    const tagVolumes = resumoVolumes(volumesNumericos)?.toUpperCase() ?? null;
-
-    const itensDoPedido = rows.filter(r => r.pedido_id === row.pedido_id);
-    for (const item of itensDoPedido) {
-      if (tagPagamento) await adicionarTag(item, tagPagamento);
-      if (tagVolumes) await adicionarTag(item, tagVolumes);
-    }
-
-    await mudarStatus(row.producao_id, statusCanonicoDaColuna(target), `Expedição registrada por ${expedicaoResponsavel.trim()}`);
-
-    setExpedicaoSaving(false);
-    setExpedicaoModal(null);
-    toast.success("Expedição registrada: volumes e responsável salvos.");
+  /* "se um produto já está com as informações o restante pode clicar em
+     algo tipo JÁ PREENCHIDO" — reaproveita o volume de um item-irmão do
+     mesmo pedido (mesma caixa), sem digitar tudo de novo. */
+  const usarVolumeDeItemIrmao = async (origem: PcpRow) => {
+    if (!expedicaoModal || !origem.item_volumes) return;
+    const { row, target } = expedicaoModal;
+    await aplicarVolumesNoItem(
+      row, target, origem.item_volumes,
+      `Expedição: mesma caixa do item "${origem.produto_nome}"`,
+    );
   };
 
   /* Reseta o formulário sempre que o popup abre para um pedido novo —
@@ -2646,56 +2637,10 @@ export default function PCP() {
         </DialogContent>
       </Dialog>
 
-      {/* Gate de pagamento (cartão / PIX) */}
-      <Dialog open={!!gateModal} onOpenChange={open => !open && setGateModal(null)}>
-        <DialogContent style={{ maxWidth: 460 }}>
-          <DialogHeader>
-            <DialogTitle>
-              {gateModal?.tipo === "cartao" ? "Conferiu o pagamento na Stone?" : "Recebeu 100% do valor?"}
-            </DialogTitle>
-          </DialogHeader>
-
-          {gateModal && (
-            <div className="space-y-3 py-1">
-              <div className="rounded-lg bg-[var(--gw-surface-alt)] px-3 py-2.5 space-y-1">
-                <p className="text-[13px] font-semibold text-[var(--gw-text)]">
-                  Pedido {gateModal.row.pedido_numero}
-                </p>
-                <p className="text-[12px] text-[var(--gw-text-secondary)]">
-                  {gateModal.row.cliente || "Cliente não informado"}
-                </p>
-                {gateModal.row.pagamento_nome && (
-                  <p className="text-[11px] text-[var(--gw-text-muted)]">{gateModal.row.pagamento_nome}</p>
-                )}
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">
-                  Valor total
-                </span>
-                <Money value={Number(gateModal.row.pedido_total ?? 0)} emphasis bold />
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setGateModal(null)} disabled={gateSaving}>
-              {gateModal?.tipo === "cartao" ? "Cancelar" : "Ainda não"}
-            </Button>
-            <Button
-              onClick={confirmarGate}
-              disabled={gateSaving}
-              style={{ backgroundColor: "var(--gw-primary)", color: "#fff" }}
-            >
-              {gateSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {gateModal?.tipo === "cartao" ? "Sim, pagamento confirmado" : "Sim, recebi o valor integral"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Popup de Expedição — abre quando o item arrastado fecha o pedido
-          inteiro na coluna. Volumes (L/A/P/peso), "Pago 100%?" obrigatório,
-          e transportadora, tudo de uma vez. */}
+      {/* Popup de Expedição — abre por item (uma caixa pode não levar
+          o pedido inteiro). Volumes (L/A/P/peso) + responsável; se um
+          item-irmão do mesmo pedido já tiver volume preenchido, oferece
+          "Já preenchido" pra reaproveitar sem digitar de novo. */}
       <Dialog open={!!expedicaoModal} onOpenChange={open => !open && !expedicaoSaving && setExpedicaoModal(null)}>
         <DialogContent style={{ maxWidth: 560 }}>
           <DialogHeader>
@@ -2708,9 +2653,35 @@ export default function PCP() {
           {expedicaoModal && (
             <div className="space-y-4 py-1 max-h-[65vh] overflow-y-auto pr-1">
               <p className="text-[12px] text-[var(--gw-text-muted)]">
-                Todos os {expedicaoModal.row.total_itens_pedido ?? 1} itens deste pedido chegaram na expedição.
-                Registre os volumes antes de liberar para a coleta.
+                Registre os volumes deste item antes de liberar para a coleta.
               </p>
+
+              {/* Itens-irmãos do mesmo pedido que já têm volume — "foi na
+                  mesma caixa" sem preencher tudo de novo. */}
+              {rows.filter(r => r.pedido_id === expedicaoModal.row.pedido_id
+                && r.producao_id !== expedicaoModal.row.producao_id && r.item_volumes).length > 0 && (
+                <div className="rounded-lg border border-[var(--gw-primary)] bg-[var(--gw-primary-soft)]/40 p-3 space-y-2">
+                  <p className="text-[12px] font-semibold text-[var(--gw-text)]">
+                    Foi na mesma caixa de outro item deste pedido?
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    {rows.filter(r => r.pedido_id === expedicaoModal.row.pedido_id
+                      && r.producao_id !== expedicaoModal.row.producao_id && r.item_volumes).map(irmao => (
+                      <Button
+                        key={irmao.producao_id}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="justify-start"
+                        onClick={() => usarVolumeDeItemIrmao(irmao)}
+                        disabled={expedicaoSaving}
+                      >
+                        Já preenchido — mesma caixa de "{irmao.produto_nome}"
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Volumes */}
               <div className="space-y-2.5">
