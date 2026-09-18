@@ -25,6 +25,22 @@
 -- algum dia for usado de novo.
 -- =====================================================================
 
+-- 0) A tabela tinha um CHECK CONSTRAINT travando coluna_pcp nas 8
+--    colunas antigas -- é o que fez a primeira tentativa desta
+--    migration falhar inteira (23514, nenhuma linha mudou). Solta o
+--    constraint antigo e recria com o conjunto novo de colunas (as 8
+--    antigas continuam válidas, pra não quebrar nada que já usa;
+--    "embalagem_pagamento" também fica na lista só por segurança --
+--    não é mais alvo de nenhum status, mas remover do check agora não
+--    ajuda em nada e um dia pode existir dado velho apontando pra lá).
+alter table public.sistema_status drop constraint if exists sistema_status_coluna_pcp_check;
+alter table public.sistema_status add constraint sistema_status_coluna_pcp_check
+  check (coluna_pcp in (
+    'organizando_pedido', 'pronto_producao', 'aguardando_mercadoria',
+    'teste_fisico', 'teste_enviado', 'preparacao',
+    'em_producao', 'em_producao_terceirizada', 'produzido',
+    'embalagem_pagamento', 'aguardando_coleta', 'enviado', 'cancelado'));
+
 -- 1) Novo status "Produzido" -- não existia; é o elo que faltava entre
 --    "acabou de produzir" e "expedição" (que já tem o popup de volumes
 --    e pagamento pronto desde a fase anterior do PCP).
