@@ -13,9 +13,6 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
-} from "@/components/ui/sheet";
-import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -97,6 +94,8 @@ interface PcpRow {
   itens_expedicao_pedido: number | null;
   pedido_volumes: unknown;
   pedido_pago_integral: boolean | null;
+  arte_anexo_url: string | null;
+  pedido_anexos: { url: string; nome: string; criadoEm: string }[] | null;
 }
 
 interface ComentarioRow {
@@ -1638,101 +1637,101 @@ export default function PCP() {
 
       )}
 
-      {/* Painel de detalhe do item — slide-over lateral, não navega de página */}
-      <Sheet open={!!detalhe} onOpenChange={open => !open && setDetalheId(null)}>
-        <SheetContent
-          side="right"
-          className="p-0 gap-0 overflow-hidden border-l-[var(--gw-border)] w-[94vw] sm:max-w-[720px]"
+      {/* Painel de detalhe do item — popup centralizado, largo (landscape),
+          3 colunas pra caber bastante informação sem precisar rolar tanto. */}
+      <Dialog open={!!detalhe} onOpenChange={open => !open && setDetalheId(null)}>
+        <DialogContent
+          className="p-0 gap-0 overflow-hidden rounded-[12px] border-[var(--gw-border)]"
+          style={{ maxWidth: 1180, width: "94vw", maxHeight: "88vh", boxShadow: "var(--gw-shadow-lg)" }}
         >
           {detalhe && (
-            <div className="grid grid-rows-[auto_1fr] h-full overflow-hidden">
-              {/* Imagem — topo do painel (não é mais coluna, é linha) */}
-              <div className="bg-[var(--gw-surface-alt)] p-4">
-                {detalhe.mockup_url || detalhe.imagem_catalogo_url ? (
-                  <>
-                    <img
-                      src={sizedImage(detalhe.mockup_url || detalhe.imagem_catalogo_url!, 800)}
-                      alt={detalhe.produto_nome || ""}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-[220px] object-contain bg-white rounded-lg border border-[var(--gw-border)]"
-                    />
-                    <a
-                      href={detalhe.mockup_url || detalhe.imagem_catalogo_url!}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-2 inline-block text-[12px] font-medium text-[var(--gw-primary)] hover:underline"
-                    >
-                      Abrir imagem em tamanho original
-                    </a>
-                  </>
-                ) : (
-                  <div className="w-full h-[220px] rounded-lg bg-white border border-[var(--gw-border)] flex items-center justify-center">
-                    <Package className="h-10 w-10 text-[var(--gw-text-muted)]" />
-                  </div>
-                )}
+            <div className="grid grid-rows-[auto_1fr] max-h-[88vh]">
+              <DialogHeader className="px-6 py-4 border-b border-[var(--gw-border)] text-left">
+                <DialogTitle className="flex items-center gap-3 pr-8 text-left">
+                  <OrderNumber value={detalhe.pedido_numero} />
+                  <span className="gw-title text-[15px] truncate">{detalhe.cliente || "—"}</span>
+                  <StatusPill status={detalhe.status} />
+                  <span className="flex-1" />
+                  <VendedorAvatar nome={vendedorNome(detalhe.pedido_vendedor_id)} />
+                </DialogTitle>
+              </DialogHeader>
 
-                {detalhe.mockup_url && detalhe.imagem_catalogo_url &&
-                  detalhe.imagem_catalogo_url !== detalhe.mockup_url && (
-                    <div className="mt-4">
-                      <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)] mb-1">
-                        Foto de catálogo
-                      </p>
+              <div className="grid md:grid-cols-[300px_1fr_340px] min-h-0 overflow-hidden">
+                {/* Coluna 1 — imagem */}
+                <div className="bg-[var(--gw-surface-alt)] p-4 overflow-y-auto border-r border-[var(--gw-border)]">
+                  {detalhe.mockup_url || detalhe.imagem_catalogo_url ? (
+                    <>
                       <img
-                        src={sizedImage(detalhe.imagem_catalogo_url, 320)}
-                        alt=""
-                        width={96}
-                        height={96}
+                        src={sizedImage(detalhe.mockup_url || detalhe.imagem_catalogo_url!, 640)}
+                        alt={detalhe.produto_nome || ""}
                         loading="lazy"
                         decoding="async"
-                        className="w-[96px] h-[96px] object-contain bg-white rounded-lg border border-[var(--gw-border)]"
+                        className="w-full h-[260px] object-contain bg-white rounded-lg border border-[var(--gw-border)]"
                       />
+                      <a
+                        href={detalhe.mockup_url || detalhe.imagem_catalogo_url!}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-block text-[12px] font-medium text-[var(--gw-primary)] hover:underline"
+                      >
+                        Abrir imagem em tamanho original
+                      </a>
+                    </>
+                  ) : (
+                    <div className="w-full h-[260px] rounded-lg bg-white border border-[var(--gw-border)] flex items-center justify-center">
+                      <Package className="h-10 w-10 text-[var(--gw-text-muted)]" />
                     </div>
                   )}
-              </div>
 
-              {/* Dados — rola independente da imagem */}
-              <div className="overflow-y-auto min-h-0">
-                <SheetHeader className="px-5 py-4 border-b border-[var(--gw-border)] space-y-1 text-left">
-                  <SheetTitle className="flex items-center gap-3 pr-8 text-left">
-                    <OrderNumber value={detalhe.pedido_numero} />
-                    <span className="gw-title text-[15px] truncate">{detalhe.cliente || "—"}</span>
-                    <StatusPill status={detalhe.status} />
-                  </SheetTitle>
-                </SheetHeader>
+                  {detalhe.mockup_url && detalhe.imagem_catalogo_url &&
+                    detalhe.imagem_catalogo_url !== detalhe.mockup_url && (
+                      <div className="mt-4">
+                        <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)] mb-1">
+                          Foto de catálogo
+                        </p>
+                        <img
+                          src={sizedImage(detalhe.imagem_catalogo_url, 320)}
+                          alt=""
+                          width={96}
+                          height={96}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-[96px] h-[96px] object-contain bg-white rounded-lg border border-[var(--gw-border)]"
+                        />
+                      </div>
+                    )}
 
-                {/* Produto */}
-                <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
-                  <p className="gw-label">Produto</p>
-                  <p className="gw-title text-[15px]">{detalhe.produto_nome || "—"}</p>
+                  <div className="mt-4 space-y-3">
+                    <p className="gw-title text-[15px]">{detalhe.produto_nome || "—"}</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        ["Quantidade", `${detalhe.quantidade ?? 0} un`],
+                        ["Técnica", detalhe.tecnica_nome || "—"],
+                        ["Local de produção", detalhe.local_producao.replace(/_/g, " ")],
+                        ...((detalhe.terceirizada_nome || detalhe.terceirizada_nome_livre)
+                          ? [["Terceirizada", detalhe.terceirizada_nome || detalhe.terceirizada_nome_livre]] : []),
+                        ...(detalhe.previsao_retorno ? [["Previsão de retorno", formatDate(detalhe.previsao_retorno) || "—"]] : []),
+                        ["Produzir até", formatDate(detalhe.data_entrega_item) || "—"],
+                        ["Tempo na etapa", tempoNaEtapa(detalhe.horas_na_etapa) || "—"],
+                      ].map(([k, v]) => (
+                        <div key={k as string}>
+                          <p className="gw-label">{k}</p>
+                          <p className="gw-body text-[13px] text-[var(--gw-text)] capitalize truncate">{String(v)}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {TERCEIRIZADA_TRIGGER.includes(detalhe.local_producao) && (
+                      <Button variant="outline" size="sm" onClick={() => { setDetalheId(null); openTerceiroModal(detalhe); }}>
+                        <ShoppingBag className="h-4 w-4 mr-2" /> Dados da terceirizada
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
-                {/* Produção — valor/total removidos daqui (não são
-                    informação operacional pra produção); quantidade entra
-                    junto com técnica/local/prazo, tudo que a produção usa. */}
-                <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-3">
-                  <p className="gw-label">Produção</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      ["Quantidade", `${detalhe.quantidade ?? 0} un`],
-                      ["Técnica", detalhe.tecnica_nome || "—"],
-                      ["Local de produção", detalhe.local_producao.replace(/_/g, " ")],
-                      ...((detalhe.terceirizada_nome || detalhe.terceirizada_nome_livre)
-                        ? [["Terceirizada", detalhe.terceirizada_nome || detalhe.terceirizada_nome_livre]] : []),
-                      ...(detalhe.previsao_retorno ? [["Previsão de retorno", formatDate(detalhe.previsao_retorno) || "—"]] : []),
-                      ["Produzir até", formatDate(detalhe.data_entrega_item) || "—"],
-                      ["Despachar até", formatDate(detalhe.data_entrega_item) || "—"],
-                      ["Tempo na etapa", tempoNaEtapa(detalhe.horas_na_etapa) || "—"],
-                    ].map(([k, v]) => (
-                      <div key={k as string}>
-                        <p className="gw-label">{k}</p>
-                        <p className="gw-body text-[13px] text-[var(--gw-text)] capitalize truncate">{String(v)}</p>
-                      </div>
-                    ))}
-                  </div>
-
+                {/* Coluna 2 — etiquetas, teste, produção, observações */}
+                <div className="overflow-y-auto border-r border-[var(--gw-border)]">
                   {/* Etiquetas */}
-                  <div className="space-y-2 pt-1">
+                  <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
                     <Label className="gw-label flex items-center gap-1.5">
                       <Tag className="h-3.5 w-3.5" /> Etiquetas
                     </Label>
@@ -1764,343 +1763,384 @@ export default function PCP() {
                     />
                   </div>
 
-                  {TERCEIRIZADA_TRIGGER.includes(detalhe.local_producao) && (
-                    <Button variant="outline" size="sm" onClick={() => { setDetalheId(null); openTerceiroModal(detalhe); }}>
-                      <ShoppingBag className="h-4 w-4 mr-2" /> Dados da terceirizada
-                    </Button>
-                  )}
-                </div>
-
-                {/* Anexos genéricos — logo, mockup, etiqueta, nota fiscal e
-                    qualquer outro arquivo do item, centralizados num lugar
-                    só (independente da automação de teste/produção abaixo,
-                    que continua funcionando do jeito que já funcionava). */}
-                <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2.5">
-                  <p className="gw-label flex items-center gap-1.5">
-                    <Paperclip className="h-3.5 w-3.5" /> Anexos
-                  </p>
-                  {anexos.length === 0 ? (
-                    <p className="gw-body text-[13px] text-[var(--gw-text-muted)]">Nenhum anexo ainda.</p>
-                  ) : (
-                    <div className="space-y-1.5">
-                      {anexos.map(a => (
-                        <div key={a.id} className="flex items-center gap-2.5 rounded-[8px] border border-[var(--gw-border)] px-2.5 py-2">
-                          {a.tipo === "foto" ? (
-                            <img src={sizedImage(a.url, 80)} alt="" className="w-9 h-9 rounded object-cover border border-[var(--gw-border)] shrink-0" />
-                          ) : a.tipo === "video" ? (
-                            <Video className="h-9 w-9 p-2 rounded bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)] shrink-0" />
-                          ) : (
-                            <FileText className="h-9 w-9 p-2 rounded bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)] shrink-0" />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[12px] font-semibold text-[var(--gw-text)] truncate">
-                              {ANEXO_CATEGORIA_LABEL[a.categoria]}{a.nome_arquivo ? ` · ${a.nome_arquivo}` : ""}
-                            </p>
-                            <p className="text-[11px] text-[var(--gw-text-muted)]">
-                              {vendedorNome(a.vendedor_id) || "não identificado"} · {formatDateTime(a.created_at)}
-                            </p>
-                          </div>
-                          <a href={a.url} target="_blank" rel="noreferrer" className="shrink-0 text-[var(--gw-primary)]" aria-label="Abrir anexo">
-                            <Download className="h-4 w-4" />
-                          </a>
-                          <button
-                            type="button"
-                            onClick={() => removerAnexo(a)}
-                            className="shrink-0 text-[var(--gw-text-muted)] hover:text-[var(--gw-danger)]"
-                            aria-label="Remover anexo"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" disabled={enviandoAnexoGenerico}>
-                        {enviandoAnexoGenerico ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                        Adicionar anexo
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      {(Object.keys(ANEXO_CATEGORIA_LABEL) as AnexoCategoria[]).map(cat => (
-                        <DropdownMenuItem key={cat} onClick={() => abrirSeletorAnexoGenerico(detalhe, cat)}>
-                          {ANEXO_CATEGORIA_LABEL[cat]}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                {/* Teste físico — só aparece na etapa certa, ou depois de já
-                    ter anexo (pra continuar visível como registro). */}
-                {(detalhe.coluna_pcp === "teste_fisico" || detalhe.teste_anexo_url) && (
-                  <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2.5">
-                    <p className="gw-label flex items-center gap-1.5">
-                      <Camera className="h-3.5 w-3.5" /> Teste físico
-                    </p>
-                    {detalhe.teste_anexo_url ? (
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={sizedImage(detalhe.teste_anexo_url, 96)}
-                          alt="Foto do teste"
-                          className="w-16 h-16 rounded-lg object-cover border border-[var(--gw-border)] shrink-0"
-                        />
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <p className="text-[12px] text-[var(--gw-text-muted)]">
-                            Enviado {formatDateTime(detalhe.teste_enviado_em)}
-                          </p>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <a
-                              href={detalhe.teste_anexo_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-[12px] font-medium text-[var(--gw-primary)] hover:underline"
-                            >
-                              <Download className="h-3 w-3" /> Baixar para enviar ao cliente
-                            </a>
-                            <button
-                              type="button"
-                              onClick={() => abrirSeletorTeste(detalhe)}
-                              disabled={enviandoTeste}
-                              className="text-[12px] font-medium text-[var(--gw-text-secondary)] hover:underline disabled:opacity-50"
-                            >
-                              Trocar foto
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <Button variant="outline" size="sm" onClick={() => abrirSeletorTeste(detalhe)} disabled={enviandoTeste}>
-                        {enviandoTeste ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                        Anexar foto do teste
-                      </Button>
-                    )}
-
-                    {/* Aprovação é ação do VENDEDOR (ele que sabe se o cliente
-                        aprovou), não da produção. */}
-                    {(detalhe.tags ?? []).includes(TAG_TESTE_APROVADO) ? (
-                      <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: "var(--gw-success)" }}>
-                        <CheckCircle2 className="h-4 w-4" /> Teste aprovado pelo cliente
-                      </span>
-                    ) : (detalhe.tags ?? []).includes(TAG_TESTE_ENVIADO) && (
-                      <Button size="sm" onClick={() => aprovarTeste(detalhe)} style={{ backgroundColor: "var(--gw-success)" }}>
-                        <CheckCircle2 className="h-4 w-4 mr-2" /> Cliente aprovou o teste
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {/* Produção concluída — foto ou vídeo do pedido 100% pronto.
-                    Aparece nas duas colunas de produção (galpão e
-                    terceirizada) e também em Produzido, pra poder trocar o
-                    anexo depois se precisar. */}
-                {(detalhe.coluna_pcp === "em_producao" || detalhe.coluna_pcp === "em_producao_terceirizada" ||
-                  detalhe.coluna_pcp === "produzido" || detalhe.producao_anexo_url) && (
-                  <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2.5">
-                    <p className="gw-label flex items-center gap-1.5">
-                      <Video className="h-3.5 w-3.5" /> Produção concluída (foto ou vídeo)
-                    </p>
-                    {detalhe.producao_anexo_url ? (
-                      <div className="flex items-center gap-3">
-                        {detalhe.producao_anexo_tipo === "video" ? (
-                          <video
-                            src={detalhe.producao_anexo_url}
-                            className="w-16 h-16 rounded-lg object-cover border border-[var(--gw-border)] shrink-0 bg-black"
-                            muted
-                          />
-                        ) : (
+                  {/* Teste físico — só aparece na etapa certa, ou depois de já
+                      ter anexo (pra continuar visível como registro). */}
+                  {(detalhe.coluna_pcp === "teste_fisico" || detalhe.coluna_pcp === "teste_enviado" || detalhe.teste_anexo_url) && (
+                    <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2.5">
+                      <p className="gw-label flex items-center gap-1.5">
+                        <Camera className="h-3.5 w-3.5" /> Teste físico
+                      </p>
+                      {detalhe.teste_anexo_url ? (
+                        <div className="flex items-center gap-3">
                           <img
-                            src={sizedImage(detalhe.producao_anexo_url, 96)}
-                            alt="Produto pronto"
+                            src={sizedImage(detalhe.teste_anexo_url, 96)}
+                            alt="Foto do teste"
                             className="w-16 h-16 rounded-lg object-cover border border-[var(--gw-border)] shrink-0"
                           />
-                        )}
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <p className="text-[12px] text-[var(--gw-text-muted)]">
-                            Enviado {formatDateTime(detalhe.producao_anexo_em)}
-                          </p>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <a
-                              href={detalhe.producao_anexo_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-[12px] font-medium text-[var(--gw-primary)] hover:underline"
-                            >
-                              <Download className="h-3 w-3" /> Baixar para enviar ao cliente
-                            </a>
-                            <button
-                              type="button"
-                              onClick={() => abrirSeletorProducaoAnexo(detalhe)}
-                              disabled={enviandoProducaoAnexo}
-                              className="text-[12px] font-medium text-[var(--gw-text-secondary)] hover:underline disabled:opacity-50"
-                            >
-                              Trocar
-                            </button>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <p className="text-[12px] text-[var(--gw-text-muted)]">
+                              Enviado {formatDateTime(detalhe.teste_enviado_em)}
+                            </p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <a
+                                href={detalhe.teste_anexo_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[12px] font-medium text-[var(--gw-primary)] hover:underline"
+                              >
+                                <Download className="h-3 w-3" /> Baixar para enviar ao cliente
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => abrirSeletorTeste(detalhe)}
+                                disabled={enviandoTeste}
+                                className="text-[12px] font-medium text-[var(--gw-text-secondary)] hover:underline disabled:opacity-50"
+                              >
+                                Trocar foto
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <Button variant="outline" size="sm" onClick={() => abrirSeletorProducaoAnexo(detalhe)} disabled={enviandoProducaoAnexo}>
-                        {enviandoProducaoAnexo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                        Anexar foto ou vídeo
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {/* Observações — histórico em formato de conversa */}
-                <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-3">
-                  <p className="gw-label flex items-center gap-1.5">
-                    <MessageSquare className="h-3.5 w-3.5" /> Observações
-                  </p>
-
-                  {(detalhe.pedido_observacoes || detalhe.item_observacao) && (
-                    <div className="space-y-2">
-                      {detalhe.pedido_observacoes && (
-                        <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
-                          <p className="gw-label mb-0.5">Observação do pedido</p>
-                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
-                            {detalhe.pedido_observacoes}
-                          </p>
-                        </div>
+                      ) : (
+                        <Button variant="outline" size="sm" onClick={() => abrirSeletorTeste(detalhe)} disabled={enviandoTeste}>
+                          {enviandoTeste ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                          Anexar foto do teste
+                        </Button>
                       )}
-                      {detalhe.item_observacao && (
-                        <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
-                          <p className="gw-label mb-0.5">Observação do item</p>
-                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
-                            {detalhe.item_observacao}
-                          </p>
-                        </div>
+
+                      {/* Aprovação é ação do VENDEDOR (ele que sabe se o cliente
+                          aprovou), não da produção. */}
+                      {(detalhe.tags ?? []).includes(TAG_TESTE_APROVADO) ? (
+                        <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: "var(--gw-success)" }}>
+                          <CheckCircle2 className="h-4 w-4" /> Teste aprovado pelo cliente
+                        </span>
+                      ) : (detalhe.tags ?? []).includes(TAG_TESTE_ENVIADO) && (
+                        <Button size="sm" onClick={() => aprovarTeste(detalhe)} style={{ backgroundColor: "var(--gw-success)" }}>
+                          <CheckCircle2 className="h-4 w-4 mr-2" /> Cliente aprovou o teste
+                        </Button>
                       )}
                     </div>
                   )}
 
-                  <div className="space-y-2 max-h-[260px] overflow-y-auto">
-                    {comentarios.length === 0 ? (
-                      <p className="gw-body text-[13px] text-[var(--gw-text-muted)]">
-                        Nenhuma mensagem ainda. Escreva a primeira abaixo.
+                  {/* Produção concluída — foto ou vídeo do pedido 100% pronto.
+                      Aparece nas duas colunas de produção (galpão e
+                      terceirizada) e também em Produzido, pra poder trocar o
+                      anexo depois se precisar. */}
+                  {(detalhe.coluna_pcp === "em_producao" || detalhe.coluna_pcp === "em_producao_terceirizada" ||
+                    detalhe.coluna_pcp === "produzido" || detalhe.producao_anexo_url) && (
+                    <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2.5">
+                      <p className="gw-label flex items-center gap-1.5">
+                        <Video className="h-3.5 w-3.5" /> Produção concluída (foto ou vídeo)
                       </p>
-                    ) : (
-                      comentarios.map(c => (
-                        <div
-                          key={c.id}
-                          className="rounded-[10px] bg-[var(--gw-primary-soft)]/60 border border-[var(--gw-border)] px-3 py-2"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="gw-body text-[12px] font-semibold text-[var(--gw-text-secondary)] truncate">
-                              {c.autor_email || "Sistema"}
-                            </span>
-                            <span className="gw-body text-[11px] text-[var(--gw-text-muted)] shrink-0">
-                              {new Date(c.created_at).toLocaleString("pt-BR", {
-                                day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
-                              })}
-                            </span>
+                      {detalhe.producao_anexo_url ? (
+                        <div className="flex items-center gap-3">
+                          {detalhe.producao_anexo_tipo === "video" ? (
+                            <video
+                              src={detalhe.producao_anexo_url}
+                              className="w-16 h-16 rounded-lg object-cover border border-[var(--gw-border)] shrink-0 bg-black"
+                              muted
+                            />
+                          ) : (
+                            <img
+                              src={sizedImage(detalhe.producao_anexo_url, 96)}
+                              alt="Produto pronto"
+                              className="w-16 h-16 rounded-lg object-cover border border-[var(--gw-border)] shrink-0"
+                            />
+                          )}
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <p className="text-[12px] text-[var(--gw-text-muted)]">
+                              Enviado {formatDateTime(detalhe.producao_anexo_em)}
+                            </p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <a
+                                href={detalhe.producao_anexo_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[12px] font-medium text-[var(--gw-primary)] hover:underline"
+                              >
+                                <Download className="h-3 w-3" /> Baixar para enviar ao cliente
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => abrirSeletorProducaoAnexo(detalhe)}
+                                disabled={enviandoProducaoAnexo}
+                                className="text-[12px] font-medium text-[var(--gw-text-secondary)] hover:underline disabled:opacity-50"
+                              >
+                                Trocar
+                              </button>
+                            </div>
                           </div>
-                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap mt-0.5">
-                            {c.mensagem}
-                          </p>
                         </div>
-                      ))
-                    )}
-                  </div>
+                      ) : (
+                        <Button variant="outline" size="sm" onClick={() => abrirSeletorProducaoAnexo(detalhe)} disabled={enviandoProducaoAnexo}>
+                          {enviandoProducaoAnexo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                          Anexar foto ou vídeo
+                        </Button>
+                      )}
+                    </div>
+                  )}
 
-                  <div className="flex items-end gap-2">
-                    <Textarea
-                      value={novoComentario}
-                      onChange={e => setNovoComentario(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                          e.preventDefault();
-                          enviarComentario();
-                        }
-                      }}
-                      placeholder="Escreva uma observação…"
-                      rows={2}
-                      className="text-[13px] resize-none"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={enviarComentario}
-                      disabled={enviandoComentario || !novoComentario.trim()}
-                    >
-                      {enviandoComentario
-                        ? <Loader2 className="h-4 w-4 animate-spin" />
-                        : <Send className="h-4 w-4" />}
-                    </Button>
+                  {/* Observações — histórico em formato de conversa */}
+                  <div className="px-5 py-4 space-y-3">
+                    <p className="gw-label flex items-center gap-1.5">
+                      <MessageSquare className="h-3.5 w-3.5" /> Observações
+                    </p>
+
+                    {(detalhe.pedido_observacoes || detalhe.item_observacao) && (
+                      <div className="space-y-2">
+                        {detalhe.pedido_observacoes && (
+                          <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
+                            <p className="gw-label mb-0.5">Observação do pedido</p>
+                            <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
+                              {detalhe.pedido_observacoes}
+                            </p>
+                          </div>
+                        )}
+                        {detalhe.item_observacao && (
+                          <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
+                            <p className="gw-label mb-0.5">Observação do item</p>
+                            <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
+                              {detalhe.item_observacao}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                      {comentarios.length === 0 ? (
+                        <p className="gw-body text-[13px] text-[var(--gw-text-muted)]">
+                          Nenhuma mensagem ainda. Escreva a primeira abaixo.
+                        </p>
+                      ) : (
+                        comentarios.map(c => (
+                          <div
+                            key={c.id}
+                            className="rounded-[10px] bg-[var(--gw-primary-soft)]/60 border border-[var(--gw-border)] px-3 py-2"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="gw-body text-[12px] font-semibold text-[var(--gw-text-secondary)] truncate">
+                                {c.autor_email || "Sistema"}
+                              </span>
+                              <span className="gw-body text-[11px] text-[var(--gw-text-muted)] shrink-0">
+                                {new Date(c.created_at).toLocaleString("pt-BR", {
+                                  day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
+                                })}
+                              </span>
+                            </div>
+                            <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap mt-0.5">
+                              {c.mensagem}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <div className="flex items-end gap-2">
+                      <Textarea
+                        value={novoComentario}
+                        onChange={e => setNovoComentario(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                            e.preventDefault();
+                            enviarComentario();
+                          }
+                        }}
+                        placeholder="Escreva uma observação…"
+                        rows={2}
+                        className="text-[13px] resize-none"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={enviarComentario}
+                        disabled={enviandoComentario || !novoComentario.trim()}
+                      >
+                        {enviandoComentario
+                          ? <Loader2 className="h-4 w-4 animate-spin" />
+                          : <Send className="h-4 w-4" />}
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
-
-                {/* Checklist */}
-                {detalhe.status === "embalagem_pagamento" && (
-                  <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
-                    <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">Checklist</p>
-                    <div className="flex flex-wrap gap-4">
-                      {([
-                        ["medidas_ok", "Medidas"],
-                        ["pagamento_ok", "Pagamento"],
-                        ["etiqueta_ok", "Etiqueta"],
-                      ] as const).map(([key, label]) => {
-                        const auto = key === "pagamento_ok" && pagamentoGateOk(detalhe);
-                        return (
-                          <label key={key} className="flex items-center gap-2 text-[13px]">
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 accent-[#2563EB]"
-                              checked={!!detalhe[key] || auto}
-                              disabled={auto}
-                              onChange={e => applyUpdate(detalhe.producao_id, { [key]: e.target.checked })}
-                            />
-                            {label}
-                          </label>
-                        );
-                      })}
+                {/* Coluna 3 — anexos (unificados) + histórico */}
+                <div className="overflow-y-auto">
+                  {/* Anexos do pedido — o que já foi anexado na tela de criar/
+                      editar pedido (arte de personalização do item + anexos
+                      gerais do pedido). Só leitura aqui: pra trocar, edita no
+                      pedido — é de lá que vem. */}
+                  {(detalhe.arte_anexo_url || (detalhe.pedido_anexos?.length ?? 0) > 0) && (
+                    <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
+                      <p className="gw-label flex items-center gap-1.5">
+                        <Paperclip className="h-3.5 w-3.5" /> Anexos do pedido
+                      </p>
+                      <div className="space-y-1.5">
+                        {detalhe.arte_anexo_url && (
+                          <a
+                            href={detalhe.arte_anexo_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-2.5 rounded-[8px] border border-[var(--gw-border)] px-2.5 py-2 hover:border-[var(--gw-border-strong)]"
+                          >
+                            <FileText className="h-8 w-8 p-1.5 rounded bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)] shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[12px] font-semibold text-[var(--gw-text)] truncate">Arte de personalização</p>
+                              <p className="text-[11px] text-[var(--gw-text-muted)]">Anexado no item do pedido</p>
+                            </div>
+                            <Download className="h-4 w-4 shrink-0 text-[var(--gw-primary)]" />
+                          </a>
+                        )}
+                        {(detalhe.pedido_anexos ?? []).map(a => (
+                          <a
+                            key={a.url}
+                            href={a.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-2.5 rounded-[8px] border border-[var(--gw-border)] px-2.5 py-2 hover:border-[var(--gw-border-strong)]"
+                          >
+                            <FileText className="h-8 w-8 p-1.5 rounded bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)] shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[12px] font-semibold text-[var(--gw-text)] truncate">{a.nome}</p>
+                              <p className="text-[11px] text-[var(--gw-text-muted)]">Anexo geral do pedido</p>
+                            </div>
+                            <Download className="h-4 w-4 shrink-0 text-[var(--gw-primary)]" />
+                          </a>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-
-                {/* Histórico */}
-                <div className="px-5 py-4">
-                  <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)] flex items-center gap-2 mb-3">
-                    <History className="h-3.5 w-3.5" /> Histórico
-                  </p>
-                  {historico.length === 0 ? (
-                    <p className="text-[12px] text-[var(--gw-text-muted)]">Sem histórico registrado.</p>
-                  ) : (
-                    <ul className="space-y-3 border-l border-[var(--gw-border)] pl-4">
-                      {historico.map(h => (
-                        <li key={h.id} className="relative">
-                          <span
-                            className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full"
-                            style={{ backgroundColor: statusInfo(h.status_novo).cor }}
-                          />
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {h.status_anterior && (
-                              <>
-                                <StatusPill status={h.status_anterior} className="opacity-60" />
-                                <span className="text-[11px] text-[var(--gw-text-muted)]">→</span>
-                              </>
-                            )}
-                            <StatusPill status={h.status_novo} />
-                            <span className="text-[11px] text-[var(--gw-text-secondary)]">
-                              {formatDateTime(h.created_at)}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-[var(--gw-text-muted)] mt-0.5">
-                            Alterado por: {vendedorNome(h.vendedor_id) || "não identificado"}
-                            {h.observacao ? ` · ${h.observacao}` : ""}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
                   )}
+
+                  {/* Anexos do PCP — logo, mockup, etiqueta, nota fiscal e
+                      qualquer outro arquivo adicionado aqui (independente da
+                      automação de teste/produção, que continua funcionando
+                      do jeito que já funcionava). */}
+                  <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2.5">
+                    <p className="gw-label flex items-center gap-1.5">
+                      <Paperclip className="h-3.5 w-3.5" /> Anexos do PCP
+                    </p>
+                    {anexos.length === 0 ? (
+                      <p className="gw-body text-[13px] text-[var(--gw-text-muted)]">Nenhum anexo ainda.</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {anexos.map(a => (
+                          <div key={a.id} className="flex items-center gap-2.5 rounded-[8px] border border-[var(--gw-border)] px-2.5 py-2">
+                            {a.tipo === "foto" ? (
+                              <img src={sizedImage(a.url, 80)} alt="" className="w-9 h-9 rounded object-cover border border-[var(--gw-border)] shrink-0" />
+                            ) : a.tipo === "video" ? (
+                              <Video className="h-9 w-9 p-2 rounded bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)] shrink-0" />
+                            ) : (
+                              <FileText className="h-9 w-9 p-2 rounded bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)] shrink-0" />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[12px] font-semibold text-[var(--gw-text)] truncate">
+                                {ANEXO_CATEGORIA_LABEL[a.categoria]}{a.nome_arquivo ? ` · ${a.nome_arquivo}` : ""}
+                              </p>
+                              <p className="text-[11px] text-[var(--gw-text-muted)]">
+                                {vendedorNome(a.vendedor_id) || "não identificado"} · {formatDateTime(a.created_at)}
+                              </p>
+                            </div>
+                            <a href={a.url} target="_blank" rel="noreferrer" className="shrink-0 text-[var(--gw-primary)]" aria-label="Abrir anexo">
+                              <Download className="h-4 w-4" />
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => removerAnexo(a)}
+                              className="shrink-0 text-[var(--gw-text-muted)] hover:text-[var(--gw-danger)]"
+                              aria-label="Remover anexo"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" disabled={enviandoAnexoGenerico}>
+                          {enviandoAnexoGenerico ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                          Adicionar anexo
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        {(Object.keys(ANEXO_CATEGORIA_LABEL) as AnexoCategoria[]).map(cat => (
+                          <DropdownMenuItem key={cat} onClick={() => abrirSeletorAnexoGenerico(detalhe, cat)}>
+                            {ANEXO_CATEGORIA_LABEL[cat]}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  {/* Checklist */}
+                  {detalhe.status === "embalagem_pagamento" && (
+                    <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
+                      <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)]">Checklist</p>
+                      <div className="flex flex-wrap gap-4">
+                        {([
+                          ["medidas_ok", "Medidas"],
+                          ["pagamento_ok", "Pagamento"],
+                          ["etiqueta_ok", "Etiqueta"],
+                        ] as const).map(([key, label]) => {
+                          const auto = key === "pagamento_ok" && pagamentoGateOk(detalhe);
+                          return (
+                            <label key={key} className="flex items-center gap-2 text-[13px]">
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4 accent-[#2563EB]"
+                                checked={!!detalhe[key] || auto}
+                                disabled={auto}
+                                onChange={e => applyUpdate(detalhe.producao_id, { [key]: e.target.checked })}
+                              />
+                              {label}
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Histórico */}
+                  <div className="px-5 py-4">
+                    <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)] flex items-center gap-2 mb-3">
+                      <History className="h-3.5 w-3.5" /> Histórico
+                    </p>
+                    {historico.length === 0 ? (
+                      <p className="text-[12px] text-[var(--gw-text-muted)]">Sem histórico registrado.</p>
+                    ) : (
+                      <ul className="space-y-3 border-l border-[var(--gw-border)] pl-4">
+                        {historico.map(h => (
+                          <li key={h.id} className="relative">
+                            <span
+                              className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full"
+                              style={{ backgroundColor: statusInfo(h.status_novo).cor }}
+                            />
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {h.status_anterior && (
+                                <>
+                                  <StatusPill status={h.status_anterior} className="opacity-60" />
+                                  <span className="text-[11px] text-[var(--gw-text-muted)]">→</span>
+                                </>
+                              )}
+                              <StatusPill status={h.status_novo} />
+                              <span className="text-[11px] text-[var(--gw-text-secondary)]">
+                                {formatDateTime(h.created_at)}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-[var(--gw-text-muted)] mt-0.5">
+                              Alterado por: {vendedorNome(h.vendedor_id) || "não identificado"}
+                              {h.observacao ? ` · ${h.observacao}` : ""}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           )}
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal: enviar para terceirizada (obrigatório ao arrastar pra "A Produzir — Terceirizada") */}
       <Dialog open={!!terceiroModal} onOpenChange={open => !open && setTerceiroModal(null)}>
