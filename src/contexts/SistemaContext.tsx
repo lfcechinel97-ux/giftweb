@@ -149,6 +149,10 @@ export interface PedidoItem {
   mockupImagem?: string;
   imagem?: string;
   observacao?: string;
+  /** Arquivo de arte/logo do cliente pra personalização — separado do
+      mockup (foto do produto pronto): este é o insumo, aquele é o
+      resultado. Campo novo dentro do jsonb, sem migration. */
+  arteAnexoUrl?: string;
 }
 
 export interface Pedido {

@@ -116,3 +116,39 @@ export async function uploadAnexoGenerico(
   const tipo = file.type === "application/pdf" ? "pdf" : file.type.startsWith("video/") ? "video" : "foto";
   return { url: data.publicUrl, tipo };
 }
+
+/**
+ * Arquivos de arte/briefing do pedido (logo do cliente, arquivo de gravação,
+ * PDF de briefing) — extensões de design como .ai/.cdr/.eps costumam chegar
+ * do navegador com `file.type` vazio ou genérico (`application/octet-stream`),
+ * então a validação aqui é por EXTENSÃO, não por mimetype como os outros
+ * uploaders — são arquivos que o cliente manda, não fotos/vídeos que a
+ * própria produção gera.
+ */
+const MAX_BYTES_ARQUIVO_PEDIDO = 30 * 1024 * 1024;
+const EXTENSOES_ARQUIVO_PEDIDO_OK = /\.(jpe?g|png|webp|gif|heic|pdf|ai|cdr|eps|svg)$/i;
+
+export async function uploadArquivoPedido(
+  file: File,
+  pedidoId: string,
+): Promise<{ url: string; nome: string }> {
+  if (!EXTENSOES_ARQUIVO_PEDIDO_OK.test(file.name)) {
+    throw new MockupUploadError("Formato não suportado. Use JPG, PNG, WebP, PDF, AI, CDR, EPS ou SVG.");
+  }
+  if (file.size > MAX_BYTES_ARQUIVO_PEDIDO) {
+    const mb = (file.size / 1024 / 1024).toFixed(1);
+    throw new MockupUploadError(`Arquivo de ${mb} MB excede o limite de 30 MB.`);
+  }
+
+  const ext = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const path = `pedidos/${pedidoId}/anexos/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from("mockups")
+    .upload(path, file, { upsert: false, contentType: file.type || "application/octet-stream" });
+
+  if (error) throw new MockupUploadError(error.message);
+
+  const { data } = supabase.storage.from("mockups").getPublicUrl(path);
+  return { url: data.publicUrl, nome: file.name };
+}
