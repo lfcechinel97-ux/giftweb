@@ -11,6 +11,11 @@
 -- lockstep no board.
 -- =====================================================================
 
+-- Garante a coluna de volumes por item mesmo se 20260919130000 ainda
+-- não tiver rodado (evita depender da ordem exata de execução).
+alter table public.sistema_producao_itens
+  add column if not exists volumes jsonb;
+
 -- O check constraint de coluna_pcp (criado na migration do catálogo,
 -- reforçado em 20260918140000) ainda não conhece 'organizando_comercial'.
 alter table public.sistema_status drop constraint if exists sistema_status_coluna_pcp_check;
