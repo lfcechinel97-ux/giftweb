@@ -31,7 +31,7 @@ export interface StatusInfo {
 }
 
 const SEMENTE: StatusInfo[] = [
-  { slug: "organizando_anotacoes",   nome: "Organizando anotações",      cor: "#64748B", colunaPcp: "organizando_pedido",  escopo: "ambos",  ordem: 10 },
+  { slug: "organizando_anotacoes",   nome: "Organizando Pedido",         cor: "#64748B", colunaPcp: "organizando_comercial", escopo: "ambos", ordem: 10 },
   { slug: "imprimir_ordem_producao", nome: "Imprimir ordem de produção", cor: "#0B7CAF", colunaPcp: "organizando_pedido",  escopo: "ambos",  ordem: 20 },
   { slug: "aguardando_mercadoria",   nome: "Aguardando mercadoria",      cor: "#A36907", colunaPcp: "aguardando_mercadoria", escopo: "ambos", ordem: 30 },
   { slug: "aguardando_teste",        nome: "Aguardando teste laser/DTF", cor: "#9E42F6", colunaPcp: "teste_fisico",        escopo: "ambos",  ordem: 40 },
@@ -110,22 +110,28 @@ export function opcoesStatus(nivel: "pedido" | "item"): StatusInfo[] {
  * quadro e não são editáveis. Cada uma tem um status canônico: é ele que dá a
  * cor da coluna e é o valor gravado quando um card é arrastado para lá.
  */
-/* Fluxo final de 7 colunas (evolução de 18/09/2026, pedido explícito do
-   usuário — "essas serão as 7 colunas do PCP... antes eram 15"):
-   Organizando Anotações -> Aguardando Mercadoria -> Aguardando Teste ->
-   Teste Enviado -> A Produzir -> Expedição -> Coletado e Enviado.
+/* Fluxo final de 7 colunas (evolução de 19/09/2026):
+   Imprimir Ordem de Produção -> Aguardando Mercadoria -> Aguardando
+   Teste -> Teste Enviado -> A Produzir -> Expedição -> Coletado e
+   Enviado.
 
-   Simplificações desta rodada (nenhum status apagado, só coluna_pcp
+   "Organizando Pedido" (organizando_anotacoes) NÃO aparece mais aqui —
+   virou uma etapa só da tela de Pedidos (comercial/vendedor), antes do
+   pedido entrar no radar da produção. Ela deixa de existir pro PCP no
+   momento em que o vendedor manda "Imprimir Ordem de Produção" (esta
+   é a primeira coluna que a produção vê). Duas classes de usuário,
+   mesmo catálogo de status por trás: COMERCIAL usa a tela de Pedidos
+   (que tem uma etapa a mais), PRODUÇÃO usa o PCP.
+
+   Outras simplificações (nenhum status apagado, só coluna_pcp
    remapeado):
-   - "Pronto p/ Produção" (imprimir_ordem_producao) volta a cair em
-     "Organizando Pedido" -- não é mais coluna própria.
    - "Preparação" (preparar_dtf) cai em "A Produzir".
    - Galpão e Terceirizada deixam de ser colunas separadas -- viram UMA
      coluna só ("A Produzir"), com a distinção feita por TAG
      ("PROD. GALPÃO" / "TERCEIRIZADA + nome") escolhida num popup ao
      entrar em Aguardando Teste, não mais ao entrar em produção. */
 export const COLUNAS_PCP = [
-  { coluna: "organizando_pedido",    rotulo: "Organizando Anotações",  canonico: "organizando_anotacoes" },
+  { coluna: "organizando_pedido",    rotulo: "Imprimir Ordem de Produção", canonico: "imprimir_ordem_producao" },
   { coluna: "aguardando_mercadoria", rotulo: "Aguardando Mercadoria",  canonico: "aguardando_mercadoria" },
   { coluna: "teste_fisico",          rotulo: "Aguardando Teste",       canonico: "aguardando_teste" },
   { coluna: "teste_enviado",         rotulo: "Teste Enviado",          canonico: "aguardando_aprovacao_teste" },

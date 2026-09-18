@@ -25,7 +25,8 @@ import { cn } from "@/lib/utils";
 import { Money } from "@/components/sistema/ui/Money";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 import { COLUNAS_PCP, corDaColuna, statusCanonicoDaColuna, colunaDoStatus, statusInfo } from "@/lib/statusPedido";
-import { useSistema } from "@/contexts/SistemaContext";
+import { useSistema, type Pedido, type PedidoItem } from "@/contexts/SistemaContext";
+import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 
@@ -97,6 +98,7 @@ interface PcpRow {
   pedido_pago_integral: boolean | null;
   pedido_comprovante_pagamento_url: string | null;
   item_volumes: { responsavel: string; itens: { comprimento: number; altura: number; largura: number; peso: number }[] } | null;
+  grupo_id: string | null;
   arte_anexo_url: string | null;
   pedido_anexos: { url: string; nome: string; criadoEm: string }[] | null;
 }
@@ -508,7 +510,8 @@ function EtiquetaCombobox({ opcoes, onSelect }: { opcoes: string[]; onSelect: (n
 
 function PcpCard({
   row, indice, total, dragging, saving, atrasado, critico, highlight, comFotos, vendedorNome,
-  onDragStart, onDragEnd, onOpen, onHover, onComprado, onDespachar,
+  imprimindoOP,
+  onDragStart, onDragEnd, onOpen, onHover, onComprado, onDespachar, onImprimirOP, onAgrupar, onDesagrupar,
 }: {
   row: PcpRow;
   indice: number;
@@ -520,12 +523,16 @@ function PcpCard({
   highlight: boolean;
   comFotos: boolean;
   vendedorNome: string | null;
+  imprimindoOP: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
   onOpen: () => void;
   onHover: (pedidoId: string | null) => void;
   onComprado: (row: PcpRow, origem: "XBZ" | "SP") => void;
   onDespachar: (row: PcpRow) => void;
+  onImprimirOP: (row: PcpRow) => void;
+  onAgrupar: (row: PcpRow) => void;
+  onDesagrupar: (row: PcpRow) => void;
 }) {
   const foto = row.mockup_url || row.imagem_catalogo_url;
   const cor = corDoPedido(row);
@@ -662,6 +669,44 @@ function PcpCard({
           </div>
         )}
 
+        {/* "IMPRIMIR O.P." — só o item 1 do pedido, só na 1a coluna. Baixa
+            o PDF e já move pra Aguardando Mercadoria (o grupo inteiro,
+            se tiver). "Agrupar" fica ao lado, também só aqui. */}
+        {colunaDoStatus(row) === "organizando_pedido" && (
+          <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
+            {indice === 1 && (
+              <button
+                type="button"
+                onClick={() => onImprimirOP(row)}
+                disabled={imprimindoOP}
+                className="flex-1 h-6 rounded-[5px] text-white text-[10px] font-bold"
+                style={{ backgroundColor: "#0B7CAF" }}
+              >
+                {imprimindoOP ? "Gerando…" : "Imprimir O.P."}
+              </button>
+            )}
+            {row.grupo_id ? (
+              <button
+                type="button"
+                onClick={() => onDesagrupar(row)}
+                className="h-6 px-2 rounded-[5px] text-white text-[10px] font-bold"
+                style={{ backgroundColor: "#7C3AED" }}
+              >
+                Agrupado ✕
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onAgrupar(row)}
+                className="h-6 px-2 rounded-[5px] text-white text-[10px] font-bold"
+                style={{ backgroundColor: "var(--gw-text-muted)" }}
+              >
+                Agrupar
+              </button>
+            )}
+          </div>
+        )}
+
         {/* "Confirmar despacho" — só na Expedição, só até a tag DESPACHAR
             já existir (ação feita uma vez por item). */}
         {colunaDoStatus(row) === "aguardando_coleta" &&
@@ -713,7 +758,7 @@ export default function PCP() {
      — o sistema roda com um único login compartilhado (ver migration
      20260917130000). É essa identidade que carimba o histórico, não
      auth.uid(), que é sempre a mesma pessoa fisicamente logada. */
-  const { vendedores, currentVendedor } = useSistema();
+  const { vendedores, currentVendedor, clientes, transportadoras: transportadorasCadastro } = useSistema();
   const vendedorNome = (id: string | null) => vendedores.find(v => v.id === id)?.nome || null;
   const queryClient = useQueryClient();
 
@@ -1192,6 +1237,66 @@ export default function PCP() {
     await registrarNotaHistorico(row, `Compra registrada: ${origem === "XBZ" ? "Comprado XBZ" : "Comprado SP"}`);
   };
 
+  /* ── "IMPRIMIR O.P." — só no item 1 do pedido, na 1a coluna. Baixa o
+     PDF da ordem de produção e já move (o item e o grupo dele, se
+     tiver) pra Aguardando Mercadoria, sem precisar arrastar. ────────── */
+  const [imprimindoOP, setImprimindoOP] = useState<string | null>(null);
+  const imprimirOP = async (row: PcpRow) => {
+    setImprimindoOP(row.producao_id);
+    try {
+      const { data: p, error } = await supabase.from("sistema_pedidos").select("*").eq("id", row.pedido_id).maybeSingle();
+      if (error || !p) throw error ?? new Error("Pedido não encontrado");
+      const pedidoMapeado: Pedido = {
+        id: p.id, numero: p.numero, orcamentoId: p.orcamento_id ?? "", clienteId: p.cliente_id ?? "",
+        clienteSnapshot: (p.cliente_snapshot as never) ?? undefined,
+        contatoNome: p.contato_nome ?? undefined, contatoTelefone: p.contato_telefone ?? undefined,
+        contatoEmail: p.contato_email ?? undefined, vendedorId: p.vendedor_id ?? undefined,
+        itens: (p.itens as unknown as PedidoItem[]) ?? [], subtotal: Number(p.subtotal) || 0,
+        freteTipo: (p.frete_tipo as "CIF" | "FOB" | null) ?? null, freteValor: Number(p.frete_valor) || 0,
+        total: Number(p.total) || 0, transportadoraId: p.transportadora_id ?? undefined,
+        prazoEntrega: p.prazo_entrega ?? undefined, pagamentoId: p.pagamento_id ?? undefined,
+        observacoes: p.observacoes ?? undefined, status: p.status as Pedido["status"],
+        createdAt: p.created_at, updatedAt: p.updated_at,
+        prazoProducaoDias: p.prazo_producao_dias ?? undefined,
+        dataProduzirAte: p.data_produzir_ate ?? undefined,
+        dataDespacharAte: p.data_despachar_ate ?? undefined,
+      };
+      await gerarOrdemProducaoPDF(pedidoMapeado, { clientes, vendedores, transportadoras: transportadorasCadastro });
+      moverItem(row, "aguardando_mercadoria", "Ordem de produção impressa");
+      toast.success("Ordem de produção baixada. Item movido para Aguardando Mercadoria.");
+    } catch (err) {
+      console.error("[PCP] imprimir O.P. falhou:", err);
+      toast.error("Não foi possível gerar a ordem de produção.");
+    } finally {
+      setImprimindoOP(null);
+    }
+  };
+
+  /* ── Agrupar produtos do mesmo pedido — só na 1a coluna. Itens no
+     mesmo grupo se movem juntos pelo resto do fluxo (ver moverItem). */
+  const [agrupamentoModal, setAgrupamentoModal] = useState<{ row: PcpRow } | null>(null);
+  const [itensSelecionados, setItensSelecionados] = useState<Set<string>>(new Set());
+
+  const abrirAgrupamento = (row: PcpRow) => {
+    setAgrupamentoModal({ row });
+    setItensSelecionados(new Set(row.grupo_id ? rows.filter(r => r.grupo_id === row.grupo_id).map(r => r.producao_id) : [row.producao_id]));
+  };
+
+  const confirmarAgrupamento = async () => {
+    if (!agrupamentoModal) return;
+    const grupoId = agrupamentoModal.row.grupo_id ?? crypto.randomUUID();
+    for (const id of itensSelecionados) await applyUpdate(id, { grupo_id: grupoId });
+    setAgrupamentoModal(null);
+    toast.success(`${itensSelecionados.size} itens agrupados — vão seguir o fluxo juntos.`);
+  };
+
+  const desfazerAgrupamento = async (row: PcpRow) => {
+    if (!row.grupo_id) return;
+    const irmaos = rows.filter(r => r.grupo_id === row.grupo_id);
+    for (const irmao of irmaos) await applyUpdate(irmao.producao_id, { grupo_id: null });
+    toast.success("Agrupamento desfeito.");
+  };
+
   /* ── Anexo de teste físico ────────────────────────────────────────────
      "vai ter um campo no produto escrito 'teste' onde a produção anexa a
      foto p/ vendedor baixar e mandar p cliente. nesse mesmo tempo,
@@ -1422,10 +1527,18 @@ export default function PCP() {
     }
   };
 
-  const moverItem = (row: PcpRow, targetStatus: PcpStatus) => {
+  const moverItem = (row: PcpRow, targetStatus: PcpStatus, observacao?: string) => {
     /* Grava o STATUS canônico da coluna. targetStatus é nome de coluna
        ("em_producao"); o banco espera slug de status ("a_produzir"). */
-    mudarStatus(row.producao_id, statusCanonicoDaColuna(targetStatus));
+    mudarStatus(row.producao_id, statusCanonicoDaColuna(targetStatus), observacao);
+    /* "se a produção quiser, ela pode agrupar os produtos... pra eles
+       seguirem as etapas do pcp juntos" — item com grupo_id arrasta os
+       irmãos do mesmo grupo junto, sem passar pelos gates de novo (a
+       validação já foi feita no item que a produção arrastou). */
+    if (row.grupo_id) {
+      const irmaos = rows.filter(r => r.grupo_id === row.grupo_id && r.producao_id !== row.producao_id);
+      for (const irmao of irmaos) mudarStatus(irmao.producao_id, statusCanonicoDaColuna(targetStatus), "Movido junto com o grupo");
+    }
   };
 
   const handleDrop = (targetStatus: PcpStatus, id: string) => {
@@ -1887,6 +2000,10 @@ export default function PCP() {
                         onHover={setHoverPedido}
                         onComprado={registrarCompra}
                         onDespachar={abrirDespachoModal}
+                        onImprimirOP={imprimirOP}
+                        onAgrupar={abrirAgrupamento}
+                        onDesagrupar={desfazerAgrupamento}
+                        imprimindoOP={imprimindoOP === row.producao_id}
                         onDragStart={() => setDraggingId(row.producao_id)}
                         onDragEnd={() => setDraggingId(null)}
                         onOpen={() => setDetalheId(row.producao_id)}
@@ -2417,6 +2534,42 @@ export default function PCP() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: agrupar itens do mesmo pedido (só na 1a coluna) */}
+      <Dialog open={!!agrupamentoModal} onOpenChange={open => !open && setAgrupamentoModal(null)}>
+        <DialogContent style={{ maxWidth: 420 }}>
+          <DialogHeader>
+            <DialogTitle>Agrupar produtos do pedido</DialogTitle>
+          </DialogHeader>
+          {agrupamentoModal && (
+            <div className="space-y-2 py-1">
+              <p className="text-[12px] text-[var(--gw-text-muted)]">
+                Itens marcados seguem as etapas do PCP juntos — mover um move todos.
+              </p>
+              {rows.filter(r => r.pedido_id === agrupamentoModal.row.pedido_id
+                && colunaDoStatus(r) === "organizando_pedido").map(item => (
+                <label key={item.producao_id} className="flex items-center gap-2.5 rounded-lg border border-[var(--gw-border)] px-3 py-2 text-[13px]">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-[#2563EB]"
+                    checked={itensSelecionados.has(item.producao_id)}
+                    onChange={e => setItensSelecionados(prev => {
+                      const novo = new Set(prev);
+                      if (e.target.checked) novo.add(item.producao_id); else novo.delete(item.producao_id);
+                      return novo;
+                    })}
+                  />
+                  {item.produto_nome} — {item.quantidade} un.
+                </label>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAgrupamentoModal(null)}>Cancelar</Button>
+            <Button onClick={confirmarAgrupamento} disabled={itensSelecionados.size < 2}>Agrupar</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -56,13 +56,22 @@ const brl = (v: number) =>
  * Abas do topo. Cada uma agrupa várias etapas pela COLUNA do PCP — assim um
  * status novo criado em Configurações já cai na aba certa, sem tocar aqui.
  */
+/* Mesma quantidade de etapas do PCP, na mesma ordem -- a única diferença é
+   "Organizando Pedido" (organizando_comercial), que existe só aqui: é a
+   etapa do vendedor ANTES do pedido entrar no radar da produção. Some do
+   PCP no momento em que o item vai pra "Imprimir O.P.". Duas classes de
+   usuário, um catálogo de status só por trás. */
 const ABAS = [
-  { id: "todos",      rotulo: "Todos",         colunas: null },
-  { id: "produzir",   rotulo: "A produzir",    colunas: ["organizando_pedido", "pronto_producao", "teste_fisico", "preparacao"] },
-  { id: "producao",   rotulo: "Em produção",   colunas: ["em_producao"] },
-  { id: "transporte", rotulo: "Em transporte", colunas: ["embalagem_pagamento", "aguardando_coleta"] },
-  { id: "entregues",  rotulo: "Entregues",     colunas: ["enviado"] },
-  { id: "cancelados", rotulo: "Cancelados",    colunas: ["cancelado"] },
+  { id: "todos",       rotulo: "Todos",                colunas: null },
+  { id: "organizando", rotulo: "Organizando Pedido",   colunas: ["organizando_comercial"] },
+  { id: "imprimir_op", rotulo: "Imprimir O.P.",        colunas: ["organizando_pedido"] },
+  { id: "mercadoria",  rotulo: "Aguardando Mercadoria", colunas: ["aguardando_mercadoria"] },
+  { id: "teste",       rotulo: "Aguardando Teste",     colunas: ["teste_fisico"] },
+  { id: "teste_env",   rotulo: "Teste Enviado",        colunas: ["teste_enviado"] },
+  { id: "produzir",    rotulo: "A Produzir",           colunas: ["em_producao"] },
+  { id: "expedicao",   rotulo: "Expedição",            colunas: ["aguardando_coleta"] },
+  { id: "entregues",   rotulo: "Coletado e Enviado",   colunas: ["enviado"] },
+  { id: "cancelados",  rotulo: "Cancelados",           colunas: ["cancelado"] },
 ] as const;
 
 type AbaId = typeof ABAS[number]["id"];
