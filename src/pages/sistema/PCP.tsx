@@ -35,7 +35,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 type PcpStatus =
   | "organizando_pedido" | "aguardando_mercadoria"
   | "teste_fisico" | "teste_enviado"
-  | "em_producao"
+  | "em_producao" | "inserir_medidas"
   | "aguardando_coleta" | "enviado";
 
 type LocalProducao = "interna" | "terceirizada" | "fornecedor_para_terceirizada";
@@ -511,7 +511,7 @@ function EtiquetaCombobox({ opcoes, onSelect }: { opcoes: string[]; onSelect: (n
 function PcpCard({
   row, indice, total, dragging, saving, atrasado, critico, highlight, comFotos, vendedorNome,
   imprimindoOP,
-  onDragStart, onDragEnd, onOpen, onHover, onComprado, onDespachar, onImprimirOP, onAgrupar, onDesagrupar,
+  onDragStart, onDragEnd, onOpen, onHover, onComprado, onDespachar, onImprimirOP, onAgrupar, onDesagrupar, onInserirMedidas,
 }: {
   row: PcpRow;
   indice: number;
@@ -533,6 +533,7 @@ function PcpCard({
   onImprimirOP: (row: PcpRow) => void;
   onAgrupar: (row: PcpRow) => void;
   onDesagrupar: (row: PcpRow) => void;
+  onInserirMedidas: (row: PcpRow) => void;
 }) {
   const foto = row.mockup_url || row.imagem_catalogo_url;
   const cor = corDoPedido(row);
@@ -705,6 +706,17 @@ function PcpCard({
               </button>
             )}
           </div>
+        )}
+
+        {colunaDoStatus(row) === "inserir_medidas" && (
+          <button
+            type="button"
+            onClick={e => { e.stopPropagation(); onInserirMedidas(row); }}
+            className="h-6 rounded-[5px] text-white text-[10px] font-bold"
+            style={{ backgroundColor: "#0B8177" }}
+          >
+            Inserir medidas
+          </button>
         )}
 
         {/* "Confirmar despacho" — só na Expedição, só até a tag DESPACHAR
@@ -880,6 +892,9 @@ export default function PCP() {
   const producaoAnexoAlvoRef = useRef<PcpRow | null>(null);
   const [enviandoTeste, setEnviandoTeste] = useState(false);
   const [enviandoProducaoAnexo, setEnviandoProducaoAnexo] = useState(false);
+  const [recusaModal, setRecusaModal] = useState<PcpRow | null>(null);
+  const [recusaMotivo, setRecusaMotivo] = useState("");
+  const [recusaSaving, setRecusaSaving] = useState(false);
 
   /* Anexos genéricos (seção "Anexos") — categoria escolhida antes do
      arquivo, guardada em ref pro handler do <input type=file> saber
@@ -892,6 +907,9 @@ export default function PCP() {
   const pcpQuery = useQuery<PcpRow[]>({
     queryKey: ["sistema", "pcp", "rows"],
     staleTime: 60 * 1000,
+    // Rede de segurança caso o realtime caia (aba em segundo plano, rede instável).
+    refetchInterval: 20 * 1000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       /* Sem filtro, o board carrega TODO item de produção que já existiu,
          pra sempre — inclusive o que já foi "Coletado e enviado" há meses.
@@ -979,12 +997,21 @@ export default function PCP() {
   useEffect(() => { detalheIdRef.current = detalheId; }, [detalheId]);
 
   useEffect(() => {
+    // O merge abaixo é instantâneo mas parcial (a tabela crua não tem os
+    // campos calculados da view); a releitura debounced traz o resto.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const recarregar = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => { void loadItems(); }, 400);
+    };
     const canal: RealtimeChannel = supabase
       .channel("pcp-ao-vivo")
+      .on("postgres_changes", { event: "*", schema: "public", table: "sistema_pedidos" }, recarregar)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "sistema_producao_itens" },
         (payload) => {
+          recarregar();
           if (payload.eventType === "DELETE") {
             const idRemovido = (payload.old as { id?: string })?.id;
             if (idRemovido) setRows(prev => prev.filter(r => r.producao_id !== idRemovido));
@@ -994,12 +1021,7 @@ export default function PCP() {
           const id = novo.id as string;
           setRows(prev => {
             const existe = prev.some(r => r.producao_id === id);
-            if (!existe) {
-              // Item novo (pedido recém-criado): o merge não tem produto_nome
-              // nem foto, que só a view resolve — busca a linha completa.
-              void loadItems();
-              return prev;
-            }
+            if (!existe) return prev;
             const statusNovo = String(novo.status ?? "");
             const info = statusInfo(statusNovo);
             return prev.map(r => (r.producao_id !== id ? r : {
@@ -1037,7 +1059,7 @@ export default function PCP() {
         },
       )
       .subscribe();
-    return () => { void supabase.removeChannel(canal); };
+    return () => { clearTimeout(timer); void supabase.removeChannel(canal); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1373,11 +1395,40 @@ export default function PCP() {
   /* "se reprovado, volta para a coluna Aguardando Teste e adiciona a tag
      TESTE RECUSADO" — mantém a tag de galpão/terceirizada, só troca o
      status do teste. */
-  const reprovarTeste = async (row: PcpRow) => {
+  const reprovarTeste = async () => {
+    if (!recusaModal) return;
+    const row = recusaModal;
+    const motivo = recusaMotivo.trim();
+    if (!motivo) { toast.error("Descreva o motivo da recusa."); return; }
+    setRecusaSaving(true);
+
+    // O motivo vira observação do produto no pedido, para ficar registrado junto do item.
+    const { data: prod } = await supabase
+      .from("sistema_producao_itens" as any).select("item_id").eq("id", row.producao_id).single();
+    const { data: ped } = await supabase
+      .from("sistema_pedidos").select("itens").eq("id", row.pedido_id).single();
+    const itemId = (prod as any)?.item_id as string | undefined;
+    const itens = ((ped as any)?.itens ?? []) as Record<string, any>[];
+    if (itemId && itens.some(i => i.id === itemId)) {
+      const nota = `TESTE RECUSADO (${new Date().toLocaleDateString("pt-BR")}): ${motivo}`;
+      const novosItens = itens.map(i => i.id !== itemId ? i : {
+        ...i, observacao: i.observacao ? `${i.observacao}\n${nota}` : nota,
+      });
+      const { error } = await supabase.from("sistema_pedidos").update({ itens: novosItens } as any).eq("id", row.pedido_id);
+      if (error) {
+        toast.error(`Não foi possível gravar o motivo no pedido. ${error.message || ""}`);
+        setRecusaSaving(false);
+        return;
+      }
+    }
+
     const semFluxoTeste = (row.tags ?? []).filter(t => !TAGS_FLUXO_TESTE.includes(t));
     await salvarTags(row, [...new Set([...semFluxoTeste, TAG_TESTE_RECUSADO])]);
-    await mudarStatus(row.producao_id, statusCanonicoDaColuna("teste_fisico"), "Teste recusado pelo cliente");
-    toast.success("Teste recusado. Item voltou para Aguardando Teste.");
+    await mudarStatus(row.producao_id, statusCanonicoDaColuna("teste_fisico"), `Teste recusado pelo cliente: ${motivo}`);
+    setRecusaSaving(false);
+    setRecusaModal(null);
+    void loadItems();
+    toast.success("Teste recusado. Motivo registrado no pedido e item voltou para Aguardando Teste.");
   };
 
   /* ── Anexo de produção concluída (foto ou vídeo) ──────────────────────
@@ -1410,20 +1461,19 @@ export default function PCP() {
          o state ainda não tinha sido commitado quando esse código roda
          logo após o applyUpdate, o que faria os gates abaixo verem o item
          como se a mídia não existisse. */
-      const tagsFinais = (row.tags ?? []).filter(t => t !== TAG_TESTE_ENVIADO && t !== TAG_TESTE_REFEITO);
-      if (tagsFinais.length !== (row.tags ?? []).length) await salvarTags(row, tagsFinais);
-      const rowAtualizada: PcpRow = { ...row, producao_anexo_url: url, tags: tagsFinais };
+      /* A mídia sai antes de a caixa ser fechada e medida, então o item vai
+         pra "Inserir Medidas" sem popup; os volumes são preenchidos lá. O
+         pagamento vira tag aqui, que é quando o vendedor precisa cobrar. */
+      const tagPagamento = tagPagamentoDoPedido(row.pagamento_nome);
+      const tagsFinais = [...new Set([
+        ...(row.tags ?? []).filter(t => t !== TAG_TESTE_ENVIADO && t !== TAG_TESTE_REFEITO),
+        ...(tagPagamento ? [tagPagamento] : []),
+      ])];
+      await salvarTags(row, tagsFinais);
 
-      /* Sem pergunta de pagamento aqui — essa decisão é do VENDEDOR, não
-         da produção; o pagamento agora vira tag automática no popup de
-         Expedição (COBRAR 50% RESTANTE / PAGO CARTÃO), sem interromper
-         quem está anexando a mídia. Cada item abre seu próprio popup de
-         volumes — não espera mais o pedido inteiro chegar junto, porque
-         uma caixa pode não levar todos os itens do pedido. */
-      if (colunaDoStatus(row) === "em_producao") {
-        setExpedicaoModal({ row: rowAtualizada, target: "aguardando_coleta" });
-      }
-      toast.success(`${tipo === "video" ? "Vídeo" : "Foto"} anexado. Indo para Expedição.`);
+      const movido = colunaDoStatus(row) === "em_producao";
+      if (movido) moverItem(row, "inserir_medidas", `${tipo === "video" ? "Vídeo" : "Foto"} da produção concluída anexado`);
+      toast.success(`${tipo === "video" ? "Vídeo" : "Foto"} anexado.${movido ? " Item foi para Inserir Medidas." : ""}`);
     } catch (err) {
       toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o anexo.");
     } finally {
@@ -1569,8 +1619,9 @@ export default function PCP() {
        pra Expedição — arrastar direto de "A Produzir" sem anexo não pode
        pular essa checagem (o caminho normal é anexar a mídia, que já move
        sozinho). */
-    if (targetStatus === "aguardando_coleta" && colunaDoStatus(row) === "em_producao" && !row.producao_anexo_url) {
-      toast.error("Anexe a foto/vídeo da produção concluída antes de mover para Expedição.");
+    if ((targetStatus === "inserir_medidas" || targetStatus === "aguardando_coleta")
+      && colunaDoStatus(row) === "em_producao" && !row.producao_anexo_url) {
+      toast.error("Anexe a foto/vídeo da produção concluída antes de avançar.");
       return;
     }
 
@@ -1719,9 +1770,7 @@ export default function PCP() {
       return;
     }
 
-    const tagPagamento = tagPagamentoDoPedido(row.pagamento_nome);
-    const tagsVolumes = agruparVolumesEmTags(volumesPayload.itens);
-    await salvarTags(row, [...(tagPagamento ? [tagPagamento] : []), ...tagsVolumes]);
+    await salvarTags(row, agruparVolumesEmTags(volumesPayload.itens));
 
     await mudarStatus(row.producao_id, statusCanonicoDaColuna(target), observacaoHistorico);
 
@@ -2003,6 +2052,7 @@ export default function PCP() {
                         onImprimirOP={imprimirOP}
                         onAgrupar={abrirAgrupamento}
                         onDesagrupar={desfazerAgrupamento}
+                        onInserirMedidas={r => setExpedicaoModal({ row: r, target: "aguardando_coleta" })}
                         imprimindoOP={imprimindoOP === row.producao_id}
                         onDragStart={() => setDraggingId(row.producao_id)}
                         onDragEnd={() => setDraggingId(null)}
@@ -2204,12 +2254,12 @@ export default function PCP() {
                         <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold" style={{ color: "var(--gw-danger)" }}>
                           <X className="h-4 w-4" /> Teste recusado — anexe um novo teste quando refeito
                         </span>
-                      ) : ((detalhe.tags ?? []).includes(TAG_TESTE_ENVIADO) || (detalhe.tags ?? []).includes(TAG_TESTE_REFEITO)) && (
+                      ) : (detalhe.coluna_pcp === "teste_enviado" || (detalhe.tags ?? []).includes(TAG_TESTE_ENVIADO) || (detalhe.tags ?? []).includes(TAG_TESTE_REFEITO)) && (
                         <div className="flex items-center gap-2">
                           <Button size="sm" onClick={() => aprovarTeste(detalhe)} style={{ backgroundColor: "var(--gw-success)" }}>
                             <CheckCircle2 className="h-4 w-4 mr-2" /> Cliente aprovou
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => reprovarTeste(detalhe)} style={{ color: "var(--gw-danger)", borderColor: "var(--gw-danger)" }}>
+                          <Button size="sm" variant="outline" onClick={() => { setRecusaMotivo(""); setRecusaModal(detalhe); }} style={{ color: "var(--gw-danger)", borderColor: "var(--gw-danger)" }}>
                             <X className="h-4 w-4 mr-2" /> Cliente recusou
                           </Button>
                         </div>
@@ -2409,6 +2459,17 @@ export default function PCP() {
                       Mesma ação do botão no card, só que acessível também
                       por quem já está com o painel aberto (não só arrastando
                       no quadro). */}
+                  {detalhe.coluna_pcp === "inserir_medidas" && (
+                    <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
+                      <p className="gw-label flex items-center gap-1.5">
+                        <Boxes className="h-3.5 w-3.5" /> Medidas da caixa
+                      </p>
+                      <Button size="sm" onClick={() => { setDetalheId(null); setExpedicaoModal({ row: detalhe, target: "aguardando_coleta" }); }} style={{ backgroundColor: "#0B8177" }}>
+                        <Boxes className="h-4 w-4 mr-2" /> Inserir medidas
+                      </Button>
+                    </div>
+                  )}
+
                   {detalhe.coluna_pcp === "aguardando_coleta" && (
                     <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
                       <p className="gw-label flex items-center gap-1.5">
@@ -2815,19 +2876,50 @@ export default function PCP() {
           o pedido inteiro). Volumes (L/A/P/peso) + responsável; se um
           item-irmão do mesmo pedido já tiver volume preenchido, oferece
           "Já preenchido" pra reaproveitar sem digitar de novo. */}
+      <Dialog open={!!recusaModal} onOpenChange={open => !open && !recusaSaving && setRecusaModal(null)}>
+        <DialogContent style={{ maxWidth: 520 }}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <X className="h-5 w-5" style={{ color: "var(--gw-danger)" }} />
+              Teste recusado — Pedido {recusaModal?.pedido_numero}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-1">
+            <p className="text-[12px] text-[var(--gw-text-muted)]">
+              {recusaModal?.produto_nome} — o motivo fica registrado como observação deste produto no pedido.
+            </p>
+            <Label>Motivo da recusa <span className="text-[var(--gw-danger)]">*</span></Label>
+            <Textarea
+              autoFocus
+              rows={4}
+              value={recusaMotivo}
+              onChange={e => setRecusaMotivo(e.target.value)}
+              placeholder="Ex.: cliente pediu a logo 1 cm maior e mais centralizada"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRecusaModal(null)} disabled={recusaSaving}>Cancelar</Button>
+            <Button onClick={reprovarTeste} disabled={recusaSaving || !recusaMotivo.trim()} style={{ backgroundColor: "var(--gw-danger)" }}>
+              {recusaSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Confirmar recusa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!expedicaoModal} onOpenChange={open => !open && !expedicaoSaving && setExpedicaoModal(null)}>
         <DialogContent style={{ maxWidth: 560 }}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Boxes className="h-5 w-5 text-primary" />
-              Expedição — Pedido {expedicaoModal?.row.pedido_numero}
+              Inserir medidas — Pedido {expedicaoModal?.row.pedido_numero}
             </DialogTitle>
           </DialogHeader>
 
           {expedicaoModal && (
             <div className="space-y-4 py-1 max-h-[65vh] overflow-y-auto pr-1">
               <p className="text-[12px] text-[var(--gw-text-muted)]">
-                Registre os volumes deste item antes de liberar para a coleta.
+                Registre os volumes deste item. Ao confirmar, ele vai para Expedição e as etiquetas anteriores são trocadas pelas medidas de cada volume.
               </p>
 
               {/* Itens-irmãos do mesmo pedido que já têm volume — "foi na
@@ -2924,7 +3016,7 @@ export default function PCP() {
             </Button>
             <Button onClick={confirmarExpedicao} disabled={expedicaoSaving}>
               {expedicaoSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Confirmar expedição
+              Confirmar medidas
             </Button>
           </DialogFooter>
         </DialogContent>

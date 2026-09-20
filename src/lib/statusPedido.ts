@@ -39,8 +39,8 @@ const SEMENTE: StatusInfo[] = [
   { slug: "preparar_dtf",            nome: "Preparar DTF/vetorização",   cor: "#8452F5", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 50 },
   { slug: "a_produzir",              nome: "A produzir",                 cor: "#2563EB", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 60 },
   { slug: "a_produzir_terceirizada", nome: "A produzir terceirizada",    cor: "#1D4ED8", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 70 },
-  { slug: "produzido",               nome: "Produzido",                  cor: "#22C55E", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 75 },
-  { slug: "inserir_medidas",         nome: "Inserir medidas",            cor: "#0B8177", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 80 },
+  { slug: "produzido",               nome: "Produzido",                  cor: "#22C55E", colunaPcp: "inserir_medidas",     escopo: "ambos",  ordem: 75 },
+  { slug: "inserir_medidas",         nome: "Inserir medidas",            cor: "#0B8177", colunaPcp: "inserir_medidas",     escopo: "ambos",  ordem: 80 },
   { slug: "conferir_pagamentos",     nome: "Conferir pagamentos",        cor: "#05875F", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 90 },
   { slug: "enviar_etiqueta",         nome: "Enviar etiqueta/expedição",  cor: "#12883E", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 100 },
   { slug: "aguardando_coleta",       nome: "Aguardando coleta",          cor: "#9D6B03", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 110 },
@@ -136,6 +136,7 @@ export const COLUNAS_PCP = [
   { coluna: "teste_fisico",          rotulo: "Aguardando Teste",       canonico: "aguardando_teste" },
   { coluna: "teste_enviado",         rotulo: "Teste Enviado",          canonico: "aguardando_aprovacao_teste" },
   { coluna: "em_producao",           rotulo: "A Produzir",             canonico: "a_produzir" },
+  { coluna: "inserir_medidas",       rotulo: "Inserir Medidas",        canonico: "inserir_medidas" },
   { coluna: "aguardando_coleta",     rotulo: "Expedição",              canonico: "aguardando_coleta" },
   { coluna: "enviado",               rotulo: "Coletado e Enviado",     canonico: "coletado_enviado" },
 ] as const;

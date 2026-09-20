@@ -69,6 +69,7 @@ const ABAS = [
   { id: "teste",       rotulo: "Aguardando Teste",     colunas: ["teste_fisico"] },
   { id: "teste_env",   rotulo: "Teste Enviado",        colunas: ["teste_enviado"] },
   { id: "produzir",    rotulo: "A Produzir",           colunas: ["em_producao"] },
+  { id: "medidas",     rotulo: "Inserir Medidas",      colunas: ["inserir_medidas"] },
   { id: "expedicao",   rotulo: "Expedição",            colunas: ["aguardando_coleta"] },
   { id: "entregues",   rotulo: "Coletado e Enviado",   colunas: ["enviado"] },
   { id: "cancelados",  rotulo: "Cancelados",           colunas: ["cancelado"] },
@@ -269,7 +270,16 @@ export default function Pedidos() {
       .on("postgres_changes", { event: "*", schema: "public", table: "sistema_pedidos" }, recarregar)
       .on("postgres_changes", { event: "*", schema: "public", table: "sistema_producao_itens" }, recarregar)
       .subscribe();
-    return () => { window.clearTimeout(debounce); void supabase.removeChannel(canal); };
+    // Rede de segurança caso o realtime caia: relê a cada 20s e ao voltar pra aba.
+    const intervalo = window.setInterval(() => { if (!document.hidden) recarregar(); }, 20000);
+    const aoFocar = () => { if (!document.hidden) recarregar(); };
+    document.addEventListener("visibilitychange", aoFocar);
+    return () => {
+      window.clearTimeout(debounce);
+      window.clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", aoFocar);
+      void supabase.removeChannel(canal);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
