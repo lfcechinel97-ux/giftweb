@@ -1,5 +1,6 @@
 import { OrderNumber, StatusPill, MetaField, Thumb, Money, type GwStage } from "@/components/sistema/ui";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -219,6 +220,7 @@ export default function Orcamentos() {
     fetchOrcamentosItens,
   } = useSistema();
   const navigate = useNavigate();
+  const { vendedorRestrito } = useUserRole();
   const [filtroCliente, setFiltroCliente] = useState("");
   const [filtroBusca, setFiltroBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
@@ -431,7 +433,7 @@ export default function Orcamentos() {
     filtroBusca ? { key: "busca", label: `Busca: ${filtroBusca}`, clear: () => setFiltroBusca("") } : null,
     filtroCliente ? { key: "cliente", label: `Cliente: ${filtroCliente}`, clear: () => setFiltroCliente("") } : null,
     filtroStatus !== "todos" ? { key: "status", label: `Status: ${statusStyles[filtroStatus as OrcamentoStatus].label}`, clear: () => setFiltroStatus("todos") } : null,
-    filtroVendedor !== "todos" ? { key: "vendedor", label: `Vendedor: ${getVendedorNome(filtroVendedor)}`, clear: () => setFiltroVendedor("todos") } : null,
+    filtroVendedor !== "todos" && !vendedorRestrito ? { key: "vendedor", label: `Vendedor: ${getVendedorNome(filtroVendedor)}`, clear: () => setFiltroVendedor("todos") } : null,
     dataInicio ? { key: "de", label: `De: ${dateBR(dataInicio)}`, clear: () => setDataInicio("") } : null,
     dataFim ? { key: "ate", label: `Até: ${dateBR(dataFim)}`, clear: () => setDataFim("") } : null,
   ].filter(Boolean) as { key: string; label: string; clear: () => void }[];
@@ -487,17 +489,19 @@ export default function Orcamentos() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={filtroVendedor} onValueChange={setFiltroVendedor}>
-          <SelectTrigger className="h-9 w-[190px]">
-            <SelectValue placeholder="Vendedor" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os vendedores</SelectItem>
-            {vendedores.map(v => (
-              <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {!vendedorRestrito && (
+          <Select value={filtroVendedor} onValueChange={setFiltroVendedor}>
+            <SelectTrigger className="h-9 w-[190px]">
+              <SelectValue placeholder="Vendedor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos os vendedores</SelectItem>
+              {vendedores.map(v => (
+                <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <Input type="date" aria-label="Data inicial" value={dataInicio} onChange={e => setDataInicio(e.target.value)} className="h-9 w-[140px]" />
         <Input type="date" aria-label="Data final" value={dataFim} onChange={e => setDataFim(e.target.value)} className="h-9 w-[140px]" />
       </div>

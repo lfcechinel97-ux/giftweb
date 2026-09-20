@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { carregarCatalogoStatus } from "@/lib/statusPedido";
+import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
 
 // Helper: surface DB write errors to the user (otherwise inserts fail silently and data "disappears" on reload)
 const reportDbError = (label: string) => (res: any) => {
@@ -438,11 +439,12 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Todos os filtros vão para o SERVIDOR, aplicados ANTES do recorte da página.
     // fetchQuery serve do cache do React Query (60s) quando os mesmos filtros
     // já foram buscados — voltar para a tela não gera nova requisição.
+    const restrito = vendedorRestritoDe(await obterPerfil(qc));
     const { data: payload, error } = await qc.fetchQuery({
-      queryKey: ["sistema", "orcamentos", "list", opts ?? null],
+      queryKey: ["sistema", "orcamentos", "list", opts ?? null, restrito],
       staleTime: 60 * 1000,
       queryFn: () => supabase.rpc("sistema_list_orcamentos", {
-        p_vendedor_id: opts?.vendedorId || null,
+        p_vendedor_id: restrito ?? (opts?.vendedorId || null),
         p_status: opts?.status && opts.status !== "todos" ? opts.status : null,
         p_search: opts?.search || null,
         p_cliente: opts?.cliente || null,
@@ -547,8 +549,9 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const pageSize = opts?.pageSize ?? 10;
     const from = (page - 1) * pageSize;
 
+    const restrito = vendedorRestritoDe(await obterPerfil(qc));
     const res = await qc.fetchQuery({
-      queryKey: ["sistema", "pedidos", "list", opts ?? null],
+      queryKey: ["sistema", "pedidos", "list", opts ?? null, restrito],
       staleTime: 60 * 1000,
       queryFn: () => {
         /* Desempate por id: sem ele, pedidos com o mesmo created_at saem em
@@ -560,6 +563,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .order("created_at", { ascending: false })
           .order("id", { ascending: false });
         // Filtros ANTES do recorte da página
+        if (restrito) q = q.eq("vendedor_id", restrito);
         if (opts?.status && opts.status !== "todos") q = q.eq("status", opts.status);
         if (opts?.dataInicio) q = q.gte("created_at", `${opts.dataInicio}T00:00:00`);
         if (opts?.dataFim) q = q.lte("created_at", `${opts.dataFim}T23:59:59`);

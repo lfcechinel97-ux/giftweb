@@ -68,7 +68,7 @@ const PedidoForm: React.FC = () => {
   const navigate = useNavigate();
   const { clientes, transportadoras, meiosPagamento, vendedores, ensureClientes, refreshPedidos } = useSistema();
   const { parentProducts, searchParents, getParentWithVariants, isLoading } = useSistemaProducts();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, vendedorRestrito } = useUserRole();
 
   useEffect(() => { void ensureClientes(); }, [ensureClientes]);
 
@@ -548,7 +548,7 @@ const PedidoForm: React.FC = () => {
           </label>
           <label className="space-y-1">
             <span className="gw-label">Vendedor</span>
-            <Select value={vendedorId} onValueChange={setVendedorId}>
+            <Select value={vendedorId} onValueChange={setVendedorId} disabled={!!vendedorRestrito}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
                 {vendedores.map(v => <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>)}

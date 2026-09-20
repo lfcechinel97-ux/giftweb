@@ -27,6 +27,7 @@ import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 import { COLUNAS_PCP, corDaColuna, statusCanonicoDaColuna, colunaDoStatus, statusInfo } from "@/lib/statusPedido";
 import { useSistema, type Pedido, type PedidoItem } from "@/contexts/SistemaContext";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
+import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 
@@ -920,11 +921,13 @@ export default function PCP() {
          sempre. Itens em qualquer OUTRA coluna sempre aparecem — só quem
          já terminou o fluxo é que expira do board. */
       const cortaEnviadoAntes = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
-      const { data, error } = await supabase
+      const restrito = vendedorRestritoDe(await obterPerfil(queryClient));
+      let q = supabase
         .from("vw_pcp" as any)
         .select("*")
-        .or(`coluna_pcp.neq.enviado,etapa_desde.gte.${cortaEnviadoAntes}`)
-        .order("data_entrega_item", { ascending: true, nullsFirst: false });
+        .or(`coluna_pcp.neq.enviado,etapa_desde.gte.${cortaEnviadoAntes}`);
+      if (restrito) q = q.eq("pedido_vendedor_id", restrito);
+      const { data, error } = await q.order("data_entrega_item", { ascending: true, nullsFirst: false });
       if (error) {
         console.error("[PCP] carregar itens falhou:", error);
         toast.error(`Não foi possível carregar o PCP. ${error.message || ""}`);

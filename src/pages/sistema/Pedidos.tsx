@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { statusInfo, opcoesStatus } from "@/lib/statusPedido";
 import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaContext";
 import { supabase } from "@/integrations/supabase/client";
+import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -105,7 +106,7 @@ export default function Pedidos() {
   const navigate = useNavigate();
   const {
     pedidos, pedidosTotal, updatePedido, clientes, vendedores, meiosPagamento,
-    refreshPedidos, ensureClientes,
+    refreshPedidos, ensureClientes, currentVendedor,
   } = useSistema();
 
   useEffect(() => { void ensureClientes(); }, [ensureClientes]);
@@ -132,10 +133,26 @@ export default function Pedidos() {
     queryKey: ["sistema", "pedidos", "contagem-abas"],
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("sistema_contar_pedidos_por_coluna" as any);
       const zero = Object.fromEntries(ABAS.map(a => [a.id, 0])) as Record<AbaId, number>;
-      if (error || !data) return zero;
-      for (const r of data as { coluna_pcp: string; total: number }[]) {
+      /* Comercial conta só os próprios pedidos (a RPC agrega a empresa toda);
+         o volume de um vendedor é pequeno o bastante para somar aqui. */
+      const restrito = vendedorRestritoDe(await obterPerfil(qc));
+      let linhas: { coluna_pcp: string; total: number }[];
+      if (restrito) {
+        const { data, error } = await supabase.from("sistema_pedidos").select("status").eq("vendedor_id", restrito);
+        if (error || !data) return zero;
+        const porColuna = new Map<string, number>();
+        for (const r of data as { status: string }[]) {
+          const col = statusInfo(r.status).colunaPcp;
+          porColuna.set(col, (porColuna.get(col) ?? 0) + 1);
+        }
+        linhas = [...porColuna].map(([coluna_pcp, total]) => ({ coluna_pcp, total }));
+      } else {
+        const { data, error } = await supabase.rpc("sistema_contar_pedidos_por_coluna" as any);
+        if (error || !data) return zero;
+        linhas = data as { coluna_pcp: string; total: number }[];
+      }
+      for (const r of linhas) {
         zero.todos += r.total;
         for (const a of ABAS) {
           if (a.colunas && (a.colunas as readonly string[]).includes(r.coluna_pcp)) zero[a.id] += r.total;
@@ -311,9 +328,14 @@ export default function Pedidos() {
     try {
       const { data: numero, error: errNum } = await supabase.rpc("sistema_next_pedido_numero");
       if (errNum) throw errNum;
+      // Já nasce com o vendedor de quem criou; sem isso some da lista do Comercial.
+      const perfil = await obterPerfil(qc);
+      const vendedorDoPedido = vendedorRestritoDe(perfil)
+        ? perfil.vendedorId
+        : (currentVendedor?.id ?? perfil.vendedorId ?? null);
       const { data, error } = await supabase
         .from("sistema_pedidos")
-        .insert({ numero: numero as unknown as string, itens: [], status: "organizando_anotacoes" })
+        .insert({ numero: numero as unknown as string, itens: [], status: "organizando_anotacoes", vendedor_id: vendedorDoPedido })
         .select("id")
         .single();
       if (error) throw error;
