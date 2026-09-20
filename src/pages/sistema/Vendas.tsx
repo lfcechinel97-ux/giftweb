@@ -13,6 +13,7 @@ import VendaConferencia from "./financeiro/VendaConferencia";
 import { fetchVendasConferencia, sincronizarFinanceiro } from "./financeiro/api";
 import type { VendasConferencia } from "./financeiro/types";
 import { toast } from "sonner";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const brl = (v: number) => BRL.format(Number.isFinite(v) ? v : 0);
@@ -25,6 +26,19 @@ const iso = (d: Date) => d.toISOString().slice(0, 10);
 type StatusFiltro = "todas" | "pendentes" | "conferidas";
 
 export default function Vendas() {
+  const { isAdmin, isLoading } = useUserRole();
+  if (isLoading) return null;
+  if (!isAdmin) {
+    return (
+      <div className="rounded-xl border p-6 text-sm" style={{ background: "var(--gw-surface)", borderColor: "var(--gw-border)", color: "var(--gw-text-secondary)" }}>
+        Esta área mostra custos e lucro e é restrita ao administrador.
+      </div>
+    );
+  }
+  return <VendasAdmin />;
+}
+
+function VendasAdmin() {
   const [params, setParams] = useSearchParams();
   const qc = useQueryClient();
 

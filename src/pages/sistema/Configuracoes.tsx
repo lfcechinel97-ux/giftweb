@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useUserRole } from "@/hooks/useUserRole";
+import UsuariosAdmin from "./UsuariosAdmin";
 import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +13,9 @@ import {
 import { useSistema, type LookupItem, type Transportadora } from "@/contexts/SistemaContext";
 
 export default function Configuracoes() {
+  const { isAdmin } = useUserRole();
+  const [params, setParams] = useSearchParams();
+  const aba = params.get("aba") || "vendedores";
   return (
     <div className="space-y-6">
       <div>
@@ -19,14 +25,16 @@ export default function Configuracoes() {
         </p>
       </div>
 
-      <Tabs defaultValue="vendedores" className="space-y-4">
+      <Tabs value={aba} onValueChange={v => setParams({ aba: v }, { replace: true })} className="space-y-4">
         <TabsList>
+          {isAdmin && <TabsTrigger value="usuarios">Usuários</TabsTrigger>}
           <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
           <TabsTrigger value="pagamentos">Meios de pagamento</TabsTrigger>
           <TabsTrigger value="transportadoras">Transportadoras</TabsTrigger>
           <TabsTrigger value="origens">Origens</TabsTrigger>
         </TabsList>
 
+        {isAdmin && <TabsContent value="usuarios"><UsuariosAdmin /></TabsContent>}
         <TabsContent value="vendedores"><VendedoresCRUD /></TabsContent>
         <TabsContent value="pagamentos"><PagamentosCRUD /></TabsContent>
         <TabsContent value="transportadoras"><TransportadorasCRUD /></TabsContent>

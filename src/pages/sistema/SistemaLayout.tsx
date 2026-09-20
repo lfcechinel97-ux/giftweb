@@ -2,17 +2,19 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import {
   FileText, ShoppingCart, Boxes, Package, Globe, User, Users, Settings, ChevronDown, Kanban, LayoutDashboard, Wallet,
-  Search as SearchIcon, Bell, BarChart3,
+  Search as SearchIcon, Bell, BarChart3, LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useSistema } from "@/contexts/SistemaContext";
+import { useUserRole, ROTULO_PAPEL } from "@/hooks/useUserRole";
+import { supabase } from "@/integrations/supabase/client";
 
-const menu = [
+const menu: { icon: typeof LayoutDashboard; label: string; path: string; chunk: () => Promise<unknown>; soAdmin?: boolean }[] = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/sistema/dashboard", chunk: () => import("./Dashboard.tsx") },
-  { icon: Wallet, label: "Fluxo de vendas", path: "/sistema/vendas", chunk: () => import("./Vendas.tsx") },
+  { icon: Wallet, label: "Fluxo de vendas", path: "/sistema/vendas", chunk: () => import("./Vendas.tsx"), soAdmin: true },
   { icon: FileText, label: "Orçamentos", path: "/sistema/orcamentos", chunk: () => import("./Orcamentos.tsx") },
   { icon: ShoppingCart, label: "Pedidos", path: "/sistema/pedidos", chunk: () => import("./Pedidos.tsx") },
   { icon: Kanban, label: "PCP", path: "/sistema/pcp", chunk: () => import("./PCP.tsx") },
@@ -42,6 +44,24 @@ const RouteSkeleton = () => (
 
 export default function SistemaLayout() {
   const { vendedores, currentVendedor, setCurrentVendedor, loading } = useSistema();
+  const { isAdmin, papel, nome: nomeUsuario, email, vendedorId, isLoading: perfilCarregando } = useUserRole();
+
+  /* Usuário vinculado a um vendedor assina o histórico com ele. Só o admin
+     pode trocar de vendedor à vontade; os demais ficam presos ao próprio. */
+  useEffect(() => {
+    if (!vendedorId || vendedores.length === 0) return;
+    if (currentVendedor?.id === vendedorId) return;
+    if (isAdmin && currentVendedor) return;
+    const v = vendedores.find(x => x.id === vendedorId);
+    if (v) setCurrentVendedor(v);
+  }, [vendedorId, vendedores, currentVendedor, isAdmin, setCurrentVendedor]);
+  const podeTrocarVendedor = isAdmin || !vendedorId;
+
+  const sair = async () => {
+    await supabase.auth.signOut();
+    // Recarrega do zero para não sobrar cache (papéis, listas) do usuário anterior.
+    window.location.href = "/admin/login";
+  };
   const vendedorAtualId = currentVendedor?.id;
   const vendedorAtualNome = currentVendedor?.nome ?? "Selecionar vendedor";
   const setVendedorAtualId = (id: string) => {
@@ -81,7 +101,7 @@ export default function SistemaLayout() {
         </div>
 
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
-          {menu.map(item => (
+          {menu.filter(item => !item.soAdmin || isAdmin).map(item => (
             <NavLink
               key={item.path}
               to={item.path}
@@ -178,30 +198,49 @@ export default function SistemaLayout() {
                   <span className="text-[13.5px] font-semibold truncate" style={{ color: "var(--gw-text)" }}>
                     {vendedorAtualNome}
                   </span>
-                  <span className="text-[11.5px]" style={{ color: "var(--gw-text-muted)" }}>Vendedor</span>
+                  <span className="text-[11.5px]" style={{ color: "var(--gw-text-muted)" }}>
+                    {perfilCarregando ? "…" : ROTULO_PAPEL[papel]}
+                  </span>
                 </span>
                 <ChevronDown className="h-4 w-4 shrink-0" style={{ color: "var(--gw-text-muted)" }} />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Trocar vendedor</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-60">
+              <DropdownMenuLabel className="font-normal">
+                <span className="block text-[13px] font-semibold truncate">{nomeUsuario || email}</span>
+                {nomeUsuario && email && <span className="block text-[11.5px] text-muted-foreground truncate">{email}</span>}
+                <span className="block text-[11.5px] text-muted-foreground">Perfil: {ROTULO_PAPEL[papel]}</span>
+              </DropdownMenuLabel>
+              {podeTrocarVendedor && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Trocar vendedor</DropdownMenuLabel>
+                  {loading && vendedores.length === 0 ? (
+                    <DropdownMenuItem disabled>Carregando vendedores...</DropdownMenuItem>
+                  ) : vendedores.length === 0 ? (
+                    <DropdownMenuItem disabled>Nenhum cadastrado</DropdownMenuItem>
+                  ) : vendedores.map(v => (
+                    <DropdownMenuItem
+                      key={v.id}
+                      onClick={() => setVendedorAtualId(v.id)}
+                      className={v.id === vendedorAtualId ? "bg-muted" : ""}
+                    >
+                      {v.nome}
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
               <DropdownMenuSeparator />
-              {loading && vendedores.length === 0 ? (
-                <DropdownMenuItem disabled>Carregando vendedores...</DropdownMenuItem>
-              ) : vendedores.length === 0 ? (
-                <DropdownMenuItem disabled>Nenhum cadastrado</DropdownMenuItem>
-              ) : vendedores.map(v => (
-                <DropdownMenuItem
-                  key={v.id}
-                  onClick={() => setVendedorAtualId(v.id)}
-                  className={v.id === vendedorAtualId ? "bg-muted" : ""}
-                >
-                  {v.nome}
+              {isAdmin && (
+                <DropdownMenuItem onClick={() => navigate("/sistema/configuracoes?aba=usuarios")}>
+                  <Users className="h-3.5 w-3.5 mr-2" /> Usuários e acessos
                 </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
+              )}
               <DropdownMenuItem onClick={() => navigate("/sistema/configuracoes")}>
-                <Settings className="h-3.5 w-3.5 mr-2" /> Gerenciar vendedores
+                <Settings className="h-3.5 w-3.5 mr-2" /> Configurações
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => void sair()}>
+                <LogOut className="h-3.5 w-3.5 mr-2" /> Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
             </DropdownMenu>

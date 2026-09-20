@@ -10,6 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import DespesaDialog from "./financeiro/DespesaDialog";
+import { useUserRole } from "@/hooks/useUserRole";
 import { BarraOrcamento, BarrasCategoria, GraficoDiario } from "./financeiro/Graficos";
 import { useDashboardFinanceiro } from "./financeiro/useFinanceiro";
 import type { GrupoDespesa, LinhaOrcamento } from "./financeiro/types";
@@ -166,6 +167,8 @@ export default function Dashboard() {
   const [params, setParams] = useSearchParams();
   const periodoId = (params.get("periodo") as PeriodoId) || "mes";
   const [despesaAberta, setDespesaAberta] = useState(false);
+  // Resultado, custos, despesas e caixa são só do admin.
+  const { isAdmin } = useUserRole();
 
   const { inicio, fim } = useMemo(() => {
     if (periodoId === "custom") {
@@ -256,9 +259,11 @@ export default function Dashboard() {
           <RefreshCw className={`h-4 w-4 mr-2 ${sincronizando ? "animate-spin" : ""}`} />
           {sincronizando ? "Sincronizando" : "Sincronizar"}
         </Button>
-        <Button onClick={() => setDespesaAberta(true)}>
-          <Plus className="h-4 w-4 mr-2" /> Lançar despesa
-        </Button>
+        {isAdmin && (
+          <Button onClick={() => setDespesaAberta(true)}>
+            <Plus className="h-4 w-4 mr-2" /> Lançar despesa
+          </Button>
+        )}
       </header>
 
       {isLoading && !data ? (
@@ -268,11 +273,12 @@ export default function Dashboard() {
       ) : (
         <>
           {/* ── KPIs ──────────────────────────────────────────────── */}
-          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-5">
+          <div className={isAdmin ? "grid gap-3 md:grid-cols-3 xl:grid-cols-5" : "grid gap-3 md:grid-cols-3"}>
             <CardKpi
               label="Vendido" valor={receita} icone={TrendingUp} cor="var(--gw-primary)"
               rodape={<>{totais?.pedidos ?? 0} pedidos · ticket {brl(totais?.ticket ?? 0)}</>}
             />
+            {isAdmin && <>
             <CardKpi
               label="Entrou no caixa" valor={totais?.recebido ?? 0} icone={ArrowDownRight} cor="var(--gw-violet)"
               rodape={<>hoje {brl(hoje?.recebido ?? 0)}</>}
@@ -291,10 +297,11 @@ export default function Dashboard() {
               destaque
               rodape={<>lucro das vendas menos despesas</>}
             />
+            </>}
           </div>
 
           {/* ── Aviso de cobertura de custo ───────────────────────── */}
-          {((totais?.itens_sem_custo ?? 0) > 0 || (totais?.pedidos_sem_itens ?? 0) > 0) && (
+          {isAdmin && ((totais?.itens_sem_custo ?? 0) > 0 || (totais?.pedidos_sem_itens ?? 0) > 0) && (
             <div
               className="flex flex-wrap items-center gap-2 rounded-xl border p-3 text-[13px]"
               style={{ background: "var(--gw-warning-soft)", borderColor: "var(--gw-warning)", color: "var(--gw-text)" }}
@@ -316,22 +323,24 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className="grid gap-4 xl:grid-cols-[1fr_380px]">
+          <div className={isAdmin ? "grid gap-4 xl:grid-cols-[1fr_380px]" : "grid gap-4"}>
             <div className="space-y-4">
               {/* ── Gráfico diário ──────────────────────────────── */}
-              <Painel titulo="Movimento diário">
+              <Painel titulo={isAdmin ? "Movimento diário" : "Vendas por dia"}>
                 <GraficoDiario
                   dados={(data?.serie ?? []) as unknown as Record<string, number | string>[]}
                   series={[
                     { chave: "vendido", label: "Vendido", cor: "var(--gw-primary)", preenchida: true },
-                    { chave: "recebido", label: "Entrou", cor: "var(--gw-violet)" },
-                    { chave: "despesas", label: "Despesas", cor: "var(--gw-danger)" },
+                    ...(isAdmin ? [
+                      { chave: "recebido", label: "Entrou", cor: "var(--gw-violet)" },
+                      { chave: "despesas", label: "Despesas", cor: "var(--gw-danger)" },
+                    ] : []),
                   ]}
                 />
               </Painel>
 
               {/* ── Previsto x realizado ────────────────────────── */}
-              <Painel
+              {isAdmin && <Painel
                 titulo="Orçamento do mês"
                 acao={
                   data?.orcamento_competencia && (
@@ -368,7 +377,7 @@ export default function Dashboard() {
                     ))}
                   </div>
                 )}
-              </Painel>
+              </Painel>}
 
               {/* ── Maiores pedidos ─────────────────────────────── */}
               <Painel titulo="Maiores pedidos do período">
@@ -384,8 +393,8 @@ export default function Dashboard() {
                           <th className="text-left font-medium pb-2">Pedido</th>
                           <th className="text-left font-medium pb-2">Cliente</th>
                           <th className="text-right font-medium pb-2">Venda</th>
-                          <th className="text-right font-medium pb-2">Custo</th>
-                          <th className="text-right font-medium pb-2">Lucro</th>
+                          {isAdmin && <th className="text-right font-medium pb-2">Custo</th>}
+                          {isAdmin && <th className="text-right font-medium pb-2">Lucro</th>}
                         </tr>
                       </thead>
                       <tbody>
@@ -396,6 +405,7 @@ export default function Dashboard() {
                               {v.cliente_nome ?? "—"}
                             </td>
                             <td className="py-2 text-right gw-tnum">{brl(v.valor_total)}</td>
+                            {isAdmin && <>
                             <td className="py-2 text-right gw-tnum" style={{ color: "var(--gw-text-secondary)" }}>
                               {v.sem_itens || v.itens_sem_custo > 0
                                 ? <span title="Custo incompleto: há itens sem custo cadastrado.">
@@ -410,6 +420,7 @@ export default function Dashboard() {
                                 {pct(v.lucro, v.valor_total)}
                               </span>
                             </td>
+                            </>}
                           </tr>
                         ))}
                       </tbody>
@@ -420,7 +431,7 @@ export default function Dashboard() {
             </div>
 
             {/* ── Coluna direita ─────────────────────────────────── */}
-            <div className="space-y-4">
+            {isAdmin && <div className="space-y-4">
               {/* DRE */}
               <Painel titulo="Como o resultado se forma">
                 <LinhaDre label="Receita bruta" valor={receita} />
@@ -518,7 +529,7 @@ export default function Dashboard() {
                   </span>
                 </div>
               </div>
-            </div>
+            </div>}
           </div>
         </>
       )}

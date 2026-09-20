@@ -1914,43 +1914,6 @@ export default function PCP() {
         </div>
       </div>
 
-      {/* Filtro por etiquetas */}
-      {todasTags.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="gw-label flex items-center gap-1.5">
-            <Tag className="h-3.5 w-3.5" /> Etiquetas
-          </span>
-          {todasTags.map(t => {
-            const ativo = tagsFiltro.includes(t);
-            return (
-              <button
-                key={t}
-                type="button"
-                onClick={() =>
-                  setTagsFiltro(prev => (ativo ? prev.filter(x => x !== t) : [...prev, t]))
-                }
-                className={cn(
-                  "gw-body text-[13px] font-semibold rounded-full px-3 py-1 border transition-colors",
-                  !ativo && "bg-[var(--gw-surface)] text-[var(--gw-text-secondary)] border-[var(--gw-border)] hover:border-[var(--gw-border-strong)]"
-                )}
-                style={ativo ? { backgroundColor: corDaTag(t), color: "#fff", borderColor: "transparent" } : undefined}
-              >
-                {t}
-              </button>
-            );
-          })}
-          {tagsFiltro.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setTagsFiltro([])}
-              className="gw-body text-[13px] text-[var(--gw-text-muted)] hover:underline"
-            >
-              limpar
-            </button>
-          )}
-        </div>
-      )}
-
       {loading ? (
         <div className="flex gap-4 overflow-hidden">
           {[0, 1, 2, 3].map(c => (
