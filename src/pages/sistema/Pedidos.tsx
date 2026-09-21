@@ -610,11 +610,9 @@ export default function Pedidos() {
                     className="px-4 py-2.5"
                     style={{ borderTop: idx === 0 ? undefined : "2px solid var(--gw-bg)" }}
                   >
-                    {/* max-w puxa o bloco numérico para perto do produto. Sem
-                        ele, o nome ocupa toda a sobra e os números vão parar na
-                        borda do cartão, longe do que descrevem. A régua acima
-                        continua na largura cheia. */}
-                    <div className="grid grid-cols-[104px_minmax(0,1fr)_84px_116px_140px] items-center gap-3 max-w-[790px]">
+                    {/* Colunas numéricas em fr: dividem a largura inteira do
+                        cartão com o produto, sem deixar um vão vazio à direita. */}
+                    <div className="grid grid-cols-[104px_minmax(0,1.6fr)_minmax(80px,0.6fr)_minmax(120px,0.8fr)_minmax(130px,0.9fr)] items-center gap-4">
                     <Thumb size="lg" className="!h-[104px] !w-[104px] !rounded-[12px]" src={item.mockupImagem || item.imagem} alt={item.nome} />
 
                     <span className="flex flex-col min-w-0 gap-1">
@@ -640,13 +638,15 @@ export default function Pedidos() {
                     </span>
 
                     <Numero rotulo="Qtd">
-                      <span className="gw-qtd">{num(item.quantidade)}</span>
+                      <span className="gw-qtd" style={{ fontSize: 22, fontWeight: 800 }}>{num(item.quantidade)}</span>
                     </Numero>
                     <Numero rotulo="Unit.">
-                      <span className="gw-valor-sm">{brl(num(item.precoUnitario))}</span>
+                      <span className="gw-valor-sm" style={{ fontSize: 17, fontWeight: 800, color: "var(--gw-text)" }}>
+                        {brl(num(item.precoUnitario))}
+                      </span>
                     </Numero>
                     <Numero rotulo="Total">
-                      <span className="gw-valor">{brl(itemTotal(item))}</span>
+                      <span className="gw-valor" style={{ fontSize: 19 }}>{brl(itemTotal(item))}</span>
                     </Numero>
                     </div>
                   </div>
