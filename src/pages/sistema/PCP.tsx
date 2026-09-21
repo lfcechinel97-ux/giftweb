@@ -216,34 +216,37 @@ const TAG_PALETTE = [
    (nome de terceirizada, nome de transportadora fora da lista) continua
    caindo no hash determinístico acima. "TERCEIRIZADA: X" é reconhecida
    pelo prefixo, não pelo texto inteiro (o nome muda por pedido). */
+/* Todas aqui são tons FECHADOS de propósito: a etiqueta é sempre texto
+   branco em negrito, e verde/laranja/ciano claros deixavam a palavra
+   quase ilegível em cima da foto do produto. */
 const TAG_COR_EXATA: Record<string, string> = {
-  "COMPRADO XBZ": "#2563EB",
-  "COMPRADO SP": "#7C3AED",
-  "COMPRADO CHINA": "#7C3AED", // legado — tags já gravadas com esse texto continuam coloridas
-  "TESTE ENVIADO": "#A855F7",
-  "TESTE REFEITO": "#8452F5",
-  "TESTE APROVADO": "#22C55E",
-  "TESTE RECUSADO": "#EF4444",
-  "PROD. GALPÃO": "#2563EB",
-  "TERCEIRIZADA": "#F97316",
-  "COBRAR 50% RESTANTE": "#EF4444",
-  "PAGO CARTÃO": "#22C55E",
-  "DESPACHAR": "#0EA5E9",
-  "PRODUZIR + MÍDIA": "#F97316",
-  "PRODUZIDO": "#16A34A",
-  "LASER": "#16A34A",
-  "DTF UV": "#2563EB",
-  "MÍDIA ENVIADA": "#06B6D4",
-  "PAGO 100%": "#22C55E",
-  "PAGAMENTO PENDENTE": "#EF4444",
-  "COLETADO": "#22C55E",
-  "ENVIADO": "#22C55E",
-  "COLETA BRASPRESS": "#2563EB",
-  "BRASPRESS": "#2563EB",
-  "COLETA MELHOR ENVIO": "#7C3AED",
-  "MELHOR ENVIO": "#7C3AED",
-  "ENVIO POR LALAMOVE": "#F97316",
-  "LALAMOVE": "#F97316",
+  "COMPRADO XBZ": "#1D4ED8",
+  "COMPRADO SP": "#6D28D9",
+  "COMPRADO CHINA": "#6D28D9", // legado — tags já gravadas com esse texto continuam coloridas
+  "TESTE ENVIADO": "#7E22CE",
+  "TESTE REFEITO": "#6D28D9",
+  "TESTE APROVADO": "#15803D",
+  "TESTE RECUSADO": "#DC2626",
+  "PROD. GALPÃO": "#1D4ED8",
+  "TERCEIRIZADA": "#C2410C",
+  "COBRAR 50% RESTANTE": "#DC2626",
+  "PAGO CARTÃO": "#15803D",
+  "DESPACHAR": "#0369A1",
+  "PRODUZIR + MÍDIA": "#C2410C",
+  "PRODUZIDO": "#15803D",
+  "LASER": "#15803D",
+  "DTF UV": "#1D4ED8",
+  "MÍDIA ENVIADA": "#0E7490",
+  "PAGO 100%": "#15803D",
+  "PAGAMENTO PENDENTE": "#DC2626",
+  "COLETADO": "#15803D",
+  "ENVIADO": "#15803D",
+  "COLETA BRASPRESS": "#1D4ED8",
+  "BRASPRESS": "#1D4ED8",
+  "COLETA MELHOR ENVIO": "#6D28D9",
+  "MELHOR ENVIO": "#6D28D9",
+  "ENVIO POR LALAMOVE": "#C2410C",
+  "LALAMOVE": "#C2410C",
 };
 
 /* Ordem de prioridade quando o card tem mais etiquetas do que cabe —
@@ -549,8 +552,8 @@ function PcpCard({
       {tagsVisiveis.map(t => (
         <span
           key={t}
-          className="gw-body text-white text-[10px] leading-none rounded-[5px] px-[6px] py-[4px] whitespace-nowrap"
-          style={{ backgroundColor: corDaTag(t), fontWeight: 700 }}
+          className="gw-body text-white text-[10px] leading-none rounded-[5px] px-[7px] py-[4px] whitespace-nowrap"
+          style={{ backgroundColor: corDaTag(t), fontWeight: 700, boxShadow: "0 1px 3px rgba(15,23,42,.45)" }}
         >
           {t}
         </span>
@@ -1980,16 +1983,17 @@ export default function PCP() {
                   )}
                 >
                   <div
-                    className="flex items-center justify-between px-4 py-3 text-white shrink-0"
+                    className="flex items-center justify-between gap-2 px-4 py-2.5 text-white shrink-0"
                     style={{ backgroundColor: col.color }}
                   >
-                    <span className="gw-title text-[15px] text-white truncate" style={{ fontWeight: 700 }}>{col.label}</span>
+                    {/* Nome inteiro, sempre: quebra em duas linhas em vez de
+                        virar "Aguardando Me…". */}
+                    <span className="gw-title text-[14px] text-white leading-tight" style={{ fontWeight: 700 }}>{col.label}</span>
                     <span
-                      className="gw-body text-[12px] font-semibold text-white rounded-full px-2.5 py-0.5 shrink-0"
-                      style={{ backgroundColor: "rgba(255,255,255,.22)" }}
+                      className="gw-body text-[11px] font-bold text-white rounded-full px-2 py-0.5 shrink-0 whitespace-nowrap"
+                      style={{ backgroundColor: "rgba(255,255,255,.28)" }}
                     >
-
-                      {items.length} {items.length === 1 ? "item" : "itens"} · {somaQtd} un.
+                      {items.length} · {somaQtd} un.
                     </span>
                   </div>
                   {/* Rolagem vertical acontece por coluna */}
