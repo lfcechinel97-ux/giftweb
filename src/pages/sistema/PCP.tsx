@@ -28,6 +28,7 @@ import { COLUNAS_PCP, corDaColuna, statusCanonicoDaColuna, colunaDoStatus, statu
 import { useSistema, type Pedido, type PedidoItem } from "@/contexts/SistemaContext";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
+import { resumoPersonalizacao } from "@/lib/personalizacao";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 
@@ -1174,6 +1175,70 @@ export default function PCP() {
     carregarAnexos(detalheId);
   }, [detalheId]);
 
+  /* ── O.P. terceirizada: link público temporário com mockup + medida da
+     logo + arte para baixar (página /op-terceirizada/:token). ─────────── */
+  const [opLink, setOpLink] = useState<{ id: string; expira_em: string; dimensao_tipo: string; dimensao_cm: number } | null>(null);
+  const [opDimTipo, setOpDimTipo] = useState<"largura" | "altura">("largura");
+  const [opDimCm, setOpDimCm] = useState("");
+  const [opGerando, setOpGerando] = useState(false);
+
+  useEffect(() => {
+    setOpLink(null);
+    setOpDimCm("");
+    if (!detalheId) return;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("sistema_op_terceirizada_links")
+        .select("id, expira_em, dimensao_tipo, dimensao_cm")
+        .eq("producao_item_id", detalheId)
+        .order("criado_em", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data && new Date(data.expira_em) > new Date()) setOpLink(data);
+    })();
+  }, [detalheId]);
+
+  const urlOpTerceirizada = (id: string) => `${window.location.origin}/op-terceirizada/${id}`;
+
+  const gerarOpTerceirizada = async (row: PcpRow) => {
+    const cm = Number(opDimCm.replace(",", "."));
+    if (!cm || cm <= 0) { toast.error("Informe a medida da logo em cm."); return; }
+    setOpGerando(true);
+    try {
+      // Personalização e observação moram no item do pedido (jsonb), não na view.
+      const { data: prod } = await supabase
+        .from("sistema_producao_itens" as any).select("item_id").eq("id", row.producao_id).single();
+      const { data: ped } = await supabase
+        .from("sistema_pedidos").select("itens").eq("id", row.pedido_id).single();
+      const item = (((ped as any)?.itens ?? []) as PedidoItem[]).find(i => i.id === (prod as any)?.item_id);
+
+      const conteudo = {
+        pedido_numero: row.pedido_numero,
+        produto_nome: row.produto_nome,
+        quantidade: row.quantidade,
+        mockup_url: row.mockup_url || row.imagem_catalogo_url,
+        arte_url: row.arte_anexo_url,
+        personalizacao: item ? resumoPersonalizacao(item) : "",
+        observacao: item?.observacao ?? row.item_observacao ?? "",
+        terceirizada_nome: row.terceirizada_nome || row.terceirizada_nome_livre || "",
+      };
+      const { data, error } = await (supabase as any)
+        .from("sistema_op_terceirizada_links")
+        .insert({ producao_item_id: row.producao_id, dimensao_tipo: opDimTipo, dimensao_cm: cm, conteudo })
+        .select("id, expira_em, dimensao_tipo, dimensao_cm")
+        .single();
+      if (error) throw error;
+      setOpLink(data);
+      await registrarNotaHistorico(row, `O.P. terceirizada gerada (logo com ${cm} cm de ${opDimTipo})`);
+      try { await navigator.clipboard.writeText(urlOpTerceirizada(data.id)); toast.success("Link gerado e copiado."); }
+      catch { toast.success("Link gerado."); }
+    } catch (err: any) {
+      toast.error(`Não foi possível gerar o link. ${err?.message ?? ""}`);
+    } finally {
+      setOpGerando(false);
+    }
+  };
+
   const carregarComentarios = async (producaoId: string) => {
     const { data } = await supabase
       .from("sistema_producao_comentarios" as any)
@@ -2165,8 +2230,8 @@ export default function PCP() {
                       {(detalhe.tags ?? []).map(t => (
                         <span
                           key={t}
-                          className="gw-body inline-flex items-center gap-1 text-[13px] font-semibold rounded-full pl-3 pr-1.5 py-1 text-white"
-                          style={{ backgroundColor: corDaTag(t) }}
+                          className="gw-body inline-flex items-center gap-1 text-[13px] rounded-full pl-3 pr-1.5 py-1"
+                          style={{ backgroundColor: corDaTag(t), color: "#FFFFFF", fontWeight: 700 }}
                         >
                           {t}
                           <button
@@ -2188,6 +2253,70 @@ export default function PCP() {
                       onSelect={nome => adicionarTag(detalhe, nome)}
                     />
                   </div>
+
+                  {/* O.P. terceirizada — só quando o item vai pra terceirizada. */}
+                  {(detalhe.local_producao === "terceirizada"
+                    || (detalhe.tags ?? []).some(t => t.toUpperCase().startsWith(TAG_TERCEIRIZADA_PREFIXO))) && (
+                    <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2.5">
+                      <p className="gw-label flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5" /> Ordem de produção terceirizada
+                      </p>
+                      {opLink && (
+                        <div className="rounded-lg border border-[var(--gw-border)] bg-[var(--gw-surface-alt)] p-2.5 space-y-1.5">
+                          <p className="text-[12px] text-[var(--gw-text-secondary)]">
+                            Logo com <strong>{Number(opLink.dimensao_cm).toLocaleString("pt-BR")} cm</strong> de {opLink.dimensao_tipo} ·
+                            válido até {new Date(opLink.expira_em).toLocaleDateString("pt-BR")}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Input readOnly value={urlOpTerceirizada(opLink.id)} className="h-8 text-[12px]" onFocus={e => e.currentTarget.select()} />
+                            <Button
+                              size="sm" variant="outline" className="h-8 shrink-0"
+                              onClick={async () => {
+                                try { await navigator.clipboard.writeText(urlOpTerceirizada(opLink.id)); toast.success("Link copiado."); }
+                                catch { toast.error("Não foi possível copiar."); }
+                              }}
+                            >
+                              Copiar
+                            </Button>
+                            <Button size="sm" variant="outline" className="h-8 shrink-0" asChild>
+                              <a href={urlOpTerceirizada(opLink.id)} target="_blank" rel="noreferrer">Abrir</a>
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      {!detalhe.arte_anexo_url && (
+                        <p className="text-[12px]" style={{ color: "var(--gw-warning)" }}>
+                          Este produto não tem arte anexada no pedido — o link sai sem a logo para baixar.
+                        </p>
+                      )}
+                      <div className="flex items-end gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-[11px]">Medida da logo</Label>
+                          <Select value={opDimTipo} onValueChange={v => setOpDimTipo(v as "largura" | "altura")}>
+                            <SelectTrigger className="h-9 w-[120px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="largura">Largura</SelectItem>
+                              <SelectItem value="altura">Altura</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[11px]">cm</Label>
+                          <Input
+                            inputMode="decimal"
+                            value={opDimCm}
+                            onChange={e => setOpDimCm(e.target.value)}
+                            placeholder="Ex.: 5"
+                            className="h-9 w-[80px]"
+                          />
+                        </div>
+                        <Button size="sm" className="h-9" onClick={() => void gerarOpTerceirizada(detalhe)} disabled={opGerando}>
+                          {opGerando && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                          {opLink ? "Gerar novo link" : "Gerar link"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Teste físico — só aparece na etapa certa, ou depois de já
                       ter anexo (pra continuar visível como registro). */}
