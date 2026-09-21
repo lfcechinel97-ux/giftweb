@@ -76,12 +76,31 @@ export default function UsuariosAdmin() {
     if (novo.senha.length < 6) { toast.error("A senha precisa ter pelo menos 6 caracteres."); return; }
     setCriando(true);
     try {
-      const { data, error } = await clienteCadastro().auth.signUp({ email, password: novo.senha });
-      const jaExistia = /already|registered|exists/i.test(error?.message ?? "")
-        || (data?.user && (data.user.identities?.length ?? 0) === 0);
-      if (error && !jaExistia) throw error;
+      const vendedorId = novo.vendedorId === SEM_VENDEDOR ? null : novo.vendedorId;
+      let jaExistia = false;
 
-      await salvarNoBanco(email, nome, novo.papel, novo.vendedorId === SEM_VENDEDOR ? null : novo.vendedorId);
+      /* Caminho principal: função no servidor, que funciona com o cadastro
+         público DESLIGADO. Se ela ainda não foi publicada (404/rede), cai
+         no cadastro público antigo para não travar a criação de usuários. */
+      const { data: res, error: erroFn } = await supabase.functions.invoke("sistema-criar-usuario", {
+        body: { email, senha: novo.senha, nome, papel: novo.papel, vendedorId },
+      });
+      const naoPublicada = !!erroFn
+        && (erroFn.name === "FunctionsFetchError" || (erroFn as any).context?.status === 404);
+
+      if (!erroFn) {
+        jaExistia = !!(res as any)?.jaExistia;
+      } else if (naoPublicada) {
+        const { data, error } = await clienteCadastro().auth.signUp({ email, password: novo.senha });
+        jaExistia = /already|registered|exists/i.test(error?.message ?? "")
+          || (!!data?.user && (data.user.identities?.length ?? 0) === 0);
+        if (error && !jaExistia) throw error;
+        await salvarNoBanco(email, nome, novo.papel, vendedorId);
+      } else {
+        const detalhe = await (erroFn as any)?.context?.json?.().catch(() => null);
+        throw new Error(detalhe?.error ?? erroFn.message);
+      }
+
       toast.success(jaExistia
         ? "Esse e-mail já tinha conta: acesso liberado, mas a senha continua a antiga."
         : "Usuário criado. Ele já pode entrar com o e-mail e a senha informados.");
