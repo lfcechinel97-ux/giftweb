@@ -27,7 +27,7 @@ import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 import { COLUNAS_PCP, corDaColuna, statusCanonicoDaColuna, colunaDoStatus, statusInfo } from "@/lib/statusPedido";
 import { useSistema, type Pedido, type PedidoItem } from "@/contexts/SistemaContext";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
-import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
+import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
 import { resumoPersonalizacao } from "@/lib/personalizacao";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -109,6 +109,7 @@ interface ComentarioRow {
   id: string;
   mensagem: string;
   autor_email: string | null;
+  autor_nome?: string | null;
   created_at: string;
 }
 
@@ -782,6 +783,8 @@ export default function PCP() {
      auth.uid(), que é sempre a mesma pessoa fisicamente logada. */
   const { vendedores, currentVendedor, clientes, transportadoras: transportadorasCadastro } = useSistema();
   const vendedorNome = (id: string | null) => vendedores.find(v => v.id === id)?.nome || null;
+  const { email: emailUsuario, nome: nomeCadastro, vendedorId: vendedorDoUsuario } = useUserRole();
+  const nomeUsuario = nomeCadastro || vendedorNome(vendedorDoUsuario);
   const queryClient = useQueryClient();
 
   const [rows, setRows] = useState<PcpRow[]>([]);
@@ -1272,7 +1275,7 @@ export default function PCP() {
   const carregarComentarios = async (producaoId: string) => {
     const { data } = await supabase
       .from("sistema_producao_comentarios" as any)
-      .select("id, mensagem, autor_email, created_at")
+      .select("*")
       .eq("producao_item_id", producaoId)
       .order("created_at", { ascending: true });
     setComentarios((data as any as ComentarioRow[]) ?? []);
@@ -2536,7 +2539,9 @@ export default function PCP() {
                           >
                             <div className="flex items-center justify-between gap-2">
                               <span className="gw-body text-[12px] font-semibold text-[var(--gw-text-secondary)] truncate">
-                                {c.autor_email || "Sistema"}
+                                {c.autor_nome
+                                  || (c.autor_email && c.autor_email.toLowerCase() === (emailUsuario ?? "").toLowerCase() ? nomeUsuario : null)
+                                  || (c.autor_email ? c.autor_email.split("@")[0] : "Sistema")}
                               </span>
                               <span className="gw-body text-[11px] text-[var(--gw-text-muted)] shrink-0">
                                 {new Date(c.created_at).toLocaleString("pt-BR", {
