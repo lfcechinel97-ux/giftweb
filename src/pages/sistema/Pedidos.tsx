@@ -288,8 +288,8 @@ export default function Pedidos() {
       .on("postgres_changes", { event: "*", schema: "public", table: "sistema_pedidos" }, recarregar)
       .on("postgres_changes", { event: "*", schema: "public", table: "sistema_producao_itens" }, recarregar)
       .subscribe();
-    // Rede de segurança caso o realtime caia: relê a cada 20s e ao voltar pra aba.
-    const intervalo = window.setInterval(() => { if (!document.hidden) recarregar(); }, 20000);
+    // Rede de segurança caso o realtime caia: relê a cada 2 min e ao voltar pra aba.
+    const intervalo = window.setInterval(() => { if (!document.hidden) recarregar(); }, 120000);
     const aoFocar = () => { if (!document.hidden) recarregar(); };
     document.addEventListener("visibilitychange", aoFocar);
     return () => {

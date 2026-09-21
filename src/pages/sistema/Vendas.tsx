@@ -21,7 +21,9 @@ const dataBR = (iso?: string | null) =>
   iso ? new Date(`${String(iso).slice(0, 10)}T12:00:00`).toLocaleDateString("pt-BR") : "—";
 
 const hojeBR = () => new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-const iso = (d: Date) => d.toISOString().slice(0, 10);
+// Componentes locais: toISOString (UTC) pulava pro dia seguinte depois das 21h.
+const iso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 type StatusFiltro = "todas" | "pendentes" | "conferidas";
 

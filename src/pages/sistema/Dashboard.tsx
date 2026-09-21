@@ -30,7 +30,11 @@ const dataBR = (iso: string) =>
 const hojeBR = () =>
   new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
 
-const iso = (d: Date) => d.toISOString().slice(0, 10);
+/* Componentes locais, NÃO toISOString: o Date de hojeBR() já está no
+   relógio de Brasília, e converter pra UTC pulava pro dia seguinte depois
+   das 21h. */
+const iso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 type PeriodoId = "hoje" | "7dias" | "mes" | "mes_passado" | "ano" | "custom";
 

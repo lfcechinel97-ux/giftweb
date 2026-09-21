@@ -773,7 +773,8 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       subtotal: orcamento.subtotal, freteTipo: orcamento.freteTipo, freteValor: orcamento.freteValor,
       total: orcamento.subtotal + orcamento.freteValor, transportadoraId: orcamento.transportadoraId,
       prazoEntrega: orcamento.prazoEntrega, pagamentoId: orcamento.pagamentoId,
-      observacoes: orcamento.observacoes, status: "novo", createdAt: now, updatedAt: now,
+      // "novo" deixou de existir no catálogo de status (FK em sistema_status).
+      observacoes: orcamento.observacoes, status: "organizando_anotacoes", createdAt: now, updatedAt: now,
     };
 
     const reservas: StockAdjustment[] = itensPedido.map(item => ({
@@ -783,6 +784,13 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       orcamentoId: orcamento.id, pedidoId: pedido.id, createdAt: now,
     }));
 
+    /* O pedido primeiro, e só com ele gravado o orçamento vira "aprovado":
+       antes os três iam juntos, e um pedido rejeitado deixava o orçamento
+       aprovado sem pedido nenhum. */
+    const resPedido = await dbWrite("pedido", () =>
+      supabase.from("sistema_pedidos").insert({ ...pedidoToDb(pedido), created_at: now }));
+    if (resPedido?.error) return null;
+
     setData(prev => ({
       ...prev,
       pedidos: [pedido, ...prev.pedidos],
@@ -791,7 +799,6 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }));
 
     await Promise.all([
-      dbWrite("pedido", () => supabase.from("sistema_pedidos").insert({ ...pedidoToDb(pedido), created_at: now })),
       dbWrite("orçamento", () => supabase.from("sistema_orcamentos").update({ status: "aprovado", aprovado_em: now, updated_at: now }).eq("id", id)),
       dbWrite("reserva de estoque", () => supabase.from("sistema_ajustes_estoque").insert(reservas.map(r => ({
         id: r.id, produto_id: r.produtoId, codigo_composto: r.codigoComposto, variante_slug: r.varianteSlug,

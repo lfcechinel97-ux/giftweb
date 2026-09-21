@@ -314,14 +314,15 @@ const PedidoForm: React.FC = () => {
 
   const pedirRemocao = (item: PedidoItem) => {
     const st = statusDoItem(item.id);
-    const coluna = st ? statusInfo(st).colunaPcp : "organizando_pedido";
+    const coluna = st ? statusInfo(st).colunaPcp : "organizando_comercial";
     if (coluna === "enviado") {
       toast.error("Item já enviado: não pode ser excluído. Use “Cancelar item”.");
       return;
     }
-    /* Item sem linha de produção nunca entrou no chão de fábrica — sai sem
-       confirmação, igual a um que ainda está sendo organizado. */
-    if (coluna !== "organizando_pedido") {
+    /* Sai sem confirmação só o que ainda não chegou na produção: item sem
+       linha de produção ou em "Organizando Pedido" (etapa do comercial).
+       "Imprimir O.P." (coluna organizando_pedido) já é chão de fábrica. */
+    if (coluna !== "organizando_comercial") {
       setConfirmRemove({ item, etapa: statusInfo(st).nome });
       return;
     }

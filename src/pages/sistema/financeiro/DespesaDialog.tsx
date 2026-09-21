@@ -29,9 +29,8 @@ const GRUPO_LABEL: Record<GrupoDespesa, string> = {
   variavel: "Variáveis",
 };
 
-const hojeBR = () =>
-  new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }))
-    .toISOString().slice(0, 10);
+// en-CA formata como AAAA-MM-DD; toISOString (UTC) pulava pro dia seguinte depois das 21h.
+const hojeBR = () => new Date().toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
 
 /** Aceita "1.234,56" e "1234.56" — o teclado de quem lança não é o do banco. */
 const paraNumero = (v: string): number => {

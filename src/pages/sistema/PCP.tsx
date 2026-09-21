@@ -920,8 +920,10 @@ export default function PCP() {
   const pcpQuery = useQuery<PcpRow[]>({
     queryKey: ["sistema", "pcp", "rows"],
     staleTime: 60 * 1000,
-    // Rede de segurança caso o realtime caia (aba em segundo plano, rede instável).
-    refetchInterval: 20 * 1000,
+    /* Rede de segurança caso o realtime caia. Espaçada de propósito: cada
+       releitura é a vw_pcp inteira, e com várias abas abertas um intervalo
+       curto pesava no banco (sessões caindo nos picos). */
+    refetchInterval: 2 * 60 * 1000,
     refetchOnWindowFocus: true,
     queryFn: async () => {
       /* Sem filtro, o board carrega TODO item de produção que já existiu,
@@ -1017,7 +1019,8 @@ export default function PCP() {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const recarregar = () => {
       clearTimeout(timer);
-      timer = setTimeout(() => { void loadItems(); }, 400);
+      // Agrupa rajadas (mover um pedido inteiro gera um evento por item).
+      timer = setTimeout(() => { void loadItems(); }, 1500);
     };
     const canal: RealtimeChannel = supabase
       .channel("pcp-ao-vivo")
