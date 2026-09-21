@@ -1067,7 +1067,8 @@ export default function PCP() {
         (payload) => {
           const linha = payload.new as HistoricoRow;
           if (linha.producao_item_id !== detalheIdRef.current) return;
-          setHistorico(prev => [linha, ...prev]);
+          // A própria tela já pode ter inserido essa linha (registrarNotaHistorico).
+          setHistorico(prev => (prev.some(h => h.id === linha.id) ? prev : [linha, ...prev]));
         },
       )
       .subscribe();
@@ -1200,6 +1201,35 @@ export default function PCP() {
 
   const urlOpTerceirizada = (id: string) => `${window.location.origin}/op-terceirizada/${id}`;
 
+  /* Mesma regra da página pública: logo anexada no PCP (a mais recente)
+     vence a arte que veio do pedido. `anexos` já vem do mais novo pro mais
+     velho. */
+  const logoDoItem = (row: PcpRow) =>
+    anexos.find(a => a.categoria === "logo" && a.producao_item_id === row.producao_id)?.url
+      ?? row.arte_anexo_url ?? null;
+
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const [enviandoLogo, setEnviandoLogo] = useState(false);
+  const handleTrocarLogo = async (e: React.ChangeEvent<HTMLInputElement>, row: PcpRow) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setEnviandoLogo(true);
+    try {
+      const { url } = await uploadArquivoPedido(file, row.pedido_id);
+      const tipo: AnexoRow["tipo"] = /\.(jpe?g|png|webp|gif|heic|svg)$/i.test(file.name) ? "foto"
+        : /\.pdf$/i.test(file.name) ? "pdf" : "outro";
+      const ok = await registrarAnexoGenerico(row, "logo", tipo, url, file.name);
+      if (!ok) throw new Error("não foi possível registrar o anexo");
+      await registrarNotaHistorico(row, `Logo substituída: ${file.name}`);
+      toast.success(opLink ? "Logo trocada. O link já enviado passa a mostrar a nova." : "Logo anexada.");
+    } catch (err) {
+      toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar a logo.");
+    } finally {
+      setEnviandoLogo(false);
+    }
+  };
+
   const gerarOpTerceirizada = async (row: PcpRow) => {
     const cm = Number(opDimCm.replace(",", "."));
     if (!cm || cm <= 0) { toast.error("Informe a medida da logo em cm."); return; }
@@ -1217,7 +1247,7 @@ export default function PCP() {
         produto_nome: row.produto_nome,
         quantidade: row.quantidade,
         mockup_url: row.mockup_url || row.imagem_catalogo_url,
-        arte_url: row.arte_anexo_url,
+        arte_url: logoDoItem(row),
         personalizacao: item ? resumoPersonalizacao(item) : "",
         observacao: item?.observacao ?? row.item_observacao ?? "",
         terceirizada_nome: row.terceirizada_nome || row.terceirizada_nome_livre || "",
@@ -1658,7 +1688,7 @@ export default function PCP() {
       observacao: texto,
     } as any).select("id").single();
     if (!error && detalheIdRef.current === row.producao_id && data) {
-      setHistorico(prev => [{
+      setHistorico(prev => prev.some(h => h.id === (data as any).id) ? prev : [{
         id: (data as any).id, producao_item_id: row.producao_id, status_anterior: null,
         status_novo: row.status, usuario_id: null, vendedor_id: currentVendedor?.id ?? null,
         observacao: texto, created_at: new Date().toISOString(),
@@ -2284,11 +2314,33 @@ export default function PCP() {
                           </div>
                         </div>
                       )}
-                      {!detalhe.arte_anexo_url && (
-                        <p className="text-[12px]" style={{ color: "var(--gw-warning)" }}>
-                          Este produto não tem arte anexada no pedido — o link sai sem a logo para baixar.
-                        </p>
-                      )}
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*,application/pdf,.ai,.cdr,.eps,.svg"
+                        className="hidden"
+                        onChange={e => void handleTrocarLogo(e, detalhe)}
+                      />
+                      <div className="flex items-center gap-3 rounded-lg border border-[var(--gw-border)] p-2.5">
+                        {logoDoItem(detalhe) && /\.(jpe?g|png|webp|gif|svg)(\?|$)/i.test(logoDoItem(detalhe)!) ? (
+                          <img src={logoDoItem(detalhe)!} alt="Logo" className="h-12 w-12 rounded object-contain bg-white border border-[var(--gw-border)] shrink-0" />
+                        ) : (
+                          <span className="h-12 w-12 rounded border border-dashed border-[var(--gw-border)] flex items-center justify-center shrink-0">
+                            <FileText className="h-5 w-5 text-[var(--gw-text-muted)]" />
+                          </span>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[12px] font-semibold">Logo do cliente</p>
+                          <p className="text-[11.5px] truncate" style={{ color: logoDoItem(detalhe) ? "var(--gw-text-secondary)" : "var(--gw-warning)" }}>
+                            {logoDoItem(detalhe)
+                              ? decodeURIComponent(logoDoItem(detalhe)!.split("/").pop() || "arquivo")
+                              : "Nenhuma logo — anexe aqui para ela ir no link"}
+                          </p>
+                        </div>
+                        <Button size="sm" variant="outline" className="h-8 shrink-0" onClick={() => logoInputRef.current?.click()} disabled={enviandoLogo}>
+                          {enviandoLogo ? <Loader2 className="h-4 w-4 animate-spin" /> : logoDoItem(detalhe) ? "Trocar logo" : "Anexar logo"}
+                        </Button>
+                      </div>
                       <div className="flex items-end gap-2">
                         <div className="space-y-1">
                           <Label className="text-[11px]">Medida da logo</Label>
