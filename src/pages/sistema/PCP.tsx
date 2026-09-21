@@ -1295,8 +1295,21 @@ export default function PCP() {
         dataDespacharAte: p.data_despachar_ate ?? undefined,
       };
       await gerarOrdemProducaoPDF(pedidoMapeado, { clientes, vendedores, transportadoras: transportadorasCadastro });
-      moverItem(row, "aguardando_mercadoria", "Ordem de produção impressa");
-      toast.success("Ordem de produção baixada. Item movido para Aguardando Mercadoria.");
+      /* A O.P. é do PEDIDO inteiro (lista todos os produtos), então quem
+         avança é o pedido inteiro — não só o item do botão. */
+      const doPedido = rows.filter(
+        r => r.pedido_id === row.pedido_id && colunaDoStatus(r) === "organizando_pedido",
+      );
+      for (const irmao of doPedido) {
+        await mudarStatus(
+          irmao.producao_id, statusCanonicoDaColuna("aguardando_mercadoria"), "Ordem de produção impressa",
+        );
+      }
+      toast.success(
+        doPedido.length > 1
+          ? `Ordem de produção baixada. ${doPedido.length} itens do pedido foram para Aguardando Mercadoria.`
+          : "Ordem de produção baixada. Item movido para Aguardando Mercadoria.",
+      );
     } catch (err) {
       console.error("[PCP] imprimir O.P. falhou:", err);
       toast.error("Não foi possível gerar a ordem de produção.");
