@@ -19,18 +19,32 @@ export type Database = {
           created_at: string | null
           email: string
           id: string
+          nome: string | null
+          vendedor_id: string | null
         }
         Insert: {
           created_at?: string | null
           email: string
           id: string
+          nome?: string | null
+          vendedor_id?: string | null
         }
         Update: {
           created_at?: string | null
           email?: string
           id?: string
+          nome?: string | null
+          vendedor_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "admin_users_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_vendedores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       catalogo_clientes: {
         Row: {
@@ -825,6 +839,7 @@ export type Database = {
           ie: string | null
           nome: string
           observacoes: string | null
+          razao_social: string | null
           tipo: string
           updated_at: string
         }
@@ -837,6 +852,7 @@ export type Database = {
           ie?: string | null
           nome: string
           observacoes?: string | null
+          razao_social?: string | null
           tipo: string
           updated_at?: string
         }
@@ -849,6 +865,7 @@ export type Database = {
           ie?: string | null
           nome?: string
           observacoes?: string | null
+          razao_social?: string | null
           tipo?: string
           updated_at?: string
         }
@@ -1117,6 +1134,33 @@ export type Database = {
           },
         ]
       }
+      sistema_etiquetas: {
+        Row: {
+          ativo: boolean
+          cor: string | null
+          created_at: string
+          id: string
+          nome: string
+          nome_norm: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          id?: string
+          nome: string
+          nome_norm?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          cor?: string | null
+          created_at?: string
+          id?: string
+          nome?: string
+          nome_norm?: string | null
+        }
+        Relationships: []
+      }
       sistema_financeiro_config: {
         Row: {
           comissao_pct: number
@@ -1306,6 +1350,54 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sistema_op_terceirizada_links: {
+        Row: {
+          conteudo: Json
+          criado_em: string
+          criado_por: string | null
+          dimensao_cm: number
+          dimensao_tipo: string
+          expira_em: string
+          id: string
+          producao_item_id: string
+        }
+        Insert: {
+          conteudo: Json
+          criado_em?: string
+          criado_por?: string | null
+          dimensao_cm: number
+          dimensao_tipo: string
+          expira_em?: string
+          id?: string
+          producao_item_id: string
+        }
+        Update: {
+          conteudo?: Json
+          criado_em?: string
+          criado_por?: string | null
+          dimensao_cm?: number
+          dimensao_tipo?: string
+          expira_em?: string
+          id?: string
+          producao_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_op_terceirizada_links_producao_item_id_fkey"
+            columns: ["producao_item_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_producao_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_op_terceirizada_links_producao_item_id_fkey"
+            columns: ["producao_item_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pcp"
+            referencedColumns: ["producao_id"]
+          },
+        ]
       }
       sistema_orcamento: {
         Row: {
@@ -1610,6 +1702,7 @@ export type Database = {
       }
       sistema_pedidos: {
         Row: {
+          anexos: Json
           calcme_data_entrega: string | null
           calcme_order_id: string | null
           calcme_order_idint: number | null
@@ -1619,6 +1712,7 @@ export type Database = {
           calcme_vendedor_nome: string | null
           cliente_id: string | null
           cliente_snapshot: Json | null
+          comprovante_pagamento_url: string | null
           contato_email: string | null
           contato_nome: string | null
           contato_telefone: string | null
@@ -1633,6 +1727,9 @@ export type Database = {
           observacoes: string | null
           orcamento_id: string | null
           pagamento_id: string | null
+          pago_integral: boolean
+          pago_integral_em: string | null
+          pago_integral_por: string | null
           prazo_entrega: number | null
           prazo_producao_dias: number
           status: string
@@ -1641,8 +1738,12 @@ export type Database = {
           transportadora_id: string | null
           updated_at: string
           vendedor_id: string | null
+          versao: number
+          volumes: Json
+          volumes_responsavel: string | null
         }
         Insert: {
+          anexos?: Json
           calcme_data_entrega?: string | null
           calcme_order_id?: string | null
           calcme_order_idint?: number | null
@@ -1652,6 +1753,7 @@ export type Database = {
           calcme_vendedor_nome?: string | null
           cliente_id?: string | null
           cliente_snapshot?: Json | null
+          comprovante_pagamento_url?: string | null
           contato_email?: string | null
           contato_nome?: string | null
           contato_telefone?: string | null
@@ -1666,6 +1768,9 @@ export type Database = {
           observacoes?: string | null
           orcamento_id?: string | null
           pagamento_id?: string | null
+          pago_integral?: boolean
+          pago_integral_em?: string | null
+          pago_integral_por?: string | null
           prazo_entrega?: number | null
           prazo_producao_dias?: number
           status?: string
@@ -1674,8 +1779,12 @@ export type Database = {
           transportadora_id?: string | null
           updated_at?: string
           vendedor_id?: string | null
+          versao?: number
+          volumes?: Json
+          volumes_responsavel?: string | null
         }
         Update: {
+          anexos?: Json
           calcme_data_entrega?: string | null
           calcme_order_id?: string | null
           calcme_order_idint?: number | null
@@ -1685,6 +1794,7 @@ export type Database = {
           calcme_vendedor_nome?: string | null
           cliente_id?: string | null
           cliente_snapshot?: Json | null
+          comprovante_pagamento_url?: string | null
           contato_email?: string | null
           contato_nome?: string | null
           contato_telefone?: string | null
@@ -1699,6 +1809,9 @@ export type Database = {
           observacoes?: string | null
           orcamento_id?: string | null
           pagamento_id?: string | null
+          pago_integral?: boolean
+          pago_integral_em?: string | null
+          pago_integral_por?: string | null
           prazo_entrega?: number | null
           prazo_producao_dias?: number
           status?: string
@@ -1707,13 +1820,104 @@ export type Database = {
           transportadora_id?: string | null
           updated_at?: string
           vendedor_id?: string | null
+          versao?: number
+          volumes?: Json
+          volumes_responsavel?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_pedidos_status"
+            columns: ["status"]
+            isOneToOne: false
+            referencedRelation: "sistema_status"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "sistema_pedidos_pago_integral_por_fkey"
+            columns: ["pago_integral_por"]
+            isOneToOne: false
+            referencedRelation: "sistema_vendedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sistema_producao_anexos: {
+        Row: {
+          categoria: string
+          created_at: string
+          id: string
+          nome_arquivo: string | null
+          pedido_id: string
+          producao_item_id: string
+          tipo: string
+          url: string
+          vendedor_id: string | null
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          id?: string
+          nome_arquivo?: string | null
+          pedido_id: string
+          producao_item_id: string
+          tipo: string
+          url: string
+          vendedor_id?: string | null
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          id?: string
+          nome_arquivo?: string | null
+          pedido_id?: string
+          producao_item_id?: string
+          tipo?: string
+          url?: string
+          vendedor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_producao_anexos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_producao_anexos_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pcp"
+            referencedColumns: ["pedido_id"]
+          },
+          {
+            foreignKeyName: "sistema_producao_anexos_producao_item_id_fkey"
+            columns: ["producao_item_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_producao_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_producao_anexos_producao_item_id_fkey"
+            columns: ["producao_item_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pcp"
+            referencedColumns: ["producao_id"]
+          },
+          {
+            foreignKeyName: "sistema_producao_anexos_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_vendedores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sistema_producao_comentarios: {
         Row: {
           autor_email: string | null
           autor_id: string | null
+          autor_nome: string | null
           created_at: string
           id: string
           mensagem: string
@@ -1723,6 +1927,7 @@ export type Database = {
         Insert: {
           autor_email?: string | null
           autor_id?: string | null
+          autor_nome?: string | null
           created_at?: string
           id?: string
           mensagem: string
@@ -1732,6 +1937,7 @@ export type Database = {
         Update: {
           autor_email?: string | null
           autor_id?: string | null
+          autor_nome?: string | null
           created_at?: string
           id?: string
           mensagem?: string
@@ -1764,6 +1970,7 @@ export type Database = {
           status_anterior: string | null
           status_novo: string
           usuario_id: string | null
+          vendedor_id: string | null
         }
         Insert: {
           created_at?: string
@@ -1773,6 +1980,7 @@ export type Database = {
           status_anterior?: string | null
           status_novo: string
           usuario_id?: string | null
+          vendedor_id?: string | null
         }
         Update: {
           created_at?: string
@@ -1782,6 +1990,7 @@ export type Database = {
           status_anterior?: string | null
           status_novo?: string
           usuario_id?: string | null
+          vendedor_id?: string | null
         }
         Relationships: [
           {
@@ -1798,6 +2007,13 @@ export type Database = {
             referencedRelation: "vw_pcp"
             referencedColumns: ["producao_id"]
           },
+          {
+            foreignKeyName: "sistema_producao_historico_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_vendedores"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sistema_producao_itens: {
@@ -1811,6 +2027,7 @@ export type Database = {
           enviado_terceiro_em: string | null
           etiqueta_ok: boolean
           fornecedor_compra_id: string | null
+          grupo_id: string | null
           id: string
           item_id: string
           local_producao: string
@@ -1823,6 +2040,9 @@ export type Database = {
           pedido_id: string
           pix_recebido_integral_em: string | null
           previsao_retorno: string | null
+          producao_anexo_em: string | null
+          producao_anexo_tipo: string | null
+          producao_anexo_url: string | null
           qtd_enviada: number | null
           qtd_retornada: number | null
           retornado_terceiro_em: string | null
@@ -1830,7 +2050,11 @@ export type Database = {
           tags: string[]
           tecnica_id: string | null
           terceirizada_id: string | null
+          terceirizada_nome_livre: string | null
+          teste_anexo_url: string | null
+          teste_enviado_em: string | null
           updated_at: string
+          volumes: Json | null
         }
         Insert: {
           arte_aprovada_em?: string | null
@@ -1842,6 +2066,7 @@ export type Database = {
           enviado_terceiro_em?: string | null
           etiqueta_ok?: boolean
           fornecedor_compra_id?: string | null
+          grupo_id?: string | null
           id?: string
           item_id: string
           local_producao?: string
@@ -1854,6 +2079,9 @@ export type Database = {
           pedido_id: string
           pix_recebido_integral_em?: string | null
           previsao_retorno?: string | null
+          producao_anexo_em?: string | null
+          producao_anexo_tipo?: string | null
+          producao_anexo_url?: string | null
           qtd_enviada?: number | null
           qtd_retornada?: number | null
           retornado_terceiro_em?: string | null
@@ -1861,7 +2089,11 @@ export type Database = {
           tags?: string[]
           tecnica_id?: string | null
           terceirizada_id?: string | null
+          terceirizada_nome_livre?: string | null
+          teste_anexo_url?: string | null
+          teste_enviado_em?: string | null
           updated_at?: string
+          volumes?: Json | null
         }
         Update: {
           arte_aprovada_em?: string | null
@@ -1873,6 +2105,7 @@ export type Database = {
           enviado_terceiro_em?: string | null
           etiqueta_ok?: boolean
           fornecedor_compra_id?: string | null
+          grupo_id?: string | null
           id?: string
           item_id?: string
           local_producao?: string
@@ -1885,6 +2118,9 @@ export type Database = {
           pedido_id?: string
           pix_recebido_integral_em?: string | null
           previsao_retorno?: string | null
+          producao_anexo_em?: string | null
+          producao_anexo_tipo?: string | null
+          producao_anexo_url?: string | null
           qtd_enviada?: number | null
           qtd_retornada?: number | null
           retornado_terceiro_em?: string | null
@@ -1892,9 +2128,20 @@ export type Database = {
           tags?: string[]
           tecnica_id?: string | null
           terceirizada_id?: string | null
+          terceirizada_nome_livre?: string | null
+          teste_anexo_url?: string | null
+          teste_enviado_em?: string | null
           updated_at?: string
+          volumes?: Json | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_producao_itens_status"
+            columns: ["status"]
+            isOneToOne: false
+            referencedRelation: "sistema_status"
+            referencedColumns: ["slug"]
+          },
           {
             foreignKeyName: "sistema_producao_itens_fornecedor_compra_id_fkey"
             columns: ["fornecedor_compra_id"]
@@ -2050,6 +2297,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sistema_status: {
+        Row: {
+          ativo: boolean
+          coluna_pcp: string
+          cor: string
+          created_at: string
+          escopo: string
+          id: string
+          nome: string
+          ordem: number
+          protegido: boolean
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          coluna_pcp?: string
+          cor?: string
+          created_at?: string
+          escopo?: string
+          id?: string
+          nome: string
+          ordem?: number
+          protegido?: boolean
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          coluna_pcp?: string
+          cor?: string
+          created_at?: string
+          escopo?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          protegido?: boolean
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       sistema_tecnicas: {
         Row: {
@@ -2468,18 +2757,24 @@ export type Database = {
       }
       vw_pcp: {
         Row: {
+          arte_anexo_url: string | null
           cliente: string | null
           coleta_solicitada_em: string | null
+          coluna_pcp: string | null
           compra_confirmada_em: string | null
           data_entrega_item: string | null
           enviado_terceiro_em: string | null
           etapa_desde: string | null
           etiqueta_ok: boolean | null
           fornecedor_compra_id: string | null
+          grupo_id: string | null
           horas_na_etapa: number | null
           imagem_catalogo_url: string | null
+          item_criado_em: string | null
           item_observacao: string | null
+          item_volumes: Json | null
           itens_enviados_pedido: number | null
+          itens_expedicao_pedido: number | null
           local_producao: string | null
           medidas_ok: boolean | null
           mockup_url: string | null
@@ -2487,29 +2782,50 @@ export type Database = {
           pagamento_cartao_conferido_em: string | null
           pagamento_nome: string | null
           pagamento_ok: boolean | null
+          pedido_anexos: Json | null
+          pedido_comprovante_pagamento_url: string | null
           pedido_cor: string | null
           pedido_id: string | null
           pedido_numero: string | null
           pedido_observacoes: string | null
+          pedido_pago_integral: boolean | null
           pedido_total: number | null
+          pedido_vendedor_id: string | null
+          pedido_volumes: Json | null
+          pedido_volumes_responsavel: string | null
           pix_recebido_integral_em: string | null
           previsao_retorno: string | null
+          producao_anexo_em: string | null
+          producao_anexo_tipo: string | null
+          producao_anexo_url: string | null
           producao_id: string | null
           produto_nome: string | null
           qtd_enviada: number | null
           qtd_retornada: number | null
           quantidade: number | null
           status: string | null
+          status_cor: string | null
+          status_nome: string | null
           tags: string[] | null
           tecnica_id: string | null
           tecnica_nome: string | null
           terceirizada_id: string | null
           terceirizada_nome: string | null
+          terceirizada_nome_livre: string | null
           terceirizada_telefone: string | null
+          teste_anexo_url: string | null
+          teste_enviado_em: string | null
           total_itens_pedido: number | null
           valor_unitario: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_producao_itens_status"
+            columns: ["status"]
+            isOneToOne: false
+            referencedRelation: "sistema_status"
+            referencedColumns: ["slug"]
+          },
           {
             foreignKeyName: "sistema_producao_itens_fornecedor_compra_id_fkey"
             columns: ["fornecedor_compra_id"]
@@ -2671,7 +2987,18 @@ export type Database = {
       set_variantes_por_prefixo: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sistema_contar_pedidos_por_coluna: {
+        Args: never
+        Returns: {
+          coluna_pcp: string
+          total: number
+        }[]
+      }
       sistema_cor_pedido: { Args: { p_numero: string }; Returns: string }
+      sistema_dashboard_comercial: {
+        Args: { p_fim?: string; p_inicio?: string }
+        Returns: Json
+      }
       sistema_dashboard_financeiro: {
         Args: { p_fim?: string; p_inicio?: string }
         Returns: Json
@@ -2698,10 +3025,117 @@ export type Database = {
         }
         Returns: Json
       }
+      sistema_list_pedidos: {
+        Args: {
+          p_cliente?: string
+          p_data_fim?: string
+          p_data_inicio?: string
+          p_page?: number
+          p_page_size?: number
+          p_search?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
+      sistema_listar_usuarios: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          nome: string
+          papel: string
+          user_id: string
+          vendedor_id: string
+        }[]
+      }
+      sistema_meu_perfil: {
+        Args: never
+        Returns: {
+          email: string
+          nome: string
+          papel: string
+          user_id: string
+          vendedor_id: string
+        }[]
+      }
+      sistema_mudar_status_producao: {
+        Args: {
+          p_observacao?: string
+          p_producao_id: string
+          p_status: string
+          p_vendedor_id?: string
+        }
+        Returns: {
+          arte_aprovada_em: string | null
+          coleta_solicitada_em: string | null
+          compra_confirmada_em: string | null
+          created_at: string
+          data_entrega_item: string | null
+          descricao_personalizacao: string | null
+          enviado_terceiro_em: string | null
+          etiqueta_ok: boolean
+          fornecedor_compra_id: string | null
+          grupo_id: string | null
+          id: string
+          item_id: string
+          local_producao: string
+          medidas_ok: boolean
+          nota_fiscal_compra: string | null
+          observacoes: string | null
+          origem_estoque: string
+          pagamento_cartao_conferido_em: string | null
+          pagamento_ok: boolean
+          pedido_id: string
+          pix_recebido_integral_em: string | null
+          previsao_retorno: string | null
+          producao_anexo_em: string | null
+          producao_anexo_tipo: string | null
+          producao_anexo_url: string | null
+          qtd_enviada: number | null
+          qtd_retornada: number | null
+          retornado_terceiro_em: string | null
+          status: string
+          tags: string[]
+          tecnica_id: string | null
+          terceirizada_id: string | null
+          terceirizada_nome_livre: string | null
+          teste_anexo_url: string | null
+          teste_enviado_em: string | null
+          updated_at: string
+          volumes: Json | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "sistema_producao_itens"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       sistema_next_orcamento_numero: { Args: never; Returns: string }
       sistema_next_pedido_numero: { Args: never; Returns: string }
+      sistema_op_terceirizada_publica: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      sistema_remover_usuario: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      sistema_salvar_usuario: {
+        Args: {
+          p_email: string
+          p_nome: string
+          p_papel: Database["public"]["Enums"]["app_role"]
+          p_vendedor_id?: string
+        }
+        Returns: string
+      }
       sistema_search_products: {
         Args: { p_page?: number; p_page_size?: number; p_search?: string }
+        Returns: Json
+      }
+      sistema_set_status_item: {
+        Args: { p_producao_id: string; p_status: string }
         Returns: Json
       }
       sistema_venda_detalhe: { Args: { p_venda_id: string }; Returns: Json }
