@@ -221,7 +221,15 @@ export async function gerarOrdemProducaoPDF(pedido: Pedido, sis: Sis): Promise<v
     if (p.imagem) {
       try {
         const props = doc.getImageProperties(p.imagem);
-        const escala = Math.min((imgArea.w - 10) / props.width, (imgArea.h - 10) / props.height);
+        /* Proporção original sempre, e nunca ampliar além do que a imagem
+           aguenta: o teto de 0,48 pt por pixel mantém no mínimo 150 dpi no
+           papel — esticar um mockup pequeno só deixaria a arte borrada. */
+        const TETO_AMPLIACAO = 0.48;
+        const escala = Math.min(
+          (imgArea.w - 10) / props.width,
+          (imgArea.h - 10) / props.height,
+          TETO_AMPLIACAO,
+        );
         const w = props.width * escala;
         const h = props.height * escala;
         doc.addImage(
