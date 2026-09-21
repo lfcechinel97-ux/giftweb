@@ -31,19 +31,19 @@ export interface StatusInfo {
 }
 
 const SEMENTE: StatusInfo[] = [
-  { slug: "organizando_anotacoes",   nome: "Organizando Pedido",         cor: "#64748B", colunaPcp: "organizando_comercial", escopo: "ambos", ordem: 10 },
-  { slug: "imprimir_ordem_producao", nome: "Imprimir ordem de produção", cor: "#0B7CAF", colunaPcp: "organizando_pedido",  escopo: "ambos",  ordem: 20 },
-  { slug: "aguardando_mercadoria",   nome: "Aguardando mercadoria",      cor: "#A36907", colunaPcp: "aguardando_mercadoria", escopo: "ambos", ordem: 30 },
+  { slug: "organizando_anotacoes",   nome: "Organizando Pedido",         cor: "#075985", colunaPcp: "organizando_comercial", escopo: "ambos", ordem: 10 },
+  { slug: "imprimir_ordem_producao", nome: "Imprimir ordem de produção", cor: "#0369A1", colunaPcp: "organizando_pedido",  escopo: "ambos",  ordem: 20 },
+  { slug: "aguardando_mercadoria",   nome: "Aguardando mercadoria",      cor: "#C2410C", colunaPcp: "aguardando_mercadoria", escopo: "ambos", ordem: 30 },
   { slug: "aguardando_teste",        nome: "Aguardando teste laser/DTF", cor: "#7E22CE", colunaPcp: "teste_fisico",        escopo: "ambos",  ordem: 40 },
   { slug: "aguardando_aprovacao_teste", nome: "Teste enviado",           cor: "#A21CAF", colunaPcp: "teste_enviado",       escopo: "ambos",  ordem: 45 },
-  { slug: "preparar_dtf",            nome: "Preparar DTF/vetorização",   cor: "#8452F5", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 50 },
+  { slug: "preparar_dtf",            nome: "Preparar DTF/vetorização",   cor: "#6D28D9", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 50 },
   { slug: "a_produzir",              nome: "A produzir",                 cor: "#1D4ED8", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 60 },
-  { slug: "a_produzir_terceirizada", nome: "A produzir terceirizada",    cor: "#1D4ED8", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 70 },
+  { slug: "a_produzir_terceirizada", nome: "A produzir terceirizada",    cor: "#1E40AF", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 70 },
   { slug: "produzido",               nome: "Produzido",                  cor: "#15803D", colunaPcp: "inserir_medidas",     escopo: "ambos",  ordem: 75 },
-  { slug: "inserir_medidas",         nome: "Inserir medidas",            cor: "#0B8177", colunaPcp: "inserir_medidas",     escopo: "ambos",  ordem: 80 },
-  { slug: "conferir_pagamentos",     nome: "Conferir pagamentos",        cor: "#05875F", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 90 },
-  { slug: "enviar_etiqueta",         nome: "Enviar etiqueta/expedição",  cor: "#12883E", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 100 },
-  { slug: "aguardando_coleta",       nome: "Aguardando coleta",          cor: "#9D6B03", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 110 },
+  { slug: "inserir_medidas",         nome: "Inserir medidas",            cor: "#047857", colunaPcp: "inserir_medidas",     escopo: "ambos",  ordem: 80 },
+  { slug: "conferir_pagamentos",     nome: "Conferir pagamentos",        cor: "#047857", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 90 },
+  { slug: "enviar_etiqueta",         nome: "Enviar etiqueta/expedição",  cor: "#B91C1C", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 100 },
+  { slug: "aguardando_coleta",       nome: "Aguardando coleta",          cor: "#B91C1C", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 110 },
   { slug: "coletado_enviado",        nome: "Coletado e enviado",         cor: "#15803D", colunaPcp: "enviado",             escopo: "ambos",  ordem: 120 },
   { slug: "entregue",                nome: "Entregue",                   cor: "#166534", colunaPcp: "enviado",             escopo: "pedido", ordem: 130 },
   { slug: "cancelado",               nome: "Cancelado",                  cor: "#DC2626", colunaPcp: "cancelado",           escopo: "ambos",  ordem: 140 },
@@ -130,22 +130,22 @@ export function opcoesStatus(nivel: "pedido" | "item"): StatusInfo[] {
      coluna só ("A Produzir"), com a distinção feita por TAG
      ("PROD. GALPÃO" / "TERCEIRIZADA + nome") escolhida num popup ao
      entrar em Aguardando Teste, não mais ao entrar em produção. */
+/* A cor é definida AQUI, não no catálogo do banco: o cabeçalho é texto
+   branco em negrito, então cada coluna precisa de um tom fechado, e só
+   de variações das primárias (azul, verde, vermelho, roxo, laranja). */
 export const COLUNAS_PCP = [
-  { coluna: "organizando_pedido",    rotulo: "Imprimir Ordem de Produção", canonico: "imprimir_ordem_producao" },
-  { coluna: "aguardando_mercadoria", rotulo: "Aguardando Mercadoria",  canonico: "aguardando_mercadoria" },
-  { coluna: "teste_fisico",          rotulo: "Aguardando Teste",       canonico: "aguardando_teste" },
-  { coluna: "teste_enviado",         rotulo: "Teste Enviado",          canonico: "aguardando_aprovacao_teste" },
-  { coluna: "em_producao",           rotulo: "A Produzir",             canonico: "a_produzir" },
-  { coluna: "inserir_medidas",       rotulo: "Inserir Medidas",        canonico: "inserir_medidas" },
-  { coluna: "aguardando_coleta",     rotulo: "Expedição",              canonico: "aguardando_coleta" },
-  { coluna: "enviado",               rotulo: "Coletado e Enviado",     canonico: "coletado_enviado" },
+  { coluna: "organizando_pedido",    rotulo: "Imprimir Ordem de Produção", canonico: "imprimir_ordem_producao", cor: "#0369A1" },
+  { coluna: "aguardando_mercadoria", rotulo: "Aguardando Mercadoria",  canonico: "aguardando_mercadoria", cor: "#C2410C" },
+  { coluna: "teste_fisico",          rotulo: "Aguardando Teste",       canonico: "aguardando_teste",      cor: "#7E22CE" },
+  { coluna: "teste_enviado",         rotulo: "Teste Enviado",          canonico: "aguardando_aprovacao_teste", cor: "#A21CAF" },
+  { coluna: "em_producao",           rotulo: "A Produzir",             canonico: "a_produzir",            cor: "#1D4ED8" },
+  { coluna: "inserir_medidas",       rotulo: "Inserir Medidas",        canonico: "inserir_medidas",       cor: "#047857" },
+  { coluna: "aguardando_coleta",     rotulo: "Expedição",              canonico: "aguardando_coleta",     cor: "#B91C1C" },
+  { coluna: "enviado",               rotulo: "Coletado e Enviado",     canonico: "coletado_enviado",      cor: "#15803D" },
 ] as const;
 
-/** Cor da coluna = cor do seu status canônico. */
-export const corDaColuna = (coluna: string): string => {
-  const c = COLUNAS_PCP.find(x => x.coluna === coluna);
-  return c ? statusInfo(c.canonico).cor : DESCONHECIDO.cor;
-};
+export const corDaColuna = (coluna: string): string =>
+  COLUNAS_PCP.find(x => x.coluna === coluna)?.cor ?? DESCONHECIDO.cor;
 
 /**
  * Status gravado quando um card é solto numa coluna.

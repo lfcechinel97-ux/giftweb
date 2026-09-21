@@ -206,9 +206,14 @@ const PEDIDO_PALETTE = [
    branco), reaproveitados aqui: tag é texto livre, sem cor própria salva no
    banco, então a cor precisa ser determinística a partir do próprio texto —
    a mesma etiqueta sempre cai na mesma cor, em qualquer card. */
+/* Só variações das cores primárias — azul, verde, vermelho, roxo e
+   laranja — todas fechadas o bastante para o texto branco. */
 const TAG_PALETTE = [
-  "#64748B", "#0B7CAF", "#A36907", "#9E42F6", "#C026D3", "#8452F5", "#2563EB",
-  "#1D4ED8", "#0B8177", "#05875F", "#12883E", "#9D6B03", "#15803D", "#166534", "#DC2626",
+  "#1D4ED8", "#1E40AF", "#0369A1", "#075985",
+  "#15803D", "#047857", "#166534",
+  "#B91C1C", "#DC2626",
+  "#7E22CE", "#6D28D9", "#A21CAF",
+  "#C2410C", "#9A3412",
 ];
 
 /* Paleta EXATA de etiquetas fixas do fluxo (cores dadas pelo usuário) —
@@ -552,24 +557,24 @@ function PcpCard({
       {tagsVisiveis.map(t => (
         <span
           key={t}
-          className="gw-body text-white text-[10px] leading-none rounded-[5px] px-[7px] py-[4px] whitespace-nowrap"
-          style={{ backgroundColor: corDaTag(t), fontWeight: 700, boxShadow: "0 1px 3px rgba(15,23,42,.45)" }}
+          className="gw-body text-[10px] leading-none rounded-[5px] px-[7px] py-[4px] whitespace-nowrap"
+          style={{ backgroundColor: corDaTag(t), color: "#FFFFFF", fontWeight: 700, boxShadow: "0 1px 3px rgba(15,23,42,.45)" }}
         >
           {t}
         </span>
       ))}
       {tagsOcultas.length > 0 && (
         <span
-          className="group/tags relative gw-body text-white text-[10px] leading-none rounded-[5px] px-[6px] py-[4px]"
-          style={{ backgroundColor: "rgba(15,23,42,.72)", fontWeight: 700 }}
+          className="group/tags relative gw-body text-[10px] leading-none rounded-[5px] px-[6px] py-[4px]"
+          style={{ backgroundColor: "rgba(15,23,42,.72)", color: "#FFFFFF", fontWeight: 700 }}
         >
           +{tagsOcultas.length}
           <span className="pointer-events-none absolute left-0 top-full mt-1 hidden group-hover/tags:flex flex-col gap-1 rounded-[6px] bg-[#0F172A] p-1.5 z-10 w-max max-w-[220px]">
             {tagsOcultas.map(t => (
               <span
                 key={t}
-                className="text-white text-[10px] rounded-[4px] px-[6px] py-[3px]"
-                style={{ backgroundColor: corDaTag(t), fontWeight: 700 }}
+                className="text-[10px] rounded-[4px] px-[6px] py-[3px]"
+                style={{ backgroundColor: corDaTag(t), color: "#FFFFFF", fontWeight: 700 }}
               >
                 {t}
               </span>
@@ -1988,10 +1993,12 @@ export default function PCP() {
                   >
                     {/* Nome inteiro, sempre: quebra em duas linhas em vez de
                         virar "Aguardando Me…". */}
-                    <span className="gw-title text-[14px] text-white leading-tight" style={{ fontWeight: 700 }}>{col.label}</span>
+                    {/* A cor vai inline: .gw-title/.gw-body definem color no
+                        index.css e ganham do text-white do Tailwind. */}
+                    <span className="gw-title text-[14px] leading-tight" style={{ fontWeight: 700, color: "#FFFFFF" }}>{col.label}</span>
                     <span
-                      className="gw-body text-[11px] font-bold text-white rounded-full px-2 py-0.5 shrink-0 whitespace-nowrap"
-                      style={{ backgroundColor: "rgba(255,255,255,.28)" }}
+                      className="gw-body text-[11px] rounded-full px-2 py-0.5 shrink-0 whitespace-nowrap"
+                      style={{ backgroundColor: "rgba(255,255,255,.28)", color: "#FFFFFF", fontWeight: 700 }}
                     >
                       {items.length} · {somaQtd} un.
                     </span>
