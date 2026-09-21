@@ -15,7 +15,6 @@ import type {
   FinanceiroConfig,
   Recebimento,
   MeioPagamento,
-  SyncFinanceiroResult,
   VendaDetalhe,
   VendasConferencia,
 } from "./types";
@@ -233,19 +232,6 @@ export async function fetchConfig(): Promise<FinanceiroConfig> {
 export const salvarConfig = (c: Partial<FinanceiroConfig>) =>
   write("parâmetros do financeiro", () =>
     db.from("sistema_financeiro_config").update(c).eq("id", true).select().single());
-
-/* ── Sincronização ────────────────────────────────────────────────────── */
-
-export async function sincronizarFinanceiro(
-  opts: { inicio?: string; fim?: string; itens?: boolean; reprocessarItens?: boolean } = {},
-): Promise<SyncFinanceiroResult> {
-  const { data, error } = await db.functions.invoke("sync-calcme-financeiro", { body: opts });
-  if (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    throw new Error(msg);
-  }
-  return data as SyncFinanceiroResult;
-}
 
 /* ── Fornecedores ─────────────────────────────────────────────────────── */
 

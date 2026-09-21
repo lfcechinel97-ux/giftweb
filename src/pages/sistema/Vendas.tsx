@@ -10,7 +10,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import VendaConferencia from "./financeiro/VendaConferencia";
-import { fetchVendasConferencia, sincronizarFinanceiro } from "./financeiro/api";
+import { fetchVendasConferencia } from "./financeiro/api";
 import type { VendasConferencia } from "./financeiro/types";
 import { toast } from "sonner";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -51,7 +51,6 @@ function VendasAdmin() {
   const busca = params.get("busca") || "";
 
   const [vendaAberta, setVendaAberta] = useState<string | null>(null);
-  const [sincronizando, setSincronizando] = useState(false);
 
   const setParam = (patch: Record<string, string>) => {
     const p = new URLSearchParams(params);
@@ -67,24 +66,6 @@ function VendasAdmin() {
     staleTime: 30 * 1000,
     placeholderData: anterior => anterior,
   });
-
-  const sincronizar = async () => {
-    setSincronizando(true);
-    try {
-      const r = await sincronizarFinanceiro({ inicio, fim });
-      if (!r.success) toast.error(`Sincronização falhou: ${r.error ?? "erro desconhecido"}`);
-      else if (r.itens_pendentes > 0) {
-        toast.warning(`${r.itens} itens trazidos. Faltam ${r.itens_pendentes} pedidos — sincronize de novo.`);
-      } else {
-        toast.success(`${r.vendas} pedidos, ${r.itens} itens sincronizados.`);
-      }
-      await qc.invalidateQueries({ queryKey: ["sistema", "financeiro"] });
-    } catch (e: unknown) {
-      toast.error(`Sincronização falhou: ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-      setSincronizando(false);
-    }
-  };
 
   const vendas = useMemo(() => data?.vendas ?? [], [data?.vendas]);
 
@@ -103,10 +84,6 @@ function VendasAdmin() {
             Confira pagamento, imposto e custo de cada pedido — o lucro cai no Dashboard na hora.
           </p>
         </div>
-        <Button variant="outline" onClick={() => void sincronizar()} disabled={sincronizando}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${sincronizando ? "animate-spin" : ""}`} />
-          {sincronizando ? "Sincronizando" : "Sincronizar"}
-        </Button>
       </header>
 
       {/* ── Filtros ─────────────────────────────────────────────────── */}

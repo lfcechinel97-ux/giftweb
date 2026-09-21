@@ -198,8 +198,7 @@ export default function VendaConferencia({ vendaId, onOpenChange, onSalvo }: Pro
                style={{ background: "var(--gw-warning-soft)", color: "var(--gw-text)" }}>
             <AlertTriangle className="h-4 w-4 shrink-0 mt-px" style={{ color: "var(--gw-warning)" }} />
             <span>
-              Os itens deste pedido ainda não foram sincronizados do Calcme. Volte ao Dashboard e
-              clique em <strong>Sincronizar</strong> — os itens vêm em lotes de 120 por vez.
+              Os itens deste pedido não chegaram a ser importados do Calcme (a integração foi desativada).
             </span>
           </div>
         ) : (

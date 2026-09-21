@@ -192,7 +192,7 @@ function DashboardFinanceiro() {
     return intervaloDe(periodoId);
   }, [periodoId, params]);
 
-  const { data, isLoading, isError, error, sincronizar, sincronizando } =
+  const { data, isLoading, isError, error } =
     useDashboardFinanceiro(inicio, fim);
 
   const setPeriodo = (id: PeriodoId) => {
@@ -266,10 +266,6 @@ function DashboardFinanceiro() {
           </div>
         )}
 
-        <Button variant="outline" onClick={() => void sincronizar()} disabled={sincronizando}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${sincronizando ? "animate-spin" : ""}`} />
-          {sincronizando ? "Sincronizando" : "Sincronizar"}
-        </Button>
         <Button onClick={() => setDespesaAberta(true)}>
           <Plus className="h-4 w-4 mr-2" /> Lançar despesa
         </Button>
