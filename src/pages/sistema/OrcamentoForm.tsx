@@ -11,6 +11,7 @@ import { useSistemaProducts } from "./useSistemaProducts";
 import { getEffectiveUnitPrice, getNormalizedPriceRows } from "@/utils/price";
 import { cnpjMask, cpfMask } from "./cnpj";
 import { uploadMockup } from "@/lib/uploadMockup";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OPCOES_PERSONALIZACAO, resumoPersonalizacao, type TipoPersonalizacao } from "@/lib/personalizacao";
 import { gerarPDFOrcamento } from "./pdf";
 
@@ -1232,16 +1233,21 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
                       <label className="block text-sm font-medium mb-2">
                         Personalização <span className="text-red-600">*</span>
                       </label>
-                      <select
-                        value={personalizacao}
-                        onChange={(e) => setPersonalizacao(e.target.value as TipoPersonalizacao | "")}
-                        className={`w-full px-3 py-2 border rounded-lg bg-white ${!personalizacao ? "border-red-300" : ""}`}
+                      <Select
+                        value={personalizacao || undefined}
+                        onValueChange={(v) => setPersonalizacao(v as TipoPersonalizacao)}
                       >
-                        <option value="" disabled>Selecione…</option>
-                        {OPCOES_PERSONALIZACAO.map(o => (
-                          <option key={o.valor} value={o.valor}>{o.rotulo}</option>
-                        ))}
-                      </select>
+                        <SelectTrigger className="h-[42px] rounded-xl bg-white">
+                          <SelectValue placeholder="Selecione…" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl p-1">
+                          {OPCOES_PERSONALIZACAO.map(o => (
+                            <SelectItem key={o.valor} value={o.valor} className="rounded-lg py-2">
+                              {o.rotulo}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     {personalizacao && personalizacao !== "sem" && (
                       <div>
@@ -1251,14 +1257,11 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
                           min={1}
                           value={aplicacoes}
                           onChange={(e) => setAplicacoes(Math.max(1, parseInt(e.target.value) || 1))}
-                          className="w-full px-3 py-2 border rounded-lg"
+                          className="w-full h-[42px] px-3 border rounded-xl"
                         />
                       </div>
                     )}
                   </div>
-                  {!personalizacao && (
-                    <p className="text-xs text-red-600 -mt-2">Escolha a personalização para adicionar o item.</p>
-                  )}
 
                   <div>
                     <label className="block text-sm font-medium mb-2">
