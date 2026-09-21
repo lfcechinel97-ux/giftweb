@@ -21,6 +21,7 @@ import { statusInfo, opcoesStatus } from "@/lib/statusPedido";
 import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaContext";
 import { supabase } from "@/integrations/supabase/client";
 import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
+import { resumoPersonalizacao } from "@/lib/personalizacao";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -618,6 +619,11 @@ export default function Pedidos() {
 
                     <span className="flex flex-col min-w-0 gap-1">
                       <span className="gw-title text-[14.5px] truncate" style={{ fontWeight: 700 }}>{item.nome}</span>
+                      {resumoPersonalizacao(item) && (
+                        <span className="text-[12.5px] font-semibold truncate" style={{ color: "var(--gw-primary)" }}>
+                          {resumoPersonalizacao(item)}
+                        </span>
+                      )}
                       {item.observacao && (
                         <span className="text-[12.5px] truncate" style={{ color: "var(--gw-text-secondary)" }}>
                           {item.observacao}

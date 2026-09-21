@@ -1,6 +1,7 @@
 import { OrderNumber, StatusPill, MetaField, Thumb, Money, type GwStage } from "@/components/sistema/ui";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUserRole } from "@/hooks/useUserRole";
+import { resumoPersonalizacao } from "@/lib/personalizacao";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -655,6 +656,11 @@ export default function Orcamentos() {
                     <Thumb size="lg" className="!h-[104px] !w-[104px] !rounded-[12px]" src={item.mockupImagem || item.imagem} alt={item.nome} />
                     <span className="flex flex-col min-w-0 gap-0.5">
                       <span className="gw-title text-[14.5px] truncate" style={{ fontWeight: 700 }}>{item.nome}</span>
+                      {resumoPersonalizacao(item) && (
+                        <span className="text-[12.5px] font-semibold truncate" style={{ color: "var(--gw-primary)" }}>
+                          {resumoPersonalizacao(item)}
+                        </span>
+                      )}
                       {item.observacao && (
                         <span className="text-[12.5px] truncate" style={{ color: "var(--gw-text-secondary)" }}>{item.observacao}</span>
                       )}

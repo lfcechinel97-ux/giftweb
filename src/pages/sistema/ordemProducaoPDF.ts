@@ -1,5 +1,6 @@
 import { jsPDF } from "jspdf";
 import type { Pedido, PedidoItem, Cliente, LookupItem, Transportadora } from "@/contexts/SistemaContext";
+import { resumoPersonalizacao } from "@/lib/personalizacao";
 
 /* Ficha OPERACIONAL de produção — não é pedido nem nota.
    A4 retrato, produtos sempre empilhados (nunca lado a lado), no máximo 3
@@ -94,7 +95,8 @@ export async function gerarOrdemProducaoPDF(pedido: Pedido, sis: Sis): Promise<v
       item,
       indice: i + 1,
       imagem: src ? await loadImageAsDataURL(src) : null,
-      personalizacao: (item.observacao || "").trim(),
+      personalizacao: [resumoPersonalizacao(item), (item.observacao || "").trim()]
+        .filter(Boolean).join("\n"),
       variacao: variacaoDoItem(item.nome, item.varianteSlug),
     });
   }

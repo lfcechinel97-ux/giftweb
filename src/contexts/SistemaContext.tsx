@@ -5,6 +5,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { carregarCatalogoStatus } from "@/lib/statusPedido";
 import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
+import type { TipoPersonalizacao } from "@/lib/personalizacao";
 
 // Helper: surface DB write errors to the user (otherwise inserts fail silently and data "disappears" on reload)
 const reportDbError = (label: string) => (res: any) => {
@@ -97,6 +98,8 @@ export interface QuoteItem {
   altura?: number;
   diametro?: number;
   observacao?: string;
+  personalizacao?: TipoPersonalizacao;
+  aplicacoes?: number;
 }
 
 export type OrcamentoStatus = "aberto" | "aprovado" | "cancelado";
@@ -154,6 +157,8 @@ export interface PedidoItem {
       mockup (foto do produto pronto): este é o insumo, aquele é o
       resultado. Campo novo dentro do jsonb, sem migration. */
   arteAnexoUrl?: string;
+  personalizacao?: TipoPersonalizacao;
+  aplicacoes?: number;
 }
 
 export interface Pedido {
@@ -758,6 +763,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       varianteSlug: item.varianteSlug, nome: item.nome, quantidade: item.quantidade,
       precoUnitario: item.precoUnitario, total: item.quantidade * item.precoUnitario,
       mockupImagem: item.mockupImagem, imagem: item.imagem, observacao: (item as any).observacao,
+      personalizacao: item.personalizacao, aplicacoes: item.aplicacoes,
     }));
 
     const pedido: Pedido = {

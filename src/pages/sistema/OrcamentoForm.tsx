@@ -11,6 +11,7 @@ import { useSistemaProducts } from "./useSistemaProducts";
 import { getEffectiveUnitPrice, getNormalizedPriceRows } from "@/utils/price";
 import { cnpjMask, cpfMask } from "./cnpj";
 import { uploadMockup } from "@/lib/uploadMockup";
+import { OPCOES_PERSONALIZACAO, resumoPersonalizacao, type TipoPersonalizacao } from "@/lib/personalizacao";
 import { gerarPDFOrcamento } from "./pdf";
 
 const FRETE_TIPOS = [
@@ -545,6 +546,11 @@ export const OrcamentoForm: React.FC = () => {
                         <div>
                           <p className="font-medium truncate">{item.nome}</p>
                           <p className="text-sm text-gray-500">{item.codigoComposto}</p>
+                          {resumoPersonalizacao(item) ? (
+                            <p className="text-xs font-medium text-primary mt-0.5">{resumoPersonalizacao(item)}</p>
+                          ) : (
+                            <p className="text-xs font-medium text-red-600 mt-0.5">Sem personalização definida — edite o item</p>
+                          )}
                         </div>
                         <div className="flex items-center gap-1">
                           <button onClick={() => handleEditItem(item)} className="p-1.5 text-gray-500 hover:bg-gray-100 rounded">
@@ -773,6 +779,8 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
   const [precoManual, setPrecoManual] = useState(false);
   const [mockupImagem, setMockupImagem] = useState<string | undefined>(undefined);
   const [observacao, setObservacao] = useState<string>("");
+  const [personalizacao, setPersonalizacao] = useState<TipoPersonalizacao | "">("");
+  const [aplicacoes, setAplicacoes] = useState(1);
   const [showPriceRows, setShowPriceRows] = useState(false);
   const [produtoVariantes, setProdutoVariantes] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>(() => parentProducts.slice(0, 10));
@@ -817,6 +825,8 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
       setPrecoManual(item.precoManual);
       setMockupImagem(item.mockupImagem);
       setObservacao(item.observacao || "");
+      setPersonalizacao(item.personalizacao ?? "");
+      setAplicacoes(item.aplicacoes && item.aplicacoes > 0 ? item.aplicacoes : 1);
       if (item.produtoId) {
         let cancelled = false;
         getParentWithVariants(item.codigoComposto?.split("-")[0] || item.produtoId)
@@ -938,8 +948,11 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
     }
   };
 
+  const podeSalvar = !!selectedProduct && quantidade > 0 && !!personalizacao
+    && (personalizacao === "sem" || aplicacoes >= 1);
+
   const handleSalvar = () => {
-    if (!selectedProduct || quantidade <= 0) return;
+    if (!podeSalvar) return;
     const variant = selectedVariant;
     // codigoComposto: se há variante usa o código dela (já contém o composto, ex: 08114-VD),
     // caso contrário usa o código do pai.
@@ -968,6 +981,8 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
       mockupImagem,
       altura: selectedProduct.altura,
       observacao: observacao.trim() || undefined,
+      personalizacao: personalizacao || undefined,
+      aplicacoes: personalizacao === "sem" ? 0 : aplicacoes,
     };
     onSave(newItem);
   };
@@ -1212,6 +1227,39 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-[1fr_120px] gap-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Personalização <span className="text-red-600">*</span>
+                      </label>
+                      <select
+                        value={personalizacao}
+                        onChange={(e) => setPersonalizacao(e.target.value as TipoPersonalizacao | "")}
+                        className={`w-full px-3 py-2 border rounded-lg bg-white ${!personalizacao ? "border-red-300" : ""}`}
+                      >
+                        <option value="" disabled>Selecione…</option>
+                        {OPCOES_PERSONALIZACAO.map(o => (
+                          <option key={o.valor} value={o.valor}>{o.rotulo}</option>
+                        ))}
+                      </select>
+                    </div>
+                    {personalizacao && personalizacao !== "sem" && (
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Aplicações</label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={aplicacoes}
+                          onChange={(e) => setAplicacoes(Math.max(1, parseInt(e.target.value) || 1))}
+                          className="w-full px-3 py-2 border rounded-lg"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {!personalizacao && (
+                    <p className="text-xs text-red-600 -mt-2">Escolha a personalização para adicionar o item.</p>
+                  )}
+
                   <div>
                     <label className="block text-sm font-medium mb-2">
                       Observação <span className="text-gray-400 font-normal">(opcional)</span>
@@ -1219,7 +1267,7 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
                     <textarea
                       value={observacao}
                       onChange={(e) => setObservacao(e.target.value)}
-                      placeholder="Ex.: Personalização a laser 1 cor / Transfer silk frontal"
+                      placeholder="Ex.: logo frontal 1 cor, nomes, posição da gravação"
                       rows={2}
                       className="w-full px-3 py-2 border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
                       maxLength={140}
@@ -1238,7 +1286,7 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
           </button>
           <button
             onClick={handleSalvar}
-            disabled={!selectedProduct || quantidade <= 0}
+            disabled={!podeSalvar}
             className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50"
           >
             {item ? "Salvar Alterações" : "Adicionar item"}

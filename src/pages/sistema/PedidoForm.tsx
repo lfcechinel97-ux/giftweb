@@ -27,6 +27,7 @@ import ClienteDialog from "./ClienteDialog";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { uploadMockup, uploadArquivoPedido, MockupUploadError } from "@/lib/uploadMockup";
 import { useUserRole } from "@/hooks/useUserRole";
+import { resumoPersonalizacao } from "@/lib/personalizacao";
 
 const brl = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -641,6 +642,12 @@ const PedidoForm: React.FC = () => {
                         </span>
                       )}
                     </div>
+                    <span
+                      className="block text-[12px] font-semibold mt-0.5"
+                      style={{ color: resumoPersonalizacao(item) ? "var(--gw-primary)" : "var(--gw-danger)" }}
+                    >
+                      {resumoPersonalizacao(item) || "Sem personalização definida — edite o item"}
+                    </span>
                     <span onClick={e => e.stopPropagation()} className="inline-block mt-0.5">
                       <StatusBadge
                         status={cancelado ? "cancelado" : st}

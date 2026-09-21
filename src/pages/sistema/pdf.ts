@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 import type { Orcamento, Cliente, LookupItem } from "@/contexts/SistemaContext";
 import { getNormalizedPriceRows } from "@/utils/price";
+import { resumoPersonalizacao } from "@/lib/personalizacao";
 
 interface Sis {
   clientes: Cliente[];
@@ -303,7 +304,8 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   const imgX = M + 12;
 
   for (const item of orc.itens) {
-    const obs = (item as any).observacao as string | undefined;
+    const obs = [resumoPersonalizacao(item), ((item as any).observacao as string | undefined)?.trim()]
+      .filter(Boolean).join(" — ");
     const hasObs = !!(obs && obs.trim());
     const cardH = cardHBase + (hasObs ? 14 : 0);
 
