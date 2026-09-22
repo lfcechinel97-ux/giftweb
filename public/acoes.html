@@ -446,21 +446,34 @@
     });
   }
 
-  // Tenta trazer o histórico intradiário de hoje (desde a abertura do pregão em NY).
-  // No plano grátis da Finnhub, candles intradiários podem não estar disponíveis para
-  // todos os tickers — nesse caso cai para um único ponto (preço atual) e o gráfico
-  // vai sendo desenhado dali em diante, como antes.
+  // Histórico do dia: une duas fontes.
+  // 1ª tentativa — stooq.com (grátis, sem chave, barras de 5min): costuma liberar
+  //   o intradiário de hoje mesmo para quem não tem plano pago em lugar nenhum.
+  // 2ª tentativa — candle intradiário da Finnhub (geralmente bloqueado no plano
+  //   grátis para ações dos EUA, mas tentamos mesmo assim, sem custo).
+  // Se as duas falharem, o gráfico começa a ser desenhado a partir de agora — e,
+  // como só recarregamos de madrugada (scheduleNightlyReload), esse "agora em
+  // diante" vai virando o dia inteiro se você deixar o painel aberto.
+  // A partir daí, o polling da Finnhub (startPollingLoop) assume e vai completando
+  // ao vivo, ponto a ponto, a partir de onde o histórico parou.
   function seedAndBackfill(i) {
+    var st = charts[i];
+    if (!st) return;
+
+    fetchStooqIntraday(st.financeSym)
+      .then(function (points) {
+        st.series.setData(points);
+        st.lastPrice = points[points.length - 1].value;
+        startPollingLoop(i);
+      })
+      .catch(function () { tryFinnhubCandle(i); });
+  }
+
+  function tryFinnhubCandle(i) {
     var st = charts[i];
     if (!st) return;
     var openEpoch = todayMarketOpenEpoch();
     var nowEpoch = Math.floor(Date.now() / 1000);
-
-    // Nota: no plano grátis da Finnhub, o endpoint de candles intradiários costuma
-    // ser bloqueado (403) para ações dos EUA — a tentativa abaixo é best-effort;
-    // se falhar, seguimos normalmente só com a cotação atual e o gráfico vai sendo
-    // desenhado ao vivo a partir de agora (por isso evitamos recarregar a página
-    // durante o pregão — veja scheduleNightlyReload).
     var afterBackfill = function () { startPollingLoop(i); };
 
     if (!openEpoch) { afterBackfill(); return; }
@@ -473,7 +486,6 @@
       .then(function (data) {
         if (!data || data.s !== "ok" || !Array.isArray(data.t) || !data.t.length) throw new Error("sem histórico");
         var points = data.t.map(function (t, idx) { return { time: t, value: data.c[idx] }; });
-        // remove possíveis timestamps duplicados/fora de ordem
         points.sort(function (a, b) { return a.time - b.time; });
         var seen = {};
         points = points.filter(function (p) { if (seen[p.time]) return false; seen[p.time] = true; return true; });
@@ -482,6 +494,58 @@
         afterBackfill();
       })
       .catch(function () { afterBackfill(); }); // sem histórico disponível: segue só com a cotação atual
+  }
+
+  // ---------- fonte de histórico: stooq.com (CSV público, sem chave) ----------
+  function stooqTicker(financeSym) {
+    return String(financeSym || "").toLowerCase() + ".us"; // cobre os tickers americanos padrão do painel
+  }
+
+  function fetchStooqIntraday(financeSym) {
+    var url = "https://stooq.com/q/d/l/?s=" + encodeURIComponent(stooqTicker(financeSym)) + "&i=5";
+    return fetch(url, { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+      .then(function (text) {
+        var lines = text.trim().split("\n");
+        if (lines.length < 2 || lines[0].toLowerCase().indexOf("date") === -1) throw new Error("formato inesperado");
+
+        var p = nyParts();
+        var todayStr = p.year + "-" + p.month + "-" + p.day;
+        var points = [];
+        for (var i = 1; i < lines.length; i++) {
+          var cols = lines[i].split(",");
+          if (cols.length < 6) continue;
+          var d = cols[0], t = cols[1], close = parseFloat(cols[5]);
+          if (d !== todayStr || isNaN(close)) continue;
+          var dp = d.split("-"), tp = t.split(":");
+          var epoch = nyWallTimeToEpoch(+dp[0], +dp[1], +dp[2], +tp[0], +tp[1], +(tp[2] || 0));
+          points.push({ time: epoch, value: close });
+        }
+        if (!points.length) throw new Error("sem barras de hoje");
+
+        points.sort(function (a, b) { return a.time - b.time; });
+        var seen = {}, out = [];
+        points.forEach(function (pt) { if (!seen[pt.time]) { seen[pt.time] = true; out.push(pt); } });
+        return out;
+      });
+  }
+
+  // Converte um horário "de parede" (ano,mês,dia,hora,min,seg) no fuso de NY para
+  // epoch UTC em segundos — necessário porque o CSV da stooq vem em horário local
+  // da bolsa, e o gráfico trabalha em UTC.
+  function nyWallTimeToEpoch(y, mo, d, h, mi, s) {
+    var guessMs = Date.UTC(y, mo - 1, d, h, mi, s || 0);
+    var parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York", hour12: false,
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit"
+    }).formatToParts(new Date(guessMs)).reduce(function (acc, part) { acc[part.type] = part.value; return acc; }, {});
+    var nyAsUtcMs = Date.UTC(
+      parts.year, parts.month - 1, parts.day,
+      parts.hour === "24" ? 0 : parts.hour, parts.minute, parts.second
+    );
+    var offsetMs = nyAsUtcMs - guessMs;
+    return Math.floor((guessMs - offsetMs) / 1000);
   }
 
   function todayMarketOpenEpoch() {
@@ -637,6 +701,7 @@
   function nyParts() {
     var parts = new Intl.DateTimeFormat("en-US", {
       timeZone: "America/New_York", weekday: "short",
+      year: "numeric", month: "2-digit", day: "2-digit",
       hour: "2-digit", minute: "2-digit", hour12: false
     }).formatToParts(new Date());
     var out = {};
