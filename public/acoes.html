@@ -461,12 +461,30 @@
     if (!st) return;
 
     fetchStooqIntraday(st.financeSym)
+      .catch(function () {
+        // 1ª falha pode ser esporádica (rede/instabilidade do stooq): tenta mais uma vez.
+        return new Promise(function (resolve) { setTimeout(resolve, 1500); })
+          .then(function () { return fetchStooqIntraday(st.financeSym); });
+      })
       .then(function (points) {
         st.series.setData(points);
         st.lastPrice = points[points.length - 1].value;
         startPollingLoop(i);
       })
-      .catch(function () { tryFinnhubCandle(i); });
+      .catch(function () {
+        markNoHistory(i);
+        tryFinnhubCandle(i);
+      });
+  }
+
+  function markNoHistory(i) {
+    var box = document.getElementById("chartbox" + i);
+    if (!box) return;
+    var note = document.createElement("div");
+    note.className = "cell-note";
+    note.textContent = "sem histórico de hoje — desenhando a partir de agora";
+    box.appendChild(note);
+    setTimeout(function () { if (note.parentNode) note.parentNode.removeChild(note); }, 15000);
   }
 
   function tryFinnhubCandle(i) {
@@ -501,31 +519,55 @@
     return String(financeSym || "").toLowerCase() + ".us"; // cobre os tickers americanos padrão do painel
   }
 
+  var STOOQ_MIN_GAP_SEC = 60; // descarta pontos "colados" no tempo (evita degraus/verticais no gráfico)
+
   function fetchStooqIntraday(financeSym) {
     var url = "https://stooq.com/q/d/l/?s=" + encodeURIComponent(stooqTicker(financeSym)) + "&i=5";
     return fetch(url, { cache: "no-store" })
       .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
       .then(function (text) {
-        var lines = text.trim().split("\n");
-        if (lines.length < 2 || lines[0].toLowerCase().indexOf("date") === -1) throw new Error("formato inesperado");
+        var lines = text.trim().split(/\r?\n/);
+        if (lines.length < 2) throw new Error("resposta vazia");
+
+        // Localiza as colunas pelo cabeçalho em vez de supor a ordem — o índice fixo
+        // é o que provavelmente causou os "degraus" vistos no gráfico (se a ordem real
+        // vier diferente do que eu presumi, cada linha era lida errado, misturando
+        // Open/High/Low/Close de um mesmo candle como se fossem pontos separados).
+        var header = lines[0].toLowerCase().split(",").map(function (h) { return h.trim(); });
+        var idxDate = header.indexOf("date");
+        var idxTime = header.indexOf("time");
+        var idxClose = header.indexOf("close");
+        if (idxDate === -1 || idxTime === -1 || idxClose === -1) throw new Error("cabeçalho inesperado: " + lines[0]);
 
         var p = nyParts();
         var todayStr = p.year + "-" + p.month + "-" + p.day;
-        var points = [];
+        var raw = [];
         for (var i = 1; i < lines.length; i++) {
           var cols = lines[i].split(",");
-          if (cols.length < 6) continue;
-          var d = cols[0], t = cols[1], close = parseFloat(cols[5]);
+          if (cols.length <= Math.max(idxDate, idxTime, idxClose)) continue;
+          var d = (cols[idxDate] || "").trim();
+          var t = (cols[idxTime] || "").trim();
+          var close = parseFloat(cols[idxClose]);
           if (d !== todayStr || isNaN(close)) continue;
           var dp = d.split("-"), tp = t.split(":");
+          if (dp.length < 3 || tp.length < 2) continue;
           var epoch = nyWallTimeToEpoch(+dp[0], +dp[1], +dp[2], +tp[0], +tp[1], +(tp[2] || 0));
-          points.push({ time: epoch, value: close });
+          raw.push({ time: epoch, value: close });
         }
-        if (!points.length) throw new Error("sem barras de hoje");
+        if (!raw.length) throw new Error("sem barras de hoje");
 
-        points.sort(function (a, b) { return a.time - b.time; });
-        var seen = {}, out = [];
-        points.forEach(function (pt) { if (!seen[pt.time]) { seen[pt.time] = true; out.push(pt); } });
+        raw.sort(function (a, b) { return a.time - b.time; });
+
+        // mantém só um ponto por janela mínima de tempo, ficando com o mais recente da janela
+        var out = [];
+        raw.forEach(function (pt) {
+          if (!out.length || pt.time - out[out.length - 1].time >= STOOQ_MIN_GAP_SEC) {
+            out.push(pt);
+          } else {
+            out[out.length - 1] = pt;
+          }
+        });
+        if (out.length < 2) throw new Error("poucos pontos válidos");
         return out;
       });
   }
