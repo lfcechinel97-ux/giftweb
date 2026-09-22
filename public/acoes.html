@@ -15,7 +15,7 @@
     --up: #22ab94;
     --down: #f7525f;
     --accent: #3b82f6;
-    --badge-bg: rgba(10, 12, 16, 0.82);
+    --cost-line: #eab308;
     --gap: 10px;
   }
   html[data-theme="light"] {
@@ -24,7 +24,6 @@
     --border: #e1e5ec;
     --text: #0f0f0f;
     --muted: #6a6d78;
-    --badge-bg: rgba(255, 255, 255, 0.9);
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
@@ -53,17 +52,15 @@
   .brand { font-size: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
   .status { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-  .dot.open { background: var(--up); box-shadow: 0 0 0 3px rgba(34,171,148,.18); }
-  .dot.closed { background: var(--down); box-shadow: 0 0 0 3px rgba(247,82,95,.18); }
-  .quote-status {
-    font-size: 11px; color: var(--muted); display: none; align-items: center; gap: 6px;
-  }
-  body.has-costs .quote-status { display: flex; }
-  .quote-status button {
+  .dot.open, .dot.live { background: var(--up); box-shadow: 0 0 0 3px rgba(34,171,148,.18); }
+  .dot.closed, .dot.off { background: var(--down); box-shadow: 0 0 0 3px rgba(247,82,95,.18); }
+  .dot.pending { background: #eab308; box-shadow: 0 0 0 3px rgba(234,179,8,.18); }
+  .ws-status { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+  .ws-status button {
     background: transparent; border: 1px solid var(--border); color: var(--muted);
     border-radius: 5px; padding: 2px 6px; font-size: 11px; cursor: pointer; line-height: 1.4;
   }
-  .quote-status button:hover { color: var(--accent); border-color: var(--accent); }
+  .ws-status button:hover { color: var(--accent); border-color: var(--accent); }
   .clocks { margin-left: auto; display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
   .clocks b { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 600; }
   .actions { display: flex; gap: 6px; }
@@ -97,31 +94,40 @@
     border: 1px solid var(--border);
     border-radius: 10px;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
-  .cell .tradingview-widget-container,
-  .cell .tradingview-widget-container__widget { height: 100%; width: 100%; }
-  .cell .tradingview-widget-copyright { display: none; }
 
-  /* ---------- barra "meu preço" sobre o gráfico ---------- */
-  .cost-badge {
-    position: absolute; left: 0; right: 0; bottom: 0;
+  .cell-head {
+    flex: 0 0 auto;
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 8px 12px 4px;
+  }
+  .c-sym { font-weight: 700; font-size: 13px; letter-spacing: .02em; }
+  .c-price { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .c-day { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; margin-left: auto; }
+  .c-day.up { color: var(--up); }
+  .c-day.down { color: var(--down); }
+
+  .cell-cost {
+    flex: 0 0 auto;
     display: none;
-    align-items: center; justify-content: space-between;
-    gap: 8px;
-    padding: 6px 10px;
-    background: var(--badge-bg);
-    border-top: 1px solid var(--border);
+    align-items: center; justify-content: space-between; gap: 8px;
+    padding: 0 12px 6px;
     font-size: 12px;
     font-variant-numeric: tabular-nums;
-    z-index: 2;
-    pointer-events: none;
-    backdrop-filter: blur(2px);
   }
-  .cost-badge .q-price { color: var(--muted); }
-  .cost-badge .q-diff { font-weight: 700; }
-  .cost-badge .q-diff.up { color: var(--up); }
-  .cost-badge .q-diff.down { color: var(--down); }
-  .cost-badge .q-diff.warn { color: var(--muted); font-weight: 500; font-style: italic; }
+  .cell-cost .q-price { color: var(--muted); }
+  .cell-cost .q-diff { font-weight: 700; }
+  .cell-cost .q-diff.up { color: var(--up); }
+  .cell-cost .q-diff.down { color: var(--down); }
+
+  .cell-chart { flex: 1 1 auto; min-height: 0; position: relative; }
+  .cell-chart .placeholder {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 20px; font-size: 12px; color: var(--muted); line-height: 1.6;
+  }
+  .cell-chart .placeholder a { color: var(--accent); }
 
   /* ---------- painel de configuração ---------- */
   dialog#cfg {
@@ -133,6 +139,7 @@
   dialog#cfg::backdrop { background: rgba(0,0,0,.55); }
   dialog#cfg h2 { margin: 0 0 4px; font-size: 16px; }
   dialog#cfg p.hint { margin: 0 0 14px; font-size: 12px; color: var(--muted); line-height: 1.45; }
+  dialog#cfg p.hint a { color: var(--accent); }
   dialog#cfg label { display: block; font-size: 11px; color: var(--muted); margin: 10px 0 4px; text-transform: uppercase; letter-spacing: .04em; }
   dialog#cfg input, dialog#cfg select {
     width: 100%; padding: 8px 10px; font-size: 13px;
@@ -162,9 +169,10 @@
 <header>
   <span class="brand">Painel de Ações</span>
   <span class="status"><span class="dot" id="mktDot"></span><span id="mktLabel">—</span></span>
-  <span class="quote-status" id="quoteStatus">
-    <span id="quoteUpdated">cotações: —</span>
-    <button type="button" id="btnRefreshQuotes" title="Atualizar cotações agora">↻</button>
+  <span class="ws-status">
+    <span class="dot pending" id="wsDot"></span>
+    <span id="wsLabel">tempo real: —</span>
+    <button type="button" id="btnReconnect" title="Reconectar agora">↻</button>
   </span>
   <div class="clocks">
     <span>NY <b id="clockNy">--:--</b></span>
@@ -182,36 +190,47 @@
 
 <dialog id="cfg">
   <h2>Configurar painel</h2>
-  <p class="hint">Use o código completo do TradingView: <code>BOLSA:TICKER</code>
-    (ex.: <code>NASDAQ:META</code>, <code>NYSE:SNOW</code>, <code>BMFBOVESPA:PETR4</code>).<br>
-    Preencha "preço pago" para ver, na barra sob o gráfico, sua valorização real desde a compra
-    (cotação de referência via stooq.com, com pequeno atraso — não é o preço exato do TradingView).</p>
+  <p class="hint">
+    Gráfico em tempo real via <b>Finnhub</b> (grátis). Crie uma chave em
+    <a href="https://finnhub.io/register" target="_blank" rel="noopener">finnhub.io/register</a>
+    (cadastro rápido, sem cartão) e cole abaixo. A conexão é feita direto do seu navegador —
+    nada passa por servidor.
+  </p>
   <form method="dialog" id="cfgForm">
+    <div>
+      <label for="apiKey">Chave da API Finnhub</label>
+      <input id="apiKey" placeholder="cole aqui sua chave" autocomplete="off" spellcheck="false">
+    </div>
+
+    <p class="hint" style="margin-top:14px;">
+      Ticker do ativo (ex.: <code>META</code>, <code>AMD</code>, <code>SNOW</code>).
+      Preencha "preço pago" para ver a linha tracejada com sua valorização real no gráfico.
+    </p>
     <div class="asset-row">
       <label>Ativo 1</label>
       <div class="row">
-        <input id="s0" placeholder="NASDAQ:META" autocomplete="off" spellcheck="false">
+        <input id="s0" placeholder="META" autocomplete="off" spellcheck="false">
         <input id="c0" type="number" step="0.01" min="0" placeholder="Preço pago (opc.)">
       </div>
     </div>
     <div class="asset-row">
       <label>Ativo 2</label>
       <div class="row">
-        <input id="s1" placeholder="NYSE:SNOW" autocomplete="off" spellcheck="false">
+        <input id="s1" placeholder="SNOW" autocomplete="off" spellcheck="false">
         <input id="c1" type="number" step="0.01" min="0" placeholder="Preço pago (opc.)">
       </div>
     </div>
     <div class="asset-row">
       <label>Ativo 3</label>
       <div class="row">
-        <input id="s2" placeholder="NASDAQ:AMD" autocomplete="off" spellcheck="false">
+        <input id="s2" placeholder="AMD" autocomplete="off" spellcheck="false">
         <input id="c2" type="number" step="0.01" min="0" placeholder="Preço pago (opc.)">
       </div>
     </div>
     <div class="asset-row">
       <label>Ativo 4</label>
       <div class="row">
-        <input id="s3" placeholder="NASDAQ:SNDK" autocomplete="off" spellcheck="false">
+        <input id="s3" placeholder="SNDK" autocomplete="off" spellcheck="false">
         <input id="c3" type="number" step="0.01" min="0" placeholder="Preço pago (opc.)">
       </div>
     </div>
@@ -224,15 +243,6 @@
           <option value="4x1">4 x 1 (linhas)</option>
         </select>
       </div>
-      <div>
-        <label for="range">Período do gráfico</label>
-        <select id="range">
-          <option value="1d|1">Dia (1 min)</option>
-          <option value="5d|15">5 dias (15 min)</option>
-          <option value="1m|30">1 mês (30 min)</option>
-          <option value="12m|1D">12 meses (diário)</option>
-        </select>
-      </div>
     </div>
     <label class="check"><input type="checkbox" id="showTape"> Mostrar fita de cotações no topo</label>
     <div class="cfg-actions">
@@ -242,21 +252,23 @@
   </form>
 </dialog>
 
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 (function () {
   "use strict";
 
-  var STORAGE_KEY = "painel-acoes-v1";
-  var RELOAD_MS = 6 * 60 * 60 * 1000;  // recarrega a cada 6h para não envelhecer a sessão no monitor
-  var QUOTE_POLL_MS = 60 * 1000;       // cotações de referência a cada 60s
+  var STORAGE_KEY = "painel-acoes-v2";
+  var RELOAD_MS = 6 * 60 * 60 * 1000; // recarrega a cada 6h (limita memória/estado acumulado no monitor)
+  var WS_BACKOFF_MIN = 3000;
+  var WS_BACKOFF_MAX = 30000;
 
   var DEFAULTS = {
-    symbols: ["NYSE:SNOW", "NASDAQ:META", "NASDAQ:AMD", "NASDAQ:SNDK"],
+    symbols: ["SNOW", "META", "AMD", "SNDK"],
     costs: ["", "", "", ""],
     layout: "2x2",
-    range: "1d|1",
     theme: "dark",
-    tape: true
+    tape: true,
+    apiKey: ""
   };
 
   // ---------- estado ----------
@@ -267,7 +279,7 @@
       if (saved) cfg = Object.assign(cfg, saved);
     } catch (e) { /* localStorage indisponível: segue com o padrão */ }
 
-    // ?symbols=NASDAQ:META,NYSE:SNOW&costs=180,320&layout=1x4&theme=light — modo quiosque
+    // ?symbols=META,SNOW,AMD,SNDK&costs=180,320,,&layout=1x4&theme=dark&apiKey=... — modo quiosque
     var qs = new URLSearchParams(location.search);
     var qsSymbols = qs.get("symbols");
     if (qsSymbols) {
@@ -281,8 +293,8 @@
     }
     if (qs.get("layout")) cfg.layout = qs.get("layout");
     if (qs.get("theme")) cfg.theme = qs.get("theme");
-    if (qs.get("range")) cfg.range = qs.get("range");
     if (qs.get("tape")) cfg.tape = qs.get("tape") !== "0";
+    if (qs.get("apiKey")) cfg.apiKey = qs.get("apiKey");
     return cfg;
   }
 
@@ -291,86 +303,29 @@
   }
 
   var cfg = load();
-  var quoteTimer = null;
+  var charts = [null, null, null, null]; // { chart, series, financeSym, prevClose, lastPrice }
+  var ws = null;
+  var wsReconnectTimer = null;
+  var wsBackoff = WS_BACKOFF_MIN;
 
-  // ---------- widgets ----------
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  // ---------- fita de cotações (segue via widget TradingView, só decorativa) ----------
   function mountWidget(parent, src, config) {
     var container = document.createElement("div");
     container.className = "tradingview-widget-container";
     var target = document.createElement("div");
     target.className = "tradingview-widget-container__widget";
     container.appendChild(target);
-
     var script = document.createElement("script");
     script.type = "text/javascript";
     script.src = src;
     script.async = true;
     script.innerHTML = JSON.stringify(config);
     container.appendChild(script);
-
     parent.appendChild(container);
-  }
-
-  function chartConfig(symbol) {
-    var light = cfg.theme === "light";
-    return {
-      symbols: [[symbol + "|" + cfg.range.split("|")[0]]],
-      chartOnly: false,
-      chartType: "area",
-      lineWidth: 2,
-      lineType: 0,
-      locale: "br",
-      colorTheme: light ? "light" : "dark",
-      backgroundColor: light ? "#ffffff" : "#12151c",
-      widgetFontColor: light ? "#0F0F0F" : "#e8eaee",
-      fontColor: light ? "rgb(106, 109, 120)" : "rgb(139, 147, 163)",
-      gridLineColor: light ? "rgba(46, 46, 46, 0.06)" : "rgba(240, 243, 250, 0.06)",
-      upColor: "#22ab94",
-      downColor: "#f7525f",
-      borderUpColor: "#22ab94",
-      borderDownColor: "#f7525f",
-      wickUpColor: "#22ab94",
-      wickDownColor: "#f7525f",
-      volumeUpColor: "rgba(34, 171, 148, 0.5)",
-      volumeDownColor: "rgba(247, 82, 95, 0.5)",
-      isTransparent: false,
-      scalePosition: "right",
-      scaleMode: "Normal",
-      fontFamily: "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
-      fontSize: "10",
-      headerFontSize: "medium",
-      valuesTracking: "1",
-      changeMode: "price-and-percent",
-      dateRanges: [cfg.range, "5d|15", "1m|30", "3m|60", "12m|1D"],
-      hideDateRanges: false,
-      hideMarketStatus: false,
-      hideSymbolLogo: false,
-      noTimeScale: false,
-      autosize: true,
-      width: "100%",
-      height: "100%"
-    };
-  }
-
-  function renderGrid() {
-    var grid = document.getElementById("grid");
-    grid.innerHTML = "";
-    cfg.symbols.slice(0, 4).forEach(function (symbol, i) {
-      var cell = document.createElement("section");
-      cell.className = "cell";
-      grid.appendChild(cell);
-      mountWidget(
-        cell,
-        "https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js",
-        chartConfig(symbol)
-      );
-
-      var badge = document.createElement("div");
-      badge.className = "cost-badge";
-      badge.id = "badge" + i;
-      badge.innerHTML = '<span class="q-price"></span><span class="q-diff"></span>';
-      cell.appendChild(badge);
-    });
   }
 
   function renderTape() {
@@ -379,7 +334,7 @@
     document.body.classList.toggle("no-tape", !cfg.tape);
     if (!cfg.tape) return;
     mountWidget(tape, "https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js", {
-      symbols: cfg.symbols.slice(0, 4).map(function (s) { return { proName: s, title: s.split(":")[1] || s }; }),
+      symbols: cfg.symbols.slice(0, 4).map(function (s) { return { proName: financeToTvGuess(s), title: s }; }),
       showSymbolLogo: true,
       isTransparent: false,
       displayMode: "adaptive",
@@ -388,108 +343,247 @@
     });
   }
 
-  function renderAll() {
-    document.documentElement.setAttribute("data-theme", cfg.theme);
-    document.body.setAttribute("data-layout", cfg.layout);
-    var anyCost = cfg.costs.slice(0, 4).some(function (c) { return c !== "" && !isNaN(parseFloat(c)); });
-    document.body.classList.toggle("has-costs", anyCost);
-    renderTape();
-    renderGrid();
-    restartQuotePolling();
+  // heurística só para a fita (não afeta o gráfico principal, que usa Finnhub puro)
+  function financeToTvGuess(ticker) {
+    return "NASDAQ:" + ticker;
   }
 
-  // ---------- cotação de referência (para valorização sobre o preço pago) ----------
-  // O widget do TradingView roda num iframe isolado: não é possível ler o preço
-  // exibido nele por JS. Por isso buscamos a cotação separadamente (stooq.com,
-  // gratuito, sem cadastro, com pequeno atraso) só para calcular ganho/perda.
-  function guessQuoteSymbol(tvSymbol) {
-    var parts = String(tvSymbol || "").split(":");
-    var exch = (parts[0] || "").toUpperCase();
-    var ticker = (parts[1] || parts[0] || "").trim().toLowerCase();
-    if (!ticker) return null;
-    if (exch.indexOf("BOVESPA") !== -1 || exch === "B3") return ticker + ".sa";
-    if (exch.indexOf("LSE") !== -1 || exch.indexOf("LON") !== -1) return ticker + ".uk";
-    return ticker + ".us"; // padrão: bolsas americanas (NASDAQ/NYSE/AMEX)
-  }
-
-  function currencyFor(quoteSymbol) {
-    if (!quoteSymbol) return "$";
-    if (quoteSymbol.slice(-3) === ".sa") return "R$";
-    if (quoteSymbol.slice(-3) === ".uk") return "£";
-    return "$";
-  }
-
-  function updateBadge(i, price, failed) {
-    var badge = document.getElementById("badge" + i);
-    if (!badge) return;
-    var cost = parseFloat(cfg.costs[i]);
-    if (!cfg.costs[i] || isNaN(cost) || cost <= 0) {
-      badge.style.display = "none";
-      return;
-    }
-    var qSym = guessQuoteSymbol(cfg.symbols[i]);
-    var cur = currencyFor(qSym);
-    var qEl = badge.querySelector(".q-price");
-    var dEl = badge.querySelector(".q-diff");
-    badge.style.display = "flex";
-    qEl.textContent = "Pago " + cur + " " + cost.toFixed(2);
-
-    if (failed) {
-      dEl.textContent = "cotação indisponível";
-      dEl.className = "q-diff warn";
-      return;
-    }
-    if (price === null || price === undefined || isNaN(price)) {
-      dEl.textContent = "sem dado";
-      dEl.className = "q-diff warn";
-      return;
-    }
-    var diff = price - cost;
-    var pct = (diff / cost) * 100;
-    dEl.textContent =
-      "Agora " + cur + " " + price.toFixed(2) + "  " +
-      (diff >= 0 ? "▲ +" : "▼ ") + cur + " " + Math.abs(diff).toFixed(2) +
-      " (" + (pct >= 0 ? "+" : "") + pct.toFixed(1) + "%)";
-    dEl.className = "q-diff " + (diff >= 0 ? "up" : "down");
-  }
-
-  function refreshQuotes() {
-    var symbols = cfg.symbols.slice(0, 4);
-    var needsQuote = symbols.some(function (_, i) {
-      var c = parseFloat(cfg.costs[i]);
-      return cfg.costs[i] && !isNaN(c) && c > 0;
+  // ---------- gráficos em tempo real (Lightweight Charts + Finnhub) ----------
+  function destroyCharts() {
+    charts.forEach(function (st) {
+      if (st && st.chart) { try { st.chart.remove(); } catch (e) {} }
     });
-    if (!needsQuote) return;
+    charts = [null, null, null, null];
+  }
 
-    var quoteSymbols = symbols.map(guessQuoteSymbol);
-    var url = "https://stooq.com/q/l/?s=" + quoteSymbols.map(function(s){ return s || "x"; }).join(",") + "&f=sd2t2ohlc&h&e=csv";
+  function buildCell(symbol, cost, index) {
+    var cell = document.createElement("section");
+    cell.className = "cell";
 
-    fetch(url, { cache: "no-store" })
-      .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.text(); })
-      .then(function (text) {
-        var lines = text.trim().split("\n");
-        lines.shift(); // remove cabeçalho
-        symbols.forEach(function (_, i) {
-          var line = lines[i] || "";
-          var cols = line.split(",");
-          var close = parseFloat(cols[6]);
-          updateBadge(i, isNaN(close) ? null : close, false);
+    var head = document.createElement("div");
+    head.className = "cell-head";
+    head.innerHTML =
+      '<span class="c-sym">' + symbol + '</span>' +
+      '<span class="c-price" id="price' + index + '">—</span>' +
+      '<span class="c-day" id="day' + index + '"></span>';
+    cell.appendChild(head);
+
+    var costRow = document.createElement("div");
+    costRow.className = "cell-cost";
+    costRow.id = "cost" + index;
+    costRow.innerHTML = '<span class="q-price"></span><span class="q-diff"></span>';
+    cell.appendChild(costRow);
+
+    var chartBox = document.createElement("div");
+    chartBox.className = "cell-chart";
+    chartBox.id = "chartbox" + index;
+    cell.appendChild(chartBox);
+
+    return cell;
+  }
+
+  function renderGrid() {
+    destroyCharts();
+    var grid = document.getElementById("grid");
+    grid.innerHTML = "";
+
+    cfg.symbols.slice(0, 4).forEach(function (symbol, i) {
+      var cost = parseFloat(cfg.costs[i]);
+      var cell = buildCell(symbol, cost, i);
+      grid.appendChild(cell);
+
+      if (!cfg.apiKey) {
+        var box = document.getElementById("chartbox" + i);
+        box.innerHTML =
+          '<div class="placeholder">🔑 Configure sua chave grátis da Finnhub no menu ' +
+          '<b>Ativos</b> para ligar o gráfico em tempo real.<br>' +
+          '<a href="https://finnhub.io/register" target="_blank" rel="noopener">Criar chave grátis</a></div>';
+        return;
+      }
+
+      var light = cfg.theme === "light";
+      var chart = LightweightCharts.createChart(document.getElementById("chartbox" + i), {
+        layout: {
+          background: { color: "transparent" },
+          textColor: cssVar("--muted") || (light ? "#6a6d78" : "#8b93a3")
+        },
+        grid: {
+          vertLines: { color: light ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)" },
+          horzLines: { color: light ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)" }
+        },
+        rightPriceScale: { borderVisible: false },
+        timeScale: { borderVisible: false, timeVisible: true, secondsVisible: true },
+        crosshair: { mode: 0 },
+        autoSize: true
+      });
+
+      var series = chart.addAreaSeries({
+        lineColor: cssVar("--accent") || "#3b82f6",
+        topColor: "rgba(59,130,246,0.28)",
+        bottomColor: "rgba(59,130,246,0.02)",
+        lineWidth: 2,
+        priceLineVisible: false,
+        lastValueVisible: true
+      });
+
+      var costLine = null;
+      if (cost > 0) {
+        costLine = series.createPriceLine({
+          price: cost,
+          color: cssVar("--cost-line") || "#eab308",
+          lineWidth: 2,
+          lineStyle: LightweightCharts.LineStyle.Dashed,
+          axisLabelVisible: true,
+          title: "Pago"
         });
-        document.getElementById("quoteUpdated").textContent = "cotações: " + timeIn("America/Sao_Paulo");
+      }
+
+      charts[i] = { chart: chart, series: series, financeSym: symbol, prevClose: null, lastPrice: null, cost: cost > 0 ? cost : null };
+      seedQuote(i);
+    });
+
+    connectWS();
+  }
+
+  function seedQuote(i) {
+    var st = charts[i];
+    if (!st) return;
+    var url = "https://finnhub.io/api/v1/quote?symbol=" + encodeURIComponent(st.financeSym) + "&token=" + encodeURIComponent(cfg.apiKey);
+    fetch(url)
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function (q) {
+        if (!q || !q.c) throw new Error("sem dado");
+        st.prevClose = q.pc || null;
+        st.lastPrice = q.c;
+        st.series.setData([{ time: Math.floor(Date.now() / 1000), value: q.c }]);
+        updateHeader(i);
       })
       .catch(function () {
-        symbols.forEach(function (_, i) { updateBadge(i, null, true); });
-        document.getElementById("quoteUpdated").textContent = "cotações: falha ao atualizar";
+        var priceEl = document.getElementById("price" + i);
+        if (priceEl) priceEl.textContent = "sem dado";
       });
   }
 
-  function restartQuotePolling() {
-    if (quoteTimer) clearInterval(quoteTimer);
-    refreshQuotes();
-    quoteTimer = setInterval(refreshQuotes, QUOTE_POLL_MS);
+  function applyTrade(sym, price, tMs) {
+    charts.forEach(function (st, i) {
+      if (!st || st.financeSym !== sym) return;
+      st.lastPrice = price;
+      try {
+        st.series.update({ time: Math.floor(tMs / 1000), value: price });
+      } catch (e) { /* timestamp fora de ordem: ignora o ponto */ }
+      updateHeader(i);
+    });
   }
 
-  document.getElementById("btnRefreshQuotes").addEventListener("click", refreshQuotes);
+  function updateHeader(i) {
+    var st = charts[i];
+    if (!st) return;
+
+    var priceEl = document.getElementById("price" + i);
+    var dayEl = document.getElementById("day" + i);
+    if (priceEl) priceEl.textContent = "$ " + st.lastPrice.toFixed(2);
+
+    if (dayEl) {
+      if (st.prevClose) {
+        var dayDiff = st.lastPrice - st.prevClose;
+        var dayPct = (dayDiff / st.prevClose) * 100;
+        dayEl.textContent = (dayDiff >= 0 ? "▲ +" : "▼ ") + Math.abs(dayPct).toFixed(2) + "% (dia)";
+        dayEl.className = "c-day " + (dayDiff >= 0 ? "up" : "down");
+        try {
+          st.series.applyOptions({
+            lineColor: dayDiff >= 0 ? cssVar("--up") : cssVar("--down"),
+            topColor: dayDiff >= 0 ? "rgba(34,171,148,0.28)" : "rgba(247,82,95,0.28)",
+            bottomColor: "rgba(0,0,0,0.02)"
+          });
+        } catch (e) {}
+      } else {
+        dayEl.textContent = "";
+      }
+    }
+
+    var costRow = document.getElementById("cost" + i);
+    if (costRow) {
+      if (!st.cost) {
+        costRow.style.display = "none";
+      } else {
+        costRow.style.display = "flex";
+        var diff = st.lastPrice - st.cost;
+        var pct = (diff / st.cost) * 100;
+        costRow.querySelector(".q-price").textContent = "Pago $ " + st.cost.toFixed(2);
+        var dEl = costRow.querySelector(".q-diff");
+        dEl.textContent = (diff >= 0 ? "▲ +$" : "▼ -$") + Math.abs(diff).toFixed(2) + " (" + (pct >= 0 ? "+" : "") + pct.toFixed(1) + "%)";
+        dEl.className = "q-diff " + (diff >= 0 ? "up" : "down");
+      }
+    }
+  }
+
+  // ---------- WebSocket Finnhub (dados negociação a negociação, sem polling) ----------
+  function setWsStatus(kind, text) {
+    var dot = document.getElementById("wsDot");
+    var label = document.getElementById("wsLabel");
+    dot.className = "dot " + kind;
+    label.textContent = "tempo real: " + text;
+  }
+
+  function connectWS() {
+    if (ws) { try { ws.close(); } catch (e) {} ws = null; }
+    clearTimeout(wsReconnectTimer);
+
+    if (!cfg.apiKey) { setWsStatus("off", "sem chave configurada"); return; }
+    var hasSymbols = charts.some(function (st) { return st; });
+    if (!hasSymbols) { setWsStatus("off", "sem ativos"); return; }
+
+    setWsStatus("pending", "conectando…");
+    try {
+      ws = new WebSocket("wss://ws.finnhub.io?token=" + encodeURIComponent(cfg.apiKey));
+    } catch (e) {
+      setWsStatus("off", "erro ao conectar");
+      scheduleReconnect();
+      return;
+    }
+
+    ws.onopen = function () {
+      wsBackoff = WS_BACKOFF_MIN;
+      setWsStatus("live", "conectado");
+      charts.forEach(function (st) {
+        if (st) ws.send(JSON.stringify({ type: "subscribe", symbol: st.financeSym }));
+      });
+    };
+
+    ws.onmessage = function (ev) {
+      var msg;
+      try { msg = JSON.parse(ev.data); } catch (e) { return; }
+      if (msg.type === "trade" && Array.isArray(msg.data)) {
+        msg.data.forEach(function (tr) { applyTrade(tr.s, tr.p, tr.t); });
+      }
+    };
+
+    ws.onerror = function () { /* onclose trata a reconexão */ };
+
+    ws.onclose = function () {
+      setWsStatus("off", "reconectando…");
+      scheduleReconnect();
+    };
+  }
+
+  function scheduleReconnect() {
+    clearTimeout(wsReconnectTimer);
+    wsReconnectTimer = setTimeout(connectWS, wsBackoff);
+    wsBackoff = Math.min(wsBackoff * 1.6, WS_BACKOFF_MAX);
+  }
+
+  document.getElementById("btnReconnect").addEventListener("click", function () {
+    wsBackoff = WS_BACKOFF_MIN;
+    connectWS();
+  });
+
+  // ---------- render geral ----------
+  function renderAll() {
+    document.documentElement.setAttribute("data-theme", cfg.theme);
+    document.body.setAttribute("data-layout", cfg.layout);
+    renderTape();
+    renderGrid();
+  }
 
   // ---------- relógios e status do pregão (NYSE/Nasdaq) ----------
   function timeIn(tz) {
@@ -538,12 +632,12 @@
   var dlg = document.getElementById("cfg");
 
   function openCfg() {
+    document.getElementById("apiKey").value = cfg.apiKey || "";
     for (var i = 0; i < 4; i++) {
       document.getElementById("s" + i).value = cfg.symbols[i] || "";
       document.getElementById("c" + i).value = cfg.costs[i] || "";
     }
     document.getElementById("layout").value = cfg.layout;
-    document.getElementById("range").value = cfg.range;
     document.getElementById("showTape").checked = !!cfg.tape;
     dlg.showModal();
   }
@@ -556,10 +650,10 @@
       nextSymbols.push(v || DEFAULTS.symbols[i]);
       nextCosts.push(document.getElementById("c" + i).value.trim());
     }
+    cfg.apiKey = document.getElementById("apiKey").value.trim();
     cfg.symbols = nextSymbols;
     cfg.costs = nextCosts;
     cfg.layout = document.getElementById("layout").value;
-    cfg.range = document.getElementById("range").value;
     cfg.tape = document.getElementById("showTape").checked;
     save();
     renderAll();
