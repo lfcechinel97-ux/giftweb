@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Painel de Ações</title>
+<style>
+  :root {
+    --bg: #0c0e12;
+    --panel: #12151c;
+    --border: #232936;
+    --text: #e8eaee;
+    --muted: #8b93a3;
+    --up: #22ab94;
+    --down: #f7525f;
+    --accent: #3b82f6;
+    --gap: 10px;
+  }
+  html[data-theme="light"] {
+    --bg: #f1f3f6;
+    --panel: #ffffff;
+    --border: #e1e5ec;
+    --text: #0f0f0f;
+    --muted: #6a6d78;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Trebuchet MS", Roboto, Ubuntu, sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ---------- cabeçalho ---------- */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 14px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex: 0 0 auto;
+  }
+  .brand { font-size: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  .status { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .dot.open { background: var(--up); box-shadow: 0 0 0 3px rgba(34,171,148,.18); }
+  .dot.closed { background: var(--down); box-shadow: 0 0 0 3px rgba(247,82,95,.18); }
+  .clocks { margin-left: auto; display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
+  .clocks b { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .actions { display: flex; gap: 6px; }
+  button.ghost {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border); border-radius: 7px;
+    padding: 5px 10px; font-size: 12px; cursor: pointer;
+  }
+  button.ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ---------- fita de cotações ---------- */
+  #tape { flex: 0 0 auto; height: 46px; border-bottom: 1px solid var(--border); background: var(--panel); }
+  body.no-tape #tape { display: none; }
+
+  /* ---------- grade dos gráficos ---------- */
+  main {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    gap: var(--gap);
+    padding: var(--gap);
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  body[data-layout="1x4"] main { grid-template-columns: 1fr 1fr 1fr 1fr; grid-template-rows: 1fr; }
+  body[data-layout="4x1"] main { grid-template-columns: 1fr; grid-template-rows: repeat(4, 1fr); }
+  .cell {
+    position: relative;
+    min-width: 0; min-height: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .cell .tradingview-widget-container,
+  .cell .tradingview-widget-container__widget { height: 100%; width: 100%; }
+  .cell .tradingview-widget-copyright { display: none; }
+
+  /* ---------- painel de configuração ---------- */
+  dialog#cfg {
+    border: 1px solid var(--border); border-radius: 12px;
+    background: var(--panel); color: var(--text);
+    padding: 18px 20px; width: min(420px, 92vw);
+  }
+  dialog#cfg::backdrop { background: rgba(0,0,0,.55); }
+  dialog#cfg h2 { margin: 0 0 4px; font-size: 16px; }
+  dialog#cfg p.hint { margin: 0 0 14px; font-size: 12px; color: var(--muted); line-height: 1.45; }
+  dialog#cfg label { display: block; font-size: 11px; color: var(--muted); margin: 10px 0 4px; text-transform: uppercase; letter-spacing: .04em; }
+  dialog#cfg input, dialog#cfg select {
+    width: 100%; padding: 8px 10px; font-size: 13px;
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--border); border-radius: 7px;
+  }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  .cfg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  button.primary {
+    background: var(--accent); color: #fff; border: 0;
+    border-radius: 7px; padding: 8px 14px; font-size: 13px; cursor: pointer;
+  }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 14px; color: var(--text); }
+  .check input { width: auto; }
+
+  @media (max-width: 720px) {
+    main { grid-template-columns: 1fr; grid-template-rows: repeat(4, minmax(260px, 1fr)); overflow: auto; }
+    .clocks { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="brand">Painel de Ações</span>
+  <span class="status"><span class="dot" id="mktDot"></span><span id="mktLabel">—</span></span>
+  <div class="clocks">
+    <span>NY <b id="clockNy">--:--</b></span>
+    <span>BR <b id="clockBr">--:--</b></span>
+  </div>
+  <div class="actions">
+    <button class="ghost" id="btnCfg" title="Escolher ativos e layout">Ativos</button>
+    <button class="ghost" id="btnTheme" title="Alternar tema">Tema</button>
+    <button class="ghost" id="btnFull" title="Tela cheia (F)">Tela cheia</button>
+  </div>
+</header>
+
+<div id="tape"></div>
+<main id="grid"></main>
+
+<dialog id="cfg">
+  <h2>Configurar painel</h2>
+  <p class="hint">Use o código completo do TradingView: <code>BOLSA:TICKER</code>.<br>
+    Ex.: <code>NASDAQ:META</code>, <code>NYSE:SNOW</code>, <code>BMFBOVESPA:PETR4</code>.</p>
+  <form method="dialog" id="cfgForm">
+    <div class="row">
+      <div><label for="s0">Ativo 1</label><input id="s0" autocomplete="off" spellcheck="false"></div>
+      <div><label for="s1">Ativo 2</label><input id="s1" autocomplete="off" spellcheck="false"></div>
+    </div>
+    <div class="row">
+      <div><label for="s2">Ativo 3</label><input id="s2" autocomplete="off" spellcheck="false"></div>
+      <div><label for="s3">Ativo 4</label><input id="s3" autocomplete="off" spellcheck="false"></div>
+    </div>
+    <div class="row">
+      <div>
+        <label for="layout">Layout</label>
+        <select id="layout">
+          <option value="2x2">2 x 2 (grade)</option>
+          <option value="1x4">1 x 4 (colunas)</option>
+          <option value="4x1">4 x 1 (linhas)</option>
+        </select>
+      </div>
+      <div>
+        <label for="range">Período do gráfico</label>
+        <select id="range">
+          <option value="1d|1">Dia (1 min)</option>
+          <option value="5d|15">5 dias (15 min)</option>
+          <option value="1m|30">1 mês (30 min)</option>
+          <option value="12m|1D">12 meses (diário)</option>
+        </select>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" id="showTape"> Mostrar fita de cotações no topo</label>
+    <div class="cfg-actions">
+      <button type="button" class="ghost" id="cfgCancel">Cancelar</button>
+      <button type="submit" class="primary">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "painel-acoes-v1";
+  var RELOAD_MS = 6 * 60 * 60 * 1000; // recarrega a cada 6h para não envelhecer a sessão no monitor
+
+  var DEFAULTS = {
+    symbols: ["NYSE:SNOW", "NASDAQ:META", "NASDAQ:AMD", "NASDAQ:SNDK"],
+    layout: "2x2",
+    range: "1d|1",
+    theme: "dark",
+    tape: true
+  };
+
+  // ---------- estado ----------
+  function load() {
+    var cfg = Object.assign({}, DEFAULTS);
+    try {
+      var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (saved) cfg = Object.assign(cfg, saved);
+    } catch (e) { /* localStorage indisponível: segue com o padrão */ }
+
+    // ?symbols=NASDAQ:META,NYSE:SNOW&layout=1x4&theme=light — útil para modo quiosque
+    var qs = new URLSearchParams(location.search);
+    var qsSymbols = qs.get("symbols");
+    if (qsSymbols) {
+      var list = qsSymbols.split(",").map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
+      for (var i = 0; i < 4; i++) if (list[i]) cfg.symbols[i] = list[i];
+    }
+    if (qs.get("layout")) cfg.layout = qs.get("layout");
+    if (qs.get("theme")) cfg.theme = qs.get("theme");
+    if (qs.get("range")) cfg.range = qs.get("range");
+    if (qs.get("tape")) cfg.tape = qs.get("tape") !== "0";
+    return cfg;
+  }
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg)); } catch (e) {}
+  }
+
+  var cfg = load();
+
+  // ---------- widgets ----------
+  function mountWidget(parent, src, config) {
+    var container = document.createElement("div");
+    container.className = "tradingview-widget-container";
+    var target = document.createElement("div");
+    target.className = "tradingview-widget-container__widget";
+    container.appendChild(target);
+
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = src;
+    script.async = true;
+    script.innerHTML = JSON.stringify(config);
+    container.appendChild(script);
+
+    parent.appendChild(container);
+  }
+
+  function chartConfig(symbol) {
+    var light = cfg.theme === "light";
+    return {
+      symbols: [[symbol + "|" + cfg.range.split("|")[0]]],
+      chartOnly: false,
+      chartType: "area",
+      lineWidth: 2,
+      lineType: 0,
+      locale: "br",
+      colorTheme: light ? "light" : "dark",
+      backgroundColor: light ? "#ffffff" : "#12151c",
+      widgetFontColor: light ? "#0F0F0F" : "#e8eaee",
+      fontColor: light ? "rgb(106, 109, 120)" : "rgb(139, 147, 163)",
+      gridLineColor: light ? "rgba(46, 46, 46, 0.06)" : "rgba(240, 243, 250, 0.06)",
+      upColor: "#22ab94",
+      downColor: "#f7525f",
+      borderUpColor: "#22ab94",
+      borderDownColor: "#f7525f",
+      wickUpColor: "#22ab94",
+      wickDownColor: "#f7525f",
+      volumeUpColor: "rgba(34, 171, 148, 0.5)",
+      volumeDownColor: "rgba(247, 82, 95, 0.5)",
+      isTransparent: false,
+      scalePosition: "right",
+      scaleMode: "Normal",
+      fontFamily: "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
+      fontSize: "10",
+      headerFontSize: "medium",
+      valuesTracking: "1",
+      changeMode: "price-and-percent",
+      dateRanges: [cfg.range, "5d|15", "1m|30", "3m|60", "12m|1D"],
+      hideDateRanges: false,
+      hideMarketStatus: false,
+      hideSymbolLogo: false,
+      noTimeScale: false,
+      autosize: true,
+      width: "100%",
+      height: "100%"
+    };
+  }
+
+  function renderGrid() {
+    var grid = document.getElementById("grid");
+    grid.innerHTML = "";
+    cfg.symbols.slice(0, 4).forEach(function (symbol) {
+      var cell = document.createElement("section");
+      cell.className = "cell";
+      grid.appendChild(cell);
+      mountWidget(
+        cell,
+        "https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js",
+        chartConfig(symbol)
+      );
+    });
+  }
+
+  function renderTape() {
+    var tape = document.getElementById("tape");
+    tape.innerHTML = "";
+    document.body.classList.toggle("no-tape", !cfg.tape);
+    if (!cfg.tape) return;
+    mountWidget(tape, "https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js", {
+      symbols: cfg.symbols.slice(0, 4).map(function (s) { return { proName: s, title: s.split(":")[1] || s }; }),
+      showSymbolLogo: true,
+      isTransparent: false,
+      displayMode: "adaptive",
+      colorTheme: cfg.theme === "light" ? "light" : "dark",
+      locale: "br"
+    });
+  }
+
+  function renderAll() {
+    document.documentElement.setAttribute("data-theme", cfg.theme);
+    document.body.setAttribute("data-layout", cfg.layout);
+    renderTape();
+    renderGrid();
+  }
+
+  // ---------- relógios e status do pregão (NYSE/Nasdaq) ----------
+  function timeIn(tz) {
+    return new Intl.DateTimeFormat("pt-BR", {
+      timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false
+    }).format(new Date());
+  }
+
+  function nyParts() {
+    var parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York", weekday: "short",
+      hour: "2-digit", minute: "2-digit", hour12: false
+    }).formatToParts(new Date());
+    var out = {};
+    parts.forEach(function (p) { out[p.type] = p.value; });
+    return out;
+  }
+
+  function tick() {
+    document.getElementById("clockNy").textContent = timeIn("America/New_York");
+    document.getElementById("clockBr").textContent = timeIn("America/Sao_Paulo");
+
+    var p = nyParts();
+    var minutes = parseInt(p.hour, 10) * 60 + parseInt(p.minute, 10);
+    var weekend = p.weekday === "Sat" || p.weekday === "Sun";
+    var dot = document.getElementById("mktDot");
+    var label = document.getElementById("mktLabel");
+
+    // Horário regular: 9h30–16h00 (NY). Feriados americanos não são considerados.
+    if (!weekend && minutes >= 570 && minutes < 960) {
+      dot.className = "dot open";
+      label.textContent = "Pregão aberto";
+    } else if (!weekend && minutes >= 240 && minutes < 570) {
+      dot.className = "dot";
+      label.textContent = "Pré-mercado";
+    } else if (!weekend && minutes >= 960 && minutes < 1200) {
+      dot.className = "dot";
+      label.textContent = "After-market";
+    } else {
+      dot.className = "dot closed";
+      label.textContent = "Mercado fechado";
+    }
+  }
+
+  // ---------- configuração ----------
+  var dlg = document.getElementById("cfg");
+
+  function openCfg() {
+    for (var i = 0; i < 4; i++) document.getElementById("s" + i).value = cfg.symbols[i] || "";
+    document.getElementById("layout").value = cfg.layout;
+    document.getElementById("range").value = cfg.range;
+    document.getElementById("showTape").checked = !!cfg.tape;
+    dlg.showModal();
+  }
+
+  document.getElementById("cfgForm").addEventListener("submit", function () {
+    var next = [];
+    for (var i = 0; i < 4; i++) {
+      var v = document.getElementById("s" + i).value.trim().toUpperCase();
+      next.push(v || DEFAULTS.symbols[i]);
+    }
+    cfg.symbols = next;
+    cfg.layout = document.getElementById("layout").value;
+    cfg.range = document.getElementById("range").value;
+    cfg.tape = document.getElementById("showTape").checked;
+    save();
+    renderAll();
+  });
+
+  document.getElementById("cfgCancel").addEventListener("click", function () { dlg.close(); });
+  document.getElementById("btnCfg").addEventListener("click", openCfg);
+
+  document.getElementById("btnTheme").addEventListener("click", function () {
+    cfg.theme = cfg.theme === "light" ? "dark" : "light";
+    save();
+    renderAll();
+  });
+
+  document.getElementById("btnFull").addEventListener("click", function () {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (dlg.open) return;
+    var k = e.key.toLowerCase();
+    if (k === "f") document.getElementById("btnFull").click();
+    if (k === "c") openCfg();
+    if (k === "t") document.getElementById("btnTheme").click();
+  });
+
+  // ---------- início ----------
+  renderAll();
+  tick();
+  setInterval(tick, 15000);
+  setTimeout(function () { location.reload(); }, RELOAD_MS);
+})();
+</script>
+</body>
+</html>
