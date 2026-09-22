@@ -263,9 +263,9 @@
   "use strict";
 
   var STORAGE_KEY = "painel-acoes-v3";
-  var RELOAD_MS = 6 * 60 * 60 * 1000; // recarrega a cada 6h (limita memória/estado acumulado no monitor)
-  var POLL_MS = 5000;                 // consulta cada ativo a cada 5s (~48 chamadas/min p/ 4 ativos, dentro do limite grátis da Finnhub)
-  var POLL_STAGGER_MS = 350;          // espaça as 4 consultas iniciais para não estourar rajada
+  var BASE_POLL_MS = 8000;   // intervalo base por ativo (revezado, não simultâneo)
+  var MAX_POLL_MS = 60000;   // teto de espera quando um ativo está falhando (backoff)
+  var POLL_STAGGER_MS = 2000; // espaçamento inicial entre os 4 ativos
 
   var DEFAULTS = {
     symbols: ["SNOW", "META", "AMD", "SNDK"],
@@ -308,8 +308,7 @@
   }
 
   var cfg = load();
-  var charts = [null, null, null, null]; // { chart, series, financeSym, prevClose, lastPrice, cost, lastOkAt, failCount }
-  var pollTimer = null;
+  var charts = [null, null, null, null]; // { chart, series, financeSym, prevClose, lastPrice, cost, lastOkAt, failCount, lastError, pollTimer, currentDelay }
 
   function cssVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -349,7 +348,9 @@
   // ---------- gráficos (Lightweight Charts + Finnhub) ----------
   function destroyCharts() {
     charts.forEach(function (st) {
-      if (st && st.chart) { try { st.chart.remove(); } catch (e) {} }
+      if (!st) return;
+      if (st.pollTimer) clearTimeout(st.pollTimer);
+      if (st.chart) { try { st.chart.remove(); } catch (e) {} }
     });
     charts = [null, null, null, null];
   }
@@ -438,13 +439,11 @@
 
       charts[i] = {
         chart: chart, series: series, financeSym: symbol, prevClose: null, lastPrice: null,
-        cost: cost > 0 ? cost : null, lastOkAt: null, failCount: 0
+        cost: cost > 0 ? cost : null, lastOkAt: null, failCount: 0, lastError: null, pollTimer: null, currentDelay: BASE_POLL_MS
       };
 
       setTimeout(function () { seedAndBackfill(i); }, i * POLL_STAGGER_MS);
     });
-
-    restartPolling();
   }
 
   // Tenta trazer o histórico intradiário de hoje (desde a abertura do pregão em NY).
@@ -457,7 +456,12 @@
     var openEpoch = todayMarketOpenEpoch();
     var nowEpoch = Math.floor(Date.now() / 1000);
 
-    var afterBackfill = function () { pollOne(i, true); };
+    // Nota: no plano grátis da Finnhub, o endpoint de candles intradiários costuma
+    // ser bloqueado (403) para ações dos EUA — a tentativa abaixo é best-effort;
+    // se falhar, seguimos normalmente só com a cotação atual e o gráfico vai sendo
+    // desenhado ao vivo a partir de agora (por isso evitamos recarregar a página
+    // durante o pregão — veja scheduleNightlyReload).
+    var afterBackfill = function () { startPollingLoop(i); };
 
     if (!openEpoch) { afterBackfill(); return; }
 
@@ -490,27 +494,51 @@
     return Math.floor(Date.now() / 1000) - deltaMinutes * 60;
   }
 
-  function pollOne(i, isSeed) {
+  function pollOne(i) {
     var st = charts[i];
-    if (!st) return Promise.resolve();
+    if (!st) return Promise.resolve(false);
     var url = "https://finnhub.io/api/v1/quote?symbol=" + encodeURIComponent(st.financeSym) + "&token=" + encodeURIComponent(cfg.apiKey);
     return fetch(url)
-      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
       .then(function (q) {
         if (!q || !q.c) throw new Error("sem dado");
         st.prevClose = q.pc || st.prevClose;
         st.lastPrice = q.c;
         st.lastOkAt = Date.now();
         st.failCount = 0;
+        st.lastError = null;
         var t = Math.floor(Date.now() / 1000);
         try { st.series.update({ time: t, value: q.c }); }
         catch (e) { /* ponto fora de ordem: ignora */ }
         updateHeader(i);
+        recomputeStatus();
+        return true;
       })
-      .catch(function () {
+      .catch(function (err) {
         st.failCount++;
-        if (isSeed) updateHeader(i);
+        st.lastError = (err && err.message) ? err.message : "erro de rede";
+        updateHeader(i);
+        recomputeStatus();
+        return false;
       });
+  }
+
+  // Cada ativo tem seu próprio ciclo de consulta, revezado (não os 4 juntos),
+  // com espera progressiva quando aquele ativo específico está falhando — assim
+  // uma falha isolada não trava os outros nem estoura o limite de chamadas.
+  function startPollingLoop(i) {
+    var st = charts[i];
+    if (!st) return;
+    pollOne(i).then(function (ok) {
+      st = charts[i];
+      if (!st) return; // célula foi recriada/removida nesse meio tempo
+      st.currentDelay = ok ? BASE_POLL_MS : Math.min((st.currentDelay || BASE_POLL_MS) * 1.6, MAX_POLL_MS);
+      clearTimeout(st.pollTimer);
+      st.pollTimer = setTimeout(function () { startPollingLoop(i); }, st.currentDelay);
+    });
   }
 
   function updateHeader(i) {
@@ -560,21 +588,7 @@
     }
   }
 
-  // ---------- ciclo de atualização (polling REST, sem WebSocket) ----------
-  function pollAll() {
-    var any = charts.some(function (st) { return st; });
-    if (!any) { setStatus("off", "sem ativos"); return; }
-
-    var promises = charts.map(function (st, i) { return st ? pollOne(i, false) : Promise.resolve(); });
-    Promise.all(promises).then(function () {
-      var failing = charts.filter(function (st) { return st && st.failCount > 0; }).length;
-      var active = charts.filter(function (st) { return st; }).length;
-      if (failing === 0) setStatus("live", "atualizado agora");
-      else if (failing < active) setStatus("pending", "parcial (" + failing + " com falha)");
-      else setStatus("off", "falha ao atualizar");
-    });
-  }
-
+  // ---------- status agregado (sem WebSocket: cada ativo se atualiza sozinho) ----------
   function setStatus(kind, text) {
     var dot = document.getElementById("wsDot");
     var label = document.getElementById("wsLabel");
@@ -582,15 +596,27 @@
     label.textContent = "cotações: " + text;
   }
 
-  function restartPolling() {
-    if (pollTimer) clearInterval(pollTimer);
-    if (!cfg.apiKey) { setStatus("off", "sem chave configurada"); return; }
-    setStatus("pending", "carregando…");
-    pollTimer = setInterval(pollAll, POLL_MS);
+  function recomputeStatus() {
+    var active = charts.filter(function (st) { return st; });
+    if (!active.length) { setStatus("off", "sem ativos"); return; }
+    var failing = active.filter(function (st) { return st.failCount > 0; });
+    if (!failing.length) {
+      setStatus("live", "atualizado " + timeIn("America/Sao_Paulo"));
+    } else if (failing.length < active.length) {
+      var f = failing[0];
+      setStatus("pending", "parcial — " + f.financeSym + ": " + (f.lastError || "falha"));
+    } else {
+      setStatus("off", "falha: " + (failing[0].lastError || "desconhecida"));
+    }
   }
 
   document.getElementById("btnReconnect").addEventListener("click", function () {
-    pollAll();
+    charts.forEach(function (st, i) {
+      if (!st) return;
+      clearTimeout(st.pollTimer);
+      st.currentDelay = BASE_POLL_MS;
+      startPollingLoop(i);
+    });
   });
 
   // ---------- render geral ----------
@@ -697,11 +723,19 @@
     if (k === "t") document.getElementById("btnTheme").click();
   });
 
+  // ---------- recarga só de madrugada (preserva o histórico do dia acumulado ao vivo) ----------
+  function scheduleNightlyReload() {
+    var target = new Date();
+    target.setHours(3, 0, 0, 0); // 03:00 no horário local do navegador
+    if (target.getTime() <= Date.now()) target.setDate(target.getDate() + 1);
+    setTimeout(function () { location.reload(); }, target.getTime() - Date.now());
+  }
+
   // ---------- início ----------
   renderAll();
   tick();
   setInterval(tick, 15000);
-  setTimeout(function () { location.reload(); }, RELOAD_MS);
+  scheduleNightlyReload();
 })();
 </script>
 </body>
