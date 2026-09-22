@@ -15,6 +15,7 @@
     --up: #22ab94;
     --down: #f7525f;
     --accent: #3b82f6;
+    --badge-bg: rgba(10, 12, 16, 0.82);
     --gap: 10px;
   }
   html[data-theme="light"] {
@@ -23,6 +24,7 @@
     --border: #e1e5ec;
     --text: #0f0f0f;
     --muted: #6a6d78;
+    --badge-bg: rgba(255, 255, 255, 0.9);
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
@@ -45,12 +47,23 @@
     background: var(--panel);
     border-bottom: 1px solid var(--border);
     flex: 0 0 auto;
+    flex-wrap: wrap;
+    row-gap: 4px;
   }
   .brand { font-size: 14px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
   .status { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
   .dot.open { background: var(--up); box-shadow: 0 0 0 3px rgba(34,171,148,.18); }
   .dot.closed { background: var(--down); box-shadow: 0 0 0 3px rgba(247,82,95,.18); }
+  .quote-status {
+    font-size: 11px; color: var(--muted); display: none; align-items: center; gap: 6px;
+  }
+  body.has-costs .quote-status { display: flex; }
+  .quote-status button {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 5px; padding: 2px 6px; font-size: 11px; cursor: pointer; line-height: 1.4;
+  }
+  .quote-status button:hover { color: var(--accent); border-color: var(--accent); }
   .clocks { margin-left: auto; display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
   .clocks b { color: var(--text); font-variant-numeric: tabular-nums; font-weight: 600; }
   .actions { display: flex; gap: 6px; }
@@ -89,11 +102,33 @@
   .cell .tradingview-widget-container__widget { height: 100%; width: 100%; }
   .cell .tradingview-widget-copyright { display: none; }
 
+  /* ---------- barra "meu preço" sobre o gráfico ---------- */
+  .cost-badge {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    display: none;
+    align-items: center; justify-content: space-between;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--badge-bg);
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    z-index: 2;
+    pointer-events: none;
+    backdrop-filter: blur(2px);
+  }
+  .cost-badge .q-price { color: var(--muted); }
+  .cost-badge .q-diff { font-weight: 700; }
+  .cost-badge .q-diff.up { color: var(--up); }
+  .cost-badge .q-diff.down { color: var(--down); }
+  .cost-badge .q-diff.warn { color: var(--muted); font-weight: 500; font-style: italic; }
+
   /* ---------- painel de configuração ---------- */
   dialog#cfg {
     border: 1px solid var(--border); border-radius: 12px;
     background: var(--panel); color: var(--text);
-    padding: 18px 20px; width: min(420px, 92vw);
+    padding: 18px 20px; width: min(460px, 92vw);
+    max-height: 88vh; overflow: auto;
   }
   dialog#cfg::backdrop { background: rgba(0,0,0,.55); }
   dialog#cfg h2 { margin: 0 0 4px; font-size: 16px; }
@@ -106,6 +141,8 @@
   }
   .row { display: flex; gap: 10px; }
   .row > * { flex: 1; }
+  .asset-row { padding: 10px; border: 1px solid var(--border); border-radius: 9px; margin-top: 10px; }
+  .asset-row .row label { margin-top: 0; }
   .cfg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
   button.primary {
     background: var(--accent); color: #fff; border: 0;
@@ -125,6 +162,10 @@
 <header>
   <span class="brand">Painel de Ações</span>
   <span class="status"><span class="dot" id="mktDot"></span><span id="mktLabel">—</span></span>
+  <span class="quote-status" id="quoteStatus">
+    <span id="quoteUpdated">cotações: —</span>
+    <button type="button" id="btnRefreshQuotes" title="Atualizar cotações agora">↻</button>
+  </span>
   <div class="clocks">
     <span>NY <b id="clockNy">--:--</b></span>
     <span>BR <b id="clockBr">--:--</b></span>
@@ -141,16 +182,38 @@
 
 <dialog id="cfg">
   <h2>Configurar painel</h2>
-  <p class="hint">Use o código completo do TradingView: <code>BOLSA:TICKER</code>.<br>
-    Ex.: <code>NASDAQ:META</code>, <code>NYSE:SNOW</code>, <code>BMFBOVESPA:PETR4</code>.</p>
+  <p class="hint">Use o código completo do TradingView: <code>BOLSA:TICKER</code>
+    (ex.: <code>NASDAQ:META</code>, <code>NYSE:SNOW</code>, <code>BMFBOVESPA:PETR4</code>).<br>
+    Preencha "preço pago" para ver, na barra sob o gráfico, sua valorização real desde a compra
+    (cotação de referência via stooq.com, com pequeno atraso — não é o preço exato do TradingView).</p>
   <form method="dialog" id="cfgForm">
-    <div class="row">
-      <div><label for="s0">Ativo 1</label><input id="s0" autocomplete="off" spellcheck="false"></div>
-      <div><label for="s1">Ativo 2</label><input id="s1" autocomplete="off" spellcheck="false"></div>
+    <div class="asset-row">
+      <label>Ativo 1</label>
+      <div class="row">
+        <input id="s0" placeholder="NASDAQ:META" autocomplete="off" spellcheck="false">
+        <input id="c0" type="number" step="0.01" min="0" placeholder="Preço pago (opc.)">
+      </div>
     </div>
-    <div class="row">
-      <div><label for="s2">Ativo 3</label><input id="s2" autocomplete="off" spellcheck="false"></div>
-      <div><label for="s3">Ativo 4</label><input id="s3" autocomplete="off" spellcheck="false"></div>
+    <div class="asset-row">
+      <label>Ativo 2</label>
+      <div class="row">
+        <input id="s1" placeholder="NYSE:SNOW" autocomplete="off" spellcheck="false">
+        <input id="c1" type="number" step="0.01" min="0" placeholder="Preço pago (opc.)">
+      </div>
+    </div>
+    <div class="asset-row">
+      <label>Ativo 3</label>
+      <div class="row">
+        <input id="s2" placeholder="NASDAQ:AMD" autocomplete="off" spellcheck="false">
+        <input id="c2" type="number" step="0.01" min="0" placeholder="Preço pago (opc.)">
+      </div>
+    </div>
+    <div class="asset-row">
+      <label>Ativo 4</label>
+      <div class="row">
+        <input id="s3" placeholder="NASDAQ:SNDK" autocomplete="off" spellcheck="false">
+        <input id="c3" type="number" step="0.01" min="0" placeholder="Preço pago (opc.)">
+      </div>
     </div>
     <div class="row">
       <div>
@@ -184,10 +247,12 @@
   "use strict";
 
   var STORAGE_KEY = "painel-acoes-v1";
-  var RELOAD_MS = 6 * 60 * 60 * 1000; // recarrega a cada 6h para não envelhecer a sessão no monitor
+  var RELOAD_MS = 6 * 60 * 60 * 1000;  // recarrega a cada 6h para não envelhecer a sessão no monitor
+  var QUOTE_POLL_MS = 60 * 1000;       // cotações de referência a cada 60s
 
   var DEFAULTS = {
     symbols: ["NYSE:SNOW", "NASDAQ:META", "NASDAQ:AMD", "NASDAQ:SNDK"],
+    costs: ["", "", "", ""],
     layout: "2x2",
     range: "1d|1",
     theme: "dark",
@@ -196,18 +261,23 @@
 
   // ---------- estado ----------
   function load() {
-    var cfg = Object.assign({}, DEFAULTS);
+    var cfg = Object.assign({}, DEFAULTS, { symbols: DEFAULTS.symbols.slice(), costs: DEFAULTS.costs.slice() });
     try {
       var saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
       if (saved) cfg = Object.assign(cfg, saved);
     } catch (e) { /* localStorage indisponível: segue com o padrão */ }
 
-    // ?symbols=NASDAQ:META,NYSE:SNOW&layout=1x4&theme=light — útil para modo quiosque
+    // ?symbols=NASDAQ:META,NYSE:SNOW&costs=180,320&layout=1x4&theme=light — modo quiosque
     var qs = new URLSearchParams(location.search);
     var qsSymbols = qs.get("symbols");
     if (qsSymbols) {
       var list = qsSymbols.split(",").map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
       for (var i = 0; i < 4; i++) if (list[i]) cfg.symbols[i] = list[i];
+    }
+    var qsCosts = qs.get("costs");
+    if (qsCosts) {
+      var clist = qsCosts.split(",");
+      for (var j = 0; j < 4; j++) if (clist[j] !== undefined) cfg.costs[j] = clist[j].trim();
     }
     if (qs.get("layout")) cfg.layout = qs.get("layout");
     if (qs.get("theme")) cfg.theme = qs.get("theme");
@@ -221,6 +291,7 @@
   }
 
   var cfg = load();
+  var quoteTimer = null;
 
   // ---------- widgets ----------
   function mountWidget(parent, src, config) {
@@ -284,7 +355,7 @@
   function renderGrid() {
     var grid = document.getElementById("grid");
     grid.innerHTML = "";
-    cfg.symbols.slice(0, 4).forEach(function (symbol) {
+    cfg.symbols.slice(0, 4).forEach(function (symbol, i) {
       var cell = document.createElement("section");
       cell.className = "cell";
       grid.appendChild(cell);
@@ -293,6 +364,12 @@
         "https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js",
         chartConfig(symbol)
       );
+
+      var badge = document.createElement("div");
+      badge.className = "cost-badge";
+      badge.id = "badge" + i;
+      badge.innerHTML = '<span class="q-price"></span><span class="q-diff"></span>';
+      cell.appendChild(badge);
     });
   }
 
@@ -314,9 +391,105 @@
   function renderAll() {
     document.documentElement.setAttribute("data-theme", cfg.theme);
     document.body.setAttribute("data-layout", cfg.layout);
+    var anyCost = cfg.costs.slice(0, 4).some(function (c) { return c !== "" && !isNaN(parseFloat(c)); });
+    document.body.classList.toggle("has-costs", anyCost);
     renderTape();
     renderGrid();
+    restartQuotePolling();
   }
+
+  // ---------- cotação de referência (para valorização sobre o preço pago) ----------
+  // O widget do TradingView roda num iframe isolado: não é possível ler o preço
+  // exibido nele por JS. Por isso buscamos a cotação separadamente (stooq.com,
+  // gratuito, sem cadastro, com pequeno atraso) só para calcular ganho/perda.
+  function guessQuoteSymbol(tvSymbol) {
+    var parts = String(tvSymbol || "").split(":");
+    var exch = (parts[0] || "").toUpperCase();
+    var ticker = (parts[1] || parts[0] || "").trim().toLowerCase();
+    if (!ticker) return null;
+    if (exch.indexOf("BOVESPA") !== -1 || exch === "B3") return ticker + ".sa";
+    if (exch.indexOf("LSE") !== -1 || exch.indexOf("LON") !== -1) return ticker + ".uk";
+    return ticker + ".us"; // padrão: bolsas americanas (NASDAQ/NYSE/AMEX)
+  }
+
+  function currencyFor(quoteSymbol) {
+    if (!quoteSymbol) return "$";
+    if (quoteSymbol.slice(-3) === ".sa") return "R$";
+    if (quoteSymbol.slice(-3) === ".uk") return "£";
+    return "$";
+  }
+
+  function updateBadge(i, price, failed) {
+    var badge = document.getElementById("badge" + i);
+    if (!badge) return;
+    var cost = parseFloat(cfg.costs[i]);
+    if (!cfg.costs[i] || isNaN(cost) || cost <= 0) {
+      badge.style.display = "none";
+      return;
+    }
+    var qSym = guessQuoteSymbol(cfg.symbols[i]);
+    var cur = currencyFor(qSym);
+    var qEl = badge.querySelector(".q-price");
+    var dEl = badge.querySelector(".q-diff");
+    badge.style.display = "flex";
+    qEl.textContent = "Pago " + cur + " " + cost.toFixed(2);
+
+    if (failed) {
+      dEl.textContent = "cotação indisponível";
+      dEl.className = "q-diff warn";
+      return;
+    }
+    if (price === null || price === undefined || isNaN(price)) {
+      dEl.textContent = "sem dado";
+      dEl.className = "q-diff warn";
+      return;
+    }
+    var diff = price - cost;
+    var pct = (diff / cost) * 100;
+    dEl.textContent =
+      "Agora " + cur + " " + price.toFixed(2) + "  " +
+      (diff >= 0 ? "▲ +" : "▼ ") + cur + " " + Math.abs(diff).toFixed(2) +
+      " (" + (pct >= 0 ? "+" : "") + pct.toFixed(1) + "%)";
+    dEl.className = "q-diff " + (diff >= 0 ? "up" : "down");
+  }
+
+  function refreshQuotes() {
+    var symbols = cfg.symbols.slice(0, 4);
+    var needsQuote = symbols.some(function (_, i) {
+      var c = parseFloat(cfg.costs[i]);
+      return cfg.costs[i] && !isNaN(c) && c > 0;
+    });
+    if (!needsQuote) return;
+
+    var quoteSymbols = symbols.map(guessQuoteSymbol);
+    var url = "https://stooq.com/q/l/?s=" + quoteSymbols.map(function(s){ return s || "x"; }).join(",") + "&f=sd2t2ohlc&h&e=csv";
+
+    fetch(url, { cache: "no-store" })
+      .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.text(); })
+      .then(function (text) {
+        var lines = text.trim().split("\n");
+        lines.shift(); // remove cabeçalho
+        symbols.forEach(function (_, i) {
+          var line = lines[i] || "";
+          var cols = line.split(",");
+          var close = parseFloat(cols[6]);
+          updateBadge(i, isNaN(close) ? null : close, false);
+        });
+        document.getElementById("quoteUpdated").textContent = "cotações: " + timeIn("America/Sao_Paulo");
+      })
+      .catch(function () {
+        symbols.forEach(function (_, i) { updateBadge(i, null, true); });
+        document.getElementById("quoteUpdated").textContent = "cotações: falha ao atualizar";
+      });
+  }
+
+  function restartQuotePolling() {
+    if (quoteTimer) clearInterval(quoteTimer);
+    refreshQuotes();
+    quoteTimer = setInterval(refreshQuotes, QUOTE_POLL_MS);
+  }
+
+  document.getElementById("btnRefreshQuotes").addEventListener("click", refreshQuotes);
 
   // ---------- relógios e status do pregão (NYSE/Nasdaq) ----------
   function timeIn(tz) {
@@ -365,7 +538,10 @@
   var dlg = document.getElementById("cfg");
 
   function openCfg() {
-    for (var i = 0; i < 4; i++) document.getElementById("s" + i).value = cfg.symbols[i] || "";
+    for (var i = 0; i < 4; i++) {
+      document.getElementById("s" + i).value = cfg.symbols[i] || "";
+      document.getElementById("c" + i).value = cfg.costs[i] || "";
+    }
     document.getElementById("layout").value = cfg.layout;
     document.getElementById("range").value = cfg.range;
     document.getElementById("showTape").checked = !!cfg.tape;
@@ -373,12 +549,15 @@
   }
 
   document.getElementById("cfgForm").addEventListener("submit", function () {
-    var next = [];
+    var nextSymbols = [];
+    var nextCosts = [];
     for (var i = 0; i < 4; i++) {
       var v = document.getElementById("s" + i).value.trim().toUpperCase();
-      next.push(v || DEFAULTS.symbols[i]);
+      nextSymbols.push(v || DEFAULTS.symbols[i]);
+      nextCosts.push(document.getElementById("c" + i).value.trim());
     }
-    cfg.symbols = next;
+    cfg.symbols = nextSymbols;
+    cfg.costs = nextCosts;
     cfg.layout = document.getElementById("layout").value;
     cfg.range = document.getElementById("range").value;
     cfg.tape = document.getElementById("showTape").checked;
