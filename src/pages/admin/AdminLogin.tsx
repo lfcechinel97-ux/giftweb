@@ -42,7 +42,9 @@ export default function AdminLogin() {
         return;
       }
       rememberAdminAccess(data.user.id);
-      navigate('/admin');
+      // O vendedor salvo no navegador é de quem entrou antes; cada login recomeça pelo próprio.
+      try { localStorage.removeItem('sistema_vendedor_v1'); } catch { /* armazenamento bloqueado */ }
+      navigate('/sistema');
     } catch (e) {
       setError('Erro de conexão. Tente novamente.');
       setLoading(false);

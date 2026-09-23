@@ -2,7 +2,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import {
   FileText, ShoppingCart, Boxes, Package, Globe, User, Users, Settings, ChevronDown, Kanban, LayoutDashboard, Wallet,
-  Search as SearchIcon, Bell, BarChart3, LogOut,
+  Search as SearchIcon, Bell, LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -49,15 +49,26 @@ export default function SistemaLayout() {
   /* Usuário vinculado a um vendedor assina o histórico com ele. Só o admin
      pode trocar de vendedor à vontade; os demais ficam presos ao próprio. */
   useEffect(() => {
-    if (!vendedorId || vendedores.length === 0) return;
+    if (perfilCarregando || vendedores.length === 0) return;
+    if (!vendedorId) {
+      // Sem vendedor vinculado, não herda o vendedor de quem usou o navegador antes.
+      if (!isAdmin && currentVendedor) setCurrentVendedor(null);
+      return;
+    }
     if (currentVendedor?.id === vendedorId) return;
     if (isAdmin && currentVendedor) return;
     const v = vendedores.find(x => x.id === vendedorId);
     if (v) setCurrentVendedor(v);
-  }, [vendedorId, vendedores, currentVendedor, isAdmin, setCurrentVendedor]);
+  }, [perfilCarregando, vendedorId, vendedores, currentVendedor, isAdmin, setCurrentVendedor]);
   const podeTrocarVendedor = isAdmin || !vendedorId;
 
+  // No topo sempre aparece quem está logado, não o vendedor selecionado.
+  const nomeLogado = nomeUsuario
+    || vendedores.find(v => v.id === vendedorId)?.nome
+    || (email ? email.split("@")[0] : "");
+
   const sair = async () => {
+    try { localStorage.removeItem("sistema_vendedor_v1"); } catch { /* armazenamento bloqueado */ }
     await supabase.auth.signOut();
     // Recarrega do zero para não sobrar cache (papéis, listas) do usuário anterior.
     window.location.href = "/admin/login";
@@ -88,64 +99,59 @@ export default function SistemaLayout() {
 
   return (
     <div className="sistema-theme flex min-h-screen bg-background">
+      {/* Recolhida (só ícones) e abre POR CIMA do conteúdo ao passar o mouse —
+          o conteúdo não se desloca, só ganha a largura que a barra ocupava. */}
       <aside
-        className="w-[230px] min-h-screen text-white fixed left-0 top-0 flex flex-col z-50"
+        className="group/menu w-[68px] hover:w-[230px] hover:shadow-[8px_0_24px_-8px_rgba(0,0,0,0.35)] h-screen text-white fixed left-0 top-0 flex flex-col z-50 overflow-hidden transition-[width,box-shadow] duration-200 ease-out"
         style={{ background: "var(--gw-sidebar)" }}
       >
-        <div className="px-5 py-6 border-b border-white/10">
-          <h2 className="text-xl tracking-tight" style={{ fontFamily: "inherit", fontWeight: 600, letterSpacing: "-0.02em" }}>
-            <span style={{ color: "#fff" }}>Gift</span>
-            <span style={{ color: "var(--gw-blue-vivid)" }}>Web</span>
-          </h2>
-          <p className="text-xs text-white/40 mt-0.5">Sistema do Vendedor</p>
+        <div className="h-[76px] px-[14px] flex items-center gap-3 border-b border-white/10 shrink-0">
+          <img src="/logos/giftweb-logo.png" alt="GiftWeb" className="h-10 w-10 shrink-0" />
+          <div className="min-w-0 whitespace-nowrap opacity-0 group-hover/menu:opacity-100 transition-opacity duration-150">
+            <h2 className="text-lg leading-tight tracking-tight" style={{ fontFamily: "inherit", fontWeight: 600, letterSpacing: "-0.02em" }}>
+              <span style={{ color: "#fff" }}>Gift</span>
+              <span style={{ color: "var(--gw-blue-vivid)" }}>Web</span>
+            </h2>
+            <p className="text-[11px] text-white/40">Sistema do Vendedor</p>
+          </div>
         </div>
 
-        <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
+        <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
           {menu.filter(item => !item.soAdmin || isAdmin).map(item => (
             <NavLink
               key={item.path}
               to={item.path}
+              title={item.label}
               onMouseEnter={() => prefetch(item)}
               onFocus={() => prefetch(item)}
               className="relative flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[14px] font-medium text-white/70 hover:bg-[var(--gw-sidebar-hover)] hover:text-white transition-colors"
               activeClassName="!text-white !font-semibold gw-nav-ativo"
             >
-              <item.icon className="h-4 w-4 shrink-0" />
-              <span>{item.label}</span>
+              <item.icon className="h-[18px] w-[18px] shrink-0" />
+              <span className="whitespace-nowrap opacity-0 group-hover/menu:opacity-100 transition-opacity duration-150">
+                {item.label}
+              </span>
             </NavLink>
           ))}
-
 
           <a
             href="/"
             target="_blank"
             rel="noopener noreferrer"
+            title="Ver Site"
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/70 hover:bg-white/[0.08] transition-colors mt-4"
           >
-            <Globe className="h-4 w-4 shrink-0" />
-            <span>Ver Site</span>
+            <Globe className="h-[18px] w-[18px] shrink-0" />
+            <span className="whitespace-nowrap opacity-0 group-hover/menu:opacity-100 transition-opacity duration-150">Ver Site</span>
           </a>
         </nav>
 
-        {/* Card de rodapé da barra lateral */}
-        <div className="px-3 pb-3">
-          <div className="rounded-[12px] p-4 bg-white/[0.06] border border-white/10">
-            <BarChart3 className="h-5 w-5 mb-2" style={{ color: "var(--gw-blue-vivid)" }} />
-            <p className="text-[13px] font-semibold leading-snug text-white">
-              Mais vendas<br />para a sua empresa
-            </p>
-            <p className="text-[11.5px] leading-snug text-white/45 mt-1.5">
-              Ferramentas simples para grandes resultados.
-            </p>
-          </div>
-        </div>
-
-        <div className="px-5 py-3.5 border-t border-white/10 text-[11px] text-white/40">
+        <div className="px-5 py-3.5 border-t border-white/10 text-[11px] text-white/40 whitespace-nowrap opacity-0 group-hover/menu:opacity-100 transition-opacity duration-150">
           Gift Web Brindes © {new Date().getFullYear()}
         </div>
       </aside>
 
-      <div className="ml-[230px] flex-1 min-w-0 min-h-screen flex flex-col">
+      <div className="ml-[68px] flex-1 min-w-0 min-h-screen flex flex-col">
         <header
           className="h-[60px] flex items-center gap-4 px-6 sticky top-0 z-40"
           style={{ background: "var(--gw-surface)", borderBottom: "1px solid var(--gw-border)" }}
@@ -192,11 +198,11 @@ export default function SistemaLayout() {
                   className="inline-flex items-center justify-center h-9 w-9 rounded-full text-[13px] font-bold text-white shrink-0"
                   style={{ background: "var(--gw-primary)" }}
                 >
-                  {iniciais(vendedorAtualNome)}
+                  {iniciais(nomeLogado || "?")}
                 </span>
                 <span className="hidden sm:flex flex-col items-start leading-tight min-w-0">
                   <span className="text-[13.5px] font-semibold truncate" style={{ color: "var(--gw-text)" }}>
-                    {vendedorAtualNome}
+                    {perfilCarregando ? "…" : nomeLogado}
                   </span>
                   <span className="text-[11.5px]" style={{ color: "var(--gw-text-muted)" }}>
                     {perfilCarregando ? "…" : ROTULO_PAPEL[papel]}
@@ -214,7 +220,10 @@ export default function SistemaLayout() {
               {podeTrocarVendedor && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Trocar vendedor</DropdownMenuLabel>
+                  <DropdownMenuLabel className="font-normal">
+                    <span className="block text-[12px] font-semibold">Vendedor dos lançamentos</span>
+                    <span className="block text-[11.5px] text-muted-foreground">Atual: {vendedorAtualNome}</span>
+                  </DropdownMenuLabel>
                   {loading && vendedores.length === 0 ? (
                     <DropdownMenuItem disabled>Carregando vendedores...</DropdownMenuItem>
                   ) : vendedores.length === 0 ? (
