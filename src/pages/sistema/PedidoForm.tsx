@@ -108,6 +108,7 @@ const PedidoForm: React.FC = () => {
   const [confirmRemove, setConfirmRemove] = useState<{ item: PedidoItem; etapa: string } | null>(null);
   const [confirmExcluir, setConfirmExcluir] = useState(false);
   const [numeroDigitado, setNumeroDigitado] = useState("");
+  const [numero, setNumero] = useState("");
   const [senhaAdmin, setSenhaAdmin] = useState("");
   const [excluindo, setExcluindo] = useState(false);
 
@@ -234,6 +235,7 @@ const PedidoForm: React.FC = () => {
         hydrated.current = true;
         itensOriginais.current = mapped.itens;
         setItens(mapped.itens);
+        setNumero(mapped.numero);
         setClienteId(mapped.clienteId);
         setContatoNome(mapped.contatoNome || "");
         setContatoTelefone(mapped.contatoTelefone || "");
@@ -347,6 +349,13 @@ const PedidoForm: React.FC = () => {
   const salvar = async () => {
     if (!id || !pedido) return;
     if (itens.length === 0) { toast.error("O pedido precisa ter ao menos um item."); return; }
+    const numeroNovo = numero.trim();
+    if (!numeroNovo) { toast.error("Informe o número do pedido."); return; }
+    if (numeroNovo !== pedido.numero) {
+      const { data: repetido } = await supabase
+        .from("sistema_pedidos").select("id").eq("numero", numeroNovo).neq("id", id).maybeSingle();
+      if (repetido) { toast.error(`Já existe um pedido com o número ${numeroNovo}.`); return; }
+    }
     setSalvando(true);
 
     const antes = itensOriginais.current;
@@ -364,6 +373,7 @@ const PedidoForm: React.FC = () => {
       .filter(Boolean) as { item: PedidoItem; de: { qtd: number; preco: number }; para: { qtd: number; preco: number } }[];
 
     const { error } = await supabase.from("sistema_pedidos").update({
+      numero: numeroNovo,
       cliente_id: clienteId || null,
       contato_nome: contatoNome || null,
       contato_telefone: contatoTelefone || null,
@@ -414,8 +424,9 @@ const PedidoForm: React.FC = () => {
     }
 
     await registrarAuditoria({
-      entidade: "pedido", entidadeId: id, entidadeNumero: pedido.numero, acao: "pedido_editado",
+      entidade: "pedido", entidadeId: id, entidadeNumero: numeroNovo, acao: "pedido_editado",
       detalhes: {
+        ...(numeroNovo !== pedido.numero ? { numero: { de: pedido.numero, para: numeroNovo } } : {}),
         adicionados: adicionados.map(i => i.nome),
         removidos: removidos.map(i => i.nome),
         alterados: alterados.map(a => ({ item: a.item.nome, de: a.de, para: a.para })),
@@ -526,6 +537,15 @@ const PedidoForm: React.FC = () => {
       {/* Dados do pedido */}
       <SectionCard icon={<ClipboardList className="h-4 w-4" />} title="Dados do pedido" color="var(--gw-primary)">
         <div className="grid gap-3 md:grid-cols-3">
+          <label className="space-y-1">
+            <span className="gw-label">Nº do pedido</span>
+            <Input
+              value={numero}
+              onChange={e => setNumero(e.target.value.replace(/\D/g, ""))}
+              inputMode="numeric"
+              className="h-9 gw-tnum"
+            />
+          </label>
           <label className="space-y-1">
             <span className="gw-label">Cliente</span>
             <div className="flex items-center gap-1.5">
