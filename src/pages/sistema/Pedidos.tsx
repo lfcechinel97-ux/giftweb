@@ -20,13 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { statusInfo, opcoesStatus } from "@/lib/statusPedido";
 import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaContext";
 import { supabase } from "@/integrations/supabase/client";
-import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
 import { resumoPersonalizacao } from "@/lib/personalizacao";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 import type { RealtimeChannel } from "@supabase/supabase-js";
@@ -128,10 +122,6 @@ export default function Pedidos() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [criandoPedido, setCriandoPedido] = useState(false);
-  const { isAdmin } = useUserRole();
-  const [importarAberto, setImportarAberto] = useState(false);
-  const [numeroImportar, setNumeroImportar] = useState("");
-  const [importando, setImportando] = useState(false);
 
   const qc = useQueryClient();
 
@@ -358,36 +348,6 @@ export default function Pedidos() {
     }
   };
 
-  const handleImportarCalcme = async () => {
-    const numero = numeroImportar.trim();
-    if (!numero) { toast.error("Informe o número do pedido no Calcme."); return; }
-    setImportando(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("importar-pedido-calcme", { body: { numero } });
-      if (error) {
-        const detalhe = await (error as any)?.context?.json?.().catch(() => null);
-        throw new Error(detalhe?.error ?? error.message);
-      }
-      if (!(data as any)?.success) throw new Error((data as any)?.error ?? "Falha desconhecida.");
-      const r = data as {
-        pedidoId: string; numero: string; itensImportados: number;
-        vendedor?: string | null; vendedorCalcme?: string | null;
-      };
-      toast.success(`Pedido ${r.numero} importado com ${r.itensImportados} item(ns), em Organizando Pedido.`);
-      if (r.vendedorCalcme && !r.vendedor) {
-        toast.warning(`Vendedor "${r.vendedorCalcme}" não encontrado no sistema — escolha o vendedor no pedido.`);
-      }
-      setImportarAberto(false);
-      setNumeroImportar("");
-      void refreshPedidos({ page: 1, pageSize: 10 });
-      navigate(`/sistema/pedidos/${r.pedidoId}`);
-    } catch (e: unknown) {
-      toast.error(`Não foi possível importar. ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-      setImportando(false);
-    }
-  };
-
   const handlePrintPDF = (p: Pedido) => gerarOrdemProducaoPDF(p, { clientes, vendedores, transportadoras: [] });
 
   const handleCopiarNumero = async (p: Pedido) => {
@@ -432,17 +392,6 @@ export default function Pedidos() {
           <p className="gw-meta">Pedidos gerados a partir de orçamentos aprovados.</p>
         </div>
         <div className="flex items-center gap-2">
-          {isAdmin && (
-            <button
-              type="button"
-              onClick={() => setImportarAberto(true)}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-[10px] text-[14px] font-semibold"
-              style={{ background: "var(--gw-surface-alt)", border: "1px solid var(--gw-border)", color: "var(--gw-text)" }}
-            >
-              <Download className="h-4 w-4" />
-              Importar do Calcme
-            </button>
-          )}
           <button
             type="button"
             onClick={handleNovoPedido}
@@ -796,38 +745,6 @@ export default function Pedidos() {
           </div>
         </div>
       )}
-
-      {/* Importar 1 pedido do Calcme pelo número — nasce com o MESMO número,
-          itens sem produto do catálogo vinculado (revisar em "Editar item"). */}
-      <Dialog open={importarAberto} onOpenChange={o => !importando && setImportarAberto(o)}>
-        <DialogContent style={{ maxWidth: 420 }}>
-          <DialogHeader>
-            <DialogTitle>Importar pedido do Calcme</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 py-1">
-            <Label>Número do pedido no Calcme</Label>
-            <Input
-              autoFocus
-              inputMode="numeric"
-              placeholder="Ex.: 100667"
-              value={numeroImportar}
-              onChange={e => setNumeroImportar(e.target.value.replace(/\D/g, ""))}
-              onKeyDown={e => { if (e.key === "Enter" && !importando) void handleImportarCalcme(); }}
-            />
-            <p className="text-[12px]" style={{ color: "var(--gw-text-muted)" }}>
-              O pedido é criado com o mesmo número do Calcme, em Organizando Pedido, e os produtos
-              ficam com o nome de lá (sem vínculo com o catálogo). Fotos e logo você anexa depois,
-              no próprio pedido, e as etapas são movidas manualmente.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setImportarAberto(false)} disabled={importando}>Cancelar</Button>
-            <Button onClick={() => void handleImportarCalcme()} disabled={importando || !numeroImportar.trim()}>
-              {importando ? "Importando..." : "Importar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
