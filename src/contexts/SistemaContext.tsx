@@ -159,6 +159,8 @@ export interface PedidoItem {
   arteAnexoUrl?: string;
   personalizacao?: TipoPersonalizacao;
   aplicacoes?: number;
+  /** Item trazido do Calcme na migração: mantém o nome de lá, sem vínculo com o catálogo. */
+  origemCalcme?: boolean;
 }
 
 export interface Pedido {

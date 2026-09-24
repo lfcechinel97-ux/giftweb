@@ -369,8 +369,14 @@ export default function Pedidos() {
         throw new Error(detalhe?.error ?? error.message);
       }
       if (!(data as any)?.success) throw new Error((data as any)?.error ?? "Falha desconhecida.");
-      const r = data as { pedidoId: string; numero: string; itensImportados: number };
-      toast.success(`Pedido ${r.numero} importado com ${r.itensImportados} item(ns). Revise os produtos antes de avançar.`);
+      const r = data as {
+        pedidoId: string; numero: string; itensImportados: number;
+        vendedor?: string | null; vendedorCalcme?: string | null;
+      };
+      toast.success(`Pedido ${r.numero} importado com ${r.itensImportados} item(ns), em Organizando Pedido.`);
+      if (r.vendedorCalcme && !r.vendedor) {
+        toast.warning(`Vendedor "${r.vendedorCalcme}" não encontrado no sistema — escolha o vendedor no pedido.`);
+      }
       setImportarAberto(false);
       setNumeroImportar("");
       void refreshPedidos({ page: 1, pageSize: 10 });
@@ -809,9 +815,9 @@ export default function Pedidos() {
               onKeyDown={e => { if (e.key === "Enter" && !importando) void handleImportarCalcme(); }}
             />
             <p className="text-[12px]" style={{ color: "var(--gw-text-muted)" }}>
-              O pedido é criado com o mesmo número do Calcme. Os produtos vêm com o nome de lá e
-              precisam ser conferidos: abra o pedido e use "Editar item" para trocar pelo produto
-              certo do catálogo.
+              O pedido é criado com o mesmo número do Calcme, em Organizando Pedido, e os produtos
+              ficam com o nome de lá (sem vínculo com o catálogo). Fotos e logo você anexa depois,
+              no próprio pedido, e as etapas são movidas manualmente.
             </p>
           </div>
           <DialogFooter>

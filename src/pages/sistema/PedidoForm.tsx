@@ -663,12 +663,18 @@ const PedidoForm: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <span
-                      className="block text-[12px] font-semibold mt-0.5"
-                      style={{ color: resumoPersonalizacao(item) ? "var(--gw-primary)" : "var(--gw-danger)" }}
-                    >
-                      {resumoPersonalizacao(item) || "Sem personalização definida — edite o item"}
-                    </span>
+                    {item.origemCalcme ? (
+                      <span className="block text-[12px] font-semibold mt-0.5" style={{ color: "var(--gw-text-muted)" }}>
+                        Importado do Calcme
+                      </span>
+                    ) : (
+                      <span
+                        className="block text-[12px] font-semibold mt-0.5"
+                        style={{ color: resumoPersonalizacao(item) ? "var(--gw-primary)" : "var(--gw-danger)" }}
+                      >
+                        {resumoPersonalizacao(item) || "Sem personalização definida — edite o item"}
+                      </span>
+                    )}
                     <span onClick={e => e.stopPropagation()} className="inline-block mt-0.5">
                       <StatusBadge
                         status={cancelado ? "cancelado" : st}

@@ -118,9 +118,10 @@ serve(async (req: Request) => {
       const descricao = it?.descricao ?? it?.descricaoPersonalizacao ?? it?.observacao ?? null;
       return {
         id: crypto.randomUUID(),
-        // Sem produtoId/codigoComposto de propósito: o nome vem do Calcme,
-        // não bate com o catálogo do /sistema — fica para revisão manual
-        // ("Editar item" > trocar pelo produto certo).
+        // Sem produtoId/codigoComposto de propósito: na migração o item
+        // fica com o nome do Calcme, sem vínculo com o catálogo. Fotos e
+        // logo são anexadas depois, direto no pedido.
+        origemCalcme: true,
         nome: String(it?.produtoNome ?? "Item sem nome"),
         quantidade: qtd,
         precoUnitario: vUnit,
@@ -130,6 +131,23 @@ serve(async (req: Request) => {
     });
 
     const clienteNome = detail?.clienteNome ?? achado?.clienteNome ?? null;
+
+    // Liga ao vendedor pelo nome (o Comercial só enxerga pedidos com o
+    // próprio vendedor). Sem correspondência exata, fica em branco e a
+    // resposta avisa, em vez de chutar o vendedor errado.
+    const norm = (s: unknown) =>
+      String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+    const vendedorCalcme = detail?.vendedorNome ?? achado?.vendedorNome ?? null;
+    let vendedorId: string | null = null;
+    let vendedorNome: string | null = null;
+    if (vendedorCalcme) {
+      const { data: vends } = await admin.from("sistema_vendedores").select("id, nome").eq("ativo", true);
+      const alvo = norm(vendedorCalcme);
+      const iguais = (vends ?? []).filter((v: any) => norm(v.nome) === alvo);
+      const contem = (vends ?? []).filter((v: any) => norm(v.nome).includes(alvo) || alvo.includes(norm(v.nome)));
+      const escolhido = iguais.length === 1 ? iguais[0] : (iguais.length === 0 && contem.length === 1 ? contem[0] : null);
+      if (escolhido) { vendedorId = (escolhido as any).id; vendedorNome = (escolhido as any).nome; }
+    }
     const dataPedido: string | null = detail?.data ?? achado?.data ?? null;
     const dataEntrega: string | null = detail?.dataEntrega ?? null;
 
@@ -138,6 +156,7 @@ serve(async (req: Request) => {
       .insert({
         numero: numeroStr,
         status: "organizando_anotacoes",
+        vendedor_id: vendedorId,
         contato_nome: clienteNome,
         cliente_snapshot: clienteNome ? { nome: clienteNome, origem: "calcme" } : null,
         observacoes: detail?.observacoes ?? null,
@@ -174,6 +193,8 @@ serve(async (req: Request) => {
       numero: numeroStr,
       cliente: clienteNome,
       itensImportados: itensJsonb.length,
+      vendedor: vendedorNome,
+      vendedorCalcme,
     });
   } catch (e) {
     return json({ success: false, error: (e as Error).message }, 500);
