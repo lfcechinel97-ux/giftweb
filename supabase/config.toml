@@ -2,3 +2,6 @@ project_id = "ozkbfxvouxgsdthnweyr"
 
 [functions.sync-products]
 verify_jwt = false
+
+[functions.importar-pedido-calcme]
+verify_jwt = true
