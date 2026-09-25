@@ -224,7 +224,7 @@ const TAG_PALETTE = [
   "#15803D", "#047857", "#166534",
   "#B91C1C", "#DC2626",
   "#7E22CE", "#6D28D9", "#A21CAF",
-  "#C2410C", "#9A3412",
+  "#EA580C", "#F97316",
 ];
 
 /* Paleta EXATA de etiquetas fixas do fluxo (cores dadas pelo usuário) —
@@ -244,11 +244,11 @@ const TAG_COR_EXATA: Record<string, string> = {
   "TESTE APROVADO": "#15803D",
   "TESTE RECUSADO": "#DC2626",
   "PROD. GALPÃO": "#1D4ED8",
-  "TERCEIRIZADA": "#C2410C",
+  "TERCEIRIZADA": "#EA580C",
   "COBRAR 50% RESTANTE": "#DC2626",
   "PAGO CARTÃO": "#15803D",
   "DESPACHAR": "#0369A1",
-  "PRODUZIR + MÍDIA": "#C2410C",
+  "PRODUZIR + MÍDIA": "#EA580C",
   "PRODUZIDO": "#15803D",
   "LASER": "#15803D",
   "DTF UV": "#1D4ED8",
@@ -261,8 +261,8 @@ const TAG_COR_EXATA: Record<string, string> = {
   "BRASPRESS": "#1D4ED8",
   "COLETA MELHOR ENVIO": "#6D28D9",
   "MELHOR ENVIO": "#6D28D9",
-  "ENVIO POR LALAMOVE": "#C2410C",
-  "LALAMOVE": "#C2410C",
+  "ENVIO POR LALAMOVE": "#EA580C",
+  "LALAMOVE": "#EA580C",
 };
 
 /* Ordem de prioridade quando o card tem mais etiquetas do que cabe —
@@ -283,6 +283,9 @@ const prioridadeDaTag = (texto: string) => {
 
 const ordenarTagsPorPrioridade = (tags: string[]) =>
   [...tags].sort((a, b) => prioridadeDaTag(a) - prioridadeDaTag(b));
+
+/** Etiquetas antigas foram gravadas como "TERCEIRIZADA + nome"; o padrão agora é "TERCEIRIZADA - nome". */
+const rotuloTag = (t: string) => t.replace(/^(TERCEIRIZADA)\s*\+\s*/i, "$1 - ");
 
 const corDaTag = (texto: string) => {
   const exata = TAG_COR_EXATA[texto.toUpperCase()];
@@ -588,7 +591,7 @@ function PcpPedidoCard({
           <OrderNumber value={primeiro.pedido_numero} className="text-[13px] shrink-0" />
           <span
             className="gw-body text-[11px] font-bold rounded-full px-2 py-[2px] shrink-0"
-            style={parcial ? { backgroundColor: "#C2410C", color: "#FFFFFF" } : { backgroundColor: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)" }}
+            style={parcial ? { backgroundColor: "#EA580C", color: "#FFFFFF" } : { backgroundColor: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)" }}
             title={parcial ? "Parte dos produtos deste pedido está em outras colunas" : undefined}
           >
             {rows.length}/{totalPedido} produtos
@@ -635,7 +638,7 @@ function PcpPedidoCard({
             return (
               <p
                 className="gw-body text-[12px] font-bold rounded-[6px] px-2 py-1 text-white w-fit"
-                style={{ backgroundColor: tudo ? "#15803D" : "#C2410C" }}
+                style={{ backgroundColor: tudo ? "#15803D" : "#EA580C" }}
               >
                 {comprados} de {rows.length} produtos comprados
               </p>
@@ -649,7 +652,7 @@ function PcpPedidoCard({
             <span className="flex-1" />
             <span
               className="gw-body text-[11px] font-semibold flex items-center gap-1"
-              style={{ color: critico ? "var(--gw-danger)" : atrasado ? "#C2410C" : "var(--gw-text-secondary)" }}
+              style={{ color: critico ? "var(--gw-danger)" : atrasado ? "#EA580C" : "var(--gw-text-secondary)" }}
             >
               <Clock className="h-3 w-3" /> {tempoNaEtapaCurto(maxHoras)}
             </span>
@@ -719,7 +722,7 @@ function PcpCard({
           className="gw-body text-[10px] leading-none rounded-[5px] px-[7px] py-[4px] whitespace-nowrap"
           style={{ backgroundColor: corDaTag(t), color: "#FFFFFF", fontWeight: 700, boxShadow: "0 1px 3px rgba(15,23,42,.45)" }}
         >
-          {t}
+          {rotuloTag(t)}
         </span>
       ))}
       {tagsOcultas.length > 0 && (
@@ -735,7 +738,7 @@ function PcpCard({
                 className="text-[10px] rounded-[4px] px-[6px] py-[3px]"
                 style={{ backgroundColor: corDaTag(t), color: "#FFFFFF", fontWeight: 700 }}
               >
-                {t}
+                {rotuloTag(t)}
               </span>
             ))}
           </span>
@@ -1269,7 +1272,7 @@ export default function PCP() {
     return rows.filter(r => tagsFiltro.every(t => (r.tags ?? []).includes(t)));
   }, [rows, tagsFiltro]);
 
-  const [filtroLocal, setFiltroLocal] = useState<FiltroLocal>("todos");
+  const [filtroLocal, setFiltroLocal] = useState<Record<string, FiltroLocal>>({});
   const byStatus = useMemo(() => {
     const map: Record<string, PcpRow[]> = {};
     for (const col of STATUS_COLS) map[col.value] = [];
@@ -2043,7 +2046,7 @@ export default function PCP() {
 
     const localProducao: LocalProducao = modalTipoProducao === "galpao" ? "interna" : "terceirizada";
     const nomeTerceirizada = fornecedor?.nome || nomeLivre;
-    const novaTag = modalTipoProducao === "galpao" ? TAG_PROD_GALPAO : `${TAG_TERCEIRIZADA_PREFIXO} + ${nomeTerceirizada}`;
+    const novaTag = modalTipoProducao === "galpao" ? TAG_PROD_GALPAO : `${TAG_TERCEIRIZADA_PREFIXO} - ${nomeTerceirizada}`;
 
     /* Arrastou o pedido inteiro: a mesma resposta vale para todos os
        produtos dele que estavam na coluna. */
@@ -2306,19 +2309,6 @@ export default function PCP() {
               Desagrupado
             </button>
           </div>
-          <div className="flex items-center rounded-[8px] border border-[var(--gw-border)] overflow-hidden text-[12px] font-semibold" title="Filtra Aguardando Teste e A Produzir">
-            {([["todos", "Todos"], ["galpao", "Produzir Galpão"], ["terceirizada", "Produzir Terceirizada"]] as [FiltroLocal, string][]).map(([id, rotulo]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setFiltroLocal(id)}
-                className={cn("px-3 py-1.5 transition-colors", filtroLocal === id ? "text-white" : "bg-white text-[var(--gw-text-secondary)]")}
-                style={filtroLocal === id ? { backgroundColor: "var(--gw-primary)" } : undefined}
-              >
-                {rotulo}
-              </button>
-            ))}
-          </div>
           <span className="gw-meta">{totalItens} item(ns)</span>
           <Button variant="outline" size="sm" onClick={() => loadItems()} disabled={loading}>
             <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
@@ -2372,8 +2362,9 @@ export default function PCP() {
 
             {STATUS_COLS.map(col => {
               const itensColuna = byStatus[col.value] || [];
-              const items = filtroLocal !== "todos" && COLUNAS_COM_FILTRO_LOCAL.includes(col.value)
-                ? itensColuna.filter(filtroLocal === "galpao" ? ehGalpao : ehTerceirizada)
+              const filtroDaColuna: FiltroLocal = filtroLocal[col.value] ?? "todos";
+              const items = filtroDaColuna !== "todos" && COLUNAS_COM_FILTRO_LOCAL.includes(col.value)
+                ? itensColuna.filter(filtroDaColuna === "galpao" ? ehGalpao : ehTerceirizada)
                 : itensColuna;
               const somaQtd = items.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
               const isOver = dragOverStatus === col.value;
@@ -2414,6 +2405,21 @@ export default function PCP() {
                       {items.length} · {somaQtd} un.
                     </span>
                   </div>
+                  {COLUNAS_COM_FILTRO_LOCAL.includes(col.value) && (
+                    <div className="flex items-center bg-white border-b border-[var(--gw-border)] text-[11px] font-semibold shrink-0">
+                      {([["todos", "Todos"], ["galpao", "Produzir Galpão"], ["terceirizada", "Produzir Terceirizada"]] as [FiltroLocal, string][]).map(([id, rotulo]) => (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => setFiltroLocal(prev => ({ ...prev, [col.value]: id }))}
+                          className={cn("flex-1 px-1.5 py-1.5 transition-colors whitespace-nowrap", filtroDaColuna === id ? "text-white" : "text-[var(--gw-text-secondary)] hover:bg-[var(--gw-surface-alt)]")}
+                          style={filtroDaColuna === id ? { backgroundColor: "var(--gw-primary)" } : undefined}
+                        >
+                          {rotulo}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   {/* Rolagem vertical acontece por coluna */}
                   <div className="p-2 space-y-2 flex-1 min-h-0 overflow-y-auto pcp-col-scroll">
 
@@ -2620,7 +2626,7 @@ export default function PCP() {
                           className="gw-body inline-flex items-center gap-1 text-[13px] rounded-full pl-3 pr-1.5 py-1"
                           style={{ backgroundColor: corDaTag(t), color: "#FFFFFF", fontWeight: 700 }}
                         >
-                          {t}
+                          {rotuloTag(t)}
                           <button
                             type="button"
                             onClick={() => removerTag(detalhe, t)}

@@ -33,7 +33,7 @@ export interface StatusInfo {
 const SEMENTE: StatusInfo[] = [
   { slug: "organizando_anotacoes",   nome: "Organizando Pedido",         cor: "#075985", colunaPcp: "organizando_comercial", escopo: "ambos", ordem: 10 },
   { slug: "imprimir_ordem_producao", nome: "Imprimir ordem de produção", cor: "#0369A1", colunaPcp: "organizando_pedido",  escopo: "ambos",  ordem: 20 },
-  { slug: "aguardando_mercadoria",   nome: "Aguardando mercadoria",      cor: "#C2410C", colunaPcp: "aguardando_mercadoria", escopo: "ambos", ordem: 30 },
+  { slug: "aguardando_mercadoria",   nome: "Aguardando mercadoria",      cor: "#EA580C", colunaPcp: "aguardando_mercadoria", escopo: "ambos", ordem: 30 },
   { slug: "aguardando_teste",        nome: "Aguardando teste laser/DTF", cor: "#7E22CE", colunaPcp: "teste_fisico",        escopo: "ambos",  ordem: 40 },
   { slug: "aguardando_aprovacao_teste", nome: "Teste enviado",           cor: "#A21CAF", colunaPcp: "teste_enviado",       escopo: "ambos",  ordem: 45 },
   { slug: "preparar_dtf",            nome: "Preparar DTF/vetorização",   cor: "#6D28D9", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 50 },
@@ -142,7 +142,7 @@ export const MOSTRAR_COLUNA_ANOTACOES = true;
 const TODAS_COLUNAS_PCP = [
   { coluna: "organizando_comercial", rotulo: "Aguardando Anotações Pedido", canonico: "organizando_anotacoes", cor: "#3730A3" },
   { coluna: "organizando_pedido",    rotulo: "Imprimir Ordem de Produção", canonico: "imprimir_ordem_producao", cor: "#0369A1" },
-  { coluna: "aguardando_mercadoria", rotulo: "Aguardando Mercadoria",  canonico: "aguardando_mercadoria", cor: "#C2410C" },
+  { coluna: "aguardando_mercadoria", rotulo: "Aguardando Mercadoria",  canonico: "aguardando_mercadoria", cor: "#EA580C" },
   { coluna: "teste_fisico",          rotulo: "Aguardando Teste",       canonico: "aguardando_teste",      cor: "#7E22CE" },
   { coluna: "teste_enviado",         rotulo: "Teste Enviado",          canonico: "aguardando_aprovacao_teste", cor: "#A21CAF" },
   { coluna: "em_producao",           rotulo: "A Produzir",             canonico: "a_produzir",            cor: "#1D4ED8" },
