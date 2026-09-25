@@ -133,7 +133,14 @@ export function opcoesStatus(nivel: "pedido" | "item"): StatusInfo[] {
 /* A cor é definida AQUI, não no catálogo do banco: o cabeçalho é texto
    branco em negrito, então cada coluna precisa de um tom fechado, e só
    de variações das primárias (azul, verde, vermelho, roxo, laranja). */
-export const COLUNAS_PCP = [
+/** Coluna TEMPORÁRIA "Aguardando Anotações Pedido", para distribuir os
+    pedidos migrados do Calcme nas etapas certas. Passou a migração, é só
+    trocar para false: a coluna some do PCP e os itens dela voltam a ficar
+    escondidos da produção (só o comercial os vê, em Pedidos). */
+export const MOSTRAR_COLUNA_ANOTACOES = true;
+
+const TODAS_COLUNAS_PCP = [
+  { coluna: "organizando_comercial", rotulo: "Aguardando Anotações Pedido", canonico: "organizando_anotacoes", cor: "#3730A3" },
   { coluna: "organizando_pedido",    rotulo: "Imprimir Ordem de Produção", canonico: "imprimir_ordem_producao", cor: "#0369A1" },
   { coluna: "aguardando_mercadoria", rotulo: "Aguardando Mercadoria",  canonico: "aguardando_mercadoria", cor: "#C2410C" },
   { coluna: "teste_fisico",          rotulo: "Aguardando Teste",       canonico: "aguardando_teste",      cor: "#7E22CE" },
@@ -143,6 +150,10 @@ export const COLUNAS_PCP = [
   { coluna: "aguardando_coleta",     rotulo: "Expedição",              canonico: "aguardando_coleta",     cor: "#B91C1C" },
   { coluna: "enviado",               rotulo: "Coletado e Enviado",     canonico: "coletado_enviado",      cor: "#15803D" },
 ] as const;
+
+export const COLUNAS_PCP = TODAS_COLUNAS_PCP.filter(
+  c => MOSTRAR_COLUNA_ANOTACOES || c.coluna !== "organizando_comercial",
+);
 
 export const corDaColuna = (coluna: string): string =>
   COLUNAS_PCP.find(x => x.coluna === coluna)?.cor ?? DESCONHECIDO.cor;

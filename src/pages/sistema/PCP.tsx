@@ -24,7 +24,7 @@ import { uploadAnexoPcp, uploadAnexoGenerico, uploadArquivoPedido, MockupUploadE
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/sistema/ui/Money";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
-import { COLUNAS_PCP, corDaColuna, statusCanonicoDaColuna, colunaDoStatus, statusInfo } from "@/lib/statusPedido";
+import { COLUNAS_PCP, MOSTRAR_COLUNA_ANOTACOES, corDaColuna, statusCanonicoDaColuna, colunaDoStatus, statusInfo } from "@/lib/statusPedido";
 import { useSistema, type Pedido, type PedidoItem } from "@/contexts/SistemaContext";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
@@ -35,7 +35,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 /* ── Types ───────────────────────────────────────────────────────────────── */
 
 type PcpStatus =
-  | "organizando_pedido" | "aguardando_mercadoria"
+  | "organizando_comercial" | "organizando_pedido" | "aguardando_mercadoria"
   | "teste_fisico" | "teste_enviado"
   | "em_producao" | "inserir_medidas"
   | "aguardando_coleta" | "enviado";
@@ -947,7 +947,10 @@ export default function PCP() {
         toast.error(`Não foi possível carregar o PCP. ${error.message || ""}`);
         throw error;
       }
-      return (data as any as PcpRow[]) ?? [];
+      const linhas = (data as any as PcpRow[]) ?? [];
+      /* A view traz também "Organizando Pedido" (etapa do comercial); a
+         produção só o vê enquanto a coluna temporária estiver ligada. */
+      return MOSTRAR_COLUNA_ANOTACOES ? linhas : linhas.filter(r => r.coluna_pcp !== "organizando_comercial");
     },
   });
 
