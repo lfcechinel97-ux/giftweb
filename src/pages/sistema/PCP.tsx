@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag, Clock, History,
+  ChevronDown, ChevronRight, Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag, Clock, History,
   Tag, X, MessageSquare, Send, Camera, Video, CheckCircle2, Upload, Download, Paperclip, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -521,6 +521,135 @@ function EtiquetaCombobox({ opcoes, onSelect }: { opcoes: string[]; onSelect: (n
   );
 }
 
+/** Card único do pedido numa coluna (modo "Agrupado"). Só o cabeçalho é
+    arrastável: arrastar o card move todos os produtos do pedido que estão
+    nesta coluna; os cards individuais (expandidos) se arrastam sozinhos. */
+function PcpPedidoCard({
+  rows, coluna, totalPedido, cor, comFotos, vendedorNome, expandido, dragging, highlight, atrasado, critico, imprimindoOP,
+  onAlternar, onImprimirOP, onHover, onDragStart, onDragEnd,
+}: {
+  rows: PcpRow[];
+  coluna: string;
+  totalPedido: number;
+  cor: string;
+  comFotos: boolean;
+  vendedorNome: string | null;
+  expandido: boolean;
+  dragging: boolean;
+  highlight: boolean;
+  atrasado: boolean;
+  critico: boolean;
+  imprimindoOP: boolean;
+  onAlternar: () => void;
+  onImprimirOP: () => void;
+  onHover: (pedidoId: string | null) => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+}) {
+  const primeiro = rows[0];
+  const parcial = rows.length < totalPedido;
+  const qtd = rows.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
+  const maxHoras = Math.max(...rows.map(r => r.horas_na_etapa ?? 0));
+  const fotos = rows.map(r => r.mockup_url || r.imagem_catalogo_url).filter((u): u is string => !!u);
+
+  return (
+    <div
+      onMouseEnter={() => onHover(primeiro.pedido_id)}
+      onMouseLeave={() => onHover(null)}
+      className={cn(
+        "w-[300px] rounded-[10px] overflow-hidden bg-white border border-[var(--gw-border)] select-none",
+        dragging && "opacity-40",
+      )}
+      style={{
+        boxShadow: atrasado ? "0 0 0 2px var(--gw-danger)" : highlight ? `0 0 0 2px ${cor}` : undefined,
+      }}
+    >
+      <div
+        draggable
+        onDragStart={e => {
+          e.dataTransfer.setData("text/plain", `pedido:${primeiro.pedido_id}:${coluna}`);
+          e.dataTransfer.effectAllowed = "move";
+          onDragStart();
+        }}
+        onDragEnd={onDragEnd}
+        onClick={onAlternar}
+        className="cursor-grab active:cursor-grabbing"
+      >
+        <div className="flex items-center gap-1.5 pl-3 pr-2.5 pt-2.5 pb-1.5">
+          <span className="h-[7px] w-[7px] rounded-full shrink-0" style={{ backgroundColor: cor }} />
+          <OrderNumber value={primeiro.pedido_numero} className="text-[13px] shrink-0" />
+          <span
+            className="gw-body text-[11px] font-bold rounded-full px-2 py-[2px] shrink-0"
+            style={parcial ? { backgroundColor: "#C2410C", color: "#FFFFFF" } : { backgroundColor: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)" }}
+            title={parcial ? "Parte dos produtos deste pedido está em outras colunas" : undefined}
+          >
+            {rows.length}/{totalPedido} produtos
+          </span>
+          <span className="flex-1" />
+          <VendedorAvatar nome={vendedorNome} />
+          {expandido ? <ChevronDown className="h-4 w-4 text-[var(--gw-text-muted)]" /> : <ChevronRight className="h-4 w-4 text-[var(--gw-text-muted)]" />}
+        </div>
+
+        <div className="px-3 pb-2.5 space-y-1.5">
+          <p className="gw-body text-[13px] font-semibold text-[#0F172A] truncate">{primeiro.cliente || "—"}</p>
+
+          {comFotos ? (
+            <div className="flex gap-1.5">
+              {fotos.slice(0, 4).map((u, i) => (
+                <img key={i} src={sizedImage(u, 160)} alt="" loading="lazy" decoding="async" className="h-[54px] w-[54px] rounded-[6px] object-cover bg-[var(--gw-surface-alt)]" />
+              ))}
+              {fotos.length === 0 && (
+                <div className="h-[54px] w-[54px] rounded-[6px] bg-[var(--gw-surface-alt)] flex items-center justify-center">
+                  <Package className="h-5 w-5 text-[var(--gw-text-muted)]" />
+                </div>
+              )}
+              {rows.length > 4 && (
+                <div className="h-[54px] w-[54px] rounded-[6px] bg-[var(--gw-surface-alt)] flex items-center justify-center text-[12px] font-bold text-[var(--gw-text-secondary)]">
+                  +{rows.length - 4}
+                </div>
+              )}
+            </div>
+          ) : (
+            <ul className="gw-body text-[12px] text-[var(--gw-text-secondary)] space-y-0.5">
+              {rows.slice(0, 3).map(r => (
+                <li key={r.producao_id} className="truncate">• {r.produto_nome || "—"}</li>
+              ))}
+              {rows.length > 3 && <li className="font-semibold">+{rows.length - 3} produto(s)</li>}
+            </ul>
+          )}
+
+          <div className="flex items-center gap-2 pt-0.5">
+            <span className="gw-body text-[15px] font-bold text-[#0F172A]">
+              {qtd} <span className="text-[12px] font-medium text-[var(--gw-text-secondary)]">un.</span>
+            </span>
+            <span className="flex-1" />
+            <span
+              className="gw-body text-[11px] font-semibold flex items-center gap-1"
+              style={{ color: critico ? "var(--gw-danger)" : atrasado ? "#C2410C" : "var(--gw-text-secondary)" }}
+            >
+              <Clock className="h-3 w-3" /> {tempoNaEtapaCurto(maxHoras)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {coluna === "organizando_pedido" && (
+        <div className="px-3 pb-2.5">
+          <Button
+            size="sm"
+            className="w-full h-8"
+            disabled={imprimindoOP}
+            onClick={e => { e.stopPropagation(); onImprimirOP(); }}
+          >
+            {imprimindoOP ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <FileText className="h-3.5 w-3.5 mr-1.5" />}
+            Imprimir O.P.
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PcpCard({
   row, indice, total, primeiroDoPedido, dragging, saving, atrasado, critico, highlight, comFotos, vendedorNome,
   imprimindoOP,
@@ -805,6 +934,17 @@ export default function PCP() {
   useEffect(() => {
     try { localStorage.setItem("pcp_com_fotos", comFotos ? "1" : "0"); } catch { /* noop */ }
   }, [comFotos]);
+  /* "Agrupado / Desagrupado": agrupado = um card por pedido em cada coluna
+     (expande para os produtos); desagrupado = um card por produto. */
+  const [agrupado, setAgrupado] = useState<boolean>(() => {
+    try { return localStorage.getItem("pcp_agrupado") !== "0"; } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("pcp_agrupado", agrupado ? "1" : "0"); } catch { /* noop */ }
+  }, [agrupado]);
+  const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
+  const alternarExpandido = (chave: string) =>
+    setExpandidos(prev => { const n = new Set(prev); if (n.has(chave)) n.delete(chave); else n.add(chave); return n; });
   const [comentarios, setComentarios] = useState<ComentarioRow[]>([]);
   const [novoComentario, setNovoComentario] = useState("");
   const [enviandoComentario, setEnviandoComentario] = useState(false);
@@ -860,7 +1000,7 @@ export default function PCP() {
   /* Popup obrigatório ao sair de "Organizando Anotações" pra "Aguardando
      Mercadoria": comprovante de pagamento anexado OU confirmação manual
      ("CONFIRMADO MARLON") — vale pro PEDIDO inteiro, não item por item. */
-  const [pagamentoPedidoModal, setPagamentoPedidoModal] = useState<{ row: PcpRow; target: PcpStatus } | null>(null);
+  const [pagamentoPedidoModal, setPagamentoPedidoModal] = useState<{ row: PcpRow; target: PcpStatus; grupo?: PcpRow[] } | null>(null);
   const [pagamentoPedidoSaving, setPagamentoPedidoSaving] = useState(false);
   const comprovanteInputRef = useRef<HTMLInputElement | null>(null);
   const [enviandoComprovante, setEnviandoComprovante] = useState(false);
@@ -869,7 +1009,7 @@ export default function PCP() {
      ou terceirizada (com nome, se terceirizada) — a resposta vira tag,
      não muda mais a coluna (galpão/terceirizada não são mais colunas
      separadas). */
-  const [galpaoTerceirizadaModal, setGalpaoTerceirizadaModal] = useState<{ row: PcpRow; target: PcpStatus } | null>(null);
+  const [galpaoTerceirizadaModal, setGalpaoTerceirizadaModal] = useState<{ row: PcpRow; target: PcpStatus; grupo?: PcpRow[] } | null>(null);
   const [modalTipoProducao, setModalTipoProducao] = useState<"galpao" | "terceirizada">("galpao");
   const [modalFornecedorId, setModalFornecedorId] = useState("");
   const [modalTerceirizadaLivre, setModalTerceirizadaLivre] = useState("");
@@ -1790,12 +1930,66 @@ export default function PCP() {
     moverItem(row, targetStatus);
   };
 
+  /* ── Arrastar o CARD DO PEDIDO (modo agrupado) ────────────────────────
+     Leva todos os produtos do pedido que estão naquela coluna. Passa pelas
+     mesmas regras do arrasto individual, aplicadas item a item; o que pede
+     dado por produto (medidas da expedição) obriga a expandir e mover um a
+     um. */
+  const handleDropPedido = (targetStatus: PcpStatus, pedidoId: string, colunaOrigem: string) => {
+    setDragOverStatus(null);
+    setDraggingId(null);
+    if (colunaOrigem === targetStatus) return;
+    const grupo = rows.filter(r => r.pedido_id === pedidoId && colunaDoStatus(r) === colunaOrigem);
+    if (grupo.length === 0) return;
+    const row = grupo[0];
+
+    if (colunaOrigem === "organizando_pedido" && targetStatus === "aguardando_mercadoria") {
+      setPagamentoPedidoModal({ row, target: targetStatus, grupo });
+      return;
+    }
+    if (targetStatus === "teste_fisico" && colunaOrigem !== "teste_enviado") {
+      openGalpaoTerceirizadaModal(row, targetStatus);
+      setGalpaoTerceirizadaModal({ row, target: targetStatus, grupo });
+      return;
+    }
+    if (colunaOrigem === "teste_fisico" && targetStatus !== "teste_fisico") {
+      const faltam = grupo.filter(r => !r.teste_anexo_url).length;
+      if (faltam > 0) {
+        toast.error(`${faltam} produto(s) ainda sem o teste físico anexado. Expanda o pedido e anexe o teste antes de mover.`);
+        return;
+      }
+    }
+    if ((targetStatus === "inserir_medidas" || targetStatus === "aguardando_coleta") && colunaOrigem === "em_producao") {
+      const faltam = grupo.filter(r => !r.producao_anexo_url).length;
+      if (faltam > 0) {
+        toast.error(`${faltam} produto(s) sem a foto/vídeo da produção concluída. Expanda o pedido e anexe antes de avançar.`);
+        return;
+      }
+    }
+    if (targetStatus === "aguardando_coleta") {
+      toast.error("A Expedição pede as medidas de cada produto. Expanda o pedido e arraste um por um.");
+      return;
+    }
+
+    if (colunaOrigem === "aguardando_mercadoria") {
+      for (const r of grupo) {
+        const semCompra = (r.tags ?? []).filter(
+          t => t.toUpperCase() !== "COMPRADO XBZ" && t.toUpperCase() !== "COMPRADO SP",
+        );
+        if (semCompra.length !== (r.tags ?? []).length) void salvarTags(r, semCompra);
+      }
+    }
+    for (const r of grupo) {
+      void mudarStatus(r.producao_id, statusCanonicoDaColuna(targetStatus), grupo.length > 1 ? "Movido junto com o pedido" : undefined);
+    }
+  };
+
   /* "resposta se torna uma tag como TERCEIRIZADA + nome ou PROD. GALPÃO.
      e a tag COMPRADO já sai automaticamente" — confirma o local de
      produção e move pra Aguardando Teste. */
   const confirmarGalpaoTerceirizada = async () => {
     if (!galpaoTerceirizadaModal) return;
-    const { row, target } = galpaoTerceirizadaModal;
+    const { row, target, grupo } = galpaoTerceirizadaModal;
     const fornecedor = terceirizadas.find(f => f.id === modalFornecedorId);
     const nomeLivre = modalTerceirizadaLivre.trim();
     if (modalTipoProducao === "terceirizada" && !modalFornecedorId && !nomeLivre) {
@@ -1805,20 +1999,23 @@ export default function PCP() {
     setModalSaving(true);
 
     const localProducao: LocalProducao = modalTipoProducao === "galpao" ? "interna" : "terceirizada";
-    await applyUpdate(row.producao_id, {
-      local_producao: localProducao,
-      terceirizada_id: modalTipoProducao === "terceirizada" ? (modalFornecedorId || null) : null,
-      terceirizada_nome_livre: modalTipoProducao === "terceirizada" ? (fornecedor ? null : (nomeLivre || null)) : null,
-    });
-
-    const semCompra = (row.tags ?? []).filter(
-      t => t.toUpperCase() !== "COMPRADO XBZ" && t.toUpperCase() !== "COMPRADO SP",
-    );
     const nomeTerceirizada = fornecedor?.nome || nomeLivre;
     const novaTag = modalTipoProducao === "galpao" ? TAG_PROD_GALPAO : `${TAG_TERCEIRIZADA_PREFIXO} + ${nomeTerceirizada}`;
-    await salvarTags(row, [...new Set([...semCompra, novaTag])]);
 
-    await mudarStatus(row.producao_id, statusCanonicoDaColuna(target), `Produção definida: ${novaTag}`);
+    /* Arrastou o pedido inteiro: a mesma resposta vale para todos os
+       produtos dele que estavam na coluna. */
+    for (const alvo of (grupo ?? [row])) {
+      await applyUpdate(alvo.producao_id, {
+        local_producao: localProducao,
+        terceirizada_id: modalTipoProducao === "terceirizada" ? (modalFornecedorId || null) : null,
+        terceirizada_nome_livre: modalTipoProducao === "terceirizada" ? (fornecedor ? null : (nomeLivre || null)) : null,
+      });
+      const semCompra = (alvo.tags ?? []).filter(
+        t => t.toUpperCase() !== "COMPRADO XBZ" && t.toUpperCase() !== "COMPRADO SP",
+      );
+      await salvarTags(alvo, [...new Set([...semCompra, novaTag])]);
+      await mudarStatus(alvo.producao_id, statusCanonicoDaColuna(target), `Produção definida: ${novaTag}`);
+    }
 
     setModalSaving(false);
     setGalpaoTerceirizadaModal(null);
@@ -1842,7 +2039,7 @@ export default function PCP() {
 
   const confirmarPagamentoPedido = async (comprovanteUrl?: string) => {
     if (!pagamentoPedidoModal) return;
-    const { row, target } = pagamentoPedidoModal;
+    const { row, target, grupo } = pagamentoPedidoModal;
     setPagamentoPedidoSaving(true);
 
     const { error } = await supabase
@@ -1856,13 +2053,15 @@ export default function PCP() {
       return;
     }
 
-    await mudarStatus(
-      row.producao_id, statusCanonicoDaColuna(target),
-      comprovanteUrl ? "Comprovante de pagamento anexado" : "Pagamento confirmado manualmente",
-    );
+    for (const alvo of (grupo ?? [row])) {
+      await mudarStatus(
+        alvo.producao_id, statusCanonicoDaColuna(target),
+        comprovanteUrl ? "Comprovante de pagamento anexado" : "Pagamento confirmado manualmente",
+      );
+    }
     setPagamentoPedidoSaving(false);
     setPagamentoPedidoModal(null);
-    toast.success("Pagamento confirmado. Item movido para Aguardando Mercadoria.");
+    toast.success("Pagamento confirmado. Movido para Aguardando Mercadoria.");
   };
 
   /* ── Popup de Expedição ────────────────────────────────────────────── */
@@ -2042,6 +2241,24 @@ export default function PCP() {
               Sem fotos
             </button>
           </div>
+          <div className="flex items-center rounded-[8px] border border-[var(--gw-border)] overflow-hidden text-[12px] font-semibold">
+            <button
+              type="button"
+              onClick={() => setAgrupado(true)}
+              className={cn("px-3 py-1.5 transition-colors", agrupado ? "text-white" : "bg-white text-[var(--gw-text-secondary)]")}
+              style={agrupado ? { backgroundColor: "var(--gw-primary)" } : undefined}
+            >
+              Agrupado
+            </button>
+            <button
+              type="button"
+              onClick={() => setAgrupado(false)}
+              className={cn("px-3 py-1.5 transition-colors", !agrupado ? "text-white" : "bg-white text-[var(--gw-text-secondary)]")}
+              style={!agrupado ? { backgroundColor: "var(--gw-primary)" } : undefined}
+            >
+              Desagrupado
+            </button>
+          </div>
           <span className="gw-meta">{totalItens} item(ns)</span>
           <Button variant="outline" size="sm" onClick={() => loadItems()} disabled={loading}>
             <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
@@ -2104,7 +2321,13 @@ export default function PCP() {
                   onDragLeave={() => setDragOverStatus(prev => (prev === col.value ? null : prev))}
                   onDrop={e => {
                     e.preventDefault();
-                    handleDrop(col.value, e.dataTransfer.getData("text/plain"));
+                    const dado = e.dataTransfer.getData("text/plain");
+                    if (dado.startsWith("pedido:")) {
+                      const [, pedidoId, origem] = dado.split(":");
+                      handleDropPedido(col.value, pedidoId, origem);
+                    } else {
+                      handleDrop(col.value, dado);
+                    }
                   }}
                   style={{ width: 328, flexShrink: 0, height: "100%" }}
                   className={cn(
@@ -2135,33 +2358,78 @@ export default function PCP() {
                       <div className="h-[96px] rounded-lg border border-dashed border-[var(--gw-border)] flex items-center justify-center gw-meta text-[11px] text-[var(--gw-text-muted)]">
                         Sem itens nesta etapa
                       </div>
-                    ) : items.map(row => (
-                      <PcpCard
-                        key={row.producao_id}
-                        row={row}
-                        indice={indices[row.producao_id]?.i ?? 1}
-                        total={indices[row.producao_id]?.total ?? 1}
-                        primeiroDoPedido={items.find(x => x.pedido_id === row.pedido_id)?.producao_id === row.producao_id}
-                        dragging={draggingId === row.producao_id}
-                        saving={savingId === row.producao_id}
-                        atrasado={horasUteisDesde(row.etapa_desde) > LIMITE_ATENCAO_HORAS_UTEIS}
-                        critico={(row.horas_na_etapa ?? 0) / 24 > LIMITE_CRITICO_DIAS_CORRIDOS}
-                        highlight={!!hoverPedido && hoverPedido === row.pedido_id}
-                        comFotos={comFotos}
-                        vendedorNome={vendedorNome(row.pedido_vendedor_id)}
-                        onHover={setHoverPedido}
-                        onComprado={registrarCompra}
-                        onDespachar={abrirDespachoModal}
-                        onImprimirOP={imprimirOP}
-                        onAgrupar={abrirAgrupamento}
-                        onDesagrupar={desfazerAgrupamento}
-                        onInserirMedidas={r => setExpedicaoModal({ row: r, target: "aguardando_coleta" })}
-                        imprimindoOP={imprimindoOP === row.producao_id}
-                        onDragStart={() => setDraggingId(row.producao_id)}
-                        onDragEnd={() => setDraggingId(null)}
-                        onOpen={() => setDetalheId(row.producao_id)}
-                      />
-                    ))}
+                    ) : (() => {
+                      const renderCard = (row: PcpRow) => (
+                        <PcpCard
+                          key={row.producao_id}
+                          row={row}
+                          indice={indices[row.producao_id]?.i ?? 1}
+                          total={indices[row.producao_id]?.total ?? 1}
+                          primeiroDoPedido={items.find(x => x.pedido_id === row.pedido_id)?.producao_id === row.producao_id}
+                          dragging={draggingId === row.producao_id}
+                          saving={savingId === row.producao_id}
+                          atrasado={horasUteisDesde(row.etapa_desde) > LIMITE_ATENCAO_HORAS_UTEIS}
+                          critico={(row.horas_na_etapa ?? 0) / 24 > LIMITE_CRITICO_DIAS_CORRIDOS}
+                          highlight={!!hoverPedido && hoverPedido === row.pedido_id}
+                          comFotos={comFotos}
+                          vendedorNome={vendedorNome(row.pedido_vendedor_id)}
+                          onHover={setHoverPedido}
+                          onComprado={registrarCompra}
+                          onDespachar={abrirDespachoModal}
+                          onImprimirOP={imprimirOP}
+                          onAgrupar={abrirAgrupamento}
+                          onDesagrupar={desfazerAgrupamento}
+                          onInserirMedidas={r => setExpedicaoModal({ row: r, target: "aguardando_coleta" })}
+                          imprimindoOP={imprimindoOP === row.producao_id}
+                          onDragStart={() => setDraggingId(row.producao_id)}
+                          onDragEnd={() => setDraggingId(null)}
+                          onOpen={() => setDetalheId(row.producao_id)}
+                        />
+                      );
+                      if (!agrupado) return items.map(renderCard);
+
+                      // Modo agrupado: um card por pedido nesta coluna (as linhas do
+                      // mesmo pedido já saem juntas e em ordem de byStatus).
+                      const grupos: { pedidoId: string; rows: PcpRow[] }[] = [];
+                      for (const r of items) {
+                        const g = grupos[grupos.length - 1];
+                        if (g && g.pedidoId === r.pedido_id) g.rows.push(r);
+                        else grupos.push({ pedidoId: r.pedido_id, rows: [r] });
+                      }
+                      return grupos.map(g => {
+                        const chave = `${col.value}:${g.pedidoId}`;
+                        const aberto = expandidos.has(chave);
+                        const primeiro = g.rows[0];
+                        return (
+                          <div key={chave}>
+                            <PcpPedidoCard
+                              rows={g.rows}
+                              coluna={col.value}
+                              totalPedido={indices[primeiro.producao_id]?.total ?? g.rows.length}
+                              cor={corDoPedido(primeiro)}
+                              comFotos={comFotos}
+                              vendedorNome={vendedorNome(primeiro.pedido_vendedor_id)}
+                              expandido={aberto}
+                              onAlternar={() => alternarExpandido(chave)}
+                              dragging={draggingId === `pedido:${g.pedidoId}:${col.value}`}
+                              highlight={!!hoverPedido && hoverPedido === g.pedidoId}
+                              atrasado={g.rows.some(r => horasUteisDesde(r.etapa_desde) > LIMITE_ATENCAO_HORAS_UTEIS)}
+                              critico={g.rows.some(r => (r.horas_na_etapa ?? 0) / 24 > LIMITE_CRITICO_DIAS_CORRIDOS)}
+                              imprimindoOP={imprimindoOP === primeiro.producao_id}
+                              onImprimirOP={() => imprimirOP(primeiro)}
+                              onHover={setHoverPedido}
+                              onDragStart={() => setDraggingId(`pedido:${g.pedidoId}:${col.value}`)}
+                              onDragEnd={() => setDraggingId(null)}
+                            />
+                            {aberto && (
+                              <div className="mt-1.5 ml-2.5 pl-2 space-y-2 border-l-2" style={{ borderColor: corDoPedido(primeiro) }}>
+                                {g.rows.map(renderCard)}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               );
