@@ -101,6 +101,8 @@ interface PcpRow {
   pedido_comprovante_pagamento_url: string | null;
   item_volumes: { responsavel: string; itens: { comprimento: number; altura: number; largura: number; peso: number }[] } | null;
   grupo_id: string | null;
+  /** Posição do item dentro do pedido (1, 2, 3…), na ordem de lançamento. */
+  item_posicao?: number | null;
   arte_anexo_url: string | null;
   pedido_anexos: { url: string; nome: string; criadoEm: string }[] | null;
 }
@@ -520,13 +522,15 @@ function EtiquetaCombobox({ opcoes, onSelect }: { opcoes: string[]; onSelect: (n
 }
 
 function PcpCard({
-  row, indice, total, dragging, saving, atrasado, critico, highlight, comFotos, vendedorNome,
+  row, indice, total, primeiroDoPedido, dragging, saving, atrasado, critico, highlight, comFotos, vendedorNome,
   imprimindoOP,
   onDragStart, onDragEnd, onOpen, onHover, onComprado, onDespachar, onImprimirOP, onAgrupar, onDesagrupar, onInserirMedidas,
 }: {
   row: PcpRow;
   indice: number;
   total: number;
+  /** Primeiro card deste pedido na coluna (é nele que fica "Imprimir O.P."). */
+  primeiroDoPedido: boolean;
   dragging: boolean;
   saving: boolean;
   atrasado: boolean;
@@ -686,7 +690,7 @@ function PcpCard({
             se tiver). "Agrupar" fica ao lado, também só aqui. */}
         {colunaDoStatus(row) === "organizando_pedido" && (
           <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-            {indice === 1 && (
+            {primeiroDoPedido && (
               <button
                 type="button"
                 onClick={() => onImprimirOP(row)}
@@ -1122,7 +1126,9 @@ export default function PCP() {
       map[col] = [...map[col]].sort((a, b) => {
         const pa = primeiraAparicao.get(a.pedido_id)!;
         const pb = primeiraAparicao.get(b.pedido_id)!;
-        return pa !== pb ? pa - pb : 0;
+        if (pa !== pb) return pa - pb;
+        // Mesmo pedido: Item 1, 2, 3… na ordem em que os produtos foram lançados.
+        return (a.item_posicao ?? 0) - (b.item_posicao ?? 0);
       });
     }
     return map;
@@ -1131,6 +1137,8 @@ export default function PCP() {
 
   /* Índice do item dentro do pedido (Item n/total) */
   const indices = useMemo(() => {
+    /* Posição real do item no pedido (item_posicao, vinda da view). Sem ela
+       — banco ainda sem a migration — cai na ordem antiga, por UUID. */
     const grupos: Record<string, string[]> = {};
     for (const r of [...rows].sort((a, b) => a.producao_id.localeCompare(b.producao_id))) {
       (grupos[r.pedido_id] ??= []).push(r.producao_id);
@@ -1139,7 +1147,7 @@ export default function PCP() {
     for (const r of rows) {
       const lista = grupos[r.pedido_id] || [];
       map[r.producao_id] = {
-        i: lista.indexOf(r.producao_id) + 1,
+        i: r.item_posicao ?? lista.indexOf(r.producao_id) + 1,
         total: r.total_itens_pedido ?? lista.length,
       };
     }
@@ -2133,6 +2141,7 @@ export default function PCP() {
                         row={row}
                         indice={indices[row.producao_id]?.i ?? 1}
                         total={indices[row.producao_id]?.total ?? 1}
+                        primeiroDoPedido={items.find(x => x.pedido_id === row.pedido_id)?.producao_id === row.producao_id}
                         dragging={draggingId === row.producao_id}
                         saving={savingId === row.producao_id}
                         atrasado={horasUteisDesde(row.etapa_desde) > LIMITE_ATENCAO_HORAS_UTEIS}
