@@ -550,7 +550,6 @@ function PcpPedidoCard({
   const parcial = rows.length < totalPedido;
   const qtd = rows.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
   const maxHoras = Math.max(...rows.map(r => r.horas_na_etapa ?? 0));
-  const fotos = rows.map(r => r.mockup_url || r.imagem_catalogo_url).filter((u): u is string => !!u);
 
   return (
     <div
@@ -595,14 +594,17 @@ function PcpPedidoCard({
 
           {comFotos ? (
             <div className="flex gap-1.5">
-              {fotos.slice(0, 4).map((u, i) => (
-                <img key={i} src={sizedImage(u, 160)} alt="" loading="lazy" decoding="async" className="h-[54px] w-[54px] rounded-[6px] object-cover bg-[var(--gw-surface-alt)]" />
-              ))}
-              {fotos.length === 0 && (
-                <div className="h-[54px] w-[54px] rounded-[6px] bg-[var(--gw-surface-alt)] flex items-center justify-center">
-                  <Package className="h-5 w-5 text-[var(--gw-text-muted)]" />
-                </div>
-              )}
+              {rows.slice(0, 4).map(r => {
+                const u = r.mockup_url || r.imagem_catalogo_url;
+                return u ? (
+                  <img key={r.producao_id} src={sizedImage(u, 160)} alt="" loading="lazy" decoding="async" className="h-[54px] w-[54px] rounded-[6px] object-cover bg-[var(--gw-surface-alt)]" />
+                ) : (
+                  <div key={r.producao_id} className="h-[54px] w-[54px] rounded-[6px] bg-[var(--gw-surface-alt)] border border-dashed border-[var(--gw-border)] flex flex-col items-center justify-center gap-0.5 px-0.5">
+                    <Package className="h-4 w-4 text-[var(--gw-text-muted)]" />
+                    <span className="text-[7.5px] leading-[1.05] font-semibold text-center text-[var(--gw-text-muted)] uppercase">Sem foto cadastrada</span>
+                  </div>
+                );
+              })}
               {rows.length > 4 && (
                 <div className="h-[54px] w-[54px] rounded-[6px] bg-[var(--gw-surface-alt)] flex items-center justify-center text-[12px] font-bold text-[var(--gw-text-secondary)]">
                   +{rows.length - 4}
@@ -2418,10 +2420,16 @@ export default function PCP() {
                         if (g && g.pedidoId === r.pedido_id) g.rows.push(r);
                         else grupos.push({ pedidoId: r.pedido_id, rows: [r] });
                       }
-                      return grupos.map(g => {
+                      return grupos.flatMap(g => {
                         const chave = `${col.value}:${g.pedidoId}`;
                         const aberto = expandidos.has(chave);
                         const primeiro = g.rows[0];
+                        // Pedido já separado em etapas diferentes: some o card do
+                        // pedido e ficam só os produtos avulsos. Voltam a se agrupar
+                        // quando todos estiverem de novo na mesma coluna.
+                        if (g.rows.length < (indices[primeiro.producao_id]?.total ?? g.rows.length)) {
+                          return g.rows.map(renderCard);
+                        }
                         return (
                           <div key={chave}>
                             <PcpPedidoCard
