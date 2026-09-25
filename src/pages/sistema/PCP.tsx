@@ -534,7 +534,7 @@ function EtiquetaCombobox({ opcoes, onSelect }: { opcoes: string[]; onSelect: (n
 /** Card único do pedido numa coluna (modo "Agrupado"). Só o cabeçalho é
     arrastável: arrastar o card move todos os produtos do pedido que estão
     nesta coluna; os cards individuais (expandidos) se arrastam sozinhos. */
-const COLUNAS_AGRUPAVEIS = ["organizando_comercial", "organizando_pedido", "aguardando_mercadoria"];
+const COLUNAS_AGRUPAVEIS = ["organizando_comercial", "organizando_pedido", "aguardando_mercadoria", "inserir_medidas"];
 
 function PcpPedidoCard({
   rows, coluna, totalPedido, cor, comFotos, vendedorNome, expandido, dragging, highlight, atrasado, critico, imprimindoOP,
@@ -2489,7 +2489,13 @@ export default function PCP() {
                         // Pedido já separado em etapas diferentes: some o card do
                         // pedido e ficam só os produtos avulsos. Voltam a se agrupar
                         // quando todos estiverem de novo na mesma coluna.
-                        if (g.rows.length < (indices[primeiro.producao_id]?.total ?? g.rows.length)) {
+                        // Em Inserir Medidas os produtos do mesmo pedido sempre se agrupam
+                        // (o pedido segue junto para a Expedição), mesmo que parte dele
+                        // ainda esteja em etapas anteriores.
+                        const soltos = col.value === "inserir_medidas"
+                          ? g.rows.length < 2
+                          : g.rows.length < (indices[primeiro.producao_id]?.total ?? g.rows.length);
+                        if (soltos) {
                           return g.rows.map(renderCard);
                         }
                         return (
