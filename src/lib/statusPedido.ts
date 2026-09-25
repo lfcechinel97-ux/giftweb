@@ -171,3 +171,25 @@ export const statusCanonicoDaColuna = (coluna: string): string =>
 export const colunaDoStatus = (
   linha: { coluna_pcp?: string | null; status?: string | null },
 ): string => linha.coluna_pcp || statusInfo(linha.status).colunaPcp;
+
+/** Etapa como o PCP a mostra: nome e cor da COLUNA em que o status cai. */
+export interface EtapaPcp { slug: string; nome: string; cor: string }
+
+export const etapaPcpDoStatus = (slug?: string | null): EtapaPcp => {
+  const info = statusInfo(slug);
+  const col = TODAS_COLUNAS_PCP.find(c => c.coluna === info.colunaPcp);
+  return col
+    ? { slug: col.canonico, nome: col.rotulo, cor: col.cor }
+    : { slug: info.slug, nome: info.nome, cor: info.cor };
+};
+
+/** As mesmas colunas do PCP, para os seletores de etapa (Pedidos etc.). */
+export const opcoesEtapasPcp = (): EtapaPcp[] =>
+  COLUNAS_PCP.map(c => ({ slug: c.canonico, nome: c.rotulo, cor: c.cor }));
+
+/** Posição da coluna no fluxo (para achar a etapa mais atrasada do pedido). */
+export const ordemDaColuna = (slug?: string | null): number => {
+  const info = statusInfo(slug);
+  const i = TODAS_COLUNAS_PCP.findIndex(c => c.coluna === info.colunaPcp);
+  return i === -1 ? 999 : i;
+};

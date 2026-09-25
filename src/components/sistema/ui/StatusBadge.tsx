@@ -2,7 +2,7 @@ import { ChevronDown } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { statusInfo, opcoesStatus } from "@/lib/statusPedido";
+import { etapaPcpDoStatus, opcoesEtapasPcp } from "@/lib/statusPedido";
 import { cn } from "@/lib/utils";
 
 /**
@@ -26,9 +26,10 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({
-  status, onSelect, nivel = "item", size = "md", className,
+  status, onSelect, size = "md", className,
 }: StatusBadgeProps) {
-  const info = statusInfo(status);
+  /* Mesmas etapas (nome e cor) das colunas do PCP: mudou lá, muda aqui. */
+  const info = etapaPcpDoStatus(status);
   const alt = size === "sm" ? "h-[22px] text-[11px] px-2" : "h-[26px] text-[12px] px-2.5";
 
   const corpo = (
@@ -62,7 +63,7 @@ export function StatusBadge({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-60">
-        {opcoesStatus(nivel).map(s => (
+        {opcoesEtapasPcp().map(s => (
           <DropdownMenuItem key={s.slug} onClick={() => onSelect(s.slug)} className="gap-2">
             <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ background: s.cor }} />
             <span className="truncate">{s.nome}</span>

@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Thumb, StatusBadge } from "@/components/sistema/ui";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { statusInfo, opcoesStatus } from "@/lib/statusPedido";
+import { statusInfo, opcoesStatus, ordemDaColuna } from "@/lib/statusPedido";
+import { ordenarTagsPorPrioridade, rotuloTag, corDaTag } from "@/lib/tagsPcp";
 import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaContext";
 import { supabase } from "@/integrations/supabase/client";
 import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
@@ -174,28 +175,52 @@ export default function Pedidos() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("sistema_producao_itens")
-        .select("pedido_id,item_id,status,pagamento_ok")
+        .select("pedido_id,item_id,status,pagamento_ok,tags")
         .in("pedido_id", pedidoIds);
       const vazio = {
         porItem: {} as Record<string, string>,
+        tagsPorItem: {} as Record<string, string[]>,
+        statusPorPedido: {} as Record<string, string[]>,
         pagamento: {} as Record<string, { ok: number; total: number }>,
       };
       if (error || !data) return vazio;
 
       const porItem: Record<string, string> = {};
+      const tagsPorItem: Record<string, string[]> = {};
+      const statusPorPedido: Record<string, string[]> = {};
       const pagamento: Record<string, { ok: number; total: number }> = {};
-      for (const r of data as { pedido_id: string; item_id: string; status: string; pagamento_ok: boolean }[]) {
+      for (const r of data as { pedido_id: string; item_id: string; status: string; pagamento_ok: boolean; tags: string[] | null }[]) {
         porItem[r.item_id] = r.status;
+        tagsPorItem[r.item_id] = r.tags ?? [];
+        (statusPorPedido[r.pedido_id] ??= []).push(r.status);
         const acc = pagamento[r.pedido_id] ?? { ok: 0, total: 0 };
         acc.total += 1;
         if (r.pagamento_ok) acc.ok += 1;
         pagamento[r.pedido_id] = acc;
       }
-      return { porItem, pagamento };
+      return { porItem, pagamento, tagsPorItem, statusPorPedido };
     },
   });
 
   const statusDoItem = (itemId?: string) => (itemId ? producao?.porItem[itemId] : undefined);
+
+  /* Etapa do pedido = a do produto MAIS ATRASADO no fluxo, lida dos itens
+     (é o que o PCP mostra). Sem itens de produção, cai no status gravado. */
+  const statusDoPedido = (p: Pedido): string => {
+    if (p.status === "cancelado") return p.status;
+    const lista = producao?.statusPorPedido?.[p.id];
+    if (!lista?.length) return p.status;
+    return lista.reduce((pior, atual) => (ordemDaColuna(atual) < ordemDaColuna(pior) ? atual : pior));
+  };
+
+  /* Escolher a etapa do pedido leva TODOS os produtos dele para lá. */
+  const alterarStatusPedido = async (p: Pedido, slug: string) => {
+    updatePedido(p.id, { status: slug as PedidoStatus });
+    const { error } = await supabase.from("sistema_producao_itens").update({ status: slug }).eq("pedido_id", p.id);
+    if (error) toast.error(`Não foi possível mover os produtos. ${error.message || ""}`);
+    qc.invalidateQueries({ queryKey: ["sistema", "pedidos", "producao"] });
+    qc.invalidateQueries({ queryKey: ["sistema", "pcp", "rows"] });
+  };
 
   /* "Pago" / "Parcial" não existem como campo no pedido. São derivados do
      gate de pagamento que o PCP já marca por item (pagamento_ok). */
@@ -511,7 +536,8 @@ export default function Pedidos() {
           </div>
         ) : visiveis.map(p => {
           const itens = Array.isArray(p.itens) ? p.itens : [];
-          const info = statusInfo(p.status);
+          const statusExibido = statusDoPedido(p);
+          const info = statusInfo(statusExibido);
           const despachar = p.dataDespacharAte ?? addDays(p.createdAt, p.prazoProducaoDias ?? 15);
           const atrasado = prazoVencido(despachar, p.status);
           const criado = dataHoraBR(p.createdAt);
@@ -543,10 +569,10 @@ export default function Pedidos() {
                     {p.numero}
                   </span>
                   <StatusBadge
-                    status={p.status}
+                    status={statusExibido}
                     nivel="pedido"
                     size="sm"
-                    onSelect={slug => updatePedido(p.id, { status: slug as PedidoStatus })}
+                    onSelect={slug => alterarStatusPedido(p, slug)}
                   />
                 </div>
 
@@ -635,6 +661,19 @@ export default function Pedidos() {
                           onSelect={slug => alterarStatusItem(p.id, item.id, slug)}
                         />
                       </span>
+                      {(producao?.tagsPorItem?.[item.id]?.length ?? 0) > 0 && (
+                        <span className="flex flex-wrap gap-1">
+                          {ordenarTagsPorPrioridade(producao!.tagsPorItem[item.id]).map(t => (
+                            <span
+                              key={t}
+                              className="text-[10.5px] leading-none rounded-[5px] px-[7px] py-[4px] whitespace-nowrap"
+                              style={{ backgroundColor: corDaTag(t), color: "#FFFFFF", fontWeight: 700 }}
+                            >
+                              {rotuloTag(t)}
+                            </span>
+                          ))}
+                        </span>
+                      )}
                     </span>
 
                     <Numero rotulo="Qtd">
