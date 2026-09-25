@@ -1,3 +1,4 @@
+import DashboardPedidos from "./DashboardPedidos";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -173,7 +174,32 @@ function Painel({ titulo, acao, children }: {
 export default function Dashboard() {
   const { isAdmin, isLoading } = useUserRole();
   if (isLoading) return null;
-  return isAdmin ? <DashboardFinanceiro /> : <DashboardComercial />;
+  if (!isAdmin) return <DashboardComercial />;
+  return <DashboardAdmin />;
+}
+
+/* Admin: "Pedidos" (venda por pedido, comissão, a receber) e "Financeiro"
+   (despesas e resultado da empresa). */
+function DashboardAdmin() {
+  const [aba, setAba] = useState<"pedidos" | "financeiro">("pedidos");
+  return (
+    <div className="space-y-4">
+      <div className="inline-flex rounded-[8px] border overflow-hidden text-[13px] font-semibold" style={{ borderColor: "var(--gw-border)" }}>
+        {([["pedidos", "Pedidos e comissões"], ["financeiro", "Financeiro"]] as const).map(([id, rotulo]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setAba(id)}
+            className="px-4 py-2 transition-colors"
+            style={aba === id ? { background: "var(--gw-primary)", color: "#FFFFFF" } : { background: "#FFFFFF", color: "var(--gw-text-secondary)" }}
+          >
+            {rotulo}
+          </button>
+        ))}
+      </div>
+      {aba === "pedidos" ? <DashboardPedidos /> : <DashboardFinanceiro />}
+    </div>
+  );
 }
 
 function DashboardFinanceiro() {
