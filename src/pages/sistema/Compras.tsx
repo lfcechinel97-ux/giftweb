@@ -124,11 +124,35 @@ export default function Compras() {
       if (ids.length) {
         const { data: peds } = await supabase.from("sistema_pedidos").select("id,itens").in("id", ids);
         const porPedido = new Map((peds ?? []).map((p: any) => [p.id, (p.itens as any[]) ?? []]));
+        const semFoto: { l: LinhaCompra; it: any }[] = [];
         for (const l of lista) {
           const it = porPedido.get(l.pedido_id)?.[(l.item_posicao ?? 1) - 1];
           if (it) {
             l.sku = it.codigoComposto ?? null;
             l.variacao = variacaoDoItem(it.nome ?? l.produto_nome ?? "", it.varianteSlug) || null;
+            if (!l.mockup_url && !l.imagem_catalogo_url) semFoto.push({ l, it });
+          }
+        }
+        // Sem mockup nem imagem no pedido: usa a foto do produto no catálogo do sistema.
+        if (semFoto.length) {
+          const idsProd = [...new Set(semFoto.map(x => x.it.produtoId).filter(Boolean))];
+          const codigos = [...new Set(semFoto.map(x => x.it.codigoComposto).filter(Boolean))];
+          const nomes = [...new Set(semFoto.map(x => String(x.it.nome ?? "").trim()).filter(Boolean))];
+          const busca = async (col: string, valores: string[]) =>
+            valores.length
+              ? ((await (supabase as any).from("products_cache").select("id,nome,codigo_amigavel,image_url").in(col, valores)).data ?? [])
+              : [];
+          const [porId, porCodigo, porNome] = await Promise.all([busca("id", idsProd), busca("codigo_amigavel", codigos), busca("nome", nomes)]);
+          const mapa = new Map<string, string>();
+          for (const r of [...porNome, ...porCodigo, ...porId]) {
+            if (!r.image_url) continue;
+            mapa.set(`id:${r.id}`, r.image_url);
+            if (r.codigo_amigavel) mapa.set(`cod:${r.codigo_amigavel}`, r.image_url);
+            if (r.nome) mapa.set(`nome:${String(r.nome).trim()}`, r.image_url);
+          }
+          for (const { l, it } of semFoto) {
+            l.imagem_catalogo_url =
+              mapa.get(`id:${it.produtoId}`) ?? mapa.get(`cod:${it.codigoComposto}`) ?? mapa.get(`nome:${String(it.nome ?? "").trim()}`) ?? null;
           }
         }
       }
