@@ -1894,7 +1894,7 @@ export default function PCP() {
     /* "para ir p/ aguardando mercadoria abre um popup e o vendedor tem
        que anexar o comprovante de pagamento ou clicar em CONFIRMADO
        MARLON" — vale pro pedido inteiro, não item por item. */
-    if (colunaDoStatus(row) === "organizando_pedido" && targetStatus === "aguardando_mercadoria") {
+    if (colunaDoStatus(row) === "organizando_comercial" && targetStatus === "organizando_pedido") {
       setPagamentoPedidoModal({ row, target: targetStatus });
       return;
     }
@@ -1972,7 +1972,7 @@ export default function PCP() {
     if (grupo.length === 0) return;
     const row = grupo[0];
 
-    if (colunaOrigem === "organizando_pedido" && targetStatus === "aguardando_mercadoria") {
+    if (colunaOrigem === "organizando_comercial" && targetStatus === "organizando_pedido") {
       setPagamentoPedidoModal({ row, target: targetStatus, grupo });
       return;
     }
@@ -2056,7 +2056,7 @@ export default function PCP() {
     setGalpaoTerceirizadaModal(null);
   };
 
-  /* ── Popup de pagamento (Organizando Anotações -> Aguardando Mercadoria) */
+  /* ── Popup de pagamento (Aguardando Anotações -> Imprimir O.P.) */
   const handleComprovanteUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -2096,7 +2096,7 @@ export default function PCP() {
     }
     setPagamentoPedidoSaving(false);
     setPagamentoPedidoModal(null);
-    toast.success("Pagamento confirmado. Movido para Aguardando Mercadoria.");
+    toast.success("Pagamento confirmado. Movido para Imprimir Ordem de Produção.");
   };
 
   /* ── Popup de Expedição ────────────────────────────────────────────── */

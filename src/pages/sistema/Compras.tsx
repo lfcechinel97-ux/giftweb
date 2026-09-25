@@ -9,7 +9,7 @@ import { sizedImage } from "@/lib/imageSize";
 import { cn } from "@/lib/utils";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 import { useSistema } from "@/contexts/SistemaContext";
-import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
+import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
 
 /* Compras: tudo que está em "Aguardando Mercadoria" no PCP. É a MESMA
    informação do PCP (etiqueta COMPRADO XBZ / COMPRADO SP + compra_confirmada_em
@@ -53,13 +53,16 @@ type Filtro = "pendentes" | "comprados" | "todos";
 export default function Compras() {
   const queryClient = useQueryClient();
   const { currentVendedor } = useSistema();
+  const { isAdmin } = useUserRole();
+  const [valores, setValores] = useState<Record<string, string>>({});
   const [filtro, setFiltro] = useState<Filtro>("pendentes");
   const [busca, setBusca] = useState("");
   const [salvando, setSalvando] = useState<string | null>(null);
 
   const { data: linhas = [], isLoading, refetch } = useQuery({
     queryKey: ["sistema", "compras"],
-    staleTime: 30 * 1000,
+    staleTime: 0,
+    refetchOnMount: "always",
     refetchInterval: 2 * 60 * 1000,
     refetchOnWindowFocus: true,
     queryFn: async () => {
@@ -77,6 +80,29 @@ export default function Compras() {
       return (data as any as LinhaCompra[]) ?? [];
     },
   });
+
+  // Valor pago: só o admin lê/grava (tabela com RLS de admin).
+  useEffect(() => {
+    if (!isAdmin) return;
+    (supabase as any).from("sistema_compras_valores").select("producao_item_id,valor").then(({ data }: any) => {
+      const m: Record<string, string> = {};
+      for (const v of data ?? []) m[v.producao_item_id] = String(v.valor).replace(".", ",");
+      setValores(m);
+    });
+  }, [isAdmin, linhas.length]);
+
+  const salvarValor = async (r: LinhaCompra) => {
+    const txt = (valores[r.producao_id] ?? "").trim();
+    const tabela = (supabase as any).from("sistema_compras_valores");
+    if (!txt) {
+      await tabela.delete().eq("producao_item_id", r.producao_id);
+      return;
+    }
+    const n = Number(txt.replace(/\./g, "").replace(",", "."));
+    if (!Number.isFinite(n) || n < 0) { toast.error("Valor inválido."); return; }
+    const { error } = await tabela.upsert({ producao_item_id: r.producao_id, valor: n, atualizado_em: new Date().toISOString() });
+    if (error) toast.error(`Não foi possível salvar o valor. ${error.message || ""}`);
+  };
 
   // Tempo real: qualquer mudança nos itens (inclusive vinda do PCP) recarrega.
   useEffect(() => {
@@ -211,6 +237,20 @@ export default function Compras() {
                   <p className="gw-meta text-[11px]">Entrega</p>
                   <p className="gw-body text-[13px] font-medium">{fmtData(r.data_entrega_item)}</p>
                 </div>
+                {isAdmin && (
+                  <div className="w-[120px]">
+                    <p className="gw-meta text-[11px]">Valor pago (R$)</p>
+                    <Input
+                      value={valores[r.producao_id] ?? ""}
+                      onChange={e => setValores(v => ({ ...v, [r.producao_id]: e.target.value }))}
+                      onBlur={() => salvarValor(r)}
+                      onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+                      inputMode="decimal"
+                      placeholder="0,00"
+                      className="h-8 text-[13px]"
+                    />
+                  </div>
+                )}
                 <div className="flex items-center gap-1.5 w-[250px] justify-end">
                   {origem ? (
                     <>
