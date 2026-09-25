@@ -1022,7 +1022,7 @@ export default function PCP() {
      Só pede volumes + responsável -- pagamento e transportadora saíram
      daqui (pagamento agora é tag automática; transportadora é perguntada
      só no "Confirmar despacho", junto da nota fiscal/etiqueta). */
-  const [expedicaoModal, setExpedicaoModal] = useState<{ row: PcpRow; target: PcpStatus } | null>(null);
+  const [expedicaoModal, setExpedicaoModal] = useState<{ row: PcpRow; target: PcpStatus; grupo?: PcpRow[] } | null>(null);
   const [expedicaoVolumes, setExpedicaoVolumes] = useState<
     { comprimento: string; altura: string; largura: string; peso: string }[]
   >([{ comprimento: "", altura: "", largura: "", peso: "" }]);
@@ -1913,6 +1913,11 @@ export default function PCP() {
        mais o pedido inteiro chegar junto (uma caixa pode não levar todos
        os itens do pedido). */
     if (targetStatus === "aguardando_coleta") {
+      const faltam = faltamNaExpedicao(row.pedido_id);
+      if (faltam > 0) {
+        toast.error(`${faltam} produto(s) do pedido ainda não estão em Inserir Medidas. Todos precisam estar lá para ir à Expedição.`);
+        return;
+      }
       setExpedicaoModal({ row, target: targetStatus });
       return;
     }
@@ -1935,6 +1940,13 @@ export default function PCP() {
      mesmas regras do arrasto individual, aplicadas item a item; o que pede
      dado por produto (medidas da expedição) obriga a expandir e mover um a
      um. */
+  /* Produtos do pedido que ainda não chegaram em Inserir Medidas (ou além):
+     os produtos vão juntos na caixa, então só há medida quando o pedido
+     inteiro está pronto. */
+  const faltamNaExpedicao = (pedidoId: string) =>
+    rows.filter(r => r.pedido_id === pedidoId
+      && !["inserir_medidas", "aguardando_coleta", "enviado"].includes(colunaDoStatus(r))).length;
+
   const handleDropPedido = (targetStatus: PcpStatus, pedidoId: string, colunaOrigem: string) => {
     setDragOverStatus(null);
     setDraggingId(null);
@@ -1967,7 +1979,13 @@ export default function PCP() {
       }
     }
     if (targetStatus === "aguardando_coleta") {
-      toast.error("A Expedição pede as medidas de cada produto. Expanda o pedido e arraste um por um.");
+      const faltam = faltamNaExpedicao(pedidoId);
+      if (faltam > 0) {
+        toast.error(`${faltam} produto(s) do pedido ainda não estão em Inserir Medidas. Todos precisam estar lá para ir à Expedição.`);
+        return;
+      }
+      // Uma caixa só para o pedido: as medidas valem para todos os produtos.
+      setExpedicaoModal({ row, target: targetStatus, grupo });
       return;
     }
 
@@ -2092,22 +2110,25 @@ export default function PCP() {
     row: PcpRow, target: PcpStatus,
     volumesPayload: { responsavel: string; itens: { comprimento: number; altura: number; largura: number; peso: number }[] },
     observacaoHistorico: string,
+    alvos: PcpRow[] = [row],
   ) => {
     setExpedicaoSaving(true);
-    const { error } = await supabase
-      .from("sistema_producao_itens" as any)
-      .update({ volumes: volumesPayload })
-      .eq("id", row.producao_id);
-    if (error) {
-      console.error("[PCP] gravar volumes falhou:", error);
-      toast.error(`Não foi possível salvar a expedição. ${error.message || ""}`);
-      setExpedicaoSaving(false);
-      return;
+    for (const alvo of alvos) {
+      const { error } = await supabase
+        .from("sistema_producao_itens" as any)
+        .update({ volumes: volumesPayload })
+        .eq("id", alvo.producao_id);
+      if (error) {
+        console.error("[PCP] gravar volumes falhou:", error);
+        toast.error(`Não foi possível salvar a expedição. ${error.message || ""}`);
+        setExpedicaoSaving(false);
+        return;
+      }
+
+      await salvarTags(alvo, agruparVolumesEmTags(volumesPayload.itens));
+
+      await mudarStatus(alvo.producao_id, statusCanonicoDaColuna(target), observacaoHistorico);
     }
-
-    await salvarTags(row, agruparVolumesEmTags(volumesPayload.itens));
-
-    await mudarStatus(row.producao_id, statusCanonicoDaColuna(target), observacaoHistorico);
 
     setExpedicaoSaving(false);
     setExpedicaoModal(null);
@@ -2131,11 +2152,12 @@ export default function PCP() {
       return;
     }
 
-    const { row, target } = expedicaoModal;
+    const { row, target, grupo } = expedicaoModal;
     await aplicarVolumesNoItem(
       row, target,
       { responsavel: expedicaoResponsavel.trim(), itens: volumesNumericos },
       `Expedição registrada por ${expedicaoResponsavel.trim()}`,
+      grupo ?? [row],
     );
   };
 
