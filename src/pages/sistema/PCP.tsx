@@ -180,7 +180,6 @@ const TAG_TESTE_ENVIADO = "TESTE ENVIADO";
 const TAG_TESTE_REFEITO = "TESTE REFEITO";
 const TAG_TESTE_APROVADO = "TESTE APROVADO";
 const TAG_TESTE_RECUSADO = "TESTE RECUSADO";
-const SENHA_ADMIN_PCP = "1534";
 const TAG_PROD_GALPAO = "PROD. GALPÃO";
 const TAG_TERCEIRIZADA_PREFIXO = "TERCEIRIZADA";
 
@@ -1896,32 +1895,18 @@ export default function PCP() {
     }
   };
 
-  /* Senha admin: quando um trajeto exige anexo/medidas que não valem a pena
-     preencher (produto que já estava adiante), o aviso de erro traz o botão
-     "Senha admin"; com a senha certa o passo é liberado uma vez, sem
-     preencher. Conferência só no navegador — é atalho operacional, não
-     barreira de segurança. */
+  /* Trajeto com pendência (falta anexo/medidas): em vez de bloquear, pergunta
+     se quer anexar agora ou seguir assim mesmo. Produção e vendas têm liberdade
+     de pular etapas quando o produto já está adiantado. */
   const liberadoRef = useRef(false);
-  const [senhaAdminModal, setSenhaAdminModal] = useState<{ retry: () => void } | null>(null);
-  const [senhaDigitada, setSenhaDigitada] = useState("");
-  const bloquear = (mensagem: string, retry: () => void) => {
-    toast.error(mensagem, {
-      duration: 12000,
-      action: { label: "Senha admin", onClick: () => { setSenhaDigitada(""); setSenhaAdminModal({ retry }); } },
-    });
-  };
-  const confirmarSenhaAdmin = () => {
-    if (!senhaAdminModal) return;
-    if (senhaDigitada !== SENHA_ADMIN_PCP) {
-      toast.error("Senha incorreta.");
-      setSenhaDigitada("");
-      return;
-    }
-    const { retry } = senhaAdminModal;
-    setSenhaAdminModal(null);
+  const [avisoFalta, setAvisoFalta] = useState<{ mensagem: string; retry: () => void; itemId: string } | null>(null);
+  const bloquear = (mensagem: string, retry: () => void, itemId: string) => setAvisoFalta({ mensagem, retry, itemId });
+  const continuarAssimMesmo = () => {
+    if (!avisoFalta) return;
+    const { retry } = avisoFalta;
+    setAvisoFalta(null);
     liberadoRef.current = true;
     try { retry(); } finally { liberadoRef.current = false; }
-    toast.success("Liberado com senha admin.");
   };
 
   const handleDrop = (targetStatus: PcpStatus, id: string) => {
@@ -1954,7 +1939,7 @@ export default function PCP() {
        sozinho). */
     if ((targetStatus === "inserir_medidas" || targetStatus === "aguardando_coleta")
       && colunaDoStatus(row) === "em_producao" && !row.producao_anexo_url && !liberadoRef.current) {
-      bloquear("Anexe a foto/vídeo da produção concluída antes de avançar.", () => handleDrop(targetStatus, id));
+      bloquear("FALTA ANEXAR A FOTO/VÍDEO DA PRODUÇÃO CONCLUÍDA DO PRODUTO.", () => handleDrop(targetStatus, id), row.producao_id);
       return;
     }
 
@@ -1962,7 +1947,7 @@ export default function PCP() {
        teste" — sem o anexo, arrastar manualmente pra qualquer coluna
        seguinte fica bloqueado; só avança com a foto/vídeo do teste. */
     if (colunaDoStatus(row) === "teste_fisico" && targetStatus !== "teste_fisico" && !row.teste_anexo_url && !liberadoRef.current) {
-      bloquear("Anexe o teste físico antes de mover este item.", () => handleDrop(targetStatus, id));
+      bloquear("FALTA ANEXAR A FOTO DE TESTE DO PRODUTO.", () => handleDrop(targetStatus, id), row.producao_id);
       return;
     }
 
@@ -1972,7 +1957,7 @@ export default function PCP() {
     if (targetStatus === "aguardando_coleta" && !liberadoRef.current) {
       const faltam = faltamNaExpedicao(row.pedido_id);
       if (faltam > 0) {
-        bloquear(`${faltam} produto(s) do pedido ainda não estão em Inserir Medidas. Todos precisam estar lá para ir à Expedição.`, () => handleDrop(targetStatus, id));
+        bloquear(`${faltam} PRODUTO(S) DO PEDIDO AINDA NÃO ESTÃO EM INSERIR MEDIDAS.`, () => handleDrop(targetStatus, id), row.producao_id);
         return;
       }
       setExpedicaoModal({ row, target: targetStatus });
@@ -2025,21 +2010,21 @@ export default function PCP() {
     if (colunaOrigem === "teste_fisico" && targetStatus !== "teste_fisico" && !liberadoRef.current) {
       const faltam = grupo.filter(r => !r.teste_anexo_url).length;
       if (faltam > 0) {
-        bloquear(`${faltam} produto(s) ainda sem o teste físico anexado. Expanda o pedido e anexe o teste antes de mover.`, retry);
+        bloquear(`FALTA ANEXAR A FOTO DE TESTE EM ${faltam} PRODUTO(S).`, retry, (grupo.find(r => !r.teste_anexo_url) ?? row).producao_id);
         return;
       }
     }
     if ((targetStatus === "inserir_medidas" || targetStatus === "aguardando_coleta") && colunaOrigem === "em_producao" && !liberadoRef.current) {
       const faltam = grupo.filter(r => !r.producao_anexo_url).length;
       if (faltam > 0) {
-        bloquear(`${faltam} produto(s) sem a foto/vídeo da produção concluída. Expanda o pedido e anexe antes de avançar.`, retry);
+        bloquear(`FALTA ANEXAR A FOTO/VÍDEO DA PRODUÇÃO EM ${faltam} PRODUTO(S).`, retry, (grupo.find(r => !r.producao_anexo_url) ?? row).producao_id);
         return;
       }
     }
     if (targetStatus === "aguardando_coleta" && !liberadoRef.current) {
       const faltam = faltamNaExpedicao(pedidoId);
       if (faltam > 0) {
-        bloquear(`${faltam} produto(s) do pedido ainda não estão em Inserir Medidas. Todos precisam estar lá para ir à Expedição.`, retry);
+        bloquear(`${faltam} PRODUTO(S) DO PEDIDO AINDA NÃO ESTÃO EM INSERIR MEDIDAS.`, retry, row.producao_id);
         return;
       }
       // Uma caixa só para o pedido: as medidas valem para todos os produtos.
@@ -3323,24 +3308,19 @@ export default function PCP() {
       </Dialog>
 
       {/* Modal: pagamento (obrigatório ao sair de "Organizando Anotações" pra "Aguardando Mercadoria") */}
-      <Dialog open={!!senhaAdminModal} onOpenChange={open => !open && setSenhaAdminModal(null)}>
-        <DialogContent className="max-w-[340px]">
+      <Dialog open={!!avisoFalta} onOpenChange={open => !open && setAvisoFalta(null)}>
+        <DialogContent className="max-w-[420px]">
           <DialogHeader>
-            <DialogTitle>Senha admin</DialogTitle>
+            <DialogTitle>Falta uma informação</DialogTitle>
           </DialogHeader>
-          <Input
-            autoFocus
-            type="password"
-            inputMode="numeric"
-            maxLength={4}
-            placeholder="4 números"
-            value={senhaDigitada}
-            onChange={e => setSenhaDigitada(e.target.value.replace(/\D/g, ""))}
-            onKeyDown={e => e.key === "Enter" && confirmarSenhaAdmin()}
-          />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSenhaAdminModal(null)}>Cancelar</Button>
-            <Button onClick={confirmarSenhaAdmin} disabled={senhaDigitada.length !== 4}>Liberar</Button>
+          <p className="gw-body text-[14px] font-bold text-[#B91C1C]">{avisoFalta?.mensagem}</p>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={continuarAssimMesmo}>Continuar assim mesmo</Button>
+            <Button
+              onClick={() => { const id = avisoFalta?.itemId; setAvisoFalta(null); if (id) setDetalheId(id); }}
+            >
+              Anexar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
