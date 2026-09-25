@@ -49,7 +49,7 @@ async function loadImageAsDataURL(src: string): Promise<string | null> {
    ("CANETA METAL TOUCH - AZUL" -> "AZUL"). O slug da variante costuma
    repetir o produto inteiro ("caneta-metal-touch-08103-azul"), então só
    entra quando sobra algo curto depois de tirar o que já está no nome. */
-const variacaoDoItem = (nome: string, slug?: string): string => {
+export const variacaoDoItem = (nome: string, slug?: string): string => {
   const partes = nome.split(/\s+[-–]\s+/);
   if (partes.length > 1) {
     const ultima = partes[partes.length - 1].trim();

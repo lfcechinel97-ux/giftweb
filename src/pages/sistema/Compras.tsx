@@ -14,6 +14,7 @@ import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 import { useSistema } from "@/contexts/SistemaContext";
 import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
 import { gerarPedidoCompraPDF } from "./pedidoCompraPDF";
+import { variacaoDoItem } from "./ordemProducaoPDF";
 
 /* Compras: tudo que está em "Aguardando Mercadoria" no PCP.
    - Aba "A comprar": marca os produtos comprados (caixinha) e registra a
@@ -35,6 +36,8 @@ interface LinhaCompra {
   data_entrega_item: string | null;
   tags: string[] | null;
   status: string;
+  sku?: string | null;
+  variacao?: string | null;
 }
 
 interface LinhaPopup {
@@ -43,6 +46,9 @@ interface LinhaPopup {
   pedidoNumero: string | null;
   cliente: string | null;
   produto: string;
+  sku: string | null;
+  variacao: string | null;
+  foto: string | null;
   quantidade: string;
   unitario: string;
 }
@@ -53,7 +59,7 @@ interface CompraRegistrada {
   fornecedor: string;
   criado_por_nome: string | null;
   criado_em: string;
-  itens: { id: string; produto_nome: string; pedido_numero: string | null; cliente: string | null; quantidade: number; ordem: number }[];
+  itens: { id: string; produto_nome: string; pedido_numero: string | null; cliente: string | null; quantidade: number; ordem: number; sku: string | null; variacao: string | null; foto_url: string | null }[];
 }
 
 const FORNECEDORES = ["XBZ", "SP", "OUTRO"] as const;
@@ -112,7 +118,21 @@ export default function Compras() {
         toast.error(`Não foi possível carregar as compras. ${error.message || ""}`);
         throw error;
       }
-      return (data as any as LinhaCompra[]) ?? [];
+      const lista = (data as any as LinhaCompra[]) ?? [];
+      // SKU e variação vêm do item dentro do pedido (a view não os expõe).
+      const ids = [...new Set(lista.map(l => l.pedido_id))];
+      if (ids.length) {
+        const { data: peds } = await supabase.from("sistema_pedidos").select("id,itens").in("id", ids);
+        const porPedido = new Map((peds ?? []).map((p: any) => [p.id, (p.itens as any[]) ?? []]));
+        for (const l of lista) {
+          const it = porPedido.get(l.pedido_id)?.[(l.item_posicao ?? 1) - 1];
+          if (it) {
+            l.sku = it.codigoComposto ?? null;
+            l.variacao = variacaoDoItem(it.nome ?? l.produto_nome ?? "", it.varianteSlug) || null;
+          }
+        }
+      }
+      return lista;
     },
   });
 
@@ -123,7 +143,7 @@ export default function Compras() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("sistema_compras")
-        .select("id,numero,fornecedor,criado_por_nome,criado_em,itens:sistema_compras_itens(id,produto_nome,pedido_numero,cliente,quantidade,ordem)")
+        .select("id,numero,fornecedor,criado_por_nome,criado_em,itens:sistema_compras_itens(id,produto_nome,pedido_numero,cliente,quantidade,ordem,sku,variacao,foto_url)")
         .order("numero", { ascending: false })
         .limit(100);
       if (error) {
@@ -188,6 +208,9 @@ export default function Compras() {
       pedidoNumero: String(r.pedido_numero),
       cliente: r.cliente,
       produto: r.produto_nome || "—",
+      sku: r.sku ?? null,
+      variacao: r.variacao ?? null,
+      foto: r.mockup_url || r.imagem_catalogo_url,
       quantidade: String(r.quantidade ?? 0),
       unitario: "",
     })));
@@ -199,7 +222,7 @@ export default function Compras() {
   const adicionarLinha = () =>
     setLinhasPopup(prev => [...prev, {
       chave: `livre-${Date.now()}-${prev.length}`, producaoId: null, pedidoNumero: null, cliente: null,
-      produto: "", quantidade: "1", unitario: "",
+      produto: "", sku: null, variacao: null, foto: null, quantidade: "1", unitario: "",
     }]);
   const removerLinha = (chave: string) => setLinhasPopup(prev => prev.filter(l => l.chave !== chave));
 
@@ -230,6 +253,9 @@ export default function Compras() {
           pedido_numero: l.pedidoNumero,
           cliente: l.cliente,
           produto_nome: l.produto.trim(),
+          sku: l.sku,
+          variacao: l.variacao,
+          foto_url: l.foto,
           quantidade: aNumero(l.quantidade),
           ordem: i,
         })))
@@ -303,6 +329,7 @@ export default function Compras() {
   };
 
   const baixarPdf = async (c: CompraRegistrada, comPreco: boolean) => {
+    toast.info("Gerando PDF…");
     let precos: Record<string, number> = {};
     if (comPreco) {
       const { data, error } = await (supabase as any)
@@ -312,14 +339,15 @@ export default function Compras() {
       if (error) { toast.error(`Não foi possível ler os preços. ${error.message || ""}`); return; }
       for (const p of data ?? []) precos[p.compra_item_id] = Number(p.valor_unitario);
     }
-    gerarPedidoCompraPDF({
+    await gerarPedidoCompraPDF({
       numero: c.numero,
       data: c.criado_em,
       fornecedor: c.fornecedor,
       criadoPor: c.criado_por_nome,
       comPreco,
       linhas: c.itens.map(i => ({
-        produto: i.produto_nome, pedido: i.pedido_numero, cliente: i.cliente,
+        produto: i.produto_nome, sku: i.sku, variacao: i.variacao, foto: i.foto_url ? sizedImage(i.foto_url, 160) : null,
+        pedido: i.pedido_numero, cliente: i.cliente,
         quantidade: Number(i.quantidade), valorUnitario: precos[i.id] ?? 0,
       })),
     });
@@ -484,6 +512,7 @@ export default function Compras() {
                         {c.itens.map(i => (
                           <p key={i.id} className="gw-body text-[13px]">
                             <b>{Number(i.quantidade)}×</b> {i.produto_nome}
+                            {(i.sku || i.variacao) && <span className="gw-meta"> · {[i.sku, i.variacao].filter(Boolean).join(" · ")}</span>}
                             {i.pedido_numero && <span className="gw-meta"> · #{i.pedido_numero} {i.cliente ? `· ${i.cliente}` : ""}</span>}
                           </p>
                         ))}
@@ -537,6 +566,7 @@ export default function Compras() {
                       {l.producaoId ? (
                         <>
                           <p className="font-semibold truncate max-w-[300px]">{l.produto}</p>
+                          <p className="gw-meta text-[11px]">{[l.sku, l.variacao].filter(Boolean).join(" · ")}</p>
                           <p className="gw-meta text-[11px]">#{l.pedidoNumero} · {l.cliente || "—"}</p>
                         </>
                       ) : (

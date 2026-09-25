@@ -5,6 +5,9 @@ import { jsPDF } from "jspdf";
 
 export interface LinhaPedidoCompra {
   produto: string;
+  sku?: string | null;
+  variacao?: string | null;
+  foto?: string | null;
   pedido?: string | null;
   cliente?: string | null;
   quantidade: number;
@@ -30,7 +33,24 @@ const FRACO = [110, 122, 140] as const;
 const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const num = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
 
-export function gerarPedidoCompraPDF(d: DadosPedidoCompra) {
+async function carregarImagem(src: string): Promise<string | null> {
+  try {
+    const controle = new AbortController();
+    const limite = setTimeout(() => controle.abort(), 8000);
+    const res = await fetch(src, { mode: "cors", signal: controle.signal });
+    clearTimeout(limite);
+    const blob = await res.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result as string);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  } catch { return null; }
+}
+
+export async function gerarPedidoCompraPDF(d: DadosPedidoCompra) {
+  const fotos = await Promise.all(d.linhas.map(l => (l.foto ? carregarImagem(l.foto) : Promise.resolve(null))));
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const L = 595, A = 842, M = 36;
   const largura = L - M * 2;
@@ -86,11 +106,16 @@ export function gerarPedidoCompraPDF(d: DadosPedidoCompra) {
   let unidades = 0;
 
   d.linhas.forEach((l, i) => {
-    const nomeLinhas = doc.splitTextToSize(l.produto, cols.prod[1] - 8) as string[];
+    const FOTO = 34;
+    const foto = fotos[i];
+    const larguraNome = cols.prod[1] - 8 - FOTO - 6;
+    const nomeLinhas = doc.splitTextToSize(l.produto, larguraNome) as string[];
+    const detalhe = [l.sku ? `SKU ${l.sku}` : "", l.variacao ? `Cor/variação: ${l.variacao}` : ""].filter(Boolean);
+    const detLinhas = detalhe.flatMap(t => doc.splitTextToSize(t, larguraNome) as string[]);
     const ref = [l.pedido ? `#${l.pedido}` : "", l.cliente ?? ""].filter(Boolean).join(" · ");
     const refLinhas = doc.splitTextToSize(ref, cols.ped[1] - 8) as string[];
-    const nLinhas = Math.max(nomeLinhas.length, refLinhas.length, 1);
-    const h = Math.max(26, nLinhas * 11 + 10);
+    const nLinhas = Math.max(nomeLinhas.length + detLinhas.length, refLinhas.length, 1);
+    const h = Math.max(FOTO + 10, nLinhas * 11 + 10);
 
     if (y + h > A - 90) {
       doc.addPage();
@@ -106,8 +131,25 @@ export function gerarPedidoCompraPDF(d: DadosPedidoCompra) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.text(String(i + 1), cols.n[0] + 4, y + 16);
+    if (foto) {
+      try {
+        const pr = doc.getImageProperties(foto);
+        const esc = Math.min(FOTO / pr.width, FOTO / pr.height);
+        const w = pr.width * esc, hh = pr.height * esc;
+        doc.addImage(foto, cols.prod[0] + 4 + (FOTO - w) / 2, y + 5 + (FOTO - hh) / 2, w, hh, undefined, "FAST");
+      } catch { /* imagem inválida: segue sem foto */ }
+    }
+    const xNome = cols.prod[0] + 4 + FOTO + 6;
     doc.setFont("helvetica", "bold");
-    doc.text(nomeLinhas, cols.prod[0] + 4, y + 16);
+    doc.text(nomeLinhas, xNome, y + 16);
+    if (detLinhas.length) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...FRACO);
+      doc.text(detLinhas, xNome, y + 16 + nomeLinhas.length * 11);
+      doc.setFontSize(9);
+      doc.setTextColor(...TEXTO);
+    }
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...FRACO);
