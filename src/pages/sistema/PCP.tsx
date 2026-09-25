@@ -182,6 +182,13 @@ const TAG_TESTE_APROVADO = "TESTE APROVADO";
 const TAG_TESTE_RECUSADO = "TESTE RECUSADO";
 const TAG_PROD_GALPAO = "PROD. GALPÃO";
 const TAG_TERCEIRIZADA_PREFIXO = "TERCEIRIZADA";
+
+type FiltroLocal = "todos" | "galpao" | "terceirizada";
+const COLUNAS_COM_FILTRO_LOCAL = ["teste_fisico", "em_producao"];
+const ehTerceirizada = (r: PcpRow) =>
+  r.local_producao === "terceirizada" || (r.tags ?? []).some(t => t.toUpperCase().startsWith(TAG_TERCEIRIZADA_PREFIXO));
+const ehGalpao = (r: PcpRow) =>
+  !ehTerceirizada(r) && (r.local_producao === "interna" || (r.tags ?? []).some(t => t.toUpperCase() === TAG_PROD_GALPAO));
 const TAG_COBRAR_RESTANTE = "COBRAR 50% RESTANTE";
 const TAG_PAGO_CARTAO = "PAGO CARTÃO";
 const TAG_DESPACHAR_PREFIXO = "DESPACHAR";
@@ -1262,6 +1269,7 @@ export default function PCP() {
     return rows.filter(r => tagsFiltro.every(t => (r.tags ?? []).includes(t)));
   }, [rows, tagsFiltro]);
 
+  const [filtroLocal, setFiltroLocal] = useState<FiltroLocal>("todos");
   const byStatus = useMemo(() => {
     const map: Record<string, PcpRow[]> = {};
     for (const col of STATUS_COLS) map[col.value] = [];
@@ -2298,6 +2306,19 @@ export default function PCP() {
               Desagrupado
             </button>
           </div>
+          <div className="flex items-center rounded-[8px] border border-[var(--gw-border)] overflow-hidden text-[12px] font-semibold" title="Filtra Aguardando Teste e A Produzir">
+            {([["todos", "Todos"], ["galpao", "Produzir Galpão"], ["terceirizada", "Produzir Terceirizada"]] as [FiltroLocal, string][]).map(([id, rotulo]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setFiltroLocal(id)}
+                className={cn("px-3 py-1.5 transition-colors", filtroLocal === id ? "text-white" : "bg-white text-[var(--gw-text-secondary)]")}
+                style={filtroLocal === id ? { backgroundColor: "var(--gw-primary)" } : undefined}
+              >
+                {rotulo}
+              </button>
+            ))}
+          </div>
           <span className="gw-meta">{totalItens} item(ns)</span>
           <Button variant="outline" size="sm" onClick={() => loadItems()} disabled={loading}>
             <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
@@ -2350,7 +2371,10 @@ export default function PCP() {
           >
 
             {STATUS_COLS.map(col => {
-              const items = byStatus[col.value] || [];
+              const itensColuna = byStatus[col.value] || [];
+              const items = filtroLocal !== "todos" && COLUNAS_COM_FILTRO_LOCAL.includes(col.value)
+                ? itensColuna.filter(filtroLocal === "galpao" ? ehGalpao : ehTerceirizada)
+                : itensColuna;
               const somaQtd = items.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
               const isOver = dragOverStatus === col.value;
               return (
