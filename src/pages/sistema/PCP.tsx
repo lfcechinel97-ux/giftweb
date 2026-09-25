@@ -524,6 +524,8 @@ function EtiquetaCombobox({ opcoes, onSelect }: { opcoes: string[]; onSelect: (n
 /** Card único do pedido numa coluna (modo "Agrupado"). Só o cabeçalho é
     arrastável: arrastar o card move todos os produtos do pedido que estão
     nesta coluna; os cards individuais (expandidos) se arrastam sozinhos. */
+const COLUNAS_AGRUPAVEIS = ["organizando_comercial", "organizando_pedido", "aguardando_mercadoria"];
+
 function PcpPedidoCard({
   rows, coluna, totalPedido, cor, comFotos, vendedorNome, expandido, dragging, highlight, atrasado, critico, imprimindoOP,
   onAlternar, onImprimirOP, onHover, onDragStart, onDragEnd,
@@ -2410,7 +2412,9 @@ export default function PCP() {
                           onOpen={() => setDetalheId(row.producao_id)}
                         />
                       );
-                      if (!agrupado) return items.map(renderCard);
+                      // Só as primeiras colunas agrupam: dali em diante cada produto
+                      // tem suas próprias etiquetas (galpão/terceirizada, volumes).
+                      if (!agrupado || !COLUNAS_AGRUPAVEIS.includes(col.value)) return items.map(renderCard);
 
                       // Modo agrupado: um card por pedido nesta coluna (as linhas do
                       // mesmo pedido já saem juntas e em ordem de byStatus).
