@@ -84,6 +84,7 @@ const SistemaOrcamentoForm = lazyRetry(() => import("./pages/sistema/OrcamentoFo
 const SistemaPedidos = lazyRetry(() => import("./pages/sistema/Pedidos.tsx"));
 const SistemaPedidoForm = lazyRetry(() => import("./pages/sistema/PedidoForm.tsx"));
 const SistemaPCP = lazyRetry(() => import("./pages/sistema/PCP.tsx"));
+const SistemaCompras = lazyRetry(() => import("./pages/sistema/Compras.tsx"));
 const SistemaEstoque = lazyRetry(() => import("./pages/sistema/Estoque.tsx"));
 const SistemaProdutos = lazyRetry(() => import("./pages/sistema/ProdutosCatalogo.tsx"));
 const SistemaClientes = lazyRetry(() => import("./pages/sistema/Clientes.tsx"));
@@ -182,6 +183,7 @@ const App = () => (
                 <Route path="pedidos" element={<SistemaPedidos />} />
                 <Route path="pedidos/:id" element={<SistemaPedidoForm />} />
                 <Route path="pcp" element={<SistemaPCP />} />
+                <Route path="compras" element={<SistemaCompras />} />
                 <Route path="estoque" element={<SistemaEstoque />} />
                 <Route path="produtos" element={<SistemaProdutos />} />
                 <Route path="clientes" element={<SistemaClientes />} />

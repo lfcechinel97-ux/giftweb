@@ -622,6 +622,19 @@ function PcpPedidoCard({
             </ul>
           )}
 
+          {coluna === "aguardando_mercadoria" && (() => {
+            const comprados = rows.filter(r => (r.tags ?? []).some(t => /^comprado/i.test(t.trim()))).length;
+            const tudo = comprados === rows.length;
+            return (
+              <p
+                className="gw-body text-[12px] font-bold rounded-[6px] px-2 py-1 text-white w-fit"
+                style={{ backgroundColor: tudo ? "#15803D" : "#C2410C" }}
+              >
+                {comprados} de {rows.length} produtos comprados
+              </p>
+            );
+          })()}
+
           <div className="flex items-center gap-2 pt-0.5">
             <span className="gw-body text-[15px] font-bold text-[#0F172A]">
               {qtd} <span className="text-[12px] font-medium text-[var(--gw-text-secondary)]">un.</span>
