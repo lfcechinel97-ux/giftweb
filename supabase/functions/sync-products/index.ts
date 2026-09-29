@@ -225,7 +225,11 @@ function getImageUrls(p: any): string[] {
     .slice(0, 4);
 }
 
-const CHUNK_SIZE = 500;
+/* 500 estourava o statement_timeout do banco no upsert (catálogo já é grande
+   o bastante para o lote de 500 linhas, com seus índices, não caber no
+   tempo padrão). 100 por vez evita isso, sem mudar o resultado final --
+   só faz mais viagens menores. */
+const CHUNK_SIZE = 100;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
