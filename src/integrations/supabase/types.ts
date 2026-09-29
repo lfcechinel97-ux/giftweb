@@ -871,6 +871,153 @@ export type Database = {
         }
         Relationships: []
       }
+      sistema_compras: {
+        Row: {
+          criado_em: string
+          criado_por_nome: string | null
+          fornecedor: string
+          id: string
+          numero: number
+          observacao: string | null
+        }
+        Insert: {
+          criado_em?: string
+          criado_por_nome?: string | null
+          fornecedor: string
+          id?: string
+          numero?: never
+          observacao?: string | null
+        }
+        Update: {
+          criado_em?: string
+          criado_por_nome?: string | null
+          fornecedor?: string
+          id?: string
+          numero?: never
+          observacao?: string | null
+        }
+        Relationships: []
+      }
+      sistema_compras_itens: {
+        Row: {
+          cliente: string | null
+          compra_id: string
+          foto_url: string | null
+          id: string
+          ordem: number
+          pedido_numero: string | null
+          producao_item_id: string | null
+          produto_nome: string
+          quantidade: number
+          sku: string | null
+          variacao: string | null
+        }
+        Insert: {
+          cliente?: string | null
+          compra_id: string
+          foto_url?: string | null
+          id?: string
+          ordem?: number
+          pedido_numero?: string | null
+          producao_item_id?: string | null
+          produto_nome: string
+          quantidade: number
+          sku?: string | null
+          variacao?: string | null
+        }
+        Update: {
+          cliente?: string | null
+          compra_id?: string
+          foto_url?: string | null
+          id?: string
+          ordem?: number
+          pedido_numero?: string | null
+          producao_item_id?: string | null
+          produto_nome?: string
+          quantidade?: number
+          sku?: string | null
+          variacao?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_compras_itens_compra_id_fkey"
+            columns: ["compra_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_compras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_compras_itens_producao_item_id_fkey"
+            columns: ["producao_item_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_producao_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_compras_itens_producao_item_id_fkey"
+            columns: ["producao_item_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pcp"
+            referencedColumns: ["producao_id"]
+          },
+        ]
+      }
+      sistema_compras_precos: {
+        Row: {
+          compra_item_id: string
+          valor_unitario: number
+        }
+        Insert: {
+          compra_item_id: string
+          valor_unitario: number
+        }
+        Update: {
+          compra_item_id?: string
+          valor_unitario?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_compras_precos_compra_item_id_fkey"
+            columns: ["compra_item_id"]
+            isOneToOne: true
+            referencedRelation: "sistema_compras_itens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sistema_compras_valores: {
+        Row: {
+          atualizado_em: string
+          producao_item_id: string
+          valor: number
+        }
+        Insert: {
+          atualizado_em?: string
+          producao_item_id: string
+          valor: number
+        }
+        Update: {
+          atualizado_em?: string
+          producao_item_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_compras_valores_producao_item_id_fkey"
+            columns: ["producao_item_id"]
+            isOneToOne: true
+            referencedRelation: "sistema_producao_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_compras_valores_producao_item_id_fkey"
+            columns: ["producao_item_id"]
+            isOneToOne: true
+            referencedRelation: "vw_pcp"
+            referencedColumns: ["producao_id"]
+          },
+        ]
+      }
       sistema_config: {
         Row: {
           chave: string
@@ -1263,6 +1410,45 @@ export type Database = {
         }
         Relationships: []
       }
+      sistema_item_financeiro: {
+        Row: {
+          atualizado_em: string
+          custo_personalizacao_unit: number
+          custo_unitario: number | null
+          item_id: string
+          pedido_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          custo_personalizacao_unit?: number
+          custo_unitario?: number | null
+          item_id: string
+          pedido_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          custo_personalizacao_unit?: number
+          custo_unitario?: number | null
+          item_id?: string
+          pedido_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_item_financeiro_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_item_financeiro_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pcp"
+            referencedColumns: ["pedido_id"]
+          },
+        ]
+      }
       sistema_item_historico: {
         Row: {
           created_at: string
@@ -1547,6 +1733,51 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sistema_pedido_financeiro: {
+        Row: {
+          atualizado_em: string
+          custo_personalizacao: number
+          custo_produto: number | null
+          frete: number | null
+          pedido_id: string
+          taxa_cartao_pct: number | null
+          valor_recebido: number
+        }
+        Insert: {
+          atualizado_em?: string
+          custo_personalizacao?: number
+          custo_produto?: number | null
+          frete?: number | null
+          pedido_id: string
+          taxa_cartao_pct?: number | null
+          valor_recebido?: number
+        }
+        Update: {
+          atualizado_em?: string
+          custo_personalizacao?: number
+          custo_produto?: number | null
+          frete?: number | null
+          pedido_id?: string
+          taxa_cartao_pct?: number | null
+          valor_recebido?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_pedido_financeiro_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: true
+            referencedRelation: "sistema_pedidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_pedido_financeiro_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: true
+            referencedRelation: "vw_pcp"
+            referencedColumns: ["pedido_id"]
+          },
+        ]
       }
       sistema_pedido_itens: {
         Row: {
@@ -2734,6 +2965,32 @@ export type Database = {
           },
         ]
       }
+      vw_custo_compras_por_item: {
+        Row: {
+          custo_total: number | null
+          custo_unitario_medio: number | null
+          pedido_numero: string | null
+          producao_item_id: string | null
+          produto_nome: string | null
+          quantidade_comprada: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_compras_itens_producao_item_id_fkey"
+            columns: ["producao_item_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_producao_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sistema_compras_itens_producao_item_id_fkey"
+            columns: ["producao_item_id"]
+            isOneToOne: false
+            referencedRelation: "vw_pcp"
+            referencedColumns: ["producao_id"]
+          },
+        ]
+      }
       vw_fora_de_casa: {
         Row: {
           alerta: string | null
@@ -2772,6 +3029,7 @@ export type Database = {
           imagem_catalogo_url: string | null
           item_criado_em: string | null
           item_observacao: string | null
+          item_posicao: number | null
           item_volumes: Json | null
           itens_enviados_pedido: number | null
           itens_expedicao_pedido: number | null
@@ -2994,6 +3252,13 @@ export type Database = {
           total: number
         }[]
       }
+      sistema_contar_pedidos_por_etapa: {
+        Args: { p_vendedor_id?: string }
+        Returns: {
+          coluna_pcp: string
+          total: number
+        }[]
+      }
       sistema_cor_pedido: { Args: { p_numero: string }; Returns: string }
       sistema_dashboard_comercial: {
         Args: { p_fim?: string; p_inicio?: string }
@@ -3116,6 +3381,10 @@ export type Database = {
       sistema_op_terceirizada_publica: {
         Args: { p_token: string }
         Returns: Json
+      }
+      sistema_pedidos_ids_por_coluna: {
+        Args: { p_coluna: string }
+        Returns: string[]
       }
       sistema_remover_usuario: {
         Args: { p_user_id: string }
