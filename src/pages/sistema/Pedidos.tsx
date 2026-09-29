@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Thumb, StatusBadge } from "@/components/sistema/ui";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { statusInfo, opcoesStatus, ordemDaColuna, etapaPcpDoStatus } from "@/lib/statusPedido";
+import { statusInfo, ordemDaColuna, etapaPcpDoStatus, opcoesEtapasPcp } from "@/lib/statusPedido";
 import { ordenarTagsPorPrioridade, rotuloTag, corDaTag } from "@/lib/tagsPcp";
 import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -495,7 +495,7 @@ export default function Pedidos() {
           <SelectTrigger className="h-10 w-[190px]"><SelectValue placeholder="Todos os status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos os status</SelectItem>
-            {opcoesStatus("pedido").map(s => (
+            {opcoesEtapasPcp().map(s => (
               <SelectItem key={s.slug} value={s.slug}>
                 <span className="inline-flex items-center gap-2">
                   <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ background: s.cor }} />
@@ -630,15 +630,10 @@ export default function Pedidos() {
                 </span>
 
                 <div className="flex flex-col gap-1.5 mt-0.5">
-                  <Linha icone={CalendarDays}>
-                    <span className="gw-tnum">{criado.data}</span>
-                    <span className="gw-tnum ml-1.5" style={{ color: "var(--gw-text-muted)" }}>{criado.hora}</span>
-                    <span className="ml-1.5 gw-meta">Pedido</span>
-                  </Linha>
-
                   <Linha icone={CalendarDays} tom={atrasado ? "var(--gw-danger)" : undefined}>
-                    <span className="gw-tnum" style={{ fontWeight: atrasado ? 700 : 500 }}>{dateBR(despachar)}</span>
-                    <span className="ml-1.5 gw-meta">Despachar até</span>
+                    <span className="gw-tnum" style={{ fontWeight: atrasado ? 700 : 500 }}>{criado.data}</span>
+                    <span className="gw-tnum ml-1.5" style={{ color: atrasado ? undefined : "var(--gw-text-muted)" }}>{criado.hora}</span>
+                    <span className="ml-1.5 gw-meta">Pedido{atrasado ? " · atrasado" : ""}</span>
                   </Linha>
 
                   {meioPgto && (

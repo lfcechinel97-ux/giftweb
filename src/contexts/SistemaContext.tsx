@@ -571,8 +571,18 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     const restrito = vendedorRestritoDe(await obterPerfil(qc));
+    const termo = (opts?.search || "").trim();
+    /* "Buscar por cliente" precisa achar pelo NOME do cliente cadastrado, não
+       só pelo contato avulso do pedido (contato_nome) -- a maioria dos
+       pedidos tem cliente_id e nada em contato_nome. Resolve os ids que
+       batem pelo nome antes de montar o filtro. */
+    let clienteIdsAchados: string[] = [];
+    if (termo) {
+      const { data } = await supabase.from("sistema_clientes").select("id").ilike("nome", `%${termo}%`).limit(50);
+      clienteIdsAchados = (data ?? []).map((c: { id: string }) => c.id);
+    }
     const res = await qc.fetchQuery({
-      queryKey: ["sistema", "pedidos", "list", opts ?? null, restrito],
+      queryKey: ["sistema", "pedidos", "list", opts ?? null, restrito, clienteIdsAchados],
       staleTime: 60 * 1000,
       queryFn: () => {
         /* Desempate por id: sem ele, pedidos com o mesmo created_at saem em
@@ -590,10 +600,16 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (opts?.status && opts.status !== "todos") q = q.eq("status", opts.status);
         if (opts?.dataInicio) q = q.gte("created_at", `${opts.dataInicio}T00:00:00`);
         if (opts?.dataFim) q = q.lte("created_at", `${opts.dataFim}T23:59:59`);
-        const term = (opts?.search || "").trim();
-        if (term) {
-          const like = `%${term}%`;
-          q = q.or(`numero.ilike.${like},contato_nome.ilike.${like},contato_email.ilike.${like}`);
+        if (termo) {
+          const like = `%${termo}%`;
+          const partes = [
+            `numero.ilike.${like}`,
+            `contato_nome.ilike.${like}`,
+            `contato_email.ilike.${like}`,
+            `cliente_snapshot->>nome.ilike.${like}`,
+          ];
+          if (clienteIdsAchados.length) partes.push(`cliente_id.in.(${clienteIdsAchados.join(",")})`);
+          q = q.or(partes.join(","));
         }
         return q.range(from, from + pageSize - 1);
       },
