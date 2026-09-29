@@ -120,6 +120,7 @@ export default function Pedidos() {
 
   const [aba, setAba] = useState<AbaId>("todos");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
+  const [ordenacao, setOrdenacao] = useState<"recente" | "antigo">("recente");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [page, setPage] = useState(1);
@@ -289,12 +290,13 @@ export default function Pedidos() {
           dataInicio: dataInicio || null, dataFim: dataFim || null,
           page, pageSize,
           ids: colunaAbaAtual ? idsDaAba : undefined,
+          ordenacao,
         });
       } catch { /* erro já reportado pelo contexto */ }
       finally { if (!cancelled) setListLoading(false); }
     }, 250);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [busca, filtroStatus, dataInicio, dataFim, page, pageSize, refreshPedidos, colunaAbaAtual, idsDaAba]);
+  }, [busca, filtroStatus, dataInicio, dataFim, page, pageSize, refreshPedidos, colunaAbaAtual, idsDaAba, ordenacao]);
 
   /* Atualização automática — "tem que ter atualização automática dos
      pedidos, não ter que ficar clicando no atualizar". Mesmo padrão de
@@ -303,10 +305,10 @@ export default function Pedidos() {
      aparece nesta lista) recarrega a página atual com os filtros de
      agora, sem precisar de clique. Os filtros ficam numa ref pra o canal
      não precisar reabrir toda vez que o usuário muda uma busca. */
-  const filtrosAtuaisRef = useRef({ filtroStatus, busca, dataInicio, dataFim, page, pageSize });
+  const filtrosAtuaisRef = useRef({ filtroStatus, busca, dataInicio, dataFim, page, pageSize, ordenacao });
   useEffect(() => {
-    filtrosAtuaisRef.current = { filtroStatus, busca, dataInicio, dataFim, page, pageSize };
-  }, [filtroStatus, busca, dataInicio, dataFim, page, pageSize]);
+    filtrosAtuaisRef.current = { filtroStatus, busca, dataInicio, dataFim, page, pageSize, ordenacao };
+  }, [filtroStatus, busca, dataInicio, dataFim, page, pageSize, ordenacao]);
 
   useEffect(() => {
     let debounce: number | undefined;
@@ -318,6 +320,7 @@ export default function Pedidos() {
           status: f.filtroStatus, search: f.busca,
           dataInicio: f.dataInicio || null, dataFim: f.dataFim || null,
           page: f.page, pageSize: f.pageSize,
+          ordenacao: f.ordenacao,
         });
         void qc.invalidateQueries({ queryKey: ["sistema", "pedidos", "contagem-abas"] });
         void qc.invalidateQueries({ queryKey: ["sistema", "pedidos", "ids-etapa"] });
@@ -347,7 +350,7 @@ export default function Pedidos() {
   const visiveis = pedidos;
 
   const totalPages = Math.max(1, Math.ceil(pedidosTotal / pageSize));
-  useEffect(() => { setPage(1); }, [busca, filtroStatus, dataInicio, dataFim, pageSize, aba]);
+  useEffect(() => { setPage(1); }, [busca, filtroStatus, dataInicio, dataFim, pageSize, aba, ordenacao]);
   const currentPage = Math.min(page, totalPages);
   const pageNumbers: (number | null)[] = (() => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -500,6 +503,13 @@ export default function Pedidos() {
                 </span>
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={ordenacao} onValueChange={v => setOrdenacao(v as "recente" | "antigo")}>
+          <SelectTrigger className="h-10 w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recente">Mais recente</SelectItem>
+            <SelectItem value="antigo">Mais antigo</SelectItem>
           </SelectContent>
         </Select>
         <Input type="date" aria-label="Data inicial" value={dataInicio} onChange={e => setDataInicio(e.target.value)} className="h-10 w-[150px]" />

@@ -245,6 +245,7 @@ interface SistemaContextType extends SistemaData {
     page?: number;
     pageSize?: number;
     ids?: string[];
+    ordenacao?: "recente" | "antigo";
   }) => Promise<{ rows: Pedido[]; total: number }>;
   /* Carregadores sob demanda — a carga inicial traz só o bootstrap */
   ensureClientes: () => Promise<void>;
@@ -557,6 +558,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
      *  ids vem de `sistema_pedidos_ids_por_coluna`). `[]` explícito = "sem
      *  resultado" (não busca nada); `undefined`/omitido = sem restrição. */
     ids?: string[];
+    ordenacao?: "recente" | "antigo";
   }): Promise<{ rows: Pedido[]; total: number }> => {
     const page = opts?.page ?? 1;
     const pageSize = opts?.pageSize ?? 10;
@@ -576,11 +578,12 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         /* Desempate por id: sem ele, pedidos com o mesmo created_at saem em
            ordem arbitrária a cada consulta — e como a paginação é por OFFSET,
            isso faz linha aparecer duas vezes numa página e sumir de outra. */
+        const asc = opts?.ordenacao === "antigo";
         let q = supabase
           .from("sistema_pedidos")
           .select("*", { count: "exact" })
-          .order("created_at", { ascending: false })
-          .order("id", { ascending: false });
+          .order("created_at", { ascending: asc })
+          .order("id", { ascending: asc });
         // Filtros ANTES do recorte da página
         if (restrito) q = q.eq("vendedor_id", restrito);
         if (opts?.ids) q = q.in("id", opts.ids);
