@@ -304,8 +304,12 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
   const imgX = M + 12;
 
   for (const item of orc.itens) {
-    const obs = [resumoPersonalizacao(item), ((item as any).observacao as string | undefined)?.trim()]
-      .filter(Boolean).join(" — ");
+    /* Observação pode ter várias linhas (um nome por linha, digitado pelo
+       vendedor) -- na proposta isso viraria uma parede de texto, então
+       cada quebra de linha vira " / " (cabe mais nomes por linha). */
+    const obsBruta = ((item as any).observacao as string | undefined) ?? "";
+    const obsTexto = obsBruta.split(String.fromCharCode(10)).map(l => l.trim()).filter(Boolean).join(" / ");
+    const obs = [resumoPersonalizacao(item), obsTexto].filter(Boolean).join(" — ");
     const hasObs = !!(obs && obs.trim());
     const cardH = cardHBase + (hasObs ? 14 : 0);
 

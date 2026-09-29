@@ -1143,6 +1143,26 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
                       <p className="text-xs text-green-600 mt-1">Mockup será usado no PDF</p>
                     )}
                   </div>
+
+                  {/* Observação: campo grande, sem limite de caracteres -- é onde o
+                      vendedor lista nome por nome a ser gravado, um por linha. Na
+                      ordem de produção cada linha sai separada; na proposta as
+                      linhas viram " / " para não ocupar espaço demais. */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Observação <span className="text-gray-400 font-normal">(opcional)</span>
+                    </label>
+                    <textarea
+                      value={observacao}
+                      onChange={(e) => setObservacao(e.target.value)}
+                      placeholder={["Ex.: um nome por linha", "João Silva", "Maria Souza", "Pedro Lima"].join(String.fromCharCode(10))}
+                      rows={10}
+                      className="w-full px-3 py-2 border rounded-lg text-sm resize-y focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      Aparece na ordem de produção linha por linha, e na proposta com " / " entre as linhas.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -1263,20 +1283,6 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Observação <span className="text-gray-400 font-normal">(opcional)</span>
-                    </label>
-                    <textarea
-                      value={observacao}
-                      onChange={(e) => setObservacao(e.target.value)}
-                      placeholder="Ex.: logo frontal 1 cor, nomes, posição da gravação"
-                      rows={2}
-                      className="w-full px-3 py-2 border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/30"
-                      maxLength={140}
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Aparecerá no PDF da proposta abaixo do produto.</p>
-                  </div>
                 </>
               )}
             </div>
