@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  ChevronDown, ChevronRight, Package, Loader2, RefreshCw, Boxes, Phone, Layers, ShoppingBag, Clock, History,
+  ChevronDown, ChevronRight, Package, Loader2, RefreshCw, Search, Boxes, Phone, Layers, ShoppingBag, Clock, History,
   Tag, X, MessageSquare, Send, Camera, Video, CheckCircle2, Upload, Download, Paperclip, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -869,6 +869,7 @@ export default function PCP() {
   const [dragOverStatus, setDragOverStatus] = useState<PcpStatus | null>(null);
   const [hoverPedido, setHoverPedido] = useState<string | null>(null);
   const [tagsFiltro, setTagsFiltro] = useState<string[]>([]);
+  const [buscaPedido, setBuscaPedido] = useState("");
   /* "Com fotos / Sem fotos" — preferência por usuário, local ao navegador
      (não é dado do pedido, é jeito de olhar o quadro). */
   const [comFotos, setComFotos] = useState<boolean>(() => {
@@ -1184,9 +1185,12 @@ export default function PCP() {
   }, [rows, etiquetasMestre]);
 
   const rowsFiltradas = useMemo(() => {
-    if (tagsFiltro.length === 0) return rows;
-    return rows.filter(r => tagsFiltro.every(t => (r.tags ?? []).includes(t)));
-  }, [rows, tagsFiltro]);
+    let out = rows;
+    if (tagsFiltro.length > 0) out = out.filter(r => tagsFiltro.every(t => (r.tags ?? []).includes(t)));
+    const termo = buscaPedido.trim();
+    if (termo) out = out.filter(r => String(r.pedido_numero ?? "").includes(termo));
+    return out;
+  }, [rows, tagsFiltro, buscaPedido]);
 
   const [filtroLocal, setFiltroLocal] = useState<Record<string, FiltroLocal>>({});
   const byStatus = useMemo(() => {
@@ -2204,6 +2208,15 @@ export default function PCP() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--gw-text-muted)]" />
+            <Input
+              value={buscaPedido}
+              onChange={e => setBuscaPedido(e.target.value)}
+              placeholder="Nº do pedido"
+              className="pl-8 h-9 w-[130px] text-[13px]"
+            />
+          </div>
           <div className="flex items-center rounded-[8px] border border-[var(--gw-border)] overflow-hidden text-[12px] font-semibold">
             <button
               type="button"

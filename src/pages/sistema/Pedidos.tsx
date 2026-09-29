@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Thumb, StatusBadge } from "@/components/sistema/ui";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { statusInfo, opcoesStatus, ordemDaColuna } from "@/lib/statusPedido";
+import { statusInfo, opcoesStatus, ordemDaColuna, etapaPcpDoStatus } from "@/lib/statusPedido";
 import { ordenarTagsPorPrioridade, rotuloTag, corDaTag } from "@/lib/tagsPcp";
 import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,6 +81,8 @@ const ABAS = [
 type AbaId = typeof ABAS[number]["id"];
 
 const colunasDaAba = (id: AbaId) => ABAS.find(a => a.id === id)?.colunas ?? null;
+/** As abas de etapa têm sempre 1 coluna só (ver ABAS acima). */
+const colunaDaAba = (id: AbaId) => colunasDaAba(id)?.[0] ?? null;
 
 /** Linha ícone + texto da coluna de identificação. */
 const Linha = ({
@@ -131,35 +133,33 @@ export default function Pedidos() {
      pedidos e somava na tela: com 44 pedidos era barato, mas crescia sem
      limite — era a única contagem do sistema sem corte nenhum. A RPC
      devolve no máximo 8 linhas (uma por coluna do board), não uma por pedido. */
+  /* Cada aba conta pedidos com PELO MENOS UM produto naquela coluna do PCP
+     (não o status bruto do pedido) — é a mesma regra que filtra a lista
+     logo abaixo, então o número da aba bate com o que ela mostra. Um
+     pedido com produtos em duas colunas soma nas duas abas; "Todos" é a
+     contagem real e separada (sem duplicar). */
   const { data: contagens = {} } = useQuery<Record<AbaId, number>>({
     queryKey: ["sistema", "pedidos", "contagem-abas"],
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000,
     queryFn: async () => {
       const zero = Object.fromEntries(ABAS.map(a => [a.id, 0])) as Record<AbaId, number>;
-      /* Comercial conta só os próprios pedidos (a RPC agrega a empresa toda);
-         o volume de um vendedor é pequeno o bastante para somar aqui. */
       const restrito = vendedorRestritoDe(await obterPerfil(qc));
-      let linhas: { coluna_pcp: string; total: number }[];
-      if (restrito) {
-        const { data, error } = await supabase.from("sistema_pedidos").select("status").eq("vendedor_id", restrito);
-        if (error || !data) return zero;
-        const porColuna = new Map<string, number>();
-        for (const r of data as { status: string }[]) {
-          const col = statusInfo(r.status).colunaPcp;
-          porColuna.set(col, (porColuna.get(col) ?? 0) + 1);
-        }
-        linhas = [...porColuna].map(([coluna_pcp, total]) => ({ coluna_pcp, total }));
-      } else {
-        const { data, error } = await supabase.rpc("sistema_contar_pedidos_por_coluna" as any);
-        if (error || !data) return zero;
-        linhas = data as { coluna_pcp: string; total: number }[];
-      }
+      const [porEtapa, totalReal] = await Promise.all([
+        supabase.rpc("sistema_contar_pedidos_por_etapa" as any, { p_vendedor_id: restrito }),
+        (() => {
+          let q = supabase.from("sistema_pedidos").select("id", { count: "exact", head: true });
+          if (restrito) q = q.eq("vendedor_id", restrito);
+          return q;
+        })(),
+      ]);
+      if (porEtapa.error || !porEtapa.data) return zero;
+      const linhas = porEtapa.data as { coluna_pcp: string; total: number }[];
       for (const r of linhas) {
-        zero.todos += r.total;
         for (const a of ABAS) {
-          if (a.colunas && (a.colunas as readonly string[]).includes(r.coluna_pcp)) zero[a.id] += r.total;
+          if (a.colunas && (a.colunas as readonly string[]).includes(r.coluna_pcp)) zero[a.id] += Number(r.total);
         }
       }
+      zero.todos = Number(totalReal.count ?? 0);
       return zero;
     },
   });
@@ -199,6 +199,18 @@ export default function Pedidos() {
         pagamento[r.pedido_id] = acc;
       }
       return { porItem, pagamento, tagsPorItem, statusPorPedido };
+    },
+  });
+
+  const colunaAbaAtual = colunaDaAba(aba);
+  const { data: idsDaAba } = useQuery({
+    queryKey: ["sistema", "pedidos", "ids-etapa", colunaAbaAtual],
+    enabled: !!colunaAbaAtual,
+    staleTime: 30 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("sistema_pedidos_ids_por_coluna" as any, { p_coluna: colunaAbaAtual });
+      if (error) { toast.error(`Não foi possível filtrar por etapa. ${error.message || ""}`); return []; }
+      return (data as string[]) ?? [];
     },
   });
 
@@ -269,17 +281,20 @@ export default function Pedidos() {
     let cancelled = false;
     const timer = window.setTimeout(async () => {
       setListLoading(true);
+      // Aba de etapa ainda não trouxe a lista de ids: espera, não busca "tudo" à toa.
+      if (colunaAbaAtual && idsDaAba === undefined) { setListLoading(false); return; }
       try {
         await refreshPedidos({
           status: filtroStatus, search: busca,
           dataInicio: dataInicio || null, dataFim: dataFim || null,
           page, pageSize,
+          ids: colunaAbaAtual ? idsDaAba : undefined,
         });
       } catch { /* erro já reportado pelo contexto */ }
       finally { if (!cancelled) setListLoading(false); }
     }, 250);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [busca, filtroStatus, dataInicio, dataFim, page, pageSize, refreshPedidos]);
+  }, [busca, filtroStatus, dataInicio, dataFim, page, pageSize, refreshPedidos, colunaAbaAtual, idsDaAba]);
 
   /* Atualização automática — "tem que ter atualização automática dos
      pedidos, não ter que ficar clicando no atualizar". Mesmo padrão de
@@ -305,6 +320,7 @@ export default function Pedidos() {
           page: f.page, pageSize: f.pageSize,
         });
         void qc.invalidateQueries({ queryKey: ["sistema", "pedidos", "contagem-abas"] });
+        void qc.invalidateQueries({ queryKey: ["sistema", "pedidos", "ids-etapa"] });
         void qc.invalidateQueries({ queryKey: ["sistema", "pedidos", "producao"] });
       }, 400);
     };
@@ -326,13 +342,9 @@ export default function Pedidos() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* A aba filtra a página já carregada — não é filtro de servidor, porque
-     agrupa várias etapas e o backend só entende um status por vez. */
-  const visiveis = useMemo(() => {
-    const colunas = colunasDaAba(aba);
-    if (!colunas) return pedidos;
-    return pedidos.filter(p => (colunas as readonly string[]).includes(statusInfo(p.status).colunaPcp));
-  }, [pedidos, aba]);
+  /* O filtro por aba agora é feito no servidor (ids-etapa + refreshPedidos
+     acima), então a página já vem certa — não precisa refiltrar aqui. */
+  const visiveis = pedidos;
 
   const totalPages = Math.max(1, Math.ceil(pedidosTotal / pageSize));
   useEffect(() => { setPage(1); }, [busca, filtroStatus, dataInicio, dataFim, pageSize, aba]);
@@ -538,6 +550,23 @@ export default function Pedidos() {
           const itens = Array.isArray(p.itens) ? p.itens : [];
           const statusExibido = statusDoPedido(p);
           const info = statusInfo(statusExibido);
+          /* Produtos do pedido espalhados por mais de uma coluna do PCP:
+             mostra uma etiqueta extra (somente leitura) para cada etapa
+             além da principal — mesma ideia do "k/total produtos" do PCP. */
+          const etapasExtras = (() => {
+            const lista = producao?.statusPorPedido?.[p.id];
+            if (!lista?.length) return [];
+            const principal = etapaPcpDoStatus(statusExibido);
+            const vistas = new Set([principal.slug]);
+            const extras: ReturnType<typeof etapaPcpDoStatus>[] = [];
+            for (const slug of lista) {
+              const st = etapaPcpDoStatus(slug);
+              if (vistas.has(st.slug)) continue;
+              vistas.add(st.slug);
+              extras.push(st);
+            }
+            return extras;
+          })();
           const despachar = p.dataDespacharAte ?? addDays(p.createdAt, p.prazoProducaoDias ?? 15);
           const atrasado = prazoVencido(despachar, p.status);
           const criado = dataHoraBR(p.createdAt);
@@ -574,6 +603,16 @@ export default function Pedidos() {
                     size="sm"
                     onSelect={slug => alterarStatusPedido(p, slug)}
                   />
+                  {etapasExtras.map(st => (
+                    <span
+                      key={st.slug}
+                      className="inline-flex items-center h-[22px] px-2 rounded-full text-[11px] font-semibold whitespace-nowrap"
+                      style={{ background: st.cor, color: "#FFFFFF" }}
+                      title="Parte dos produtos deste pedido está nesta etapa"
+                    >
+                      {st.nome}
+                    </span>
+                  ))}
                 </div>
 
                 <span className="gw-title text-[17px] leading-tight truncate" style={{ fontWeight: 700 }}>

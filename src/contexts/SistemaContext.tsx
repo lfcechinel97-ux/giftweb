@@ -244,6 +244,7 @@ interface SistemaContextType extends SistemaData {
     dataFim?: string | null;
     page?: number;
     pageSize?: number;
+    ids?: string[];
   }) => Promise<{ rows: Pedido[]; total: number }>;
   /* Carregadores sob demanda — a carga inicial traz só o bootstrap */
   ensureClientes: () => Promise<void>;
@@ -551,10 +552,21 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     dataFim?: string | null;
     page?: number;
     pageSize?: number;
+    /** Restringe aos pedidos com este id — usado pelas abas de etapa do
+     *  PCP (um pedido pode ter produtos em mais de uma etapa; a lista de
+     *  ids vem de `sistema_pedidos_ids_por_coluna`). `[]` explícito = "sem
+     *  resultado" (não busca nada); `undefined`/omitido = sem restrição. */
+    ids?: string[];
   }): Promise<{ rows: Pedido[]; total: number }> => {
     const page = opts?.page ?? 1;
     const pageSize = opts?.pageSize ?? 10;
     const from = (page - 1) * pageSize;
+
+    if (opts?.ids && opts.ids.length === 0) {
+      setData(prev => ({ ...prev, pedidos: [] }));
+      setPedidosTotal(0);
+      return { rows: [], total: 0 };
+    }
 
     const restrito = vendedorRestritoDe(await obterPerfil(qc));
     const res = await qc.fetchQuery({
@@ -571,6 +583,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .order("id", { ascending: false });
         // Filtros ANTES do recorte da página
         if (restrito) q = q.eq("vendedor_id", restrito);
+        if (opts?.ids) q = q.in("id", opts.ids);
         if (opts?.status && opts.status !== "todos") q = q.eq("status", opts.status);
         if (opts?.dataInicio) q = q.gte("created_at", `${opts.dataInicio}T00:00:00`);
         if (opts?.dataFim) q = q.lte("created_at", `${opts.dataFim}T23:59:59`);
