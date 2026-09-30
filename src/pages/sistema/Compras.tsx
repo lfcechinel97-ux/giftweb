@@ -248,6 +248,7 @@ export default function Compras() {
     const escolhidos = ordenadas.filter(r => selecionados.has(r.producao_id));
     if (escolhidos.length === 0) return;
     const linhas = escolhidos.map(r => ({
+      pedido: r.pedido_numero != null ? String(r.pedido_numero) : null,
       produto: r.produto_nome || "—",
       cor: r.variacao ?? null,
       quantidade: Number(r.quantidade ?? 0),
@@ -473,7 +474,7 @@ export default function Compras() {
                   <FileText className="h-3.5 w-3.5 mr-2" /> PDF
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => void gerarRelatorio("html")}>
-                  <FileSpreadsheet className="h-3.5 w-3.5 mr-2" /> HTML (editável, cole no Excel)
+                  <FileSpreadsheet className="h-3.5 w-3.5 mr-2" /> HTML (documento pronto)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -491,48 +492,59 @@ export default function Compras() {
               {filtro === "pendentes" ? "Nada a comprar no momento." : "Nenhum produto por aqui."}
             </div>
           ) : (
-            <div className="rounded-xl border border-[var(--gw-border)] bg-white divide-y divide-[var(--gw-border)] overflow-hidden">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
               {visiveis.map(r => {
                 const foto = r.mockup_url || r.imagem_catalogo_url;
                 const origem = origemDe(r);
+                const marcado = selecionados.has(r.producao_id) && !origem;
                 return (
-                  <div key={r.producao_id} className={cn("flex flex-wrap items-center gap-3 px-3 py-2.5", selecionados.has(r.producao_id) && !origem && "bg-[#EFF6FF]")}>
-                    <div className="w-5 flex justify-center">
-                      {origem ? null : <Checkbox checked={selecionados.has(r.producao_id)} onCheckedChange={() => alternar(r.producao_id)} />}
-                    </div>
-                    {foto ? (
-                      <img src={sizedImage(foto, 120)} alt="" loading="lazy" className="h-[46px] w-[46px] rounded-[8px] object-cover bg-[var(--gw-surface-alt)] shrink-0" />
-                    ) : (
-                      <div className="h-[46px] w-[46px] rounded-[8px] bg-[var(--gw-surface-alt)] flex items-center justify-center shrink-0">
-                        <Package className="h-5 w-5 text-[var(--gw-text-muted)]" />
-                      </div>
+                  <div
+                    key={r.producao_id}
+                    onClick={origem ? undefined : () => alternar(r.producao_id)}
+                    className={cn(
+                      "relative rounded-xl border bg-white overflow-hidden transition-colors",
+                      origem ? "border-[var(--gw-border)]" : "cursor-pointer",
+                      marcado ? "border-[var(--gw-primary)] ring-2 ring-[var(--gw-primary)]" : "border-[var(--gw-border)]",
                     )}
-                    <div className="min-w-[220px] flex-1">
-                      <p className="gw-body text-[14px] font-semibold text-[#0F172A] truncate">{r.produto_nome || "—"}</p>
-                      <p className="gw-meta text-[12px] flex items-center gap-1.5">
-                        <OrderNumber value={r.pedido_numero} className="text-[12px]" />
-                        <span>· {r.cliente || "—"}</span>
-                      </p>
-                    </div>
-                    <div className="w-[84px] text-right">
-                      <p className="gw-body text-[18px] font-bold text-[#0F172A] leading-none">{r.quantidade ?? 0}</p>
-                      <p className="gw-meta text-[11px]">unidades</p>
-                    </div>
-                    <div className="w-[96px] text-right">
-                      <p className="gw-meta text-[11px]">Entrega</p>
-                      <p className="gw-body text-[13px] font-medium">{fmtData(r.data_entrega_item)}</p>
-                    </div>
-                    <div className="flex items-center gap-1.5 w-[190px] justify-end">
-                      {origem && (
-                        <>
-                          <span className="rounded-full px-3 py-1 text-[12px] font-bold text-white" style={{ backgroundColor: "#15803D" }}>
-                            Comprado {origem}
-                          </span>
-                          <Button size="sm" variant="ghost" className="h-8 px-2" disabled={desfazendo === r.producao_id} onClick={() => desfazer(r)} title="Desfazer compra">
-                            {desfazendo === r.producao_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Undo2 className="h-3.5 w-3.5" />}
-                          </Button>
-                        </>
+                  >
+                    <div className="absolute top-2 left-2 z-10">
+                      {origem ? (
+                        <span className="rounded-full px-2.5 py-1 text-[11px] font-bold text-white" style={{ backgroundColor: "#15803D" }}>
+                          Comprado {origem}
+                        </span>
+                      ) : (
+                        <Checkbox checked={marcado} onCheckedChange={() => alternar(r.producao_id)} onClick={e => e.stopPropagation()} className="bg-white shadow" />
                       )}
+                    </div>
+                    {origem && (
+                      <Button
+                        size="sm" variant="ghost"
+                        className="absolute top-1.5 right-1.5 z-10 h-7 px-2 bg-white/90 shadow"
+                        disabled={desfazendo === r.producao_id}
+                        onClick={e => { e.stopPropagation(); void desfazer(r); }}
+                        title="Desfazer compra"
+                      >
+                        {desfazendo === r.producao_id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Undo2 className="h-3.5 w-3.5" />}
+                      </Button>
+                    )}
+                    <div className="aspect-square bg-[var(--gw-surface-alt)] flex items-center justify-center p-3">
+                      {foto ? (
+                        <img src={sizedImage(foto, 300)} alt="" loading="lazy" className="h-full w-full object-contain" />
+                      ) : (
+                        <Package className="h-10 w-10 text-[var(--gw-text-muted)]" />
+                      )}
+                    </div>
+                    <div className="px-2.5 pt-2 pb-2.5 text-center border-t border-[var(--gw-border)]">
+                      <p className="gw-body text-[22px] font-extrabold text-[#0F172A] leading-none">{r.quantidade ?? 0}</p>
+                      <p className="gw-meta text-[10.5px] mb-1.5">unidades</p>
+                      <p className="gw-body text-[13px] font-semibold text-[#0F172A] leading-tight truncate" title={r.produto_nome || "—"}>
+                        {r.produto_nome || "—"}
+                      </p>
+                      <p className="gw-meta text-[11px] flex items-center justify-center gap-1 mt-0.5">
+                        <OrderNumber value={r.pedido_numero} className="text-[11px]" />
+                        <span className="truncate">· {r.cliente || "—"}</span>
+                      </p>
+                      <p className="gw-meta text-[10.5px] mt-1">Entrega {fmtData(r.data_entrega_item)}</p>
                     </div>
                   </div>
                 );
