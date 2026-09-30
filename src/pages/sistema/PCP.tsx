@@ -387,11 +387,9 @@ const iniciaisVendedor = (nome: string | null) => {
 
 function VendedorAvatar({ nome }: { nome: string | null }) {
   if (!nome) return null;
-  const cor = corDaTag(nome);
   return (
     <span
-      className="group/av relative shrink-0 h-[24px] w-[24px] rounded-full flex items-center justify-center text-white text-[10px] font-bold select-none"
-      style={{ backgroundColor: cor }}
+      className="group/av relative shrink-0 h-[24px] w-[24px] rounded-full flex items-center justify-center text-[10px] font-bold select-none bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)]"
     >
       {iniciaisVendedor(nome)}
       <span
@@ -742,32 +740,34 @@ function PcpCard({
         </div>
       </div>
 
-      {/* Corpo — foto quadrada pequena (contain, não corta o produto) +
-          nome/quantidade/técnica empilhados. */}
-      <div className="flex gap-2.5 px-3 pb-2">
-        {comFotos && (
-          foto ? (
+      {/* Corpo — foto quadrada GRANDE (contain, não corta o produto),
+          ocupando a largura do card; nome/quantidade/técnica embaixo. */}
+      {comFotos && (
+        <div className="px-3 pb-2">
+          {foto ? (
             <img
-              src={sizedImage(foto, 160)}
+              src={sizedImage(foto, 480)}
               alt=""
               loading="lazy"
               decoding="async"
-              className="h-[56px] w-[56px] rounded-[8px] object-contain bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] shrink-0"
+              className="h-[168px] w-full rounded-[10px] object-contain bg-[var(--gw-surface-alt)] border border-[var(--gw-border)]"
             />
           ) : (
-            <div className="h-[56px] w-[56px] rounded-[8px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] flex items-center justify-center shrink-0">
-              <Package className="h-6 w-6 text-[var(--gw-text-muted)]" />
+            <div className="h-[168px] w-full rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] flex items-center justify-center">
+              <Package className="h-10 w-10 text-[var(--gw-text-muted)]" />
             </div>
-          )
-        )}
-        <div className="min-w-0 flex-1 flex flex-col justify-center gap-0.5">
-          <p
-            className="gw-body text-[13px] font-semibold text-[#0F172A] leading-tight"
-            style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
-            title={row.produto_nome || undefined}
-          >
-            {row.produto_nome || "—"}
-          </p>
+          )}
+        </div>
+      )}
+      <div className="px-3 pb-2 flex flex-col gap-0.5">
+        <p
+          className="gw-body text-[13px] font-semibold text-[#0F172A] leading-tight"
+          style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+          title={row.produto_nome || undefined}
+        >
+          {row.produto_nome || "—"}
+        </p>
+        <div className="flex items-center gap-2">
           <span className="gw-num text-[15px] leading-none text-[#0F172A]" style={{ fontWeight: 700 }}>
             {row.quantidade ?? 0} <span className="text-[11px] font-medium text-[var(--gw-text-secondary)]">un.</span>
           </span>
