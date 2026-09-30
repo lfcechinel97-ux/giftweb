@@ -15,7 +15,7 @@ import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 import { useSistema } from "@/contexts/SistemaContext";
 import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
 import { gerarPedidoCompraPDF } from "./pedidoCompraPDF";
-import { gerarRelatorioComprasPDF, gerarRelatorioComprasHTML } from "./relatorioCompras";
+import { gerarRelatorioComprasPDF, gerarRelatorioComprasHTML, copiarRelatorioComprasTXT } from "./relatorioCompras";
 import { variacaoDoItem } from "./ordemProducaoPDF";
 
 /* Compras: tudo que está em "Aguardando Mercadoria" no PCP.
@@ -244,18 +244,21 @@ export default function Compras() {
   };
 
   const [gerandoRelatorio, setGerandoRelatorio] = useState(false);
-  const gerarRelatorio = async (formato: "pdf" | "html") => {
+  const gerarRelatorio = async (formato: "pdf" | "html" | "txt") => {
     const escolhidos = ordenadas.filter(r => selecionados.has(r.producao_id));
     if (escolhidos.length === 0) return;
     const linhas = escolhidos.map(r => ({
-      pedido: r.pedido_numero != null ? String(r.pedido_numero) : null,
-      cliente: r.cliente,
       produto: r.produto_nome || "—",
       cor: r.variacao ?? null,
       quantidade: Number(r.quantidade ?? 0),
-      foto: r.mockup_url || r.imagem_catalogo_url ? sizedImage((r.mockup_url || r.imagem_catalogo_url)!, 160) : null,
+      foto: r.mockup_url || r.imagem_catalogo_url ? sizedImage((r.mockup_url || r.imagem_catalogo_url)!, 300) : null,
     }));
     if (formato === "html") { gerarRelatorioComprasHTML(linhas); return; }
+    if (formato === "txt") {
+      const ok = await copiarRelatorioComprasTXT(linhas);
+      toast[ok ? "success" : "error"](ok ? "Texto copiado! Já pode colar no WhatsApp." : "Não foi possível copiar. Tente novamente.");
+      return;
+    }
     setGerandoRelatorio(true);
     toast.info("Gerando PDF…");
     try { await gerarRelatorioComprasPDF(linhas); }
@@ -463,6 +466,9 @@ export default function Compras() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => void gerarRelatorio("txt")}>
+                  <ClipboardList className="h-3.5 w-3.5 mr-2" /> Copiar texto (WhatsApp)
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => void gerarRelatorio("pdf")}>
                   <FileText className="h-3.5 w-3.5 mr-2" /> PDF
                 </DropdownMenuItem>
