@@ -47,7 +47,7 @@ export const ESTILO_CATALOGO = `
 
 .gwc-stwrap{position:relative}
 .gwc-stories{display:flex;gap:10px;overflow-x:auto;padding:20px 12px 10px;scrollbar-width:none;
-  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;cursor:grab;user-select:none}
 .gwc-stories::-webkit-scrollbar{display:none}
 .gwc-st{flex:none;width:98px;text-align:center;scroll-snap-align:center}
 .gwc-circ{position:relative;width:86px;height:86px;margin:0 auto 8px}
@@ -315,6 +315,17 @@ export const ESTILO_CATALOGO = `
 .gwc-obf{padding:14px 20px 20px}
 .gwc-obf button{width:100%;height:48px;border-radius:12px;background:var(--green-600);
   color:#fff;font-size:15px;font-weight:700}
+
+/* Onboarding em imagem única (tutorial "Como fazer seu orçamento") --
+   mesmo tamanho de moldura do popup de sempre (.gwc-obc), só o miolo
+   muda: a imagem ocupa a largura, com scroll se a tela for baixa
+   demais pra ela caber inteira. */
+.gwc-obc-img{position:relative;max-width:420px}
+.gwc-obx{position:absolute;top:8px;right:8px;z-index:1;width:32px;height:32px;border-radius:50%;
+  background:rgba(4,24,43,.55);color:#fff;font-size:20px;line-height:1;display:grid;place-items:center;
+  border:none}
+.gwc-obimgwrap{overflow-y:auto;max-height:calc(92vh - 78px)}
+.gwc-obimg{display:block;width:100%;height:auto;margin:0 auto}
 
 .gwc-estado{text-align:center;padding:44px 20px;color:var(--muted);font-size:14px}
 .gwc-footer{text-align:center;padding:30px 20px calc(96px + env(safe-area-inset-bottom));

@@ -319,6 +319,82 @@ export default function CatalogoClientes() {
     return () => clearTimeout(t1);
   }, [carregando, onboarding]);
 
+  /* No desktop não dá pra arrastar os stories com o dedo (não é touch) e
+     não existe scrollbar visível -- sem isso, quem não sabe usar a roda
+     do mouse com Shift nunca vê as categorias depois da 5ª/6ª. Duas
+     coisas: (1) rolagem automática bem devagar, de ida e volta, que para
+     assim que o visitante interage; (2) arrastar segurando o botão do
+     mouse ("click and drag"), como um carrossel comum. */
+  useEffect(() => {
+    if (carregando || onboarding) return;
+    const s = storiesRef.current;
+    if (!s) return;
+
+    let pausado = false;
+    let direcao: 1 | -1 = 1;
+    let raf = 0;
+    const VELOCIDADE = 0.35; // px por frame (~60fps) -- bem devagar de propósito
+
+    const passo = () => {
+      if (!pausado && s.scrollWidth > s.clientWidth + 4) {
+        const max = s.scrollWidth - s.clientWidth;
+        let novo = s.scrollLeft + VELOCIDADE * direcao;
+        if (novo >= max) { novo = max; direcao = -1; }
+        else if (novo <= 0) { novo = 0; direcao = 1; }
+        s.scrollLeft = novo;
+      }
+      raf = requestAnimationFrame(passo);
+    };
+    raf = requestAnimationFrame(passo);
+
+    const parar = () => { pausado = true; };
+    const retomar = () => { pausado = false; };
+    const aoSairMouse = () => { if (!arrastando) retomar(); };
+    const aoSoltarToque = () => setTimeout(retomar, 1200);
+
+    // Arrastar com o mouse (o toque já rola sozinho, não precisa disso).
+    let arrastando = false;
+    let inicioX = 0;
+    let inicioScroll = 0;
+    const aoDescerMouse = (e: MouseEvent) => {
+      arrastando = true;
+      parar();
+      inicioX = e.pageX;
+      inicioScroll = s.scrollLeft;
+      s.style.cursor = "grabbing";
+    };
+    const aoMoverMouse = (e: MouseEvent) => {
+      if (!arrastando) return;
+      e.preventDefault();
+      s.scrollLeft = inicioScroll - (e.pageX - inicioX);
+    };
+    const aoSoltarMouse = () => {
+      if (!arrastando) return;
+      arrastando = false;
+      s.style.cursor = "";
+      setTimeout(retomar, 1200);
+    };
+
+    s.addEventListener("mouseenter", parar);
+    s.addEventListener("mouseleave", aoSairMouse);
+    s.addEventListener("mousedown", aoDescerMouse);
+    window.addEventListener("mousemove", aoMoverMouse);
+    window.addEventListener("mouseup", aoSoltarMouse);
+    s.addEventListener("touchstart", parar, { passive: true });
+    s.addEventListener("touchend", aoSoltarToque, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      s.removeEventListener("mouseenter", parar);
+      s.removeEventListener("mouseleave", aoSairMouse);
+      s.removeEventListener("mousedown", aoDescerMouse);
+      window.removeEventListener("mousemove", aoMoverMouse);
+      window.removeEventListener("mouseup", aoSoltarMouse);
+      s.removeEventListener("touchstart", parar);
+      s.removeEventListener("touchend", aoSoltarToque);
+    };
+  }, [carregando, onboarding]);
+
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 1900);
@@ -670,27 +746,14 @@ export default function CatalogoClientes() {
 
         {onboarding && (
           <div className="gwc-ob" onClick={() => setOnboarding(false)}>
-            <div className="gwc-obc" onClick={(e) => e.stopPropagation()}>
-              <div className="gwc-obh">
-                <img src="/logos/giftweb-logo.png" alt="" />
-                <h2>Como fazer seu pedido</h2>
-                <p>São 3 passos rápidos, direto por aqui</p>
-              </div>
-              <div className="gwc-obb">
-                <div className="gwc-step"><div className="n">1</div><div>
-                  <h3>Escolha os produtos</h3>
-                  <p>Role o catálogo, toque nas categorias do topo ou use a busca.</p>
-                </div></div>
-                <div className="gwc-step"><div className="n">2</div><div>
-                  <h3>Defina a quantidade e adicione</h3>
-                  <p>Use os atalhos de 50 e 100 unidades ou ajuste no + e −. Depois toque em Adicionar.</p>
-                  <span className="gwc-mini g">Adicionar</span>
-                </div></div>
-                <div className="gwc-step"><div className="n">3</div><div>
-                  <h3>Finalize no WhatsApp</h3>
-                  <p>Com tudo escolhido, toque no botão verde do pedido no canto da tela e envie sua lista.</p>
-                  <span className="gwc-mini">Meu pedido</span>
-                </div></div>
+            <div className="gwc-obc gwc-obc-img" onClick={(e) => e.stopPropagation()}>
+              <button className="gwc-obx" onClick={() => setOnboarding(false)} aria-label="Fechar">×</button>
+              <div className="gwc-obimgwrap">
+                <img
+                  className="gwc-obimg"
+                  src="/catalogo/tutorial-como-fazer-orcamento.webp"
+                  alt="Como fazer seu orçamento: 1. Selecione a categoria. 2. Selecione o produto e a quantidade. 3. Revise o carrinho e solicite no WhatsApp."
+                />
               </div>
               <div className="gwc-obf">
                 <button onClick={() => setOnboarding(false)}>Ver o catálogo</button>
