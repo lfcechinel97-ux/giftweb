@@ -757,16 +757,16 @@ function PcpCard({
             {tecnicaCurta && (
               <span
                 className="absolute left-1.5 bottom-1.5 gw-body text-[10px] font-bold leading-none rounded-[5px] px-[7px] py-[4px] text-white"
-                style={{ backgroundColor: "rgba(15,23,42,.72)" }}
+                style={{ backgroundColor: "rgba(0,0,0,.78)" }}
               >
                 {tecnicaCurta}
               </span>
             )}
             <span
               className="absolute right-1.5 bottom-1.5 gw-num leading-none rounded-[5px] px-[7px] py-[4px] text-white"
-              style={{ backgroundColor: "rgba(15,23,42,.72)" }}
+              style={{ backgroundColor: "rgba(0,0,0,.78)" }}
             >
-              <span className="text-[14px] font-bold">{row.quantidade ?? 0}</span>{" "}
+              <span className="text-[16px] font-extrabold">{row.quantidade ?? 0}</span>{" "}
               <span className="text-[9px] font-medium">un.</span>
             </span>
           </div>
