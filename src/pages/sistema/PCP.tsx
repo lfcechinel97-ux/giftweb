@@ -28,7 +28,7 @@ import { COLUNAS_PCP, MOSTRAR_COLUNA_ANOTACOES, corDaColuna, corFundoDaColuna, s
 import { useSistema, type Pedido, type PedidoItem } from "@/contexts/SistemaContext";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
-import { resumoPersonalizacao } from "@/lib/personalizacao";
+import { resumoPersonalizacao, rotuloPersonalizacao } from "@/lib/personalizacao";
 import { ordenarTagsPorPrioridade, rotuloTag, corDaTag, pastelizar } from "@/lib/tagsPcp";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -634,6 +634,9 @@ function PcpCard({
   const tempo = tempoNaEtapaCurto(row.horas_na_etapa);
   const dataCriacao = dataCurta(row.item_criado_em);
   const tecnica = resumoPersonalizacao({ personalizacao: row.item_personalizacao, aplicacoes: row.item_aplicacoes });
+  /* Sem o número de aplicações -- só a técnica (Laser, DTF UV...), pro
+     selo caber no canto da foto. */
+  const tecnicaCurta = rotuloPersonalizacao(row.item_personalizacao);
   /* As tags do item (quem faz é a produção/vendedor -- "TERCEIRIZADA - nome"
      diz qual terceirizada de verdade, isso não tem por que repetir o nome
      da coluna). Pastel, mesma cor determinística de sempre (corDaTag), só
@@ -732,22 +735,41 @@ function PcpCard({
       </div>
 
       {/* Corpo — foto quadrada GRANDE (contain, não corta o produto),
-          ocupando a largura do card; nome/quantidade/técnica embaixo. */}
+          ocupando a largura do card; técnica e quantidade ficam dentro do
+          retângulo de fundo, cantos inferiores (não precisam estar em cima
+          do produto em si). Nome fica embaixo, fora da foto. */}
       {comFotos && (
         <div className="px-3 pb-2">
-          {foto ? (
-            <img
-              src={sizedImage(foto, 480)}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              className="h-[168px] w-full rounded-[10px] object-contain bg-[var(--gw-surface-alt)] border border-[var(--gw-border)]"
-            />
-          ) : (
-            <div className="h-[168px] w-full rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] flex items-center justify-center">
-              <Package className="h-10 w-10 text-[var(--gw-text-muted)]" />
-            </div>
-          )}
+          <div className="relative h-[168px] w-full rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] overflow-hidden">
+            {foto ? (
+              <img
+                src={sizedImage(foto, 480)}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center">
+                <Package className="h-10 w-10 text-[var(--gw-text-muted)]" />
+              </div>
+            )}
+            {tecnicaCurta && (
+              <span
+                className="absolute left-1.5 bottom-1.5 gw-body text-[10px] font-bold leading-none rounded-[5px] px-[7px] py-[4px] text-white"
+                style={{ backgroundColor: "rgba(15,23,42,.72)" }}
+              >
+                {tecnicaCurta}
+              </span>
+            )}
+            <span
+              className="absolute right-1.5 bottom-1.5 gw-num leading-none rounded-[5px] px-[7px] py-[4px] text-white"
+              style={{ backgroundColor: "rgba(15,23,42,.72)" }}
+            >
+              <span className="text-[14px] font-bold">{row.quantidade ?? 0}</span>{" "}
+              <span className="text-[9px] font-medium">un.</span>
+            </span>
+          </div>
         </div>
       )}
       <div className="px-3 pb-2 flex flex-col gap-0.5">
@@ -758,14 +780,16 @@ function PcpCard({
         >
           {row.produto_nome || "—"}
         </p>
-        <div className="flex items-center gap-2">
-          <span className="gw-num text-[15px] leading-none text-[#0F172A]" style={{ fontWeight: 700 }}>
-            {row.quantidade ?? 0} <span className="text-[11px] font-medium text-[var(--gw-text-secondary)]">un.</span>
-          </span>
-          {tecnica && (
-            <span className="text-[11px] text-[var(--gw-text-secondary)] truncate">{tecnica}</span>
-          )}
-        </div>
+        {!comFotos && (
+          <div className="flex items-center gap-2">
+            <span className="gw-num text-[15px] leading-none text-[#0F172A]" style={{ fontWeight: 700 }}>
+              {row.quantidade ?? 0} <span className="text-[11px] font-medium text-[var(--gw-text-secondary)]">un.</span>
+            </span>
+            {tecnica && (
+              <span className="text-[11px] text-[var(--gw-text-secondary)] truncate">{tecnica}</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Rodapé — tag da etapa (pastel) + demais tags, 1 linha só. */}
