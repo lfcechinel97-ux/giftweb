@@ -58,6 +58,15 @@ export const ESTILO_CATALOGO = `
   width:138%;height:138%;object-fit:contain;filter:drop-shadow(0 5px 10px rgba(9,36,60,.18))}
 .gwc-st span{font-size:11.5px;line-height:1.3;color:var(--ink);font-weight:600;display:block}
 .gwc-st.on .gwc-circ::before{background:#dbe7f5;box-shadow:0 0 0 2.5px var(--green-500)}
+
+/* Story "Os Mais Vendidos" -- texto em vez de foto de produto, sempre o
+   primeiro da fileira. */
+.gwc-circ.top10::before{background:linear-gradient(150deg,#0a2a4d,#123a63)}
+.gwc-st.on .gwc-circ.top10::before{box-shadow:0 0 0 2.5px var(--green-500)}
+.gwc-top10txt{position:relative;z-index:1;width:100%;height:100%;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;
+  font-family:'CaveatGW','Segoe Script',cursive;font-weight:700;color:#fff;
+  font-size:19px;line-height:1.05;letter-spacing:.02em}
 .gwc-stfade{position:absolute;top:0;bottom:0;right:0;width:34px;pointer-events:none;
   background:linear-gradient(90deg,rgba(255,255,255,0),#fff)}
 
@@ -133,6 +142,14 @@ export const ESTILO_CATALOGO = `
 .gwc-tag{position:absolute;top:8px;left:8px;background:var(--amber-bg);color:var(--amber);
   font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
   padding:3px 7px;border-radius:5px;z-index:2;border:1px solid rgba(180,83,9,.18)}
+
+/* Selo "TOP N" da seção Os Mais Vendidos -- broche/fita de medalha, não
+   mais a etiqueta amarela clarinha. */
+.gwc-topn{position:absolute;top:0;left:14px;z-index:2;min-width:34px;text-align:center;
+  background:linear-gradient(160deg,#f5c94a,#c9891c);color:#5c3a00;
+  font-size:11.5px;font-weight:800;letter-spacing:.02em;
+  padding:6px 8px 13px;box-shadow:0 3px 7px rgba(0,0,0,.28);
+  clip-path:polygon(0 0,100% 0,100% 76%,50% 100%,0 76%)}
 .gwc-info{padding:10px 11px 11px;display:flex;flex-direction:column;flex:1;gap:7px}
 .gwc-info h3{font-size:12.5px;font-weight:500;line-height:1.35;color:var(--ink-2);min-height:2.7em;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}

@@ -37,6 +37,30 @@ interface ItemCarrinho {
 }
 
 const MAX_BOLINHAS = 6;
+
+/** Categoria virtual "Mais Vendidos": sempre a primeira, escolhida por
+    curadoria (não é a coluna `destaque`) -- os produtos continuam
+    aparecendo também na própria categoria real. "primeira"/"segunda"
+    escolhe imagem_url ou imagem_secundaria_url como foto inicial do
+    card, pra mostrar a cor/ângulo combinado com o vendedor. */
+const MAIS_VENDIDOS_SLUG = "mais-vendidos";
+/** Sentinela gravado na URL quando alguém clica em "limpar" -- distingue
+    "usuário escolheu ver tudo" de "acabou de abrir o link" (sem isso os
+    dois ficam iguais -- grupo ausente -- e o catálogo nunca conseguiria
+    abrir direto em Mais Vendidos por padrão). */
+const TODOS_SLUG = "todos";
+const MAIS_VENDIDOS_LISTA: { id: string; foto: "primeira" | "segunda" }[] = [
+  { id: "2e41f8b0-bbe5-4127-9c63-b49859a2c0ca", foto: "segunda" },  // Garrafa Quencher 1,2L Canudo Inox
+  { id: "b72a6742-313b-48ac-84d3-90f448d2a8c6", foto: "segunda" },  // Copo Térmico Cuia Premium 350 mL
+  { id: "c9265e47-1d90-423b-94ff-658f13e2e9e9", foto: "primeira" }, // Mochila De Nylon Usb 20L (a mais barata)
+  { id: "8ea735b4-c48e-4557-8b15-21c22d68396f", foto: "primeira" }, // Garrafa Led Termômetro 500 Ml
+  { id: "04c91bbf-cbed-4937-b81f-96729763af76", foto: "primeira" }, // Kit Churrasco No Estojo C/ 2 Peças
+  { id: "1ff86f83-6e28-43bb-9b09-387fb9398fb5", foto: "segunda" },  // Copo Térmico 473mL C/ Abridor
+  { id: "f9226a67-26d2-4fa0-bb6b-dacd485cac0e", foto: "segunda" },  // Guarda-Chuva Automático
+  { id: "93d613ec-5dec-4cf6-9df0-187caacf9212", foto: "segunda" },  // Bolsa Térmica 15L
+  { id: "7e898310-cb14-439f-b5c3-7efebf46a8e0", foto: "segunda" },  // Kit Vinho 5Pçs Formato Garrafa
+  { id: "ffe422eb-f2fe-445a-b12f-670daa75b104", foto: "primeira" }, // Fone De Ouvido Bluetooth
+];
 /**
  * Teto do texto do wa.me ja codificado. O limite real varia por aparelho e
  * versao do WhatsApp; abaixo disso nao vi truncamento em lugar nenhum, e passar
@@ -92,15 +116,21 @@ const subtotalDoItem = (i: ItemCarrinho): number | null => {
  * derrubava os handlers no meio da interacao.
  */
 const Card = memo(function Card({
-  p, qtd, marcado, onQtd, onAdd,
+  p, qtd, marcado, onQtd, onAdd, topN, fotoInicial,
 }: {
   p: Produto; qtd: number; marcado: boolean;
   onQtd: (v: number) => void; onAdd: () => void;
+  /** Selo "TOP N" (broche), só na seção Mais Vendidos -- substitui a tag
+      "Mais vendido" nesse contexto específico. */
+  topN?: number;
+  /** Qual foto abre por padrão nesse card -- Mais Vendidos escolhe a
+      1ª ou 2ª foto conforme o produto (continua trocável no hover/toque). */
+  fotoInicial?: "primeira" | "segunda";
 }) {
   // Um unico estado controla qual foto aparece, alimentado por hover (mouse) e
   // por toque (celular). A opacidade vai inline de proposito: com classe + CSS
   // alguma regra do site vencia a especificidade e a troca nao acontecia.
-  const [mostrandoAlt, setMostrandoAlt] = useState(false);
+  const [mostrandoAlt, setMostrandoAlt] = useState(fotoInicial === "segunda");
   const temSegunda = !!p.imagem_secundaria_url;
   const passo = passoDaQuantidade(p);
 
@@ -134,7 +164,7 @@ const Card = memo(function Card({
         onMouseLeave={temSegunda && !usouToque() ? () => setMostrandoAlt(false) : undefined}
         onClick={temSegunda ? () => setMostrandoAlt((v) => !v) : undefined}
       >
-        {p.destaque && <span className="gwc-tag">Mais vendido</span>}
+        {topN ? <span className="gwc-topn">TOP {topN}</span> : p.destaque && <span className="gwc-tag">Mais vendido</span>}
         {p.imagem_url && (
           <img
             className="f1"
@@ -245,8 +275,10 @@ export default function CatalogoClientes() {
   const grupoNaUrl = params.get("grupo");
   const setGrupoAtivo = (slug: string | null) => {
     const novo = new URLSearchParams(params);
-    if (slug) novo.set("grupo", slug);
-    else novo.delete("grupo");
+    // Sem slug = "limpar": grava o sentinela TODOS_SLUG em vez de remover o
+    // parâmetro -- se removesse, um link recarregado cairia de novo em
+    // Mais Vendidos (o padrão de quando não há ?grupo na URL).
+    novo.set("grupo", slug ?? TODOS_SLUG);
     // replace: filtrar nao e navegacao nova, entao nao empilha uma entrada no
     // historico a cada toque nos stories
     setParams(novo, { replace: true });
@@ -257,7 +289,6 @@ export default function CatalogoClientes() {
   const [onboarding, setOnboarding] = useState(true);
   const [adicionado, setAdicionado] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const caroRef = useRef<HTMLDivElement>(null);
   const storiesRef = useRef<HTMLDivElement>(null);
 
   /**
@@ -331,10 +362,27 @@ export default function CatalogoClientes() {
    * uma pagina vazia sem explicacao. So valida depois que os produtos chegam,
    * senao o filtro sumiria durante o carregamento.
    */
+  /* Sem ?grupo na URL = acabou de abrir o link -> Mais Vendidos por padrão.
+     ?grupo=todos = clicou em "limpar" -> mostra tudo. Slug desconhecido
+     (categoria renomeada/link antigo) também cai em "mostra tudo". */
   const grupoAtivo =
-    !grupoNaUrl || (produtos.length && !produtos.some((p) => p.grupo === grupoNaUrl))
+    grupoNaUrl === TODOS_SLUG
       ? null
-      : grupoNaUrl;
+      : (grupoNaUrl || MAIS_VENDIDOS_SLUG) === MAIS_VENDIDOS_SLUG
+        ? MAIS_VENDIDOS_SLUG
+        : produtos.length && !produtos.some((p) => p.grupo === grupoNaUrl)
+          ? null
+          : grupoNaUrl;
+
+  const produtosMaisVendidos = useMemo(() => {
+    const porId = new Map(produtos.map((p) => [p.id, p]));
+    return MAIS_VENDIDOS_LISTA
+      .map(({ id, foto }, i) => {
+        const p = porId.get(id);
+        return p ? { p, foto, top: i + 1 } : null;
+      })
+      .filter((x): x is { p: Produto; foto: "primeira" | "segunda"; top: number } => !!x);
+  }, [produtos]);
 
   const grupos = useMemo(() => {
     const mapa = new Map<string, { slug: string; rot: string; n: number }>();
@@ -344,8 +392,10 @@ export default function CatalogoClientes() {
       if (atual) atual.n++;
       else mapa.set(p.grupo, { slug: p.grupo, rot: p.grupo_rotulo || p.grupo, n: 1 });
     });
-    return [...mapa.values()];
-  }, [produtos]);
+    const reais = [...mapa.values()];
+    if (!produtosMaisVendidos.length) return reais;
+    return [{ slug: MAIS_VENDIDOS_SLUG, rot: "Os Mais Vendidos", n: produtosMaisVendidos.length }, ...reais];
+  }, [produtos, produtosMaisVendidos]);
 
   const secoes = useMemo(() => {
     const ordem: string[] = [];
@@ -360,8 +410,6 @@ export default function CatalogoClientes() {
       itens: mapa.get(c)!,
     }));
   }, [produtos]);
-
-  const destaques = useMemo(() => produtos.filter((p) => p.destaque), [produtos]);
 
   const filtrando = !!busca.trim() || !!grupoAtivo;
   const passaNoFiltro = (p: Produto) => {
@@ -536,8 +584,10 @@ export default function CatalogoClientes() {
                         className={`gwc-st ${grupoAtivo === g.slug ? "on" : ""}`}
                         onClick={() => selecionarGrupo(g.slug)}
                       >
-                        <div className="gwc-circ">
-                          <img src={`/catalogo/grupo-${g.slug}.png`} alt="" loading="lazy" />
+                        <div className={`gwc-circ ${g.slug === MAIS_VENDIDOS_SLUG ? "top10" : ""}`}>
+                          {g.slug === MAIS_VENDIDOS_SLUG
+                            ? <span className="gwc-top10txt">TOP<br />10</span>
+                            : <img src={`/catalogo/grupo-${g.slug}.png`} alt="" loading="lazy" />}
                         </div>
                         <span>{g.rot}</span>
                       </button>
@@ -548,50 +598,49 @@ export default function CatalogoClientes() {
                 </div>
               )}
 
-              {grupoAtivo && !busca.trim() && (
-                <div className="gwc-filtro">
-                  <span>Mostrando <b>{grupos.find((g) => g.slug === grupoAtivo)?.rot}</b></span>
-                  <button onClick={() => setGrupoAtivo(null)}>✕ limpar</button>
-                </div>
-              )}
-
-              {!filtrando && destaques.length > 0 && (
+              {grupoAtivo === MAIS_VENDIDOS_SLUG ? (
+                // Segue o mesmo padrão em grade das outras categorias (não é
+                // mais o carrossel lateral) -- só o título muda pro cursivo
+                // que já existia, sem a barra "Mostrando X".
                 <section>
                   <p className="gwc-cursivo">Os Mais Vendidos</p>
-                  <div className="gwc-carowrap">
-                    <button className="gwc-caroarrow l"
-                      onClick={() => caroRef.current?.scrollBy({ left: -caroRef.current.clientWidth * 0.8, behavior: "smooth" })}
-                      aria-label="Anterior">‹</button>
-                    <div className="gwc-caro" ref={caroRef}>
-                      {destaques.map((p) => <Card key={p.id} {...cardProps(p)} />)}
-                    </div>
-                    <button className="gwc-caroarrow r"
-                      onClick={() => caroRef.current?.scrollBy({ left: caroRef.current.clientWidth * 0.8, behavior: "smooth" })}
-                      aria-label="Próximo">›</button>
+                  <div className="gwc-grid">
+                    {produtosMaisVendidos.map(({ p, foto, top }) => (
+                      <Card key={p.id} {...cardProps(p)} topN={top} fotoInicial={foto} />
+                    ))}
                   </div>
                 </section>
+              ) : (
+                <>
+                  {grupoAtivo && !busca.trim() && (
+                    <div className="gwc-filtro">
+                      <span>Mostrando <b>{grupos.find((g) => g.slug === grupoAtivo)?.rot}</b></span>
+                      <button onClick={() => setGrupoAtivo(null)}>✕ limpar</button>
+                    </div>
+                  )}
+
+                  {secoes.map((s, i) => {
+                    const itens = s.itens.filter(passaNoFiltro);
+                    if (!itens.length) return null;
+                    return (
+                      <div key={s.nome}>
+                        <section>
+                          <div className="gwc-head">
+                            <h2>{s.rot}</h2>
+                            <span>{itens.length} {itens.length === 1 ? "item" : "itens"}</span>
+                          </div>
+                          <div className="gwc-grid">
+                            {itens.map((p) => <Card key={p.id} {...cardProps(p)} />)}
+                          </div>
+                        </section>
+                        {!filtrando && i % 3 === 2 && i < secoes.length - 1 && <Beneficios />}
+                      </div>
+                    );
+                  })}
+                </>
               )}
 
-              {secoes.map((s, i) => {
-                const itens = s.itens.filter(passaNoFiltro);
-                if (!itens.length) return null;
-                return (
-                  <div key={s.nome}>
-                    <section>
-                      <div className="gwc-head">
-                        <h2>{s.rot}</h2>
-                        <span>{itens.length} {itens.length === 1 ? "item" : "itens"}</span>
-                      </div>
-                      <div className="gwc-grid">
-                        {itens.map((p) => <Card key={p.id} {...cardProps(p)} />)}
-                      </div>
-                    </section>
-                    {!filtrando && i % 3 === 2 && i < secoes.length - 1 && <Beneficios />}
-                  </div>
-                );
-              })}
-
-              {filtrando && totalVisiveis === 0 && (
+              {grupoAtivo !== MAIS_VENDIDOS_SLUG && filtrando && totalVisiveis === 0 && (
                 <p className="gwc-estado">Nenhum produto encontrado.<br />Tente outro termo.</p>
               )}
               {!filtrando && <Beneficios />}
