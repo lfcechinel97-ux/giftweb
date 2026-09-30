@@ -225,11 +225,105 @@ function getImageUrls(p: any): string[] {
     .slice(0, 4);
 }
 
-/* 500 estourava o statement_timeout do banco no upsert (catálogo já é grande
-   o bastante para o lote de 500 linhas, com seus índices, não caber no
-   tempo padrão). 100 por vez evita isso, sem mudar o resultado final --
-   só faz mais viagens menores. */
-const CHUNK_SIZE = 100;
+/* 500 estourava o statement_timeout do banco no upsert de cada lote
+   (catálogo grande o bastante para isso). Só diminuir o lote (100) trocou
+   um problema por outro: com o catálogo inteiro, virou upsert sequencial
+   demais e o conjunto passou do tempo que a Supabase deixa uma edge
+   function ficar rodando (limite de 150s por chamada -- é da plataforma,
+   não dá para aumentar por configuração do banco). A saída real é rodar
+   vários lotes AO MESMO TEMPO (ver runWithConcurrency), não um por vez. */
+const CHUNK_SIZE = 150;
+const UPSERT_CONCORRENCIA = 6;
+
+/** Roda `worker` sobre `items`, no máximo `limite` de cada vez em paralelo
+ *  (não é Promise.all direto -- isso abriria uma conexão por item de uma
+ *  vez só). Para no primeiro erro (rejeita como Promise.all faria). */
+async function runWithConcurrency<T>(items: T[], limite: number, worker: (item: T) => Promise<void>): Promise<void> {
+  let indice = 0;
+  let falhou: unknown = null;
+  async function proximo(): Promise<void> {
+    if (falhou) return;
+    const i = indice++;
+    if (i >= items.length) return;
+    try {
+      await worker(items[i]);
+    } catch (e) {
+      falhou = e;
+      return;
+    }
+    return proximo();
+  }
+  await Promise.all(Array.from({ length: Math.min(limite, items.length) }, () => proximo()));
+  if (falhou) throw falhou;
+}
+
+/** Roda DEPOIS da resposta (ver EdgeRuntime.waitUntil na chamada). Vincula
+ *  variantes ao produto pai e recalcula as categorias em destaque -- nada
+ *  aqui é estoque/preço, então um erro não derruba a sincronização nem
+ *  precisa segurar quem está esperando a resposta. */
+async function executarPosProcessamento(supabaseClient: ReturnType<typeof createClient>): Promise<void> {
+  try {
+    console.log("[SYNC-BG] Stage 4: Setting produto_pai via SQL join...");
+    const { error: rpcError } = await supabaseClient.rpc("set_variantes_por_prefixo");
+    if (rpcError) console.error("[SYNC-BG] Stage 4 RPC error:", JSON.stringify(rpcError));
+    else console.log("[SYNC-BG] Stage 4 OK");
+  } catch (e) {
+    console.error("[SYNC-BG] Stage 4 fatal (non-blocking):", (e as Error).message);
+  }
+
+  try {
+    console.log("[SYNC-BG] Stage 5: Populating product_spotlight_categories...");
+    const { data: spotlightCats } = await supabaseClient
+      .from("spotlight_categories")
+      .select("id, slug")
+      .eq("category_type", "base")
+      .eq("active", true);
+
+    if (spotlightCats && spotlightCats.length > 0) {
+      const slugToId = new Map<string, string>();
+      for (const sc of spotlightCats) slugToId.set(sc.slug, sc.id);
+
+      const allProducts: { id: string; categoria: string }[] = [];
+      let offset = 0;
+      const batchSize = 1000;
+      while (true) {
+        const { data: batch } = await supabaseClient
+          .from("products_cache")
+          .select("id, categoria")
+          .eq("ativo", true)
+          .range(offset, offset + batchSize - 1);
+        if (!batch || batch.length === 0) break;
+        allProducts.push(...batch);
+        if (batch.length < batchSize) break;
+        offset += batchSize;
+      }
+      console.log("[SYNC-BG] Stage 5: Found", allProducts.length, "active products to map");
+
+      const mappings: { product_id: string; category_id: string; position: number }[] = [];
+      for (const prod of allProducts) {
+        const cat = prod.categoria || "outros";
+        const spotlightSlug = CATEGORIA_TO_SLUG[cat] || cat;
+        const catId = slugToId.get(spotlightSlug);
+        if (catId) mappings.push({ product_id: prod.id, category_id: catId, position: 0 });
+      }
+      console.log("[SYNC-BG] Stage 5: Mapped", mappings.length, "product-category pairs");
+
+      await runWithConcurrency(
+        Array.from({ length: Math.ceil(mappings.length / CHUNK_SIZE) }, (_, i) => mappings.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE)),
+        UPSERT_CONCORRENCIA,
+        async (chunk) => {
+          const { error: mapError } = await supabaseClient
+            .from("product_spotlight_categories")
+            .upsert(chunk, { onConflict: "product_id,category_id", ignoreDuplicates: true });
+          if (mapError) throw new Error(JSON.stringify(mapError));
+        },
+      ).catch((e) => console.error("[SYNC-BG] Stage 5 upsert error:", (e as Error).message));
+      console.log("[SYNC-BG] Stage 5 OK");
+    }
+  } catch (stage5Err) {
+    console.error("[SYNC-BG] Stage 5 error (non-fatal):", (stage5Err as Error).message);
+  }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -422,93 +516,48 @@ serve(async (req) => {
       }
     }
 
+    const lotes: any[][] = [];
     for (let i = 0; i < registros.length; i += CHUNK_SIZE) {
-      const chunk = registros.slice(i, i + CHUNK_SIZE).map((r) => {
+      lotes.push(registros.slice(i, i + CHUNK_SIZE).map((r) => {
         if (codigosManual.has(r.codigo_amigavel)) {
           // Keep admin-edited preco_custo
           const { preco_custo: _ignored, ...rest } = r;
           return rest;
         }
         return r;
-      });
+      }));
+    }
+    await runWithConcurrency(lotes, UPSERT_CONCORRENCIA, async (chunk) => {
       const { error } = await supabaseClient.from("products_cache").upsert(chunk, { onConflict: "codigo_amigavel" });
       if (error) throw new Error("Upsert falhou: " + JSON.stringify(error));
-    }
+    });
     console.log("[SYNC] Stage 3c OK - manual overrides preserved:", codigosManual.size);
 
-    console.log("[SYNC] Stage 4: Setting produto_pai via SQL join...");
-    const { error: rpcError } = await supabaseClient.rpc("set_variantes_por_prefixo");
-    if (rpcError) console.error("[SYNC] Stage 4 RPC error:", JSON.stringify(rpcError));
-    console.log("[SYNC] Stage 4 OK");
-
-    // Stage 5: Auto-populate product_spotlight_categories
-    console.log("[SYNC] Stage 5: Populating product_spotlight_categories...");
-    try {
-      // Fetch all spotlight_categories (base type)
-      const { data: spotlightCats } = await supabaseClient
-        .from("spotlight_categories")
-        .select("id, slug")
-        .eq("category_type", "base")
-        .eq("active", true);
-
-      if (spotlightCats && spotlightCats.length > 0) {
-        const slugToId = new Map<string, string>();
-        for (const sc of spotlightCats) {
-          slugToId.set(sc.slug, sc.id);
-        }
-
-        // Fetch all active products with their categoria
-        const allProducts: { id: string; categoria: string }[] = [];
-        let offset = 0;
-        const batchSize = 1000;
-        while (true) {
-          const { data: batch } = await supabaseClient
-            .from("products_cache")
-            .select("id, categoria")
-            .eq("ativo", true)
-            .range(offset, offset + batchSize - 1);
-          if (!batch || batch.length === 0) break;
-          allProducts.push(...batch);
-          if (batch.length < batchSize) break;
-          offset += batchSize;
-        }
-        console.log("[SYNC] Stage 5: Found", allProducts.length, "active products to map");
-
-        // Map each product to its spotlight category
-        const mappings: { product_id: string; category_id: string; position: number }[] = [];
-        for (const prod of allProducts) {
-          const cat = prod.categoria || "outros";
-          // Try direct match first
-          let spotlightSlug = CATEGORIA_TO_SLUG[cat] || cat;
-          const catId = slugToId.get(spotlightSlug);
-          if (catId) {
-            mappings.push({ product_id: prod.id, category_id: catId, position: 0 });
-          }
-        }
-        console.log("[SYNC] Stage 5: Mapped", mappings.length, "product-category pairs");
-
-        // Upsert in chunks (on conflict do nothing via unique constraint)
-        for (let i = 0; i < mappings.length; i += CHUNK_SIZE) {
-          const chunk = mappings.slice(i, i + CHUNK_SIZE);
-          const { error: mapError } = await supabaseClient
-            .from("product_spotlight_categories")
-            .upsert(chunk, { onConflict: "product_id,category_id", ignoreDuplicates: true });
-          if (mapError) console.error("[SYNC] Stage 5 upsert error:", JSON.stringify(mapError));
-        }
-        console.log("[SYNC] Stage 5 OK");
-      }
-    } catch (stage5Err) {
-      console.error("[SYNC] Stage 5 error (non-fatal):", (stage5Err as Error).message);
-    }
-
-    // Mark products not seen in this sync as inactive
-    const limite = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    await supabaseClient.from("products_cache").update({ ativo: false }).lt("ultima_sync", limite).eq("ativo", true);
+    // Mark products not seen in this sync as inactive (estoque real depende
+    // disso -- fica na parte que espera terminar antes de responder).
+    const limiteInativos = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    await supabaseClient.from("products_cache").update({ ativo: false }).lt("ultima_sync", limiteInativos).eq("ativo", true);
 
     await supabaseClient
       .from("sync_log")
       .insert({ total_products: registros.length, status: useMock ? "success-mock" : "success" });
-    console.log("[SYNC] DONE - total:", registros.length);
+    console.log("[SYNC] DONE (estoque/preço) - total:", registros.length);
+
+    /* Estágios 4 e 5 (vínculo pai/variante e categorias em destaque) não
+       mudam estoque nem preço -- são cosméticos para o catálogo público.
+       Rodar isso ANTES de responder foi o que estourava o limite de 150s
+       da edge function quando o catálogo é grande. Dispara em segundo
+       plano (EdgeRuntime.waitUntil mantém a function viva depois da
+       resposta) e devolve a resposta assim que o que importa (estoque)
+       já está gravado. */
+    const posProcessamento = executarPosProcessamento(supabaseClient);
+    // deno-lint-ignore no-explicit-any
+    const runtime = (globalThis as any).EdgeRuntime;
+    if (runtime && typeof runtime.waitUntil === "function") {
+      runtime.waitUntil(posProcessamento);
+    } else {
+      posProcessamento.catch((e) => console.error("[SYNC-BG] falhou fora do EdgeRuntime:", (e as Error).message));
+    }
 
     return new Response(JSON.stringify({ success: true, total: registros.length, mock: useMock }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
