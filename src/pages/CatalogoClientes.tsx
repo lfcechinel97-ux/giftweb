@@ -586,7 +586,7 @@ export default function CatalogoClientes() {
                       >
                         <div className={`gwc-circ ${g.slug === MAIS_VENDIDOS_SLUG ? "top10" : ""}`}>
                           {g.slug === MAIS_VENDIDOS_SLUG
-                            ? <span className="gwc-top10txt">TOP<br />10</span>
+                            ? <img src="/catalogo/top10-badge.png" alt="Top 10 mais vendidos" loading="lazy" className="gwc-top10img" />
                             : <img src={`/catalogo/grupo-${g.slug}.png`} alt="" loading="lazy" />}
                         </div>
                         <span>{g.rot}</span>

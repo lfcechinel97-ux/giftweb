@@ -59,14 +59,9 @@ export const ESTILO_CATALOGO = `
 .gwc-st span{font-size:11.5px;line-height:1.3;color:var(--ink);font-weight:600;display:block}
 .gwc-st.on .gwc-circ::before{background:#dbe7f5;box-shadow:0 0 0 2.5px var(--green-500)}
 
-/* Story "Os Mais Vendidos" -- texto em vez de foto de produto, sempre o
-   primeiro da fileira. */
-.gwc-circ.top10::before{background:linear-gradient(150deg,#0a2a4d,#123a63)}
-.gwc-st.on .gwc-circ.top10::before{box-shadow:0 0 0 2.5px var(--green-500)}
-.gwc-top10txt{position:relative;z-index:1;width:100%;height:100%;display:flex;
-  flex-direction:column;align-items:center;justify-content:center;
-  font-family:'CaveatGW','Segoe Script',cursive;font-weight:700;color:#fff;
-  font-size:19px;line-height:1.05;letter-spacing:.02em}
+/* Story "Os Mais Vendidos" -- selo TOP 10, sempre o primeiro da fileira. */
+.gwc-top10img{width:118%!important;height:118%!important;transform:translate(-50%,-50%)!important;
+  filter:drop-shadow(0 3px 7px rgba(9,36,60,.22))}
 .gwc-stfade{position:absolute;top:0;bottom:0;right:0;width:34px;pointer-events:none;
   background:linear-gradient(90deg,rgba(255,255,255,0),#fff)}
 
