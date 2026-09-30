@@ -86,6 +86,15 @@ export function quantidadeInicial(p: ProdutoComPreco): number {
 }
 
 /**
+ * Quantidade pre-selecionada ao abrir o card: o degrau do MEIO (ex.: 50 un.),
+ * nao o minimo. Cai no minimo quando o produto nao tem as tres faixas.
+ */
+export function quantidadePadrao(p: ProdutoComPreco): number {
+  const faixas = faixasDoProduto(p);
+  return faixas ? faixas[1].min : quantidadeInicial(p);
+}
+
+/**
  * Passo do +/-. Produto de minimo alto (caneta, sacola) andaria de 5 em 5 a
  * partir de 100, o que sao 20 cliques ate o degrau seguinte.
  */

@@ -2,10 +2,10 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { WHATSAPP_NUMERO, ESTILO_CATALOGO } from "./catalogoClientes.styles";
+import { WHATSAPP_NUMERO, WHATSAPP_NUMERO_SP, ESTILO_CATALOGO } from "./catalogoClientes.styles";
 import {
   type FaixaPreco, brl, brlPartes, faixasDoProduto, indiceDaFaixa,
-  passoDaQuantidade, quantidadeInicial, type ProdutoComPreco,
+  passoDaQuantidade, quantidadeInicial, quantidadePadrao, type ProdutoComPreco,
 } from "@/lib/catalogoPrecos";
 
 /**
@@ -137,24 +137,6 @@ const Card = memo(function Card({
   // Produto sem as tres faixas configuradas cai no "a partir de" de antes.
   const faixas = faixasDoProduto(p);
   const iAtiva = faixas ? indiceDaFaixa(faixas, qtd) : -1;
-  const ultima = faixas ? faixas.length - 1 : -1;
-  // Linha de apoio sempre presente: some/aparecer empurraria o card e mexeria
-  // na altura da linha inteira do grid a cada clique de quantidade.
-  // Aponta o proximo degrau MAIS BARATO, nao simplesmente o seguinte: ha
-  // produto com dois degraus no mesmo valor (o chaveiro 09824 cobra R$ 1,99
-  // tanto a 100 quanto a 200 un.), e ali "Leve 200 un. e pague R$ 1,99" seria
-  // um convite a pagar o mesmo preco.
-  const proximo =
-    faixas && iAtiva >= 0
-      ? faixas.slice(iAtiva + 1).find((f) => f.valor < faixas[iAtiva].valor)
-      : undefined;
-  const dica = !faixas
-    ? null
-    : iAtiva < 0
-      ? `Preço de tabela a partir de ${faixas[0].min} un.`
-      : proximo
-        ? `Leve ${proximo.min} un. e pague ${brl(proximo.valor)}`
-        : "Você está no melhor preço";
 
   return (
     <article className="gwc-card">
@@ -219,11 +201,9 @@ const Card = memo(function Card({
                 >
                   <span>{f.rotulo}</span>
                   <b><i>R$</i>{brlPartes(f.valor).valor}</b>
-                  {f.melhor && <em>Melhor preço</em>}
                 </button>
               ))}
             </div>
-            <p className={`gwc-dica ${iAtiva === ultima ? "top" : ""}`}>{dica}</p>
           </>
         ) : (
           <div className="gwc-price">
@@ -421,7 +401,7 @@ export default function CatalogoClientes() {
 
   // A quantidade inicial e o minimo do proprio produto: 20 un. no geral, 100
   // em caneta, sacola e chaveiro, onde o fornecedor so vende a partir dai.
-  const qtdDe = (p: Produto) => qtds[p.codigo] ?? quantidadeInicial(p);
+  const qtdDe = (p: Produto) => qtds[p.codigo] ?? quantidadePadrao(p);
   const setQtd = (p: Produto, v: number) =>
     setQtds((q) => ({ ...q, [p.codigo]: Math.max(quantidadeInicial(p), v) }));
 
@@ -434,7 +414,7 @@ export default function CatalogoClientes() {
         : [...c, { codigo: p.codigo, nome: p.nome, img: p.imagem_url, qtd: q,
                    passo: passoDaQuantidade(p), faixas: faixasDoProduto(p) }];
     });
-    setQtds((s) => ({ ...s, [p.codigo]: quantidadeInicial(p) }));
+    setQtds((s) => ({ ...s, [p.codigo]: quantidadePadrao(p) }));
     setAdicionado(p.codigo);
     setTimeout(() => setAdicionado(null), 1200);
     setToast(`${q} unidades adicionadas`);
@@ -651,6 +631,24 @@ export default function CatalogoClientes() {
             <b>Gift Web Brindes</b>
             Brindes corporativos personalizados<br />
             Valores sujeitos a confirmação conforme quantidade e personalização.
+            <div className="gwc-fend">
+              <div className="gwc-fend-col">
+                <b>Matriz – Santa Catarina</b>
+                Rua Cel Marcos Rovaris, 274 – Centro, Içara – SC
+              </div>
+              <div className="gwc-fend-col">
+                <b>Filial – São Paulo</b>
+                Av. Monteiro Lobato, 4550 – Galpão 6 – Setor 7 – Cidade Jardim Cumbica, Guarulhos – SP
+              </div>
+              <div className="gwc-fend-tel">
+                <a href={`https://wa.me/${WHATSAPP_NUMERO}`} target="_blank" rel="noreferrer">
+                  (48) 99665-2844 (SC)
+                </a>
+                <a href={`https://wa.me/${WHATSAPP_NUMERO_SP}`} target="_blank" rel="noreferrer">
+                  (11) 97016-9697 (SP)
+                </a>
+              </div>
+            </div>
           </footer>
         </main>
 

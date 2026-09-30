@@ -7,6 +7,7 @@
  */
 
 export const WHATSAPP_NUMERO = "5548996652844";
+export const WHATSAPP_NUMERO_SP = "5511970169697";
 
 export const ESTILO_CATALOGO = `
 .gwc{--navy-800:#07253f;--navy-700:#0b3159;--navy-600:#0f4a80;
@@ -173,7 +174,7 @@ export const ESTILO_CATALOGO = `
    empurrava a terceira coluna e as tres ficavam de larguras diferentes,
    estourando o card. */
 .gwc-faixas{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:3px;margin-top:1px;padding-top:9px;align-items:stretch}
+  gap:3px;margin-top:1px;align-items:stretch}
 .gwc-faixas>button{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
   gap:1px;padding:5px 2px 5px;border-radius:8px;border:1px solid var(--line);background:#f7f9fc;
   text-align:center;transition:border-color .15s,background .15s,box-shadow .15s}
@@ -191,13 +192,6 @@ export const ESTILO_CATALOGO = `
 .gwc-faixas.compacta b{font-size:11px;letter-spacing:-.05em}
 .gwc-faixas.compacta .best b{font-size:11.5px}
 .gwc-faixas.compacta b i{font-size:7px}
-/* Selo como fita sobre a borda de cima, em vez de terceira linha dentro da
-   celula: fora do fluxo ele nao alonga o card e pode ser mais largo que a
-   coluna, que a 50px nao caberia "MELHOR PRECO" legivel. */
-.gwc-faixas em{position:absolute;top:-9px;right:0;font-style:normal;font-size:7.5px;
-  font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;
-  background:var(--green-600);color:#fff;border-radius:20px;padding:1.5px 6px;line-height:1.35;
-  box-shadow:0 1px 2px rgba(18,134,47,.30)}
 /* 100+ ja nasce destacada, mesmo sem estar selecionada */
 .gwc-faixas .best{background:#effbf1;border-color:#a8e0b4;position:relative}
 .gwc-faixas .best b{color:var(--green-700);font-size:13.5px}
@@ -206,12 +200,6 @@ export const ESTILO_CATALOGO = `
   box-shadow:0 0 0 1px var(--navy-600) inset}
 .gwc-faixas .best.on{border-color:var(--green-600);background:#e6f8ea;
   box-shadow:0 0 0 1px var(--green-600) inset}
-/* Linha de apoio de altura fixa: ela troca de texto conforme a quantidade
-   (proximo degrau / melhor preco atingido) em vez de sumir, senao o card
-   mudaria de altura a cada clique. */
-.gwc-dica{margin:-2px 0 0;font-size:9.5px;line-height:1.25;min-height:1.25em;color:var(--muted);
-  font-weight:600;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gwc-dica.top{color:var(--green-700)}
 /* Card muito estreito (2 colunas em telas <=380px): reduz fonte e respiro em
    vez de quebrar as tres colunas. */
 @media(max-width:380px){
@@ -220,7 +208,6 @@ export const ESTILO_CATALOGO = `
   .gwc-faixas span{font-size:8.5px}
   .gwc-faixas b{font-size:11px}
   .gwc-faixas .best b{font-size:11.5px}
-  .gwc-faixas em{font-size:7px;padding:1px 4px}
 }
 /* Telas antigas de 320px deixam so ~38px por coluna. Aqui o preco encolhe mais
    um degrau e, nos 12 produtos de valor com tres digitos ("R$ 334,00"), o
@@ -353,6 +340,15 @@ export const ESTILO_CATALOGO = `
 .gwc-footer{text-align:center;padding:30px 20px calc(96px + env(safe-area-inset-bottom));
   color:var(--muted);font-size:11.5px;line-height:1.7;border-top:1px solid var(--line);margin-top:28px}
 .gwc-footer b{color:var(--navy-700);display:block;font-size:13px;margin-bottom:3px;font-weight:800}
+/* Enderecos/telefones: discretos de proposito -- info de apoio, nao CTA
+   principal (esse ja existe no botao flutuante do WhatsApp). */
+.gwc-fend{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;margin-top:16px;
+  padding-top:14px;border-top:1px solid var(--line);text-align:left}
+.gwc-fend-col{font-size:10px;line-height:1.5;max-width:230px}
+.gwc-fend-col b{display:block;color:var(--navy-600);font-size:10.5px;font-weight:700;margin-bottom:1px}
+.gwc-fend-tel{display:flex;flex-direction:column;gap:3px;align-items:flex-start;font-size:10px}
+.gwc-fend-tel a{color:var(--green-700);text-decoration:none;font-weight:600}
+.gwc-fend-tel a:hover{text-decoration:underline}
 .gwc-toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);background:var(--navy-800);
   color:#fff;padding:11px 18px;border-radius:11px;font-size:13px;font-weight:600;z-index:90;
   box-shadow:0 8px 24px rgba(4,24,43,.3)}
