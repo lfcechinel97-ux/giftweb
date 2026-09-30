@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import {
   ChevronDown, ChevronRight, Package, Loader2, RefreshCw, Search, Boxes, Phone, Layers, ShoppingBag, Clock, History,
   Tag, X, MessageSquare, Send, Camera, Video, CheckCircle2, Upload, Download, Paperclip, FileText,
+  ArrowUpDown, Eye, EyeOff, Check, User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -104,6 +105,9 @@ interface PcpRow {
   grupo_id: string | null;
   item_personalizacao: string | null;
   item_aplicacoes: number | null;
+  pedido_criado_em: string | null;
+  pedido_data_despacho: string | null;
+  pedido_vendedor_nome: string | null;
   /** Posição do item dentro do pedido (1, 2, 3…), na ordem de lançamento. */
   item_posicao?: number | null;
   arte_anexo_url: string | null;
@@ -199,6 +203,28 @@ const classificarProducao = (r: Pick<PcpRow, "local_producao" | "tags">): "galpa
     trata "a etapa de teste" ou "a etapa de produção" precisa considerar as
     duas, já que Galpão e Terceirizada são só a mesma etapa em colunas
     separadas. */
+/* Ordenação por coluna do PCP. "urgente" usa a mesma data que a tela de
+   Pedidos já usa pra marcar atraso (pedido_data_despacho, vinda de
+   vw_pcp — despacho combinado, ou pedido + prazo padrão quando não
+   preenchido). Itens sem data vão pro final, em qualquer modo. */
+type OrdemColuna = "antigo" | "etapa" | "urgente";
+const ORDEM_COLUNA_ROTULO: Record<OrdemColuna, string> = {
+  antigo: "Pedido mais antigo",
+  etapa: "Mais tempo na etapa",
+  urgente: "Mais urgente",
+};
+const chaveOrdenacao = (modo: OrdemColuna, rows: PcpRow[]): number => {
+  const valores = rows
+    .map(r => {
+      const iso = modo === "antigo" ? r.pedido_criado_em : modo === "urgente" ? r.pedido_data_despacho : r.etapa_desde;
+      const t = iso ? new Date(iso).getTime() : NaN;
+      return Number.isFinite(t) ? t : null;
+    })
+    .filter((v): v is number => v != null);
+  // Sem data em nenhum item do grupo: vai pro final (Infinity).
+  return valores.length ? Math.min(...valores) : Infinity;
+};
+
 const COLUNAS_TESTE = ["teste_fisico", "teste_fisico_terceirizada"];
 const COLUNAS_PRODUZIR = ["em_producao", "em_producao_terceirizada"];
 
@@ -396,6 +422,35 @@ function VendedorAvatar({ nome }: { nome: string | null }) {
         className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-[6px] bg-[#0F172A] text-white text-[11px] font-medium px-2 py-1 opacity-0 group-hover/av:opacity-100 transition-opacity z-10"
       >
         Vendedor / {nome}
+      </span>
+    </span>
+  );
+}
+
+/** Ícone de pessoa (estilo "boneco" neutro, cinza) com o nome do vendedor
+ *  em tooltip -- ao contrário do VendedorAvatar (iniciais), esse sempre
+ *  aparece, mesmo sem vendedor ("Sem vendedor"). Funciona em hover (mouse)
+ *  e em toque (o clique alterna `aberto`, cobre touch sem precisar de
+ *  biblioteca de gestos). className posiciona (inline no topo do card, ou
+ *  absoluto no canto da foto). */
+function VendedorIcone({ nome, className }: { nome: string | null; className?: string }) {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <span
+      className={cn("group/vi relative shrink-0 flex items-center justify-center select-none", className)}
+      onClick={e => { e.stopPropagation(); setAberto(v => !v); }}
+      onMouseLeave={() => setAberto(false)}
+    >
+      <span className="h-[22px] w-[22px] rounded-full bg-[rgba(15,23,42,.55)] flex items-center justify-center">
+        <User className="h-3 w-3 text-white" />
+      </span>
+      <span
+        className={cn(
+          "pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded-[6px] bg-[#0F172A] text-white text-[11px] font-medium px-2 py-1 z-10 transition-opacity",
+          aberto ? "opacity-100" : "opacity-0 group-hover/vi:opacity-100",
+        )}
+      >
+        {nome ? `Vendedor / ${nome}` : "Sem vendedor"}
       </span>
     </span>
   );
@@ -601,7 +656,7 @@ function PcpPedidoCard({
 }
 
 function PcpCard({
-  row, indice, total, primeiroDoPedido, dragging, saving, atrasado, critico, highlight, comFotos, vendedorNome,
+  row, indice, total, primeiroDoPedido, dragging, saving, atrasado, critico, highlight, comFotos,
   imprimindoOP,
   onDragStart, onDragEnd, onOpen, onHover, onComprado, onDespachar, onImprimirOP, onAgrupar, onDesagrupar, onInserirMedidas,
 }: {
@@ -616,7 +671,6 @@ function PcpCard({
   critico: boolean;
   highlight: boolean;
   comFotos: boolean;
-  vendedorNome: string | null;
   imprimindoOP: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -715,7 +769,7 @@ function PcpCard({
           </span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          <VendedorAvatar nome={vendedorNome} />
+          {!comFotos && <VendedorIcone nome={row.pedido_vendedor_nome} />}
           <div className="flex flex-col items-end leading-tight">
             <span
               className="gw-body flex items-center gap-1 text-[11px] font-bold"
@@ -754,6 +808,7 @@ function PcpCard({
                 <Package className="h-10 w-10 text-[var(--gw-text-muted)]" />
               </div>
             )}
+            <VendedorIcone nome={row.pedido_vendedor_nome} className="absolute right-1.5 top-1.5" />
             {tecnicaCurta && (
               <span
                 className="absolute left-1.5 bottom-1.5 gw-body text-[10px] font-bold leading-none rounded-[5px] px-[7px] py-[4px] text-white"
@@ -934,6 +989,14 @@ export default function PCP() {
     try { localStorage.setItem("pcp_agrupado", agrupado ? "1" : "0"); } catch { /* noop */ }
   }, [agrupado]);
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
+  /* Ordenação por coluna — estado local (useState), não vai pro Supabase e
+     não afeta outros usuários; volta ao padrão ("etapa") ao recarregar a
+     página. O quadro não pagina no servidor hoje (carrega tudo de uma vez
+     em `rows`), então a ordenação também é client-side. */
+  const [ordemColuna, setOrdemColuna] = useState<Record<string, OrdemColuna>>({});
+  /* "Olho" — modo foco numa coluna só, também local ao navegador de quem
+     clicou. */
+  const [colunaFoco, setColunaFoco] = useState<string | null>(null);
   const alternarExpandido = (chave: string) =>
     setExpandidos(prev => { const n = new Set(prev); if (n.has(chave)) n.delete(chave); else n.add(chave); return n; });
   const [comentarios, setComentarios] = useState<ComentarioRow[]>([]);
@@ -1247,25 +1310,31 @@ export default function PCP() {
        sumir do quadro. */
     for (const row of rowsFiltradas) (map[colunaDoStatus(row)] ??= []).push(row);
     /* "é importante que os produtos do mesmo pedido, se estiverem na
-       mesma coluna, sempre fiquem juntos" — agrupa por pedido_id
-       preservando a ordem original de quem chegou primeiro (não
-       reordena por prazo/data, só agrupa os irmãos ao lado um do
-       outro). */
+       mesma coluna, sempre fiquem juntos" — agrupa por pedido_id; a
+       ORDEM DOS GRUPOS segue o modo escolhido no header da coluna
+       (padrão: mais tempo na etapa). Dentro do mesmo pedido, sempre
+       Item 1, 2, 3… na ordem em que os produtos foram lançados —
+       isso não muda com a ordenação. */
     for (const col of Object.keys(map)) {
+      const modo = ordemColuna[col] ?? "etapa";
+      const grupos = new Map<string, PcpRow[]>();
       const primeiraAparicao = new Map<string, number>();
       map[col].forEach((r, i) => {
-        if (!primeiraAparicao.has(r.pedido_id)) primeiraAparicao.set(r.pedido_id, i);
+        if (!grupos.has(r.pedido_id)) { grupos.set(r.pedido_id, []); primeiraAparicao.set(r.pedido_id, i); }
+        grupos.get(r.pedido_id)!.push(r);
       });
-      map[col] = [...map[col]].sort((a, b) => {
-        const pa = primeiraAparicao.get(a.pedido_id)!;
-        const pb = primeiraAparicao.get(b.pedido_id)!;
-        if (pa !== pb) return pa - pb;
-        // Mesmo pedido: Item 1, 2, 3… na ordem em que os produtos foram lançados.
-        return (a.item_posicao ?? 0) - (b.item_posicao ?? 0);
+      const ordemPedidos = [...grupos.keys()].sort((idA, idB) => {
+        const ca = chaveOrdenacao(modo, grupos.get(idA)!);
+        const cb = chaveOrdenacao(modo, grupos.get(idB)!);
+        if (ca !== cb) return ca - cb;
+        // Empate (ou ambos sem data): mantém a ordem de chegada original.
+        return primeiraAparicao.get(idA)! - primeiraAparicao.get(idB)!;
       });
+      map[col] = ordemPedidos.flatMap(pid =>
+        [...grupos.get(pid)!].sort((a, b) => (a.item_posicao ?? 0) - (b.item_posicao ?? 0)));
     }
     return map;
-  }, [rowsFiltradas]);
+  }, [rowsFiltradas, ordemColuna]);
 
 
   /* Índice do item dentro do pedido (Item n/total) */
@@ -2382,10 +2451,12 @@ export default function PCP() {
             }}
           >
 
-            {STATUS_COLS.map(col => {
+            {STATUS_COLS.filter(col => !colunaFoco || col.value === colunaFoco).map(col => {
               const items = byStatus[col.value] || [];
               const somaQtd = items.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
               const isOver = dragOverStatus === col.value;
+              const emFoco = colunaFoco === col.value;
+              const modoOrdem: OrdemColuna = ordemColuna[col.value] ?? "etapa";
               return (
                 <div
                   key={col.value}
@@ -2401,7 +2472,7 @@ export default function PCP() {
                       handleDrop(col.value, dado);
                     }
                   }}
-                  style={{ width: 328, flexShrink: 0, height: "100%" }}
+                  style={{ width: emFoco ? 560 : 328, flexShrink: 0, height: "100%" }}
                   className={cn(
                     "rounded-xl border transition-colors flex flex-col overflow-hidden",
                     isOver ? "border-[#2563EB] bg-[#2563EB]/5" : "border-[var(--gw-border)] bg-white/60"
@@ -2416,12 +2487,52 @@ export default function PCP() {
                         virar "Aguardando Me…". A cor vai inline porque é
                         por-coluna, não dá pra vir de classe fixa. */}
                     <span className="gw-title text-[14px] leading-tight" style={{ fontWeight: 700, color: col.color }}>{col.label}</span>
-                    <span
-                      className="gw-body text-[11px] rounded-full px-2 py-0.5 shrink-0 whitespace-nowrap"
-                      style={{ backgroundColor: "rgba(255,255,255,.6)", color: col.color, fontWeight: 700 }}
-                    >
-                      {items.length} · {somaQtd} un.
-                    </span>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span
+                        className="gw-body text-[11px] rounded-full px-2 py-0.5 whitespace-nowrap"
+                        style={{ backgroundColor: "rgba(255,255,255,.6)", color: col.color, fontWeight: 700 }}
+                      >
+                        {items.length} · {somaQtd} un.
+                      </span>
+                      {/* Ordenação — só desta coluna; padrão "mais tempo na
+                          etapa". Estado local (useState), não é gravado em
+                          lugar nenhum. */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            title={`Ordenar por: ${ORDEM_COLUNA_ROTULO[modoOrdem]}`}
+                            className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-white/60 transition-colors"
+                            style={{ color: col.color }}
+                          >
+                            <ArrowUpDown className="h-3.5 w-3.5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-52">
+                          {(Object.keys(ORDEM_COLUNA_ROTULO) as OrdemColuna[]).map(modo => (
+                            <DropdownMenuItem
+                              key={modo}
+                              onClick={() => setOrdemColuna(prev => ({ ...prev, [col.value]: modo }))}
+                              className={cn("gap-2", modo === modoOrdem && "font-semibold")}
+                            >
+                              {modo === modoOrdem && <Check className="h-3.5 w-3.5" />}
+                              <span className={modo === modoOrdem ? "" : "ml-[22px]"}>{ORDEM_COLUNA_ROTULO[modo]}</span>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      {/* "Olho" — modo foco: some com as outras colunas, só
+                          local a quem clicou (não afeta outros usuários). */}
+                      <button
+                        type="button"
+                        title={emFoco ? "Mostrar todas as colunas" : "Ver só esta coluna"}
+                        onClick={() => setColunaFoco(prev => (prev === col.value ? null : col.value))}
+                        className="h-6 w-6 rounded-full flex items-center justify-center hover:bg-white/60 transition-colors"
+                        style={{ color: col.color, backgroundColor: emFoco ? "rgba(255,255,255,.6)" : undefined }}
+                      >
+                        {emFoco ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
                   </div>
                   {/* Rolagem vertical acontece por coluna */}
                   <div className="p-2 space-y-2 flex-1 min-h-0 overflow-y-auto pcp-col-scroll">
@@ -2444,7 +2555,6 @@ export default function PCP() {
                           critico={(row.horas_na_etapa ?? 0) / 24 > LIMITE_CRITICO_DIAS_CORRIDOS}
                           highlight={!!hoverPedido && hoverPedido === row.pedido_id}
                           comFotos={comFotos}
-                          vendedorNome={vendedorNome(row.pedido_vendedor_id)}
                           onHover={setHoverPedido}
                           onComprado={registrarCompra}
                           onDespachar={abrirDespachoModal}
@@ -2494,7 +2604,7 @@ export default function PCP() {
                               totalPedido={indices[primeiro.producao_id]?.total ?? g.rows.length}
                               cor={corDoPedido(primeiro)}
                               comFotos={comFotos}
-                              vendedorNome={vendedorNome(primeiro.pedido_vendedor_id)}
+                              vendedorNome={primeiro.pedido_vendedor_nome}
                               expandido={aberto}
                               onAlternar={() => alternarExpandido(chave)}
                               dragging={draggingId === `pedido:${g.pedidoId}:${col.value}`}
@@ -2541,7 +2651,7 @@ export default function PCP() {
                   <span className="gw-title text-[15px] truncate">{detalhe.cliente || "—"}</span>
                   <StatusPill status={detalhe.status} />
                   <span className="flex-1" />
-                  <VendedorAvatar nome={vendedorNome(detalhe.pedido_vendedor_id)} />
+                  <VendedorAvatar nome={detalhe.pedido_vendedor_nome} />
                 </DialogTitle>
               </DialogHeader>
 
