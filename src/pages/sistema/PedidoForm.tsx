@@ -130,12 +130,36 @@ const PedidoForm: React.FC = () => {
     fotoInputRef.current?.click();
   };
 
-  const [arquivoParaRecortar, setArquivoParaRecortar] = useState<File | null>(null);
-  const handleFotoItem = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /* Sobe a foto INTEIRA por padrão -- o recorte quadrado é opcional (botão
+     "Recortar" abaixo da miniatura, só quando já tem foto), não obrigatório
+     no upload. */
+  const handleFotoItem = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    const itemId = itemAlvoFoto.current;
     e.target.value = "";
-    if (!file || !itemAlvoFoto.current) return;
-    setArquivoParaRecortar(file);
+    if (!file || !itemId) return;
+    setEnviandoFoto(itemId);
+    try {
+      const url = await uploadMockup(file, id);
+      setItens(prev => prev.map(i => (i.id === itemId ? { ...i, mockupImagem: url } : i)));
+      toast.success("Foto anexada. Salve o pedido para publicá-la no PCP.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível enviar a foto.");
+    } finally {
+      setEnviandoFoto(null);
+    }
+  };
+
+  const [arquivoParaRecortar, setArquivoParaRecortar] = useState<File | null>(null);
+  const abrirRecorteFoto = async (itemId: string, url: string) => {
+    itemAlvoFoto.current = itemId;
+    try {
+      const resp = await fetch(url);
+      const blob = await resp.blob();
+      setArquivoParaRecortar(new File([blob], "mockup.jpg", { type: blob.type || "image/jpeg" }));
+    } catch {
+      toast.error("Não foi possível carregar a imagem para recortar.");
+    }
   };
   const handleFotoRecortada = async (arquivo: File) => {
     const itemId = itemAlvoFoto.current;
@@ -145,7 +169,7 @@ const PedidoForm: React.FC = () => {
     try {
       const url = await uploadMockup(arquivo, id);
       setItens(prev => prev.map(i => (i.id === itemId ? { ...i, mockupImagem: url } : i)));
-      toast.success("Foto anexada. Salve o pedido para publicá-la no PCP.");
+      toast.success("Foto recortada e salva.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Não foi possível enviar a foto.");
     } finally {
@@ -646,25 +670,37 @@ const PedidoForm: React.FC = () => {
                 style={{ border: "1px solid var(--gw-hairline)", opacity: cancelado ? 0.5 : 1 }}
               >
                 <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => escolherFoto(item.id)}
-                    disabled={enviandoFoto === item.id}
-                    title={item.mockupImagem ? "Trocar a foto deste item" : "Anexar foto deste item"}
-                    className="relative group h-14 w-14 rounded-lg overflow-hidden shrink-0"
-                  >
-                    <Thumb src={item.mockupImagem || item.imagem} alt={item.nome} size="md" />
-                    <span
-                      className={`absolute inset-0 flex items-center justify-center transition-opacity ${
-                        enviandoFoto === item.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                      }`}
-                      style={{ background: "rgba(15,42,92,0.62)" }}
+                  <div className="shrink-0 space-y-1">
+                    <button
+                      type="button"
+                      onClick={() => escolherFoto(item.id)}
+                      disabled={enviandoFoto === item.id}
+                      title={item.mockupImagem ? "Trocar a foto deste item" : "Anexar foto deste item"}
+                      className="relative group h-14 w-14 rounded-lg overflow-hidden block"
                     >
-                      {enviandoFoto === item.id
-                        ? <Loader2 className="h-4 w-4 animate-spin text-white" />
-                        : <Camera className="h-4 w-4 text-white" />}
-                    </span>
-                  </button>
+                      <Thumb src={item.mockupImagem || item.imagem} alt={item.nome} size="md" />
+                      <span
+                        className={`absolute inset-0 flex items-center justify-center transition-opacity ${
+                          enviandoFoto === item.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                        style={{ background: "rgba(15,42,92,0.62)" }}
+                      >
+                        {enviandoFoto === item.id
+                          ? <Loader2 className="h-4 w-4 animate-spin text-white" />
+                          : <Camera className="h-4 w-4 text-white" />}
+                      </span>
+                    </button>
+                    {item.mockupImagem && (
+                      <button
+                        type="button"
+                        onClick={() => void abrirRecorteFoto(item.id, item.mockupImagem!)}
+                        disabled={enviandoFoto === item.id}
+                        className="text-[10px] text-primary hover:underline block w-14 text-center"
+                      >
+                        Recortar
+                      </button>
+                    )}
+                  </div>
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">

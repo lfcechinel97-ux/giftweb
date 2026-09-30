@@ -935,15 +935,35 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
 
   /* Vai para o bucket `mockups` e guarda só a URL. Gravar base64 no jsonb
      inchava cada pedido em megabytes — ver src/lib/uploadMockup.ts.
-     Antes de subir, passa pelo recorte quadrado (RecorteQuadrado) -- "pra
-     deixar o produto bem aparente sem bordas" no card do PCP, que agora
-     mostra a foto grande e sem letterbox. */
+     Sobe a imagem INTEIRA por padrão; o recorte quadrado (RecorteQuadrado)
+     é opcional, só se o vendedor clicar em "Recortar" -- "eu não quero que
+     recorte, quero que apareça inteira, apenas se o vendedor quiser". */
   const [enviandoMockup, setEnviandoMockup] = useState(false);
   const [arquivoParaRecortar, setArquivoParaRecortar] = useState<File | null>(null);
-  const selecionarArquivoMockup = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMockupUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (file) setArquivoParaRecortar(file);
+    if (!file) return;
+    setEnviandoMockup(true);
+    try {
+      setMockupImagem(await uploadMockup(file));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao enviar a imagem.");
+    } finally {
+      setEnviandoMockup(false);
+    }
+  };
+  /* "Recortar" (opcional) -- baixa o mockup já publicado de volta como
+     arquivo, abre o recorte por cima dele, e sobe o resultado no lugar. */
+  const abrirRecorte = async () => {
+    if (!mockupImagem) return;
+    try {
+      const resp = await fetch(mockupImagem);
+      const blob = await resp.blob();
+      setArquivoParaRecortar(new File([blob], "mockup.jpg", { type: blob.type || "image/jpeg" }));
+    } catch {
+      toast.error("Não foi possível carregar a imagem para recortar.");
+    }
   };
   const handleMockupRecortado = async (arquivo: File) => {
     setArquivoParaRecortar(null);
@@ -1127,7 +1147,7 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
                       type="file"
                       className="hidden"
                       accept="image/*"
-                      onChange={selecionarArquivoMockup}
+                      onChange={handleMockupUpload}
                     />
                     <RecorteQuadrado
                       arquivo={arquivoParaRecortar}
@@ -1144,12 +1164,20 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
                         {enviandoMockup ? "Enviando..." : mockupImagem ? "Trocar" : "Enviar mockup"}
                       </button>
                       {mockupImagem && (
-                        <button
-                          onClick={() => setMockupImagem(undefined)}
-                          className="text-xs text-red-600 hover:underline"
-                        >
-                          Remover
-                        </button>
+                        <>
+                          <button
+                            onClick={() => void abrirRecorte()}
+                            className="text-xs text-primary hover:underline"
+                          >
+                            Recortar
+                          </button>
+                          <button
+                            onClick={() => setMockupImagem(undefined)}
+                            className="text-xs text-red-600 hover:underline"
+                          >
+                            Remover
+                          </button>
+                        </>
                       )}
                     </div>
                     {mockupImagem && (

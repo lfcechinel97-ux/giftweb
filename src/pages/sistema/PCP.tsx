@@ -741,7 +741,7 @@ function PcpCard({
               alt=""
               loading="lazy"
               decoding="async"
-              className="h-[168px] w-full rounded-[10px] object-cover bg-[var(--gw-surface-alt)] border border-[var(--gw-border)]"
+              className="h-[168px] w-full rounded-[10px] object-contain bg-[var(--gw-surface-alt)] border border-[var(--gw-border)]"
             />
           ) : (
             <div className="h-[168px] w-full rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] flex items-center justify-center">
