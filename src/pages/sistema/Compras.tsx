@@ -329,11 +329,18 @@ export default function Compras() {
         const linha = linhas.find(x => x.producao_id === l.producaoId);
         if (!linha) continue;
         const tags = [...(linha.tags ?? []).filter(t => !ehTagCompra(t)), tag];
-        const { error: e2 } = await supabase
+        const { data: atualizado, error: e2 } = await supabase
           .from("sistema_producao_itens" as any)
           .update({ tags, compra_confirmada_em: agora })
-          .eq("id", l.producaoId);
-        if (e2) { toast.error(`Não foi possível marcar "${l.produto}" como comprado. ${e2.message}`); continue; }
+          .eq("id", l.producaoId)
+          .select("id");
+        // Sem erro E sem linha alterada = RLS bloqueou em silêncio (o Supabase
+        // não reporta isso como erro). Sem o .select() acima esse caso passa
+        // batido: a compra "salva" mas a etiqueta nunca muda no PCP.
+        if (e2 || !atualizado?.length) {
+          toast.error(`Não foi possível marcar "${l.produto}" como comprado. ${e2?.message || "Permissão negada pelo banco (RLS)."}`);
+          continue;
+        }
         await supabase.from("sistema_producao_historico").insert({
           producao_item_id: l.producaoId,
           status_anterior: null,
@@ -360,12 +367,14 @@ export default function Compras() {
   const desfazer = async (r: LinhaCompra) => {
     setDesfazendo(r.producao_id);
     const tags = (r.tags ?? []).filter(t => !ehTagCompra(t));
-    const { error } = await supabase
+    const { data: atualizado, error } = await supabase
       .from("sistema_producao_itens" as any)
       .update({ tags, compra_confirmada_em: null })
-      .eq("id", r.producao_id);
-    if (error) toast.error(`Não foi possível desfazer. ${error.message || ""}`);
-    else {
+      .eq("id", r.producao_id)
+      .select("id");
+    if (error || !atualizado?.length) {
+      toast.error(`Não foi possível desfazer. ${error?.message || "Permissão negada pelo banco (RLS)."}`);
+    } else {
       await supabase.from("sistema_producao_historico").insert({
         producao_item_id: r.producao_id, status_anterior: null, status_novo: r.status,
         vendedor_id: currentVendedor?.id ?? null, observacao: "Compra desfeita",
