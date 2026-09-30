@@ -1,20 +1,9 @@
 -- =====================================================================
--- GIFT WEB - Busca de produtos do Orçamento/Pedido demorando muito.
---
--- Causa: sistema_search_products testava cada palavra digitada com
--- `NOT EXISTS (SELECT 1 FROM unnest(tokens) tk WHERE busca NOT ILIKE ...)`
--- -- uma sub-consulta CORRELACIONADA (reavaliada linha a linha). O Postgres
--- não consegue usar o índice trigram (idx_pc_sistema_busca_trgm) nesse
--- formato, então cada tecla digitada varria a tabela products_cache
--- inteira -- e ainda rodava essa varredura DUAS vezes (uma para contar,
--- outra para trazer as linhas).
---
--- Correção: monta a condição de cada palavra como `busca ILIKE '%token%'`
--- literal (via format/EXECUTE) e liga tudo com AND -- nesse formato o
--- Postgres consegue combinar buscas pelo índice trigram (bitmap AND) em
--- vez de varrer a tabela. Conta e busca as linhas numa PASSADA SÓ (window
--- function em vez de duas CTEs iguais). Sem mudança de contrato: mesmos
--- parâmetros, mesmo formato de retorno.
+-- GIFT WEB - Hotfix: a migration 20260929110000 (busca mais rápida)
+-- tinha um bug -- a função devolvia 400 (column t.total_count does not
+-- exist) para QUALQUER busca, inclusive a lista inicial "sem termo".
+-- Achado testando de verdade: a coluna total_count era usada fora do
+-- SELECT que a trazia.
 -- =====================================================================
 
 CREATE OR REPLACE FUNCTION public.sistema_search_products(p_search text DEFAULT NULL::text, p_page integer DEFAULT 1, p_page_size integer DEFAULT 60)
@@ -144,7 +133,3 @@ END;
 $function$;
 
 GRANT EXECUTE ON FUNCTION public.sistema_search_products(text, integer, integer) TO authenticated, service_role;
-
--- Conferência: tempo da consulta (deve terminar em milissegundos, não segundos).
--- Rode manualmente se quiser medir:
--- EXPLAIN ANALYZE SELECT public.sistema_search_products('copo termico', 1, 30);
