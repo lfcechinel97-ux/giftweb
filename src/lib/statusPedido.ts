@@ -144,18 +144,21 @@ export function opcoesStatus(nivel: "pedido" | "item"): StatusInfo[] {
     escondidos da produção (só o comercial os vê, em Pedidos). */
 export const MOSTRAR_COLUNA_ANOTACOES = true;
 
+/* Fundo pastel + texto forte da mesma família -- headers, tags de etapa e
+   badges do quadro. Definido por coluna (não por status individual): é a
+   coluna que aparece pro usuário. */
 const TODAS_COLUNAS_PCP = [
-  { coluna: "organizando_comercial",    rotulo: "Aguardando Anotações Pedido", canonico: "organizando_anotacoes",       cor: "#3730A3" },
-  { coluna: "organizando_pedido",       rotulo: "Imprimir Ordem de Produção",  canonico: "imprimir_ordem_producao",     cor: "#0369A1" },
-  { coluna: "aguardando_mercadoria",    rotulo: "Aguardando Mercadoria",       canonico: "aguardando_mercadoria",       cor: "#EA580C" },
-  { coluna: "teste_fisico",             rotulo: "Aguardando Teste Galpão",     canonico: "aguardando_teste",            cor: "#7E22CE" },
-  { coluna: "teste_fisico_terceirizada", rotulo: "Aguardando Teste Terceirizada", canonico: "aguardando_teste_terceirizada", cor: "#EA580C" },
-  { coluna: "teste_enviado",            rotulo: "Teste Enviado",               canonico: "aguardando_aprovacao_teste",  cor: "#A21CAF" },
-  { coluna: "em_producao",              rotulo: "A Produzir Galpão",           canonico: "a_produzir",                  cor: "#1D4ED8" },
-  { coluna: "em_producao_terceirizada", rotulo: "A Produzir Terceirizada",     canonico: "a_produzir_terceirizada",     cor: "#EA580C" },
-  { coluna: "inserir_medidas",          rotulo: "Inserir Medidas",             canonico: "inserir_medidas",             cor: "#047857" },
-  { coluna: "aguardando_coleta",        rotulo: "Expedição",                   canonico: "aguardando_coleta",           cor: "#B91C1C" },
-  { coluna: "enviado",                  rotulo: "Coletado e Enviado",          canonico: "coletado_enviado",            cor: "#15803D" },
+  { coluna: "organizando_comercial",    rotulo: "Aguardando Anotações Pedido", canonico: "organizando_anotacoes",       cor: "#3730A3", corFundo: "#E0E7FF" },
+  { coluna: "organizando_pedido",       rotulo: "Imprimir Ordem de Produção",  canonico: "imprimir_ordem_producao",     cor: "#1D4ED8", corFundo: "#DBEAFE" },
+  { coluna: "aguardando_mercadoria",    rotulo: "Aguardando Mercadoria",       canonico: "aguardando_mercadoria",       cor: "#C2410C", corFundo: "#FFEDD5" },
+  { coluna: "teste_fisico",             rotulo: "Aguardando Teste Galpão",     canonico: "aguardando_teste",            cor: "#6D28D9", corFundo: "#EDE9FE" },
+  { coluna: "teste_fisico_terceirizada", rotulo: "Aguardando Teste Terceirizada", canonico: "aguardando_teste_terceirizada", cor: "#A21CAF", corFundo: "#FAE8FF" },
+  { coluna: "teste_enviado",            rotulo: "Teste Enviado",               canonico: "aguardando_aprovacao_teste",  cor: "#BE185D", corFundo: "#FCE7F3" },
+  { coluna: "em_producao",              rotulo: "A Produzir Galpão",           canonico: "a_produzir",                  cor: "#0E7490", corFundo: "#CFFAFE" },
+  { coluna: "em_producao_terceirizada", rotulo: "A Produzir Terceirizada",     canonico: "a_produzir_terceirizada",     cor: "#0F766E", corFundo: "#CCFBF1" },
+  { coluna: "inserir_medidas",          rotulo: "Inserir Medidas",             canonico: "inserir_medidas",             cor: "#4D7C0F", corFundo: "#ECFCCB" },
+  { coluna: "aguardando_coleta",        rotulo: "Expedição",                   canonico: "aguardando_coleta",           cor: "#B91C1C", corFundo: "#FEE2E2" },
+  { coluna: "enviado",                  rotulo: "Coletado e Enviado",          canonico: "coletado_enviado",            cor: "#047857", corFundo: "#D1FAE5" },
 ] as const;
 
 export const COLUNAS_PCP = TODAS_COLUNAS_PCP.filter(
@@ -164,6 +167,10 @@ export const COLUNAS_PCP = TODAS_COLUNAS_PCP.filter(
 
 export const corDaColuna = (coluna: string): string =>
   COLUNAS_PCP.find(x => x.coluna === coluna)?.cor ?? DESCONHECIDO.cor;
+
+/** Fundo pastel da coluna -- cabeçalho, tag de etapa no card. */
+export const corFundoDaColuna = (coluna: string): string =>
+  COLUNAS_PCP.find(x => x.coluna === coluna)?.corFundo ?? "#F1F5F9";
 
 /**
  * Status gravado quando um card é solto numa coluna.
@@ -180,19 +187,19 @@ export const colunaDoStatus = (
 ): string => linha.coluna_pcp || statusInfo(linha.status).colunaPcp;
 
 /** Etapa como o PCP a mostra: nome e cor da COLUNA em que o status cai. */
-export interface EtapaPcp { slug: string; nome: string; cor: string }
+export interface EtapaPcp { slug: string; nome: string; cor: string; corFundo: string }
 
 export const etapaPcpDoStatus = (slug?: string | null): EtapaPcp => {
   const info = statusInfo(slug);
   const col = TODAS_COLUNAS_PCP.find(c => c.coluna === info.colunaPcp);
   return col
-    ? { slug: col.canonico, nome: col.rotulo, cor: col.cor }
-    : { slug: info.slug, nome: info.nome, cor: info.cor };
+    ? { slug: col.canonico, nome: col.rotulo, cor: col.cor, corFundo: col.corFundo }
+    : { slug: info.slug, nome: info.nome, cor: info.cor, corFundo: "#F1F5F9" };
 };
 
 /** As mesmas colunas do PCP, para os seletores de etapa (Pedidos etc.). */
 export const opcoesEtapasPcp = (): EtapaPcp[] =>
-  COLUNAS_PCP.map(c => ({ slug: c.canonico, nome: c.rotulo, cor: c.cor }));
+  COLUNAS_PCP.map(c => ({ slug: c.canonico, nome: c.rotulo, cor: c.cor, corFundo: c.corFundo }));
 
 /** Posição da coluna no fluxo (para achar a etapa mais atrasada do pedido). */
 export const ordemDaColuna = (slug?: string | null): number => {

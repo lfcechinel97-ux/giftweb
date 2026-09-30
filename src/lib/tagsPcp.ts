@@ -88,3 +88,15 @@ export const corDaTag = (texto: string) => {
   return TAG_PALETTE[h % TAG_PALETTE.length];
 };
 
+
+/** Clareia uma cor sólida em direção ao branco -- é como as etiquetas
+ *  (cor determinística por texto) viram fundo pastel com o mesmo tom
+ *  forte no texto, sem precisar de uma segunda paleta pastel mantida à
+ *  mão em paralelo com TAG_PALETTE/TAG_COR_EXATA. */
+export const pastelizar = (hex: string, mistura = 0.84): string => {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = Math.round(((n >> 16) & 255) + (255 - ((n >> 16) & 255)) * mistura);
+  const g = Math.round(((n >> 8) & 255) + (255 - ((n >> 8) & 255)) * mistura);
+  const b = Math.round((n & 255) + (255 - (n & 255)) * mistura);
+  return `#${[r, g, b].map(c => c.toString(16).padStart(2, "0")).join("")}`;
+};

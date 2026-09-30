@@ -24,12 +24,12 @@ import { uploadAnexoPcp, uploadAnexoGenerico, uploadArquivoPedido, MockupUploadE
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/sistema/ui/Money";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
-import { COLUNAS_PCP, MOSTRAR_COLUNA_ANOTACOES, corDaColuna, statusCanonicoDaColuna, colunaDoStatus, statusInfo } from "@/lib/statusPedido";
+import { COLUNAS_PCP, MOSTRAR_COLUNA_ANOTACOES, corDaColuna, corFundoDaColuna, statusCanonicoDaColuna, colunaDoStatus, statusInfo } from "@/lib/statusPedido";
 import { useSistema, type Pedido, type PedidoItem } from "@/contexts/SistemaContext";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
 import { resumoPersonalizacao } from "@/lib/personalizacao";
-import { ordenarTagsPorPrioridade, rotuloTag, corDaTag } from "@/lib/tagsPcp";
+import { ordenarTagsPorPrioridade, rotuloTag, corDaTag, pastelizar } from "@/lib/tagsPcp";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 
@@ -102,6 +102,8 @@ interface PcpRow {
   pedido_comprovante_pagamento_url: string | null;
   item_volumes: { responsavel: string; itens: { comprimento: number; altura: number; largura: number; peso: number }[] } | null;
   grupo_id: string | null;
+  item_personalizacao: string | null;
+  item_aplicacoes: number | null;
   /** Posição do item dentro do pedido (1, 2, 3…), na ordem de lançamento. */
   item_posicao?: number | null;
   arte_anexo_url: string | null;
@@ -163,11 +165,12 @@ const ANEXO_CATEGORIA_LABEL: Record<AnexoCategoria, string> = {
 /* Colunas e cores vêm de src/lib/statusPedido.ts — mesma fonte que a lista de
    Pedidos e o Editar Pedido usam. Antes o PCP tinha paleta própria, com três
    colunas repetindo a mesma cor. */
-const STATUS_COLS: { value: PcpStatus; label: string; color: string }[] =
+const STATUS_COLS: { value: PcpStatus; label: string; color: string; corFundo: string }[] =
   COLUNAS_PCP.map(c => ({
     value: c.coluna as PcpStatus,
     label: c.rotulo,
     color: corDaColuna(c.coluna),
+    corFundo: corFundoDaColuna(c.coluna),
   }));
 
 const STATUS_MAP = Object.fromEntries(STATUS_COLS.map(c => [c.value, c])) as Record<string, typeof STATUS_COLS[number]>;
@@ -252,24 +255,21 @@ const tempoNaEtapa = (horas: number | null) => {
   return `${Math.floor(horas / 24)}d nesta etapa`;
 };
 
+/* "2d 18h" -- dias e horas quando passa de 1 dia, senão só horas. */
 const tempoNaEtapaCurto = (horas: number | null) => {
   if (horas == null) return null;
-  if (horas < 1) return "<1h";
-  if (horas < 24) return `${Math.floor(horas)}h`;
-  return `${Math.floor(horas / 24)}d`;
-};
-
-/* Timer 2 — desde que o item ENTROU no sistema (item_criado_em), não desde a
-   última mudança de etapa. Formato "Xd Yh" quando passa de 1 dia, senão só
-   horas — mais discreto que o timer de etapa, que é o que importa primeiro. */
-const tempoTotalCurto = (criadoEm: string | null) => {
-  if (!criadoEm) return null;
-  const horas = (Date.now() - new Date(criadoEm).getTime()) / 3600000;
   if (horas < 1) return "<1h";
   if (horas < 24) return `${Math.floor(horas)}h`;
   const dias = Math.floor(horas / 24);
   const resto = Math.floor(horas % 24);
   return resto > 0 ? `${dias}d ${resto}h` : `${dias}d`;
+};
+
+/** "25/10" -- data de criação, pequena e discreta no card. */
+const dataCurta = (iso: string | null) => {
+  if (!iso) return null;
+  const d = new Date(iso);
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
 };
 
 /* Resumo compacto dos volumes da expedição — "2 volumes · 12kg" — pra
@@ -634,34 +634,48 @@ function PcpCard({
   const foto = row.mockup_url || row.imagem_catalogo_url;
   const cor = corDoPedido(row);
   const tempo = tempoNaEtapaCurto(row.horas_na_etapa);
-  const tempoTotal = tempoTotalCurto(row.item_criado_em);
-  const tagsOrdenadas = ordenarTagsPorPrioridade(row.tags ?? []);
-  const tagsVisiveis = tagsOrdenadas.slice(0, 3);
-  const tagsOcultas = tagsOrdenadas.slice(3);
+  const dataCriacao = dataCurta(row.item_criado_em);
+  const tecnica = resumoPersonalizacao({ personalizacao: row.item_personalizacao, aplicacoes: row.item_aplicacoes });
+  const corEtapa = corDaColuna(colunaDoStatus(row));
+  const corEtapaFundo = corFundoDaColuna(colunaDoStatus(row));
 
-  const Etiquetas = tagsOrdenadas.length > 0 && (
-    <div className="flex flex-wrap gap-1 max-w-full">
+  /* Etiqueta da etapa atual (pastel, sempre visível) + as demais tags do
+     item, também em pastel -- mesma cor determinística de sempre
+     (corDaTag), só que clareada em vez de sólida. Prioridade + "+N" com
+     popover, igual já era. */
+  const tagsOrdenadas = ordenarTagsPorPrioridade(row.tags ?? []);
+  const tagsVisiveis = tagsOrdenadas.slice(0, 2);
+  const tagsOcultas = tagsOrdenadas.slice(2);
+
+  const Etiquetas = (
+    <div className="flex items-center gap-1 max-w-full overflow-hidden">
+      <span
+        className="gw-body text-[10px] leading-none rounded-[5px] px-[7px] py-[4px] whitespace-nowrap font-bold shrink-0"
+        style={{ backgroundColor: corEtapaFundo, color: corEtapa }}
+      >
+        {STATUS_MAP[colunaDoStatus(row)]?.label ?? row.status_nome}
+      </span>
       {tagsVisiveis.map(t => (
         <span
           key={t}
-          className="gw-body text-[10px] leading-none rounded-[5px] px-[7px] py-[4px] whitespace-nowrap"
-          style={{ backgroundColor: corDaTag(t), color: "#FFFFFF", fontWeight: 700, boxShadow: "0 1px 3px rgba(15,23,42,.45)" }}
+          className="gw-body text-[10px] leading-none rounded-[5px] px-[7px] py-[4px] whitespace-nowrap font-bold shrink-0"
+          style={{ backgroundColor: pastelizar(corDaTag(t)), color: corDaTag(t) }}
         >
           {rotuloTag(t)}
         </span>
       ))}
       {tagsOcultas.length > 0 && (
         <span
-          className="group/tags relative gw-body text-[10px] leading-none rounded-[5px] px-[6px] py-[4px]"
-          style={{ backgroundColor: "rgba(15,23,42,.72)", color: "#FFFFFF", fontWeight: 700 }}
+          className="group/tags relative gw-body text-[10px] leading-none rounded-[5px] px-[6px] py-[4px] font-bold shrink-0"
+          style={{ backgroundColor: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)" }}
         >
           +{tagsOcultas.length}
-          <span className="pointer-events-none absolute left-0 top-full mt-1 hidden group-hover/tags:flex flex-col gap-1 rounded-[6px] bg-[#0F172A] p-1.5 z-10 w-max max-w-[220px]">
+          <span className="pointer-events-none absolute right-0 bottom-full mb-1 hidden group-hover/tags:flex flex-col gap-1 rounded-[6px] bg-[#0F172A] p-1.5 z-10 w-max max-w-[220px]">
             {tagsOcultas.map(t => (
               <span
                 key={t}
-                className="text-[10px] rounded-[4px] px-[6px] py-[3px]"
-                style={{ backgroundColor: corDaTag(t), color: "#FFFFFF", fontWeight: 700 }}
+                className="text-[10px] rounded-[4px] px-[6px] py-[3px] font-bold"
+                style={{ backgroundColor: corDaTag(t), color: "#FFFFFF" }}
               >
                 {rotuloTag(t)}
               </span>
@@ -685,7 +699,7 @@ function PcpCard({
       onMouseEnter={() => onHover(row.pedido_id)}
       onMouseLeave={() => onHover(null)}
       className={cn(
-        "w-[300px] rounded-[10px] overflow-hidden cursor-pointer select-none bg-white",
+        "w-[300px] rounded-[16px] overflow-hidden cursor-pointer select-none bg-white",
         "border border-[var(--gw-border)] transition-shadow hover:shadow-[var(--gw-shadow-md)]",
         dragging && "opacity-40",
         saving && "opacity-60 pointer-events-none"
@@ -698,66 +712,75 @@ function PcpCard({
             : undefined,
       }}
     >
-      {/* Cabeçalho — pedido / item / vendedor */}
-      <div className="flex items-center gap-1.5 pl-3 pr-2.5 pt-2.5 pb-1.5">
-        <span className="h-[7px] w-[7px] rounded-full shrink-0" style={{ backgroundColor: cor }} />
-        <OrderNumber value={row.pedido_numero} className="text-[13px] shrink-0" />
-        <span className="text-[var(--gw-text-muted)] text-[12px] shrink-0">·</span>
-        <span className="gw-body text-[12px] font-medium text-[var(--gw-text-secondary)] shrink-0">
-          Item {indice}/{total}
-        </span>
-        <span className="flex-1" />
-        <VendedorAvatar nome={vendedorNome} />
+      {/* Topo — pedido/item à esquerda; tempo na etapa + data de criação à
+          direita, com o vendedor entre os dois. */}
+      <div className="flex items-start justify-between gap-2 pl-3 pr-2.5 pt-2.5 pb-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="h-[7px] w-[7px] rounded-full shrink-0" style={{ backgroundColor: cor }} />
+          <OrderNumber value={row.pedido_numero} className="text-[13px] shrink-0" />
+          <span className="gw-body text-[12px] font-medium text-[var(--gw-text-secondary)] shrink-0">
+            Item {indice}/{total}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <VendedorAvatar nome={vendedorNome} />
+          <div className="flex flex-col items-end leading-tight">
+            <span
+              className="gw-body flex items-center gap-1 text-[11px] font-bold"
+              style={
+                critico
+                  ? { color: "#FFFFFF", backgroundColor: "var(--gw-danger)", borderRadius: 5, padding: "1px 5px" }
+                  : { color: atrasado ? "var(--gw-danger)" : "var(--gw-text-secondary)" }
+              }
+            >
+              <Clock className="h-[11px] w-[11px]" /> {tempo || "—"}
+            </span>
+            {dataCriacao && (
+              <span className="text-[10px] text-[var(--gw-text-muted)] mt-0.5">{dataCriacao}</span>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Imagem (modo "com fotos") */}
-      {comFotos && (
-        <div className="relative h-[150px] w-full mx-0">
-          {foto ? (
-            <img src={sizedImage(foto, 480)} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-[var(--gw-surface-alt)]" />
+      {/* Corpo — foto quadrada pequena (contain, não corta o produto) +
+          nome/quantidade/técnica empilhados. */}
+      <div className="flex gap-2.5 px-3 pb-2">
+        {comFotos && (
+          foto ? (
+            <img
+              src={sizedImage(foto, 160)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="h-[56px] w-[56px] rounded-[8px] object-contain bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] shrink-0"
+            />
           ) : (
-            <div className="w-full h-full bg-[var(--gw-surface-alt)] flex items-center justify-center">
-              <Package className="h-9 w-9 text-[var(--gw-text-muted)]" />
+            <div className="h-[56px] w-[56px] rounded-[8px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] flex items-center justify-center shrink-0">
+              <Package className="h-6 w-6 text-[var(--gw-text-muted)]" />
             </div>
-          )}
-          {tagsOrdenadas.length > 0 && (
-            <div className="absolute top-1.5 left-1.5 right-1.5">{Etiquetas}</div>
-          )}
-        </div>
-      )}
-
-      {/* Info — nome, tags (modo sem fotos), quantidade, timers */}
-      <div className="px-3 pt-2 pb-2.5 space-y-1.5">
-        <p className="gw-body text-[13px] font-semibold text-[#0F172A] truncate" title={row.produto_nome || undefined}>
-          {row.produto_nome || "—"}
-        </p>
-
-        {!comFotos && tagsOrdenadas.length > 0 && Etiquetas}
-
-        <div className="flex items-center justify-between">
-          <span className="gw-num text-[16px] leading-none text-[#0F172A]" style={{ fontWeight: 700 }}>
-            {row.quantidade ?? 0} <span className="text-[12px] font-medium text-[var(--gw-text-secondary)]">un.</span>
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2.5 pt-0.5">
-          <span
-            className="gw-body flex items-center gap-1 text-[11px] font-semibold"
-            style={
-              critico
-                ? { color: "#FFFFFF", backgroundColor: "var(--gw-danger)", borderRadius: 5, padding: "2px 6px" }
-                : { color: atrasado ? "var(--gw-danger)" : "var(--gw-text-secondary)" }
-            }
+          )
+        )}
+        <div className="min-w-0 flex-1 flex flex-col justify-center gap-0.5">
+          <p
+            className="gw-body text-[13px] font-semibold text-[#0F172A] leading-tight"
+            style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+            title={row.produto_nome || undefined}
           >
-            <Clock className="h-[12px] w-[12px]" /> {tempo || "—"} na etapa
+            {row.produto_nome || "—"}
+          </p>
+          <span className="gw-num text-[15px] leading-none text-[#0F172A]" style={{ fontWeight: 700 }}>
+            {row.quantidade ?? 0} <span className="text-[11px] font-medium text-[var(--gw-text-secondary)]">un.</span>
           </span>
-          {tempoTotal && (
-            <span className="gw-body flex items-center gap-1 text-[11px] text-[var(--gw-text-muted)]">
-              <History className="h-[11px] w-[11px]" /> {tempoTotal} total
-            </span>
+          {tecnica && (
+            <span className="text-[11px] text-[var(--gw-text-secondary)] truncate">{tecnica}</span>
           )}
         </div>
+      </div>
 
+      {/* Rodapé — tag da etapa (pastel) + demais tags, 1 linha só. */}
+      <div className="px-3 pb-2">{Etiquetas}</div>
+
+      <div className="px-3 pb-2.5 space-y-1.5">
         {/* Volumes da expedição — já aparecem como tag também (pedido do
             usuário), essa linha só reforça o peso total de forma curta. */}
         {colunaDoStatus(row) === "aguardando_coleta" && resumoVolumes(row.item_volumes?.itens) && (
@@ -2370,17 +2393,17 @@ export default function PCP() {
                   )}
                 >
                   <div
-                    className="flex items-center justify-between gap-2 px-4 py-2.5 text-white shrink-0"
-                    style={{ backgroundColor: col.color }}
+                    className="flex items-center justify-between gap-2 px-4 py-2.5 shrink-0"
+                    style={{ backgroundColor: col.corFundo }}
                   >
-                    {/* Nome inteiro, sempre: quebra em duas linhas em vez de
-                        virar "Aguardando Me…". */}
-                    {/* A cor vai inline: .gw-title/.gw-body definem color no
-                        index.css e ganham do text-white do Tailwind. */}
-                    <span className="gw-title text-[14px] leading-tight" style={{ fontWeight: 700, color: "#FFFFFF" }}>{col.label}</span>
+                    {/* Fundo pastel, texto/badge na cor forte da coluna --
+                        nome inteiro sempre, quebra em duas linhas em vez de
+                        virar "Aguardando Me…". A cor vai inline porque é
+                        por-coluna, não dá pra vir de classe fixa. */}
+                    <span className="gw-title text-[14px] leading-tight" style={{ fontWeight: 700, color: col.color }}>{col.label}</span>
                     <span
                       className="gw-body text-[11px] rounded-full px-2 py-0.5 shrink-0 whitespace-nowrap"
-                      style={{ backgroundColor: "rgba(255,255,255,.28)", color: "#FFFFFF", fontWeight: 700 }}
+                      style={{ backgroundColor: "rgba(255,255,255,.6)", color: col.color, fontWeight: 700 }}
                     >
                       {items.length} · {somaQtd} un.
                     </span>
