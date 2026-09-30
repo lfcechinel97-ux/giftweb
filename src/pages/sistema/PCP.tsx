@@ -37,8 +37,8 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 
 type PcpStatus =
   | "organizando_comercial" | "organizando_pedido" | "aguardando_mercadoria"
-  | "teste_fisico" | "teste_enviado"
-  | "em_producao" | "inserir_medidas"
+  | "teste_fisico" | "teste_fisico_terceirizada" | "teste_enviado"
+  | "em_producao" | "em_producao_terceirizada" | "inserir_medidas"
   | "aguardando_coleta" | "enviado";
 
 type LocalProducao = "interna" | "terceirizada" | "fornecedor_para_terceirizada";
@@ -184,12 +184,21 @@ const TAG_TESTE_RECUSADO = "TESTE RECUSADO";
 const TAG_PROD_GALPAO = "PROD. GALPÃO";
 const TAG_TERCEIRIZADA_PREFIXO = "TERCEIRIZADA";
 
-type FiltroLocal = "todos" | "galpao" | "terceirizada";
-const COLUNAS_COM_FILTRO_LOCAL = ["teste_fisico", "em_producao"];
-const ehTerceirizada = (r: PcpRow) =>
-  r.local_producao === "terceirizada" || (r.tags ?? []).some(t => t.toUpperCase().startsWith(TAG_TERCEIRIZADA_PREFIXO));
-const ehGalpao = (r: PcpRow) =>
-  !ehTerceirizada(r) && (r.local_producao === "interna" || (r.tags ?? []).some(t => t.toUpperCase() === TAG_PROD_GALPAO));
+/** Galpão ou Terceirizada, pelo que já está gravado no item -- usada para
+    reenviar o item pra coluna certa em passos automáticos (aprovar/recusar
+    teste), não mais para filtrar o quadro (isso virou coluna separada). */
+const classificarProducao = (r: Pick<PcpRow, "local_producao" | "tags">): "galpao" | "terceirizada" =>
+  r.local_producao === "terceirizada" || (r.tags ?? []).some(t => t.toUpperCase().startsWith(TAG_TERCEIRIZADA_PREFIXO))
+    ? "terceirizada"
+    : "galpao";
+
+/** As duas colunas de teste, e as duas de produção -- qualquer código que
+    trata "a etapa de teste" ou "a etapa de produção" precisa considerar as
+    duas, já que Galpão e Terceirizada são só a mesma etapa em colunas
+    separadas. */
+const COLUNAS_TESTE = ["teste_fisico", "teste_fisico_terceirizada"];
+const COLUNAS_PRODUZIR = ["em_producao", "em_producao_terceirizada"];
+
 const TAG_COBRAR_RESTANTE = "COBRAR 50% RESTANTE";
 const TAG_PAGO_CARTAO = "PAGO CARTÃO";
 const TAG_DESPACHAR_PREFIXO = "DESPACHAR";
@@ -954,7 +963,6 @@ export default function PCP() {
      não muda mais a coluna (galpão/terceirizada não são mais colunas
      separadas). */
   const [galpaoTerceirizadaModal, setGalpaoTerceirizadaModal] = useState<{ row: PcpRow; target: PcpStatus; grupo?: PcpRow[] } | null>(null);
-  const [modalTipoProducao, setModalTipoProducao] = useState<"galpao" | "terceirizada">("galpao");
   const [modalFornecedorId, setModalFornecedorId] = useState("");
   const [modalTerceirizadaLivre, setModalTerceirizadaLivre] = useState("");
   const [modalSaving, setModalSaving] = useState(false);
@@ -1192,7 +1200,6 @@ export default function PCP() {
     return out;
   }, [rows, tagsFiltro, buscaPedido]);
 
-  const [filtroLocal, setFiltroLocal] = useState<Record<string, FiltroLocal>>({});
   const byStatus = useMemo(() => {
     const map: Record<string, PcpRow[]> = {};
     for (const col of STATUS_COLS) map[col.value] = [];
@@ -1595,7 +1602,7 @@ export default function PCP() {
          resposta do cliente. Só avança se ainda estava em Aguardando
          Teste (reenviar um teste novo mais adiante no fluxo não deve
          voltar o card pra trás). */
-      if (colunaDoStatus(row) === "teste_fisico") {
+      if (COLUNAS_TESTE.includes(colunaDoStatus(row))) {
         await mudarStatus(row.producao_id, statusCanonicoDaColuna("teste_enviado"), "Teste físico anexado");
       }
       toast.success("Teste anexado. Baixe e mande para o cliente aprovar.");
@@ -1612,8 +1619,9 @@ export default function PCP() {
   const aprovarTeste = async (row: PcpRow) => {
     const semFluxoTeste = (row.tags ?? []).filter(t => !TAGS_FLUXO_TESTE.includes(t));
     await salvarTags(row, [...new Set([...semFluxoTeste, TAG_TESTE_APROVADO])]);
-    await mudarStatus(row.producao_id, statusCanonicoDaColuna("em_producao"), "Teste aprovado pelo cliente");
-    toast.success("Teste aprovado. Item movido para A Produzir.");
+    const colunaDestino = classificarProducao(row) === "terceirizada" ? "em_producao_terceirizada" : "em_producao";
+    await mudarStatus(row.producao_id, statusCanonicoDaColuna(colunaDestino), "Teste aprovado pelo cliente");
+    toast.success(`Teste aprovado. Item movido para ${colunaDestino === "em_producao_terceirizada" ? "A Produzir Terceirizada" : "A Produzir Galpão"}.`);
   };
 
   /* "se reprovado, volta para a coluna Aguardando Teste e adiciona a tag
@@ -1648,7 +1656,8 @@ export default function PCP() {
 
     const semFluxoTeste = (row.tags ?? []).filter(t => !TAGS_FLUXO_TESTE.includes(t));
     await salvarTags(row, [...new Set([...semFluxoTeste, TAG_TESTE_RECUSADO])]);
-    await mudarStatus(row.producao_id, statusCanonicoDaColuna("teste_fisico"), `Teste recusado pelo cliente: ${motivo}`);
+    const colunaVolta = classificarProducao(row) === "terceirizada" ? "teste_fisico_terceirizada" : "teste_fisico";
+    await mudarStatus(row.producao_id, statusCanonicoDaColuna(colunaVolta), `Teste recusado pelo cliente: ${motivo}`);
     setRecusaSaving(false);
     setRecusaModal(null);
     void loadItems();
@@ -1695,7 +1704,7 @@ export default function PCP() {
       ])];
       await salvarTags(row, tagsFinais);
 
-      const movido = colunaDoStatus(row) === "em_producao";
+      const movido = COLUNAS_PRODUZIR.includes(colunaDoStatus(row));
       if (movido) moverItem(row, "inserir_medidas", `${tipo === "video" ? "Vídeo" : "Foto"} da produção concluída anexado`);
       toast.success(`${tipo === "video" ? "Vídeo" : "Foto"} anexado.${movido ? " Item foi para Inserir Medidas." : ""}`);
     } catch (err) {
@@ -1749,9 +1758,11 @@ export default function PCP() {
     }
   };
 
+  /** A coluna-alvo já diz Galpão ou Terceirizada -- é ela que decide o
+      valor inicial do popup, não mais o que o item já tinha gravado (senão
+      arrastar pra "A Produzir Terceirizada" abriria marcado como Galpão). */
   const openGalpaoTerceirizadaModal = (row: PcpRow, target: PcpStatus) => {
     setGalpaoTerceirizadaModal({ row, target });
-    setModalTipoProducao(row.local_producao === "interna" ? "galpao" : "terceirizada");
     setModalFornecedorId(row.terceirizada_id || "");
     setModalTerceirizadaLivre(row.terceirizada_nome_livre || "");
   };
@@ -1846,11 +1857,24 @@ export default function PCP() {
 
     /* "assim que a produção arrasta o produto para aguardando teste,
        automaticamente já abre um popup perguntando se o teste vai ser
-       feito no galpão ou na terceirizada" — a resposta vira tag, a
-       coluna final é sempre "teste_fisico". */
-    if (targetStatus === "teste_fisico" && colunaDoStatus(row) !== "teste_enviado") {
+       feito no galpão ou na terceirizada" — agora a coluna já diz qual é;
+       o popup só sobra pra escolher QUAL terceirizada. Terceirizada: pede
+       sempre (menos voltando de Teste Enviado, que é reenvio de teste
+       recusado -- não precisa reclassificar). Galpão: marca sem popup. */
+    const alvoTerceirizada = targetStatus === "teste_fisico_terceirizada" || targetStatus === "em_producao_terceirizada";
+    const origemTesteEnviado = colunaDoStatus(row) === "teste_enviado";
+    if (alvoTerceirizada && !origemTesteEnviado) {
       openGalpaoTerceirizadaModal(row, targetStatus);
       return;
+    }
+    if (targetStatus === "teste_fisico" || targetStatus === "em_producao") {
+      const origemJaClassificada = COLUNAS_TESTE.includes(colunaDoStatus(row))
+        || COLUNAS_PRODUZIR.includes(colunaDoStatus(row)) || origemTesteEnviado;
+      if (!origemJaClassificada) {
+        void applyUpdate(row.producao_id, { local_producao: "interna", terceirizada_id: null, terceirizada_nome_livre: null });
+        const semTerc = (row.tags ?? []).filter(t => !t.toUpperCase().startsWith(TAG_TERCEIRIZADA_PREFIXO));
+        if (!semTerc.some(t => t.toUpperCase() === TAG_PROD_GALPAO)) void salvarTags(row, [...semTerc, TAG_PROD_GALPAO]);
+      }
     }
 
     /* A mídia de produção é o que garante que o item terminou antes de ir
@@ -1858,7 +1882,7 @@ export default function PCP() {
        pular essa checagem (o caminho normal é anexar a mídia, que já move
        sozinho). */
     if ((targetStatus === "inserir_medidas" || targetStatus === "aguardando_coleta")
-      && colunaDoStatus(row) === "em_producao" && !row.producao_anexo_url && !liberadoRef.current) {
+      && COLUNAS_PRODUZIR.includes(colunaDoStatus(row)) && !row.producao_anexo_url && !liberadoRef.current) {
       bloquear("FALTA ANEXAR A FOTO/VÍDEO DA PRODUÇÃO CONCLUÍDA DO PRODUTO.", () => handleDrop(targetStatus, id), row.producao_id);
       return;
     }
@@ -1866,7 +1890,7 @@ export default function PCP() {
     /* "só sai do Aguardando Teste e vai pra Teste Enviado se anexar o
        teste" — sem o anexo, arrastar manualmente pra qualquer coluna
        seguinte fica bloqueado; só avança com a foto/vídeo do teste. */
-    if (colunaDoStatus(row) === "teste_fisico" && targetStatus !== "teste_fisico" && !row.teste_anexo_url && !liberadoRef.current) {
+    if (COLUNAS_TESTE.includes(colunaDoStatus(row)) && !COLUNAS_TESTE.includes(targetStatus) && !row.teste_anexo_url && !liberadoRef.current) {
       bloquear("FALTA ANEXAR A FOTO DE TESTE DO PRODUTO.", () => handleDrop(targetStatus, id), row.producao_id);
       return;
     }
@@ -1921,20 +1945,31 @@ export default function PCP() {
       setPagamentoPedidoModal({ row, target: targetStatus, grupo });
       return;
     }
-    if (targetStatus === "teste_fisico" && colunaOrigem !== "teste_enviado") {
+    const alvoTerceirizadaGrupo = targetStatus === "teste_fisico_terceirizada" || targetStatus === "em_producao_terceirizada";
+    if (alvoTerceirizadaGrupo && colunaOrigem !== "teste_enviado") {
       openGalpaoTerceirizadaModal(row, targetStatus);
       setGalpaoTerceirizadaModal({ row, target: targetStatus, grupo });
       return;
     }
+    if (targetStatus === "teste_fisico" || targetStatus === "em_producao") {
+      const origemJaClassificada = COLUNAS_TESTE.includes(colunaOrigem) || COLUNAS_PRODUZIR.includes(colunaOrigem) || colunaOrigem === "teste_enviado";
+      if (!origemJaClassificada) {
+        for (const r of grupo) {
+          void applyUpdate(r.producao_id, { local_producao: "interna", terceirizada_id: null, terceirizada_nome_livre: null });
+          const semTerc = (r.tags ?? []).filter(t => !t.toUpperCase().startsWith(TAG_TERCEIRIZADA_PREFIXO));
+          if (!semTerc.some(t => t.toUpperCase() === TAG_PROD_GALPAO)) void salvarTags(r, [...semTerc, TAG_PROD_GALPAO]);
+        }
+      }
+    }
     const retry = () => handleDropPedido(targetStatus, pedidoId, colunaOrigem);
-    if (colunaOrigem === "teste_fisico" && targetStatus !== "teste_fisico" && !liberadoRef.current) {
+    if (COLUNAS_TESTE.includes(colunaOrigem) && !COLUNAS_TESTE.includes(targetStatus) && !liberadoRef.current) {
       const faltam = grupo.filter(r => !r.teste_anexo_url).length;
       if (faltam > 0) {
         bloquear(`FALTA ANEXAR A FOTO DE TESTE EM ${faltam} PRODUTO(S).`, retry, (grupo.find(r => !r.teste_anexo_url) ?? row).producao_id);
         return;
       }
     }
-    if ((targetStatus === "inserir_medidas" || targetStatus === "aguardando_coleta") && colunaOrigem === "em_producao" && !liberadoRef.current) {
+    if ((targetStatus === "inserir_medidas" || targetStatus === "aguardando_coleta") && COLUNAS_PRODUZIR.includes(colunaOrigem) && !liberadoRef.current) {
       const faltam = grupo.filter(r => !r.producao_anexo_url).length;
       if (faltam > 0) {
         bloquear(`FALTA ANEXAR A FOTO/VÍDEO DA PRODUÇÃO EM ${faltam} PRODUTO(S).`, retry, (grupo.find(r => !r.producao_anexo_url) ?? row).producao_id);
@@ -1968,34 +2003,39 @@ export default function PCP() {
   /* "resposta se torna uma tag como TERCEIRIZADA + nome ou PROD. GALPÃO.
      e a tag COMPRADO já sai automaticamente" — confirma o local de
      produção e move pra Aguardando Teste. */
+  /* Este popup só abre para colunas Terceirizada (Galpão já vira card sem
+     perguntar nada -- ver handleDrop/handleDropPedido); é só "qual
+     terceirizada", não mais "galpão ou terceirizada". */
   const confirmarGalpaoTerceirizada = async () => {
     if (!galpaoTerceirizadaModal) return;
     const { row, target, grupo } = galpaoTerceirizadaModal;
     const fornecedor = terceirizadas.find(f => f.id === modalFornecedorId);
     const nomeLivre = modalTerceirizadaLivre.trim();
-    if (modalTipoProducao === "terceirizada" && !modalFornecedorId && !nomeLivre) {
+    if (!modalFornecedorId && !nomeLivre) {
       toast.error("Selecione uma terceirizada cadastrada ou digite o nome dela");
       return;
     }
     setModalSaving(true);
 
-    const localProducao: LocalProducao = modalTipoProducao === "galpao" ? "interna" : "terceirizada";
     const nomeTerceirizada = fornecedor?.nome || nomeLivre;
-    const novaTag = modalTipoProducao === "galpao" ? TAG_PROD_GALPAO : `${TAG_TERCEIRIZADA_PREFIXO} - ${nomeTerceirizada}`;
+    const novaTag = `${TAG_TERCEIRIZADA_PREFIXO} - ${nomeTerceirizada}`;
+    const colunaFinal: PcpStatus = target.startsWith("teste_fisico") ? "teste_fisico_terceirizada"
+      : target.startsWith("em_producao") ? "em_producao_terceirizada"
+      : target;
 
     /* Arrastou o pedido inteiro: a mesma resposta vale para todos os
        produtos dele que estavam na coluna. */
     for (const alvo of (grupo ?? [row])) {
       await applyUpdate(alvo.producao_id, {
-        local_producao: localProducao,
-        terceirizada_id: modalTipoProducao === "terceirizada" ? (modalFornecedorId || null) : null,
-        terceirizada_nome_livre: modalTipoProducao === "terceirizada" ? (fornecedor ? null : (nomeLivre || null)) : null,
+        local_producao: "terceirizada",
+        terceirizada_id: modalFornecedorId || null,
+        terceirizada_nome_livre: fornecedor ? null : (nomeLivre || null),
       });
       const semCompra = (alvo.tags ?? []).filter(
         t => t.toUpperCase() !== "COMPRADO XBZ" && t.toUpperCase() !== "COMPRADO SP",
       );
       await salvarTags(alvo, [...new Set([...semCompra, novaTag])]);
-      await mudarStatus(alvo.producao_id, statusCanonicoDaColuna(target), `Produção definida: ${novaTag}`);
+      await mudarStatus(alvo.producao_id, statusCanonicoDaColuna(colunaFinal), `Produção definida: ${novaTag}`);
     }
 
     setModalSaving(false);
@@ -2305,11 +2345,7 @@ export default function PCP() {
           >
 
             {STATUS_COLS.map(col => {
-              const itensColuna = byStatus[col.value] || [];
-              const filtroDaColuna: FiltroLocal = filtroLocal[col.value] ?? "todos";
-              const items = filtroDaColuna !== "todos" && COLUNAS_COM_FILTRO_LOCAL.includes(col.value)
-                ? itensColuna.filter(filtroDaColuna === "galpao" ? ehGalpao : ehTerceirizada)
-                : itensColuna;
+              const items = byStatus[col.value] || [];
               const somaQtd = items.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
               const isOver = dragOverStatus === col.value;
               return (
@@ -2349,21 +2385,6 @@ export default function PCP() {
                       {items.length} · {somaQtd} un.
                     </span>
                   </div>
-                  {COLUNAS_COM_FILTRO_LOCAL.includes(col.value) && (
-                    <div className="flex items-center bg-white border-b border-[var(--gw-border)] text-[11px] font-semibold shrink-0">
-                      {([["todos", "Todos"], ["galpao", "Produzir Galpão"], ["terceirizada", "Produzir Terceirizada"]] as [FiltroLocal, string][]).map(([id, rotulo]) => (
-                        <button
-                          key={id}
-                          type="button"
-                          onClick={() => setFiltroLocal(prev => ({ ...prev, [col.value]: id }))}
-                          className={cn("flex-1 px-1.5 py-1.5 transition-colors whitespace-nowrap", filtroDaColuna === id ? "text-white" : "text-[var(--gw-text-secondary)] hover:bg-[var(--gw-surface-alt)]")}
-                          style={filtroDaColuna === id ? { backgroundColor: "var(--gw-primary)" } : undefined}
-                        >
-                          {rotulo}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                   {/* Rolagem vertical acontece por coluna */}
                   <div className="p-2 space-y-2 flex-1 min-h-0 overflow-y-auto pcp-col-scroll">
 
@@ -2685,7 +2706,8 @@ export default function PCP() {
 
                   {/* Teste físico — só aparece na etapa certa, ou depois de já
                       ter anexo (pra continuar visível como registro). */}
-                  {(detalhe.coluna_pcp === "teste_fisico" || detalhe.coluna_pcp === "teste_enviado" || detalhe.teste_anexo_url) && (
+                  {(detalhe.coluna_pcp === "teste_fisico" || detalhe.coluna_pcp === "teste_fisico_terceirizada"
+                    || detalhe.coluna_pcp === "teste_enviado" || detalhe.teste_anexo_url) && (
                     <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2.5">
                       <p className="gw-label flex items-center gap-1.5">
                         <Camera className="h-3.5 w-3.5" /> Teste físico
@@ -3147,7 +3169,7 @@ export default function PCP() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ShoppingBag className="h-5 w-5 text-primary" />
-              Onde o teste vai ser feito?
+              Qual terceirizada?
             </DialogTitle>
           </DialogHeader>
 
@@ -3163,70 +3185,41 @@ export default function PCP() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setModalTipoProducao("galpao")}
-                  className={cn(
-                    "h-16 rounded-lg text-sm font-semibold border transition-colors",
-                    modalTipoProducao === "galpao" ? "text-white border-transparent" : "bg-white text-foreground border-border",
-                  )}
-                  style={modalTipoProducao === "galpao" ? { backgroundColor: "#2563EB" } : undefined}
-                >
-                  Produção no Galpão
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModalTipoProducao("terceirizada")}
-                  className={cn(
-                    "h-16 rounded-lg text-sm font-semibold border transition-colors",
-                    modalTipoProducao === "terceirizada" ? "text-white border-transparent" : "bg-white text-foreground border-border",
-                  )}
-                  style={modalTipoProducao === "terceirizada" ? { backgroundColor: "#F97316" } : undefined}
-                >
-                  Terceirizada
-                </button>
+              <div className="space-y-1.5">
+                <Label>Terceirizada</Label>
+                <Select value={modalFornecedorId} onValueChange={v => { setModalFornecedorId(v); setModalTerceirizadaLivre(""); }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a terceirizada" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {terceirizadas.length === 0 ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">
+                        Nenhuma terceirizada cadastrada
+                      </div>
+                    ) : terceirizadas.map(f => (
+                      <SelectItem key={f.id} value={f.id}>
+                        <span className="flex items-center gap-2">
+                          {f.nome}
+                          {f.telefone && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                              <Phone className="h-3 w-3" /> {f.telefone}
+                            </span>
+                          )}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {modalTipoProducao === "terceirizada" && (
-                <>
-                  <div className="space-y-1.5">
-                    <Label>Terceirizada</Label>
-                    <Select value={modalFornecedorId} onValueChange={v => { setModalFornecedorId(v); setModalTerceirizadaLivre(""); }}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a terceirizada" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {terceirizadas.length === 0 ? (
-                          <div className="px-3 py-2 text-sm text-muted-foreground">
-                            Nenhuma terceirizada cadastrada
-                          </div>
-                        ) : terceirizadas.map(f => (
-                          <SelectItem key={f.id} value={f.id}>
-                            <span className="flex items-center gap-2">
-                              {f.nome}
-                              {f.telefone && (
-                                <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                                  <Phone className="h-3 w-3" /> {f.telefone}
-                                </span>
-                              )}
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label>Ou digite o nome (se não estiver cadastrada)</Label>
-                    <Input
-                      value={modalTerceirizadaLivre}
-                      onChange={e => { setModalTerceirizadaLivre(e.target.value); if (e.target.value) setModalFornecedorId(""); }}
-                      placeholder="Ex.: Gráfica São Jorge"
-                    />
-                  </div>
-                </>
-              )}
+              <div className="space-y-1.5">
+                <Label>Ou digite o nome (se não estiver cadastrada)</Label>
+                <Input
+                  value={modalTerceirizadaLivre}
+                  onChange={e => { setModalTerceirizadaLivre(e.target.value); if (e.target.value) setModalFornecedorId(""); }}
+                  placeholder="Ex.: Gráfica São Jorge"
+                />
+              </div>
             </div>
           )}
 

@@ -35,10 +35,11 @@ const SEMENTE: StatusInfo[] = [
   { slug: "imprimir_ordem_producao", nome: "Imprimir ordem de produção", cor: "#0369A1", colunaPcp: "organizando_pedido",  escopo: "ambos",  ordem: 20 },
   { slug: "aguardando_mercadoria",   nome: "Aguardando mercadoria",      cor: "#EA580C", colunaPcp: "aguardando_mercadoria", escopo: "ambos", ordem: 30 },
   { slug: "aguardando_teste",        nome: "Aguardando teste laser/DTF", cor: "#7E22CE", colunaPcp: "teste_fisico",        escopo: "ambos",  ordem: 40 },
+  { slug: "aguardando_teste_terceirizada", nome: "Aguardando teste terceirizada", cor: "#EA580C", colunaPcp: "teste_fisico_terceirizada", escopo: "ambos", ordem: 42 },
   { slug: "aguardando_aprovacao_teste", nome: "Teste enviado",           cor: "#A21CAF", colunaPcp: "teste_enviado",       escopo: "ambos",  ordem: 45 },
   { slug: "preparar_dtf",            nome: "Preparar DTF/vetorização",   cor: "#6D28D9", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 50 },
   { slug: "a_produzir",              nome: "A produzir",                 cor: "#1D4ED8", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 60 },
-  { slug: "a_produzir_terceirizada", nome: "A produzir terceirizada",    cor: "#1E40AF", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 70 },
+  { slug: "a_produzir_terceirizada", nome: "A produzir terceirizada",    cor: "#EA580C", colunaPcp: "em_producao_terceirizada", escopo: "ambos", ordem: 70 },
   { slug: "produzido",               nome: "Produzido",                  cor: "#15803D", colunaPcp: "inserir_medidas",     escopo: "ambos",  ordem: 75 },
   { slug: "inserir_medidas",         nome: "Inserir medidas",            cor: "#047857", colunaPcp: "inserir_medidas",     escopo: "ambos",  ordem: 80 },
   { slug: "conferir_pagamentos",     nome: "Conferir pagamentos",        cor: "#047857", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 90 },
@@ -104,16 +105,16 @@ export function opcoesStatus(nivel: "pedido" | "item"): StatusInfo[] {
 }
 
 /**
- * As 8 colunas do Kanban do PCP, na ordem do fluxo do galpão.
+ * As 11 colunas do Kanban do PCP, na ordem do fluxo do galpão.
  *
  * Diferente dos status, as colunas são ESTRUTURAIS — fazem parte do layout do
  * quadro e não são editáveis. Cada uma tem um status canônico: é ele que dá a
  * cor da coluna e é o valor gravado quando um card é arrastado para lá.
  */
-/* Fluxo final de 7 colunas (evolução de 19/09/2026):
-   Imprimir Ordem de Produção -> Aguardando Mercadoria -> Aguardando
-   Teste -> Teste Enviado -> A Produzir -> Expedição -> Coletado e
-   Enviado.
+/* Fluxo (evolução de 30/09/2026): Imprimir Ordem de Produção ->
+   Aguardando Mercadoria -> Aguardando Teste Galpão -> Aguardando Teste
+   Terceirizada -> Teste Enviado -> A Produzir Galpão -> A Produzir
+   Terceirizada -> Inserir Medidas -> Expedição -> Coletado e Enviado.
 
    "Organizando Pedido" (organizando_anotacoes) NÃO aparece mais aqui —
    virou uma etapa só da tela de Pedidos (comercial/vendedor), antes do
@@ -125,11 +126,15 @@ export function opcoesStatus(nivel: "pedido" | "item"): StatusInfo[] {
 
    Outras simplificações (nenhum status apagado, só coluna_pcp
    remapeado):
-   - "Preparação" (preparar_dtf) cai em "A Produzir".
-   - Galpão e Terceirizada deixam de ser colunas separadas -- viram UMA
-     coluna só ("A Produzir"), com a distinção feita por TAG
-     ("PROD. GALPÃO" / "TERCEIRIZADA + nome") escolhida num popup ao
-     entrar em Aguardando Teste, não mais ao entrar em produção. */
+   - "Preparação" (preparar_dtf) cai em "A Produzir Galpão".
+   - Galpão e Terceirizada, tanto no teste quanto na produção, viraram
+     colunas SEPARADAS (até 29/09/2026 eram uma coluna só com um filtro
+     Todos/Galpão/Terceirizada por cima, usando tag + local_producao —
+     ficou confuso e foi abandonado). Agora a coluna em que o card está
+     JÁ é a resposta; tag e local_producao continuam gravados (aparecem
+     no card, e "TERCEIRIZADA - nome" pré-preenche o formulário quando o
+     item chega em "A Produzir Terceirizada"), mas não são mais usados
+     para decidir onde o card aparece. */
 /* A cor é definida AQUI, não no catálogo do banco: o cabeçalho é texto
    branco em negrito, então cada coluna precisa de um tom fechado, e só
    de variações das primárias (azul, verde, vermelho, roxo, laranja). */
@@ -140,15 +145,17 @@ export function opcoesStatus(nivel: "pedido" | "item"): StatusInfo[] {
 export const MOSTRAR_COLUNA_ANOTACOES = true;
 
 const TODAS_COLUNAS_PCP = [
-  { coluna: "organizando_comercial", rotulo: "Aguardando Anotações Pedido", canonico: "organizando_anotacoes", cor: "#3730A3" },
-  { coluna: "organizando_pedido",    rotulo: "Imprimir Ordem de Produção", canonico: "imprimir_ordem_producao", cor: "#0369A1" },
-  { coluna: "aguardando_mercadoria", rotulo: "Aguardando Mercadoria",  canonico: "aguardando_mercadoria", cor: "#EA580C" },
-  { coluna: "teste_fisico",          rotulo: "Aguardando Teste",       canonico: "aguardando_teste",      cor: "#7E22CE" },
-  { coluna: "teste_enviado",         rotulo: "Teste Enviado",          canonico: "aguardando_aprovacao_teste", cor: "#A21CAF" },
-  { coluna: "em_producao",           rotulo: "A Produzir",             canonico: "a_produzir",            cor: "#1D4ED8" },
-  { coluna: "inserir_medidas",       rotulo: "Inserir Medidas",        canonico: "inserir_medidas",       cor: "#047857" },
-  { coluna: "aguardando_coleta",     rotulo: "Expedição",              canonico: "aguardando_coleta",     cor: "#B91C1C" },
-  { coluna: "enviado",               rotulo: "Coletado e Enviado",     canonico: "coletado_enviado",      cor: "#15803D" },
+  { coluna: "organizando_comercial",    rotulo: "Aguardando Anotações Pedido", canonico: "organizando_anotacoes",       cor: "#3730A3" },
+  { coluna: "organizando_pedido",       rotulo: "Imprimir Ordem de Produção",  canonico: "imprimir_ordem_producao",     cor: "#0369A1" },
+  { coluna: "aguardando_mercadoria",    rotulo: "Aguardando Mercadoria",       canonico: "aguardando_mercadoria",       cor: "#EA580C" },
+  { coluna: "teste_fisico",             rotulo: "Aguardando Teste Galpão",     canonico: "aguardando_teste",            cor: "#7E22CE" },
+  { coluna: "teste_fisico_terceirizada", rotulo: "Aguardando Teste Terceirizada", canonico: "aguardando_teste_terceirizada", cor: "#EA580C" },
+  { coluna: "teste_enviado",            rotulo: "Teste Enviado",               canonico: "aguardando_aprovacao_teste",  cor: "#A21CAF" },
+  { coluna: "em_producao",              rotulo: "A Produzir Galpão",           canonico: "a_produzir",                  cor: "#1D4ED8" },
+  { coluna: "em_producao_terceirizada", rotulo: "A Produzir Terceirizada",     canonico: "a_produzir_terceirizada",     cor: "#EA580C" },
+  { coluna: "inserir_medidas",          rotulo: "Inserir Medidas",             canonico: "inserir_medidas",             cor: "#047857" },
+  { coluna: "aguardando_coleta",        rotulo: "Expedição",                   canonico: "aguardando_coleta",           cor: "#B91C1C" },
+  { coluna: "enviado",                  rotulo: "Coletado e Enviado",          canonico: "coletado_enviado",            cor: "#15803D" },
 ] as const;
 
 export const COLUNAS_PCP = TODAS_COLUNAS_PCP.filter(
