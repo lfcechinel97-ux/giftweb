@@ -49,6 +49,15 @@ const TEXTO = [17, 32, 56] as const;
 const FRACO = [116, 128, 145] as const;
 const num = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
 
+/** Nome de arquivo com a data do dia, formato DD.MM.AA. */
+const nomeArquivo = (extensao: string) => {
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const aa = String(d.getFullYear()).slice(-2);
+  return `Solicitacao de Orcamento ${dd}.${mm}.${aa}.${extensao}`;
+};
+
 export async function gerarRelatorioComprasPDF(linhas: LinhaRelatorioCompra[]) {
   const [logo, ...fotos] = await Promise.all([
     carregarImagem(LOGO_URL),
@@ -161,7 +170,7 @@ export async function gerarRelatorioComprasPDF(linhas: LinhaRelatorioCompra[]) {
     y += h + 10;
   });
 
-  doc.save(`solicitacao-de-orcamento-${new Date().toISOString().slice(0, 10)}.pdf`);
+  doc.save(nomeArquivo("pdf"));
 }
 
 const escHtml = (s: string) =>
@@ -238,19 +247,24 @@ export function gerarRelatorioComprasHTML(linhas: LinhaRelatorioCompra[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `solicitacao-de-orcamento-${new Date().toISOString().slice(0, 10)}.html`;
+  a.download = nomeArquivo("html");
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
 }
 
-/** Texto pronto pra colar no WhatsApp: uma linha por produto, bem espaçado. */
+/** Texto pronto pra colar no WhatsApp: uma linha compacta por produto
+ *  ("qtd x Produto (últimos 3 dígitos do pedido)"), sem sobrar tanta
+ *  mensagem quando o carrinho tem muitos itens. */
 export function textoRelatorioCompras(linhas: LinhaRelatorioCompra[]): string {
   const cab = `*${TITULO}*\n${new Date().toLocaleDateString("pt-BR")}\n`;
   const corpo = linhas
-    .map((l, i) => `${i + 1}. ${l.produto}${l.pedido ? ` (pedido #${l.pedido})` : ""}\n   Cor: ${l.cor || "—"}\n   Quantidade: ${num(l.quantidade)} un.`)
-    .join("\n\n");
+    .map(l => {
+      const ultimos3 = l.pedido ? l.pedido.slice(-3) : null;
+      return `*${num(l.quantidade)}x ${l.produto}*${ultimos3 ? ` (${ultimos3})` : ""}`;
+    })
+    .join("\n");
   return `${cab}\n${corpo}`;
 }
 
