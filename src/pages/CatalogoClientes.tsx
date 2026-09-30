@@ -319,82 +319,6 @@ export default function CatalogoClientes() {
     return () => clearTimeout(t1);
   }, [carregando, onboarding]);
 
-  /* No desktop não dá pra arrastar os stories com o dedo (não é touch) e
-     não existe scrollbar visível -- sem isso, quem não sabe usar a roda
-     do mouse com Shift nunca vê as categorias depois da 5ª/6ª. Duas
-     coisas: (1) rolagem automática bem devagar, de ida e volta, que para
-     assim que o visitante interage; (2) arrastar segurando o botão do
-     mouse ("click and drag"), como um carrossel comum. */
-  useEffect(() => {
-    if (carregando || onboarding) return;
-    const s = storiesRef.current;
-    if (!s) return;
-
-    let pausado = false;
-    let direcao: 1 | -1 = 1;
-    let raf = 0;
-    const VELOCIDADE = 0.35; // px por frame (~60fps) -- bem devagar de propósito
-
-    const passo = () => {
-      if (!pausado && s.scrollWidth > s.clientWidth + 4) {
-        const max = s.scrollWidth - s.clientWidth;
-        let novo = s.scrollLeft + VELOCIDADE * direcao;
-        if (novo >= max) { novo = max; direcao = -1; }
-        else if (novo <= 0) { novo = 0; direcao = 1; }
-        s.scrollLeft = novo;
-      }
-      raf = requestAnimationFrame(passo);
-    };
-    raf = requestAnimationFrame(passo);
-
-    const parar = () => { pausado = true; };
-    const retomar = () => { pausado = false; };
-    const aoSairMouse = () => { if (!arrastando) retomar(); };
-    const aoSoltarToque = () => setTimeout(retomar, 1200);
-
-    // Arrastar com o mouse (o toque já rola sozinho, não precisa disso).
-    let arrastando = false;
-    let inicioX = 0;
-    let inicioScroll = 0;
-    const aoDescerMouse = (e: MouseEvent) => {
-      arrastando = true;
-      parar();
-      inicioX = e.pageX;
-      inicioScroll = s.scrollLeft;
-      s.style.cursor = "grabbing";
-    };
-    const aoMoverMouse = (e: MouseEvent) => {
-      if (!arrastando) return;
-      e.preventDefault();
-      s.scrollLeft = inicioScroll - (e.pageX - inicioX);
-    };
-    const aoSoltarMouse = () => {
-      if (!arrastando) return;
-      arrastando = false;
-      s.style.cursor = "";
-      setTimeout(retomar, 1200);
-    };
-
-    s.addEventListener("mouseenter", parar);
-    s.addEventListener("mouseleave", aoSairMouse);
-    s.addEventListener("mousedown", aoDescerMouse);
-    window.addEventListener("mousemove", aoMoverMouse);
-    window.addEventListener("mouseup", aoSoltarMouse);
-    s.addEventListener("touchstart", parar, { passive: true });
-    s.addEventListener("touchend", aoSoltarToque, { passive: true });
-
-    return () => {
-      cancelAnimationFrame(raf);
-      s.removeEventListener("mouseenter", parar);
-      s.removeEventListener("mouseleave", aoSairMouse);
-      s.removeEventListener("mousedown", aoDescerMouse);
-      window.removeEventListener("mousemove", aoMoverMouse);
-      window.removeEventListener("mouseup", aoSoltarMouse);
-      s.removeEventListener("touchstart", parar);
-      s.removeEventListener("touchend", aoSoltarToque);
-    };
-  }, [carregando, onboarding]);
-
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 1900);
@@ -534,6 +458,15 @@ export default function CatalogoClientes() {
     return `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(texto)}`;
   }, [carrinho, totalItens, totalValor, semPreco]);
 
+  /* Setas nos cantos dos stories -- só aparece pra quem clica, sem
+     rolagem automática nem arrastar (o toque no celular já rola
+     sozinho, isso é só pro desktop). */
+  const rolarStories = (dir: 1 | -1) => {
+    const s = storiesRef.current;
+    if (!s) return;
+    s.scrollBy({ left: dir * Math.round(s.clientWidth * 0.7), behavior: "smooth" });
+  };
+
   const selecionarGrupo = (slug: string) => {
     setGrupoAtivo(grupoAtivo === slug ? null : slug);
     setBusca("");
@@ -595,6 +528,7 @@ export default function CatalogoClientes() {
             <>
               {!busca.trim() && (
                 <div className="gwc-stwrap">
+                  <button className="gwc-starrow left" onClick={() => rolarStories(-1)} aria-label="Categorias anteriores">‹</button>
                   <div className="gwc-stories" ref={storiesRef}>
                     {grupos.map((g) => (
                       <button
@@ -610,6 +544,7 @@ export default function CatalogoClientes() {
                     ))}
                   </div>
                   <div className="gwc-stfade" />
+                  <button className="gwc-starrow right" onClick={() => rolarStories(1)} aria-label="Próximas categorias">›</button>
                 </div>
               )}
 

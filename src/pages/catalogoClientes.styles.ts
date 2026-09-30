@@ -47,7 +47,7 @@ export const ESTILO_CATALOGO = `
 
 .gwc-stwrap{position:relative}
 .gwc-stories{display:flex;gap:10px;overflow-x:auto;padding:20px 12px 10px;scrollbar-width:none;
-  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;cursor:grab;user-select:none}
+  scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
 .gwc-stories::-webkit-scrollbar{display:none}
 .gwc-st{flex:none;width:98px;text-align:center;scroll-snap-align:center}
 .gwc-circ{position:relative;width:86px;height:86px;margin:0 auto 8px}
@@ -60,6 +60,15 @@ export const ESTILO_CATALOGO = `
 .gwc-st.on .gwc-circ::before{background:#dbe7f5;box-shadow:0 0 0 2.5px var(--green-500)}
 .gwc-stfade{position:absolute;top:0;bottom:0;right:0;width:34px;pointer-events:none;
   background:linear-gradient(90deg,rgba(255,255,255,0),#fff)}
+
+/* Setas de navegação dos stories -- só no desktop (mouse fino); no
+   celular o dedo já rola sozinho, então elas ficam escondidas lá. */
+.gwc-starrow{position:absolute;top:38px;z-index:2;width:30px;height:30px;border-radius:50%;
+  background:#fff;border:1px solid var(--line);box-shadow:0 2px 8px rgba(9,36,60,.18);
+  color:var(--navy-800);font-size:18px;line-height:1;display:none;align-items:center;justify-content:center}
+.gwc-starrow.left{left:4px}
+.gwc-starrow.right{right:4px}
+@media (hover:hover) and (pointer:fine){.gwc-starrow{display:flex}}
 
 .gwc-filtro{display:flex;align-items:center;gap:9px;margin:4px 12px 0;padding:9px 12px;
   background:#eef2f7;border-radius:10px;font-size:13px;color:var(--navy-800);font-weight:600}
@@ -324,8 +333,9 @@ export const ESTILO_CATALOGO = `
 .gwc-obx{position:absolute;top:8px;right:8px;z-index:1;width:32px;height:32px;border-radius:50%;
   background:rgba(4,24,43,.55);color:#fff;font-size:20px;line-height:1;display:grid;place-items:center;
   border:none}
-.gwc-obimgwrap{overflow-y:auto;max-height:calc(92vh - 78px)}
-.gwc-obimg{display:block;width:100%;height:auto;margin:0 auto}
+.gwc-obimgwrap{display:flex;justify-content:center;overflow:hidden;max-height:calc(92vh - 78px)}
+.gwc-obimg{display:block;width:auto;height:auto;max-width:100%;max-height:calc(92vh - 78px);
+  margin:0 auto;object-fit:contain}
 
 .gwc-estado{text-align:center;padding:44px 20px;color:var(--muted);font-size:14px}
 .gwc-footer{text-align:center;padding:30px 20px calc(96px + env(safe-area-inset-bottom));
