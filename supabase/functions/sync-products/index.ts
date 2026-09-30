@@ -232,7 +232,7 @@ function getImageUrls(p: any): string[] {
    function ficar rodando (limite de 150s por chamada -- é da plataforma,
    não dá para aumentar por configuração do banco). A saída real é rodar
    vários lotes AO MESMO TEMPO (ver runWithConcurrency), não um por vez. */
-const CHUNK_SIZE = 150;
+const CHUNK_SIZE = 25;
 const UPSERT_CONCORRENCIA = 6;
 
 /** Roda `worker` sobre `items`, no máximo `limite` de cada vez em paralelo
