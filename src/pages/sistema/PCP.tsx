@@ -614,14 +614,29 @@ function PcpPedidoCard({
           )}
 
           {coluna === "aguardando_mercadoria" && (() => {
-            const comprados = rows.filter(r => (r.tags ?? []).some(t => /^comprado/i.test(t.trim()))).length;
-            const tudo = comprados === rows.length;
+            const compradas = rows.filter(r => (r.tags ?? []).some(t => /^comprado/i.test(t.trim())));
+            const tudo = compradas.length === rows.length;
+            if (tudo) {
+              const fornecedores = [...new Set(compradas.map(r => {
+                const tag = (r.tags ?? []).find(t => /^comprado/i.test(t.trim()))!;
+                return tag.trim().replace(/^comprado\s*/i, "").toUpperCase() || "—";
+              }))];
+              const cor = corDaTag(`COMPRADO ${fornecedores[0]}`);
+              return (
+                <p
+                  className="gw-body text-[12px] font-bold rounded-[6px] px-2 py-1 w-fit"
+                  style={{ backgroundColor: pastelizar(cor), color: cor }}
+                >
+                  COMPRADO {fornecedores.join("/")}
+                </p>
+              );
+            }
             return (
               <p
-                className="gw-body text-[12px] font-bold rounded-[6px] px-2 py-1 text-white w-fit"
-                style={{ backgroundColor: tudo ? "#15803D" : "#EA580C" }}
+                className="gw-body text-[12px] font-bold rounded-[6px] px-2 py-1 w-fit"
+                style={{ backgroundColor: pastelizar("#EA580C"), color: "#EA580C" }}
               >
-                {comprados} de {rows.length} produtos comprados
+                {compradas.length}/{rows.length} PRODUTOS COMPRADOS
               </p>
             );
           })()}
