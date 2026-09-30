@@ -614,11 +614,11 @@ function PcpPedidoCard({
           )}
 
           {coluna === "aguardando_mercadoria" && (() => {
-            const compradas = rows.filter(r => (r.tags ?? []).some(t => /^comprado/i.test(t.trim())));
+            const compradas = rows.filter(r => (r.tags ?? []).some(t => /^comprado/i.test(t.trim())));
             const tudo = compradas.length === rows.length;
             if (tudo) {
               const fornecedores = [...new Set(compradas.map(r => {
-                const tag = (r.tags ?? []).find(t => /^comprado/i.test(t.trim()))!;
+                const tag = (r.tags ?? []).find(t => /^comprado/i.test(t.trim()))!;
                 return tag.trim().replace(/^comprado\s*/i, "").toUpperCase() || "—";
               }))];
               const cor = corDaTag(`COMPRADO ${fornecedores[0]}`);
