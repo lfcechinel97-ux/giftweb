@@ -634,25 +634,16 @@ function PcpCard({
   const tempo = tempoNaEtapaCurto(row.horas_na_etapa);
   const dataCriacao = dataCurta(row.item_criado_em);
   const tecnica = resumoPersonalizacao({ personalizacao: row.item_personalizacao, aplicacoes: row.item_aplicacoes });
-  const corEtapa = corDaColuna(colunaDoStatus(row));
-  const corEtapaFundo = corFundoDaColuna(colunaDoStatus(row));
-
-  /* Etiqueta da etapa atual (pastel, sempre visível) + as demais tags do
-     item, também em pastel -- mesma cor determinística de sempre
-     (corDaTag), só que clareada em vez de sólida. Prioridade + "+N" com
-     popover, igual já era. */
+  /* As tags do item (quem faz é a produção/vendedor -- "TERCEIRIZADA - nome"
+     diz qual terceirizada de verdade, isso não tem por que repetir o nome
+     da coluna). Pastel, mesma cor determinística de sempre (corDaTag), só
+     clareada em vez de sólida. Prioridade + "+N" com popover, igual já era. */
   const tagsOrdenadas = ordenarTagsPorPrioridade(row.tags ?? []);
-  const tagsVisiveis = tagsOrdenadas.slice(0, 2);
-  const tagsOcultas = tagsOrdenadas.slice(2);
+  const tagsVisiveis = tagsOrdenadas.slice(0, 3);
+  const tagsOcultas = tagsOrdenadas.slice(3);
 
-  const Etiquetas = (
+  const Etiquetas = tagsOrdenadas.length === 0 ? null : (
     <div className="flex items-center gap-1 max-w-full overflow-hidden">
-      <span
-        className="gw-body text-[10px] leading-none rounded-[5px] px-[7px] py-[4px] whitespace-nowrap font-bold shrink-0"
-        style={{ backgroundColor: corEtapaFundo, color: corEtapa }}
-      >
-        {STATUS_MAP[colunaDoStatus(row)]?.label ?? row.status_nome}
-      </span>
       {tagsVisiveis.map(t => (
         <span
           key={t}
@@ -750,7 +741,7 @@ function PcpCard({
               alt=""
               loading="lazy"
               decoding="async"
-              className="h-[168px] w-full rounded-[10px] object-contain bg-[var(--gw-surface-alt)] border border-[var(--gw-border)]"
+              className="h-[168px] w-full rounded-[10px] object-cover bg-[var(--gw-surface-alt)] border border-[var(--gw-border)]"
             />
           ) : (
             <div className="h-[168px] w-full rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] flex items-center justify-center">

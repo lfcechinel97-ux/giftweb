@@ -26,6 +26,7 @@ import { ItemDialog } from "./OrcamentoForm";
 import ClienteDialog from "./ClienteDialog";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { uploadMockup, uploadArquivoPedido, MockupUploadError } from "@/lib/uploadMockup";
+import RecorteQuadrado from "@/components/sistema/RecorteQuadrado";
 import { useUserRole } from "@/hooks/useUserRole";
 import { resumoPersonalizacao } from "@/lib/personalizacao";
 
@@ -129,14 +130,20 @@ const PedidoForm: React.FC = () => {
     fotoInputRef.current?.click();
   };
 
-  const handleFotoItem = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [arquivoParaRecortar, setArquivoParaRecortar] = useState<File | null>(null);
+  const handleFotoItem = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    const itemId = itemAlvoFoto.current;
     e.target.value = "";
-    if (!file || !itemId) return;
+    if (!file || !itemAlvoFoto.current) return;
+    setArquivoParaRecortar(file);
+  };
+  const handleFotoRecortada = async (arquivo: File) => {
+    const itemId = itemAlvoFoto.current;
+    setArquivoParaRecortar(null);
+    if (!itemId) return;
     setEnviandoFoto(itemId);
     try {
-      const url = await uploadMockup(file, id);
+      const url = await uploadMockup(arquivo, id);
       setItens(prev => prev.map(i => (i.id === itemId ? { ...i, mockupImagem: url } : i)));
       toast.success("Foto anexada. Salve o pedido para publicá-la no PCP.");
     } catch (err) {
@@ -614,6 +621,11 @@ const PedidoForm: React.FC = () => {
           accept="image/png,image/jpeg,image/webp,image/gif"
           className="hidden"
           onChange={handleFotoItem}
+        />
+        <RecorteQuadrado
+          arquivo={arquivoParaRecortar}
+          onCancelar={() => setArquivoParaRecortar(null)}
+          onConfirmar={arq => void handleFotoRecortada(arq)}
         />
         <input
           ref={arteInputRef}

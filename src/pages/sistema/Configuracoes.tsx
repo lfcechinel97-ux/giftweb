@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useUserRole } from "@/hooks/useUserRole";
 import UsuariosAdmin from "./UsuariosAdmin";
 import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
@@ -11,6 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useSistema, type LookupItem, type Transportadora } from "@/contexts/SistemaContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Configuracoes() {
   const { isAdmin } = useUserRole();
@@ -31,6 +34,7 @@ export default function Configuracoes() {
           <TabsTrigger value="vendedores">Vendedores</TabsTrigger>
           <TabsTrigger value="pagamentos">Meios de pagamento</TabsTrigger>
           <TabsTrigger value="transportadoras">Transportadoras</TabsTrigger>
+          <TabsTrigger value="terceirizadas">Terceirizadas</TabsTrigger>
           <TabsTrigger value="origens">Origens</TabsTrigger>
         </TabsList>
 
@@ -38,6 +42,7 @@ export default function Configuracoes() {
         <TabsContent value="vendedores"><VendedoresCRUD /></TabsContent>
         <TabsContent value="pagamentos"><PagamentosCRUD /></TabsContent>
         <TabsContent value="transportadoras"><TransportadorasCRUD /></TabsContent>
+        <TabsContent value="terceirizadas"><TerceirizadasCRUD /></TabsContent>
         <TabsContent value="origens"><OrigensCRUD /></TabsContent>
       </Tabs>
     </div>
@@ -315,6 +320,144 @@ function TransportadorasCRUD() {
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-red-600" onClick={() => removeTransportadora(t.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Terceirizadas (sistema_fornecedores, tipo='terceirizada') ─────────── */
+/* Quem produção manda o produto pra fazer: aparece no popup "Qual
+   terceirizada?" do PCP e na tag do card. Não usa o SimpleCRUD genérico
+   (baseado nas listas de src/contexts/SistemaContext) porque essa
+   tabela tem telefone e não é uma das listas simples de lá. */
+
+interface Terceirizada { id: string; nome: string; telefone: string | null }
+
+function TerceirizadasCRUD() {
+  const qc = useQueryClient();
+  const { data: terceirizadas = [], isLoading } = useQuery<Terceirizada[]>({
+    queryKey: ["sistema", "config", "terceirizadas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sistema_fornecedores")
+        .select("id,nome,telefone")
+        .in("tipo", ["terceirizada", "ambos"])
+        .order("nome");
+      if (error) throw error;
+      return (data ?? []) as Terceirizada[];
+    },
+  });
+
+  const [novo, setNovo] = useState({ nome: "", telefone: "" });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState({ nome: "", telefone: "" });
+
+  const invalidar = () => {
+    qc.invalidateQueries({ queryKey: ["sistema", "config", "terceirizadas"] });
+    qc.invalidateQueries({ queryKey: ["sistema", "pcp", "fornecedores"] });
+  };
+
+  const handleAdd = async () => {
+    const nome = novo.nome.trim();
+    if (!nome) return;
+    const { error } = await supabase
+      .from("sistema_fornecedores" as any)
+      .insert({ nome, telefone: novo.telefone.trim() || null, tipo: "terceirizada" });
+    if (error) { toast.error(`Não foi possível adicionar. ${error.message || ""}`); return; }
+    setNovo({ nome: "", telefone: "" });
+    invalidar();
+  };
+
+  const startEdit = (t: Terceirizada) => { setEditingId(t.id); setEditingValue({ nome: t.nome, telefone: t.telefone ?? "" }); };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    const nome = editingValue.nome.trim();
+    if (!nome) { setEditingId(null); return; }
+    const { error } = await supabase
+      .from("sistema_fornecedores" as any)
+      .update({ nome, telefone: editingValue.telefone.trim() || null })
+      .eq("id", editingId);
+    if (error) { toast.error(`Não foi possível salvar. ${error.message || ""}`); return; }
+    setEditingId(null);
+    invalidar();
+  };
+
+  const remover = async (id: string) => {
+    const { error } = await supabase.from("sistema_fornecedores" as any).delete().eq("id", id);
+    if (error) { toast.error(`Não foi possível remover. ${error.message || ""}`); return; }
+    invalidar();
+  };
+
+  return (
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
+      <form
+        onSubmit={e => { e.preventDefault(); void handleAdd(); }}
+        className="p-4 border-b border-border flex flex-wrap items-center gap-2"
+      >
+        <Input
+          placeholder="Nome da terceirizada..."
+          value={novo.nome}
+          onChange={e => setNovo(p => ({ ...p, nome: e.target.value }))}
+          className="flex-1 min-w-40"
+        />
+        <Input
+          placeholder="Telefone (opcional)"
+          value={novo.telefone}
+          onChange={e => setNovo(p => ({ ...p, telefone: e.target.value }))}
+          className="w-48 shrink-0"
+        />
+        <Button type="submit" className="bg-blue-700 hover:bg-blue-800 text-white shrink-0">
+          <Plus className="h-4 w-4 mr-1" /> Adicionar
+        </Button>
+      </form>
+
+      <div className="divide-y divide-border">
+        {isLoading ? (
+          <p className="p-6 text-center text-sm text-muted-foreground">Carregando…</p>
+        ) : terceirizadas.length === 0 ? (
+          <p className="p-6 text-center text-sm text-muted-foreground">Nenhuma terceirizada cadastrada.</p>
+        ) : terceirizadas.map(t => (
+          <div key={t.id} className="px-4 py-2.5">
+            {editingId === t.id ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  value={editingValue.nome}
+                  onChange={e => setEditingValue(p => ({ ...p, nome: e.target.value }))}
+                  className="h-8 flex-1 min-w-40"
+                  autoFocus
+                />
+                <Input
+                  placeholder="Telefone"
+                  value={editingValue.telefone}
+                  onChange={e => setEditingValue(p => ({ ...p, telefone: e.target.value }))}
+                  className="w-48 h-8 shrink-0"
+                />
+                <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-green-600" onClick={() => void saveEdit()}>
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button type="button" size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingId(null)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-sm font-medium text-foreground">{t.nome}</span>
+                  {t.telefone && <span className="ml-2 text-xs text-muted-foreground">{t.telefone}</span>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-blue-600" onClick={() => startEdit(t)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-red-600" onClick={() => void remover(t.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

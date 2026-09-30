@@ -11,6 +11,7 @@ import { useSistemaProducts } from "./useSistemaProducts";
 import { getEffectiveUnitPrice, getNormalizedPriceRows } from "@/utils/price";
 import { cnpjMask, cpfMask } from "./cnpj";
 import { uploadMockup } from "@/lib/uploadMockup";
+import RecorteQuadrado from "@/components/sistema/RecorteQuadrado";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OPCOES_PERSONALIZACAO, resumoPersonalizacao, type TipoPersonalizacao } from "@/lib/personalizacao";
 import { gerarPDFOrcamento } from "./pdf";
@@ -933,15 +934,22 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
   };
 
   /* Vai para o bucket `mockups` e guarda só a URL. Gravar base64 no jsonb
-     inchava cada pedido em megabytes — ver src/lib/uploadMockup.ts. */
+     inchava cada pedido em megabytes — ver src/lib/uploadMockup.ts.
+     Antes de subir, passa pelo recorte quadrado (RecorteQuadrado) -- "pra
+     deixar o produto bem aparente sem bordas" no card do PCP, que agora
+     mostra a foto grande e sem letterbox. */
   const [enviandoMockup, setEnviandoMockup] = useState(false);
-  const handleMockupUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [arquivoParaRecortar, setArquivoParaRecortar] = useState<File | null>(null);
+  const selecionarArquivoMockup = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
     e.target.value = "";
+    if (file) setArquivoParaRecortar(file);
+  };
+  const handleMockupRecortado = async (arquivo: File) => {
+    setArquivoParaRecortar(null);
     setEnviandoMockup(true);
     try {
-      setMockupImagem(await uploadMockup(file));
+      setMockupImagem(await uploadMockup(arquivo));
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Falha ao enviar a imagem.");
     } finally {
@@ -1119,7 +1127,12 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
                       type="file"
                       className="hidden"
                       accept="image/*"
-                      onChange={handleMockupUpload}
+                      onChange={selecionarArquivoMockup}
+                    />
+                    <RecorteQuadrado
+                      arquivo={arquivoParaRecortar}
+                      onCancelar={() => setArquivoParaRecortar(null)}
+                      onConfirmar={arq => void handleMockupRecortado(arq)}
                     />
                     <div className="flex items-center gap-2">
                       <button
