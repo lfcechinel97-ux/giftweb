@@ -1,12 +1,13 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Package, ShoppingBag, Undo2, Search, Plus, Trash2, FileText, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, Package, ShoppingBag, Undo2, Search, Plus, Trash2, FileText, ChevronDown, ChevronRight, ClipboardList, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { sizedImage } from "@/lib/imageSize";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 import { useSistema } from "@/contexts/SistemaContext";
 import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
 import { gerarPedidoCompraPDF } from "./pedidoCompraPDF";
+import { gerarRelatorioComprasPDF, gerarRelatorioComprasHTML } from "./relatorioCompras";
 import { variacaoDoItem } from "./ordemProducaoPDF";
 
 /* Compras: tudo que está em "Aguardando Mercadoria" no PCP.
@@ -241,6 +243,25 @@ export default function Compras() {
     setPopupAberto(true);
   };
 
+  const [gerandoRelatorio, setGerandoRelatorio] = useState(false);
+  const gerarRelatorio = async (formato: "pdf" | "html") => {
+    const escolhidos = ordenadas.filter(r => selecionados.has(r.producao_id));
+    if (escolhidos.length === 0) return;
+    const linhas = escolhidos.map(r => ({
+      pedido: r.pedido_numero != null ? String(r.pedido_numero) : null,
+      cliente: r.cliente,
+      produto: r.produto_nome || "—",
+      cor: r.variacao ?? null,
+      quantidade: Number(r.quantidade ?? 0),
+      foto: r.mockup_url || r.imagem_catalogo_url ? sizedImage((r.mockup_url || r.imagem_catalogo_url)!, 160) : null,
+    }));
+    if (formato === "html") { gerarRelatorioComprasHTML(linhas); return; }
+    setGerandoRelatorio(true);
+    toast.info("Gerando PDF…");
+    try { await gerarRelatorioComprasPDF(linhas); }
+    finally { setGerandoRelatorio(false); }
+  };
+
   const mudarLinha = (chave: string, campo: "produto" | "quantidade" | "unitario", valor: string) =>
     setLinhasPopup(prev => prev.map(l => (l.chave === chave ? { ...l, [campo]: valor } : l)));
   const adicionarLinha = () =>
@@ -435,7 +456,22 @@ export default function Compras() {
               Selecionar todos
             </label>
             <span className="gw-meta">{qtdSelecionada} selecionado(s)</span>
-            <Button className="ml-auto" size="sm" disabled={qtdSelecionada === 0} onClick={abrirPopup} style={{ backgroundColor: "#15803D" }}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="ml-auto" size="sm" variant="outline" disabled={qtdSelecionada === 0 || gerandoRelatorio}>
+                  <ClipboardList className="h-3.5 w-3.5 mr-1.5" /> Gerar relatório
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => void gerarRelatorio("pdf")}>
+                  <FileText className="h-3.5 w-3.5 mr-2" /> PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => void gerarRelatorio("html")}>
+                  <FileSpreadsheet className="h-3.5 w-3.5 mr-2" /> HTML (editável, cole no Excel)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button size="sm" disabled={qtdSelecionada === 0} onClick={abrirPopup} style={{ backgroundColor: "#15803D" }}>
               Marcar como COMPRADO
             </Button>
           </div>
