@@ -441,12 +441,15 @@ function VendedorIcone({ nome, className }: { nome: string | null; className?: s
       onClick={e => { e.stopPropagation(); setAberto(v => !v); }}
       onMouseLeave={() => setAberto(false)}
     >
-      <span className="h-[22px] w-[22px] rounded-full bg-[rgba(15,23,42,.55)] flex items-center justify-center">
-        <User className="h-3 w-3 text-white" />
+      <span className="h-[18px] w-[18px] rounded-full bg-[rgba(15,23,42,.55)] flex items-center justify-center text-white text-[8px] font-bold">
+        {nome ? iniciaisVendedor(nome) : <User className="h-2.5 w-2.5" />}
       </span>
+      {/* Abre pra BAIXO, não pra cima -- quando o ícone fica no canto de
+          cima da foto (overflow-hidden), um tooltip pra cima é cortado e
+          nunca aparece. */}
       <span
         className={cn(
-          "pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded-[6px] bg-[#0F172A] text-white text-[11px] font-medium px-2 py-1 z-10 transition-opacity",
+          "pointer-events-none absolute top-6 right-0 whitespace-nowrap rounded-[6px] bg-[#0F172A] text-white text-[11px] font-medium px-2 py-1 z-10 transition-opacity",
           aberto ? "opacity-100" : "opacity-0 group-hover/vi:opacity-100",
         )}
       >
@@ -2451,7 +2454,7 @@ export default function PCP() {
             }}
           >
 
-            {STATUS_COLS.filter(col => !colunaFoco || col.value === colunaFoco).map(col => {
+            {STATUS_COLS.map(col => {
               const items = byStatus[col.value] || [];
               const somaQtd = items.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
               const isOver = dragOverStatus === col.value;
@@ -2472,9 +2475,10 @@ export default function PCP() {
                       handleDrop(col.value, dado);
                     }
                   }}
-                  style={{ width: emFoco ? 560 : 328, flexShrink: 0, height: "100%" }}
+                  style={{ width: 328, flexShrink: 0, height: "100%", ...(emFoco ? ({ "--tw-ring-color": col.color } as React.CSSProperties) : {}) }}
                   className={cn(
                     "rounded-xl border transition-colors flex flex-col overflow-hidden",
+                    emFoco && "ring-2 ring-offset-1",
                     isOver ? "border-[#2563EB] bg-[#2563EB]/5" : "border-[var(--gw-border)] bg-white/60"
                   )}
                 >
@@ -2534,10 +2538,20 @@ export default function PCP() {
                       </button>
                     </div>
                   </div>
-                  {/* Rolagem vertical acontece por coluna */}
+                  {/* Rolagem vertical acontece por coluna. No modo foco, as
+                      OUTRAS colunas continuam existindo (cabeçalho, contagem,
+                      drop-target) -- só os cards somem, porque a produção
+                      ainda precisa arrastar item pra elas ("é para
+                      desaparecer apenas os pedidos/produtos das outras
+                      etapas, mas a coluna permanece"). */}
                   <div className="p-2 space-y-2 flex-1 min-h-0 overflow-y-auto pcp-col-scroll">
 
-                    {items.length === 0 ? (
+                    {colunaFoco && !emFoco ? (
+                      <div className="h-[96px] rounded-lg border border-dashed border-[var(--gw-border)] flex flex-col items-center justify-center gap-1 gw-meta text-[11px] text-[var(--gw-text-muted)]">
+                        <span>{items.length} {items.length === 1 ? "item oculto" : "itens ocultos"}</span>
+                        <span>Solte aqui para mover</span>
+                      </div>
+                    ) : items.length === 0 ? (
                       <div className="h-[96px] rounded-lg border border-dashed border-[var(--gw-border)] flex items-center justify-center gw-meta text-[11px] text-[var(--gw-text-muted)]">
                         Sem itens nesta etapa
                       </div>
