@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Settings } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { LogoOriginal, LogoTratada, ProdutoMockup } from "./mockupStudio/types";
 import EtapaConfiguracaoInicial from "./mockupStudio/EtapaConfiguracaoInicial";
 import EtapaProduto from "./mockupStudio/EtapaProduto";
 import MockupEditor from "./mockupStudio/MockupEditor";
+import PromptsAdminDialog from "./mockupStudio/PromptsAdminDialog";
 
 export default function MockupStudio() {
   const navigate = useNavigate();
+  const { isAdmin } = useUserRole();
   const [logo, setLogo] = useState<LogoOriginal | null>(null);
   const [tratada, setTratada] = useState<LogoTratada | null>(null);
   const [produto, setProduto] = useState<ProdutoMockup | null>(null);
+  const [showPrompts, setShowPrompts] = useState(false);
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -19,6 +23,15 @@ export default function MockupStudio() {
           <ChevronLeft className="w-5 h-5" />
         </button>
         <h1 className="text-base font-semibold text-slate-800">Gift Web Mockup Studio</h1>
+        {isAdmin && (
+          <button
+            onClick={() => setShowPrompts(true)}
+            className="ml-auto p-2 hover:bg-slate-100 rounded-lg text-slate-500"
+            title="Configurar prompts de IA (admin)"
+          >
+            <Settings className="w-5 h-5" />
+          </button>
+        )}
       </header>
 
       {!tratada && (
@@ -32,6 +45,8 @@ export default function MockupStudio() {
       {tratada && produto && (
         <MockupEditor produto={produto} logoInicial={tratada} onTrocarProduto={() => setProduto(null)} />
       )}
+
+      {showPrompts && <PromptsAdminDialog onClose={() => setShowPrompts(false)} />}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Search, ImageIcon } from "lucide-react";
 import { useSistemaProducts, type SistemaProduct } from "@/pages/sistema/useSistemaProducts";
 import type { ProdutoMockup } from "./types";
@@ -17,16 +17,26 @@ export default function EtapaProduto({ onSelecionar }: Props) {
 
   const listaExibida = termo.trim() ? resultados : parentProducts.slice(0, 20);
 
-  const buscar = async (valor: string) => {
+  // Debounce: sem isso cada tecla digitada disparava uma busca -- era isso
+  // que deixava a página "travada" enquanto o vendedor digitava o nome.
+  const buscaTimer = useRef<number>();
+  const buscaIdRef = useRef(0);
+  const buscar = (valor: string) => {
     setTermo(valor);
-    if (!valor.trim()) { setResultados([]); return; }
+    window.clearTimeout(buscaTimer.current);
+    if (!valor.trim()) { setResultados([]); setBuscando(false); return; }
     setBuscando(true);
-    try {
-      setResultados(await searchParents(valor, 30));
-    } finally {
-      setBuscando(false);
-    }
+    const minhaId = ++buscaIdRef.current;
+    buscaTimer.current = window.setTimeout(async () => {
+      try {
+        const r = await searchParents(valor, 30);
+        if (minhaId === buscaIdRef.current) setResultados(r);
+      } finally {
+        if (minhaId === buscaIdRef.current) setBuscando(false);
+      }
+    }, 350);
   };
+  useEffect(() => () => window.clearTimeout(buscaTimer.current), []);
 
   const abrirProduto = async (p: SistemaProduct) => {
     const g = await getParentWithVariants(p.codigo_amigavel);

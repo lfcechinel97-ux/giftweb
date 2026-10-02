@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Canvas, FabricImage, FabricText, type FabricObject } from "fabric";
+import { Canvas, FabricImage, FabricText, Shadow, filters, type FabricObject } from "fabric";
 import {
   ZoomIn, ZoomOut, Maximize, RotateCcw, Undo2, Redo2, Trash2,
   AlignCenterHorizontal, AlignCenterVertical, Download, Sparkles, Type, ImagePlus, Expand, Printer,
@@ -8,7 +8,8 @@ import type { LogoTratada, ProdutoMockup, Tecnica } from "./types";
 import { TECNICAS } from "./types";
 import { aplicarCurvatura } from "./wrapWarp";
 import { removerFundoBranco, paraCinza, paraPretoEBranco, paraCorUnica } from "./logoOps";
-import { refinarLogoComIA } from "./iaTratamento";
+import { refinarComposicaoComIA } from "./iaTratamento";
+import { FUNDOS_PRESET, gerarFundo } from "./backdrops";
 
 interface LogoLayerData {
   kind: "logo";
@@ -18,6 +19,7 @@ interface LogoLayerData {
   modoCor: "full" | "grayscale" | "bw" | "single";
   corUnica: string;
   curvatura: number;
+  brilho: number;
 }
 interface TextLayerData { kind: "text" }
 type LayerData = LogoLayerData | TextLayerData;
@@ -28,7 +30,7 @@ interface Props {
   onTrocarProduto: () => void;
 }
 
-const CANVAS_MAX = 620;
+const CANVAS_SIZE = 560;
 
 export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: Props) {
   const canvasElRef = useRef<HTMLCanvasElement>(null);
@@ -38,8 +40,10 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
   const historicoRef = useRef<{ visaoId: string; json: any }[]>([]);
   const historicoIndexRef = useRef(-1);
   const aplicandoHistoricoRef = useRef(false);
+  const fundoIdRef = useRef(FUNDOS_PRESET[0].id);
 
   const [visaoId, setVisaoId] = useState(produto.visoes[0]?.id ?? "");
+  const [fundoId, setFundoId] = useState(FUNDOS_PRESET[0].id);
   const [pronto, setPronto] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -83,6 +87,7 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
       modoCor: "full",
       corUnica: "#1d4ed8",
       curvatura: 0,
+      brilho: 0,
       ...data,
     };
     img.set({
@@ -121,23 +126,30 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
 
     (async () => {
       try {
-        const bgImg = await FabricImage.fromURL(visaoAtual.fotoUrl, { crossOrigin: "anonymous" });
+        if (!canvas) return;
+        canvas.setDimensions({ width: CANVAS_SIZE, height: CANVAS_SIZE });
+        const fundoImg = await FabricImage.fromURL(gerarFundo(fundoIdRef.current, CANVAS_SIZE, CANVAS_SIZE));
         if (cancelado || !canvas) return;
-        const escala = Math.min(CANVAS_MAX / bgImg.width!, CANVAS_MAX / bgImg.height!, 1);
-        const w = Math.round(bgImg.width! * escala);
-        const h = Math.round(bgImg.height! * escala);
-        canvas.setDimensions({ width: w, height: h });
-        bgImg.set({ scaleX: escala, scaleY: escala, selectable: false, evented: false });
-        canvas.backgroundImage = bgImg;
+        canvas.backgroundImage = fundoImg;
 
         const salvo = estadosPorVisaoRef.current[visaoAtual.id];
         if (salvo) {
           await canvas.loadFromJSON(salvo);
-          canvas.backgroundImage = bgImg;
+          canvas.backgroundImage = fundoImg; // loadFromJSON pode trazer um fundo velho junto
           canvas.requestRenderAll();
         } else {
           canvas.clear();
-          canvas.backgroundImage = bgImg;
+          canvas.backgroundImage = fundoImg;
+          const fotoImg = await FabricImage.fromURL(visaoAtual.fotoUrl, { crossOrigin: "anonymous" });
+          if (cancelado || !canvas) return;
+          const escalaFoto = Math.min((CANVAS_SIZE * 0.78) / fotoImg.width!, (CANVAS_SIZE * 0.78) / fotoImg.height!);
+          fotoImg.set({
+            left: CANVAS_SIZE / 2, top: CANVAS_SIZE / 2, originX: "center", originY: "center",
+            scaleX: escalaFoto, scaleY: escalaFoto, selectable: false, evented: false,
+            shadow: new Shadow({ color: "rgba(0,0,0,0.28)", blur: 28, offsetX: 0, offsetY: 16 }),
+            data: { kind: "produto" },
+          });
+          canvas.add(fotoImg);
           if (visaoId === (produto.visoes[0]?.id ?? "")) {
             await criarLogoLayer(canvas, logoInicial.url);
           }
@@ -161,6 +173,16 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
     setPronto(false);
     setSelecionado(null);
     setVisaoId(novoId);
+  };
+
+  const trocarFundo = async (id: string) => {
+    fundoIdRef.current = id;
+    setFundoId(id);
+    const canvas = fabricRef.current;
+    if (!canvas || !pronto) return;
+    const fundoImg = await FabricImage.fromURL(gerarFundo(id, CANVAS_SIZE, CANVAS_SIZE));
+    canvas.backgroundImage = fundoImg;
+    canvas.requestRenderAll();
   };
 
   const aplicarHistorico = async (idx: number) => {
@@ -262,7 +284,24 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
     const transformAnterior = { left: obj.left, top: obj.top, scaleX: obj.scaleX, scaleY: obj.scaleY, angle: obj.angle, opacity: obj.opacity };
     await obj.setSrc(src, { crossOrigin: "anonymous" });
     obj.set({ ...transformAnterior, data });
+    obj.filters = data.brilho ? [new filters.Brightness({ brightness: data.brilho })] : [];
+    obj.applyFilters();
     obj.setCoords();
+    canvas.requestRenderAll();
+    forcarAtualizacao();
+  };
+
+  // Brilho usa o filtro nativo do Fabric (não mexe na imagem base), então é
+  // leve o bastante pra rodar em tempo real enquanto o vendedor arrasta o
+  // slider -- diferente da remoção de fundo/cor/curvatura, que regeneram a
+  // imagem inteira e seriam lentas demais pra isso.
+  const ajustarBrilho = (obj: FabricImage, valor: number) => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+    const data = { ...(obj.get("data") as LogoLayerData), brilho: valor };
+    obj.set({ data });
+    obj.filters = valor ? [new filters.Brightness({ brightness: valor })] : [];
+    obj.applyFilters();
     canvas.requestRenderAll();
     forcarAtualizacao();
   };
@@ -270,16 +309,32 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
   const [iaBusy, setIaBusy] = useState(false);
   const [iaErro, setIaErro] = useState<string | null>(null);
 
+  // Manda pra IA o produto + a logo juntos, exatamente como estão
+  // posicionados no canvas -- não só a logo isolada, pra ela poder ajustar
+  // luz/perspectiva considerando a superfície real. O resultado vira o novo
+  // fundo (a logo já está "assada" nele), e dá pra desfazer pelo histórico.
   const refinarLogoSelecionadoComIA = async (obj: FabricImage) => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
     const data = obj.get("data") as LogoLayerData;
     setIaBusy(true);
     setIaErro(null);
     try {
-      const resultado = await refinarLogoComIA(data.origSrc, data.tecnica);
-      await reprocessarLogo(obj, { origSrc: resultado.url, removerFundo: false });
+      canvas.discardActiveObject();
+      canvas.requestRenderAll();
+      const composicao = canvas.toDataURL({ format: "png", multiplier: 1 });
+      const resultado = await refinarComposicaoComIA(composicao, data.tecnica);
+      const novoFundo = await FabricImage.fromURL(resultado.url, { crossOrigin: "anonymous" });
+      novoFundo.set({ scaleX: canvas.getWidth() / novoFundo.width!, scaleY: canvas.getHeight() / novoFundo.height! });
+      canvas.backgroundImage = novoFundo;
+      canvas.remove(obj);
+      const produtoObj = canvas.getObjects().find((o) => (o.get("data") as any)?.kind === "produto");
+      if (produtoObj) canvas.remove(produtoObj);
+      canvas.requestRenderAll();
+      setSelecionado(null);
       registrarHistorico();
     } catch (e: any) {
-      setIaErro(e?.message || "Não foi possível refinar a logo com IA agora.");
+      setIaErro(e?.message || "Não foi possível refinar com IA agora.");
     } finally {
       setIaBusy(false);
     }
@@ -346,6 +401,7 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
               data={data as LogoLayerData}
               onChange={(patch) => reprocessarLogo(selecionado as FabricImage, patch)}
               onCommit={registrarHistorico}
+              onBrilhoChange={(v) => ajustarBrilho(selecionado as FabricImage, v)}
               onRefinarIA={() => refinarLogoSelecionadoComIA(selecionado as FabricImage)}
               iaBusy={iaBusy}
               iaErro={iaErro}
@@ -394,6 +450,18 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
         </div>
         {erro && <p className="text-sm text-red-600 mt-3">{erro}</p>}
         {!pronto && !erro && <p className="text-sm text-slate-400 mt-3">Carregando...</p>}
+
+        <div className="flex gap-2 mt-4">
+          {FUNDOS_PRESET.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => trocarFundo(f.id)}
+              title={f.nome}
+              className={`w-8 h-8 rounded-full border-2 ${fundoId === f.id ? "border-blue-500" : "border-white"} shadow`}
+              style={{ background: `linear-gradient(135deg, ${f.cores[0]}, ${f.cores[2]})` }}
+            />
+          ))}
+        </div>
 
         {produto.visoes.length > 1 && (
           <div className="flex gap-2 mt-6">
@@ -476,10 +544,11 @@ const MODOS_COR = [
   { id: "single", label: "Convert To Single Color" },
 ] as const;
 
-function LogoProperties({ data, onChange, onCommit, onRefinarIA, iaBusy, iaErro }: {
+function LogoProperties({ data, onChange, onCommit, onBrilhoChange, onRefinarIA, iaBusy, iaErro }: {
   data: LogoLayerData;
   onChange: (patch: Partial<LogoLayerData>) => void;
   onCommit: () => void;
+  onBrilhoChange: (v: number) => void;
   onRefinarIA: () => void;
   iaBusy: boolean;
   iaErro: string | null;
@@ -544,6 +613,17 @@ function LogoProperties({ data, onChange, onCommit, onRefinarIA, iaBusy, iaErro 
           className="w-full"
         />
         <p className="text-[10px] text-slate-400 mt-1">Faz a logo acompanhar a curvatura de um produto cilíndrico (garrafa, caneca, squeeze).</p>
+      </div>
+
+      <div className="pt-2 border-t">
+        <p className="text-[11px] text-slate-500 mb-1">Brilho</p>
+        <input
+          type="range" min={-0.5} max={0.5} step={0.02}
+          value={data.brilho}
+          onChange={(e) => onBrilhoChange(Number(e.target.value))}
+          onMouseUp={onCommit}
+          className="w-full"
+        />
       </div>
     </div>
   );

@@ -13,12 +13,8 @@ async function paraDataURL(src: string): Promise<string> {
   });
 }
 
-/** Remove fundo / refina o acabamento via Lovable AI Gateway (cobrado nos
- * créditos do workspace Lovable, sem chave própria). Nunca redesenha a
- * logo -- o prompt do lado do servidor é explícito sobre isso. */
-export async function refinarLogoComIA(src: string, tecnica: Tecnica): Promise<{ url: string; aviso?: string | null }> {
-  const imagemBase64 = await paraDataURL(src);
-  const { data, error } = await supabase.functions.invoke("tratar-logo-ia", { body: { imagemBase64, tecnica } });
+async function chamarTratamento(imagemBase64: string, tecnica: Tecnica, modo?: "logo" | "composicao") {
+  const { data, error } = await supabase.functions.invoke("tratar-logo-ia", { body: { imagemBase64, tecnica, modo } });
   if (error) {
     let msg = error.message;
     const ctx = (error as any)?.context;
@@ -28,5 +24,21 @@ export async function refinarLogoComIA(src: string, tecnica: Tecnica): Promise<{
     throw new Error(msg);
   }
   if (data?.error) throw new Error(data.error);
-  return { url: data.url, aviso: data.aviso };
+  return { url: data.url as string, aviso: data.aviso as string | null | undefined };
+}
+
+/** Remove fundo / refina o acabamento da logo isolada via Lovable AI Gateway
+ * (cobrado nos créditos do workspace Lovable, sem chave própria). Nunca
+ * redesenha a logo -- o prompt do lado do servidor é explícito sobre isso. */
+export async function refinarLogoComIA(src: string, tecnica: Tecnica) {
+  const imagemBase64 = await paraDataURL(src);
+  return chamarTratamento(imagemBase64, tecnica, "logo");
+}
+
+/** Refina a composição inteira (produto + logo já posicionada) -- usado no
+ * editor, onde a IA precisa considerar os dois juntos (luz, perspectiva da
+ * superfície), não só a logo isolada. */
+export async function refinarComposicaoComIA(src: string, tecnica: Tecnica) {
+  const imagemBase64 = await paraDataURL(src);
+  return chamarTratamento(imagemBase64, tecnica, "composicao");
 }

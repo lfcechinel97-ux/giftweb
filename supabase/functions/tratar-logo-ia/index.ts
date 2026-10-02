@@ -21,6 +21,13 @@ const json = (body: unknown, status = 200) =>
 
 type Tecnica = "laser" | "dtf_uv" | "dtf_textil";
 
+const INSTRUCAO_COMPOSICAO =
+  "This image shows a product with a logo already placed on it, as a mockup preview. Enhance ONLY how the logo " +
+  "blends with the product's surface: realistic shading, lighting direction matching the product, and perspective " +
+  "if the surface is curved. Do NOT change the product itself (shape, color, material) and do NOT redesign, move, " +
+  "resize, recolor or reinterpret the logo -- its letters, symbols and proportions must stay exactly the same. Do " +
+  "not add, remove or invent any element that is not already in the image.";
+
 const INSTRUCOES: Record<Tecnica, string> = {
   laser:
     "This logo will be laser engraved on stainless steel. Remove the background completely (transparent). " +
@@ -57,10 +64,17 @@ serve(async (req) => {
   const { data: souInterno } = await admin.from("admin_users").select("id").eq("id", quem.user.id).maybeSingle();
   if (!souInterno) return json({ error: "Acesso restrito à equipe interna." }, 403);
 
-  const corpo = await req.json().catch(() => ({})) as { imagemBase64?: string; tecnica?: Tecnica };
-  const { imagemBase64, tecnica } = corpo;
-  if (!imagemBase64?.startsWith("data:image/")) return json({ error: "Envie a logo como data URL de imagem." }, 400);
+  const corpo = await req.json().catch(() => ({})) as { imagemBase64?: string; tecnica?: Tecnica; modo?: "logo" | "composicao" };
+  const { imagemBase64, tecnica, modo } = corpo;
+  if (!imagemBase64?.startsWith("data:image/")) return json({ error: "Envie a imagem como data URL." }, 400);
   if (!tecnica || !INSTRUCOES[tecnica]) return json({ error: "Técnica inválida." }, 400);
+
+  // Prompt editável pelo admin fica em mockup_ia_prompts; se a linha não
+  // existir ainda (migration não rodada, ou chave nova), cai pro texto
+  // padrão embutido aqui mesmo.
+  const chave = modo === "composicao" ? "composicao" : `logo_${tecnica}`;
+  const { data: linhaPrompt } = await admin.from("mockup_ia_prompts").select("prompt").eq("chave", chave).maybeSingle();
+  const instrucao = linhaPrompt?.prompt || (modo === "composicao" ? INSTRUCAO_COMPOSICAO : INSTRUCOES[tecnica]);
 
   let resposta: Response;
   try {
@@ -76,7 +90,7 @@ serve(async (req) => {
           {
             role: "user",
             content: [
-              { type: "text", text: INSTRUCOES[tecnica] },
+              { type: "text", text: instrucao },
               { type: "image_url", image_url: { url: imagemBase64 } },
             ],
           },
