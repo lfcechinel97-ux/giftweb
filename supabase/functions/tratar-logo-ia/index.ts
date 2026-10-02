@@ -28,6 +28,13 @@ const INSTRUCAO_COMPOSICAO =
   "resize, recolor or reinterpret the logo -- its letters, symbols and proportions must stay exactly the same. Do " +
   "not add, remove or invent any element that is not already in the image.";
 
+const INSTRUCAO_PRODUTO =
+  "This is a product catalog photo with a plain white/flat background. Remove the background completely " +
+  "(transparent), keeping a clean, high quality cutout of the product. Do NOT change the product itself -- shape, " +
+  "color, material, proportions, labels, logos already printed on it and reflections must stay exactly the same. " +
+  "Do not add shadows, textures or any new element. Preserve maximum image sharpness and detail, do not blur or " +
+  "lower the resolution.";
+
 const INSTRUCOES: Record<Tecnica, string> = {
   laser:
     "This logo will be laser engraved on stainless steel. Remove the background completely (transparent). " +
@@ -64,17 +71,20 @@ serve(async (req) => {
   const { data: souInterno } = await admin.from("admin_users").select("id").eq("id", quem.user.id).maybeSingle();
   if (!souInterno) return json({ error: "Acesso restrito à equipe interna." }, 403);
 
-  const corpo = await req.json().catch(() => ({})) as { imagemBase64?: string; tecnica?: Tecnica; modo?: "logo" | "composicao" };
+  const corpo = await req.json().catch(() => ({})) as { imagemBase64?: string; tecnica?: Tecnica; modo?: "logo" | "composicao" | "produto" };
   const { imagemBase64, tecnica, modo } = corpo;
   if (!imagemBase64?.startsWith("data:image/")) return json({ error: "Envie a imagem como data URL." }, 400);
-  if (!tecnica || !INSTRUCOES[tecnica]) return json({ error: "Técnica inválida." }, 400);
+  if (modo === "logo" || !modo) {
+    if (!tecnica || !INSTRUCOES[tecnica]) return json({ error: "Técnica inválida." }, 400);
+  }
 
   // Prompt editável pelo admin fica em mockup_ia_prompts; se a linha não
   // existir ainda (migration não rodada, ou chave nova), cai pro texto
   // padrão embutido aqui mesmo.
-  const chave = modo === "composicao" ? "composicao" : `logo_${tecnica}`;
+  const chave = modo === "composicao" ? "composicao" : modo === "produto" ? "produto" : `logo_${tecnica}`;
   const { data: linhaPrompt } = await admin.from("mockup_ia_prompts").select("prompt").eq("chave", chave).maybeSingle();
-  const instrucao = linhaPrompt?.prompt || (modo === "composicao" ? INSTRUCAO_COMPOSICAO : INSTRUCOES[tecnica]);
+  const padrao = modo === "composicao" ? INSTRUCAO_COMPOSICAO : modo === "produto" ? INSTRUCAO_PRODUTO : INSTRUCOES[tecnica!];
+  const instrucao = linhaPrompt?.prompt || padrao;
 
   let resposta: Response;
   try {
@@ -85,7 +95,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
+        model: "google/gemini-3.1-flash-lite-image",
         messages: [
           {
             role: "user",

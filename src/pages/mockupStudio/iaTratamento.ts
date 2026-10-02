@@ -13,7 +13,7 @@ async function paraDataURL(src: string): Promise<string> {
   });
 }
 
-async function chamarTratamento(imagemBase64: string, tecnica: Tecnica, modo?: "logo" | "composicao") {
+async function chamarTratamento(imagemBase64: string, tecnica: Tecnica | undefined, modo?: "logo" | "composicao" | "produto") {
   const { data, error } = await supabase.functions.invoke("tratar-logo-ia", { body: { imagemBase64, tecnica, modo } });
   if (error) {
     let msg = error.message;
@@ -41,4 +41,11 @@ export async function refinarLogoComIA(src: string, tecnica: Tecnica) {
 export async function refinarComposicaoComIA(src: string, tecnica: Tecnica) {
   const imagemBase64 = await paraDataURL(src);
   return chamarTratamento(imagemBase64, tecnica, "composicao");
+}
+
+/** Remove o fundo branco da foto do produto (vem assim da XBZ) via IA,
+ * preservando o produto em si -- sem perder nitidez. */
+export async function refinarProdutoComIA(src: string) {
+  const imagemBase64 = await paraDataURL(src);
+  return chamarTratamento(imagemBase64, undefined, "produto");
 }

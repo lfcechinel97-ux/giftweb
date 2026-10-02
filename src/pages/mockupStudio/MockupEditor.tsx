@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Canvas, FabricImage, FabricText, Shadow, filters, type FabricObject } from "fabric";
+import { Canvas, FabricImage, FabricText, Shadow, Point, filters, type FabricObject } from "fabric";
 import {
   ZoomIn, ZoomOut, Maximize, RotateCcw, Undo2, Redo2, Trash2,
   AlignCenterHorizontal, AlignCenterVertical, Download, Sparkles, Type, ImagePlus, Expand, Printer,
@@ -8,7 +8,7 @@ import type { LogoTratada, ProdutoMockup, Tecnica } from "./types";
 import { TECNICAS } from "./types";
 import { aplicarCurvatura } from "./wrapWarp";
 import { removerFundoBranco, paraCinza, paraPretoEBranco, paraCorUnica } from "./logoOps";
-import { refinarComposicaoComIA } from "./iaTratamento";
+import { refinarComposicaoComIA, refinarProdutoComIA } from "./iaTratamento";
 import { FUNDOS_PRESET, gerarFundo } from "./backdrops";
 
 interface LogoLayerData {
@@ -22,7 +22,8 @@ interface LogoLayerData {
   brilho: number;
 }
 interface TextLayerData { kind: "text" }
-type LayerData = LogoLayerData | TextLayerData;
+interface ProdutoLayerData { kind: "produto"; origSrc: string; removerFundo: boolean; brilho: number }
+type LayerData = LogoLayerData | TextLayerData | ProdutoLayerData;
 
 interface Props {
   produto: ProdutoMockup;
@@ -30,7 +31,8 @@ interface Props {
   onTrocarProduto: () => void;
 }
 
-const CANVAS_SIZE = 560;
+const CANVAS_SIZE = 640;
+const EXPORT_MULTIPLIER = 2.5; // 640 * 2.5 = 1600px -- bem acima de 1K pro WhatsApp
 
 export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: Props) {
   const canvasElRef = useRef<HTMLCanvasElement>(null);
@@ -41,6 +43,7 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
   const historicoIndexRef = useRef(-1);
   const aplicandoHistoricoRef = useRef(false);
   const fundoIdRef = useRef(FUNDOS_PRESET[0].id);
+  const canvasCleanupRef = useRef<(() => void) | null>(null);
 
   const [visaoId, setVisaoId] = useState(produto.visoes[0]?.id ?? "");
   const [fundoId, setFundoId] = useState(FUNDOS_PRESET[0].id);
@@ -111,9 +114,15 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
       canvas = new Canvas(canvasElRef.current, { preserveObjectStacking: true });
       fabricRef.current = canvas;
 
+      // Travar proporção só faz sentido arrastando um CANTO (tl/tr/bl/br).
+      // Os quadradinhos do meio de cada lado (ml/mr/mt/mb) já são o jeito
+      // natural do Fabric de esticar só largura ou só altura -- é o que
+      // vira o "recorte" vertical/horizontal pedido.
       canvas.on("object:scaling", (e) => {
         const target = e.transform?.target;
-        if (target && e.e && !(e.e as MouseEvent).shiftKey) target.scaleY = target.scaleX;
+        const corner = e.transform?.corner;
+        const ehCanto = corner === "tl" || corner === "tr" || corner === "bl" || corner === "br";
+        if (target && ehCanto && e.e && !(e.e as MouseEvent).shiftKey) target.scaleY = target.scaleX;
       });
       canvas.on("selection:created", (e) => setSelecionado(e.selected?.[0] ?? null));
       canvas.on("selection:updated", (e) => setSelecionado(e.selected?.[0] ?? null));
@@ -122,6 +131,60 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
       canvas.on("object:rotating", forcarAtualizacao);
       canvas.on("object:scaling", forcarAtualizacao);
       canvas.on("object:modified", () => { registrarHistorico(); forcarAtualizacao(); });
+
+      // Scroll do mouse = zoom centrado no cursor; barra de espaço + arrastar
+      // = mover a prancheta (pan), do jeito que qualquer editor gráfico faz.
+      canvas.on("mouse:wheel", (opt) => {
+        const e = opt.e as WheelEvent;
+        let z = canvas!.getZoom();
+        z *= 0.999 ** e.deltaY;
+        z = Math.min(4, Math.max(0.25, z));
+        canvas!.zoomToPoint(new Point(e.offsetX, e.offsetY), z);
+        setZoom(z);
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
+      let espacoPressionado = false;
+      let arrastandoTela = false;
+      let ultimoPonto = { x: 0, y: 0 };
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.code === "Space" && !espacoPressionado) {
+          espacoPressionado = true;
+          canvas!.defaultCursor = "grab";
+          canvas!.selection = false;
+        }
+      };
+      const onKeyUp = (e: KeyboardEvent) => {
+        if (e.code === "Space") {
+          espacoPressionado = false;
+          arrastandoTela = false;
+          canvas!.defaultCursor = "default";
+          canvas!.selection = true;
+        }
+      };
+      window.addEventListener("keydown", onKeyDown);
+      window.addEventListener("keyup", onKeyUp);
+      canvas.on("mouse:down", (opt) => {
+        if (!espacoPressionado) return;
+        arrastandoTela = true;
+        const e = opt.e as MouseEvent;
+        ultimoPonto = { x: e.clientX, y: e.clientY };
+      });
+      canvas.on("mouse:move", (opt) => {
+        if (!arrastandoTela) return;
+        const e = opt.e as MouseEvent;
+        const vpt = canvas!.viewportTransform!;
+        vpt[4] += e.clientX - ultimoPonto.x;
+        vpt[5] += e.clientY - ultimoPonto.y;
+        canvas!.requestRenderAll();
+        ultimoPonto = { x: e.clientX, y: e.clientY };
+      });
+      canvas.on("mouse:up", () => { arrastandoTela = false; });
+      canvasCleanupRef.current = () => {
+        window.removeEventListener("keydown", onKeyDown);
+        window.removeEventListener("keyup", onKeyUp);
+      };
     }
 
     (async () => {
@@ -143,13 +206,16 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
           const fotoImg = await FabricImage.fromURL(visaoAtual.fotoUrl, { crossOrigin: "anonymous" });
           if (cancelado || !canvas) return;
           const escalaFoto = Math.min((CANVAS_SIZE * 0.78) / fotoImg.width!, (CANVAS_SIZE * 0.78) / fotoImg.height!);
+          const produtoData: ProdutoLayerData = { kind: "produto", origSrc: visaoAtual.fotoUrl, removerFundo: false, brilho: 0 };
           fotoImg.set({
             left: CANVAS_SIZE / 2, top: CANVAS_SIZE / 2, originX: "center", originY: "center",
-            scaleX: escalaFoto, scaleY: escalaFoto, selectable: false, evented: false,
+            scaleX: escalaFoto, scaleY: escalaFoto,
+            cornerColor: "#2563eb", cornerStyle: "circle", transparentCorners: false, borderColor: "#2563eb",
             shadow: new Shadow({ color: "rgba(0,0,0,0.28)", blur: 28, offsetX: 0, offsetY: 16 }),
-            data: { kind: "produto" },
+            data: produtoData,
           });
           canvas.add(fotoImg);
+          canvas.sendObjectToBack(fotoImg);
           if (visaoId === (produto.visoes[0]?.id ?? "")) {
             await criarLogoLayer(canvas, logoInicial.url);
           }
@@ -166,7 +232,11 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visaoId]);
 
-  useEffect(() => () => { fabricRef.current?.dispose(); fabricRef.current = null; }, []);
+  useEffect(() => () => {
+    canvasCleanupRef.current?.();
+    fabricRef.current?.dispose();
+    fabricRef.current = null;
+  }, []);
 
   const trocarVisao = (novoId: string) => {
     salvarEstadoVisao();
@@ -298,7 +368,7 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
   const ajustarBrilho = (obj: FabricImage, valor: number) => {
     const canvas = fabricRef.current;
     if (!canvas) return;
-    const data = { ...(obj.get("data") as LogoLayerData), brilho: valor };
+    const data = { ...(obj.get("data") as LogoLayerData | ProdutoLayerData), brilho: valor };
     obj.set({ data });
     obj.filters = valor ? [new filters.Brightness({ brightness: valor })] : [];
     obj.applyFilters();
@@ -308,6 +378,44 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
 
   const [iaBusy, setIaBusy] = useState(false);
   const [iaErro, setIaErro] = useState<string | null>(null);
+
+  // Mesma lógica de remover fundo da logo, mas pra foto do produto -- ela
+  // chega da XBZ com fundo branco. Opera sempre a partir de origSrc (a foto
+  // original, sem perda) pra nunca degradar em reprocessos sucessivos.
+  const reprocessarProduto = async (obj: FabricImage, patch: Partial<ProdutoLayerData>) => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+    const data = { ...(obj.get("data") as ProdutoLayerData), ...patch };
+    let src = data.origSrc;
+    if (data.removerFundo) src = await removerFundoBranco(src);
+    const transformAnterior = { left: obj.left, top: obj.top, scaleX: obj.scaleX, scaleY: obj.scaleY, angle: obj.angle, opacity: obj.opacity };
+    await obj.setSrc(src, { crossOrigin: "anonymous" });
+    obj.set({ ...transformAnterior, data });
+    obj.filters = data.brilho ? [new filters.Brightness({ brightness: data.brilho })] : [];
+    obj.applyFilters();
+    obj.setCoords();
+    canvas.requestRenderAll();
+    forcarAtualizacao();
+  };
+
+  // Refina só a foto do produto (sem a logo) via IA -- remove o fundo
+  // branco de verdade, mantendo nitidez (o modelo trabalha em ~1K).
+  const refinarProdutoSelecionadoComIA = async (obj: FabricImage) => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+    const data = obj.get("data") as ProdutoLayerData;
+    setIaBusy(true);
+    setIaErro(null);
+    try {
+      const resultado = await refinarProdutoComIA(data.origSrc);
+      await reprocessarProduto(obj, { origSrc: resultado.url, removerFundo: false });
+      registrarHistorico();
+    } catch (e: any) {
+      setIaErro(e?.message || "Não foi possível refinar o produto com IA agora.");
+    } finally {
+      setIaBusy(false);
+    }
+  };
 
   // Manda pra IA o produto + a logo juntos, exatamente como estão
   // posicionados no canvas -- não só a logo isolada, pra ela poder ajustar
@@ -322,7 +430,7 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
     try {
       canvas.discardActiveObject();
       canvas.requestRenderAll();
-      const composicao = canvas.toDataURL({ format: "png", multiplier: 1 });
+      const composicao = canvas.toDataURL({ format: "png", multiplier: EXPORT_MULTIPLIER });
       const resultado = await refinarComposicaoComIA(composicao, data.tecnica);
       const novoFundo = await FabricImage.fromURL(resultado.url, { crossOrigin: "anonymous" });
       novoFundo.set({ scaleX: canvas.getWidth() / novoFundo.width!, scaleY: canvas.getHeight() / novoFundo.height! });
@@ -345,7 +453,7 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
     if (!canvas) return;
     canvas.discardActiveObject();
     canvas.requestRenderAll();
-    const dataUrl = canvas.toDataURL({ format: "png", multiplier: 2 });
+    const dataUrl = canvas.toDataURL({ format: "png", multiplier: EXPORT_MULTIPLIER });
     const a = document.createElement("a");
     a.href = dataUrl;
     a.download = `mockup-${produto.codigoAmigavel || "produto"}-${visaoAtual?.nome || ""}.png`;
@@ -357,7 +465,7 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
     if (!canvas) return;
     canvas.discardActiveObject();
     canvas.requestRenderAll();
-    const dataUrl = canvas.toDataURL({ format: "png", multiplier: 2 });
+    const dataUrl = canvas.toDataURL({ format: "png", multiplier: EXPORT_MULTIPLIER });
     const w = window.open("", "_blank");
     if (!w) return;
     w.document.write(`<img src="${dataUrl}" style="max-width:100%" onload="window.print()">`);
@@ -369,6 +477,7 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
   const data = selecionado?.get("data") as LayerData | undefined;
   const isLogo = data?.kind === "logo";
   const isText = data?.kind === "text";
+  const isProduto = data?.kind === "produto";
 
   return (
     <div className="flex h-[calc(100vh-57px)]">
@@ -390,23 +499,37 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
         </div>
       </div>
 
-      {/* Painel de propriedades (abre quando algo está selecionado) */}
-      {selecionado && (
-        <div className="w-64 border-r p-4 overflow-y-auto shrink-0">
-          {isText && (
-            <TextProperties obj={selecionado as FabricText} onChange={() => { fabricRef.current?.requestRenderAll(); forcarAtualizacao(); }} onCommit={registrarHistorico} />
-          )}
-          {isLogo && (
-            <LogoProperties
-              data={data as LogoLayerData}
-              onChange={(patch) => reprocessarLogo(selecionado as FabricImage, patch)}
-              onCommit={registrarHistorico}
-              onBrilhoChange={(v) => ajustarBrilho(selecionado as FabricImage, v)}
-              onRefinarIA={() => refinarLogoSelecionadoComIA(selecionado as FabricImage)}
-              iaBusy={iaBusy}
-              iaErro={iaErro}
-            />
-          )}
+      {/* Painel de propriedades -- sempre visível, não só quando algo está selecionado */}
+      <div className="w-64 border-r p-4 overflow-y-auto shrink-0">
+        {!selecionado && (
+          <p className="text-xs text-slate-400">Selecione um elemento no canvas (logo, texto ou o produto) pra editar.</p>
+        )}
+        {isText && (
+          <TextProperties obj={selecionado as FabricText} onChange={() => { fabricRef.current?.requestRenderAll(); forcarAtualizacao(); }} onCommit={registrarHistorico} />
+        )}
+        {isLogo && (
+          <LogoProperties
+            data={data as LogoLayerData}
+            onChange={(patch) => reprocessarLogo(selecionado as FabricImage, patch)}
+            onCommit={registrarHistorico}
+            onBrilhoChange={(v) => ajustarBrilho(selecionado as FabricImage, v)}
+            onRefinarIA={() => refinarLogoSelecionadoComIA(selecionado as FabricImage)}
+            iaBusy={iaBusy}
+            iaErro={iaErro}
+          />
+        )}
+        {isProduto && (
+          <ProdutoProperties
+            data={data as ProdutoLayerData}
+            onChange={(patch) => reprocessarProduto(selecionado as FabricImage, patch)}
+            onCommit={registrarHistorico}
+            onBrilhoChange={(v) => ajustarBrilho(selecionado as FabricImage, v)}
+            onRefinarIA={() => refinarProdutoSelecionadoComIA(selecionado as FabricImage)}
+            iaBusy={iaBusy}
+            iaErro={iaErro}
+          />
+        )}
+        {selecionado && (
           <div className="mt-4 pt-4 border-t space-y-2">
             <p className="text-[11px] text-slate-500">Rotação</p>
             <input type="range" min={-180} max={180} value={selecionado.angle ?? 0}
@@ -419,11 +542,12 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
               <button onClick={excluirSelecionado} className="flex-1 p-1.5 border rounded hover:bg-red-50 text-red-600" title="Excluir"><Trash2 className="w-3.5 h-3.5 mx-auto" /></button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Canvas */}
       <div ref={containerRef} className="flex-1 flex flex-col items-center bg-slate-50 overflow-auto py-6 relative">
+        <p className="text-[11px] text-slate-400 mb-2">Scroll do mouse = zoom · Segure Espaço e arraste = mover a tela</p>
         <div className="flex items-center gap-1.5 mb-3 flex-wrap justify-center bg-white border rounded-lg px-2 py-1.5 shadow-sm">
           <button onClick={() => alternarZoom(-0.1)} className="p-1.5 rounded hover:bg-slate-100" title="Diminuir zoom"><ZoomOut className="w-4 h-4" /></button>
           <span className="text-xs text-slate-500 w-9 text-center">{Math.round(zoom * 100)}%</span>
@@ -614,6 +738,49 @@ function LogoProperties({ data, onChange, onCommit, onBrilhoChange, onRefinarIA,
         />
         <p className="text-[10px] text-slate-400 mt-1">Faz a logo acompanhar a curvatura de um produto cilíndrico (garrafa, caneca, squeeze).</p>
       </div>
+
+      <div className="pt-2 border-t">
+        <p className="text-[11px] text-slate-500 mb-1">Brilho</p>
+        <input
+          type="range" min={-0.5} max={0.5} step={0.02}
+          value={data.brilho}
+          onChange={(e) => onBrilhoChange(Number(e.target.value))}
+          onMouseUp={onCommit}
+          className="w-full"
+        />
+      </div>
+    </div>
+  );
+}
+
+function ProdutoProperties({ data, onChange, onCommit, onBrilhoChange, onRefinarIA, iaBusy, iaErro }: {
+  data: ProdutoLayerData;
+  onChange: (patch: Partial<ProdutoLayerData>) => void;
+  onCommit: () => void;
+  onBrilhoChange: (v: number) => void;
+  onRefinarIA: () => void;
+  iaBusy: boolean;
+  iaErro: string | null;
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-xs font-semibold text-slate-700">PRODUCT PROPERTIES</p>
+
+      <button
+        type="button"
+        onClick={onRefinarIA}
+        disabled={iaBusy}
+        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 text-xs font-medium disabled:opacity-50"
+      >
+        <Sparkles className="w-3.5 h-3.5" /> {iaBusy ? "Refinando..." : "Refinar com IA"}
+      </button>
+      {iaErro && <p className="text-[11px] text-red-600">{iaErro}</p>}
+
+      <label className="flex items-center gap-2 text-xs text-slate-600">
+        <input type="checkbox" checked={data.removerFundo} onChange={(e) => { onChange({ removerFundo: e.target.checked }); onCommit(); }} />
+        Remove White Background
+      </label>
+      <p className="text-[10px] text-slate-400">A foto chega da XBZ com fundo branco -- use IA ou este botão pra deixar transparente.</p>
 
       <div className="pt-2 border-t">
         <p className="text-[11px] text-slate-500 mb-1">Brilho</p>

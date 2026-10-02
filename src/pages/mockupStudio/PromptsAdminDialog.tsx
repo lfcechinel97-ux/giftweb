@@ -7,6 +7,7 @@ const CHAVES = [
   { chave: "logo_dtf_uv", label: "Logo — DTF UV" },
   { chave: "logo_dtf_textil", label: "Logo — DTF Têxtil" },
   { chave: "composicao", label: "Refinar composição (produto + logo)" },
+  { chave: "produto", label: "Remover fundo do produto" },
 ] as const;
 
 interface Props {
