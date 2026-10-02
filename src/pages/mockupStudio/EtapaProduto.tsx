@@ -82,7 +82,7 @@ export default function EtapaProduto({ onSelecionar }: Props) {
                   key={v.id}
                   type="button"
                   onClick={() => setVariante(v)}
-                  className={`px-3 py-1.5 rounded-lg border text-sm ${variante?.id === v.id ? "border-blue-500 bg-blue-50 text-blue-700" : "border-slate-200 hover:border-blue-300"}`}
+                  className={`px-3 py-1.5 rounded-lg border text-sm min-w-[64px] text-center transition-colors ${variante?.id === v.id ? "border-blue-500 bg-blue-50 text-blue-700" : "border-slate-200 hover:border-blue-300"}`}
                 >
                   {v.cor || v.codigo_amigavel}
                 </button>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Settings } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useSistemaProducts } from "@/pages/sistema/useSistemaProducts";
 import type { LogoOriginal, LogoTratada, ProdutoMockup } from "./mockupStudio/types";
 import EtapaConfiguracaoInicial from "./mockupStudio/EtapaConfiguracaoInicial";
 import EtapaProduto from "./mockupStudio/EtapaProduto";
@@ -11,6 +12,11 @@ import PromptsAdminDialog from "./mockupStudio/PromptsAdminDialog";
 export default function MockupStudio() {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
+  // Dispara a busca do catálogo (react-query) assim que o Mockup Studio
+  // abre, não só quando o vendedor chega na etapa de produto -- aí, com
+  // sorte, quando ele chegar lá (depois de subir a logo e escolher a
+  // técnica) o catálogo já está no cache e a busca é instantânea.
+  useSistemaProducts();
   const [logo, setLogo] = useState<LogoOriginal | null>(null);
   const [tratada, setTratada] = useState<LogoTratada | null>(null);
   const [produto, setProduto] = useState<ProdutoMockup | null>(null);

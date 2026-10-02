@@ -1,21 +1,25 @@
 /**
- * Fundos "estúdio" gerados por canvas (gradiente radial + manchas de luz
- * desfocadas, tipo bokeh) -- procedurais e determinísticos, sem depender de
- * nenhuma foto externa. Servem de pano de fundo atrás da foto do produto no
- * editor, pra não ficar a imagem crua do catálogo sobre fundo branco.
+ * Fundos de "estúdio" atrás da foto do produto no editor -- fica fixo feito
+ * papel de parede (nunca é apagado nem recriado quando o vendedor troca de
+ * vista ou de produto, só quando ele escolhe outro fundo). Dois tipos:
+ * fotos reais (enviadas pela Gift Web) e gradientes com bokeh gerados por
+ * canvas, pros casos sem foto de ambiente ainda.
  */
 export interface FundoPreset {
   id: string;
   nome: string;
   cores: [string, string, string];
+  /** Quando presente, usa essa foto (centralizada e cortada em quadrado) em
+   * vez de gerar o gradiente procedural. */
+  foto?: string;
 }
 
 export const FUNDOS_PRESET: FundoPreset[] = [
+  { id: "marmore-preto", nome: "Estúdio Mármore Preto", cores: ["#3b4049", "#262a31", "#15171b"], foto: "/mockup-fundos/estudio-marmore-preto.webp" },
+  { id: "marmore-bege", nome: "Estúdio Mármore Bege", cores: ["#fbf6ee", "#ecdcc0", "#c9a977"], foto: "/mockup-fundos/estudio-marmore-bege.webp" },
   { id: "cinza", nome: "Estúdio Cinza", cores: ["#f4f5f7", "#d7dbe2", "#9aa3b2"] },
   { id: "azul", nome: "Azul Suave", cores: ["#eef5ff", "#c9ddfb", "#6f9adb"] },
   { id: "verde", nome: "Verde Gift Web", cores: ["#eefaf2", "#c7ead4", "#5fb983"] },
-  { id: "areia", nome: "Areia Quente", cores: ["#fbf6ee", "#ecdcc0", "#c9a977"] },
-  { id: "escuro", nome: "Estúdio Escuro", cores: ["#3b4049", "#262a31", "#15171b"] },
 ];
 
 function manchaBokeh(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, cor: string, alpha: number) {
@@ -30,8 +34,6 @@ function manchaBokeh(ctx: CanvasRenderingContext2D, x: number, y: number, r: num
   ctx.globalAlpha = 1;
 }
 
-/** Semente fixa por preset -- mesmo fundo toda vez pro mesmo produto, sem
- * precisar guardar a imagem gerada em lugar nenhum. */
 function rngDe(seed: number) {
   let s = seed;
   return () => {
@@ -40,8 +42,7 @@ function rngDe(seed: number) {
   };
 }
 
-export function gerarFundo(presetId: string, w: number, h: number): string {
-  const preset = FUNDOS_PRESET.find((p) => p.id === presetId) || FUNDOS_PRESET[0];
+function gerarGradiente(preset: FundoPreset, w: number, h: number): string {
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
@@ -62,7 +63,6 @@ export function gerarFundo(presetId: string, w: number, h: number): string {
     manchaBokeh(ctx, x, y, r, i % 2 === 0 ? preset.cores[2] : preset.cores[1], 0.18 + rng() * 0.15);
   }
 
-  // Leve vinheta nas bordas pra dar profundidade.
   const vinheta = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.4, w / 2, h / 2, Math.max(w, h) * 0.7);
   vinheta.addColorStop(0, "rgba(0,0,0,0)");
   vinheta.addColorStop(1, "rgba(0,0,0,0.12)");
@@ -70,4 +70,30 @@ export function gerarFundo(presetId: string, w: number, h: number): string {
   ctx.fillRect(0, 0, w, h);
 
   return canvas.toDataURL("image/png");
+}
+
+/** Recorta uma foto (qualquer proporção) num quadrado w×h, tipo object-fit:cover. */
+async function recortarFotoQuadrada(src: string, w: number, h: number): Promise<string> {
+  const img = new Image();
+  img.src = src;
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error("Não foi possível carregar o fundo."));
+  });
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return src;
+  const escala = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+  const destW = img.naturalWidth * escala;
+  const destH = img.naturalHeight * escala;
+  ctx.drawImage(img, (w - destW) / 2, (h - destH) / 2, destW, destH);
+  return canvas.toDataURL("image/png");
+}
+
+export async function gerarFundo(presetId: string, w: number, h: number): Promise<string> {
+  const preset = FUNDOS_PRESET.find((p) => p.id === presetId) || FUNDOS_PRESET[0];
+  if (preset.foto) return recortarFotoQuadrada(preset.foto, w, h);
+  return gerarGradiente(preset, w, h);
 }

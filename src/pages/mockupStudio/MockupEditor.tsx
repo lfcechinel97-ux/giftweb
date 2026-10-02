@@ -191,7 +191,8 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
       try {
         if (!canvas) return;
         canvas.setDimensions({ width: CANVAS_SIZE, height: CANVAS_SIZE });
-        const fundoImg = await FabricImage.fromURL(gerarFundo(fundoIdRef.current, CANVAS_SIZE, CANVAS_SIZE));
+        const fundoDataUrl = await gerarFundo(fundoIdRef.current, CANVAS_SIZE, CANVAS_SIZE);
+        const fundoImg = await FabricImage.fromURL(fundoDataUrl);
         if (cancelado || !canvas) return;
         canvas.backgroundImage = fundoImg;
 
@@ -250,7 +251,8 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
     setFundoId(id);
     const canvas = fabricRef.current;
     if (!canvas || !pronto) return;
-    const fundoImg = await FabricImage.fromURL(gerarFundo(id, CANVAS_SIZE, CANVAS_SIZE));
+    const fundoDataUrl = await gerarFundo(id, CANVAS_SIZE, CANVAS_SIZE);
+    const fundoImg = await FabricImage.fromURL(fundoDataUrl);
     canvas.backgroundImage = fundoImg;
     canvas.requestRenderAll();
   };
@@ -417,10 +419,16 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
     }
   };
 
+  const [previewIA, setPreviewIA] = useState<{ url: string; titulo: string } | null>(null);
+
   // Manda pra IA o produto + a logo juntos, exatamente como estão
   // posicionados no canvas -- não só a logo isolada, pra ela poder ajustar
-  // luz/perspectiva considerando a superfície real. O resultado vira o novo
-  // fundo (a logo já está "assada" nele), e dá pra desfazer pelo histórico.
+  // luz/perspectiva considerando a superfície real. IMPORTANTE: isso nunca
+  // mexe no canvas (não troca o fundo, não remove camada nenhuma) -- o
+  // resultado só aparece numa prévia pra baixar, o editor continua do jeito
+  // que estava, sempre clicável. (Antes isso "assava" o resultado no lugar
+  // da logo e do produto, e depois de usar duas vezes não sobrava mais nada
+  // selecionável no canvas.)
   const refinarLogoSelecionadoComIA = async (obj: FabricImage) => {
     const canvas = fabricRef.current;
     if (!canvas) return;
@@ -428,19 +436,13 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
     setIaBusy(true);
     setIaErro(null);
     try {
+      const selecaoAnterior = canvas.getActiveObject();
       canvas.discardActiveObject();
       canvas.requestRenderAll();
       const composicao = canvas.toDataURL({ format: "png", multiplier: EXPORT_MULTIPLIER });
+      if (selecaoAnterior) { canvas.setActiveObject(selecaoAnterior); canvas.requestRenderAll(); }
       const resultado = await refinarComposicaoComIA(composicao, data.tecnica);
-      const novoFundo = await FabricImage.fromURL(resultado.url, { crossOrigin: "anonymous" });
-      novoFundo.set({ scaleX: canvas.getWidth() / novoFundo.width!, scaleY: canvas.getHeight() / novoFundo.height! });
-      canvas.backgroundImage = novoFundo;
-      canvas.remove(obj);
-      const produtoObj = canvas.getObjects().find((o) => (o.get("data") as any)?.kind === "produto");
-      if (produtoObj) canvas.remove(produtoObj);
-      canvas.requestRenderAll();
-      setSelecionado(null);
-      registrarHistorico();
+      setPreviewIA({ url: resultado.url, titulo: "Produto + logo refinados por IA" });
     } catch (e: any) {
       setIaErro(e?.message || "Não foi possível refinar com IA agora.");
     } finally {
@@ -602,6 +604,29 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
         )}
       </div>
 
+      {previewIA && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setPreviewIA(null)}>
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-slate-700">{previewIA.titulo}</p>
+              <button onClick={() => setPreviewIA(null)} className="text-slate-400 hover:text-slate-600 text-sm">Fechar</button>
+            </div>
+            <img src={previewIA.url} alt="Prévia refinada por IA" className="w-full rounded-lg border" />
+            <p className="text-[11px] text-slate-400 mt-2">
+              Isso é só uma prévia -- o editor continua do jeito que estava. Baixe se gostar do resultado.
+            </p>
+            <div className="mt-3 flex justify-end">
+              <a
+                href={previewIA.url}
+                download={`mockup-ia-${produto.codigoAmigavel || "produto"}.png`}
+                className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700"
+              >
+                Baixar
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
