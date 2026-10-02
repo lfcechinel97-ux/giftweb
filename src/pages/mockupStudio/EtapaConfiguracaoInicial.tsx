@@ -1,0 +1,177 @@
+import { useEffect, useRef, useState } from "react";
+import { Upload, FileWarning, Check, Loader2, AlertTriangle } from "lucide-react";
+import { TECNICAS, type LogoOriginal, type LogoTratada, type Tecnica } from "./types";
+
+const TIPOS_AVALIADOS = /^(image\/(png|jpe?g|svg\+xml)|application\/pdf)$/i;
+const EXT_OK = /\.(png|jpe?g|svg|pdf)$/i;
+const RASTERIZAVEL = /^image\/(png|jpe?g)$/i;
+const MAX_BYTES = 15 * 1024 * 1024;
+
+/** Processamento determinístico local (sem IA): laser vira escala de cinza
+ * com leve realce prateado, preservando o alpha; DTF mantém a arte original.
+ * A remoção de fundo e o refino por IA entram quando a chave da OpenAI
+ * estiver conectada. */
+async function processarLogo(logo: LogoOriginal, tecnica: Tecnica): Promise<LogoTratada> {
+  if (tecnica !== "laser") return { url: logo.url, tecnica };
+
+  const img = new Image();
+  img.src = logo.url;
+  await new Promise<void>((resolve, reject) => { img.onload = () => resolve(); img.onerror = () => reject(new Error("Não foi possível ler a imagem.")); });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas indisponível neste navegador.");
+  ctx.drawImage(img, 0, 0);
+
+  const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = frame.data;
+  let pixelsVisiveis = 0;
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] > 10) pixelsVisiveis++;
+    const cinza = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+    const realcado = Math.min(255, Math.max(0, (cinza - 128) * 1.15 + 128 + 25));
+    d[i] = d[i + 1] = d[i + 2] = realcado;
+  }
+  ctx.putImageData(frame, 0, 0);
+
+  const avisoQualidade = pixelsVisiveis / (canvas.width * canvas.height) < 0.01
+    ? "A arte ficou com pouquíssimo conteúdo visível depois da conversão — revise o arquivo original."
+    : undefined;
+
+  return { url: canvas.toDataURL("image/png"), tecnica, avisoQualidade };
+}
+
+interface Props {
+  onConcluir: (logo: LogoOriginal, tratada: LogoTratada) => void;
+}
+
+export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
+  const [logo, setLogo] = useState<LogoOriginal | null>(null);
+  const [tecnica, setTecnica] = useState<Tecnica | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [arrastando, setArrastando] = useState(false);
+  const [processando, setProcessando] = useState(false);
+  const [tratada, setTratada] = useState<LogoTratada | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const validarEUsar = (file: File) => {
+    setErro(null);
+    setTratada(null);
+    const tipoOk = TIPOS_AVALIADOS.test(file.type) || EXT_OK.test(file.name);
+    if (!tipoOk) { setErro("Formato não suportado. Use PNG, JPG, JPEG, SVG ou PDF."); return; }
+    if (file.size > MAX_BYTES) { setErro(`Arquivo de ${(file.size / 1024 / 1024).toFixed(1)} MB excede o limite de 15 MB.`); return; }
+    if (!RASTERIZAVEL.test(file.type)) { setErro("Por enquanto o editor só trabalha com PNG ou JPG. Envie uma versão raster da logo."); return; }
+    setLogo({ file, url: URL.createObjectURL(file), nome: file.name });
+  };
+
+  const handleFiles = (files: FileList | null) => { const f = files?.[0]; if (f) validarEUsar(f); };
+
+  useEffect(() => {
+    if (!logo || !tecnica) { setTratada(null); return; }
+    let cancelado = false;
+    setProcessando(true);
+    setErro(null);
+    processarLogo(logo, tecnica)
+      .then((t) => { if (!cancelado) setTratada(t); })
+      .catch((e: Error) => { if (!cancelado) setErro(e.message); })
+      .finally(() => { if (!cancelado) setProcessando(false); });
+    return () => { cancelado = true; };
+  }, [logo, tecnica]);
+
+  return (
+    <div className="max-w-3xl mx-auto py-10 px-4">
+      <h2 className="text-lg font-semibold text-slate-800 mb-1">Novo mockup</h2>
+      <p className="text-sm text-slate-500 mb-6">Envie a logo do cliente e escolha a técnica de personalização.</p>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <p className="text-xs font-medium text-slate-500 mb-2">Logo</p>
+          <div
+            onDragOver={(e) => { e.preventDefault(); setArrastando(true); }}
+            onDragLeave={() => setArrastando(false)}
+            onDrop={(e) => { e.preventDefault(); setArrastando(false); handleFiles(e.dataTransfer.files); }}
+            onClick={() => inputRef.current?.click()}
+            className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors h-48 ${
+              arrastando ? "border-blue-500 bg-blue-50" : "border-slate-300 hover:border-blue-400 hover:bg-slate-50"
+            }`}
+          >
+            {logo ? (
+              <img src={logo.url} alt={logo.nome} className="max-h-32 object-contain" />
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-slate-400 mb-2" />
+                <p className="text-sm text-slate-600">Arraste ou clique para enviar</p>
+                <p className="text-[11px] text-slate-400 mt-1">PNG, JPG, JPEG, SVG ou PDF — até 15 MB</p>
+              </>
+            )}
+            <input ref={inputRef} type="file" accept=".png,.jpg,.jpeg,.svg,.pdf" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+          </div>
+        </div>
+
+        <div>
+          <p className="text-xs font-medium text-slate-500 mb-2">Técnica de personalização</p>
+          <div className="space-y-2">
+            {TECNICAS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTecnica(t.id)}
+                className={`w-full text-left border rounded-lg p-2.5 flex items-start justify-between gap-2 transition-colors ${
+                  tecnica === t.id ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500" : "border-slate-200 hover:border-blue-300"
+                }`}
+              >
+                <div>
+                  <p className="text-sm font-medium text-slate-800">{t.nome}</p>
+                  <p className="text-[11px] text-slate-500">{t.descricao}</p>
+                </div>
+                {tecnica === t.id && <Check className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {erro && (
+        <div className="mt-4 flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          <FileWarning className="w-4 h-4 mt-0.5 shrink-0" /><span>{erro}</span>
+        </div>
+      )}
+
+      {processando && (
+        <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">
+          <Loader2 className="w-4 h-4 animate-spin" /> Preparando a arte...
+        </div>
+      )}
+
+      {tratada && !processando && (
+        <div className="mt-6 border rounded-xl p-4">
+          <p className="text-xs font-medium text-slate-500 mb-2">Prévia (original × tratada)</p>
+          {tratada.avisoQualidade && (
+            <div className="mb-3 flex items-start gap-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" /><span>{tratada.avisoQualidade}</span>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-slate-100 rounded-lg p-3 flex items-center justify-center h-28">
+              <img src={logo!.url} alt="original" className="max-h-full max-w-full object-contain" />
+            </div>
+            <div className="bg-slate-800 rounded-lg p-3 flex items-center justify-center h-28">
+              <img src={tratada.url} alt="tratada" className="max-h-full max-w-full object-contain" />
+            </div>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={() => onConcluir(logo!, tratada)}
+              className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            >
+              Aprovar e escolher produto
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

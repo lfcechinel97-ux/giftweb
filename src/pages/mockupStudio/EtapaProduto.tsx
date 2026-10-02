@@ -4,11 +4,10 @@ import { useSistemaProducts, type SistemaProduct } from "@/pages/sistema/useSist
 import type { ProdutoMockup } from "./types";
 
 interface Props {
-  onVoltar: () => void;
   onSelecionar: (produto: ProdutoMockup) => void;
 }
 
-export default function EtapaProduto({ onVoltar, onSelecionar }: Props) {
+export default function EtapaProduto({ onSelecionar }: Props) {
   const { parentProducts, searchParents, getParentWithVariants, isLoading } = useSistemaProducts();
   const [termo, setTermo] = useState("");
   const [resultados, setResultados] = useState<SistemaProduct[]>([]);
@@ -23,8 +22,7 @@ export default function EtapaProduto({ onVoltar, onSelecionar }: Props) {
     if (!valor.trim()) { setResultados([]); return; }
     setBuscando(true);
     try {
-      const r = await searchParents(valor, 30);
-      setResultados(r);
+      setResultados(await searchParents(valor, 30));
     } finally {
       setBuscando(false);
     }
@@ -37,9 +35,25 @@ export default function EtapaProduto({ onVoltar, onSelecionar }: Props) {
     setVariante(g.parent.has_image ? g.parent : g.variants.find((v) => v.has_image) || g.parent);
   };
 
+  const confirmar = () => {
+    if (!grupo || !variante) return;
+    const fotos = Array.from(new Set(
+      (variante.image_urls as string[] | null)?.length ? (variante.image_urls as string[]) : variante.image_url ? [variante.image_url] : []
+    ));
+    if (fotos.length === 0) return;
+    onSelecionar({
+      id: variante.id,
+      nome: grupo.parent.nome,
+      codigoAmigavel: variante.codigo_amigavel,
+      visoes: fotos.map((url, i) => ({ id: `${variante.id}-${i}`, nome: i === 0 ? "Vista 1" : `Vista ${i + 1}`, fotoUrl: url })),
+    });
+  };
+
   if (grupo) {
     const candidatos = [grupo.parent, ...grupo.variants].filter((p) => p.has_image);
-    const fotos = Array.from(new Set((variante?.image_urls as string[] | null)?.length ? (variante!.image_urls as string[]) : variante?.image_url ? [variante.image_url] : []));
+    const fotos = Array.from(new Set(
+      (variante?.image_urls as string[] | null)?.length ? (variante!.image_urls as string[]) : variante?.image_url ? [variante.image_url] : []
+    ));
 
     return (
       <div className="max-w-3xl mx-auto py-10 px-4">
@@ -67,23 +81,29 @@ export default function EtapaProduto({ onVoltar, onSelecionar }: Props) {
           </div>
         )}
 
-        <p className="text-xs font-medium text-slate-500 mb-2">Fotografia</p>
+        <p className="text-xs font-medium text-slate-500 mb-2">
+          {fotos.length} foto{fotos.length !== 1 ? "s" : ""} — todas entram como vistas no editor
+        </p>
         {fotos.length === 0 ? (
           <p className="text-sm text-slate-400">Este produto não tem fotos sincronizadas.</p>
         ) : (
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-4 gap-3 mb-6">
             {fotos.map((url) => (
-              <button
-                key={url}
-                type="button"
-                onClick={() => variante && onSelecionar({ id: variante.id, nome: grupo.parent.nome, codigoAmigavel: variante.codigo_amigavel, fotoUrl: url })}
-                className="aspect-square border rounded-lg overflow-hidden hover:ring-2 hover:ring-blue-500"
-              >
+              <div key={url} className="aspect-square border rounded-lg overflow-hidden">
                 <img src={url} alt="" className="w-full h-full object-cover" />
-              </button>
+              </div>
             ))}
           </div>
         )}
+
+        <button
+          type="button"
+          disabled={fotos.length === 0}
+          onClick={confirmar}
+          className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-40"
+        >
+          Usar este produto
+        </button>
       </div>
     );
   }
@@ -124,12 +144,6 @@ export default function EtapaProduto({ onVoltar, onSelecionar }: Props) {
           ))}
         </div>
       )}
-
-      <div className="mt-8">
-        <button type="button" onClick={onVoltar} className="px-5 py-2.5 rounded-lg border text-sm font-medium hover:bg-slate-50">
-          Voltar
-        </button>
-      </div>
     </div>
   );
 }

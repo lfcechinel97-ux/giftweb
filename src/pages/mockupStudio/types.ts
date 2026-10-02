@@ -15,24 +15,21 @@ export interface LogoOriginal {
 export interface LogoTratada {
   /** Resultado do tratamento desta etapa — hoje é processamento determinístico
    * local (ex.: conversão pra escala de cinza no laser); a remoção de fundo
-   * e o tratamento real por IA entram numa etapa futura do projeto. */
+   * e o tratamento real por IA entram quando a chave da OpenAI for conectada. */
   url: string;
   tecnica: Tecnica;
   avisoQualidade?: string;
+}
+
+export interface VisaoProduto {
+  id: string;
+  nome: string;
+  fotoUrl: string;
 }
 
 export interface ProdutoMockup {
   id: string;
   nome: string;
   codigoAmigavel: string;
-  fotoUrl: string;
+  visoes: VisaoProduto[];
 }
-
-export const ETAPAS = [
-  { n: 1, titulo: "Enviar logo" },
-  { n: 2, titulo: "Técnica" },
-  { n: 3, titulo: "Tratamento" },
-  { n: 4, titulo: "Aprovação" },
-  { n: 5, titulo: "Produto" },
-  { n: 6, titulo: "Editor" },
-] as const;
