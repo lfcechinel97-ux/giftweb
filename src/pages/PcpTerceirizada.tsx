@@ -270,6 +270,18 @@ export default function PcpTerceirizada() {
         </div>
         <span className="flex-1" />
         {carregando && <Loader2 className="h-4 w-4 animate-spin text-white/70" />}
+        {/* Pendências de chat -- clica e vai direto pro primeiro produto com
+            mensagem não lida; ao marcar como lida o "@2" vira "@1". */}
+        {chatResumo.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setDetalheId(chatResumo[0].producao_item_id)}
+            className="flex items-center gap-1.5 h-8 px-2.5 rounded-[7px] text-[12.5px] font-bold text-white"
+            style={{ backgroundColor: chatResumo.some(r => r.mencionado) ? "#DC2626" : "#15803D" }}
+          >
+            💬 @{chatResumo.length}
+          </button>
+        )}
         <button onClick={sair} className="flex items-center gap-1.5 text-[12.5px] font-semibold text-white/85 hover:text-white">
           <LogOut className="h-4 w-4" /> Sair
         </button>
