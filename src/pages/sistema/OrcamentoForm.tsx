@@ -160,27 +160,28 @@ export const OrcamentoForm: React.FC = () => {
   const total = subtotal + freteEfetivo;
 
   // --- Cálculo de frete (Melhor Envio) ---
-  // Cada item do orçamento pode virar mais de um volume físico (ex.: 50
-  // unidades despachadas em 5 caixas). As dimensões da XBZ (products_cache)
-  // aparecem só como sugestão de referência -- quem decide o que de fato
-  // vai cotado são os campos editáveis, preenchidos pelo vendedor.
+  // Um volume (caixa) de despacho costuma levar mais de um produto do
+  // orçamento misturado. Por isso os volumes não são por item: são uma
+  // lista única do pedido inteiro. As dimensões da XBZ aparecem só como
+  // referência ao lado do nome de cada produto -- quem decide o que de
+  // fato vai cotado é sempre o que o vendedor preenche nos volumes.
   interface Volume { id: string; altura: number; largura: number; comprimento: number; peso: number; quantidade: number }
   interface SugestaoDimensao { altura?: number; largura?: number; comprimento?: number; pesoKg?: number }
   const [showFreteDialog, setShowFreteDialog] = useState(false);
   const [sugestoesPorProduto, setSugestoesPorProduto] = useState<Record<string, SugestaoDimensao>>({});
-  const [volumesPorItem, setVolumesPorItem] = useState<Record<string, Volume[]>>({});
+  const [volumes, setVolumes] = useState<Volume[]>([]);
   const [cepDestinoInput, setCepDestinoInput] = useState("");
   const [carregandoDimensoes, setCarregandoDimensoes] = useState(false);
   const [cotando, setCotando] = useState(false);
   const [opcoesFrete, setOpcoesFrete] = useState<{ id: string; transportadora: string; servico: string; preco: number; prazoDias: number | null }[] | null>(null);
   const [erroFrete, setErroFrete] = useState<string | null>(null);
 
-  const novoVolume = (item: QuoteItem, sugestao?: SugestaoDimensao): Volume => ({
-    id: `${item.id}-${Math.random().toString(36).slice(2, 8)}`,
-    altura: sugestao?.altura || 0,
-    largura: sugestao?.largura || 0,
-    comprimento: sugestao?.comprimento || 0,
-    peso: sugestao?.pesoKg || 0,
+  const novoVolumeVazio = (): Volume => ({
+    id: Math.random().toString(36).slice(2, 10),
+    altura: 0,
+    largura: 0,
+    comprimento: 0,
+    peso: 0,
     quantidade: 1,
   });
 
@@ -189,72 +190,44 @@ export const OrcamentoForm: React.FC = () => {
     setOpcoesFrete(null);
     setCepDestinoInput(clienteSelecionado?.enderecos?.[0]?.cep || "");
     setShowFreteDialog(true);
+    setVolumes((prev) => (prev.length > 0 ? prev : [novoVolumeVazio()]));
     const idsProdutos = Array.from(new Set(formData.itens.filter(i => i.produtoId).map(i => i.produtoId as string)));
-    let sugestoes: Record<string, SugestaoDimensao> = {};
-    if (idsProdutos.length > 0) {
-      setCarregandoDimensoes(true);
-      try {
-        const { data, error } = await supabase
-          .from("products_cache")
-          .select("id, altura, largura, profundidade, peso")
-          .in("id", idsProdutos);
-        if (error) throw error;
-        for (const p of data || []) {
-          // "peso" vem da XBZ em gramas -- convertido pra kg aqui, que é o
-          // que a Melhor Envio espera.
-          sugestoes[p.id] = {
-            altura: p.altura ?? undefined,
-            largura: p.largura ?? undefined,
-            comprimento: p.profundidade ?? undefined,
-            pesoKg: p.peso != null ? p.peso / 1000 : undefined,
-          };
-        }
-        setSugestoesPorProduto(sugestoes);
-      } catch (e: any) {
-        setErroFrete(e?.message || "Não foi possível buscar as dimensões sugeridas dos produtos.");
-      } finally {
-        setCarregandoDimensoes(false);
+    if (idsProdutos.length === 0) return;
+    setCarregandoDimensoes(true);
+    try {
+      const { data, error } = await supabase
+        .from("products_cache")
+        .select("id, altura, largura, profundidade, peso")
+        .in("id", idsProdutos);
+      if (error) throw error;
+      const sugestoes: Record<string, SugestaoDimensao> = {};
+      for (const p of data || []) {
+        // "peso" vem da XBZ em gramas -- convertido pra kg aqui, que é o
+        // que a Melhor Envio espera.
+        sugestoes[p.id] = {
+          altura: p.altura ?? undefined,
+          largura: p.largura ?? undefined,
+          comprimento: p.profundidade ?? undefined,
+          pesoKg: p.peso != null ? p.peso / 1000 : undefined,
+        };
       }
+      setSugestoesPorProduto(sugestoes);
+    } catch (e: any) {
+      setErroFrete(e?.message || "Não foi possível buscar as dimensões sugeridas dos produtos.");
+    } finally {
+      setCarregandoDimensoes(false);
     }
-    // Inicializa 1 volume por item, pré-preenchido com a sugestão (se houver).
-    setVolumesPorItem((prev) => {
-      const next = { ...prev };
-      for (const item of formData.itens) {
-        if (next[item.id]) continue;
-        const sugestao = item.produtoId ? sugestoes[item.produtoId] : undefined;
-        next[item.id] = [novoVolume(item, sugestao)];
-      }
-      return next;
-    });
   };
 
-  const atualizarVolume = (itemId: string, volumeId: string, campo: keyof Omit<Volume, "id">, valor: number) => {
-    setVolumesPorItem((prev) => ({
-      ...prev,
-      [itemId]: (prev[itemId] || []).map((v) => (v.id === volumeId ? { ...v, [campo]: valor } : v)),
-    }));
+  const atualizarVolume = (volumeId: string, campo: keyof Omit<Volume, "id">, valor: number) => {
+    setVolumes((prev) => prev.map((v) => (v.id === volumeId ? { ...v, [campo]: valor } : v)));
   };
 
-  const adicionarVolume = (item: QuoteItem) => {
-    const sugestao = item.produtoId ? sugestoesPorProduto[item.produtoId] : undefined;
-    setVolumesPorItem((prev) => ({
-      ...prev,
-      [item.id]: [...(prev[item.id] || []), { ...novoVolume(item, sugestao), quantidade: 1 }],
-    }));
-  };
+  const adicionarVolume = () => setVolumes((prev) => [...prev, novoVolumeVazio()]);
 
-  const removerVolume = (itemId: string, volumeId: string) => {
-    setVolumesPorItem((prev) => {
-      const atuais = prev[itemId] || [];
-      if (atuais.length <= 1) return prev;
-      return { ...prev, [itemId]: atuais.filter((v) => v.id !== volumeId) };
-    });
+  const removerVolume = (volumeId: string) => {
+    setVolumes((prev) => (prev.length <= 1 ? prev : prev.filter((v) => v.id !== volumeId)));
   };
-
-  const todosOsVolumes = useMemo(
-    () => formData.itens.flatMap((it) => volumesPorItem[it.id] || []),
-    [formData.itens, volumesPorItem]
-  );
 
   const volumeInvalido = (v: Volume) => !v.altura || !v.largura || !v.comprimento || !v.peso || !v.quantidade;
 
@@ -264,7 +237,7 @@ export const OrcamentoForm: React.FC = () => {
       setErroFrete("Informe um CEP de destino válido.");
       return;
     }
-    if (todosOsVolumes.length === 0 || todosOsVolumes.some(volumeInvalido)) {
+    if (volumes.length === 0 || volumes.some(volumeInvalido)) {
       setErroFrete("Preencha altura, largura, comprimento, peso e quantidade de todos os volumes.");
       return;
     }
@@ -272,17 +245,13 @@ export const OrcamentoForm: React.FC = () => {
     setErroFrete(null);
     setOpcoesFrete(null);
     try {
-      const precoPorItem = new Map(formData.itens.map((it) => [it.id, it.precoUnitario]));
-      const itens = formData.itens.flatMap((it) =>
-        (volumesPorItem[it.id] || []).map((v) => ({
-          altura: v.altura,
-          largura: v.largura,
-          comprimento: v.comprimento,
-          peso: v.peso,
-          quantidade: v.quantidade,
-          valor: precoPorItem.get(it.id) || 0,
-        }))
-      );
+      const itens = volumes.map((v) => ({
+        altura: v.altura,
+        largura: v.largura,
+        comprimento: v.comprimento,
+        peso: v.peso,
+        quantidade: v.quantidade,
+      }));
       const { data, error } = await supabase.functions.invoke("calcular-frete", {
         body: { cepDestino: cep, itens },
       });
@@ -845,67 +814,79 @@ export const OrcamentoForm: React.FC = () => {
                     </div>
                   </div>
 
-                  {carregandoDimensoes ? (
-                    <p className="text-sm text-gray-500">Buscando dimensões sugeridas dos produtos...</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {formData.itens.map((item) => {
-                        const sugestao = item.produtoId ? sugestoesPorProduto[item.produtoId] : undefined;
-                        const volumes = volumesPorItem[item.id] || [];
-                        return (
-                          <div key={item.id} className="border border-gray-200 rounded-lg p-3">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="text-sm font-medium">{item.nome} <span className="text-gray-400 font-normal">x{item.quantidade}</span></p>
-                              <button type="button" onClick={() => adicionarVolume(item)} className="text-xs text-blue-600 hover:underline">
-                                + Adicionar volume
-                              </button>
+                  {/* Itens do orçamento só como referência -- as medidas da XBZ, quando
+                      existirem, servem de base pro vendedor, mas não entram sozinhas
+                      na cotação porque um volume de despacho pode levar mais de um
+                      produto misturado. */}
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 mb-1.5">Itens do orçamento (referência)</p>
+                    {carregandoDimensoes ? (
+                      <p className="text-sm text-gray-500">Buscando dimensões sugeridas dos produtos...</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {formData.itens.map((item) => {
+                          const sugestao = item.produtoId ? sugestoesPorProduto[item.produtoId] : undefined;
+                          const temBase = sugestao && (sugestao.altura || sugestao.largura || sugestao.comprimento || sugestao.pesoKg);
+                          return (
+                            <div key={item.id} className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs">
+                              <span className="font-medium">{item.nome}</span>{" "}
+                              <span className="text-gray-400">x{item.quantidade}</span>
+                              {temBase && (
+                                <span className="text-gray-400">
+                                  {" "}• Base XBZ: {sugestao!.altura ?? "—"}×{sugestao!.largura ?? "—"}×{sugestao!.comprimento ?? "—"}cm • {sugestao!.pesoKg != null ? sugestao!.pesoKg.toFixed(3) : "—"}kg
+                                </span>
+                              )}
                             </div>
-                            {sugestao && (sugestao.altura || sugestao.largura || sugestao.comprimento || sugestao.pesoKg) && (
-                              <p className="text-xs text-gray-400 mb-2">
-                                Base XBZ: {sugestao.altura ?? "—"}×{sugestao.largura ?? "—"}×{sugestao.comprimento ?? "—"}cm • {sugestao.pesoKg != null ? sugestao.pesoKg.toFixed(3) : "—"}kg
-                              </p>
-                            )}
-                            <div className="space-y-2">
-                              {volumes.map((v, idx) => (
-                                <div key={v.id} className="grid grid-cols-5 gap-2 items-end">
-                                  {(["altura", "largura", "comprimento", "peso"] as const).map((campo) => (
-                                    <div key={campo}>
-                                      <label className="block text-[11px] text-gray-500">{campo === "peso" ? "Peso (kg)" : `${campo[0].toUpperCase()}${campo.slice(1)} (cm)`}</label>
-                                      <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        className="w-full px-2 py-1.5 text-sm border rounded"
-                                        value={v[campo] || ""}
-                                        onChange={(e) => atualizarVolume(item.id, v.id, campo, parseFloat(e.target.value) || 0)}
-                                      />
-                                    </div>
-                                  ))}
-                                  <div className="flex gap-1 items-end">
-                                    <div className="flex-1">
-                                      <label className="block text-[11px] text-gray-500">Qtd. no volume</label>
-                                      <input
-                                        type="number"
-                                        min="1"
-                                        className="w-full px-2 py-1.5 text-sm border rounded"
-                                        value={v.quantidade || ""}
-                                        onChange={(e) => atualizarVolume(item.id, v.id, "quantidade", parseInt(e.target.value) || 0)}
-                                      />
-                                    </div>
-                                    {volumes.length > 1 && (
-                                      <button type="button" onClick={() => removerVolume(item.id, v.id)} className="p-1.5 text-gray-400 hover:text-red-600" title="Remover volume">
-                                        <Trash2 className="w-4 h-4" />
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-xs font-medium text-gray-500">Volumes de envio</p>
+                      <button type="button" onClick={adicionarVolume} className="text-xs text-blue-600 hover:underline">
+                        + Adicionar volume
+                      </button>
                     </div>
-                  )}
+                    <div className="space-y-2">
+                      {volumes.map((v) => (
+                        <div key={v.id} className="grid grid-cols-5 gap-2 items-end border border-gray-200 rounded-lg p-2">
+                          {(["altura", "largura", "comprimento", "peso"] as const).map((campo) => (
+                            <div key={campo}>
+                              <label className="block text-[11px] text-gray-500">{campo === "peso" ? "Peso (kg)" : `${campo[0].toUpperCase()}${campo.slice(1)} (cm)`}</label>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                className="w-full px-2 py-1.5 text-sm border rounded"
+                                value={v[campo] || ""}
+                                onChange={(e) => atualizarVolume(v.id, campo, parseFloat(e.target.value) || 0)}
+                              />
+                            </div>
+                          ))}
+                          <div className="flex gap-1 items-end">
+                            <div className="flex-1">
+                              <label className="block text-[11px] text-gray-500">Qtd. no volume</label>
+                              <input
+                                type="number"
+                                min="1"
+                                className="w-full px-2 py-1.5 text-sm border rounded"
+                                value={v.quantidade || ""}
+                                onChange={(e) => atualizarVolume(v.id, "quantidade", parseInt(e.target.value) || 0)}
+                              />
+                            </div>
+                            {volumes.length > 1 && (
+                              <button type="button" onClick={() => removerVolume(v.id)} className="p-1.5 text-gray-400 hover:text-red-600" title="Remover volume">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
                   {erroFrete && (
                     <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{erroFrete}</div>
