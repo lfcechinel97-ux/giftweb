@@ -34,6 +34,9 @@ interface LinhaTerceirizada {
   item_posicao: number | null;
   item_total_pedido: number | null;
   etapa_desde: string;
+  logo_url: string | null;
+  logo_dimensao_cm: number | null;
+  logo_dimensao_tipo: string | null;
 }
 
 const PEDIDO_PALETTE = [
@@ -106,11 +109,16 @@ export default function PcpTerceirizada() {
   const [meuUserId, setMeuUserId] = useState<string | null>(null);
   const [nomesUsuarios, setNomesUsuarios] = useState<{ user_id: string; nome: string }[]>([]);
   const [chatResumo, setChatResumo] = useState<{ producao_item_id: string; nao_lidas: number; mencionado: boolean }[]>([]);
+  const [mencoesPendentes, setMencoesPendentes] = useState<{ producao_item_id: string; mencionado_nome: string }[]>([]);
   const [detalheId, setDetalheId] = useState<string | null>(null);
 
   const carregarChatResumo = async () => {
-    const { data } = await (supabase as any).rpc("sistema_chat_resumo");
-    setChatResumo((data ?? []) as { producao_item_id: string; nao_lidas: number; mencionado: boolean }[]);
+    const [{ data: resumo }, { data: mencoes }] = await Promise.all([
+      (supabase as any).rpc("sistema_chat_resumo"),
+      (supabase as any).rpc("sistema_mencoes_pendentes"),
+    ]);
+    setChatResumo((resumo ?? []) as { producao_item_id: string; nao_lidas: number; mencionado: boolean }[]);
+    setMencoesPendentes((mencoes ?? []) as { producao_item_id: string; mencionado_nome: string }[]);
   };
 
   useEffect(() => {
@@ -263,6 +271,7 @@ export default function PcpTerceirizada() {
                     onAtualizado={carregarTudo}
                     onAbrir={() => setDetalheId(item.producao_id)}
                     chat={chatResumo.find(r => r.producao_item_id === item.producao_id)}
+                    mencoes={mencoesPendentes.filter(m => m.producao_item_id === item.producao_id).map(m => m.mencionado_nome)}
                   />
                 ))}
               </div>
@@ -286,10 +295,11 @@ export default function PcpTerceirizada() {
 }
 
 function CardTerceirizada({
-  item, coluna, onAtualizado, onAbrir, chat,
+  item, coluna, onAtualizado, onAbrir, chat, mencoes,
 }: {
   item: LinhaTerceirizada; coluna: string; onAtualizado: () => void; onAbrir: () => void;
   chat?: { nao_lidas: number; mencionado: boolean };
+  mencoes: string[];
 }) {
   const foto = item.mockup_url || item.imagem_catalogo_url;
   const [enviando, setEnviando] = useState(false);
@@ -357,19 +367,9 @@ function CardTerceirizada({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {chat && chat.nao_lidas > 0 && (
-            <span
-              className="flex items-center gap-0.5 text-[10px] font-bold rounded-full px-[6px] py-[2px] text-white"
-              style={{ backgroundColor: chat.mencionado ? "#DC2626" : "#0A2A56" }}
-            >
-              💬 {chat.nao_lidas}
-            </span>
-          )}
-          <span className="flex items-center gap-1 text-[11px] font-bold text-[#64748B]">
-            <Clock className="h-[11px] w-[11px]" /> {tempoNaEtapaCurto(item.etapa_desde)}
-          </span>
-        </div>
+        <span className="flex items-center gap-1 text-[11px] font-bold text-[#64748B] shrink-0">
+          <Clock className="h-[11px] w-[11px]" /> {tempoNaEtapaCurto(item.etapa_desde)}
+        </span>
       </div>
 
       {/* Foto grande (contain, sem cortar) com selo de técnica e quantidade
@@ -383,6 +383,23 @@ function CardTerceirizada({
           ) : (
             <div className="h-full w-full flex items-center justify-center">
               <Package className="h-10 w-10 text-[#94A3B8]" />
+            </div>
+          )}
+          {(!!chat?.nao_lidas || mencoes.length > 0) && (
+            <div className="absolute left-1.5 top-1.5 flex flex-col items-start gap-1">
+              {!!chat?.nao_lidas && (
+                <span
+                  className="flex items-center gap-0.5 text-[10px] font-bold rounded-full px-[6px] py-[2px] text-white"
+                  style={{ backgroundColor: chat.mencionado ? "#DC2626" : "#0A2A56" }}
+                >
+                  💬 {chat.nao_lidas}
+                </span>
+              )}
+              {mencoes.map(nome => (
+                <span key={nome} className="text-[10px] font-bold rounded-full px-[6px] py-[2px] text-white bg-[#DC2626]">
+                  @{nome}
+                </span>
+              ))}
             </div>
           )}
           {tecnicaCurta && (
@@ -691,6 +708,28 @@ function DetalheModal({
                 <p className="text-[12.5px] text-[#0F172A] whitespace-pre-wrap">{item.observacao}</p>
               </div>
             )}
+          </div>
+        )}
+
+        {item.logo_url && (
+          <div className="px-4 pt-3 shrink-0">
+            <div className="rounded-[8px] bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2 flex items-center gap-3">
+              <img src={sizedImage(item.logo_url, 100)} alt="Logo do cliente" className="h-11 w-11 rounded-[6px] object-contain bg-white border border-[#E2E8F0] shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[10.5px] font-bold uppercase text-[#94A3B8]">Logo do cliente</p>
+                {item.logo_dimensao_cm && (
+                  <p className="text-[12.5px] text-[#0F172A]">
+                    {item.logo_dimensao_cm} cm de {item.logo_dimensao_tipo === "altura" ? "altura" : "largura"}
+                  </p>
+                )}
+              </div>
+              <a
+                href={item.logo_url} target="_blank" rel="noreferrer"
+                className="shrink-0 text-[12px] font-bold text-[#15803D] hover:underline"
+              >
+                Baixar
+              </a>
+            </div>
           </div>
         )}
 

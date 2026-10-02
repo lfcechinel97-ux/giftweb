@@ -684,7 +684,7 @@ function PcpPedidoCard({
 
 function PcpCard({
   row, indice, total, primeiroDoPedido, dragging, saving, atrasado, critico, highlight, comFotos,
-  imprimindoOP, chat,
+  imprimindoOP, chat, mencoes,
   onDragStart, onDragEnd, onOpen, onHover, onComprado, onDespachar, onImprimirOP, onAgrupar, onDesagrupar, onInserirMedidas,
 }: {
   row: PcpRow;
@@ -701,6 +701,9 @@ function PcpCard({
   imprimindoOP: boolean;
   /** Mensagens não lidas no chat do produto -- undefined = nenhuma. */
   chat?: { nao_lidas: number; mencionado: boolean };
+  /** Nomes @mencionados que ainda não viram -- visível pra qualquer um até a
+   *  pessoa marcada abrir o chat, não só pra ela. */
+  mencoes: string[];
   onDragStart: () => void;
   onDragEnd: () => void;
   onOpen: () => void;
@@ -798,15 +801,6 @@ function PcpCard({
           </span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          {chat && chat.nao_lidas > 0 && (
-            <span
-              className="flex items-center gap-0.5 text-[10px] font-bold rounded-full px-[6px] py-[2px] text-white"
-              style={{ backgroundColor: chat.mencionado ? "var(--gw-danger)" : "var(--gw-primary)" }}
-              title={chat.mencionado ? "Você foi mencionado no chat" : "Mensagem nova no chat"}
-            >
-              <MessageSquare className="h-[10px] w-[10px]" /> {chat.nao_lidas}
-            </span>
-          )}
           {!comFotos && <VendedorIcone nome={row.pedido_vendedor_nome} />}
           <div className="flex flex-col items-end leading-tight">
             <span
@@ -847,6 +841,29 @@ function PcpCard({
               </div>
             )}
             <VendedorIcone nome={row.pedido_vendedor_nome} className="absolute right-1.5 top-1.5" />
+            {(chat?.nao_lidas || mencoes.length > 0) && (
+              <div className="absolute left-1.5 top-1.5 flex flex-col items-start gap-1">
+                {!!chat?.nao_lidas && (
+                  <span
+                    className="flex items-center gap-0.5 text-[10px] font-bold rounded-full px-[6px] py-[2px] text-white"
+                    style={{ backgroundColor: chat.mencionado ? "var(--gw-danger)" : "var(--gw-primary)" }}
+                    title={chat.mencionado ? "Você foi mencionado no chat" : "Mensagem nova no chat"}
+                  >
+                    <MessageSquare className="h-[10px] w-[10px]" /> {chat.nao_lidas}
+                  </span>
+                )}
+                {mencoes.map(nome => (
+                  <span
+                    key={nome}
+                    className="text-[10px] font-bold rounded-full px-[6px] py-[2px] text-white"
+                    style={{ backgroundColor: "var(--gw-danger)" }}
+                    title={`${nome} foi mencionado e ainda não viu`}
+                  >
+                    @{nome}
+                  </span>
+                ))}
+              </div>
+            )}
             {tecnicaCurta && (
               <span
                 className="absolute left-1.5 bottom-1.5 gw-body text-[10px] font-bold leading-none rounded-[5px] px-[7px] py-[4px] text-white"
@@ -1345,6 +1362,7 @@ export default function PCP() {
         { event: "*", schema: "public", table: "sistema_producao_comentarios" },
         (payload) => {
           queryClient.invalidateQueries({ queryKey: ["sistema", "pcp", "chat-resumo"] });
+          queryClient.invalidateQueries({ queryKey: ["sistema", "pcp", "mencoes-pendentes"] });
           const itemId = (payload.new as { producao_item_id?: string } | null)?.producao_item_id
             ?? (payload.old as { producao_item_id?: string } | null)?.producao_item_id;
           if (itemId && itemId === detalheIdRef.current) void carregarComentarios(itemId);
@@ -1581,6 +1599,7 @@ export default function PCP() {
             .eq("id", c.id),
         ));
         queryClient.invalidateQueries({ queryKey: ["sistema", "pcp", "chat-resumo"] });
+        queryClient.invalidateQueries({ queryKey: ["sistema", "pcp", "mencoes-pendentes"] });
       }
     }
   };
@@ -1663,6 +1682,25 @@ export default function PCP() {
     () => new Map(chatResumo.map(r => [r.producao_item_id, r])),
     [chatResumo],
   );
+
+  /* "@Fulano" no card -- pública (qualquer um com acesso ao item vê),
+     diferente de chatResumo (que é "o que EU não li"): some quando o
+     PRÓPRIO Fulano abre o chat, não quando eu abro. */
+  const { data: mencoesPendentes = [] } = useQuery<{ producao_item_id: string; mencionado_nome: string }[]>({
+    queryKey: ["sistema", "pcp", "mencoes-pendentes"],
+    staleTime: 20 * 1000,
+    refetchInterval: 30 * 1000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("sistema_mencoes_pendentes");
+      if (error) { console.error("[PCP] menções pendentes falhou:", error); return []; }
+      return (data ?? []) as { producao_item_id: string; mencionado_nome: string }[];
+    },
+  });
+  const mencoesPorItem = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const r of mencoesPendentes) (m.get(r.producao_item_id) ?? m.set(r.producao_item_id, []).get(r.producao_item_id)!).push(r.mencionado_nome);
+    return m;
+  }, [mencoesPendentes]);
 
   /* Etiquetas do item */
   const salvarTags = async (row: PcpRow, tags: string[]) => {
@@ -2713,6 +2751,7 @@ export default function PCP() {
                           onInserirMedidas={r => setExpedicaoModal({ row: r, target: "aguardando_coleta" })}
                           imprimindoOP={imprimindoOP === row.producao_id}
                           chat={chatResumoPorItem.get(row.producao_id)}
+                          mencoes={mencoesPorItem.get(row.producao_id) ?? []}
                           onDragStart={() => setDraggingId(row.producao_id)}
                           onDragEnd={() => setDraggingId(null)}
                           onOpen={() => setDetalheId(row.producao_id)}
