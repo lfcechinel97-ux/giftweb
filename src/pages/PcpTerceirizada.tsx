@@ -37,6 +37,8 @@ interface LinhaTerceirizada {
   logo_url: string | null;
   logo_dimensao_cm: number | null;
   logo_dimensao_tipo: string | null;
+  logo_link_id: string | null;
+  logo_expira_em: string | null;
 }
 
 const PEDIDO_PALETTE = [
@@ -688,7 +690,7 @@ function DetalheModal({
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onFechar}>
       <div
-        className="bg-white rounded-[14px] w-full max-w-[640px] max-h-[90vh] flex flex-col overflow-hidden"
+        className="bg-white rounded-[14px] w-full max-w-[680px] max-h-[90vh] flex flex-col overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 px-4 py-3 border-b border-[#E2E8F0]">
@@ -719,25 +721,59 @@ function DetalheModal({
           </div>
         )}
 
-        {item.logo_url && (
-          <div className="px-4 pt-3 shrink-0">
-            <div className="rounded-[8px] bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2 flex items-center gap-3">
-              <img src={sizedImage(item.logo_url, 100)} alt="Logo do cliente" className="h-11 w-11 rounded-[6px] object-contain bg-white border border-[#E2E8F0] shrink-0" />
-              <div className="min-w-0 flex-1">
-                <p className="text-[10.5px] font-bold uppercase text-[#94A3B8]">Logo do cliente</p>
+        {(item.logo_url || item.logo_link_id) && (
+          <div className="px-4 pt-3 shrink-0 space-y-1.5">
+            <p className="text-[10.5px] font-bold uppercase text-[#94A3B8]">Ordem de produção terceirizada</p>
+            {item.logo_link_id && (
+              <div className="rounded-[8px] bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2 space-y-1.5">
                 {item.logo_dimensao_cm && (
                   <p className="text-[12.5px] text-[#0F172A]">
-                    {item.logo_dimensao_cm} cm de {item.logo_dimensao_tipo === "altura" ? "altura" : "largura"}
+                    Logo com <b>{item.logo_dimensao_cm} cm</b> de {item.logo_dimensao_tipo === "altura" ? "altura" : "largura"}
+                    {item.logo_expira_em && <> · válido até {new Date(item.logo_expira_em).toLocaleDateString("pt-BR")}</>}
                   </p>
                 )}
+                <div className="flex items-center gap-1.5">
+                  <input
+                    readOnly
+                    value={`${window.location.origin}/op-terceirizada/${item.logo_link_id}`}
+                    onFocus={e => e.currentTarget.select()}
+                    className="flex-1 min-w-0 h-8 text-[11.5px] rounded-[6px] border border-[#D9E0E8] px-2 bg-white"
+                  />
+                  <button
+                    onClick={async () => {
+                      try { await navigator.clipboard.writeText(`${window.location.origin}/op-terceirizada/${item.logo_link_id}`); }
+                      catch { /* clipboard indisponível: usuário copia manualmente do campo */ }
+                    }}
+                    className="shrink-0 h-8 px-2.5 rounded-[6px] border border-[#D9E0E8] text-[11.5px] font-semibold bg-white"
+                  >
+                    Copiar
+                  </button>
+                  <a
+                    href={`${window.location.origin}/op-terceirizada/${item.logo_link_id}`} target="_blank" rel="noreferrer"
+                    className="shrink-0 h-8 px-2.5 rounded-[6px] border border-[#D9E0E8] text-[11.5px] font-semibold bg-white flex items-center"
+                  >
+                    Abrir
+                  </a>
+                </div>
               </div>
-              <a
-                href={item.logo_url} target="_blank" rel="noreferrer"
-                className="shrink-0 text-[12px] font-bold text-[#15803D] hover:underline"
-              >
-                Baixar
-              </a>
-            </div>
+            )}
+            {item.logo_url && (
+              <div className="rounded-[8px] bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2 flex items-center gap-3">
+                <img src={sizedImage(item.logo_url, 100)} alt="Logo do cliente" className="h-11 w-11 rounded-[6px] object-contain bg-white border border-[#E2E8F0] shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12.5px] font-semibold text-[#0F172A]">Logo do cliente</p>
+                  <p className="text-[11px] text-[#64748B] truncate">
+                    {decodeURIComponent(item.logo_url.split("/").pop() || "arquivo")}
+                  </p>
+                </div>
+                <a
+                  href={item.logo_url} target="_blank" rel="noreferrer"
+                  className="shrink-0 text-[12px] font-bold text-[#15803D] hover:underline"
+                >
+                  Baixar
+                </a>
+              </div>
+            )}
           </div>
         )}
 
