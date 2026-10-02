@@ -132,14 +132,21 @@ export default function PcpTerceirizada() {
 
   const [perfil, setPerfil] = useState<{ usuario: string; terceirizada_nome: string } | null>(null);
   const [linhas, setLinhas] = useState<LinhaTerceirizada[]>([]);
-  const testeEnviadoPendentes = useMemo(
-    () => linhas.filter(l => l.coluna_pcp === "teste_enviado"),
+  const testeAProduzir = useMemo(
+    () => linhas.filter(l => l.coluna_pcp === "teste_fisico_terceirizada"),
+    [linhas],
+  );
+  const produtosAProduzir = useMemo(
+    () => linhas.filter(l => l.coluna_pcp === "em_producao_terceirizada"),
     [linhas],
   );
   const [carregando, setCarregando] = useState(false);
   const [meuUserId, setMeuUserId] = useState<string | null>(null);
   const [nomesUsuarios, setNomesUsuarios] = useState<{ user_id: string; nome: string }[]>([]);
   const [chatResumo, setChatResumo] = useState<{ producao_item_id: string; nao_lidas: number; mencionado: boolean }[]>([]);
+  /** Igual chatResumo, mas só os itens onde EU fui @mencionado -- contador
+   *  distinto de "tem mensagem não lida" (mensagem ≠ menção). */
+  const mencoesParaMim = useMemo(() => chatResumo.filter(r => r.mencionado), [chatResumo]);
   const [mencoesPendentes, setMencoesPendentes] = useState<{ producao_item_id: string; mencionado_nome: string }[]>([]);
   const [detalheId, setDetalheId] = useState<string | null>(null);
 
@@ -274,28 +281,52 @@ export default function PcpTerceirizada() {
         </div>
         <span className="flex-1" />
         {carregando && <Loader2 className="h-4 w-4 animate-spin text-white/70" />}
-        {/* Pendências de chat -- clica e vai direto pro primeiro produto com
-            mensagem não lida; ao marcar como lida o "@2" vira "@1". */}
+        {/* Mensagem e menção são contadores DISTINTOS -- mensagem é
+            qualquer coisa não lida no chat; menção é só quando alguém usou
+            @. Cada botão vai pro primeiro item da própria lista. */}
         {chatResumo.length > 0 && (
           <button
             type="button"
             onClick={() => setDetalheId(chatResumo[0].producao_item_id)}
             className="flex items-center gap-1.5 h-8 px-2.5 rounded-[7px] text-[12.5px] font-bold text-white"
-            style={{ backgroundColor: chatResumo.some(r => r.mencionado) ? "#DC2626" : "#15803D" }}
+            style={{ backgroundColor: "#15803D" }}
+            title="Produtos com mensagem não lida"
           >
-            💬 @{chatResumo.length}
+            💬 {chatResumo.length}
           </button>
         )}
-        {/* Tudo que está em Teste Enviado agora, sem filtro de tempo --
-            precisa ser visto rápido, não só depois de dias parado. */}
-        {testeEnviadoPendentes.length > 0 && (
+        {mencoesParaMim.length > 0 && (
           <button
             type="button"
-            onClick={() => setDetalheId(testeEnviadoPendentes[0].producao_id)}
+            onClick={() => setDetalheId(mencoesParaMim[0].producao_item_id)}
             className="flex items-center gap-1.5 h-8 px-2.5 rounded-[7px] text-[12.5px] font-bold text-white"
-            style={{ backgroundColor: "#BE185D" }}
+            style={{ backgroundColor: "#DC2626" }}
+            title="Produtos onde você foi @mencionado"
           >
-            ⏱ {testeEnviadoPendentes.length} em Teste Enviado
+            @ {mencoesParaMim.length}
+          </button>
+        )}
+        {/* "quantos testes a produzir" / "quantos produtos a produzir" --
+            não é sobre Teste Enviado (isso aí é só aguardar o cliente, a
+            terceirizada não tem ação nenhuma a tomar). */}
+        {testeAProduzir.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setDetalheId(testeAProduzir[0].producao_id)}
+            className="flex items-center gap-1.5 h-8 px-2.5 rounded-[7px] text-[12.5px] font-bold text-white"
+            style={{ backgroundColor: "#A21CAF" }}
+          >
+            {testeAProduzir.length} teste(s) a produzir
+          </button>
+        )}
+        {produtosAProduzir.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setDetalheId(produtosAProduzir[0].producao_id)}
+            className="flex items-center gap-1.5 h-8 px-2.5 rounded-[7px] text-[12.5px] font-bold text-white"
+            style={{ backgroundColor: "#0F766E" }}
+          >
+            {produtosAProduzir.length} produto(s) a produzir
           </button>
         )}
         <button onClick={sair} className="flex items-center gap-1.5 text-[12.5px] font-semibold text-white/85 hover:text-white">

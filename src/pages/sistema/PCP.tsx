@@ -1704,6 +1704,9 @@ export default function PCP() {
     () => new Map(chatResumo.map(r => [r.producao_item_id, r])),
     [chatResumo],
   );
+  /** Igual chatResumo, mas só os itens onde EU fui @mencionado -- contador
+   *  distinto de "tem mensagem não lida" (mensagem ≠ menção). */
+  const mencoesParaMim = useMemo(() => chatResumo.filter(r => r.mencionado), [chatResumo]);
 
   /* Tudo que está em "Teste Enviado" agora, sem filtro de tempo -- vendedor
      e produção precisam ver na hora que algo entra ali, não só depois de
@@ -2567,18 +2570,30 @@ export default function PCP() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Pendências de chat -- clica e vai direto pro primeiro produto
-              com mensagem não lida; ao marcar como lida, a lista encolhe e
-              o próximo clique já leva pro seguinte (o "@2" vira "@1"). */}
+          {/* Mensagem e menção são contadores DISTINTOS -- mensagem é
+              qualquer coisa não lida no chat; menção é só quando alguém
+              usou @. Cada botão abre o primeiro item da própria lista; ao
+              marcar como lido, o próximo clique já leva pro seguinte. */}
           {chatResumo.length > 0 && (
             <button
               type="button"
               onClick={() => setDetalheId(chatResumo[0].producao_item_id)}
               className="flex items-center gap-1.5 h-9 px-3 rounded-[8px] text-[13px] font-bold text-white shrink-0"
-              style={{ backgroundColor: chatResumo.some(r => r.mencionado) ? "var(--gw-danger)" : "var(--gw-primary)" }}
-              title="Ver próxima mensagem pendente no chat"
+              style={{ backgroundColor: "var(--gw-primary)" }}
+              title="Produtos com mensagem não lida"
             >
-              <MessageSquare className="h-4 w-4" /> @{chatResumo.length}
+              <MessageSquare className="h-4 w-4" /> {chatResumo.length}
+            </button>
+          )}
+          {mencoesParaMim.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setDetalheId(mencoesParaMim[0].producao_item_id)}
+              className="flex items-center gap-1.5 h-9 px-3 rounded-[8px] text-[13px] font-bold text-white shrink-0"
+              style={{ backgroundColor: "var(--gw-danger)" }}
+              title="Produtos onde você foi @mencionado"
+            >
+              @ {mencoesParaMim.length}
             </button>
           )}
           {/* Teste Enviado conta TUDO que está na coluna agora, sem limite
