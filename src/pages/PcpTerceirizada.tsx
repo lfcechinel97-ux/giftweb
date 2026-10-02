@@ -598,26 +598,33 @@ function DetalheModal({
   const [enviando, setEnviando] = useState(false);
   const [mencaoAberta, setMencaoAberta] = useState(false);
 
-  const carregar = async () => {
+  /** Só busca -- usado depois de enviar e nos eventos de realtime, onde
+   *  remarcar como lido de novo seria trabalho à toa. */
+  const buscar = async () => {
     if (!item) return;
     const { data } = await supabase
       .from("sistema_producao_comentarios" as any)
       .select("*")
       .eq("producao_item_id", item.producao_id)
       .order("created_at", { ascending: true });
-    const lista = (data as any as ComentarioRow[]) ?? [];
-    setComentarios(lista);
-    if (meuUserId) {
-      const naoLidas = lista.filter(c => !(c.lido_por ?? []).includes(meuUserId));
+    setComentarios((data as any as ComentarioRow[]) ?? []);
+  };
+
+  /** Busca + marca como lido -- só na abertura do painel. */
+  const carregar = async () => {
+    await buscar();
+    if (!meuUserId) return;
+    setComentarios(atual => {
+      const naoLidas = atual.filter(c => !(c.lido_por ?? []).includes(meuUserId));
       if (naoLidas.length > 0) {
-        await Promise.all(naoLidas.map(c =>
+        void Promise.all(naoLidas.map(c =>
           supabase.from("sistema_producao_comentarios" as any)
             .update({ lido_por: [...(c.lido_por ?? []), meuUserId] })
             .eq("id", c.id),
-        ));
-        onLido();
+        )).then(onLido);
       }
-    }
+      return atual;
+    });
   };
 
   useEffect(() => {
@@ -649,21 +656,22 @@ function DetalheModal({
     const msg = texto.trim();
     if (!msg) return;
     setEnviando(true);
-    const { data: auth } = await supabase.auth.getUser();
+    // meuUserId já veio carregado (useUserRole/perfil) -- nada de
+    // supabase.auth.getUser() aqui, essa chamada de rede extra era o que
+    // deixava "aperta Enter e demora" pra mandar.
     const { error } = await supabase.from("sistema_producao_comentarios" as any).insert({
       producao_item_id: item.producao_id,
       mensagem: msg,
-      autor_id: auth?.user?.id ?? null,
-      autor_email: auth?.user?.email ?? null,
+      autor_id: meuUserId,
       autor_nome: meuNome,
       mencionados: resolverMencoes(msg),
-      lido_por: auth?.user?.id ? [auth.user.id] : [],
+      lido_por: meuUserId ? [meuUserId] : [],
     });
     setEnviando(false);
     if (error) { alert(error.message || "Não foi possível enviar."); return; }
     setTexto("");
     setMencaoAberta(false);
-    await carregar();
+    await buscar();
   };
 
   const opcoesMencao = (() => {
@@ -733,7 +741,8 @@ function DetalheModal({
           </div>
         )}
 
-        <div className="flex-1 min-h-[220px] overflow-y-auto px-4 py-3 space-y-1.5">
+        <p className="px-4 pt-2 text-[10.5px] font-bold uppercase text-[#94A3B8] shrink-0">GiftChat</p>
+        <div className="flex-1 min-h-[220px] overflow-y-auto px-4 py-3 space-y-1.5" style={{ backgroundColor: "#E5DDD5" }}>
           {comentarios.length === 0 ? (
             <p className="text-[13px] text-[#94A3B8] text-center py-8">Nenhuma mensagem ainda. Escreva a primeira abaixo.</p>
           ) : (

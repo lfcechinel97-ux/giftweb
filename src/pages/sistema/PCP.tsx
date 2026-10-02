@@ -1579,29 +1579,37 @@ export default function PCP() {
     }
   };
 
-  const carregarComentarios = async (producaoId: string) => {
+  /** Só busca e atualiza a lista -- usado depois de mandar mensagem, onde
+   *  marcar como lido de novo seria trabalho à toa (a própria mensagem já
+   *  nasce lida por mim). */
+  const buscarComentarios = async (producaoId: string) => {
     const { data } = await supabase
       .from("sistema_producao_comentarios" as any)
       .select("*")
       .eq("producao_item_id", producaoId)
       .order("created_at", { ascending: true });
-    const lista = (data as any as ComentarioRow[]) ?? [];
-    setComentarios(lista);
+    setComentarios((data as any as ComentarioRow[]) ?? []);
+  };
 
-    // Abrir o chat marca tudo que ainda não vi como lido -- some a
-    // notificação no card sem precisar de ação separada.
-    if (meuUserId) {
-      const naoLidas = lista.filter(c => !(c.lido_por ?? []).includes(meuUserId));
+  /** Busca + marca como lido -- só precisa rodar quando o chat ABRE, não
+   *  a cada mensagem enviada (era o que deixava o envio lento). */
+  const carregarComentarios = async (producaoId: string) => {
+    await buscarComentarios(producaoId);
+    if (!meuUserId) return;
+    setComentarios(atual => {
+      const naoLidas = atual.filter(c => !(c.lido_por ?? []).includes(meuUserId));
       if (naoLidas.length > 0) {
-        await Promise.all(naoLidas.map(c =>
+        void Promise.all(naoLidas.map(c =>
           supabase.from("sistema_producao_comentarios" as any)
             .update({ lido_por: [...(c.lido_por ?? []), meuUserId] })
             .eq("id", c.id),
-        ));
-        queryClient.invalidateQueries({ queryKey: ["sistema", "pcp", "chat-resumo"] });
-        queryClient.invalidateQueries({ queryKey: ["sistema", "pcp", "mencoes-pendentes"] });
+        )).then(() => {
+          queryClient.invalidateQueries({ queryKey: ["sistema", "pcp", "chat-resumo"] });
+          queryClient.invalidateQueries({ queryKey: ["sistema", "pcp", "mencoes-pendentes"] });
+        });
       }
-    }
+      return atual;
+    });
   };
 
   useEffect(() => {
@@ -1629,16 +1637,18 @@ export default function PCP() {
     const texto = novoComentario.trim();
     if (!texto) return;
     setEnviandoComentario(true);
-    const { data: auth } = await supabase.auth.getUser();
+    // Usa a identidade já carregada (useUserRole) em vez de
+    // supabase.auth.getUser() -- esse faz uma chamada de rede extra toda
+    // vez, é o que deixava "aperta Enter e demora" pra mandar.
     const mencionados = resolverMencoes(texto);
     const { error } = await supabase.from("sistema_producao_comentarios" as any).insert({
       producao_item_id: detalhe.producao_id,
       pedido_id: detalhe.pedido_id,
       mensagem: texto,
-      autor_id: auth?.user?.id ?? null,
-      autor_email: auth?.user?.email ?? null,
+      autor_id: meuUserId,
+      autor_email: emailUsuario ?? null,
       mencionados,
-      lido_por: auth?.user?.id ? [auth.user.id] : [],
+      lido_por: meuUserId ? [meuUserId] : [],
     });
     setEnviandoComentario(false);
     if (error) {
@@ -1648,7 +1658,7 @@ export default function PCP() {
     }
     setNovoComentario("");
     setMencaoAberta(false);
-    await carregarComentarios(detalhe.producao_id);
+    await buscarComentarios(detalhe.producao_id);
   };
 
   /** Lista de pessoas pro @autocomplete, filtrada pelo que já foi digitado
@@ -2829,7 +2839,7 @@ export default function PCP() {
           3 colunas pra caber bastante informação sem precisar rolar tanto. */}
       <Dialog open={!!detalhe} onOpenChange={open => !open && setDetalheId(null)}>
         <DialogContent
-          className="p-0 gap-0 overflow-hidden rounded-[12px] border-[var(--gw-border)]"
+          className="p-0 gap-0 overflow-hidden rounded-[12px] border-[var(--gw-border)] bg-white"
           style={{ maxWidth: 1180, width: "94vw", maxHeight: "88vh", boxShadow: "var(--gw-shadow-lg)" }}
         >
           {detalhe && (
@@ -3035,6 +3045,34 @@ export default function PCP() {
                     </div>
                   )}
 
+                  {/* Observação fixa do vendedor -- nomes a personalizar etc.
+                      Segue o pedido por todas as etapas, separada do chat
+                      (que é conversa; isto é instrução que não pode rolar
+                      pra fora de vista). */}
+                  {(detalhe.pedido_observacoes || detalhe.item_observacao) && (
+                    <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-1.5">
+                      <p className="gw-label flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5" /> Observação
+                      </p>
+                      {detalhe.pedido_observacoes && (
+                        <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
+                          <p className="gw-label mb-0.5">Observação do pedido</p>
+                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
+                            {detalhe.pedido_observacoes}
+                          </p>
+                        </div>
+                      )}
+                      {detalhe.item_observacao && (
+                        <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
+                          <p className="gw-label mb-0.5">Observação do item</p>
+                          <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
+                            {detalhe.item_observacao}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Teste físico — só aparece na etapa certa, ou depois de já
                       ter anexo (pra continuar visível como registro). */}
                   {(detalhe.coluna_pcp === "teste_fisico" || detalhe.coluna_pcp === "teste_fisico_terceirizada"
@@ -3162,37 +3200,20 @@ export default function PCP() {
                     </div>
                   )}
 
-                  {/* Observações + chat do produto -- mesmo lugar: a
-                      observação fixa do pedido/item fica presa no topo (é
-                      instrução que não devia sumir rolando a conversa), o
-                      resto é chat de verdade, em balão, com @menção. */}
+                  {/* GiftChat -- chat de verdade, separado da observação
+                      fixa (que mora logo acima, embaixo dos dados da
+                      terceirizada). Fundo no tom clássico do WhatsApp pra
+                      ficar claro que é conversa, não é mais um campo de
+                      formulário. */}
                   <div className="px-5 py-4 flex flex-col gap-2.5">
                     <p className="gw-label flex items-center gap-1.5">
-                      <MessageSquare className="h-3.5 w-3.5" /> Observações
+                      <MessageSquare className="h-3.5 w-3.5" /> GiftChat
                     </p>
 
-                    {(detalhe.pedido_observacoes || detalhe.item_observacao) && (
-                      <div className="space-y-1.5 shrink-0">
-                        {detalhe.pedido_observacoes && (
-                          <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
-                            <p className="gw-label mb-0.5">Observação do pedido</p>
-                            <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
-                              {detalhe.pedido_observacoes}
-                            </p>
-                          </div>
-                        )}
-                        {detalhe.item_observacao && (
-                          <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
-                            <p className="gw-label mb-0.5">Observação do item</p>
-                            <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap">
-                              {detalhe.item_observacao}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="space-y-1.5 min-h-[260px] max-h-[420px] overflow-y-auto rounded-[10px] bg-[var(--gw-surface-alt)]/50 p-2.5">
+                    <div
+                      className="space-y-1.5 min-h-[260px] max-h-[420px] overflow-y-auto rounded-[10px] p-2.5"
+                      style={{ backgroundColor: "#E5DDD5" }}
+                    >
                       {comentarios.length === 0 ? (
                         <p className="gw-body text-[13px] text-[var(--gw-text-muted)] text-center py-6">
                           Nenhuma mensagem ainda. Escreva a primeira abaixo.
