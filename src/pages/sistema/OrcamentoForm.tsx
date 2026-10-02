@@ -175,6 +175,8 @@ export const OrcamentoForm: React.FC = () => {
   const [cotando, setCotando] = useState(false);
   const [opcoesFrete, setOpcoesFrete] = useState<{ id: string; transportadora: string; servico: string; preco: number; prazoDias: number | null }[] | null>(null);
   const [erroFrete, setErroFrete] = useState<string | null>(null);
+  const [opcaoSelecionada, setOpcaoSelecionada] = useState<{ transportadora: string; servico: string; preco: number; prazoDias: number | null } | null>(null);
+  const [custoAdicionalInput, setCustoAdicionalInput] = useState("");
 
   const novoVolumeVazio = (): Volume => ({
     id: Math.random().toString(36).slice(2, 10),
@@ -188,6 +190,8 @@ export const OrcamentoForm: React.FC = () => {
   const abrirCalculoFrete = async () => {
     setErroFrete(null);
     setOpcoesFrete(null);
+    setOpcaoSelecionada(null);
+    setCustoAdicionalInput("");
     setCepDestinoInput(clienteSelecionado?.enderecos?.[0]?.cep || "");
     setShowFreteDialog(true);
     setVolumes((prev) => (prev.length > 0 ? prev : [novoVolumeVazio()]));
@@ -244,6 +248,8 @@ export const OrcamentoForm: React.FC = () => {
     setCotando(true);
     setErroFrete(null);
     setOpcoesFrete(null);
+    setOpcaoSelecionada(null);
+    setCustoAdicionalInput("");
     try {
       const itens = volumes.map((v) => ({
         altura: v.altura,
@@ -272,16 +278,20 @@ export const OrcamentoForm: React.FC = () => {
     }
   };
 
-  const aplicarCotacao = (op: { transportadora: string; preco: number; prazoDias: number | null }) => {
+  const custoAdicional = parseFloat(custoAdicionalInput.replace(",", ".")) || 0;
+  const totalComAdicional = (opcaoSelecionada?.preco || 0) + custoAdicional;
+
+  const confirmarCotacao = () => {
+    if (!opcaoSelecionada) return;
     const transp = transportadoras.find(
-      (t) => t.ativo && t.nome.toLowerCase().includes(op.transportadora.toLowerCase())
+      (t) => t.ativo && t.nome.toLowerCase().includes(opcaoSelecionada.transportadora.toLowerCase())
     );
     setFormData((p) => ({
       ...p,
       freteTipo: p.freteTipo === "CIF" ? p.freteTipo : "FOB",
-      freteValor: op.preco,
+      freteValor: totalComAdicional,
       transportadoraId: transp?.id || p.transportadoraId,
-      prazoEntrega: op.prazoDias ?? p.prazoEntrega,
+      prazoEntrega: opcaoSelecionada.prazoDias ?? p.prazoEntrega,
     }));
     setShowFreteDialog(false);
   };
@@ -898,22 +908,57 @@ export const OrcamentoForm: React.FC = () => {
                       {opcoesFrete.length === 0 ? (
                         <p className="text-sm text-gray-500">Nenhuma transportadora retornou cotação para esse destino/volume.</p>
                       ) : (
-                        opcoesFrete.map((op) => (
-                          <button
-                            key={op.id}
-                            type="button"
-                            onClick={() => aplicarCotacao(op)}
-                            className="w-full flex items-center justify-between border rounded-lg px-3 py-2 text-left hover:border-blue-400 hover:bg-blue-50"
-                          >
-                            <span>
-                              <span className="font-medium">{op.transportadora}</span>
-                              <span className="text-gray-500"> • {op.servico}</span>
-                              {op.prazoDias != null && <span className="text-gray-400 text-xs"> • {op.prazoDias} dias</span>}
-                            </span>
-                            <span className="font-medium text-green-700">{formatCurrency(op.preco)}</span>
-                          </button>
-                        ))
+                        opcoesFrete.map((op) => {
+                          const selecionada = opcaoSelecionada?.transportadora === op.transportadora && opcaoSelecionada?.servico === op.servico && opcaoSelecionada?.preco === op.preco;
+                          return (
+                            <button
+                              key={op.id}
+                              type="button"
+                              onClick={() => setOpcaoSelecionada({ transportadora: op.transportadora, servico: op.servico, preco: op.preco, prazoDias: op.prazoDias })}
+                              className={`w-full flex items-center justify-between border rounded-lg px-3 py-2 text-left hover:border-blue-400 hover:bg-blue-50 ${selecionada ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500" : ""}`}
+                            >
+                              <span>
+                                <span className="font-medium">{op.transportadora}</span>
+                                <span className="text-gray-500"> • {op.servico}</span>
+                                {op.prazoDias != null && <span className="text-gray-400 text-xs"> • {op.prazoDias} dias</span>}
+                              </span>
+                              <span className="font-medium text-green-700">{formatCurrency(op.preco)}</span>
+                            </button>
+                          );
+                        })
                       )}
+                    </div>
+                  )}
+
+                  {opcaoSelecionada && (
+                    <div className="border border-blue-200 bg-blue-50/50 rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium">{opcaoSelecionada.transportadora} • {opcaoSelecionada.servico}</p>
+                        <button type="button" onClick={() => setOpcaoSelecionada(null)} className="text-xs text-gray-500 hover:underline">
+                          Trocar opção
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3 items-end">
+                        <div>
+                          <label className="block text-[11px] text-gray-500">Valor da cotação</label>
+                          <p className="px-2 py-1.5 text-sm">{formatCurrency(opcaoSelecionada.preco)}</p>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-500">Custo adicional (opcional)</label>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            placeholder="0,00"
+                            className="w-full px-2 py-1.5 text-sm border rounded bg-white"
+                            value={custoAdicionalInput}
+                            onChange={(e) => setCustoAdicionalInput(e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] text-gray-500">Total pro orçamento</label>
+                          <p className="px-2 py-1.5 text-sm font-semibold text-green-700">{formatCurrency(totalComAdicional)}</p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -921,14 +966,24 @@ export const OrcamentoForm: React.FC = () => {
                   <button type="button" onClick={() => setShowFreteDialog(false)} className="px-4 py-2 text-sm rounded-lg border">
                     Fechar
                   </button>
-                  <button
-                    type="button"
-                    onClick={calcularFrete}
-                    disabled={cotando || carregandoDimensoes}
-                    className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {cotando ? "Cotando..." : "Cotar frete"}
-                  </button>
+                  {opcaoSelecionada ? (
+                    <button
+                      type="button"
+                      onClick={confirmarCotacao}
+                      className="px-4 py-2 text-sm rounded-lg bg-green-600 text-white hover:bg-green-700"
+                    >
+                      Aplicar ao orçamento
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={calcularFrete}
+                      disabled={cotando || carregandoDimensoes}
+                      className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {cotando ? "Cotando..." : "Cotar frete"}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
