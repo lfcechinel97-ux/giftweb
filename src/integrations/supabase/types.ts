@@ -2595,6 +2595,41 @@ export type Database = {
         }
         Relationships: []
       }
+      sistema_terceirizada_usuarios: {
+        Row: {
+          ativo: boolean
+          auth_user_id: string
+          created_at: string
+          id: string
+          terceirizada_id: string
+          usuario: string
+        }
+        Insert: {
+          ativo?: boolean
+          auth_user_id: string
+          created_at?: string
+          id?: string
+          terceirizada_id: string
+          usuario: string
+        }
+        Update: {
+          ativo?: boolean
+          auth_user_id?: string
+          created_at?: string
+          id?: string
+          terceirizada_id?: string
+          usuario?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sistema_terceirizada_usuarios_terceirizada_id_fkey"
+            columns: ["terceirizada_id"]
+            isOneToOne: false
+            referencedRelation: "sistema_fornecedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sistema_transportadoras: {
         Row: {
           ativo: boolean
@@ -3027,8 +3062,10 @@ export type Database = {
           grupo_id: string | null
           horas_na_etapa: number | null
           imagem_catalogo_url: string | null
+          item_aplicacoes: number | null
           item_criado_em: string | null
           item_observacao: string | null
+          item_personalizacao: string | null
           item_posicao: number | null
           item_volumes: Json | null
           itens_enviados_pedido: number | null
@@ -3043,12 +3080,15 @@ export type Database = {
           pedido_anexos: Json | null
           pedido_comprovante_pagamento_url: string | null
           pedido_cor: string | null
+          pedido_criado_em: string | null
+          pedido_data_despacho: string | null
           pedido_id: string | null
           pedido_numero: string | null
           pedido_observacoes: string | null
           pedido_pago_integral: boolean | null
           pedido_total: number | null
           pedido_vendedor_id: string | null
+          pedido_vendedor_nome: string | null
           pedido_volumes: Json | null
           pedido_volumes_responsavel: string | null
           pix_recebido_integral_em: string | null
@@ -3378,9 +3418,39 @@ export type Database = {
       }
       sistema_next_orcamento_numero: { Args: never; Returns: string }
       sistema_next_pedido_numero: { Args: never; Returns: string }
+      sistema_nomes_usuarios: {
+        Args: never
+        Returns: {
+          nome: string
+          user_id: string
+        }[]
+      }
       sistema_op_terceirizada_publica: {
         Args: { p_token: string }
         Returns: Json
+      }
+      sistema_pcp_terceirizada: {
+        Args: never
+        Returns: {
+          aplicacoes: number
+          coluna_pcp: string
+          etapa_desde: string
+          imagem_catalogo_url: string
+          item_posicao: number
+          item_total_pedido: number
+          mockup_url: string
+          observacao: string
+          pedido_numero: string
+          personalizacao: string
+          producao_anexo_tipo: string
+          producao_anexo_url: string
+          producao_id: string
+          produto_nome: string
+          quantidade: number
+          tags: string[]
+          teste_anexo_url: string
+          volumes: Json
+        }[]
       }
       sistema_pedidos_ids_por_coluna: {
         Args: { p_coluna: string }
@@ -3407,6 +3477,32 @@ export type Database = {
         Args: { p_producao_id: string; p_status: string }
         Returns: Json
       }
+      sistema_terceirizada_anexar_producao: {
+        Args: { p_producao_id: string; p_tipo: string; p_url: string }
+        Returns: undefined
+      }
+      sistema_terceirizada_anexar_teste: {
+        Args: { p_producao_id: string; p_url: string }
+        Returns: undefined
+      }
+      sistema_terceirizada_inserir_medidas: {
+        Args: {
+          p_altura: number
+          p_comprimento: number
+          p_largura: number
+          p_peso: number
+          p_producao_id: string
+          p_responsavel: string
+        }
+        Returns: undefined
+      }
+      sistema_terceirizada_meu_perfil: {
+        Args: never
+        Returns: {
+          terceirizada_nome: string
+          usuario: string
+        }[]
+      }
       sistema_venda_detalhe: { Args: { p_venda_id: string }; Returns: Json }
       sistema_vendas_conferencia: {
         Args: {
@@ -3422,6 +3518,7 @@ export type Database = {
         Args: { p_senha: string }
         Returns: boolean
       }
+      terceirizada_id_atual: { Args: never; Returns: string }
       unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
