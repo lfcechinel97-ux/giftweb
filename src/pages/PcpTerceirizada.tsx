@@ -77,6 +77,14 @@ interface ComentarioRow {
 
 const CHAT_MENTION_REGEX = /@([a-zà-ú]*)$/i;
 
+interface AnexoRow {
+  id: string;
+  categoria: string;
+  tipo: string;
+  url: string;
+  created_at: string;
+}
+
 interface HistoricoRow {
   id: string;
   status_anterior: string | null;
@@ -327,14 +335,16 @@ function CardTerceirizada({
   const [medidasAberto, setMedidasAberto] = useState(false);
 
   const handleAnexoTeste = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const files = [...(e.target.files ?? [])];
     e.target.value = "";
-    if (!file) return;
+    if (files.length === 0) return;
     setEnviando(true);
     try {
-      const { url } = await uploadAnexoPcp(file, item.producao_id, "teste");
+      const enviados = await Promise.all(files.map(f => uploadAnexoPcp(f, item.producao_id, "teste")));
       const { error } = await (supabase as any).rpc("sistema_terceirizada_anexar_teste", {
-        p_producao_id: item.producao_id, p_url: url,
+        p_producao_id: item.producao_id,
+        p_urls: enviados.map(a => a.url),
+        p_tipos: enviados.map(a => a.tipo),
       });
       if (error) throw error;
       onAtualizado();
@@ -346,14 +356,16 @@ function CardTerceirizada({
   };
 
   const handleAnexoProducao = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const files = [...(e.target.files ?? [])];
     e.target.value = "";
-    if (!file) return;
+    if (files.length === 0) return;
     setEnviando(true);
     try {
-      const { url, tipo } = await uploadAnexoPcp(file, item.producao_id, "producao");
+      const enviados = await Promise.all(files.map(f => uploadAnexoPcp(f, item.producao_id, "producao")));
       const { error } = await (supabase as any).rpc("sistema_terceirizada_anexar_producao", {
-        p_producao_id: item.producao_id, p_url: url, p_tipo: tipo,
+        p_producao_id: item.producao_id,
+        p_urls: enviados.map(a => a.url),
+        p_tipos: enviados.map(a => a.tipo),
       });
       if (error) throw error;
       onAtualizado();
@@ -488,7 +500,7 @@ function CardTerceirizada({
         )}
         {coluna === "teste_fisico_terceirizada" && (
           <>
-            <input ref={inputTesteRef} type="file" accept="image/*" className="hidden" onChange={handleAnexoTeste} />
+            <input ref={inputTesteRef} type="file" accept="image/*,video/mp4,video/quicktime,video/webm" multiple className="hidden" onChange={handleAnexoTeste} />
             <button
               onClick={() => inputTesteRef.current?.click()} disabled={enviando}
               className="w-full h-8 rounded-[7px] bg-[#7E22CE] text-white text-[12px] font-bold flex items-center justify-center gap-1.5 disabled:opacity-60"
@@ -499,7 +511,7 @@ function CardTerceirizada({
         )}
         {coluna === "em_producao_terceirizada" && (
           <>
-            <input ref={inputProducaoRef} type="file" accept="image/*,video/mp4,video/quicktime,video/webm" className="hidden" onChange={handleAnexoProducao} />
+            <input ref={inputProducaoRef} type="file" accept="image/*,video/mp4,video/quicktime,video/webm" multiple className="hidden" onChange={handleAnexoProducao} />
             <button
               onClick={() => inputProducaoRef.current?.click()} disabled={enviando}
               className="w-full h-8 rounded-[7px] bg-[#0F766E] text-white text-[12px] font-bold flex items-center justify-center gap-1.5 disabled:opacity-60"
@@ -614,6 +626,7 @@ function DetalheModal({
 }) {
   const [comentarios, setComentarios] = useState<ComentarioRow[]>([]);
   const [historico, setHistorico] = useState<HistoricoRow[]>([]);
+  const [anexos, setAnexos] = useState<AnexoRow[]>([]);
   const [historicoAberto, setHistoricoAberto] = useState(false);
   const [fotoAberta, setFotoAberta] = useState(false);
   const [texto, setTexto] = useState("");
@@ -642,9 +655,20 @@ function DetalheModal({
     setHistorico((data as any as HistoricoRow[]) ?? []);
   };
 
+  const buscarAnexos = async () => {
+    if (!item) return;
+    const { data } = await supabase
+      .from("sistema_producao_anexos" as any)
+      .select("id,categoria,tipo,url,created_at")
+      .eq("producao_item_id", item.producao_id)
+      .in("categoria", ["teste", "producao"])
+      .order("created_at", { ascending: false });
+    setAnexos((data as any as AnexoRow[]) ?? []);
+  };
+
   /** Busca + marca como lido -- só na abertura do painel. */
   const carregar = async () => {
-    await Promise.all([buscar(), buscarHistorico()]);
+    await Promise.all([buscar(), buscarHistorico(), buscarAnexos()]);
     if (!meuUserId) return;
     setComentarios(atual => {
       const naoLidas = atual.filter(c => !(c.lido_por ?? []).includes(meuUserId));
@@ -723,24 +747,26 @@ function DetalheModal({
         className="bg-white rounded-[14px] w-full max-w-[680px] max-h-[90vh] flex flex-col overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-start gap-3 px-4 py-3 border-b border-[#E2E8F0]">
+        <div className="px-4 pt-3 pb-3 border-b border-[#E2E8F0] shrink-0">
+          <div className="flex items-start gap-2 mb-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <p className="text-[16px] font-bold text-[#0F172A]">{item.produto_nome || "—"}</p>
+                {tecnica && (
+                  <span className="text-[10.5px] font-bold rounded-full px-2 py-0.5 text-white bg-[#0A2A56] whitespace-nowrap">
+                    {tecnica}
+                  </span>
+                )}
+              </div>
+              <p className="text-[12.5px] text-[#64748B] mt-0.5">{item.quantidade ?? 0} un</p>
+            </div>
+            <button onClick={onFechar} className="text-[#64748B] text-[20px] leading-none px-1 shrink-0">×</button>
+          </div>
           {foto && (
-            <button type="button" onClick={() => setFotoAberta(true)} className="shrink-0 cursor-zoom-in" title="Ver em tamanho cheio">
-              <img src={sizedImage(foto, 320)} alt="" className="h-20 w-20 rounded-[10px] object-contain bg-[#F1F5F9] border border-[#E2E8F0]" />
+            <button type="button" onClick={() => setFotoAberta(true)} className="block mx-auto cursor-zoom-in" title="Ver em tamanho cheio">
+              <img src={sizedImage(foto, 640)} alt="" className="h-60 w-60 rounded-[12px] object-contain bg-[#F1F5F9] border border-[#E2E8F0]" />
             </button>
           )}
-          <div className="min-w-0 flex-1 pt-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <p className="text-[15px] font-bold text-[#0F172A]">{item.produto_nome || "—"}</p>
-              {tecnica && (
-                <span className="text-[10.5px] font-bold rounded-full px-2 py-0.5 text-white bg-[#0A2A56] whitespace-nowrap">
-                  {tecnica}
-                </span>
-              )}
-            </div>
-            <p className="text-[12.5px] text-[#64748B] mt-0.5">{item.quantidade ?? 0} un</p>
-          </div>
-          <button onClick={onFechar} className="text-[#64748B] text-[20px] leading-none px-1 shrink-0">×</button>
         </div>
 
         {fotoAberta && foto && (
@@ -828,6 +854,37 @@ function DetalheModal({
                 </a>
               </div>
             )}
+          </div>
+        )}
+
+        {anexos.length > 0 && (
+          <div className="px-4 pt-3 shrink-0">
+            <p className="text-[10.5px] font-bold uppercase text-[#94A3B8] mb-1.5">
+              Arquivos anexados ({anexos.length})
+            </p>
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
+              {anexos.map(a => (
+                <a
+                  key={a.id} href={a.url} target="_blank" rel="noreferrer"
+                  className="relative shrink-0 h-16 w-16 rounded-[8px] overflow-hidden bg-[#F1F5F9] border border-[#E2E8F0]"
+                  title={a.categoria === "teste" ? "Teste físico" : "Produção concluída"}
+                >
+                  {a.tipo === "video" ? (
+                    <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-[#64748B]">
+                      ▶ vídeo
+                    </div>
+                  ) : (
+                    <img src={sizedImage(a.url, 160)} alt="" className="h-full w-full object-cover" />
+                  )}
+                  <span
+                    className="absolute bottom-0 left-0 right-0 text-[8px] font-bold text-white text-center py-[1px]"
+                    style={{ backgroundColor: a.categoria === "teste" ? "#7E22CE" : "#0F766E" }}
+                  >
+                    {a.categoria === "teste" ? "Teste" : "Produção"}
+                  </span>
+                </a>
+              ))}
+            </div>
           </div>
         )}
 

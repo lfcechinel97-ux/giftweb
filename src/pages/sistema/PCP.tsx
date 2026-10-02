@@ -1886,21 +1886,24 @@ export default function PCP() {
   };
 
   const handleAnexoTeste = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const files = [...(e.target.files ?? [])];
     const row = testeAlvoRef.current;
     e.target.value = "";
-    if (!file || !row) return;
+    if (files.length === 0 || !row) return;
     setEnviandoTeste(true);
     try {
-      const { url } = await uploadAnexoPcp(file, row.producao_id, "teste");
-      await applyUpdate(row.producao_id, { teste_anexo_url: url, teste_enviado_em: new Date().toISOString() });
+      // Vários arquivos de uma vez (foto e vídeo misturados); a capa que
+      // aparece pequena no card é a primeira FOTO do lote (nunca vídeo).
+      const enviados = await Promise.all(files.map(f => uploadAnexoPcp(f, row.producao_id, "teste")));
+      const capa = enviados.find(a => a.tipo === "foto") ?? enviados[0];
+      await applyUpdate(row.producao_id, { teste_anexo_url: capa.url, teste_enviado_em: new Date().toISOString() });
       /* "caso anexem um novo teste depois, sai a tag TESTE RECUSADO pra
          TESTE REFEITO" — se já tinha sido recusado, essa é a segunda (ou
          mais) tentativa; senão é a primeira, TESTE ENVIADO mesmo. */
       const jaFoiRecusado = (row.tags ?? []).includes(TAG_TESTE_RECUSADO);
       const semFluxoTeste = (row.tags ?? []).filter(t => !TAGS_FLUXO_TESTE.includes(t));
       await salvarTags(row, [...new Set([...semFluxoTeste, jaFoiRecusado ? TAG_TESTE_REFEITO : TAG_TESTE_ENVIADO])]);
-      await registrarAnexoGenerico(row, "teste", "foto", url, file.name);
+      await Promise.all(enviados.map((a, i) => registrarAnexoGenerico(row, "teste", a.tipo, a.url, files[i].name)));
       /* Anexar o teste move o card de "Aguardando Teste" pra "Teste
          Enviado" -- as duas colunas existem justamente pra separar
          quem ainda não tem teste feito de quem já mandou e espera
@@ -1908,9 +1911,9 @@ export default function PCP() {
          Teste (reenviar um teste novo mais adiante no fluxo não deve
          voltar o card pra trás). */
       if (COLUNAS_TESTE.includes(colunaDoStatus(row))) {
-        await mudarStatus(row.producao_id, statusCanonicoDaColuna("teste_enviado"), "Teste físico anexado");
+        await mudarStatus(row.producao_id, statusCanonicoDaColuna("teste_enviado"), `${enviados.length} arquivo(s) de teste físico anexado(s)`);
       }
-      toast.success("Teste anexado. Baixe e mande para o cliente aprovar.");
+      toast.success(`${enviados.length > 1 ? `${enviados.length} arquivos anexados` : "Teste anexado"}. Baixe e mande para o cliente aprovar.`);
     } catch (err) {
       toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o anexo.");
     } finally {
@@ -1978,19 +1981,22 @@ export default function PCP() {
   };
 
   const handleAnexoProducao = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const files = [...(e.target.files ?? [])];
     const row = producaoAnexoAlvoRef.current;
     e.target.value = "";
-    if (!file || !row) return;
+    if (files.length === 0 || !row) return;
     setEnviandoProducaoAnexo(true);
     try {
-      const { url, tipo } = await uploadAnexoPcp(file, row.producao_id, "producao");
+      // Vários arquivos de uma vez; a capa que aparece pequena no card é a
+      // primeira FOTO do lote (nunca vídeo, pra não mostrar frame preto).
+      const enviados = await Promise.all(files.map(f => uploadAnexoPcp(f, row.producao_id, "producao")));
+      const capa = enviados.find(a => a.tipo === "foto") ?? enviados[0];
       await applyUpdate(row.producao_id, {
-        producao_anexo_url: url,
-        producao_anexo_tipo: tipo,
+        producao_anexo_url: capa.url,
+        producao_anexo_tipo: capa.tipo,
         producao_anexo_em: new Date().toISOString(),
       });
-      await registrarAnexoGenerico(row, "producao", tipo, url, file.name);
+      await Promise.all(enviados.map((a, i) => registrarAnexoGenerico(row, "producao", a.tipo, a.url, files[i].name)));
       /* "assim que adicionado automaticamente ele já vai para a coluna de
          Expedição" — mantém a tag de galpão/terceirizada e TESTE APROVADO
          (histórico de como chegou até aqui), só limpa o que já não serve
@@ -2010,8 +2016,8 @@ export default function PCP() {
       await salvarTags(row, tagsFinais);
 
       const movido = COLUNAS_PRODUZIR.includes(colunaDoStatus(row));
-      if (movido) moverItem(row, "inserir_medidas", `${tipo === "video" ? "Vídeo" : "Foto"} da produção concluída anexado`);
-      toast.success(`${tipo === "video" ? "Vídeo" : "Foto"} anexado.${movido ? " Item foi para Inserir Medidas." : ""}`);
+      if (movido) moverItem(row, "inserir_medidas", `${enviados.length} arquivo(s) da produção concluída anexado(s)`);
+      toast.success(`${enviados.length > 1 ? `${enviados.length} arquivos anexados` : "Anexado"}.${movido ? " Item foi para Inserir Medidas." : ""}`);
     } catch (err) {
       toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o anexo.");
     } finally {
@@ -2542,8 +2548,8 @@ export default function PCP() {
           modal de detalhe. Ficam montados sempre (não só quando o modal está
           aberto) pra não perder a seleção do usuário entre o clique e o
           re-render. */}
-      <input ref={testeInputRef} type="file" accept="image/*" className="hidden" onChange={handleAnexoTeste} />
-      <input ref={producaoAnexoInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleAnexoProducao} />
+      <input ref={testeInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleAnexoTeste} />
+      <input ref={producaoAnexoInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleAnexoProducao} />
       <input ref={anexoGenericoInputRef} type="file" accept="image/*,video/*,application/pdf" className="hidden" onChange={handleAnexoGenerico} />
       <div className="flex items-center justify-between">
         <div>
