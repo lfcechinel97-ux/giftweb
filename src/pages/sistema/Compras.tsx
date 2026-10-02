@@ -17,6 +17,7 @@ import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRol
 import { gerarPedidoCompraPDF } from "./pedidoCompraPDF";
 import { gerarRelatorioComprasPDF, gerarRelatorioComprasHTML, copiarRelatorioComprasTXT } from "./relatorioCompras";
 import { variacaoDoItem } from "./ordemProducaoPDF";
+import { ehTagCompra } from "@/lib/tagsPcp";
 
 /* Compras: tudo que está em "Aguardando Mercadoria" no PCP.
    - Aba "A comprar": marca os produtos comprados (caixinha) e registra a
@@ -65,7 +66,6 @@ interface CompraRegistrada {
 }
 
 const FORNECEDORES = ["XBZ", "SP", "OUTRO"] as const;
-const ehTagCompra = (t: string) => /^comprado\b/i.test(t.trim());
 const origemDe = (r: LinhaCompra): string | null => {
   const t = (r.tags ?? []).find(ehTagCompra);
   return t ? t.trim().replace(/^comprado\s*/i, "").toUpperCase() || "—" : null;

@@ -30,7 +30,7 @@ import { useSistema, type Pedido, type PedidoItem } from "@/contexts/SistemaCont
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
 import { resumoPersonalizacao, rotuloPersonalizacao } from "@/lib/personalizacao";
-import { ordenarTagsPorPrioridade, rotuloTag, corDaTag, pastelizar } from "@/lib/tagsPcp";
+import { ordenarTagsPorPrioridade, rotuloTag, corDaTag, pastelizar, ehTagCompra } from "@/lib/tagsPcp";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 
@@ -2061,7 +2061,7 @@ export default function PCP() {
        a compra foi feita), não precisa mais poluir o card daqui em diante. */
     if (colunaDoStatus(row) === "aguardando_mercadoria" && targetStatus !== "aguardando_mercadoria") {
       const semCompra = (row.tags ?? []).filter(
-        t => t.toUpperCase() !== "COMPRADO XBZ" && t.toUpperCase() !== "COMPRADO SP",
+        t => !ehTagCompra(t),
       );
       if (semCompra.length !== (row.tags ?? []).length) void salvarTags(row, semCompra);
     }
@@ -2138,7 +2138,7 @@ export default function PCP() {
     if (colunaOrigem === "aguardando_mercadoria") {
       for (const r of grupo) {
         const semCompra = (r.tags ?? []).filter(
-          t => t.toUpperCase() !== "COMPRADO XBZ" && t.toUpperCase() !== "COMPRADO SP",
+          t => !ehTagCompra(t),
         );
         if (semCompra.length !== (r.tags ?? []).length) void salvarTags(r, semCompra);
       }
@@ -2180,7 +2180,7 @@ export default function PCP() {
         terceirizada_nome_livre: fornecedor ? null : (nomeLivre || null),
       });
       const semCompra = (alvo.tags ?? []).filter(
-        t => t.toUpperCase() !== "COMPRADO XBZ" && t.toUpperCase() !== "COMPRADO SP",
+        t => !ehTagCompra(t),
       );
       await salvarTags(alvo, [...new Set([...semCompra, novaTag])]);
       await mudarStatus(alvo.producao_id, statusCanonicoDaColuna(colunaFinal), `Produção definida: ${novaTag}`);

@@ -1,6 +1,11 @@
 const TAG_TERCEIRIZADA_PREFIXO = "TERCEIRIZADA";
 const TAG_DESPACHAR_PREFIXO = "DESPACHAR";
 
+/** Tag "COMPRADO <fornecedor>" -- fornecedor é texto livre (XBZ, SP, ou
+ *  qualquer nome digitado em Compras), então o match é pelo prefixo, não
+ *  por uma lista fixa de nomes. */
+export const ehTagCompra = (t: string) => /^comprado\b/i.test(t.trim());
+
 /* Etiquetas do PCP: cores, ordem e rótulo. Compartilhado com a tela de
    Pedidos para as etiquetas aparecerem iguais nos dois lugares. */
 /* Paleta de etiquetas — cor viva, sólida, com texto branco. Mesmos 15 tons já
