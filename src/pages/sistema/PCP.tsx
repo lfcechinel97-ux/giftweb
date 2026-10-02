@@ -117,10 +117,19 @@ interface PcpRow {
 interface ComentarioRow {
   id: string;
   mensagem: string;
+  autor_id: string | null;
   autor_email: string | null;
   autor_nome?: string | null;
+  mencionados: string[] | null;
+  lido_por: string[] | null;
   created_at: string;
 }
+
+/** "@Nome Sobrenome" -- varre o texto por "@" seguido de um nome que bate
+ *  (prefixo, sem acentuar diferença maiúsc/minúsc) com alguém da lista.
+ *  Usado tanto pro autocomplete quanto pra resolver quem foi @mencionado
+ *  de fato ao enviar. */
+const CHAT_MENTION_REGEX = /@([a-zà-ú]*)$/i;
 
 
 interface Fornecedor {
@@ -675,7 +684,7 @@ function PcpPedidoCard({
 
 function PcpCard({
   row, indice, total, primeiroDoPedido, dragging, saving, atrasado, critico, highlight, comFotos,
-  imprimindoOP,
+  imprimindoOP, chat,
   onDragStart, onDragEnd, onOpen, onHover, onComprado, onDespachar, onImprimirOP, onAgrupar, onDesagrupar, onInserirMedidas,
 }: {
   row: PcpRow;
@@ -690,6 +699,8 @@ function PcpCard({
   highlight: boolean;
   comFotos: boolean;
   imprimindoOP: boolean;
+  /** Mensagens não lidas no chat do produto -- undefined = nenhuma. */
+  chat?: { nao_lidas: number; mencionado: boolean };
   onDragStart: () => void;
   onDragEnd: () => void;
   onOpen: () => void;
@@ -787,6 +798,15 @@ function PcpCard({
           </span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
+          {chat && chat.nao_lidas > 0 && (
+            <span
+              className="flex items-center gap-0.5 text-[10px] font-bold rounded-full px-[6px] py-[2px] text-white"
+              style={{ backgroundColor: chat.mencionado ? "var(--gw-danger)" : "var(--gw-primary)" }}
+              title={chat.mencionado ? "Você foi mencionado no chat" : "Mensagem nova no chat"}
+            >
+              <MessageSquare className="h-[10px] w-[10px]" /> {chat.nao_lidas}
+            </span>
+          )}
           {!comFotos && <VendedorIcone nome={row.pedido_vendedor_nome} />}
           <div className="flex flex-col items-end leading-tight">
             <span
@@ -979,7 +999,7 @@ export default function PCP() {
      auth.uid(), que é sempre a mesma pessoa fisicamente logada. */
   const { vendedores, currentVendedor, clientes, transportadoras: transportadorasCadastro } = useSistema();
   const vendedorNome = (id: string | null) => vendedores.find(v => v.id === id)?.nome || null;
-  const { email: emailUsuario, nome: nomeCadastro, vendedorId: vendedorDoUsuario } = useUserRole();
+  const { email: emailUsuario, nome: nomeCadastro, vendedorId: vendedorDoUsuario, userId: meuUserId } = useUserRole();
   const nomeUsuario = nomeCadastro || vendedorNome(vendedorDoUsuario);
   const queryClient = useQueryClient();
 
@@ -1020,6 +1040,8 @@ export default function PCP() {
   const [comentarios, setComentarios] = useState<ComentarioRow[]>([]);
   const [novoComentario, setNovoComentario] = useState("");
   const [enviandoComentario, setEnviandoComentario] = useState(false);
+  const [mencaoAberta, setMencaoAberta] = useState(false);
+  const [historicoAberto, setHistoricoAberto] = useState(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
 
 
@@ -1318,6 +1340,16 @@ export default function PCP() {
           setHistorico(prev => (prev.some(h => h.id === linha.id) ? prev : [linha, ...prev]));
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "sistema_producao_comentarios" },
+        (payload) => {
+          queryClient.invalidateQueries({ queryKey: ["sistema", "pcp", "chat-resumo"] });
+          const itemId = (payload.new as { producao_item_id?: string } | null)?.producao_item_id
+            ?? (payload.old as { producao_item_id?: string } | null)?.producao_item_id;
+          if (itemId && itemId === detalheIdRef.current) void carregarComentarios(itemId);
+        },
+      )
       .subscribe();
     return () => { clearTimeout(timer); void supabase.removeChannel(canal); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1535,14 +1567,43 @@ export default function PCP() {
       .select("*")
       .eq("producao_item_id", producaoId)
       .order("created_at", { ascending: true });
-    setComentarios((data as any as ComentarioRow[]) ?? []);
+    const lista = (data as any as ComentarioRow[]) ?? [];
+    setComentarios(lista);
+
+    // Abrir o chat marca tudo que ainda não vi como lido -- some a
+    // notificação no card sem precisar de ação separada.
+    if (meuUserId) {
+      const naoLidas = lista.filter(c => !(c.lido_por ?? []).includes(meuUserId));
+      if (naoLidas.length > 0) {
+        await Promise.all(naoLidas.map(c =>
+          supabase.from("sistema_producao_comentarios" as any)
+            .update({ lido_por: [...(c.lido_por ?? []), meuUserId] })
+            .eq("id", c.id),
+        ));
+        queryClient.invalidateQueries({ queryKey: ["sistema", "pcp", "chat-resumo"] });
+      }
+    }
   };
 
   useEffect(() => {
     setNovoComentario("");
+    setMencaoAberta(false);
+    setHistoricoAberto(false);
     if (!detalheId) { setComentarios([]); return; }
     carregarComentarios(detalheId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detalheId]);
+
+  /** Resolve "@Nome Sobrenome" do texto pra lista de user_id -- confere
+   *  contra os nomes conhecidos (mesma lista do autocomplete). */
+  const resolverMencoes = (texto: string): string[] => {
+    const ids = new Set<string>();
+    for (const u of nomesUsuarios) {
+      if (!u.nome) continue;
+      if (new RegExp(`@${u.nome.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(texto)) ids.add(u.user_id);
+    }
+    return [...ids];
+  };
 
   const enviarComentario = async () => {
     if (!detalhe) return;
@@ -1550,12 +1611,15 @@ export default function PCP() {
     if (!texto) return;
     setEnviandoComentario(true);
     const { data: auth } = await supabase.auth.getUser();
+    const mencionados = resolverMencoes(texto);
     const { error } = await supabase.from("sistema_producao_comentarios" as any).insert({
       producao_item_id: detalhe.producao_id,
       pedido_id: detalhe.pedido_id,
       mensagem: texto,
       autor_id: auth?.user?.id ?? null,
       autor_email: auth?.user?.email ?? null,
+      mencionados,
+      lido_por: auth?.user?.id ? [auth.user.id] : [],
     });
     setEnviandoComentario(false);
     if (error) {
@@ -1564,8 +1628,41 @@ export default function PCP() {
       return;
     }
     setNovoComentario("");
+    setMencaoAberta(false);
     await carregarComentarios(detalhe.producao_id);
   };
+
+  /** Lista de pessoas pro @autocomplete, filtrada pelo que já foi digitado
+   *  depois do "@". */
+  const opcoesMencao = useMemo(() => {
+    const m = novoComentario.match(CHAT_MENTION_REGEX);
+    if (!m) return [];
+    const termo = m[1].toLowerCase();
+    return nomesUsuarios.filter(u => u.nome?.toLowerCase().includes(termo)).slice(0, 6);
+  }, [novoComentario, nomesUsuarios]);
+
+  const inserirMencao = (nome: string) => {
+    setNovoComentario(prev => prev.replace(CHAT_MENTION_REGEX, `@${nome} `));
+    setMencaoAberta(false);
+  };
+
+  /* Notificação de chat no card do quadro -- não-lidas + @menção, por
+     item. Debounced junto com o resto via o canal realtime do PCP
+     (recarregar() já dispara loadItems, aqui só precisa dele mesmo). */
+  const { data: chatResumo = [] } = useQuery<{ producao_item_id: string; nao_lidas: number; mencionado: boolean }[]>({
+    queryKey: ["sistema", "pcp", "chat-resumo"],
+    staleTime: 20 * 1000,
+    refetchInterval: 30 * 1000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("sistema_chat_resumo");
+      if (error) { console.error("[PCP] resumo do chat falhou:", error); return []; }
+      return (data ?? []) as { producao_item_id: string; nao_lidas: number; mencionado: boolean }[];
+    },
+  });
+  const chatResumoPorItem = useMemo(
+    () => new Map(chatResumo.map(r => [r.producao_item_id, r])),
+    [chatResumo],
+  );
 
   /* Etiquetas do item */
   const salvarTags = async (row: PcpRow, tags: string[]) => {
@@ -2615,6 +2712,7 @@ export default function PCP() {
                           onDesagrupar={desfazerAgrupamento}
                           onInserirMedidas={r => setExpedicaoModal({ row: r, target: "aguardando_coleta" })}
                           imprimindoOP={imprimindoOP === row.producao_id}
+                          chat={chatResumoPorItem.get(row.producao_id)}
                           onDragStart={() => setDraggingId(row.producao_id)}
                           onDragEnd={() => setDraggingId(null)}
                           onOpen={() => setDetalheId(row.producao_id)}
@@ -2758,12 +2856,6 @@ export default function PCP() {
                       {[
                         ["Quantidade", `${detalhe.quantidade ?? 0} un`],
                         ["Técnica", detalhe.tecnica_nome || "—"],
-                        ["Local de produção", detalhe.local_producao.replace(/_/g, " ")],
-                        ...((detalhe.terceirizada_nome || detalhe.terceirizada_nome_livre)
-                          ? [["Terceirizada", detalhe.terceirizada_nome || detalhe.terceirizada_nome_livre]] : []),
-                        ...(detalhe.previsao_retorno ? [["Previsão de retorno", formatDate(detalhe.previsao_retorno) || "—"]] : []),
-                        ["Produzir até", formatDate(detalhe.data_entrega_item) || "—"],
-                        ["Tempo na etapa", tempoNaEtapa(detalhe.horas_na_etapa) || "—"],
                       ].map(([k, v]) => (
                         <div key={k as string}>
                           <p className="gw-label">{k}</p>
@@ -3031,14 +3123,17 @@ export default function PCP() {
                     </div>
                   )}
 
-                  {/* Observações — histórico em formato de conversa */}
-                  <div className="px-5 py-4 space-y-3">
+                  {/* Observações + chat do produto -- mesmo lugar: a
+                      observação fixa do pedido/item fica presa no topo (é
+                      instrução que não devia sumir rolando a conversa), o
+                      resto é chat de verdade, em balão, com @menção. */}
+                  <div className="px-5 py-4 flex flex-col gap-2.5">
                     <p className="gw-label flex items-center gap-1.5">
                       <MessageSquare className="h-3.5 w-3.5" /> Observações
                     </p>
 
                     {(detalhe.pedido_observacoes || detalhe.item_observacao) && (
-                      <div className="space-y-2">
+                      <div className="space-y-1.5 shrink-0">
                         {detalhe.pedido_observacoes && (
                           <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
                             <p className="gw-label mb-0.5">Observação do pedido</p>
@@ -3058,60 +3153,80 @@ export default function PCP() {
                       </div>
                     )}
 
-                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    <div className="space-y-1.5 min-h-[260px] max-h-[420px] overflow-y-auto rounded-[10px] bg-[var(--gw-surface-alt)]/50 p-2.5">
                       {comentarios.length === 0 ? (
-                        <p className="gw-body text-[13px] text-[var(--gw-text-muted)]">
+                        <p className="gw-body text-[13px] text-[var(--gw-text-muted)] text-center py-6">
                           Nenhuma mensagem ainda. Escreva a primeira abaixo.
                         </p>
                       ) : (
-                        comentarios.map(c => (
-                          <div
-                            key={c.id}
-                            className="rounded-[10px] bg-[var(--gw-primary-soft)]/60 border border-[var(--gw-border)] px-3 py-2"
-                          >
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="gw-body text-[12px] font-semibold text-[var(--gw-text-secondary)] truncate">
-                                {c.autor_nome
-                                  || (c.autor_email && c.autor_email.toLowerCase() === (emailUsuario ?? "").toLowerCase() ? nomeUsuario : null)
-                                  || (c.autor_email ? c.autor_email.split("@")[0] : "Sistema")}
-                              </span>
-                              <span className="gw-body text-[11px] text-[var(--gw-text-muted)] shrink-0">
-                                {new Date(c.created_at).toLocaleString("pt-BR", {
-                                  day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit",
-                                })}
-                              </span>
+                        comentarios.map(c => {
+                          const minha = !!meuUserId && c.autor_id === meuUserId;
+                          const nome = c.autor_nome
+                            || (c.autor_email && c.autor_email.toLowerCase() === (emailUsuario ?? "").toLowerCase() ? nomeUsuario : null)
+                            || (c.autor_email ? c.autor_email.split("@")[0] : "Sistema");
+                          return (
+                            <div key={c.id} className={cn("flex", minha ? "justify-end" : "justify-start")}>
+                              <div
+                                className={cn(
+                                  "max-w-[82%] rounded-[12px] px-3 py-1.5 shadow-sm",
+                                  minha ? "bg-[var(--gw-primary)] text-white rounded-br-[3px]" : "bg-white border border-[var(--gw-border)] rounded-bl-[3px]",
+                                )}
+                              >
+                                {!minha && (
+                                  <p className="text-[11.5px] font-bold text-[var(--gw-primary)]">{nome}</p>
+                                )}
+                                <p className={cn("text-[13.5px] whitespace-pre-wrap leading-snug", minha ? "text-white" : "text-[var(--gw-text)]")}>
+                                  {c.mensagem}
+                                </p>
+                                <p className={cn("text-[10px] mt-0.5 text-right", minha ? "text-white/70" : "text-[var(--gw-text-muted)]")}>
+                                  {new Date(c.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                                </p>
+                              </div>
                             </div>
-                            <p className="gw-body text-[13px] text-[var(--gw-text)] whitespace-pre-wrap mt-0.5">
-                              {c.mensagem}
-                            </p>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
 
-                    <div className="flex items-end gap-2">
-                      <Textarea
-                        value={novoComentario}
-                        onChange={e => setNovoComentario(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                            e.preventDefault();
-                            enviarComentario();
-                          }
-                        }}
-                        placeholder="Escreva uma observação…"
-                        rows={2}
-                        className="text-[13px] resize-none"
-                      />
-                      <Button
-                        size="sm"
-                        onClick={enviarComentario}
-                        disabled={enviandoComentario || !novoComentario.trim()}
-                      >
-                        {enviandoComentario
-                          ? <Loader2 className="h-4 w-4 animate-spin" />
-                          : <Send className="h-4 w-4" />}
-                      </Button>
+                    <div className="relative shrink-0">
+                      {mencaoAberta && opcoesMencao.length > 0 && (
+                        <div className="absolute bottom-full left-0 right-0 mb-1 rounded-[8px] border border-[var(--gw-border)] bg-white shadow-lg overflow-hidden z-10">
+                          {opcoesMencao.map(u => (
+                            <button
+                              key={u.user_id}
+                              type="button"
+                              onClick={() => inserirMencao(u.nome)}
+                              className="w-full text-left px-3 py-1.5 text-[13px] hover:bg-[var(--gw-surface-alt)]"
+                            >
+                              @{u.nome}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex items-end gap-2">
+                        <Textarea
+                          value={novoComentario}
+                          onChange={e => { setNovoComentario(e.target.value); setMencaoAberta(CHAT_MENTION_REGEX.test(e.target.value)); }}
+                          onKeyDown={e => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              enviarComentario();
+                            }
+                          }}
+                          placeholder="Escreva uma mensagem… use @ pra marcar alguém"
+                          rows={2}
+                          className="text-[13px] resize-none"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={enviarComentario}
+                          disabled={enviandoComentario || !novoComentario.trim()}
+                        >
+                          {enviandoComentario
+                            ? <Loader2 className="h-4 w-4 animate-spin" />
+                            : <Send className="h-4 w-4" />}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -3284,12 +3399,19 @@ export default function PCP() {
                     </div>
                   )}
 
-                  {/* Histórico */}
+                  {/* Histórico -- oculto por padrão, clica pra ver (o chat
+                      é o que importa no dia a dia; histórico é consulta
+                      ocasional). */}
                   <div className="px-5 py-4">
-                    <p className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)] flex items-center gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setHistoricoAberto(v => !v)}
+                      className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)] flex items-center gap-2 mb-3 w-full"
+                    >
                       <History className="h-3.5 w-3.5" /> Histórico
-                    </p>
-                    {historico.length === 0 ? (
+                      {historicoAberto ? <ChevronDown className="h-3.5 w-3.5 ml-auto" /> : <ChevronRight className="h-3.5 w-3.5 ml-auto" />}
+                    </button>
+                    {!historicoAberto ? null : historico.length === 0 ? (
                       <p className="text-[12px] text-[var(--gw-text-muted)]">Sem histórico registrado.</p>
                     ) : (
                       <ul className="space-y-3 border-l border-[var(--gw-border)] pl-4">

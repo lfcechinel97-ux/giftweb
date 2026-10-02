@@ -25,6 +25,7 @@ interface LinhaTerceirizada {
   personalizacao: string | null;
   aplicacoes: number | null;
   observacao: string | null;
+  pedido_observacoes: string | null;
   tags: string[] | null;
   teste_anexo_url: string | null;
   producao_anexo_url: string | null;
@@ -58,6 +59,19 @@ const tempoNaEtapaCurto = (iso: string) => {
   return resto > 0 ? `${dias}d ${resto}h` : `${dias}d`;
 };
 
+interface ComentarioRow {
+  id: string;
+  mensagem: string;
+  autor_id: string | null;
+  autor_email: string | null;
+  autor_nome: string | null;
+  mencionados: string[] | null;
+  lido_por: string[] | null;
+  created_at: string;
+}
+
+const CHAT_MENTION_REGEX = /@([a-zà-ú]*)$/i;
+
 /* Mesmos rótulo/cor das colunas do PCP interno (TODAS_COLUNAS_PCP em
    src/lib/statusPedido.ts) -- "o que acontece em um, acontece no outro,
    exatamente igual", incluindo o nome da etapa escrito igual. */
@@ -89,6 +103,15 @@ export default function PcpTerceirizada() {
   const [perfil, setPerfil] = useState<{ usuario: string; terceirizada_nome: string } | null>(null);
   const [linhas, setLinhas] = useState<LinhaTerceirizada[]>([]);
   const [carregando, setCarregando] = useState(false);
+  const [meuUserId, setMeuUserId] = useState<string | null>(null);
+  const [nomesUsuarios, setNomesUsuarios] = useState<{ user_id: string; nome: string }[]>([]);
+  const [chatResumo, setChatResumo] = useState<{ producao_item_id: string; nao_lidas: number; mencionado: boolean }[]>([]);
+  const [detalheId, setDetalheId] = useState<string | null>(null);
+
+  const carregarChatResumo = async () => {
+    const { data } = await (supabase as any).rpc("sistema_chat_resumo");
+    setChatResumo((data ?? []) as { producao_item_id: string; nao_lidas: number; mencionado: boolean }[]);
+  };
 
   useEffect(() => {
     document.title = "Produção — Gift Web Brindes";
@@ -117,6 +140,11 @@ export default function PcpTerceirizada() {
     }
     setPerfil(perfilData[0]);
     if (!erroLinhas) setLinhas((linhasData as LinhaTerceirizada[]) ?? []);
+    const { data: auth } = await supabase.auth.getUser();
+    setMeuUserId(auth?.user?.id ?? null);
+    const { data: nomes } = await (supabase as any).rpc("sistema_nomes_usuarios");
+    setNomesUsuarios((nomes ?? []) as { user_id: string; nome: string }[]);
+    await carregarChatResumo();
     setCarregando(false);
   };
 
@@ -129,6 +157,7 @@ export default function PcpTerceirizada() {
     const canal = supabase
       .channel("pcp-terceirizada-ao-vivo")
       .on("postgres_changes", { event: "*", schema: "public", table: "sistema_producao_itens" }, recarregar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "sistema_producao_comentarios" }, () => void carregarChatResumo())
       .subscribe();
     return () => { clearTimeout(timer); void supabase.removeChannel(canal); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -227,20 +256,41 @@ export default function PcpTerceirizada() {
                 {itens.length === 0 ? (
                   <p className="text-[12px] text-[#94A3B8] text-center py-6">Nada por aqui.</p>
                 ) : itens.map(item => (
-                  <CardTerceirizada key={item.producao_id} item={item} coluna={col.coluna} onAtualizado={carregarTudo} />
+                  <CardTerceirizada
+                    key={item.producao_id}
+                    item={item}
+                    coluna={col.coluna}
+                    onAtualizado={carregarTudo}
+                    onAbrir={() => setDetalheId(item.producao_id)}
+                    chat={chatResumo.find(r => r.producao_item_id === item.producao_id)}
+                  />
                 ))}
               </div>
             </div>
           );
         })}
       </main>
+
+      {detalheId && (
+        <DetalheModal
+          item={linhas.find(l => l.producao_id === detalheId) ?? null}
+          meuUserId={meuUserId}
+          meuNome={perfil.terceirizada_nome}
+          nomesUsuarios={nomesUsuarios}
+          onFechar={() => setDetalheId(null)}
+          onLido={carregarChatResumo}
+        />
+      )}
     </div>
   );
 }
 
 function CardTerceirizada({
-  item, coluna, onAtualizado,
-}: { item: LinhaTerceirizada; coluna: string; onAtualizado: () => void }) {
+  item, coluna, onAtualizado, onAbrir, chat,
+}: {
+  item: LinhaTerceirizada; coluna: string; onAtualizado: () => void; onAbrir: () => void;
+  chat?: { nao_lidas: number; mencionado: boolean };
+}) {
   const foto = item.mockup_url || item.imagem_catalogo_url;
   const [enviando, setEnviando] = useState(false);
   const inputTesteRef = useRef<HTMLInputElement | null>(null);
@@ -291,7 +341,10 @@ function CardTerceirizada({
   const tags = item.tags ?? [];
 
   return (
-    <div className="w-full rounded-[16px] overflow-hidden bg-white border border-[#E2E8F0]">
+    <div
+      onClick={onAbrir}
+      className="w-full rounded-[16px] overflow-hidden bg-white border border-[#E2E8F0] cursor-pointer hover:shadow-md transition-shadow"
+    >
       {/* Topo -- igual ao PCP interno: bolinha colorida do pedido, número,
           item X/Y, e tempo nesta etapa à direita. */}
       <div className="flex items-start justify-between gap-2 pl-3 pr-2.5 pt-2.5 pb-1.5">
@@ -304,9 +357,19 @@ function CardTerceirizada({
             </span>
           )}
         </div>
-        <span className="flex items-center gap-1 text-[11px] font-bold text-[#64748B] shrink-0">
-          <Clock className="h-[11px] w-[11px]" /> {tempoNaEtapaCurto(item.etapa_desde)}
-        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {chat && chat.nao_lidas > 0 && (
+            <span
+              className="flex items-center gap-0.5 text-[10px] font-bold rounded-full px-[6px] py-[2px] text-white"
+              style={{ backgroundColor: chat.mencionado ? "#DC2626" : "#0A2A56" }}
+            >
+              💬 {chat.nao_lidas}
+            </span>
+          )}
+          <span className="flex items-center gap-1 text-[11px] font-bold text-[#64748B]">
+            <Clock className="h-[11px] w-[11px]" /> {tempoNaEtapaCurto(item.etapa_desde)}
+          </span>
+        </div>
       </div>
 
       {/* Foto grande (contain, sem cortar) com selo de técnica e quantidade
@@ -383,7 +446,7 @@ function CardTerceirizada({
         </div>
       )}
 
-      <div className="px-3 pb-3">
+      <div className="px-3 pb-3" onClick={e => e.stopPropagation()}>
         {coluna === "teste_enviado" && (
           <p className="text-[11.5px] text-[#64748B] text-center py-1">Aguardando aprovação do cliente.</p>
         )}
@@ -496,6 +559,201 @@ function Campo({
         value={value} onChange={e => onChange(e.target.value)} inputMode={span2 ? "text" : "decimal"}
         className="w-full h-9 rounded-[7px] border border-[#D9E0E8] px-2.5 text-[13px]"
       />
+    </div>
+  );
+}
+
+/** Painel de detalhe do produto: foto + dados essenciais + observação
+ *  fixa + chat (mesma tabela sistema_producao_comentarios do PCP
+ *  interno -- é o mesmo chat dos dois lados, não uma cópia). */
+function DetalheModal({
+  item, meuUserId, meuNome, nomesUsuarios, onFechar, onLido,
+}: {
+  item: LinhaTerceirizada | null;
+  meuUserId: string | null;
+  meuNome: string;
+  nomesUsuarios: { user_id: string; nome: string }[];
+  onFechar: () => void;
+  onLido: () => void;
+}) {
+  const [comentarios, setComentarios] = useState<ComentarioRow[]>([]);
+  const [texto, setTexto] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [mencaoAberta, setMencaoAberta] = useState(false);
+
+  const carregar = async () => {
+    if (!item) return;
+    const { data } = await supabase
+      .from("sistema_producao_comentarios" as any)
+      .select("*")
+      .eq("producao_item_id", item.producao_id)
+      .order("created_at", { ascending: true });
+    const lista = (data as any as ComentarioRow[]) ?? [];
+    setComentarios(lista);
+    if (meuUserId) {
+      const naoLidas = lista.filter(c => !(c.lido_por ?? []).includes(meuUserId));
+      if (naoLidas.length > 0) {
+        await Promise.all(naoLidas.map(c =>
+          supabase.from("sistema_producao_comentarios" as any)
+            .update({ lido_por: [...(c.lido_por ?? []), meuUserId] })
+            .eq("id", c.id),
+        ));
+        onLido();
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!item) return;
+    void carregar();
+    const canal = supabase
+      .channel(`chat-terceirizada-${item.producao_id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "sistema_producao_comentarios", filter: `producao_item_id=eq.${item.producao_id}` },
+        () => void carregar(),
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(canal); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.producao_id]);
+
+  const resolverMencoes = (msg: string): string[] => {
+    const ids = new Set<string>();
+    for (const u of nomesUsuarios) {
+      if (!u.nome) continue;
+      if (new RegExp(`@${u.nome.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(msg)) ids.add(u.user_id);
+    }
+    return [...ids];
+  };
+
+  const enviar = async () => {
+    if (!item) return;
+    const msg = texto.trim();
+    if (!msg) return;
+    setEnviando(true);
+    const { data: auth } = await supabase.auth.getUser();
+    const { error } = await supabase.from("sistema_producao_comentarios" as any).insert({
+      producao_item_id: item.producao_id,
+      mensagem: msg,
+      autor_id: auth?.user?.id ?? null,
+      autor_email: auth?.user?.email ?? null,
+      autor_nome: meuNome,
+      mencionados: resolverMencoes(msg),
+      lido_por: auth?.user?.id ? [auth.user.id] : [],
+    });
+    setEnviando(false);
+    if (error) { alert(error.message || "Não foi possível enviar."); return; }
+    setTexto("");
+    setMencaoAberta(false);
+    await carregar();
+  };
+
+  const opcoesMencao = (() => {
+    const m = texto.match(CHAT_MENTION_REGEX);
+    if (!m) return [];
+    const termo = m[1].toLowerCase();
+    return nomesUsuarios.filter(u => u.nome?.toLowerCase().includes(termo)).slice(0, 6);
+  })();
+
+  if (!item) return null;
+  const foto = item.mockup_url || item.imagem_catalogo_url;
+  const tecnica = resumoPersonalizacao({ personalizacao: item.personalizacao, aplicacoes: item.aplicacoes });
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onFechar}>
+      <div
+        className="bg-white rounded-[14px] w-full max-w-[640px] max-h-[90vh] flex flex-col overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-[#E2E8F0]">
+          {foto && <img src={sizedImage(foto, 120)} alt="" className="h-11 w-11 rounded-[8px] object-contain bg-[#F1F5F9] border border-[#E2E8F0]" />}
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-bold text-[#0F172A] truncate">{item.produto_nome || "—"}</p>
+            <p className="text-[12px] text-[#64748B]">
+              {item.quantidade ?? 0} un{tecnica ? ` · ${tecnica}` : ""}
+            </p>
+          </div>
+          <button onClick={onFechar} className="text-[#64748B] text-[20px] leading-none px-1">×</button>
+        </div>
+
+        {(item.pedido_observacoes || item.observacao) && (
+          <div className="px-4 pt-3 space-y-1.5 shrink-0">
+            {item.pedido_observacoes && (
+              <div className="rounded-[8px] bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2">
+                <p className="text-[10.5px] font-bold uppercase text-[#94A3B8] mb-0.5">Observação do pedido</p>
+                <p className="text-[12.5px] text-[#0F172A] whitespace-pre-wrap">{item.pedido_observacoes}</p>
+              </div>
+            )}
+            {item.observacao && (
+              <div className="rounded-[8px] bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2">
+                <p className="text-[10.5px] font-bold uppercase text-[#94A3B8] mb-0.5">Observação do item</p>
+                <p className="text-[12.5px] text-[#0F172A] whitespace-pre-wrap">{item.observacao}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex-1 min-h-[220px] overflow-y-auto px-4 py-3 space-y-1.5">
+          {comentarios.length === 0 ? (
+            <p className="text-[13px] text-[#94A3B8] text-center py-8">Nenhuma mensagem ainda. Escreva a primeira abaixo.</p>
+          ) : (
+            comentarios.map(c => {
+              const minha = !!meuUserId && c.autor_id === meuUserId;
+              return (
+                <div key={c.id} className={`flex ${minha ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[82%] rounded-[12px] px-3 py-1.5 shadow-sm ${
+                      minha ? "bg-[#15803D] text-white rounded-br-[3px]" : "bg-[#F1F5F9] border border-[#E2E8F0] rounded-bl-[3px]"
+                    }`}
+                  >
+                    {!minha && <p className="text-[11.5px] font-bold text-[#0A2A56]">{c.autor_nome || "Gift Web"}</p>}
+                    <p className={`text-[13.5px] whitespace-pre-wrap leading-snug ${minha ? "text-white" : "text-[#0F172A]"}`}>
+                      {c.mensagem}
+                    </p>
+                    <p className={`text-[10px] mt-0.5 text-right ${minha ? "text-white/70" : "text-[#94A3B8]"}`}>
+                      {new Date(c.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="relative px-4 pb-4 pt-1 shrink-0">
+          {mencaoAberta && opcoesMencao.length > 0 && (
+            <div className="absolute bottom-full left-4 right-4 mb-1 rounded-[8px] border border-[#E2E8F0] bg-white shadow-lg overflow-hidden z-10">
+              {opcoesMencao.map(u => (
+                <button
+                  key={u.user_id}
+                  type="button"
+                  onClick={() => { setTexto(prev => prev.replace(CHAT_MENTION_REGEX, `@${u.nome} `)); setMencaoAberta(false); }}
+                  className="w-full text-left px-3 py-1.5 text-[13px] hover:bg-[#F1F5F9]"
+                >
+                  @{u.nome}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="flex items-end gap-2">
+            <textarea
+              value={texto}
+              onChange={e => { setTexto(e.target.value); setMencaoAberta(CHAT_MENTION_REGEX.test(e.target.value)); }}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar(); } }}
+              placeholder="Escreva uma mensagem… use @ pra marcar alguém"
+              rows={2}
+              className="flex-1 text-[13px] resize-none rounded-[8px] border border-[#D9E0E8] px-3 py-2"
+            />
+            <button
+              onClick={enviar} disabled={enviando || !texto.trim()}
+              className="h-9 w-9 shrink-0 rounded-[8px] bg-[#15803D] text-white flex items-center justify-center disabled:opacity-60"
+            >
+              {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : "➤"}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
