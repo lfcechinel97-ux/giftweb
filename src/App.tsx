@@ -50,6 +50,7 @@ const SearchPage = lazyRetry(() => import("./pages/SearchPage.tsx"));
 const AdminLogin = lazyRetry(() => import("./pages/admin/AdminLogin.tsx"));
 const OpTerceirizada = lazyRetry(() => import("./pages/OpTerceirizada.tsx"));
 const PcpTerceirizada = lazyRetry(() => import("./pages/PcpTerceirizada.tsx"));
+const MockupStudio = lazyRetry(() => import("./pages/MockupStudio.tsx"));
 const AdminLayout = lazyRetry(() => import("./pages/admin/AdminLayout.tsx"));
 const AdminProducts = lazyRetry(() => import("./pages/admin/AdminProducts.tsx"));
 const AdminProductEdit = lazyRetry(() => import("./pages/admin/AdminProductEdit.tsx"));
@@ -133,6 +134,7 @@ const App = () => (
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/op-terceirizada/:token" element={<OpTerceirizada />} />
               <Route path="/pcp/terceirizada" element={<PcpTerceirizada />} />
+              <Route path="/mockup" element={<AdminGuard><MockupStudio /></AdminGuard>} />
               <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
                 <Route path="sync" element={<AdminSync />} />
                 <Route path="produtos" element={<AdminProducts />} />
