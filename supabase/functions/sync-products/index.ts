@@ -266,8 +266,9 @@ async function runWithConcurrency<T>(items: T[], limite: number, worker: (item: 
  *  faz o deno check inferir `never`. Métodos declarados como method-style
  *  mantêm a bivariância e aceitam o cliente real. */
 interface SyncClient {
-  from(table: string): { select(cols: string): { eq(col: string, val: unknown): { range(from: number, to: number): PromiseLike<{ data: unknown[] | null }> }; update(): PromiseLike<unknown> }; upsert(values: unknown, opts?: unknown): PromiseLike<{ error: unknown }> };
-  rpc(fn: string): PromiseLike<{ error: unknown }>;
+  from(table: string): unknown;
+  // deno-lint-ignore no-explicit-any
+  query: any;
 }
 
 async function executarPosProcessamento(supabaseClient: SyncClient): Promise<void> {
