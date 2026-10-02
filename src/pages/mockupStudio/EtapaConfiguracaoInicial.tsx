@@ -9,8 +9,7 @@ const MAX_BYTES = 15 * 1024 * 1024;
 
 /** Processamento determinístico local (sem IA): laser vira escala de cinza
  * com leve realce prateado, preservando o alpha; DTF mantém a arte original.
- * A remoção de fundo e o refino por IA entram quando a chave da OpenAI
- * estiver conectada. */
+ * A remoção de fundo e o refino por IA entram via Lovable AI (servidor). */
 async function processarLogo(logo: LogoOriginal, tecnica: Tecnica): Promise<LogoTratada> {
   if (tecnica !== "laser") return { url: logo.url, tecnica };
 

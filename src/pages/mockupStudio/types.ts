@@ -15,7 +15,7 @@ export interface LogoOriginal {
 export interface LogoTratada {
   /** Resultado do tratamento desta etapa — hoje é processamento determinístico
    * local (ex.: conversão pra escala de cinza no laser); a remoção de fundo
-   * e o tratamento real por IA entram quando a chave da OpenAI for conectada. */
+   * e o tratamento real por IA entram via Lovable AI (servidor). */
   url: string;
   tecnica: Tecnica;
   avisoQualidade?: string;
