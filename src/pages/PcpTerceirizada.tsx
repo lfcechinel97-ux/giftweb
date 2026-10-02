@@ -596,6 +596,7 @@ function DetalheModal({
   onLido: () => void;
 }) {
   const [comentarios, setComentarios] = useState<ComentarioRow[]>([]);
+  const [fotoAberta, setFotoAberta] = useState(false);
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [mencaoAberta, setMencaoAberta] = useState(false);
@@ -693,16 +694,40 @@ function DetalheModal({
         className="bg-white rounded-[14px] w-full max-w-[680px] max-h-[90vh] flex flex-col overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-[#E2E8F0]">
-          {foto && <img src={sizedImage(foto, 120)} alt="" className="h-11 w-11 rounded-[8px] object-contain bg-[#F1F5F9] border border-[#E2E8F0]" />}
-          <div className="min-w-0 flex-1">
-            <p className="text-[14px] font-bold text-[#0F172A] truncate">{item.produto_nome || "—"}</p>
-            <p className="text-[12px] text-[#64748B]">
-              {item.quantidade ?? 0} un{tecnica ? ` · ${tecnica}` : ""}
-            </p>
+        <div className="flex items-start gap-3 px-4 py-3 border-b border-[#E2E8F0]">
+          {foto && (
+            <button type="button" onClick={() => setFotoAberta(true)} className="shrink-0 cursor-zoom-in" title="Ver em tamanho cheio">
+              <img src={sizedImage(foto, 320)} alt="" className="h-20 w-20 rounded-[10px] object-contain bg-[#F1F5F9] border border-[#E2E8F0]" />
+            </button>
+          )}
+          <div className="min-w-0 flex-1 pt-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="text-[15px] font-bold text-[#0F172A]">{item.produto_nome || "—"}</p>
+              {tecnica && (
+                <span className="text-[10.5px] font-bold rounded-full px-2 py-0.5 text-white bg-[#0A2A56] whitespace-nowrap">
+                  {tecnica}
+                </span>
+              )}
+            </div>
+            <p className="text-[12.5px] text-[#64748B] mt-0.5">{item.quantidade ?? 0} un</p>
           </div>
-          <button onClick={onFechar} className="text-[#64748B] text-[20px] leading-none px-1">×</button>
+          <button onClick={onFechar} className="text-[#64748B] text-[20px] leading-none px-1 shrink-0">×</button>
         </div>
+
+        {fotoAberta && foto && (
+          <div
+            className="fixed inset-0 z-[60] bg-black/85 flex items-center justify-center p-6"
+            onClick={() => setFotoAberta(false)}
+          >
+            <img src={foto} alt="" className="max-w-full max-h-full object-contain" />
+            <button
+              onClick={() => setFotoAberta(false)}
+              className="absolute top-4 right-4 text-white text-[32px] leading-none"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         {(item.pedido_observacoes || item.observacao) && (
           <div className="px-4 pt-3 space-y-1.5 shrink-0">
