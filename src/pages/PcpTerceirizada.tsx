@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, LogOut, Package, Upload, Boxes, Video as VideoIcon, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { sizedImage } from "@/lib/imageSize";
@@ -132,6 +132,10 @@ export default function PcpTerceirizada() {
 
   const [perfil, setPerfil] = useState<{ usuario: string; terceirizada_nome: string } | null>(null);
   const [linhas, setLinhas] = useState<LinhaTerceirizada[]>([]);
+  const testeEnviadoPendentes = useMemo(
+    () => linhas.filter(l => l.coluna_pcp === "teste_enviado"),
+    [linhas],
+  );
   const [carregando, setCarregando] = useState(false);
   const [meuUserId, setMeuUserId] = useState<string | null>(null);
   const [nomesUsuarios, setNomesUsuarios] = useState<{ user_id: string; nome: string }[]>([]);
@@ -280,6 +284,18 @@ export default function PcpTerceirizada() {
             style={{ backgroundColor: chatResumo.some(r => r.mencionado) ? "#DC2626" : "#15803D" }}
           >
             💬 @{chatResumo.length}
+          </button>
+        )}
+        {/* Tudo que está em Teste Enviado agora, sem filtro de tempo --
+            precisa ser visto rápido, não só depois de dias parado. */}
+        {testeEnviadoPendentes.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setDetalheId(testeEnviadoPendentes[0].producao_id)}
+            className="flex items-center gap-1.5 h-8 px-2.5 rounded-[7px] text-[12.5px] font-bold text-white"
+            style={{ backgroundColor: "#BE185D" }}
+          >
+            ⏱ {testeEnviadoPendentes.length} em Teste Enviado
           </button>
         )}
         <button onClick={sair} className="flex items-center gap-1.5 text-[12.5px] font-semibold text-white/85 hover:text-white">

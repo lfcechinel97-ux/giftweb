@@ -1705,6 +1705,14 @@ export default function PCP() {
     [chatResumo],
   );
 
+  /* Tudo que está em "Teste Enviado" agora, sem filtro de tempo -- vendedor
+     e produção precisam ver na hora que algo entra ali, não só depois de
+     dias parado esperando o cliente. */
+  const testeEnviadoPendentes = useMemo(
+    () => rows.filter(r => colunaDoStatus(r) === "teste_enviado"),
+    [rows],
+  );
+
   /* "@Fulano" no card -- pública (qualquer um com acesso ao item vê),
      diferente de chatResumo (que é "o que EU não li"): some quando o
      PRÓPRIO Fulano abre o chat, não quando eu abro. */
@@ -2571,6 +2579,20 @@ export default function PCP() {
               title="Ver próxima mensagem pendente no chat"
             >
               <MessageSquare className="h-4 w-4" /> @{chatResumo.length}
+            </button>
+          )}
+          {/* Teste Enviado conta TUDO que está na coluna agora, sem limite
+              de tempo -- é aprovação de cliente, precisa ser visto rápido,
+              não só depois de dias parado. Clica e vai pro primeiro. */}
+          {testeEnviadoPendentes.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setDetalheId(testeEnviadoPendentes[0].producao_id)}
+              className="flex items-center gap-1.5 h-9 px-3 rounded-[8px] text-[13px] font-bold text-white shrink-0"
+              style={{ backgroundColor: "#BE185D" }}
+              title="Ver próximo item em Teste Enviado"
+            >
+              <Clock className="h-4 w-4" /> {testeEnviadoPendentes.length} em Teste Enviado
             </button>
           )}
           <div className="relative">
