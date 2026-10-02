@@ -261,7 +261,18 @@ async function runWithConcurrency<T>(items: T[], limite: number, worker: (item: 
  *  variantes ao produto pai e recalcula as categorias em destaque -- nada
  *  aqui é estoque/preço, então um erro não derruba a sincronização nem
  *  precisa segurar quem está esperando a resposta. */
-async function executarPosProcessamento(supabaseClient: ReturnType<typeof createClient>): Promise<void> {
+/** Cliente mínimo para o pós-processamento: as tabelas de destaque não
+ *  estão nos Database types gerados, então tipar com SupabaseClient inteiro
+ *  faz o deno check inferir `never`. Métodos declarados como method-style
+ *  mantêm a bivariância e aceitam o cliente real. */
+// deno-lint-ignore no-explicit-any
+interface SyncClient {
+  // deno-lint-ignore no-explicit-any
+  from(table: string): any;
+  rpc(fn: string): PromiseLike<{ error: unknown }>;
+}
+
+async function executarPosProcessamento(supabaseClient: SyncClient): Promise<void> {
   try {
     console.log("[SYNC-BG] Stage 4: Setting produto_pai via SQL join...");
     const { error: rpcError } = await supabaseClient.rpc("set_variantes_por_prefixo");
