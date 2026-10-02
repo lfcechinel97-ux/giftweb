@@ -36,7 +36,14 @@ const COLUNAS = [
   { coluna: "inserir_medidas", titulo: "Inserir Medidas", cor: "#4D7C0F", corFundo: "#ECFCCB" },
 ] as const;
 
-const EMAIL_SINTETICO = (usuario: string) => `${usuario.trim().toLowerCase()}@terceirizadas.giftweb.internal`;
+/* O campo "Usuário" do login vira o e-mail do Supabase Auth. Se quem
+   cadastrou o acesso já usou um e-mail de verdade (ex.: "terceirizada@
+   flex.com.br"), digita ele inteiro aqui -- só completa com o domínio
+   sintético quando for um usuário curto sem "@" (ex.: "flex"). */
+const EMAIL_LOGIN = (usuario: string) => {
+  const limpo = usuario.trim().toLowerCase();
+  return limpo.includes("@") ? limpo : `${limpo}@terceirizadas.giftweb.internal`;
+};
 
 export default function PcpTerceirizada() {
   const [sessaoPronta, setSessaoPronta] = useState(false);
@@ -101,7 +108,7 @@ export default function PcpTerceirizada() {
     setEntrando(true);
     setErroLogin(null);
     const { error } = await supabase.auth.signInWithPassword({
-      email: EMAIL_SINTETICO(usuario), password: senha,
+      email: EMAIL_LOGIN(usuario), password: senha,
     });
     setEntrando(false);
     if (error) setErroLogin("Usuário ou senha incorretos.");
