@@ -265,10 +265,11 @@ async function runWithConcurrency<T>(items: T[], limite: number, worker: (item: 
  *  estão nos Database types gerados, então tipar com SupabaseClient inteiro
  *  faz o deno check inferir `never`. Métodos declarados como method-style
  *  mantêm a bivariância e aceitam o cliente real. */
+// deno-lint-ignore no-explicit-any
 interface SyncClient {
-  from(table: string): unknown;
   // deno-lint-ignore no-explicit-any
-  query: any;
+  from(table: string): any;
+  rpc(fn: string): PromiseLike<{ error: unknown }>;
 }
 
 async function executarPosProcessamento(supabaseClient: SyncClient): Promise<void> {
