@@ -77,6 +77,23 @@ interface ComentarioRow {
 
 const CHAT_MENTION_REGEX = /@([a-zà-ú]*)$/i;
 
+interface HistoricoRow {
+  id: string;
+  status_anterior: string | null;
+  status_novo: string;
+  observacao: string | null;
+  created_at: string;
+}
+
+const ROTULO_STATUS: Record<string, string> = {
+  aguardando_teste_terceirizada: "Aguardando Teste",
+  aguardando_aprovacao_teste: "Teste Enviado",
+  a_produzir_terceirizada: "A Produzir",
+  inserir_medidas: "Inserir Medidas",
+  aguardando_coleta: "Expedição",
+};
+const rotuloStatus = (slug: string) => ROTULO_STATUS[slug] ?? slug.replace(/_/g, " ");
+
 /* Mesmos rótulo/cor das colunas do PCP interno (TODAS_COLUNAS_PCP em
    src/lib/statusPedido.ts) -- "o que acontece em um, acontece no outro,
    exatamente igual", incluindo o nome da etapa escrito igual. */
@@ -596,6 +613,8 @@ function DetalheModal({
   onLido: () => void;
 }) {
   const [comentarios, setComentarios] = useState<ComentarioRow[]>([]);
+  const [historico, setHistorico] = useState<HistoricoRow[]>([]);
+  const [historicoAberto, setHistoricoAberto] = useState(false);
   const [fotoAberta, setFotoAberta] = useState(false);
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -613,9 +632,19 @@ function DetalheModal({
     setComentarios((data as any as ComentarioRow[]) ?? []);
   };
 
+  const buscarHistorico = async () => {
+    if (!item) return;
+    const { data } = await supabase
+      .from("sistema_producao_historico" as any)
+      .select("id,status_anterior,status_novo,observacao,created_at")
+      .eq("producao_item_id", item.producao_id)
+      .order("created_at", { ascending: false });
+    setHistorico((data as any as HistoricoRow[]) ?? []);
+  };
+
   /** Busca + marca como lido -- só na abertura do painel. */
   const carregar = async () => {
-    await buscar();
+    await Promise.all([buscar(), buscarHistorico()]);
     if (!meuUserId) return;
     setComentarios(atual => {
       const naoLidas = atual.filter(c => !(c.lido_por ?? []).includes(meuUserId));
@@ -798,6 +827,41 @@ function DetalheModal({
                   Baixar
                 </a>
               </div>
+            )}
+          </div>
+        )}
+
+        {(historico.length > 0 || comentarios.length > 0) && (
+          <div className="px-4 pt-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setHistoricoAberto(v => !v)}
+              className="text-[10.5px] font-bold uppercase text-[#94A3B8] flex items-center gap-1.5 w-full"
+            >
+              Histórico {historicoAberto ? "▲" : "▼"}
+            </button>
+            {historicoAberto && (
+              <ul className="mt-1.5 space-y-1 max-h-[140px] overflow-y-auto">
+                {[
+                  ...historico.map(h => ({
+                    created_at: h.created_at,
+                    texto: `${h.status_anterior ? `${rotuloStatus(h.status_anterior)} → ` : ""}${rotuloStatus(h.status_novo)}${h.observacao ? ` · ${h.observacao}` : ""}`,
+                  })),
+                  ...comentarios.map(c => ({
+                    created_at: c.created_at,
+                    texto: `${c.autor_nome || "Alguém"} respondeu no chat`,
+                  })),
+                ]
+                  .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                  .map((ev, i) => (
+                    <li key={i} className="text-[11px] text-[#475569]">
+                      <span className="text-[#94A3B8]">
+                        {new Date(ev.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      </span>{" "}
+                      — {ev.texto}
+                    </li>
+                  ))}
+              </ul>
             )}
           </div>
         )}

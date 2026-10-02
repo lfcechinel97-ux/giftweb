@@ -1670,6 +1670,18 @@ export default function PCP() {
     return nomesUsuarios.filter(u => u.nome?.toLowerCase().includes(termo)).slice(0, 6);
   }, [novoComentario, nomesUsuarios]);
 
+  /** Histórico + chat mesclados numa linha do tempo só, mais recente primeiro. */
+  type EventoAtividade =
+    | { tipo: "status"; created_at: string; h: HistoricoRow }
+    | { tipo: "chat"; created_at: string; c: ComentarioRow };
+  const atividade = useMemo<EventoAtividade[]>(() => {
+    const itens: EventoAtividade[] = [
+      ...historico.map(h => ({ tipo: "status" as const, created_at: h.created_at, h })),
+      ...comentarios.map(c => ({ tipo: "chat" as const, created_at: c.created_at, c })),
+    ];
+    return itens.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [historico, comentarios]);
+
   const inserirMencao = (nome: string) => {
     setNovoComentario(prev => prev.replace(CHAT_MENTION_REGEX, `@${nome} `));
     setMencaoAberta(false);
@@ -3469,7 +3481,8 @@ export default function PCP() {
 
                   {/* Histórico -- oculto por padrão, clica pra ver (o chat
                       é o que importa no dia a dia; histórico é consulta
-                      ocasional). */}
+                      ocasional). Mescla mudança de etapa COM atividade do
+                      chat (quem respondeu, quando), uma linha do tempo só. */}
                   <div className="px-5 py-4">
                     <button
                       type="button"
@@ -3479,31 +3492,39 @@ export default function PCP() {
                       <History className="h-3.5 w-3.5" /> Histórico
                       {historicoAberto ? <ChevronDown className="h-3.5 w-3.5 ml-auto" /> : <ChevronRight className="h-3.5 w-3.5 ml-auto" />}
                     </button>
-                    {!historicoAberto ? null : historico.length === 0 ? (
+                    {!historicoAberto ? null : atividade.length === 0 ? (
                       <p className="text-[12px] text-[var(--gw-text-muted)]">Sem histórico registrado.</p>
                     ) : (
                       <ul className="space-y-3 border-l border-[var(--gw-border)] pl-4">
-                        {historico.map(h => (
-                          <li key={h.id} className="relative">
+                        {atividade.map(ev => ev.tipo === "chat" ? (
+                          <li key={`c-${ev.c.id}`} className="relative">
+                            <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-[var(--gw-text-muted)]" />
+                            <p className="text-[12px] text-[var(--gw-text)]">
+                              <strong>{ev.c.autor_nome || ev.c.autor_email?.split("@")[0] || "Alguém"}</strong> respondeu no chat
+                              <span className="text-[11px] text-[var(--gw-text-secondary)]"> · {formatDateTime(ev.c.created_at)}</span>
+                            </p>
+                          </li>
+                        ) : (
+                          <li key={`h-${ev.h.id}`} className="relative">
                             <span
                               className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full"
-                              style={{ backgroundColor: statusInfo(h.status_novo).cor }}
+                              style={{ backgroundColor: statusInfo(ev.h.status_novo).cor }}
                             />
                             <div className="flex items-center gap-2 flex-wrap">
-                              {h.status_anterior && (
+                              {ev.h.status_anterior && (
                                 <>
-                                  <StatusPill status={h.status_anterior} className="opacity-60" />
+                                  <StatusPill status={ev.h.status_anterior} className="opacity-60" />
                                   <span className="text-[11px] text-[var(--gw-text-muted)]">→</span>
                                 </>
                               )}
-                              <StatusPill status={h.status_novo} />
+                              <StatusPill status={ev.h.status_novo} />
                               <span className="text-[11px] text-[var(--gw-text-secondary)]">
-                                {formatDateTime(h.created_at)}
+                                {formatDateTime(ev.h.created_at)}
                               </span>
                             </div>
                             <p className="text-[11px] text-[var(--gw-text-muted)] mt-0.5">
-                              Alterado por: {vendedorNome(h.vendedor_id) || nomePorUsuarioId(h.usuario_id) || "não identificado"}
-                              {h.observacao ? ` · ${h.observacao}` : ""}
+                              Alterado por: {vendedorNome(ev.h.vendedor_id) || nomePorUsuarioId(ev.h.usuario_id) || "não identificado"}
+                              {ev.h.observacao ? ` · ${ev.h.observacao}` : ""}
                             </p>
                           </li>
                         ))}
