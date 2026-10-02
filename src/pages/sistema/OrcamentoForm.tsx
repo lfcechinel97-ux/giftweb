@@ -181,7 +181,7 @@ export const OrcamentoForm: React.FC = () => {
     largura: sugestao?.largura || 0,
     comprimento: sugestao?.comprimento || 0,
     peso: sugestao?.pesoKg || 0,
-    quantidade: item.quantidade,
+    quantidade: 1,
   });
 
   const abrirCalculoFrete = async () => {
