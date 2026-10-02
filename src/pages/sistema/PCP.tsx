@@ -2894,7 +2894,7 @@ export default function PCP() {
       <Dialog open={!!detalhe} onOpenChange={open => !open && setDetalheId(null)}>
         <DialogContent
           className="p-0 gap-0 overflow-hidden rounded-[12px] border-[var(--gw-border)] bg-white"
-          style={{ maxWidth: 1180, width: "94vw", maxHeight: "88vh", boxShadow: "var(--gw-shadow-lg)" }}
+          style={{ maxWidth: 1400, width: "96vw", maxHeight: "92vh", boxShadow: "var(--gw-shadow-lg)" }}
         >
           {detalhe && (
             <div className="grid grid-rows-[auto_1fr] max-h-[88vh]">
@@ -2908,7 +2908,7 @@ export default function PCP() {
                 </DialogTitle>
               </DialogHeader>
 
-              <div className="grid md:grid-cols-[300px_1fr_340px] min-h-0 overflow-hidden">
+              <div className="grid md:grid-cols-[360px_1fr_260px] min-h-0 overflow-hidden">
                 {/* Coluna 1 — imagem */}
                 <div className="bg-[var(--gw-surface-alt)] p-4 overflow-y-auto border-r border-[var(--gw-border)]">
                   {detalhe.mockup_url || detalhe.imagem_catalogo_url ? (
@@ -3113,6 +3113,7 @@ export default function PCP() {
                       <p className="gw-label flex items-center gap-1.5">
                         <FileText className="h-3.5 w-3.5" /> Observação
                       </p>
+                      <div className="max-h-[160px] overflow-y-auto space-y-1.5 pr-1">
                       {detalhe.pedido_observacoes && (
                         <div className="rounded-[10px] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] px-3 py-2">
                           <p className="gw-label mb-0.5">Observação do pedido</p>
@@ -3129,6 +3130,7 @@ export default function PCP() {
                           </p>
                         </div>
                       )}
+                      </div>
                     </div>
                   )}
 
@@ -3443,34 +3445,29 @@ export default function PCP() {
                     {anexos.length === 0 ? (
                       <p className="gw-body text-[13px] text-[var(--gw-text-muted)]">Nenhum anexo ainda.</p>
                     ) : (
-                      <div className="space-y-1.5">
+                      <div className="grid grid-cols-4 gap-1.5">
                         {anexos.map(a => (
-                          <div key={a.id} className="flex items-center gap-2.5 rounded-[8px] border border-[var(--gw-border)] px-2.5 py-2">
-                            {a.tipo === "foto" ? (
-                              <img src={sizedImage(a.url, 80)} alt="" className="w-9 h-9 rounded object-cover border border-[var(--gw-border)] shrink-0" />
-                            ) : a.tipo === "video" ? (
-                              <Video className="h-9 w-9 p-2 rounded bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)] shrink-0" />
-                            ) : (
-                              <FileText className="h-9 w-9 p-2 rounded bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)] shrink-0" />
-                            )}
-                            <div className="min-w-0 flex-1">
-                              <p className="text-[12px] font-semibold text-[var(--gw-text)] truncate">
-                                {ANEXO_CATEGORIA_LABEL[a.categoria]}{a.nome_arquivo ? ` · ${a.nome_arquivo}` : ""}
-                              </p>
-                              <p className="text-[11px] text-[var(--gw-text-muted)]">
-                                {vendedorNome(a.vendedor_id) || "não identificado"} · {formatDateTime(a.created_at)}
-                              </p>
-                            </div>
-                            <a href={a.url} target="_blank" rel="noreferrer" className="shrink-0 text-[var(--gw-primary)]" aria-label="Abrir anexo">
-                              <Download className="h-4 w-4" />
+                          <div key={a.id} className="group/anexo relative aspect-square rounded-[8px] border border-[var(--gw-border)] overflow-hidden">
+                            <a
+                              href={a.url} target="_blank" rel="noreferrer"
+                              title={`${ANEXO_CATEGORIA_LABEL[a.categoria]} · ${vendedorNome(a.vendedor_id) || "não identificado"} · ${formatDateTime(a.created_at)}`}
+                              className="block h-full w-full"
+                            >
+                              {a.tipo === "foto" ? (
+                                <img src={sizedImage(a.url, 120)} alt="" className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)]">
+                                  {a.tipo === "video" ? <Video className="h-5 w-5" /> : <FileText className="h-5 w-5" />}
+                                </div>
+                              )}
                             </a>
                             <button
                               type="button"
                               onClick={() => removerAnexo(a)}
-                              className="shrink-0 text-[var(--gw-text-muted)] hover:text-[var(--gw-danger)]"
+                              className="absolute top-0.5 right-0.5 h-4 w-4 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover/anexo:opacity-100"
                               aria-label="Remover anexo"
                             >
-                              <X className="h-4 w-4" />
+                              <X className="h-2.5 w-2.5" />
                             </button>
                           </div>
                         ))}
@@ -3521,62 +3518,73 @@ export default function PCP() {
                     </div>
                   )}
 
-                  {/* Histórico -- oculto por padrão, clica pra ver (o chat
-                      é o que importa no dia a dia; histórico é consulta
-                      ocasional). Mescla mudança de etapa COM atividade do
-                      chat (quem respondeu, quando), uma linha do tempo só. */}
+                  {/* Histórico agora é popup separado (abre por cima deste) --
+                      não precisa mais reservar espaço nenhum aqui dentro. */}
                   <div className="px-5 py-4">
                     <button
                       type="button"
-                      onClick={() => setHistoricoAberto(v => !v)}
-                      className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)] flex items-center gap-2 mb-3 w-full"
+                      onClick={() => setHistoricoAberto(true)}
+                      className="gw-meta text-[10px] font-bold uppercase text-[var(--gw-text-muted)] flex items-center gap-2 w-full"
                     >
                       <History className="h-3.5 w-3.5" /> Histórico
-                      {historicoAberto ? <ChevronDown className="h-3.5 w-3.5 ml-auto" /> : <ChevronRight className="h-3.5 w-3.5 ml-auto" />}
+                      <ChevronRight className="h-3.5 w-3.5 ml-auto" />
                     </button>
-                    {!historicoAberto ? null : atividade.length === 0 ? (
-                      <p className="text-[12px] text-[var(--gw-text-muted)]">Sem histórico registrado.</p>
-                    ) : (
-                      <ul className="space-y-3 border-l border-[var(--gw-border)] pl-4">
-                        {atividade.map(ev => ev.tipo === "chat" ? (
-                          <li key={`c-${ev.c.id}`} className="relative">
-                            <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-[var(--gw-text-muted)]" />
-                            <p className="text-[12px] text-[var(--gw-text)]">
-                              <strong>{ev.c.autor_nome || ev.c.autor_email?.split("@")[0] || "Alguém"}</strong> respondeu no chat
-                              <span className="text-[11px] text-[var(--gw-text-secondary)]"> · {formatDateTime(ev.c.created_at)}</span>
-                            </p>
-                          </li>
-                        ) : (
-                          <li key={`h-${ev.h.id}`} className="relative">
-                            <span
-                              className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full"
-                              style={{ backgroundColor: statusInfo(ev.h.status_novo).cor }}
-                            />
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {ev.h.status_anterior && (
-                                <>
-                                  <StatusPill status={ev.h.status_anterior} className="opacity-60" />
-                                  <span className="text-[11px] text-[var(--gw-text-muted)]">→</span>
-                                </>
-                              )}
-                              <StatusPill status={ev.h.status_novo} />
-                              <span className="text-[11px] text-[var(--gw-text-secondary)]">
-                                {formatDateTime(ev.h.created_at)}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-[var(--gw-text-muted)] mt-0.5">
-                              Alterado por: {vendedorNome(ev.h.vendedor_id) || nomePorUsuarioId(ev.h.usuario_id) || "não identificado"}
-                              {ev.h.observacao ? ` · ${ev.h.observacao}` : ""}
-                            </p>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
                   </div>
                 </div>
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Popup de Histórico -- separado, abre por cima do painel de detalhe. */}
+      <Dialog open={historicoAberto} onOpenChange={setHistoricoAberto}>
+        <DialogContent style={{ maxWidth: 480, maxHeight: "80vh" }} className="flex flex-col overflow-hidden">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-4 w-4" /> Histórico
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto">
+            {atividade.length === 0 ? (
+              <p className="text-[12px] text-[var(--gw-text-muted)]">Sem histórico registrado.</p>
+            ) : (
+              <ul className="space-y-3 border-l border-[var(--gw-border)] pl-4">
+                {atividade.map(ev => ev.tipo === "chat" ? (
+                  <li key={`c-${ev.c.id}`} className="relative">
+                    <span className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full bg-[var(--gw-text-muted)]" />
+                    <p className="text-[12px] text-[var(--gw-text)]">
+                      <strong>{ev.c.autor_nome || ev.c.autor_email?.split("@")[0] || "Alguém"}</strong> respondeu no chat
+                      <span className="text-[11px] text-[var(--gw-text-secondary)]"> · {formatDateTime(ev.c.created_at)}</span>
+                    </p>
+                  </li>
+                ) : (
+                  <li key={`h-${ev.h.id}`} className="relative">
+                    <span
+                      className="absolute -left-[21px] top-1.5 h-2 w-2 rounded-full"
+                      style={{ backgroundColor: statusInfo(ev.h.status_novo).cor }}
+                    />
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {ev.h.status_anterior && (
+                        <>
+                          <StatusPill status={ev.h.status_anterior} className="opacity-60" />
+                          <span className="text-[11px] text-[var(--gw-text-muted)]">→</span>
+                        </>
+                      )}
+                      <StatusPill status={ev.h.status_novo} />
+                      <span className="text-[11px] text-[var(--gw-text-secondary)]">
+                        {formatDateTime(ev.h.created_at)}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[var(--gw-text-muted)] mt-0.5">
+                      Alterado por: {vendedorNome(ev.h.vendedor_id) || nomePorUsuarioId(ev.h.usuario_id) || "não identificado"}
+                      {ev.h.observacao ? ` · ${ev.h.observacao}` : ""}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
