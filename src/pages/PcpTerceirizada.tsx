@@ -58,9 +58,13 @@ const tempoNaEtapaCurto = (iso: string) => {
   return resto > 0 ? `${dias}d ${resto}h` : `${dias}d`;
 };
 
+/* Mesmos rótulo/cor das colunas do PCP interno (TODAS_COLUNAS_PCP em
+   src/lib/statusPedido.ts) -- "o que acontece em um, acontece no outro,
+   exatamente igual", incluindo o nome da etapa escrito igual. */
 const COLUNAS = [
-  { coluna: "teste_fisico_terceirizada", titulo: "Aguardando Teste", cor: "#A21CAF", corFundo: "#FAE8FF" },
-  { coluna: "em_producao_terceirizada", titulo: "A Produzir", cor: "#0F766E", corFundo: "#CCFBF1" },
+  { coluna: "teste_fisico_terceirizada", titulo: "Aguardando Teste Terceirizada", cor: "#A21CAF", corFundo: "#FAE8FF" },
+  { coluna: "teste_enviado", titulo: "Teste Enviado", cor: "#BE185D", corFundo: "#FCE7F3" },
+  { coluna: "em_producao_terceirizada", titulo: "A Produzir Terceirizada", cor: "#0F766E", corFundo: "#CCFBF1" },
   { coluna: "inserir_medidas", titulo: "Inserir Medidas", cor: "#4D7C0F", corFundo: "#ECFCCB" },
 ] as const;
 
@@ -207,7 +211,7 @@ export default function PcpTerceirizada() {
         </button>
       </header>
 
-      <main className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
+      <main className="p-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
         {COLUNAS.map(col => {
           const itens = linhas
             .filter(l => l.coluna_pcp === col.coluna)
@@ -306,9 +310,11 @@ function CardTerceirizada({
       </div>
 
       {/* Foto grande (contain, sem cortar) com selo de técnica e quantidade
-          nos cantos inferiores -- mesmo layout do card interno. */}
-      <div className="px-3 pb-2">
-        <div className="relative h-[168px] w-full rounded-[10px] bg-[#F1F5F9] border border-[#E2E8F0] overflow-hidden">
+          nos cantos inferiores -- mesmo layout do card interno. Quando já
+          tem foto de teste/produção anexada, ela aparece do lado, bem
+          visível, não só escondida dentro de um anexo. */}
+      <div className="px-3 pb-2 flex gap-1.5">
+        <div className="relative h-[168px] flex-1 min-w-0 rounded-[10px] bg-[#F1F5F9] border border-[#E2E8F0] overflow-hidden">
           {foto ? (
             <img src={sizedImage(foto, 480)} alt="" loading="lazy" decoding="async" className="h-full w-full object-contain" />
           ) : (
@@ -332,6 +338,24 @@ function CardTerceirizada({
             <span className="text-[9px] font-medium">un.</span>
           </span>
         </div>
+        {(item.teste_anexo_url || item.producao_anexo_url) && (
+          <div className="relative h-[168px] flex-1 min-w-0 rounded-[10px] bg-[#F1F5F9] border border-[#E2E8F0] overflow-hidden">
+            {item.producao_anexo_url && item.producao_anexo_tipo === "video" ? (
+              <video src={item.producao_anexo_url} controls className="h-full w-full object-contain bg-black" />
+            ) : (
+              <img
+                src={sizedImage((item.producao_anexo_url || item.teste_anexo_url)!, 480)}
+                alt="" loading="lazy" decoding="async" className="h-full w-full object-contain"
+              />
+            )}
+            <span
+              className="absolute left-1.5 bottom-1.5 text-[10px] font-bold leading-none rounded-[5px] px-[7px] py-[4px] text-white"
+              style={{ backgroundColor: "rgba(0,0,0,.78)" }}
+            >
+              {item.producao_anexo_url ? "Produção anexada" : "Teste anexado"}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="px-3 pb-1.5">
@@ -360,6 +384,9 @@ function CardTerceirizada({
       )}
 
       <div className="px-3 pb-3">
+        {coluna === "teste_enviado" && (
+          <p className="text-[11.5px] text-[#64748B] text-center py-1">Aguardando aprovação do cliente.</p>
+        )}
         {coluna === "teste_fisico_terceirizada" && (
           <>
             <input ref={inputTesteRef} type="file" accept="image/*" className="hidden" onChange={handleAnexoTeste} />
