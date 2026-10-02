@@ -187,6 +187,35 @@ export type Database = {
         }
         Relationships: []
       }
+      mockup_ia_prompts: {
+        Row: {
+          atualizado_em: string
+          atualizado_por: string | null
+          chave: string
+          prompt: string
+        }
+        Insert: {
+          atualizado_em?: string
+          atualizado_por?: string | null
+          chave: string
+          prompt: string
+        }
+        Update: {
+          atualizado_em?: string
+          atualizado_por?: string | null
+          chave?: string
+          prompt?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mockup_ia_prompts_atualizado_por_fkey"
+            columns: ["atualizado_por"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_collection_items: {
         Row: {
           codigo_prefixo: string
