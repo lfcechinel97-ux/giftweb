@@ -160,77 +160,140 @@ export const OrcamentoForm: React.FC = () => {
   const total = subtotal + freteEfetivo;
 
   // --- Cálculo de frete (Melhor Envio) ---
-  type DimensoesItem = { altura: number; largura: number; comprimento: number; peso: number };
+  // Cada item do orçamento pode virar mais de um volume físico (ex.: 50
+  // unidades despachadas em 5 caixas). As dimensões da XBZ (products_cache)
+  // aparecem só como sugestão de referência -- quem decide o que de fato
+  // vai cotado são os campos editáveis, preenchidos pelo vendedor.
+  interface Volume { id: string; altura: number; largura: number; comprimento: number; peso: number; quantidade: number }
+  interface SugestaoDimensao { altura?: number; largura?: number; comprimento?: number; pesoKg?: number }
   const [showFreteDialog, setShowFreteDialog] = useState(false);
-  const [dimensoesProdutos, setDimensoesProdutos] = useState<Record<string, Partial<DimensoesItem>>>({});
-  const [dimensoesManuais, setDimensoesManuais] = useState<Record<string, DimensoesItem>>({});
+  const [sugestoesPorProduto, setSugestoesPorProduto] = useState<Record<string, SugestaoDimensao>>({});
+  const [volumesPorItem, setVolumesPorItem] = useState<Record<string, Volume[]>>({});
+  const [cepDestinoInput, setCepDestinoInput] = useState("");
   const [carregandoDimensoes, setCarregandoDimensoes] = useState(false);
   const [cotando, setCotando] = useState(false);
   const [opcoesFrete, setOpcoesFrete] = useState<{ id: string; transportadora: string; servico: string; preco: number; prazoDias: number | null }[] | null>(null);
   const [erroFrete, setErroFrete] = useState<string | null>(null);
 
-  const cepDestino = clienteSelecionado?.enderecos?.[0]?.cep || "";
+  const novoVolume = (item: QuoteItem, sugestao?: SugestaoDimensao): Volume => ({
+    id: `${item.id}-${Math.random().toString(36).slice(2, 8)}`,
+    altura: sugestao?.altura || 0,
+    largura: sugestao?.largura || 0,
+    comprimento: sugestao?.comprimento || 0,
+    peso: sugestao?.pesoKg || 0,
+    quantidade: item.quantidade,
+  });
 
   const abrirCalculoFrete = async () => {
     setErroFrete(null);
     setOpcoesFrete(null);
+    setCepDestinoInput(clienteSelecionado?.enderecos?.[0]?.cep || "");
     setShowFreteDialog(true);
     const idsProdutos = Array.from(new Set(formData.itens.filter(i => i.produtoId).map(i => i.produtoId as string)));
-    if (idsProdutos.length === 0) return;
-    setCarregandoDimensoes(true);
-    try {
-      const { data, error } = await supabase
-        .from("products_cache")
-        .select("id, altura, largura, profundidade, peso")
-        .in("id", idsProdutos);
-      if (error) throw error;
-      const mapa: Record<string, Partial<DimensoesItem>> = {};
-      for (const p of data || []) {
-        mapa[p.id] = {
-          altura: p.altura ?? undefined,
-          largura: p.largura ?? undefined,
-          comprimento: p.profundidade ?? undefined,
-          peso: p.peso ?? undefined,
-        };
+    let sugestoes: Record<string, SugestaoDimensao> = {};
+    if (idsProdutos.length > 0) {
+      setCarregandoDimensoes(true);
+      try {
+        const { data, error } = await supabase
+          .from("products_cache")
+          .select("id, altura, largura, profundidade, peso")
+          .in("id", idsProdutos);
+        if (error) throw error;
+        for (const p of data || []) {
+          // "peso" vem da XBZ em gramas -- convertido pra kg aqui, que é o
+          // que a Melhor Envio espera.
+          sugestoes[p.id] = {
+            altura: p.altura ?? undefined,
+            largura: p.largura ?? undefined,
+            comprimento: p.profundidade ?? undefined,
+            pesoKg: p.peso != null ? p.peso / 1000 : undefined,
+          };
+        }
+        setSugestoesPorProduto(sugestoes);
+      } catch (e: any) {
+        setErroFrete(e?.message || "Não foi possível buscar as dimensões sugeridas dos produtos.");
+      } finally {
+        setCarregandoDimensoes(false);
       }
-      setDimensoesProdutos(mapa);
-    } catch (e: any) {
-      setErroFrete(e?.message || "Não foi possível buscar as dimensões dos produtos.");
-    } finally {
-      setCarregandoDimensoes(false);
     }
+    // Inicializa 1 volume por item, pré-preenchido com a sugestão (se houver).
+    setVolumesPorItem((prev) => {
+      const next = { ...prev };
+      for (const item of formData.itens) {
+        if (next[item.id]) continue;
+        const sugestao = item.produtoId ? sugestoes[item.produtoId] : undefined;
+        next[item.id] = [novoVolume(item, sugestao)];
+      }
+      return next;
+    });
   };
 
-  const dimensaoDoItem = (item: QuoteItem): Partial<DimensoesItem> => {
-    if (dimensoesManuais[item.id]) return dimensoesManuais[item.id];
-    if (item.produtoId && dimensoesProdutos[item.produtoId]) return dimensoesProdutos[item.produtoId];
-    return {};
+  const atualizarVolume = (itemId: string, volumeId: string, campo: keyof Omit<Volume, "id">, valor: number) => {
+    setVolumesPorItem((prev) => ({
+      ...prev,
+      [itemId]: (prev[itemId] || []).map((v) => (v.id === volumeId ? { ...v, [campo]: valor } : v)),
+    }));
   };
 
-  const itemPrecisaDimensaoManual = (item: QuoteItem) => {
-    const d = dimensaoDoItem(item);
-    return !d.altura || !d.largura || !d.comprimento || !d.peso;
+  const adicionarVolume = (item: QuoteItem) => {
+    const sugestao = item.produtoId ? sugestoesPorProduto[item.produtoId] : undefined;
+    setVolumesPorItem((prev) => ({
+      ...prev,
+      [item.id]: [...(prev[item.id] || []), { ...novoVolume(item, sugestao), quantidade: 1 }],
+    }));
   };
+
+  const removerVolume = (itemId: string, volumeId: string) => {
+    setVolumesPorItem((prev) => {
+      const atuais = prev[itemId] || [];
+      if (atuais.length <= 1) return prev;
+      return { ...prev, [itemId]: atuais.filter((v) => v.id !== volumeId) };
+    });
+  };
+
+  const todosOsVolumes = useMemo(
+    () => formData.itens.flatMap((it) => volumesPorItem[it.id] || []),
+    [formData.itens, volumesPorItem]
+  );
+
+  const volumeInvalido = (v: Volume) => !v.altura || !v.largura || !v.comprimento || !v.peso || !v.quantidade;
 
   const calcularFrete = async () => {
-    if (!cepDestino) {
-      setErroFrete("Selecione um cliente com CEP cadastrado.");
+    const cep = cepDestinoInput.replace(/\D/g, "");
+    if (cep.length !== 8) {
+      setErroFrete("Informe um CEP de destino válido.");
       return;
     }
-    const faltando = formData.itens.some(itemPrecisaDimensaoManual);
-    if (faltando) {
-      setErroFrete("Preencha as dimensões faltantes antes de cotar.");
+    if (todosOsVolumes.length === 0 || todosOsVolumes.some(volumeInvalido)) {
+      setErroFrete("Preencha altura, largura, comprimento, peso e quantidade de todos os volumes.");
       return;
     }
     setCotando(true);
     setErroFrete(null);
     setOpcoesFrete(null);
     try {
-      const itens = formData.itens.map((it) => ({ ...dimensaoDoItem(it), quantidade: it.quantidade, valor: it.precoUnitario } as DimensoesItem & { quantidade: number; valor: number }));
+      const precoPorItem = new Map(formData.itens.map((it) => [it.id, it.precoUnitario]));
+      const itens = formData.itens.flatMap((it) =>
+        (volumesPorItem[it.id] || []).map((v) => ({
+          altura: v.altura,
+          largura: v.largura,
+          comprimento: v.comprimento,
+          peso: v.peso,
+          quantidade: v.quantidade,
+          valor: precoPorItem.get(it.id) || 0,
+        }))
+      );
       const { data, error } = await supabase.functions.invoke("calcular-frete", {
-        body: { cepDestino, itens },
+        body: { cepDestino: cep, itens },
       });
-      if (error) throw error;
+      if (error) {
+        let msg = error.message;
+        const ctx = (error as any)?.context;
+        if (ctx?.json) {
+          try { const body = await ctx.json(); if (body?.error) msg = body.error; } catch { /* mantém a mensagem genérica */ }
+        }
+        throw new Error(msg);
+      }
       if (data?.error) throw new Error(data.error);
       setOpcoesFrete(data?.opcoes || []);
     } catch (e: any) {
@@ -759,7 +822,7 @@ export const OrcamentoForm: React.FC = () => {
 
           {showFreteDialog && (
             <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col">
                 <div className="flex items-center justify-between px-5 py-4 border-b">
                   <h3 className="font-medium flex items-center gap-2"><Truck className="w-4 h-4" /> Cotar frete</h3>
                   <button type="button" onClick={() => setShowFreteDialog(false)} className="text-gray-400 hover:text-gray-600">
@@ -767,58 +830,77 @@ export const OrcamentoForm: React.FC = () => {
                   </button>
                 </div>
                 <div className="px-5 py-4 overflow-y-auto space-y-4">
-                  {!cepDestino && (
-                    <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                      Selecione um cliente com CEP cadastrado para cotar o frete.
+                  <div className="flex items-end gap-3">
+                    <p className="text-sm text-gray-500">Origem: Guarulhos/SP (CEP 07111-080)</p>
+                    <div className="ml-auto">
+                      <label className="block text-[11px] text-gray-500">CEP de destino</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="00000-000"
+                        className="w-36 px-2 py-1.5 text-sm border rounded"
+                        value={cepDestinoInput}
+                        onChange={(e) => setCepDestinoInput(e.target.value)}
+                      />
                     </div>
-                  )}
-                  <p className="text-sm text-gray-500">
-                    Origem: Guarulhos/SP (CEP 07111-080) • Destino: {cepDestino ? cepDestino.replace(/(\d{5})(\d{3})/, "$1-$2") : "—"}
-                  </p>
+                  </div>
 
                   {carregandoDimensoes ? (
-                    <p className="text-sm text-gray-500">Buscando dimensões dos produtos...</p>
+                    <p className="text-sm text-gray-500">Buscando dimensões sugeridas dos produtos...</p>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {formData.itens.map((item) => {
-                        const d = dimensaoDoItem(item);
-                        const precisaManual = itemPrecisaDimensaoManual(item);
+                        const sugestao = item.produtoId ? sugestoesPorProduto[item.produtoId] : undefined;
+                        const volumes = volumesPorItem[item.id] || [];
                         return (
-                          <div key={item.id} className={`border rounded-lg p-3 ${precisaManual ? "border-amber-300 bg-amber-50" : "border-gray-200"}`}>
-                            <p className="text-sm font-medium mb-2">{item.nome} <span className="text-gray-400 font-normal">x{item.quantidade}</span></p>
-                            {!precisaManual ? (
-                              <p className="text-xs text-gray-500">
-                                {d.altura}×{d.largura}×{d.comprimento}cm • {d.peso}kg
+                          <div key={item.id} className="border border-gray-200 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-sm font-medium">{item.nome} <span className="text-gray-400 font-normal">x{item.quantidade}</span></p>
+                              <button type="button" onClick={() => adicionarVolume(item)} className="text-xs text-blue-600 hover:underline">
+                                + Adicionar volume
+                              </button>
+                            </div>
+                            {sugestao && (sugestao.altura || sugestao.largura || sugestao.comprimento || sugestao.pesoKg) && (
+                              <p className="text-xs text-gray-400 mb-2">
+                                Base XBZ: {sugestao.altura ?? "—"}×{sugestao.largura ?? "—"}×{sugestao.comprimento ?? "—"}cm • {sugestao.pesoKg != null ? sugestao.pesoKg.toFixed(3) : "—"}kg
                               </p>
-                            ) : (
-                              <div className="grid grid-cols-4 gap-2">
-                                {(["altura", "largura", "comprimento", "peso"] as const).map((campo) => (
-                                  <div key={campo}>
-                                    <label className="block text-[11px] text-gray-500 capitalize">{campo === "peso" ? "Peso (kg)" : `${campo} (cm)`}</label>
-                                    <input
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      className="w-full px-2 py-1.5 text-sm border rounded"
-                                      value={dimensoesManuais[item.id]?.[campo] ?? d[campo] ?? ""}
-                                      onChange={(e) => {
-                                        const v = parseFloat(e.target.value) || 0;
-                                        setDimensoesManuais((prev) => ({
-                                          ...prev,
-                                          [item.id]: {
-                                            altura: prev[item.id]?.altura ?? d.altura ?? 0,
-                                            largura: prev[item.id]?.largura ?? d.largura ?? 0,
-                                            comprimento: prev[item.id]?.comprimento ?? d.comprimento ?? 0,
-                                            peso: prev[item.id]?.peso ?? d.peso ?? 0,
-                                            [campo]: v,
-                                          },
-                                        }));
-                                      }}
-                                    />
-                                  </div>
-                                ))}
-                              </div>
                             )}
+                            <div className="space-y-2">
+                              {volumes.map((v, idx) => (
+                                <div key={v.id} className="grid grid-cols-5 gap-2 items-end">
+                                  {(["altura", "largura", "comprimento", "peso"] as const).map((campo) => (
+                                    <div key={campo}>
+                                      <label className="block text-[11px] text-gray-500">{campo === "peso" ? "Peso (kg)" : `${campo[0].toUpperCase()}${campo.slice(1)} (cm)`}</label>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        className="w-full px-2 py-1.5 text-sm border rounded"
+                                        value={v[campo] || ""}
+                                        onChange={(e) => atualizarVolume(item.id, v.id, campo, parseFloat(e.target.value) || 0)}
+                                      />
+                                    </div>
+                                  ))}
+                                  <div className="flex gap-1 items-end">
+                                    <div className="flex-1">
+                                      <label className="block text-[11px] text-gray-500">Qtd. no volume</label>
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        className="w-full px-2 py-1.5 text-sm border rounded"
+                                        value={v.quantidade || ""}
+                                        onChange={(e) => atualizarVolume(item.id, v.id, "quantidade", parseInt(e.target.value) || 0)}
+                                      />
+                                    </div>
+                                    {volumes.length > 1 && (
+                                      <button type="button" onClick={() => removerVolume(item.id, v.id)} className="p-1.5 text-gray-400 hover:text-red-600" title="Remover volume">
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         );
                       })}
@@ -861,7 +943,7 @@ export const OrcamentoForm: React.FC = () => {
                   <button
                     type="button"
                     onClick={calcularFrete}
-                    disabled={cotando || carregandoDimensoes || !cepDestino}
+                    disabled={cotando || carregandoDimensoes}
                     className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                   >
                     {cotando ? "Cotando..." : "Cotar frete"}
@@ -996,6 +1078,7 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [quantidade, setQuantidade] = useState(1);
+  const [quantidadeInput, setQuantidadeInput] = useState("1");
   const [precoUnitario, setPrecoUnitario] = useState(0);
   const [precoInput, setPrecoInput] = useState("");
   const [precoOriginal, setPrecoOriginal] = useState(0);
@@ -1042,6 +1125,7 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
   useEffect(() => {
     if (item) {
       setQuantidade(item.quantidade);
+      setQuantidadeInput(String(item.quantidade));
       setPrecoUnitario(item.precoUnitario);
       setPrecoInput(item.precoUnitario > 0 ? item.precoUnitario.toFixed(2) : "");
       setPrecoOriginal(item.precoOriginal);
@@ -1439,8 +1523,20 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
                       type="number"
                       min="1"
                       className="w-full px-3 py-2 border rounded-lg"
-                      value={quantidade}
-                      onChange={(e) => handleQuantidadeChange(parseInt(e.target.value) || 1)}
+                      value={quantidadeInput}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        setQuantidadeInput(raw);
+                        if (raw === "") return;
+                        const n = parseInt(raw, 10);
+                        if (!isNaN(n)) handleQuantidadeChange(n);
+                      }}
+                      onBlur={() => {
+                        if (quantidadeInput === "" || parseInt(quantidadeInput, 10) < 1) {
+                          setQuantidadeInput("1");
+                          handleQuantidadeChange(1);
+                        }
+                      }}
                     />
                   </div>
 

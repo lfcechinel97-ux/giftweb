@@ -92,7 +92,13 @@ serve(async (req) => {
 
   const dados = await resposta.json().catch(() => null);
   if (!resposta.ok || !Array.isArray(dados)) {
-    return json({ error: (dados as any)?.message || "Melhor Envio recusou a cotação.", detalhes: dados }, 502);
+    const detalheValidacao = (dados as any)?.errors
+      ? Object.values((dados as any).errors).flat().join(" ")
+      : null;
+    return json({
+      error: detalheValidacao || (dados as any)?.message || "Melhor Envio recusou a cotação.",
+      detalhes: dados,
+    }, 502);
   }
 
   // Só as opções que voltaram com preço (sem erro por transportadora).
