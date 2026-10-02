@@ -2151,6 +2151,8 @@ export type Database = {
           autor_nome: string | null
           created_at: string
           id: string
+          lido_por: string[]
+          mencionados: string[]
           mensagem: string
           pedido_id: string | null
           producao_item_id: string
@@ -2161,6 +2163,8 @@ export type Database = {
           autor_nome?: string | null
           created_at?: string
           id?: string
+          lido_por?: string[]
+          mencionados?: string[]
           mensagem: string
           pedido_id?: string | null
           producao_item_id: string
@@ -2171,6 +2175,8 @@ export type Database = {
           autor_nome?: string | null
           created_at?: string
           id?: string
+          lido_por?: string[]
+          mencionados?: string[]
           mensagem?: string
           pedido_id?: string | null
           producao_item_id?: string
@@ -3285,6 +3291,14 @@ export type Database = {
       set_variantes_por_prefixo: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sistema_chat_resumo: {
+        Args: never
+        Returns: {
+          mencionado: boolean
+          nao_lidas: number
+          producao_item_id: string
+        }[]
+      }
       sistema_contar_pedidos_por_coluna: {
         Args: never
         Returns: {
@@ -3351,6 +3365,13 @@ export type Database = {
           papel: string
           user_id: string
           vendedor_id: string
+        }[]
+      }
+      sistema_mencoes_pendentes: {
+        Args: never
+        Returns: {
+          mencionado_nome: string
+          producao_item_id: string
         }[]
       }
       sistema_meu_perfil: {
@@ -3438,9 +3459,15 @@ export type Database = {
           imagem_catalogo_url: string
           item_posicao: number
           item_total_pedido: number
+          logo_dimensao_cm: number
+          logo_dimensao_tipo: string
+          logo_expira_em: string
+          logo_link_id: string
+          logo_url: string
           mockup_url: string
           observacao: string
           pedido_numero: string
+          pedido_observacoes: string
           personalizacao: string
           producao_anexo_tipo: string
           producao_anexo_url: string
@@ -3478,11 +3505,11 @@ export type Database = {
         Returns: Json
       }
       sistema_terceirizada_anexar_producao: {
-        Args: { p_producao_id: string; p_tipo: string; p_url: string }
+        Args: { p_producao_id: string; p_tipos: string[]; p_urls: string[] }
         Returns: undefined
       }
       sistema_terceirizada_anexar_teste: {
-        Args: { p_producao_id: string; p_url: string }
+        Args: { p_producao_id: string; p_tipos: string[]; p_urls: string[] }
         Returns: undefined
       }
       sistema_terceirizada_inserir_medidas: {
