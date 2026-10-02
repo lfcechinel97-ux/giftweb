@@ -494,8 +494,7 @@ function CardTerceirizada({
           )}
           {tecnicaCurta && (
             <span
-              className="absolute left-1.5 bottom-1.5 text-[10px] font-bold leading-none rounded-[5px] px-[7px] py-[4px] text-white"
-              style={{ backgroundColor: "rgba(0,0,0,.78)" }}
+              className="absolute left-1.5 bottom-1.5 text-[10px] font-bold leading-none rounded-[5px] px-[7px] py-[4px] text-black bg-white border border-[#E2E8F0]"
             >
               {tecnicaCurta}
             </span>
@@ -812,7 +811,7 @@ function DetalheModal({
               <div className="flex items-center gap-1.5 flex-wrap">
                 <p className="text-[16px] font-bold text-[#0F172A]">{item.produto_nome || "—"}</p>
                 {tecnica && (
-                  <span className="text-[10.5px] font-bold rounded-full px-2 py-0.5 text-white bg-[#0A2A56] whitespace-nowrap">
+                  <span className="text-[10.5px] font-bold rounded-full px-2 py-0.5 text-black bg-white border border-[#E2E8F0] whitespace-nowrap">
                     {tecnica}
                   </span>
                 )}

@@ -866,8 +866,7 @@ function PcpCard({
             )}
             {tecnicaCurta && (
               <span
-                className="absolute left-1.5 bottom-1.5 gw-body text-[10px] font-bold leading-none rounded-[5px] px-[7px] py-[4px] text-white"
-                style={{ backgroundColor: "rgba(0,0,0,.78)" }}
+                className="absolute left-1.5 bottom-1.5 gw-body text-[10px] font-bold leading-none rounded-[5px] px-[7px] py-[4px] text-black bg-white border border-[var(--gw-border)]"
               >
                 {tecnicaCurta}
               </span>
