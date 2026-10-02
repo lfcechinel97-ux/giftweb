@@ -15,6 +15,8 @@ import RecorteQuadrado from "@/components/sistema/RecorteQuadrado";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OPCOES_PERSONALIZACAO, resumoPersonalizacao, type TipoPersonalizacao } from "@/lib/personalizacao";
 import { gerarPDFOrcamento } from "./pdf";
+import { supabase } from "@/integrations/supabase/client";
+import { Truck } from "lucide-react";
 
 const FRETE_TIPOS = [
   { value: "CIF", label: "CIF (Frete incluso)" },
@@ -156,6 +158,101 @@ export const OrcamentoForm: React.FC = () => {
   const subtotal = useMemo(() => formData.itens.reduce((sum, it) => sum + it.quantidade * it.precoUnitario, 0), [formData.itens]);
   const freteEfetivo = formData.freteTipo === "CIF" ? 0 : (formData.freteValor || 0);
   const total = subtotal + freteEfetivo;
+
+  // --- Cálculo de frete (Melhor Envio) ---
+  type DimensoesItem = { altura: number; largura: number; comprimento: number; peso: number };
+  const [showFreteDialog, setShowFreteDialog] = useState(false);
+  const [dimensoesProdutos, setDimensoesProdutos] = useState<Record<string, Partial<DimensoesItem>>>({});
+  const [dimensoesManuais, setDimensoesManuais] = useState<Record<string, DimensoesItem>>({});
+  const [carregandoDimensoes, setCarregandoDimensoes] = useState(false);
+  const [cotando, setCotando] = useState(false);
+  const [opcoesFrete, setOpcoesFrete] = useState<{ id: string; transportadora: string; servico: string; preco: number; prazoDias: number | null }[] | null>(null);
+  const [erroFrete, setErroFrete] = useState<string | null>(null);
+
+  const cepDestino = clienteSelecionado?.enderecos?.[0]?.cep || "";
+
+  const abrirCalculoFrete = async () => {
+    setErroFrete(null);
+    setOpcoesFrete(null);
+    setShowFreteDialog(true);
+    const idsProdutos = Array.from(new Set(formData.itens.filter(i => i.produtoId).map(i => i.produtoId as string)));
+    if (idsProdutos.length === 0) return;
+    setCarregandoDimensoes(true);
+    try {
+      const { data, error } = await supabase
+        .from("products_cache")
+        .select("id, altura, largura, profundidade, peso")
+        .in("id", idsProdutos);
+      if (error) throw error;
+      const mapa: Record<string, Partial<DimensoesItem>> = {};
+      for (const p of data || []) {
+        mapa[p.id] = {
+          altura: p.altura ?? undefined,
+          largura: p.largura ?? undefined,
+          comprimento: p.profundidade ?? undefined,
+          peso: p.peso ?? undefined,
+        };
+      }
+      setDimensoesProdutos(mapa);
+    } catch (e: any) {
+      setErroFrete(e?.message || "Não foi possível buscar as dimensões dos produtos.");
+    } finally {
+      setCarregandoDimensoes(false);
+    }
+  };
+
+  const dimensaoDoItem = (item: QuoteItem): Partial<DimensoesItem> => {
+    if (dimensoesManuais[item.id]) return dimensoesManuais[item.id];
+    if (item.produtoId && dimensoesProdutos[item.produtoId]) return dimensoesProdutos[item.produtoId];
+    return {};
+  };
+
+  const itemPrecisaDimensaoManual = (item: QuoteItem) => {
+    const d = dimensaoDoItem(item);
+    return !d.altura || !d.largura || !d.comprimento || !d.peso;
+  };
+
+  const calcularFrete = async () => {
+    if (!cepDestino) {
+      setErroFrete("Selecione um cliente com CEP cadastrado.");
+      return;
+    }
+    const faltando = formData.itens.some(itemPrecisaDimensaoManual);
+    if (faltando) {
+      setErroFrete("Preencha as dimensões faltantes antes de cotar.");
+      return;
+    }
+    setCotando(true);
+    setErroFrete(null);
+    setOpcoesFrete(null);
+    try {
+      const itens = formData.itens.map((it) => ({ ...dimensaoDoItem(it), quantidade: it.quantidade, valor: it.precoUnitario } as DimensoesItem & { quantidade: number; valor: number }));
+      const { data, error } = await supabase.functions.invoke("calcular-frete", {
+        body: { cepDestino, itens },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setOpcoesFrete(data?.opcoes || []);
+    } catch (e: any) {
+      setErroFrete(e?.message || "Não foi possível cotar o frete agora.");
+    } finally {
+      setCotando(false);
+    }
+  };
+
+  const aplicarCotacao = (op: { transportadora: string; preco: number; prazoDias: number | null }) => {
+    const transp = transportadoras.find(
+      (t) => t.ativo && t.nome.toLowerCase().includes(op.transportadora.toLowerCase())
+    );
+    setFormData((p) => ({
+      ...p,
+      freteTipo: p.freteTipo === "CIF" ? p.freteTipo : "FOB",
+      freteValor: op.preco,
+      transportadoraId: transp?.id || p.transportadoraId,
+      prazoEntrega: op.prazoDias ?? p.prazoEntrega,
+    }));
+    setShowFreteDialog(false);
+  };
 
   const clienteFiltrados = useMemo(() => {
     if (!searchTerm.trim()) return clientes.slice(0, 20);
@@ -580,7 +677,17 @@ export const OrcamentoForm: React.FC = () => {
 
           {/* Frete e Negociação */}
           <section className="bg-white rounded-lg border p-4">
-            <h3 className="font-medium mb-4">Frete e Prazo</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium">Frete e Prazo</h3>
+              <button
+                type="button"
+                onClick={abrirCalculoFrete}
+                disabled={formData.itens.length === 0}
+                className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Truck className="w-4 h-4" /> Calcular frete
+              </button>
+            </div>
             <div className="grid grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Tipo de Frete</label>
@@ -649,6 +756,120 @@ export const OrcamentoForm: React.FC = () => {
               </div>
             </div>
           </section>
+
+          {showFreteDialog && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+                <div className="flex items-center justify-between px-5 py-4 border-b">
+                  <h3 className="font-medium flex items-center gap-2"><Truck className="w-4 h-4" /> Cotar frete</h3>
+                  <button type="button" onClick={() => setShowFreteDialog(false)} className="text-gray-400 hover:text-gray-600">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="px-5 py-4 overflow-y-auto space-y-4">
+                  {!cepDestino && (
+                    <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      Selecione um cliente com CEP cadastrado para cotar o frete.
+                    </div>
+                  )}
+                  <p className="text-sm text-gray-500">
+                    Origem: Guarulhos/SP (CEP 07111-080) • Destino: {cepDestino ? cepDestino.replace(/(\d{5})(\d{3})/, "$1-$2") : "—"}
+                  </p>
+
+                  {carregandoDimensoes ? (
+                    <p className="text-sm text-gray-500">Buscando dimensões dos produtos...</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {formData.itens.map((item) => {
+                        const d = dimensaoDoItem(item);
+                        const precisaManual = itemPrecisaDimensaoManual(item);
+                        return (
+                          <div key={item.id} className={`border rounded-lg p-3 ${precisaManual ? "border-amber-300 bg-amber-50" : "border-gray-200"}`}>
+                            <p className="text-sm font-medium mb-2">{item.nome} <span className="text-gray-400 font-normal">x{item.quantidade}</span></p>
+                            {!precisaManual ? (
+                              <p className="text-xs text-gray-500">
+                                {d.altura}×{d.largura}×{d.comprimento}cm • {d.peso}kg
+                              </p>
+                            ) : (
+                              <div className="grid grid-cols-4 gap-2">
+                                {(["altura", "largura", "comprimento", "peso"] as const).map((campo) => (
+                                  <div key={campo}>
+                                    <label className="block text-[11px] text-gray-500 capitalize">{campo === "peso" ? "Peso (kg)" : `${campo} (cm)`}</label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      className="w-full px-2 py-1.5 text-sm border rounded"
+                                      value={dimensoesManuais[item.id]?.[campo] ?? d[campo] ?? ""}
+                                      onChange={(e) => {
+                                        const v = parseFloat(e.target.value) || 0;
+                                        setDimensoesManuais((prev) => ({
+                                          ...prev,
+                                          [item.id]: {
+                                            altura: prev[item.id]?.altura ?? d.altura ?? 0,
+                                            largura: prev[item.id]?.largura ?? d.largura ?? 0,
+                                            comprimento: prev[item.id]?.comprimento ?? d.comprimento ?? 0,
+                                            peso: prev[item.id]?.peso ?? d.peso ?? 0,
+                                            [campo]: v,
+                                          },
+                                        }));
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {erroFrete && (
+                    <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{erroFrete}</div>
+                  )}
+
+                  {opcoesFrete && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Opções encontradas</p>
+                      {opcoesFrete.length === 0 ? (
+                        <p className="text-sm text-gray-500">Nenhuma transportadora retornou cotação para esse destino/volume.</p>
+                      ) : (
+                        opcoesFrete.map((op) => (
+                          <button
+                            key={op.id}
+                            type="button"
+                            onClick={() => aplicarCotacao(op)}
+                            className="w-full flex items-center justify-between border rounded-lg px-3 py-2 text-left hover:border-blue-400 hover:bg-blue-50"
+                          >
+                            <span>
+                              <span className="font-medium">{op.transportadora}</span>
+                              <span className="text-gray-500"> • {op.servico}</span>
+                              {op.prazoDias != null && <span className="text-gray-400 text-xs"> • {op.prazoDias} dias</span>}
+                            </span>
+                            <span className="font-medium text-green-700">{formatCurrency(op.preco)}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="px-5 py-4 border-t flex justify-end gap-2">
+                  <button type="button" onClick={() => setShowFreteDialog(false)} className="px-4 py-2 text-sm rounded-lg border">
+                    Fechar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={calcularFrete}
+                    disabled={cotando || carregandoDimensoes || !cepDestino}
+                    className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {cotando ? "Cotando..." : "Cotar frete"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Observações e Anexo */}
           <section className="bg-white rounded-lg border p-4">
