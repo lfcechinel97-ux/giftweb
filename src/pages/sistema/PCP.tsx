@@ -1177,6 +1177,21 @@ export default function PCP() {
     },
   });
 
+  /* Nome de quem fez cada mudança no histórico quando não há vendedor_id
+     (gravado pelo gatilho automático do banco, que só sabe o usuario_id de
+     quem estava logado -- edição de quantidade/preço do item e a transição
+     inicial do pedido nunca passam pelo RPC que preenche vendedor_id). */
+  const { data: nomesUsuarios = [] } = useQuery<{ user_id: string; nome: string }[]>({
+    queryKey: ["sistema", "pcp", "nomes-usuarios"],
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("sistema_nomes_usuarios");
+      if (error) { console.error("[PCP] carregar nomes de usuários falhou:", error); return []; }
+      return (data ?? []) as { user_id: string; nome: string }[];
+    },
+  });
+  const nomePorUsuarioId = (id: string | null) => nomesUsuarios.find(u => u.user_id === id)?.nome || null;
+
   const { data: fornecedores = [], refetch: refetchFornecedores } = useQuery<Fornecedor[]>({
     queryKey: ["sistema", "pcp", "fornecedores"],
     staleTime: 5 * 60 * 1000,
@@ -3297,7 +3312,7 @@ export default function PCP() {
                               </span>
                             </div>
                             <p className="text-[11px] text-[var(--gw-text-muted)] mt-0.5">
-                              Alterado por: {vendedorNome(h.vendedor_id) || "não identificado"}
+                              Alterado por: {vendedorNome(h.vendedor_id) || nomePorUsuarioId(h.usuario_id) || "não identificado"}
                               {h.observacao ? ` · ${h.observacao}` : ""}
                             </p>
                           </li>
