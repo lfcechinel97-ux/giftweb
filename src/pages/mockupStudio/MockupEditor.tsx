@@ -4,13 +4,16 @@ import {
   ZoomIn, ZoomOut, Maximize, RotateCcw, Undo2, Redo2, Trash2,
   AlignCenterHorizontal, AlignCenterVertical, Download, Sparkles, Type, ImagePlus, Expand, Printer,
 } from "lucide-react";
-import type { LogoTratada, ProdutoMockup } from "./types";
+import type { LogoTratada, ProdutoMockup, Tecnica } from "./types";
+import { TECNICAS } from "./types";
 import { aplicarCurvatura } from "./wrapWarp";
 import { removerFundoBranco, paraCinza, paraPretoEBranco, paraCorUnica } from "./logoOps";
+import { refinarLogoComIA } from "./iaTratamento";
 
 interface LogoLayerData {
   kind: "logo";
   origSrc: string;
+  tecnica: Tecnica;
   removerFundo: boolean;
   modoCor: "full" | "grayscale" | "bw" | "single";
   corUnica: string;
@@ -75,6 +78,7 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
     const layerData: LogoLayerData = {
       kind: "logo",
       origSrc: src,
+      tecnica: logoInicial.tecnica,
       removerFundo: false,
       modoCor: "full",
       corUnica: "#1d4ed8",
@@ -90,7 +94,7 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
     canvas.add(img);
     canvas.setActiveObject(img);
     return img;
-  }, []);
+  }, [logoInicial.tecnica]);
 
   // Carrega (ou troca) a visão atual.
   useEffect(() => {
@@ -263,6 +267,24 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
     forcarAtualizacao();
   };
 
+  const [iaBusy, setIaBusy] = useState(false);
+  const [iaErro, setIaErro] = useState<string | null>(null);
+
+  const refinarLogoSelecionadoComIA = async (obj: FabricImage) => {
+    const data = obj.get("data") as LogoLayerData;
+    setIaBusy(true);
+    setIaErro(null);
+    try {
+      const resultado = await refinarLogoComIA(data.origSrc, data.tecnica);
+      await reprocessarLogo(obj, { origSrc: resultado.url, removerFundo: false });
+      registrarHistorico();
+    } catch (e: any) {
+      setIaErro(e?.message || "Não foi possível refinar a logo com IA agora.");
+    } finally {
+      setIaBusy(false);
+    }
+  };
+
   const exportarPNG = () => {
     const canvas = fabricRef.current;
     if (!canvas) return;
@@ -324,6 +346,9 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
               data={data as LogoLayerData}
               onChange={(patch) => reprocessarLogo(selecionado as FabricImage, patch)}
               onCommit={registrarHistorico}
+              onRefinarIA={() => refinarLogoSelecionadoComIA(selecionado as FabricImage)}
+              iaBusy={iaBusy}
+              iaErro={iaErro}
             />
           )}
           <div className="mt-4 pt-4 border-t space-y-2">
@@ -385,13 +410,6 @@ export default function MockupEditor({ produto, logoInicial, onTrocarProduto }: 
         )}
       </div>
 
-      {/* Painel lateral direito, estilo referência */}
-      <div className="w-16 border-l flex flex-col items-center py-4 gap-6 shrink-0 text-[10px] text-slate-500">
-        <div className="flex flex-col items-center gap-1 border rounded-lg p-2 bg-slate-50 w-full">
-          <Sparkles className="w-4 h-4 text-slate-400" />
-          <span className="text-center leading-tight">IA (em breve)</span>
-        </div>
-      </div>
     </div>
   );
 }
@@ -458,10 +476,38 @@ const MODOS_COR = [
   { id: "single", label: "Convert To Single Color" },
 ] as const;
 
-function LogoProperties({ data, onChange, onCommit }: { data: LogoLayerData; onChange: (patch: Partial<LogoLayerData>) => void; onCommit: () => void }) {
+function LogoProperties({ data, onChange, onCommit, onRefinarIA, iaBusy, iaErro }: {
+  data: LogoLayerData;
+  onChange: (patch: Partial<LogoLayerData>) => void;
+  onCommit: () => void;
+  onRefinarIA: () => void;
+  iaBusy: boolean;
+  iaErro: string | null;
+}) {
   return (
     <div className="space-y-3">
       <p className="text-xs font-semibold text-slate-700">IMAGE PROPERTIES</p>
+
+      <div>
+        <p className="text-[11px] text-slate-500 mb-1">Técnica</p>
+        <select
+          className="w-full px-2 py-1.5 text-xs border rounded"
+          value={data.tecnica}
+          onChange={(e) => { onChange({ tecnica: e.target.value as LogoLayerData["tecnica"] }); onCommit(); }}
+        >
+          {TECNICAS.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
+        </select>
+      </div>
+
+      <button
+        type="button"
+        onClick={onRefinarIA}
+        disabled={iaBusy}
+        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 text-xs font-medium disabled:opacity-50"
+      >
+        <Sparkles className="w-3.5 h-3.5" /> {iaBusy ? "Refinando..." : "Refinar com IA"}
+      </button>
+      {iaErro && <p className="text-[11px] text-red-600">{iaErro}</p>}
 
       <label className="flex items-center gap-2 text-xs text-slate-600">
         <input type="checkbox" checked={data.removerFundo} onChange={(e) => { onChange({ removerFundo: e.target.checked }); onCommit(); }} />

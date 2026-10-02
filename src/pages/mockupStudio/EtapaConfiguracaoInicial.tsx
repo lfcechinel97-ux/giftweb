@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Upload, FileWarning, Check, Loader2, AlertTriangle } from "lucide-react";
+import { Upload, FileWarning, Check, Loader2, AlertTriangle, Sparkles } from "lucide-react";
 import { TECNICAS, type LogoOriginal, type LogoTratada, type Tecnica } from "./types";
+import { refinarLogoComIA } from "./iaTratamento";
 
 const TIPOS_AVALIADOS = /^(image\/(png|jpe?g|svg\+xml)|application\/pdf)$/i;
 const EXT_OK = /\.(png|jpe?g|svg|pdf)$/i;
@@ -9,7 +10,8 @@ const MAX_BYTES = 15 * 1024 * 1024;
 
 /** Processamento determinístico local (sem IA): laser vira escala de cinza
  * com leve realce prateado, preservando o alpha; DTF mantém a arte original.
- * A remoção de fundo e o refino por IA entram via Lovable AI (servidor). */
+ * Serve de prévia instantânea; o refino real (remoção de fundo, acabamento)
+ * é opcional e roda via Lovable AI (botão "Refinar com IA" abaixo). */
 async function processarLogo(logo: LogoOriginal, tecnica: Tecnica): Promise<LogoTratada> {
   if (tecnica !== "laser") return { url: logo.url, tecnica };
 
@@ -53,7 +55,23 @@ export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
   const [arrastando, setArrastando] = useState(false);
   const [processando, setProcessando] = useState(false);
   const [tratada, setTratada] = useState<LogoTratada | null>(null);
+  const [refinando, setRefinando] = useState(false);
+  const [erroIA, setErroIA] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const refinarComIA = async () => {
+    if (!tratada) return;
+    setRefinando(true);
+    setErroIA(null);
+    try {
+      const resultado = await refinarLogoComIA(tratada.url, tratada.tecnica);
+      setTratada({ ...tratada, url: resultado.url, avisoQualidade: undefined });
+    } catch (e: any) {
+      setErroIA(e?.message || "Não foi possível refinar a logo com IA agora.");
+    } finally {
+      setRefinando(false);
+    }
+  };
 
   const validarEUsar = (file: File) => {
     setErro(null);
@@ -72,6 +90,7 @@ export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
     let cancelado = false;
     setProcessando(true);
     setErro(null);
+    setErroIA(null);
     processarLogo(logo, tecnica)
       .then((t) => { if (!cancelado) setTratada(t); })
       .catch((e: Error) => { if (!cancelado) setErro(e.message); })
@@ -160,7 +179,23 @@ export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
               <img src={tratada.url} alt="tratada" className="max-h-full max-w-full object-contain" />
             </div>
           </div>
-          <div className="mt-4 flex justify-end">
+          {erroIA && (
+            <div className="mt-3 flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <FileWarning className="w-4 h-4 mt-0.5 shrink-0" /><span>{erroIA}</span>
+            </div>
+          )}
+
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={refinarComIA}
+              disabled={refinando}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 text-sm font-medium disabled:opacity-50"
+              title="Remove fundo e refina o acabamento com IA, sem redesenhar a logo"
+            >
+              {refinando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              {refinando ? "Refinando..." : "Refinar com IA"}
+            </button>
             <button
               type="button"
               onClick={() => onConcluir(logo!, tratada)}
