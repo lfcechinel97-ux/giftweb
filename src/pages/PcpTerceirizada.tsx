@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader2, LogOut, Package, Upload, Boxes, Video as VideoIcon } from "lucide-react";
+import { Loader2, LogOut, Package, Upload, Boxes, Video as VideoIcon, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { sizedImage } from "@/lib/imageSize";
 import { uploadAnexoPcp, MockupUploadError } from "@/lib/uploadMockup";
+import { resumoPersonalizacao, rotuloPersonalizacao } from "@/lib/personalizacao";
+import { corDaTag, pastelizar, rotuloTag } from "@/lib/tagsPcp";
+import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 
 /* Dashboard de login próprio pra terceirizada (ex.: FLEX) -- /pcp/terceirizada.
    Mostra SÓ os produtos dela, nas 3 colunas que importam pra produção
@@ -20,6 +23,7 @@ interface LinhaTerceirizada {
   imagem_catalogo_url: string | null;
   quantidade: number | null;
   personalizacao: string | null;
+  aplicacoes: number | null;
   observacao: string | null;
   tags: string[] | null;
   teste_anexo_url: string | null;
@@ -27,8 +31,32 @@ interface LinhaTerceirizada {
   producao_anexo_tipo: string | null;
   volumes: { responsavel?: string; itens?: unknown[] } | null;
   item_posicao: number | null;
+  item_total_pedido: number | null;
   etapa_desde: string;
 }
+
+const PEDIDO_PALETTE = [
+  "#2563EB", "#F97316", "#14B8A6", "#A855F7", "#EAB308",
+  "#EC4899", "#0EA5E9", "#16A34A", "#F43F5E", "#8B5CF6",
+];
+
+/** Mesma lógica de corDoPedido do PCP interno, sem o campo pedido_cor
+    (esse dashboard não tem acesso a sistema_pedidos). */
+const corDoPedido = (pedidoNumero: string | null, producaoId: string) => {
+  const key = pedidoNumero || producaoId || "";
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return PEDIDO_PALETTE[h % PEDIDO_PALETTE.length];
+};
+
+const tempoNaEtapaCurto = (iso: string) => {
+  const horas = (Date.now() - new Date(iso).getTime()) / 3_600_000;
+  if (horas < 1) return "<1h";
+  if (horas < 24) return `${Math.floor(horas)}h`;
+  const dias = Math.floor(horas / 24);
+  const resto = Math.floor(horas % 24);
+  return resto > 0 ? `${dias}d ${resto}h` : `${dias}d`;
+};
 
 const COLUNAS = [
   { coluna: "teste_fisico_terceirizada", titulo: "Aguardando Teste", cor: "#A21CAF", corFundo: "#FAE8FF" },
@@ -253,32 +281,85 @@ function CardTerceirizada({
     }
   };
 
+  const cor = corDoPedido(item.pedido_numero, item.producao_id);
+  const tecnicaCurta = rotuloPersonalizacao(item.personalizacao);
+  const tecnica = resumoPersonalizacao({ personalizacao: item.personalizacao, aplicacoes: item.aplicacoes });
+  const tags = item.tags ?? [];
+
   return (
-    <div className="rounded-[10px] border border-[#E2E8F0] overflow-hidden bg-white">
-      <div className="flex gap-2.5 p-2.5">
-        {foto ? (
-          <img src={sizedImage(foto, 160)} alt="" className="h-[58px] w-[58px] rounded-[7px] object-cover bg-[#F1F5F9] shrink-0" />
-        ) : (
-          <div className="h-[58px] w-[58px] rounded-[7px] bg-[#F1F5F9] flex items-center justify-center shrink-0">
-            <Package className="h-5 w-5 text-[#94A3B8]" />
-          </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-semibold text-[#0F172A] leading-tight truncate" title={item.produto_nome || "—"}>
-            {item.produto_nome || "—"}
-          </p>
-          <p className="text-[11px] text-[#64748B]">
-            {item.pedido_numero ? `Pedido #${item.pedido_numero}` : ""}
-          </p>
-          <p className="text-[12.5px] font-bold text-[#0F172A] mt-0.5">{item.quantidade ?? 0} un.</p>
+    <div className="w-full rounded-[16px] overflow-hidden bg-white border border-[#E2E8F0]">
+      {/* Topo -- igual ao PCP interno: bolinha colorida do pedido, número,
+          item X/Y, e tempo nesta etapa à direita. */}
+      <div className="flex items-start justify-between gap-2 pl-3 pr-2.5 pt-2.5 pb-1.5">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="h-[7px] w-[7px] rounded-full shrink-0" style={{ backgroundColor: cor }} />
+          <OrderNumber value={item.pedido_numero ?? "—"} className="text-[13px] shrink-0" />
+          {item.item_total_pedido != null && item.item_total_pedido > 1 && (
+            <span className="text-[12px] font-medium text-[#64748B] shrink-0">
+              Item {item.item_posicao ?? 1}/{item.item_total_pedido}
+            </span>
+          )}
+        </div>
+        <span className="flex items-center gap-1 text-[11px] font-bold text-[#64748B] shrink-0">
+          <Clock className="h-[11px] w-[11px]" /> {tempoNaEtapaCurto(item.etapa_desde)}
+        </span>
+      </div>
+
+      {/* Foto grande (contain, sem cortar) com selo de técnica e quantidade
+          nos cantos inferiores -- mesmo layout do card interno. */}
+      <div className="px-3 pb-2">
+        <div className="relative h-[168px] w-full rounded-[10px] bg-[#F1F5F9] border border-[#E2E8F0] overflow-hidden">
+          {foto ? (
+            <img src={sizedImage(foto, 480)} alt="" loading="lazy" decoding="async" className="h-full w-full object-contain" />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center">
+              <Package className="h-10 w-10 text-[#94A3B8]" />
+            </div>
+          )}
+          {tecnicaCurta && (
+            <span
+              className="absolute left-1.5 bottom-1.5 text-[10px] font-bold leading-none rounded-[5px] px-[7px] py-[4px] text-white"
+              style={{ backgroundColor: "rgba(0,0,0,.78)" }}
+            >
+              {tecnicaCurta}
+            </span>
+          )}
+          <span
+            className="absolute right-1.5 bottom-1.5 leading-none rounded-[5px] px-[7px] py-[4px] text-white"
+            style={{ backgroundColor: "rgba(0,0,0,.78)" }}
+          >
+            <span className="text-[16px] font-extrabold">{item.quantidade ?? 0}</span>{" "}
+            <span className="text-[9px] font-medium">un.</span>
+          </span>
         </div>
       </div>
 
-      {item.personalizacao && (
-        <p className="px-2.5 pb-1.5 text-[11.5px] text-[#475569]">{item.personalizacao}</p>
+      <div className="px-3 pb-1.5">
+        <p
+          className="text-[13px] font-semibold text-[#0F172A] leading-tight"
+          style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+          title={item.produto_nome || undefined}
+        >
+          {item.produto_nome || "—"}
+        </p>
+        {tecnica && <p className="text-[11px] text-[#64748B] mt-0.5">{tecnica}</p>}
+      </div>
+
+      {tags.length > 0 && (
+        <div className="px-3 pb-2 flex flex-wrap gap-1">
+          {tags.map(t => (
+            <span
+              key={t}
+              className="text-[10px] leading-none rounded-[5px] px-[7px] py-[4px] whitespace-nowrap font-bold"
+              style={{ backgroundColor: pastelizar(corDaTag(t)), color: corDaTag(t) }}
+            >
+              {rotuloTag(t)}
+            </span>
+          ))}
+        </div>
       )}
 
-      <div className="px-2.5 pb-2.5">
+      <div className="px-3 pb-3">
         {coluna === "teste_fisico_terceirizada" && (
           <>
             <input ref={inputTesteRef} type="file" accept="image/*" className="hidden" onChange={handleAnexoTeste} />

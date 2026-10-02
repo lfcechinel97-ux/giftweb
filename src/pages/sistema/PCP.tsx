@@ -1086,6 +1086,14 @@ export default function PCP() {
   const [modalTerceirizadaLivre, setModalTerceirizadaLivre] = useState("");
   const [modalSaving, setModalSaving] = useState(false);
 
+  // A lista de terceirizadas fica em cache por 5min (staleTime); quem acabou
+  // de cadastrar uma em Configurações e volta pro PCP sem recarregar a
+  // página via de outra forma continuaria vendo a lista velha neste popup.
+  useEffect(() => {
+    if (galpaoTerceirizadaModal) void refetchFornecedores();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [galpaoTerceirizadaModal]);
+
   /* Popup de Expedição — abre quando o item arrastado fecha o conjunto
      (todos os itens do pedido chegam na coluna "aguardando_coleta" de uma
      vez). Volumes ficam no PEDIDO (sistema_pedidos.volumes), não no item:
@@ -1169,7 +1177,7 @@ export default function PCP() {
     },
   });
 
-  const { data: fornecedores = [] } = useQuery<Fornecedor[]>({
+  const { data: fornecedores = [], refetch: refetchFornecedores } = useQuery<Fornecedor[]>({
     queryKey: ["sistema", "pcp", "fornecedores"],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
