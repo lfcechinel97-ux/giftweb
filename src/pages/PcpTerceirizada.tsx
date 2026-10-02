@@ -748,7 +748,7 @@ function DetalheModal({
         onClick={e => e.stopPropagation()}
       >
         <div className="px-4 pt-3 pb-3 border-b border-[#E2E8F0] shrink-0">
-          <div className="flex items-start gap-2 mb-3">
+          <div className="flex items-start gap-2 mb-2">
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <p className="text-[16px] font-bold text-[#0F172A]">{item.produto_nome || "—"}</p>
@@ -762,11 +762,33 @@ function DetalheModal({
             </div>
             <button onClick={onFechar} className="text-[#64748B] text-[20px] leading-none px-1 shrink-0">×</button>
           </div>
-          {foto && (
-            <button type="button" onClick={() => setFotoAberta(true)} className="block mx-auto cursor-zoom-in" title="Ver em tamanho cheio">
-              <img src={sizedImage(foto, 640)} alt="" className="h-60 w-60 rounded-[12px] object-contain bg-[#F1F5F9] border border-[#E2E8F0]" />
-            </button>
-          )}
+
+          {/* Foto à esquerda, observação à direita -- lado a lado em vez de
+              empilhado, pra sobrar altura pro chat (era o que cortava o
+              campo de digitar). */}
+          <div className="flex gap-3 items-start">
+            {foto && (
+              <button type="button" onClick={() => setFotoAberta(true)} className="shrink-0 cursor-zoom-in" title="Ver em tamanho cheio">
+                <img src={sizedImage(foto, 480)} alt="" className="h-36 w-36 rounded-[12px] object-contain bg-[#F1F5F9] border border-[#E2E8F0]" />
+              </button>
+            )}
+            {(item.pedido_observacoes || item.observacao) && (
+              <div className="min-w-0 flex-1 space-y-1.5 max-h-36 overflow-y-auto">
+                {item.pedido_observacoes && (
+                  <div className="rounded-[8px] bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2">
+                    <p className="text-[10.5px] font-bold uppercase text-[#94A3B8] mb-0.5">Observação do pedido</p>
+                    <p className="text-[12.5px] text-[#0F172A] whitespace-pre-wrap">{item.pedido_observacoes}</p>
+                  </div>
+                )}
+                {item.observacao && (
+                  <div className="rounded-[8px] bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2">
+                    <p className="text-[10.5px] font-bold uppercase text-[#94A3B8] mb-0.5">Observação do item</p>
+                    <p className="text-[12.5px] text-[#0F172A] whitespace-pre-wrap">{item.observacao}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {fotoAberta && foto && (
@@ -781,23 +803,6 @@ function DetalheModal({
             >
               ×
             </button>
-          </div>
-        )}
-
-        {(item.pedido_observacoes || item.observacao) && (
-          <div className="px-4 pt-3 space-y-1.5 shrink-0">
-            {item.pedido_observacoes && (
-              <div className="rounded-[8px] bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2">
-                <p className="text-[10.5px] font-bold uppercase text-[#94A3B8] mb-0.5">Observação do pedido</p>
-                <p className="text-[12.5px] text-[#0F172A] whitespace-pre-wrap">{item.pedido_observacoes}</p>
-              </div>
-            )}
-            {item.observacao && (
-              <div className="rounded-[8px] bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2">
-                <p className="text-[10.5px] font-bold uppercase text-[#94A3B8] mb-0.5">Observação do item</p>
-                <p className="text-[12.5px] text-[#0F172A] whitespace-pre-wrap">{item.observacao}</p>
-              </div>
-            )}
           </div>
         )}
 
@@ -923,8 +928,12 @@ function DetalheModal({
           </div>
         )}
 
+        {/* Label + lista + campo de digitar num flex-col só, flex-1 na
+            MODAL inteira: assim só a lista de mensagens encolhe/rola
+            quando falta espaço, o campo de digitar nunca fica cortado. */}
+        <div className="flex-1 min-h-0 flex flex-col">
         <p className="px-4 pt-2 text-[10.5px] font-bold uppercase text-[#94A3B8] shrink-0">GiftChat</p>
-        <div className="flex-1 min-h-[220px] overflow-y-auto px-4 py-3 space-y-1.5" style={{ backgroundColor: "#E5DDD5" }}>
+        <div className="flex-1 min-h-[90px] overflow-y-auto px-4 py-3 space-y-1.5" style={{ backgroundColor: "#E5DDD5" }}>
           {comentarios.length === 0 ? (
             <p className="text-[13px] text-[#94A3B8] text-center py-8">Nenhuma mensagem ainda. Escreva a primeira abaixo.</p>
           ) : (
@@ -982,6 +991,7 @@ function DetalheModal({
               {enviando ? <Loader2 className="h-4 w-4 animate-spin" /> : "➤"}
             </button>
           </div>
+        </div>
         </div>
       </div>
     </div>

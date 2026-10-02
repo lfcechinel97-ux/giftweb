@@ -2948,7 +2948,7 @@ export default function PCP() {
                     própria, e o GiftChat preenche TODO o resto -- só ele rola,
                     em vez da coluna inteira rolar junto com ele. */}
                 <div className="flex flex-col min-h-0 overflow-hidden border-r border-[var(--gw-border)]">
-                <div className="shrink-0 overflow-y-auto">
+                <div className="shrink-0 overflow-y-auto max-h-[38vh]">
                   {/* Etiquetas */}
                   <div className="px-5 py-2.5 border-b border-[var(--gw-border)] space-y-1.5">
                     <Label className="gw-label flex items-center gap-1.5">
@@ -3231,7 +3231,7 @@ export default function PCP() {
                       ficar claro que é conversa, não é mais um campo de
                       formulário. flex-1: preenche todo o resto da coluna,
                       é a única parte que rola. */}
-                  <div className="px-5 py-3 flex flex-col gap-2 flex-1 min-h-[220px]">
+                  <div className="px-5 py-3 flex flex-col gap-2 flex-1 min-h-[140px]">
                     <p className="gw-label flex items-center gap-1.5 shrink-0">
                       <MessageSquare className="h-3.5 w-3.5" /> GiftChat
                     </p>
