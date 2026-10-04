@@ -3,14 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Settings } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSistemaProducts } from "@/pages/sistema/useSistemaProducts";
-import type { CaixaPosicao, LogoOriginal, ProdutoMockup, Tecnica, VisaoProduto } from "./mockupStudio/types";
+import type { LogoOriginal, ProdutoMockup, Tecnica } from "./mockupStudio/types";
 import EtapaConfiguracaoInicial from "./mockupStudio/EtapaConfiguracaoInicial";
 import EtapaProduto from "./mockupStudio/EtapaProduto";
-import EtapaPosicionamento from "./mockupStudio/EtapaPosicionamento";
+import EtapaPosicionamento, { type ResultadoPosicionamento } from "./mockupStudio/EtapaPosicionamento";
 import EtapaGeracaoFinal from "./mockupStudio/EtapaGeracaoFinal";
 import PromptsAdminDialog from "./mockupStudio/PromptsAdminDialog";
-
-interface Posicionamento { visao: VisaoProduto; box: CaixaPosicao; logoRecortada: string; cenaUrl: string; maskUrl: string }
 
 export default function MockupStudio() {
   const navigate = useNavigate();
@@ -23,7 +21,7 @@ export default function MockupStudio() {
   const [logo, setLogo] = useState<LogoOriginal | null>(null);
   const [tecnica, setTecnica] = useState<Tecnica | null>(null);
   const [produto, setProduto] = useState<ProdutoMockup | null>(null);
-  const [posicionamento, setPosicionamento] = useState<Posicionamento | null>(null);
+  const [posicionamento, setPosicionamento] = useState<ResultadoPosicionamento | null>(null);
   const [showPrompts, setShowPrompts] = useState(false);
 
   return (
@@ -57,16 +55,14 @@ export default function MockupStudio() {
           produto={produto}
           logo={logo}
           onVoltar={() => setProduto(null)}
-          onContinuar={(visao, box, logoRecortada, cenaUrl, maskUrl) => setPosicionamento({ visao, box, logoRecortada, cenaUrl, maskUrl })}
+          onContinuar={setPosicionamento}
         />
       )}
 
       {logo && tecnica && produto && posicionamento && (
         <EtapaGeracaoFinal
           produto={produto}
-          cenaUrl={posicionamento.cenaUrl}
-          maskUrl={posicionamento.maskUrl}
-          logoUrl={posicionamento.logoRecortada}
+          posicionamento={posicionamento}
           tecnica={tecnica}
           onAjustarPosicao={() => setPosicionamento(null)}
         />

@@ -55,13 +55,15 @@ serve(async (req) => {
   if (!souInterno) return json({ error: "Acesso restrito à equipe interna." }, 403);
 
   const corpo = await req.json().catch(() => ({})) as {
-    cenaBase64?: string; logoBase64?: string; maskBase64?: string; tecnica?: Tecnica; nomeProduto?: string;
+    cenaBase64?: string; logoBase64?: string; maskBase64?: string; tecnica?: Tecnica; nomeProduto?: string; tamanho?: string;
   };
-  const { cenaBase64, logoBase64, maskBase64, tecnica, nomeProduto } = corpo;
+  const { cenaBase64, logoBase64, maskBase64, tecnica, nomeProduto, tamanho } = corpo;
   if (!cenaBase64?.startsWith("data:image/")) return json({ error: "Envie o cenário como data URL." }, 400);
   if (!logoBase64?.startsWith("data:image/")) return json({ error: "Envie a logo como data URL." }, 400);
   if (!maskBase64?.startsWith("data:image/")) return json({ error: "Envie a máscara como data URL." }, 400);
   if (!tecnica || !TEMPLATES[tecnica]) return json({ error: "Técnica inválida." }, 400);
+  const TAMANHOS_VALIDOS = ["1024x1024", "1536x1024", "1024x1536"];
+  if (!tamanho || !TAMANHOS_VALIDOS.includes(tamanho)) return json({ error: "Tamanho de saída inválido." }, 400);
 
   const chave = `final_${tecnica}`;
   const { data: linhaPrompt } = await admin.from("mockup_ia_prompts").select("prompt").eq("chave", chave).maybeSingle();
@@ -90,6 +92,7 @@ serve(async (req) => {
     form.append("image[]", dataUrlParaBlob(cenaBase64), "cenario.png");
     form.append("image[]", dataUrlParaBlob(logoBase64), "logo.png");
     form.append("mask", dataUrlParaBlob(maskBase64), "mascara.png");
+    form.append("size", tamanho);
 
     resposta = await fetch("https://ai.gateway.lovable.dev/v1/images/edits", {
       method: "POST",

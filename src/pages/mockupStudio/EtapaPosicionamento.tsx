@@ -3,12 +3,24 @@ import { Canvas, FabricImage, controlsUtils } from "fabric";
 import { Loader2, RotateCcw, RotateCw, Sparkles } from "lucide-react";
 import type { CaixaPosicao, LogoOriginal, ProdutoMockup, VisaoProduto } from "./types";
 import { gerarCenario } from "./gerarMockup";
+import { ajustarParaBucket, escolherBucket, type AjusteBucket } from "./bucketImagem";
+
+export interface ResultadoPosicionamento {
+  visao: VisaoProduto;
+  logoReferencia: string;
+  cenaBucketUrl: string;
+  maskBucketUrl: string;
+  tamanhoBucket: string;
+  ajuste: AjusteBucket;
+  cenaLargura: number;
+  cenaAltura: number;
+}
 
 interface Props {
   produto: ProdutoMockup;
   logo: LogoOriginal;
   onVoltar: () => void;
-  onContinuar: (visao: VisaoProduto, box: CaixaPosicao, logoRecortada: string, cenaUrl: string, maskUrl: string) => void;
+  onContinuar: (resultado: ResultadoPosicionamento) => void;
 }
 
 interface LimitesImagem { x0: number; y0: number; x1: number; y1: number }
@@ -177,7 +189,27 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
       // de verdade que só a área marcada é editada -- contrato da API de
       // edição de imagem, não promessa do modelo.
       const maskUrl = await gerarMascara(cenaUrl, box);
-      onContinuar(visaoAtual, box, logoReferencia, cenaUrl, maskUrl);
+
+      // A API só aceita alguns tamanhos fixos de saída. Se o cenário não
+      // tiver exatamente essa proporção, ela reamostra por conta própria e
+      // a máscara deixa de bater com o resultado -- foi isso que bagunçou a
+      // mochila (alta/estreita) enquanto o copo (quase quadrado) saiu bem.
+      // Preenche (sem cortar nada) até caber exato no bucket mais parecido.
+      const [cenaImg, maskImg] = await Promise.all([carregarImagem(cenaUrl), carregarImagem(maskUrl)]);
+      const bucket = escolherBucket(cenaImg.naturalWidth, cenaImg.naturalHeight);
+      const ajusteCena = ajustarParaBucket(cenaImg, bucket, "#808080");
+      const ajusteMask = ajustarParaBucket(maskImg, bucket, "#000000");
+
+      onContinuar({
+        visao: visaoAtual,
+        logoReferencia,
+        cenaBucketUrl: ajusteCena.dataUrl,
+        maskBucketUrl: ajusteMask.dataUrl,
+        tamanhoBucket: bucket.tamanho,
+        ajuste: ajusteCena,
+        cenaLargura: cenaImg.naturalWidth,
+        cenaAltura: cenaImg.naturalHeight,
+      });
     } catch (e: any) {
       setErro(e?.message || "Não foi possível preparar os arquivos.");
     } finally {

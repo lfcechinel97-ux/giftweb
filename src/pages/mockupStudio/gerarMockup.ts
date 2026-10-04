@@ -35,9 +35,11 @@ export async function gerarCenario(params: {
 }
 
 /** Etapa C -- aplica a logo no cenário por inpainting com máscara real
- * (GPT Image 2). A posição é garantida pela máscara, não por instrução. */
+ * (GPT Image 2). A posição é garantida pela máscara, não por instrução.
+ * `tamanho` é o bucket (ex. "1024x1024") que o cenário/máscara já foram
+ * encaixados pra bater com o que a API realmente aceita como saída. */
 export async function gerarMockupFinal(params: {
-  cenaUrl: string; logoUrl: string; maskUrl: string; tecnica: Tecnica; nomeProduto: string;
+  cenaUrl: string; logoUrl: string; maskUrl: string; tecnica: Tecnica; nomeProduto: string; tamanho: string;
 }): Promise<{ url: string }> {
   const [cenaBase64, logoBase64, maskBase64] = await Promise.all([
     paraDataURL(params.cenaUrl),
@@ -45,7 +47,7 @@ export async function gerarMockupFinal(params: {
     paraDataURL(params.maskUrl),
   ]);
   const { data, error } = await supabase.functions.invoke("gerar-mockup-final", {
-    body: { cenaBase64, logoBase64, maskBase64, tecnica: params.tecnica, nomeProduto: params.nomeProduto },
+    body: { cenaBase64, logoBase64, maskBase64, tecnica: params.tecnica, nomeProduto: params.nomeProduto, tamanho: params.tamanho },
   });
   if (error) {
     let msg = error.message;
