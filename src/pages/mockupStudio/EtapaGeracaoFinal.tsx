@@ -1,51 +1,40 @@
 import { useEffect, useState } from "react";
 import { Loader2, Download, Sparkles } from "lucide-react";
-import type { CaixaPosicao, ProdutoMockup, Tecnica } from "./types";
-import { descreverPosicao } from "./posicaoDescricao";
+import type { ProdutoMockup, Tecnica } from "./types";
 import { gerarMockupFinal } from "./gerarMockup";
 import { aplicarMarcaDagua } from "./marcaDagua";
 
 interface Props {
   produto: ProdutoMockup;
-  /** Produto com a logo já colada (de verdade, por nós) no tamanho/posição
-   * exatos escolhidos na Etapa 3 -- a IA só dá acabamento, não decide mais
-   * tamanho/posição (pedir isso só em % de texto ou só um retângulo
-   * marcado não funcionava, a IA ainda tomava liberdade). */
-  composicaoUrl: string;
-  /** Logo já recortada na Etapa 3 (o que o vendedor manteve dentro do box) --
-   * não é mais o arquivo original intocado. */
+  /** Cenário já gerado na Etapa 3 (produto no ambiente, sem logo). */
+  cenaUrl: string;
+  /** Máscara real (alpha transparente = área editável) -- é ela que garante
+   * a posição/tamanho/ângulo, não mais texto nem composição "colada". */
+  maskUrl: string;
+  /** Logo já recortada na Etapa 3 (o que o vendedor manteve dentro do box). */
   logoUrl: string;
   tecnica: Tecnica;
-  box: CaixaPosicao;
   onAjustarPosicao: () => void;
 }
 
 /**
- * Etapa 4: a única chamada de IA do fluxo inteiro. Substitui por completo o
- * antigo editor com filtros locais (wrap around, brilho, rotação, cor) --
- * a IA já devolve o mockup pronto e fotorrealista. Depois disso só entra
- * uma marca d'água leve (logo Gift Web), aplicada localmente.
+ * Etapa 4: a única chamada de IA que ainda falta -- aplica a logo no
+ * cenário por INPAINTING COM MÁSCARA (GPT Image 2). A área fora da máscara
+ * é preservada pela própria API, não por instrução -- é isso que resolve o
+ * problema de posição/tamanho/ângulo que nem composição colada resolvia
+ * sozinha (o modelo anterior resintetizava a imagem toda e recentralizava).
+ * Depois só entra uma marca d'água leve (Gift Web), aplicada localmente.
  */
-export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao }: Props) {
+export default function EtapaGeracaoFinal({ produto, cenaUrl, maskUrl, logoUrl, tecnica, onAjustarPosicao }: Props) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<string | null>(null);
-
-  const posicao = descreverPosicao(box);
-  const pct = Math.round(box.wPct);
 
   const gerar = async () => {
     setCarregando(true);
     setErro(null);
     try {
-      const r = await gerarMockupFinal({
-        produtoUrl: composicaoUrl,
-        logoUrl,
-        tecnica,
-        nomeProduto: produto.nome,
-        pct,
-        posicao,
-      });
+      const r = await gerarMockupFinal({ cenaUrl, maskUrl, logoUrl, tecnica, nomeProduto: produto.nome });
       const comMarca = await aplicarMarcaDagua(r.url);
       setResultado(comMarca);
     } catch (e: any) {
@@ -61,7 +50,7 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
     <div className="max-w-2xl mx-auto py-10 px-4 flex flex-col items-center">
       <h2 className="text-lg font-semibold text-slate-800 mb-1 self-start">Mockup final</h2>
       <p className="text-sm text-slate-500 mb-6 self-start">
-        Gerado por IA a partir da foto original do produto e da logo recortada na etapa anterior -- sem edição manual depois.
+        Logo aplicada por IA na área exata marcada na etapa anterior -- sem edição manual depois.
       </p>
 
       <div className="w-full border rounded-xl bg-slate-50 flex items-center justify-center min-h-[320px] overflow-hidden">

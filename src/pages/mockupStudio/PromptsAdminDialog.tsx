@@ -3,9 +3,10 @@ import { X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const CHAVES = [
-  { chave: "final_laser", label: "Gravação a Laser" },
-  { chave: "final_dtf_uv", label: "DTF UV" },
-  { chave: "final_dtf_textil", label: "DTF Têxtil" },
+  { chave: "cenario_padrao", label: "Cenário (Etapa 3, antes da logo)" },
+  { chave: "final_laser", label: "Acabamento — Gravação a Laser" },
+  { chave: "final_dtf_uv", label: "Acabamento — DTF UV" },
+  { chave: "final_dtf_textil", label: "Acabamento — DTF Têxtil" },
 ] as const;
 
 interface Props {
@@ -57,10 +58,10 @@ export default function PromptsAdminDialog({ onClose }: Props) {
         </div>
         <div className="px-5 py-4 overflow-y-auto space-y-5">
           <p className="text-[11px] text-slate-400">
-            Use <code className="bg-slate-100 px-1 rounded">{"{produto}"}</code> pro nome do produto. Tamanho/posição/ângulo da logo já
-            vêm garantidos (a Etapa 3 cola a logo de verdade na foto antes de mandar pra IA) -- esse prompt só descreve o ACABAMENTO
-            (textura, brilho, relevo). Escreva curto e descritivo: listas de "não faça isso" e pedidos de resolução específica pioram o
-            resultado.
+            Use <code className="bg-slate-100 px-1 rounded">{"{produto}"}</code> pro nome do produto. O prompt de <b>Cenário</b> roda antes
+            da logo existir (só descreve o ambiente/iluminação ao redor do produto). Os de <b>Acabamento</b> rodam com a logo já travada
+            numa máscara (tamanho/posição/ângulo garantidos) -- só descrevem a textura/brilho/relevo da personalização. Escreva curto e
+            descritivo: listas de "não faça isso" e pedidos de resolução específica pioram o resultado.
           </p>
           {carregando ? (
             <p className="text-sm text-slate-400 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Carregando...</p>

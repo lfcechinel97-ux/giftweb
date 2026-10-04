@@ -10,7 +10,7 @@ import EtapaPosicionamento from "./mockupStudio/EtapaPosicionamento";
 import EtapaGeracaoFinal from "./mockupStudio/EtapaGeracaoFinal";
 import PromptsAdminDialog from "./mockupStudio/PromptsAdminDialog";
 
-interface Posicionamento { visao: VisaoProduto; box: CaixaPosicao; logoRecortada: string; composicao: string }
+interface Posicionamento { visao: VisaoProduto; box: CaixaPosicao; logoRecortada: string; cenaUrl: string; maskUrl: string }
 
 export default function MockupStudio() {
   const navigate = useNavigate();
@@ -57,17 +57,17 @@ export default function MockupStudio() {
           produto={produto}
           logo={logo}
           onVoltar={() => setProduto(null)}
-          onContinuar={(visao, box, logoRecortada, composicao) => setPosicionamento({ visao, box, logoRecortada, composicao })}
+          onContinuar={(visao, box, logoRecortada, cenaUrl, maskUrl) => setPosicionamento({ visao, box, logoRecortada, cenaUrl, maskUrl })}
         />
       )}
 
       {logo && tecnica && produto && posicionamento && (
         <EtapaGeracaoFinal
           produto={produto}
-          composicaoUrl={posicionamento.composicao}
+          cenaUrl={posicionamento.cenaUrl}
+          maskUrl={posicionamento.maskUrl}
           logoUrl={posicionamento.logoRecortada}
           tecnica={tecnica}
-          box={posicionamento.box}
           onAjustarPosicao={() => setPosicionamento(null)}
         />
       )}
