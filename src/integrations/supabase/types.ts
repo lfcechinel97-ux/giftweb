@@ -187,6 +187,24 @@ export type Database = {
         }
         Relationships: []
       }
+      mockup_cenas: {
+        Row: {
+          cena_url: string
+          criado_em: string
+          visao_id: string
+        }
+        Insert: {
+          cena_url: string
+          criado_em?: string
+          visao_id: string
+        }
+        Update: {
+          cena_url?: string
+          criado_em?: string
+          visao_id?: string
+        }
+        Relationships: []
+      }
       mockup_ia_prompts: {
         Row: {
           atualizado_em: string
