@@ -23,6 +23,7 @@ interface Props {
   onAjustarPosicao: () => void;
   onGerado: (geracao: Geracao) => void;
   onNovoMockup: () => void;
+  cliente: string;
 }
 
 /**
@@ -31,7 +32,7 @@ interface Props {
  * a IA já devolve o mockup pronto e fotorrealista. Depois disso só entra
  * uma marca d'água leve (logo Gift Web), aplicada localmente.
  */
-export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao, onGerado, onNovoMockup }: Props) {
+export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao, onGerado, onNovoMockup, cliente }: Props) {
   const cor = COR_TECNICA[tecnica];
   const nomeTecnica = TECNICAS.find((t) => t.id === tecnica)?.nome ?? tecnica;
   const [carregando, setCarregando] = useState(true);
@@ -65,6 +66,7 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
         tecnica,
         nomeProduto: produto.nome,
         produtoCodigo: produto.codigoAmigavel,
+        cliente: cliente || undefined,
         pct,
         posicao,
       });
@@ -87,7 +89,7 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className={ui.titulo}>Mockup final</h2>
-            <p className={ui.subtitulo}>{produto.nome} · {produto.codigoAmigavel}</p>
+            <p className={ui.subtitulo}>{produto.nome} · {produto.codigoAmigavel}{cliente && <> · <span className="font-semibold text-[var(--gw-text-secondary)]">{cliente}</span></>}</p>
           </div>
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${cor.fundo} ${cor.texto}`}>
             <span className={`w-2 h-2 rounded-full bg-gradient-to-br ${cor.solido}`} />

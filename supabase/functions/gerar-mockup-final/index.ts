@@ -52,14 +52,14 @@ serve(async (req) => {
   const { data: quem, error: erroQuem } = await chamador.auth.getUser();
   if (erroQuem || !quem?.user) return json({ error: "Sessão inválida." }, 401);
   const admin = createClient(url, serviceKey);
-  const { data: souInterno } = await admin.from("admin_users").select("id").eq("id", quem.user.id).maybeSingle();
+  const { data: souInterno } = await admin.from("admin_users").select("id, nome, email").eq("id", quem.user.id).maybeSingle();
   if (!souInterno) return json({ error: "Acesso restrito à equipe interna." }, 403);
 
   const corpo = await req.json().catch(() => ({})) as {
     produtoBase64?: string; logoBase64?: string; tecnica?: Tecnica;
-    nomeProduto?: string; produtoCodigo?: string; pct?: number; posicao?: string;
+    nomeProduto?: string; produtoCodigo?: string; cliente?: string; pct?: number; posicao?: string;
   };
-  const { produtoBase64, logoBase64, tecnica, nomeProduto, produtoCodigo, pct, posicao } = corpo;
+  const { produtoBase64, logoBase64, tecnica, nomeProduto, produtoCodigo, cliente, pct, posicao } = corpo;
   if (!produtoBase64?.startsWith("data:image/")) return json({ error: "Envie a foto do produto como data URL." }, 400);
   if (!logoBase64?.startsWith("data:image/")) return json({ error: "Envie a logo como data URL." }, 400);
   if (!tecnica || !TEMPLATES[tecnica]) return json({ error: "Técnica inválida." }, 400);
@@ -200,6 +200,8 @@ serve(async (req) => {
       user_id: quem.user.id,
       produto_nome: nomeProduto,
       produto_codigo: produtoCodigo || null,
+      cliente: cliente?.trim().slice(0, 120) || null,
+      vendedor_nome: souInterno.nome || souInterno.email,
       tecnica,
       modelo: MODELO,
       tokens_entrada: tokensEntrada,

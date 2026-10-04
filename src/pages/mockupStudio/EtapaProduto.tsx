@@ -6,11 +6,12 @@ import { ui } from "./ui";
 
 interface Props {
   onSelecionar: (produto: ProdutoMockup) => void;
-  /** Códigos dos produtos mais usados no Mockup Studio, já ordenados. */
-  codigosRecentes: string[];
+  /** Produtos mais usados no Mockup Studio, já ordenados. */
+  recentes: SistemaProduct[];
+  carregandoRecentes: boolean;
 }
 
-export default function EtapaProduto({ onSelecionar, codigosRecentes }: Props) {
+export default function EtapaProduto({ onSelecionar, recentes, carregandoRecentes }: Props) {
   const { parentProducts, searchParents, getParentWithVariants, isLoading } = useSistemaProducts();
   const [termo, setTermo] = useState("");
   const [resultados, setResultados] = useState<SistemaProduct[]>([]);
@@ -18,21 +19,6 @@ export default function EtapaProduto({ onSelecionar, codigosRecentes }: Props) {
   const [grupo, setGrupo] = useState<{ parent: SistemaProduct; variants: SistemaProduct[] } | null>(null);
   const [variante, setVariante] = useState<SistemaProduct | null>(null);
   const [abrindo, setAbrindo] = useState<string | null>(null);
-  const [recentes, setRecentes] = useState<SistemaProduct[]>([]);
-
-  const chaveRecentes = codigosRecentes.join("|");
-  useEffect(() => {
-    if (!codigosRecentes.length) { setRecentes([]); return; }
-    let cancelado = false;
-    Promise.all(codigosRecentes.map((c) => searchParents(c, 1).then((r) => r[0]).catch(() => undefined)))
-      .then((lista) => {
-        if (cancelado) return;
-        const vistos = new Set<string>();
-        setRecentes(lista.filter((p): p is SistemaProduct => !!p && !vistos.has(p.id) && !!vistos.add(p.id)));
-      });
-    return () => { cancelado = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chaveRecentes]);
 
   const idsRecentes = new Set(recentes.map((p) => p.id));
   const sugestoes = parentProducts.filter((p) => p.has_image && !idsRecentes.has(p.id)).slice(0, 18);
@@ -201,8 +187,16 @@ export default function EtapaProduto({ onSelecionar, codigosRecentes }: Props) {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{resultados.map(cartao)}</div>
           )
-        ) : isLoading ? (
-          <p className="text-sm text-[var(--gw-text-muted)] flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Carregando catálogo...</p>
+        ) : isLoading || carregandoRecentes ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {Array.from({ length: 6 }, (_, i) => (
+              <div key={i} className="rounded-2xl border border-[var(--gw-border)] p-2.5 animate-pulse">
+                <div className="aspect-square rounded-xl bg-[var(--gw-surface-alt)] mb-2.5" />
+                <div className="h-3 rounded bg-[var(--gw-surface-alt)] w-3/4 mb-1.5" />
+                <div className="h-2.5 rounded bg-[var(--gw-surface-alt)] w-1/3" />
+              </div>
+            ))}
+          </div>
         ) : (
           <>
             {recentes.length > 0 && (

@@ -1,42 +1,80 @@
 import { useRef, useState } from "react";
-import { Upload, FileWarning, Check, ArrowRight, Zap, Sparkles, Shirt, type LucideIcon } from "lucide-react";
+import type { PDFDocumentProxy } from "pdfjs-dist";
+import { Upload, FileWarning, Check, ArrowRight, Zap, Sparkles, Shirt, Loader2, FileText, UserRound, type LucideIcon } from "lucide-react";
 import { TECNICAS, type LogoOriginal, type Tecnica } from "./types";
 import { COR_TECNICA, ui } from "./ui";
+import { abrirPdf, renderizarPagina } from "./pdfLogo";
 
 const ICONE_TECNICA: Record<Tecnica, LucideIcon> = { laser: Zap, dtf_uv: Sparkles, dtf_textil: Shirt };
 
-const TIPOS_AVALIADOS = /^(image\/(png|jpe?g|svg\+xml)|application\/pdf)$/i;
-const EXT_OK = /\.(png|jpe?g|svg|pdf)$/i;
-const RASTERIZAVEL = /^image\/(png|jpe?g)$/i;
+const EXT_OK = /\.(png|jpe?g|pdf)$/i;
+const EH_PDF = (f: File) => f.type === "application/pdf" || /\.pdf$/i.test(f.name);
+const RASTER = /^image\/(png|jpe?g)$/i;
 const MAX_BYTES = 15 * 1024 * 1024;
 
 interface Props {
-  onConcluir: (logo: LogoOriginal, tecnica: Tecnica) => void;
+  onConcluir: (logo: LogoOriginal, tecnica: Tecnica, cliente: string) => void;
 }
 
 /**
- * Etapa 1 do novo fluxo: só recolhe a logo original e a técnica -- nenhuma
- * chamada de IA acontece aqui. O tratamento da logo (remover fundo,
- * acabamento) saiu inteiramente pra Etapa 4, numa única geração final que já
- * usa o arquivo original sem pré-processamento nenhum.
+ * Etapa 1: só recolhe a logo, a técnica e (opcional) a identificação do
+ * cliente -- nenhuma chamada de IA acontece aqui. PDF vira PNG da página
+ * escolhida pelo vendedor, já recortada até a arte.
  */
 export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
   const [logo, setLogo] = useState<LogoOriginal | null>(null);
   const [tecnica, setTecnica] = useState<Tecnica | null>(null);
+  const [cliente, setCliente] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [arrastando, setArrastando] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const validarEUsar = (file: File) => {
+  const [pdf, setPdf] = useState<{ doc: PDFDocumentProxy; arquivo: File } | null>(null);
+  const [pagina, setPagina] = useState(1);
+  const [renderizando, setRenderizando] = useState(false);
+
+  const usarPagina = async (doc: PDFDocumentProxy, arquivo: File, numero: number) => {
+    setPagina(numero);
+    setRenderizando(true);
     setErro(null);
-    const tipoOk = TIPOS_AVALIADOS.test(file.type) || EXT_OK.test(file.name);
-    if (!tipoOk) { setErro("Formato não suportado. Use PNG, JPG, JPEG, SVG ou PDF."); return; }
+    try {
+      const png = await renderizarPagina(doc, numero);
+      setLogo({ file: arquivo, url: URL.createObjectURL(png), nome: `${arquivo.name} · página ${numero}` });
+    } catch (e: any) {
+      setLogo(null);
+      setErro(e?.message || "Não foi possível ler essa página do PDF.");
+    } finally {
+      setRenderizando(false);
+    }
+  };
+
+  const validarEUsar = async (file: File) => {
+    setErro(null);
+    if (!(RASTER.test(file.type) || EXT_OK.test(file.name))) { setErro("Formato não suportado. Use PNG, JPG ou PDF."); return; }
     if (file.size > MAX_BYTES) { setErro(`Arquivo de ${(file.size / 1024 / 1024).toFixed(1)} MB excede o limite de 15 MB.`); return; }
-    if (!RASTERIZAVEL.test(file.type)) { setErro("Por enquanto o posicionamento só funciona com PNG ou JPG. Envie uma versão raster da logo."); return; }
+    if (EH_PDF(file)) {
+      setRenderizando(true);
+      try {
+        const doc = await abrirPdf(file);
+        setPdf({ doc, arquivo: file });
+        await usarPagina(doc, file, 1);
+      } catch {
+        setRenderizando(false);
+        setErro("Não foi possível abrir o PDF.");
+      }
+      return;
+    }
+    setPdf(null);
     setLogo({ file, url: URL.createObjectURL(file), nome: file.name });
   };
 
   const handleFiles = (files: FileList | null) => { const f = files?.[0]; if (f) validarEUsar(f); };
+
+  const trocarPagina = (valor: number) => {
+    if (!pdf || !Number.isFinite(valor)) return;
+    const n = Math.min(Math.max(1, Math.round(valor)), pdf.doc.numPages);
+    if (n !== pagina || !logo) usarPagina(pdf.doc, pdf.arquivo, n);
+  };
 
   return (
     <div className={ui.pagina}>
@@ -60,7 +98,12 @@ export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
                     : "border-[var(--gw-border-strong)] bg-[var(--gw-surface-alt)] hover:border-[#2563EB] hover:bg-[var(--gw-blue-soft)]"
               }`}
             >
-              {logo ? (
+              {renderizando ? (
+                <>
+                  <Loader2 className="w-8 h-8 animate-spin text-[#2563EB] mb-2" />
+                  <p className="text-sm text-[var(--gw-text-muted)]">Lendo o PDF...</p>
+                </>
+              ) : logo ? (
                 <>
                   <img src={logo.url} alt={logo.nome} className="max-h-36 max-w-full object-contain drop-shadow-sm" />
                   <p className="text-[11px] text-[var(--gw-text-muted)] mt-3 truncate max-w-full">{logo.nome} · clique pra trocar</p>
@@ -71,11 +114,42 @@ export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
                     <Upload className="w-6 h-6 text-white" />
                   </div>
                   <p className="text-sm font-semibold text-[var(--gw-text)]">Arraste ou clique para enviar</p>
-                  <p className="text-[11px] text-[var(--gw-text-muted)] mt-1">PNG ou JPG — até 15 MB</p>
+                  <p className="text-[11px] text-[var(--gw-text-muted)] mt-1">PNG, JPG ou PDF — até 15 MB</p>
                 </>
               )}
-              <input ref={inputRef} type="file" accept=".png,.jpg,.jpeg,.svg,.pdf" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+              <input ref={inputRef} type="file" accept=".png,.jpg,.jpeg,.pdf" className="hidden" onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }} />
             </div>
+
+            {pdf && (
+              <div className="mt-3 flex items-center gap-2 rounded-xl border border-[var(--gw-border)] bg-[var(--gw-surface-alt)] px-3 py-2">
+                <FileText className="w-4 h-4 text-[#E5484D] shrink-0" />
+                <span className="text-sm text-[var(--gw-text-secondary)]">Página da logo</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={pdf.doc.numPages}
+                  value={pagina}
+                  onChange={(e) => trocarPagina(Number(e.target.value))}
+                  className="w-16 px-2 py-1 text-sm font-semibold text-[var(--gw-text)] bg-white border border-[var(--gw-border)] rounded-lg text-center focus:outline-none focus:border-[#2563EB]"
+                />
+                <span className="text-sm text-[var(--gw-text-muted)]">de {pdf.doc.numPages}</span>
+              </div>
+            )}
+
+            <label className="block mt-4">
+              <span className={`${ui.rotulo} block`}>Cliente <span className="normal-case tracking-normal font-normal text-[var(--gw-text-muted)]">(opcional)</span></span>
+              <div className="relative">
+                <UserRound className="w-4 h-4 text-[var(--gw-text-muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={cliente}
+                  onChange={(e) => setCliente(e.target.value)}
+                  maxLength={120}
+                  placeholder="Nome ou telefone do cliente"
+                  className="w-full pl-10 pr-3 py-2.5 bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] rounded-xl text-sm text-[var(--gw-text)] placeholder:text-[var(--gw-text-muted)] focus:outline-none focus:bg-white focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10 transition-all"
+                />
+              </div>
+            </label>
           </div>
 
           <div>
@@ -122,8 +196,8 @@ export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
         <div className="mt-8 flex justify-end">
           <button
             type="button"
-            disabled={!logo || !tecnica}
-            onClick={() => logo && tecnica && onConcluir(logo, tecnica)}
+            disabled={!logo || !tecnica || renderizando}
+            onClick={() => logo && tecnica && onConcluir(logo, tecnica, cliente.trim())}
             className={ui.btnPrimario}
           >
             Continuar <ArrowRight className="w-4 h-4" />

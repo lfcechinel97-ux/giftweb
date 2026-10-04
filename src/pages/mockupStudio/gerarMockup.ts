@@ -20,6 +20,7 @@ interface GerarMockupParams {
   tecnica: Tecnica;
   nomeProduto: string;
   produtoCodigo?: string;
+  cliente?: string;
   pct: number;
   posicao: string;
 }
@@ -40,6 +41,7 @@ export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url
       tecnica: params.tecnica,
       nomeProduto: params.nomeProduto,
       produtoCodigo: params.produtoCodigo,
+      cliente: params.cliente,
       pct: params.pct,
       posicao: params.posicao,
     },

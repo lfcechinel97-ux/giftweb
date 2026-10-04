@@ -11,6 +11,7 @@ import EtapaGeracaoFinal from "./mockupStudio/EtapaGeracaoFinal";
 import PromptsAdminDialog from "./mockupStudio/PromptsAdminDialog";
 import HistoricoGeracoes from "./mockupStudio/HistoricoGeracoes";
 import { assinar, listarGeracoes, type Geracao } from "./mockupStudio/historico";
+import { useProdutosRecentes } from "./mockupStudio/useProdutosRecentes";
 
 interface Posicionamento { visao: VisaoProduto; box: CaixaPosicao; logoRecortada: string; composicao: string }
 
@@ -18,7 +19,7 @@ const ETAPAS = ["Logo e técnica", "Produto", "Posição", "Mockup"];
 
 export default function MockupStudio() {
   const navigate = useNavigate();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, userId } = useUserRole();
   // Dispara a busca do catálogo assim que o Mockup Studio abre, não só
   // quando o vendedor chega na etapa de produto -- com sorte já está em
   // cache quando ele chegar lá.
@@ -26,6 +27,7 @@ export default function MockupStudio() {
 
   const [logo, setLogo] = useState<LogoOriginal | null>(null);
   const [tecnica, setTecnica] = useState<Tecnica | null>(null);
+  const [cliente, setCliente] = useState("");
   const [produto, setProduto] = useState<ProdutoMockup | null>(null);
   const [posicionamento, setPosicionamento] = useState<Posicionamento | null>(null);
   const [showPrompts, setShowPrompts] = useState(false);
@@ -46,12 +48,13 @@ export default function MockupStudio() {
     setGeracoes((atual) => [assinada, ...atual.filter((x) => x.id !== g.id)]);
   };
 
-  // Produtos mais usados nas gerações (frequência, desempate pela mais
-  // recente), um por grupo de prefixo -- é o que aparece antes de digitar.
+  // Produtos mais usados nas gerações DO PRÓPRIO vendedor (admin recebe as
+  // de todos no histórico), por frequência com desempate pela mais recente,
+  // um por grupo de prefixo -- é o que aparece antes de digitar.
   const codigosRecentes = useMemo(() => {
     const porPrefixo = new Map<string, { codigo: string; n: number; ultimo: string }>();
     for (const g of geracoes) {
-      if (!g.produto_codigo) continue;
+      if (!g.produto_codigo || g.user_id !== userId) continue;
       const prefixo = g.produto_codigo.split("-")[0];
       const atual = porPrefixo.get(prefixo);
       if (!atual) porPrefixo.set(prefixo, { codigo: g.produto_codigo, n: 1, ultimo: g.criado_em });
@@ -61,7 +64,8 @@ export default function MockupStudio() {
       .sort((a, b) => b.n - a.n || b.ultimo.localeCompare(a.ultimo))
       .slice(0, 12)
       .map((x) => x.codigo);
-  }, [geracoes]);
+  }, [geracoes, userId]);
+  const { recentes, carregando: carregandoRecentes } = useProdutosRecentes(codigosRecentes, carregandoHistorico || !userId);
 
   const etapaAtual = !logo ? 0 : !produto ? 1 : !posicionamento ? 2 : 3;
 
@@ -78,6 +82,7 @@ export default function MockupStudio() {
     setProduto(null);
     setLogo(null);
     setTecnica(null);
+    setCliente("");
   };
 
   return (
@@ -110,7 +115,7 @@ export default function MockupStudio() {
       </header>
 
       <div className="flex flex-1 min-h-0">
-        <HistoricoGeracoes geracoes={geracoes} carregando={carregandoHistorico} erro={erroHistorico} />
+        <HistoricoGeracoes geracoes={geracoes} carregando={carregandoHistorico} erro={erroHistorico} meuId={userId} />
 
         {/* scrollbar-gutter fixo: sem ele a barra de rolagem aparecia/sumia
             conforme a altura do conteúdo mudava e a tela "balançava". */}
@@ -118,11 +123,11 @@ export default function MockupStudio() {
           <Etapas atual={etapaAtual} />
 
           {!logo && (
-            <EtapaConfiguracaoInicial onConcluir={(l, t) => { setLogo(l); setTecnica(t); }} />
+            <EtapaConfiguracaoInicial onConcluir={(l, t, c) => { setLogo(l); setTecnica(t); setCliente(c); }} />
           )}
 
           {logo && tecnica && !produto && (
-            <EtapaProduto onSelecionar={setProduto} codigosRecentes={codigosRecentes} />
+            <EtapaProduto onSelecionar={setProduto} recentes={recentes} carregandoRecentes={carregandoRecentes} />
           )}
 
           {logo && tecnica && produto && !posicionamento && (
@@ -144,6 +149,7 @@ export default function MockupStudio() {
               onAjustarPosicao={() => setPosicionamento(null)}
               onGerado={registrarGeracao}
               onNovoMockup={novoMockup}
+              cliente={cliente}
             />
           )}
         </main>
