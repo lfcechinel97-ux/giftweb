@@ -23,24 +23,16 @@ type Tecnica = "laser" | "dtf_uv" | "dtf_textil";
 
 const TEMPLATES: Record<Tecnica, string> = {
   laser:
-    "Coloque essa logo como se estivesse personalizada a fiber laser no {produto}. Aspecto prateado brilhante " +
-    "homogêneo, como gravação real em metal. A logo deve ocupar cerca de {pct}% da largura visível do produto, " +
-    "posicionada {posicao}. Mantenha as letras e o desenho da logo idênticos ao original. Coloque o produto em um " +
-    "cenário de mostruário B2B profissional, pronto para enviar ao cliente.",
+    "A logo já colada no {produto} deve parecer personalizada a fiber laser: aspecto prateado brilhante " +
+    "homogêneo, como gravação real em metal.",
   dtf_uv:
-    "Coloque essa logo como se estivesse personalizada em DTF UV no {produto}: mantenha as cores originais da " +
-    "logo (não deixe monocromática nem prateada, isso é acabamento de laser, não de DTF UV), com uma camada de " +
-    "verniz bem visível por cima -- brilhante, com leve relevo 3D e reflexo de luz na superfície impressa. A logo " +
-    "deve ocupar cerca de {pct}% da largura visível do produto, posicionada {posicao}. Mantenha as letras e o " +
-    "desenho da logo idênticos ao original. Coloque o produto em um cenário de mostruário B2B profissional, " +
-    "pronto para enviar ao cliente.",
+    "A logo já colada no {produto} deve parecer personalizada em DTF UV: mantenha as cores originais da logo " +
+    "(não deixe monocromática nem prateada, isso é acabamento de laser, não de DTF UV), com uma camada de verniz " +
+    "bem visível por cima -- brilhante, com leve relevo 3D e reflexo de luz na superfície impressa.",
   dtf_textil:
-    "Coloque essa logo como se estivesse personalizada em DTF têxtil no {produto}: mantenha as cores originais " +
-    "da logo (não deixe monocromática nem prateada, isso é acabamento de laser, não de DTF têxtil), acabamento " +
-    "fosco (sem brilho de verniz) e com a trama do tecido levemente visível por baixo da estampa. A logo deve " +
-    "ocupar cerca de {pct}% da largura visível do produto, posicionada {posicao}. Mantenha as letras e o desenho " +
-    "da logo idênticos ao original. Coloque o produto em um cenário de mostruário B2B profissional, pronto para " +
-    "enviar ao cliente.",
+    "A logo já colada no {produto} deve parecer personalizada em DTF têxtil: mantenha as cores originais da " +
+    "logo (não deixe monocromática nem prateada, isso é acabamento de laser, não de DTF têxtil), acabamento " +
+    "fosco (sem brilho de verniz) e com a trama do tecido levemente visível por baixo da estampa.",
 };
 
 serve(async (req) => {
@@ -80,18 +72,40 @@ serve(async (req) => {
     .replace(/\{posicao\}/g, posicao);
 
   // Instrução fixa (não editável pelo admin -- é estrutural, não de
-  // acabamento): a primeira imagem já vem com um retângulo tracejado
-  // marcando onde/quão grande a logo deve ficar -- a IA segue marcação
-  // visual muito melhor do que % em texto sozinho, que estava sendo
-  // ignorado. Também trava a logo do cliente só no produto: nada de
-  // vazar pra parede, cartaz, caixa ou qualquer outro item do cenário --
-  // o resto da cena é sempre neutro/genérico, nunca com a marca do cliente.
+  // acabamento): a primeira imagem já mostra a logo colada no produto, no
+  // tamanho/posição exatos (marcar só com texto ou com um retângulo não
+  // bastava, a IA ainda tomava liberdade) -- a IA só pode dar acabamento,
+  // nunca mover/redimensionar. Também permite um cenário rico e realista
+  // de novo (antes tinha ficado genérico demais), mas trava a logo do
+  // cliente só no produto principal -- se quiser decorar o fundo com
+  // alguma marca, só pode ser a Gift Web (terceira imagem).
   const prompt =
-    "A primeira imagem mostra o produto com um retângulo tracejado rosa marcando exatamente onde a logo deve " +
-    "ficar e o tamanho que ela deve ter -- aplique a logo (segunda imagem) nesse local específico, do tamanho " +
-    "marcado pelo retângulo, substituindo o retângulo por completo (ele não deve aparecer no resultado). A logo " +
-    "do cliente deve aparecer SOMENTE sobre o produto, nunca em paredes, cartazes, caixas, roupas, telas ou " +
-    "qualquer outro objeto do cenário -- o resto da cena deve ficar neutro e genérico. " + promptTecnica;
+    "A primeira imagem já mostra o produto com a logo do cliente colada exatamente no tamanho e na posição " +
+    "corretos -- não mova, não redimensione e não reposicione essa logo de jeito nenhum, ela já está certa. Sua " +
+    "única tarefa é fazer ela parecer uma personalização real do produto (não um adesivo colado por cima): " +
+    "acabamento, sombra de contato com a superfície, leve ajuste de perspectiva se a superfície for curva. A " +
+    "segunda imagem é a logo do cliente em alta qualidade, use como referência de cor e nitidez. Capriche no " +
+    "cenário: ambiente de mostruário profissional, com contexto realista ao fundo (prateleiras, outros produtos " +
+    "desfocados, mesa, iluminação de estúdio). A logo do cliente só pode aparecer sobre o produto principal -- se " +
+    "fizer sentido algum elemento de marca aparecer em outro lugar da cena (parede, sinalização, caixa ao fundo), " +
+    "use a logo da Gift Web Brindes (terceira imagem), nunca a logo do cliente. " + promptTecnica;
+
+  // Logo da Gift Web pra IA usar em elementos secundários do cenário (nunca
+  // a logo do cliente) -- buscada aqui no servidor, não precisa vir do
+  // client. Se falhar por algum motivo, segue sem ela (só perde esse
+  // detalhe, não trava a geração).
+  const partesImagens = [
+    { inlineData: { mimeType: mimeDaDataUrl(produtoBase64), data: base64DaDataUrl(produtoBase64) } },
+    { inlineData: { mimeType: mimeDaDataUrl(logoBase64), data: base64DaDataUrl(logoBase64) } },
+  ];
+  try {
+    const logoGiftWeb = await fetch("https://giftwebbrindes.com.br/logos/giftweb-logo.png");
+    if (logoGiftWeb.ok) {
+      const buffer = await logoGiftWeb.arrayBuffer();
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+      partesImagens.push({ inlineData: { mimeType: "image/png", data: base64 } });
+    }
+  } catch { /* segue sem a logo da Gift Web */ }
 
   // Modelo Gemini: nem /v1/chat/completions (é só-de-imagem) nem
   // /v1/images/edits (esse é o formato OpenAI/DALL-E) -- é /v1/images/
@@ -109,11 +123,7 @@ serve(async (req) => {
         contents: [
           {
             role: "user",
-            parts: [
-              { text: prompt },
-              { inlineData: { mimeType: mimeDaDataUrl(produtoBase64), data: base64DaDataUrl(produtoBase64) } },
-              { inlineData: { mimeType: mimeDaDataUrl(logoBase64), data: base64DaDataUrl(logoBase64) } },
-            ],
+            parts: [{ text: prompt }, ...partesImagens],
           },
         ],
         generationConfig: { responseModalities: ["TEXT", "IMAGE"] },

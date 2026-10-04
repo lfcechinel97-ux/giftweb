@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, FabricImage, controlsUtils } from "fabric";
-import { Loader2 } from "lucide-react";
+import { Loader2, RotateCcw, RotateCw } from "lucide-react";
 import type { CaixaPosicao, LogoOriginal, ProdutoMockup, VisaoProduto } from "./types";
 
 interface Props {
   produto: ProdutoMockup;
   logo: LogoOriginal;
   onVoltar: () => void;
-  onContinuar: (visao: VisaoProduto, box: CaixaPosicao, logoRecortada: string, imagemGuia: string) => void;
+  onContinuar: (visao: VisaoProduto, box: CaixaPosicao, logoRecortada: string, composicao: string) => void;
 }
 
 interface LimitesImagem { x0: number; y0: number; x1: number; y1: number }
@@ -20,6 +20,8 @@ const CANVAS_MAX = 620;
  * o que a IA ia receber). O que o vendedor recortar aqui com as alças de
  * borda sai recortado de verdade no arquivo mandado pra Etapa 4 -- não é só
  * um guia visual, é o crop real (ex.: cortar um texto indesejado da logo).
+ * A posição/tamanho/ângulo definidos aqui são GARANTIDOS na geração final
+ * (colamos a logo de verdade antes de mandar pra IA -- ver gerarComposicao).
  */
 export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinuar }: Props) {
   const [visaoId, setVisaoId] = useState(produto.visoes[0]?.id ?? "");
@@ -33,6 +35,7 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
   const [pronto, setPronto] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [gerandoRecorte, setGerandoRecorte] = useState(false);
+  const [angulo, setAngulo] = useState(0);
 
   useEffect(() => {
     if (!canvasElRef.current) return;
@@ -50,6 +53,10 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
       const corner = e.transform?.corner;
       const ehCanto = corner === "tl" || corner === "tr" || corner === "bl" || corner === "br";
       if (target && ehCanto && e.e && !(e.e as MouseEvent).shiftKey) target.scaleY = target.scaleX;
+    });
+    canvas.on("object:rotating", (e) => {
+      const target = e.transform?.target;
+      if (target) setAngulo(Math.round(target.angle));
     });
 
     (async () => {
@@ -72,22 +79,25 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
         limitesRef.current = { x0: 0, y0: 0, x1: larguraNatural, y1: alturaNatural };
         const escalaInicial = Math.min((w * 0.3) / larguraNatural, (h * 0.3) / alturaNatural, 1);
 
+        // Origem no centro -- assim left/top representam o centro da logo
+        // e continuam corretos mesmo girada (a rotação do Fabric já é
+        // sempre em torno do centro real do objeto).
         logoImg.set({
           cropX: 0,
           cropY: 0,
           width: larguraNatural,
           height: alturaNatural,
-          left: (w - larguraNatural * escalaInicial) / 2,
-          top: (h - alturaNatural * escalaInicial) / 2,
-          originX: "left",
-          originY: "top",
+          left: w / 2,
+          top: h / 2,
+          originX: "center",
+          originY: "center",
           scaleX: escalaInicial,
           scaleY: escalaInicial,
+          angle: 0,
           cornerColor: "#2563eb",
           cornerStyle: "circle",
           transparentCorners: false,
           borderColor: "#2563eb",
-          lockRotation: true,
         });
         // Alças laterais/topo/base recortam de verdade (nunca esticam) --
         // o que sai daqui é exatamente o que vai pra geração final.
@@ -95,11 +105,11 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
         logoImg.controls.ml.actionHandler = criarControleCorte("x", limitesRef);
         logoImg.controls.mt.actionHandler = criarControleCorte("y", limitesRef);
         logoImg.controls.mb.actionHandler = criarControleCorte("y", limitesRef);
-        logoImg.controls.mtr.visible = false;
 
         canvas.add(logoImg);
         canvas.setActiveObject(logoImg);
         logoObjRef.current = logoImg;
+        setAngulo(0);
         canvas.requestRenderAll();
         setPronto(true);
       } catch (e: any) {
@@ -116,26 +126,55 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visaoId]);
 
+  const girar = (delta: number) => {
+    const canvas = fabricRef.current;
+    const logoObj = logoObjRef.current;
+    if (!canvas || !logoObj) return;
+    let novo = (logoObj.angle + delta) % 360;
+    if (novo > 180) novo -= 360;
+    if (novo < -180) novo += 360;
+    logoObj.set({ angle: novo });
+    logoObj.setCoords();
+    canvas.requestRenderAll();
+    setAngulo(Math.round(novo));
+  };
+
+  const definirAngulo = (valor: number) => {
+    const canvas = fabricRef.current;
+    const logoObj = logoObjRef.current;
+    if (!canvas || !logoObj) return;
+    logoObj.set({ angle: valor });
+    logoObj.setCoords();
+    canvas.requestRenderAll();
+    setAngulo(valor);
+  };
+
   const continuar = async () => {
     const canvas = fabricRef.current;
     const logoObj = logoObjRef.current;
     if (!canvas || !logoObj || !visaoAtual) return;
     const w = canvas.getWidth();
     const h = canvas.getHeight();
+    // left/top são o CENTRO (originX/Y = center) -- gerarComposicao desenha
+    // a partir desse centro, igual ao Fabric faz aqui na tela.
     const box: CaixaPosicao = {
       xPct: (logoObj.left! / w) * 100,
       yPct: (logoObj.top! / h) * 100,
       wPct: (logoObj.getScaledWidth() / w) * 100,
       hPct: (logoObj.getScaledHeight() / h) * 100,
+      anguloGraus: logoObj.angle || 0,
     };
 
     setGerandoRecorte(true);
     try {
-      const [logoRecortada, imagemGuia] = await Promise.all([
-        recortarLogoOriginal(logo.url, logoObj.cropX || 0, logoObj.cropY || 0, logoObj.width!, logoObj.height!),
-        gerarImagemGuia(visaoAtual.fotoUrl, box),
-      ]);
-      onContinuar(visaoAtual, box, logoRecortada, imagemGuia);
+      const logoRecortada = await recortarLogoOriginal(logo.url, logoObj.cropX || 0, logoObj.cropY || 0, logoObj.width!, logoObj.height!);
+      // Em vez de só pedir pra IA (tamanho/posição em texto, ou só marcar um
+      // retângulo), cola a própria logo no produto, já girada, no tamanho/
+      // posição exatos que o vendedor escolheu -- garantido por nós, não é
+      // mais um "pedido" pra IA decidir. O trabalho da IA vira só dar
+      // acabamento realista em cima disso, sem poder mexer em nada disso.
+      const composicao = await gerarComposicao(visaoAtual.fotoUrl, logoRecortada, box);
+      onContinuar(visaoAtual, box, logoRecortada, composicao);
     } catch (e: any) {
       setErro(e?.message || "Não foi possível preparar os arquivos.");
     } finally {
@@ -148,7 +187,7 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
       <h2 className="text-lg font-semibold text-slate-800 mb-1 self-start">Posicionar a logo</h2>
       <p className="text-sm text-slate-500 mb-4 self-start">
         Arraste pra mover, puxe os cantos pra redimensionar proporcionalmente, puxe as bordas pra recortar (ex.: tirar
-        um texto que não deve entrar). O que você recortar aqui é exatamente o que vai pra geração final.
+        um texto que não deve entrar), ou gire pela alça de cima ou pelos controles abaixo.
       </p>
 
       <div className="bg-white rounded-lg shadow-[0_18px_40px_-12px_rgba(0,0,0,0.25)] relative">
@@ -160,6 +199,26 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
         )}
       </div>
       {erro && <p className="text-sm text-red-600 mt-3">{erro}</p>}
+
+      <div className="flex items-center gap-2 mt-4 bg-white border rounded-lg px-3 py-2 shadow-sm">
+        <button type="button" onClick={() => girar(-90)} className="p-1.5 rounded hover:bg-slate-100" title="Girar -90°">
+          <RotateCcw className="w-4 h-4" />
+        </button>
+        <input
+          type="range" min={-180} max={180} value={angulo}
+          onChange={(e) => definirAngulo(Number(e.target.value))}
+          className="w-32"
+        />
+        <button type="button" onClick={() => girar(90)} className="p-1.5 rounded hover:bg-slate-100" title="Girar +90° (deixar na vertical)">
+          <RotateCw className="w-4 h-4" />
+        </button>
+        <input
+          type="number" value={angulo}
+          onChange={(e) => definirAngulo(Number(e.target.value) || 0)}
+          className="w-16 px-2 py-1 text-sm border rounded text-center"
+        />
+        <span className="text-sm text-slate-400">°</span>
+      </div>
 
       {produto.visoes.length > 1 && (
         <div className="flex gap-2 mt-4">
@@ -212,37 +271,42 @@ async function recortarLogoOriginal(src: string, cropX: number, cropY: number, w
 }
 
 /**
- * Desenha um retângulo tracejado na foto do produto (resolução nativa),
- * exatamente no lugar/tamanho que o vendedor definiu -- modelos de geração
- * de imagem seguem marcação visual muito melhor do que porcentagem em
- * texto, que é o que causava a IA ignorando o tamanho/posição pedidos.
+ * Cola a logo (já recortada) na foto do produto, na resolução nativa, no
+ * tamanho/posição/ângulo exatos que o vendedor definiu -- isso garante o
+ * resultado por construção (é matemática nossa, não um pedido pra IA
+ * interpretar), o que as tentativas anteriores (só texto, só um retângulo
+ * marcado) não conseguiam: a IA ainda tomava liberdade.
  */
-async function gerarImagemGuia(produtoUrl: string, box: CaixaPosicao): Promise<string> {
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  img.src = produtoUrl;
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error("Não foi possível reler a foto do produto."));
-  });
+async function gerarComposicao(produtoUrl: string, logoUrl: string, box: CaixaPosicao): Promise<string> {
+  const [produtoImg, logoImg] = await Promise.all([carregarImagem(produtoUrl), carregarImagem(logoUrl)]);
   const canvas = document.createElement("canvas");
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
+  canvas.width = produtoImg.naturalWidth;
+  canvas.height = produtoImg.naturalHeight;
   const ctx = canvas.getContext("2d");
   if (!ctx) return produtoUrl;
-  ctx.drawImage(img, 0, 0);
+  ctx.drawImage(produtoImg, 0, 0);
 
-  const x = (box.xPct / 100) * canvas.width;
-  const y = (box.yPct / 100) * canvas.height;
+  const cx = (box.xPct / 100) * canvas.width;
+  const cy = (box.yPct / 100) * canvas.height;
   const w = (box.wPct / 100) * canvas.width;
   const h = (box.hPct / 100) * canvas.height;
-  const espessura = Math.max(2, canvas.width * 0.004);
-  ctx.strokeStyle = "#ff00ff";
-  ctx.lineWidth = espessura;
-  ctx.setLineDash([espessura * 2.5, espessura * 2.5]);
-  ctx.strokeRect(x, y, w, h);
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(((box.anguloGraus || 0) * Math.PI) / 180);
+  ctx.drawImage(logoImg, -w / 2, -h / 2, w, h);
+  ctx.restore();
 
   return canvas.toDataURL("image/png");
+}
+
+function carregarImagem(src: string): Promise<HTMLImageElement> {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = src;
+  return new Promise((resolve, reject) => {
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Não foi possível carregar a imagem."));
+  });
 }
 
 /**
@@ -250,7 +314,8 @@ async function gerarImagemGuia(produtoUrl: string, box: CaixaPosicao): Promise<s
  * nunca scaleX/scaleY -- por isso não distorce a logo, só recorta. O lado
  * oposto ao que está sendo arrastado funciona como âncora fixa (padrão do
  * Fabric pra controles de borda), e o crop nunca passa dos limites reais da
- * imagem original.
+ * imagem original. Funciona com a logo girada também -- getLocalPoint já
+ * devolve a posição do cursor no referencial (não rotacionado) do objeto.
  */
 function criarControleCorte(eixo: "x" | "y", limitesRef: MutableRefObject<LimitesImagem | null>) {
   const handler = (_eventData: any, transform: any, x: number, y: number) => {

@@ -7,9 +7,11 @@ import { aplicarMarcaDagua } from "./marcaDagua";
 
 interface Props {
   produto: ProdutoMockup;
-  /** Foto do produto com um retângulo tracejado marcando onde a logo deve
-   * ficar -- a IA segue marcação visual muito melhor do que % em texto. */
-  produtoGuiaUrl: string;
+  /** Produto com a logo já colada (de verdade, por nós) no tamanho/posição
+   * exatos escolhidos na Etapa 3 -- a IA só dá acabamento, não decide mais
+   * tamanho/posição (pedir isso só em % de texto ou só um retângulo
+   * marcado não funcionava, a IA ainda tomava liberdade). */
+  composicaoUrl: string;
   /** Logo já recortada na Etapa 3 (o que o vendedor manteve dentro do box) --
    * não é mais o arquivo original intocado. */
   logoUrl: string;
@@ -22,10 +24,9 @@ interface Props {
  * Etapa 4: a única chamada de IA do fluxo inteiro. Substitui por completo o
  * antigo editor com filtros locais (wrap around, brilho, rotação, cor) --
  * a IA já devolve o mockup pronto e fotorrealista. Depois disso só entra
- * uma marca d'água leve (Gift Web + WhatsApp), aplicada localmente -- nunca
- * pela IA, que erraria o texto do telefone.
+ * uma marca d'água leve (logo Gift Web), aplicada localmente.
  */
-export default function EtapaGeracaoFinal({ produto, produtoGuiaUrl, logoUrl, tecnica, box, onAjustarPosicao }: Props) {
+export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao }: Props) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<string | null>(null);
@@ -38,7 +39,7 @@ export default function EtapaGeracaoFinal({ produto, produtoGuiaUrl, logoUrl, te
     setErro(null);
     try {
       const r = await gerarMockupFinal({
-        produtoUrl: produtoGuiaUrl,
+        produtoUrl: composicaoUrl,
         logoUrl,
         tecnica,
         nomeProduto: produto.nome,

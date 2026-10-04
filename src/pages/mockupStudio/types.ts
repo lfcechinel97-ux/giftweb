@@ -25,13 +25,16 @@ export interface ProdutoMockup {
   visoes: VisaoProduto[];
 }
 
-/** Posição/tamanho da logo sobre o produto, em % das dimensões da foto --
- * nunca em pixels ou mm, porque isso é o que vai direto pro prompt da IA. */
+/** Posição/tamanho/ângulo da logo sobre o produto, em % das dimensões da
+ * foto -- nunca em pixels ou mm. xPct/yPct são o CENTRO da logo (não o
+ * canto), porque é assim que a rotação do Fabric funciona e o que
+ * gerarComposicao usa pra desenhar. */
 export interface CaixaPosicao {
   xPct: number;
   yPct: number;
   wPct: number;
   hPct: number;
+  anguloGraus: number;
 }
 
 export interface ResultadoMockup {

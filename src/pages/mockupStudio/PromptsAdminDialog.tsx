@@ -57,10 +57,10 @@ export default function PromptsAdminDialog({ onClose }: Props) {
         </div>
         <div className="px-5 py-4 overflow-y-auto space-y-5">
           <p className="text-[11px] text-slate-400">
-            Use <code className="bg-slate-100 px-1 rounded">{"{produto}"}</code>, <code className="bg-slate-100 px-1 rounded">{"{pct}"}</code> e{" "}
-            <code className="bg-slate-100 px-1 rounded">{"{posicao}"}</code> -- são substituídos pelo nome do produto, o % de largura da
-            logo e a posição, calculados automaticamente na Etapa 3. Escreva curto e descritivo: listas de "não faça isso" e pedidos de
-            resolução específica pioram o resultado.
+            Use <code className="bg-slate-100 px-1 rounded">{"{produto}"}</code> pro nome do produto. Tamanho/posição/ângulo da logo já
+            vêm garantidos (a Etapa 3 cola a logo de verdade na foto antes de mandar pra IA) -- esse prompt só descreve o ACABAMENTO
+            (textura, brilho, relevo). Escreva curto e descritivo: listas de "não faça isso" e pedidos de resolução específica pioram o
+            resultado.
           </p>
           {carregando ? (
             <p className="text-sm text-slate-400 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Carregando...</p>

@@ -1,12 +1,14 @@
 import type { CaixaPosicao } from "./types";
 
 /**
- * Converte a posição/tamanho do box (em %) numa frase curta em português,
- * usada no prompt da IA -- grade 3x3 simples a partir do centro do box.
+ * Converte a posição do box (em %) numa frase curta em português -- hoje só
+ * entra no prompt como reforço textual (o posicionamento de verdade já vem
+ * garantido pela composição colada na Etapa 3). xPct/yPct já são o centro
+ * da logo, então usa direto, sem somar metade da largura/altura.
  */
 export function descreverPosicao(box: CaixaPosicao): string {
-  const cx = box.xPct + box.wPct / 2;
-  const cy = box.yPct + box.hPct / 2;
+  const cx = box.xPct;
+  const cy = box.yPct;
 
   const v = cy < 33 ? "topo" : cy > 66 ? "base" : "meio";
   const h = cx < 33 ? "esquerda" : cx > 66 ? "direita" : "centro";
