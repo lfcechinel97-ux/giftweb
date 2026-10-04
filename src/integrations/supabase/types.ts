@@ -207,6 +207,7 @@ export type Database = {
       }
       mockup_geracoes: {
         Row: {
+          cliente: string | null
           criado_em: string
           id: string
           imagem_path: string
@@ -219,8 +220,10 @@ export type Database = {
           tokens_total: number | null
           user_id: string
           uso: Json | null
+          vendedor_nome: string | null
         }
         Insert: {
+          cliente?: string | null
           criado_em?: string
           id?: string
           imagem_path: string
@@ -233,8 +236,10 @@ export type Database = {
           tokens_total?: number | null
           user_id: string
           uso?: Json | null
+          vendedor_nome?: string | null
         }
         Update: {
+          cliente?: string | null
           criado_em?: string
           id?: string
           imagem_path?: string
@@ -247,6 +252,7 @@ export type Database = {
           tokens_total?: number | null
           user_id?: string
           uso?: Json | null
+          vendedor_nome?: string | null
         }
         Relationships: []
       }
