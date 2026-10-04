@@ -168,11 +168,16 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
     setGerandoRecorte(true);
     try {
       const logoRecortada = await recortarLogoOriginal(logo.url, logoObj.cropX || 0, logoObj.cropY || 0, logoObj.width!, logoObj.height!);
+      // Manda a logo de REFERÊNCIA já no ângulo final -- se mandarmos reta e
+      // só o buraco da máscara girado, a IA tem que "adivinhar" que precisa
+      // girar; pré-girando aqui, a referência já mostra exatamente o que
+      // deve aparecer dentro do buraco, sem interpretação nenhuma.
+      const logoReferencia = await rotacionarLogo(logoRecortada, box.anguloGraus || 0);
       // A máscara (não mais "colar e pedir pra não mexer") é o que garante
       // de verdade que só a área marcada é editada -- contrato da API de
       // edição de imagem, não promessa do modelo.
       const maskUrl = await gerarMascara(cenaUrl, box);
-      onContinuar(visaoAtual, box, logoRecortada, cenaUrl, maskUrl);
+      onContinuar(visaoAtual, box, logoReferencia, cenaUrl, maskUrl);
     } catch (e: any) {
       setErro(e?.message || "Não foi possível preparar os arquivos.");
     } finally {
@@ -273,14 +278,37 @@ async function recortarLogoOriginal(src: string, cropX: number, cropY: number, w
   return canvas.toDataURL("image/png");
 }
 
+/** Gira a logo já recortada pro ângulo final, numa tela grande o bastante
+ * pra não cortar os cantos -- a imagem de referência mandada pra IA já sai
+ * na orientação certa, em vez dela ter que inferir a rotação pela forma do
+ * buraco da máscara. */
+async function rotacionarLogo(src: string, anguloGraus: number): Promise<string> {
+  if (!anguloGraus) return src;
+  const img = await carregarImagem(src);
+  const rad = (anguloGraus * Math.PI) / 180;
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+  const novaLargura = Math.abs(w * Math.cos(rad)) + Math.abs(h * Math.sin(rad));
+  const novaAltura = Math.abs(w * Math.sin(rad)) + Math.abs(h * Math.cos(rad));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.ceil(novaLargura);
+  canvas.height = Math.ceil(novaAltura);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return src;
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(rad);
+  ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  return canvas.toDataURL("image/png");
+}
+
 /**
  * Gera a máscara de edição (mesma resolução do cenário): opaca em tudo
  * (preserva), com um "buraco" transparente (editável) exatamente na
- * caixa/ângulo que o vendedor definiu, com uma folga de 18% pra sombra de
- * contato e relevo do acabamento poderem respirar um pouco além do
- * contorno exato da logo.
+ * caixa/ângulo que o vendedor definiu, com uma folga pequena (8%) só pra
+ * sombra de contato respirar um pouco -- folga maior dava espaço demais
+ * pra IA "crescer" a logo dentro do buraco.
  */
-async function gerarMascara(cenaUrl: string, box: CaixaPosicao, folgaPct = 0.18): Promise<string> {
+async function gerarMascara(cenaUrl: string, box: CaixaPosicao, folgaPct = 0.08): Promise<string> {
   const img = await carregarImagem(cenaUrl);
   const canvas = document.createElement("canvas");
   canvas.width = img.naturalWidth;

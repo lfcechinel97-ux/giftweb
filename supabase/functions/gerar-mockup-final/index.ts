@@ -68,8 +68,12 @@ serve(async (req) => {
   const acabamento = (linhaPrompt?.prompt || TEMPLATES[tecnica]).replace(/\{produto\}/g, nomeProduto || "produto");
 
   const prompt =
-    "Aplique a logo da segunda imagem dentro da área editável (marcada pela máscara), preenchendo-a por " +
-    "completo, na mesma orientação/ângulo que o formato da área editável sugere. " + acabamento +
+    "A segunda imagem é a arte EXATA que deve ser reproduzida -- mesmo que você reconheça essa marca de algum " +
+    "outro lugar, NÃO substitua por uma versão 'oficial' ou da sua memória, não redesenhe, não complete texto " +
+    "que não está na imagem, não troque o layout. Copie fielmente todas as letras, símbolos, cores e proporções " +
+    "exatamente como estão na segunda imagem, já na orientação correta (ela já está no ângulo certo, não gire " +
+    "de novo). Preencha a área editável (marcada pela máscara) por completo com essa cópia fiel, do tamanho que " +
+    "a área editável permitir, sem sobrar nem faltar. " + acabamento +
     " Acompanhe a iluminação e a textura da superfície ao redor, com uma sombra de contato sutil onde a logo " +
     "encosta no produto.";
 
