@@ -4,9 +4,15 @@ import { Loader2, RotateCcw, RotateCw, Sparkles } from "lucide-react";
 import type { CaixaPosicao, LogoOriginal, ProdutoMockup, VisaoProduto } from "./types";
 import { gerarCenario } from "./gerarMockup";
 import { ajustarParaBucket, escolherBucket, type AjusteBucket } from "./bucketImagem";
+import { removerFundoSeOpaco } from "./composicaoLocal";
 
 export interface ResultadoPosicionamento {
   visao: VisaoProduto;
+  box: CaixaPosicao;
+  cenaUrl: string;
+  /** Logo recortada pelas alças, ainda reta (a rotação vai no box). */
+  logoRecortada: string;
+  /** Mesma logo já girada -- referência pra versão com IA. */
   logoReferencia: string;
   cenaBucketUrl: string;
   maskBucketUrl: string;
@@ -50,6 +56,33 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
   const [erro, setErro] = useState<string | null>(null);
   const [gerandoRecorte, setGerandoRecorte] = useState(false);
   const [angulo, setAngulo] = useState(0);
+  // null = a logo já tem transparência (não há fundo pra tirar).
+  const semFundoRef = useRef<Promise<string | null> | null>(null);
+  const [temFundo, setTemFundo] = useState(false);
+  const [removerFundo, setRemoverFundo] = useState(true);
+  const removerFundoRef = useRef(true);
+
+  const logoEfetiva = async (): Promise<string> => {
+    semFundoRef.current ??= removerFundoSeOpaco(logo.url).catch(() => null);
+    const semFundo = await semFundoRef.current;
+    setTemFundo(!!semFundo);
+    return removerFundoRef.current && semFundo ? semFundo : logo.url;
+  };
+
+  const alternarFundo = async (remover: boolean) => {
+    removerFundoRef.current = remover;
+    setRemoverFundo(remover);
+    const canvas = fabricRef.current;
+    const logoObj = logoObjRef.current;
+    if (!canvas || !logoObj) return;
+    const url = await logoEfetiva();
+    const el = new Image();
+    el.crossOrigin = "anonymous";
+    el.src = url;
+    await el.decode();
+    logoObj.setElement(el, { width: logoObj.width, height: logoObj.height });
+    canvas.requestRenderAll();
+  };
 
   const carregarVisao = async (forcarNovoCenario: boolean) => {
     const canvas = fabricRef.current;
@@ -76,7 +109,7 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
       canvas.backgroundImage = bgImg;
 
       canvas.remove(...canvas.getObjects());
-      const logoImg = await FabricImage.fromURL(logo.url, { crossOrigin: "anonymous" });
+      const logoImg = await FabricImage.fromURL(await logoEfetiva(), { crossOrigin: "anonymous" });
       const larguraNatural = logoImg.width!;
       const alturaNatural = logoImg.height!;
       limitesRef.current = { x0: 0, y0: 0, x1: larguraNatural, y1: alturaNatural };
@@ -179,7 +212,7 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
 
     setGerandoRecorte(true);
     try {
-      const logoRecortada = await recortarLogoOriginal(logo.url, logoObj.cropX || 0, logoObj.cropY || 0, logoObj.width!, logoObj.height!);
+      const logoRecortada = await recortarLogoOriginal(await logoEfetiva(), logoObj.cropX || 0, logoObj.cropY || 0, logoObj.width!, logoObj.height!);
       // Manda a logo de REFERÊNCIA já no ângulo final -- se mandarmos reta e
       // só o buraco da máscara girado, a IA tem que "adivinhar" que precisa
       // girar; pré-girando aqui, a referência já mostra exatamente o que
@@ -202,6 +235,9 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
 
       onContinuar({
         visao: visaoAtual,
+        box,
+        cenaUrl,
+        logoRecortada,
         logoReferencia,
         cenaBucketUrl: ajusteCena.dataUrl,
         maskBucketUrl: ajusteMask.dataUrl,
@@ -265,6 +301,13 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
         />
         <span className="text-sm text-slate-400">°</span>
       </div>
+
+      {temFundo && (
+        <label className="flex items-center gap-2 mt-3 text-sm text-slate-600 cursor-pointer">
+          <input type="checkbox" checked={removerFundo} onChange={(e) => alternarFundo(e.target.checked)} />
+          Remover o fundo chapado da logo
+        </label>
+      )}
 
       {produto.visoes.length > 1 && (
         <div className="flex gap-2 mt-4">

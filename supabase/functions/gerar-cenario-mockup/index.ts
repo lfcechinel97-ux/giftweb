@@ -60,7 +60,7 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3-pro-image",
+        model: "google/gemini-3.1-flash-image",
         contents: [
           { role: "user", parts: [{ text: prompt }, { inlineData: { mimeType: mimeDaDataUrl(produtoBase64), data: base64DaDataUrl(produtoBase64) } }] },
         ],
