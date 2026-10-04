@@ -124,11 +124,17 @@ serve(async (req) => {
   // Formato nativo do Gemini: candidates[0].content.parts[] -- a parte com
   // a imagem vem como inlineData (mimeType + base64), junto de uma parte
   // de texto que é ignorada aqui.
+  // O gateway normaliza para data[0].b64_json; mantém fallback do formato nativo.
+  const item = dados?.data?.[0];
   const partes = dados?.candidates?.[0]?.content?.parts ?? [];
   const parteImagem = partes.find((p: any) => p?.inlineData?.data);
-  const imagemUrl = parteImagem
-    ? `data:${parteImagem.inlineData.mimeType || "image/png"};base64,${parteImagem.inlineData.data}`
-    : null;
+  const imagemUrl = item?.b64_json
+    ? `data:image/jpeg;base64,${item.b64_json}`
+    : item?.url
+      ? item.url
+      : parteImagem
+        ? `data:${parteImagem.inlineData.mimeType || "image/png"};base64,${parteImagem.inlineData.data}`
+        : null;
   if (!imagemUrl) {
     console.error("Resposta sem imagem:", textoBruto.slice(0, 2000));
     return json({ error: "A IA não retornou uma imagem." }, 502);
