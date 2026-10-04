@@ -21,6 +21,8 @@ const json = (body: unknown, status = 200) =>
 
 type Tecnica = "laser" | "dtf_uv" | "dtf_textil";
 
+const MODELO = "google/gemini-3.1-flash-lite-image";
+
 const TEMPLATES: Record<Tecnica, string> = {
   laser:
     "A logo já colada no {produto} deve parecer personalizada a fiber laser: aspecto prateado brilhante " +
@@ -55,9 +57,9 @@ serve(async (req) => {
 
   const corpo = await req.json().catch(() => ({})) as {
     produtoBase64?: string; logoBase64?: string; tecnica?: Tecnica;
-    nomeProduto?: string; pct?: number; posicao?: string;
+    nomeProduto?: string; produtoCodigo?: string; pct?: number; posicao?: string;
   };
-  const { produtoBase64, logoBase64, tecnica, nomeProduto, pct, posicao } = corpo;
+  const { produtoBase64, logoBase64, tecnica, nomeProduto, produtoCodigo, pct, posicao } = corpo;
   if (!produtoBase64?.startsWith("data:image/")) return json({ error: "Envie a foto do produto como data URL." }, 400);
   if (!logoBase64?.startsWith("data:image/")) return json({ error: "Envie a logo como data URL." }, 400);
   if (!tecnica || !TEMPLATES[tecnica]) return json({ error: "Técnica inválida." }, 400);
@@ -122,7 +124,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3.1-flash-lite-image",
+        model: MODELO,
         contents: [
           {
             role: "user",
@@ -173,8 +175,52 @@ serve(async (req) => {
     return json({ error: "A IA não retornou uma imagem." }, 502);
   }
 
-  return json({ url: imagemUrl });
+  // O gateway pode devolver o uso no formato OpenAI (usage) ou no nativo do
+  // Gemini (usageMetadata) -- aceita os dois.
+  const uso = dados?.usage ?? dados?.usageMetadata ?? null;
+  const tokensEntrada = numeroOuNull(uso?.input_tokens ?? uso?.prompt_tokens ?? uso?.promptTokenCount);
+  const tokensSaida = numeroOuNull(uso?.output_tokens ?? uso?.completion_tokens ?? uso?.candidatesTokenCount);
+  const tokensTotal = numeroOuNull(uso?.total_tokens ?? uso?.totalTokenCount) ??
+    (tokensEntrada != null && tokensSaida != null ? tokensEntrada + tokensSaida : null);
+  if (!uso) console.warn("Resposta sem dados de uso. Chaves:", Object.keys(dados || {}).join(","));
+
+  // Histórico: falha aqui não derruba a geração (o vendedor já tem a imagem).
+  let geracao: unknown = null;
+  try {
+    const bytes = imagemUrl.startsWith("data:")
+      ? Uint8Array.from(atob(base64DaDataUrl(imagemUrl)), (c) => c.charCodeAt(0))
+      : new Uint8Array(await (await fetch(imagemUrl)).arrayBuffer());
+    const id = crypto.randomUUID();
+    const caminho = `${quem.user.id}/${id}.png`;
+    const { error: erroUpload } = await admin.storage.from("mockup-geracoes")
+      .upload(caminho, bytes, { contentType: imagemUrl.startsWith("data:") ? mimeDaDataUrl(imagemUrl) : "image/png" });
+    if (erroUpload) throw erroUpload;
+    const { data: linha, error: erroInsert } = await admin.from("mockup_geracoes").insert({
+      id,
+      user_id: quem.user.id,
+      produto_nome: nomeProduto,
+      produto_codigo: produtoCodigo || null,
+      tecnica,
+      modelo: MODELO,
+      tokens_entrada: tokensEntrada,
+      tokens_saida: tokensSaida,
+      tokens_total: tokensTotal,
+      uso,
+      imagem_path: caminho,
+    }).select().single();
+    if (erroInsert) throw erroInsert;
+    geracao = linha;
+  } catch (e) {
+    console.error("Falha ao salvar histórico:", e);
+  }
+
+  return json({ url: imagemUrl, geracao });
 });
+
+function numeroOuNull(v: unknown): number | null {
+  const n = typeof v === "string" ? Number(v) : v;
+  return typeof n === "number" && Number.isFinite(n) ? Math.round(n) : null;
+}
 
 function mimeDaDataUrl(dataUrl: string): string {
   return dataUrl.match(/data:(.*?);base64/)?.[1] || "image/png";

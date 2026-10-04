@@ -16,6 +16,7 @@ export default function PromptsAdminDialog({ onClose }: Props) {
   const [prompts, setPrompts] = useState<Record<string, string>>({});
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState<string | null>(null);
+  const [salvo, setSalvo] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,16 +32,21 @@ export default function PromptsAdminDialog({ onClose }: Props) {
 
   const salvar = async (chave: string) => {
     setSalvando(chave);
+    setSalvo(null);
     setErro(null);
     try {
       const { data: auth } = await supabase.auth.getUser();
-      const { error } = await (supabase as any).from("mockup_ia_prompts").upsert({
+      const { data, error } = await (supabase as any).from("mockup_ia_prompts").upsert({
         chave,
         prompt: prompts[chave] || "",
         atualizado_por: auth?.user?.id,
         atualizado_em: new Date().toISOString(),
-      });
+      }).select("chave");
       if (error) throw error;
+      // RLS pode "aceitar" sem gravar nada -- só confirma se a linha voltou.
+      if (!data?.length) throw new Error("O banco não gravou o prompt (sem permissão de admin?).");
+      setSalvo(chave);
+      setTimeout(() => setSalvo((s) => (s === chave ? null : s)), 2500);
     } catch (e: any) {
       setErro(e?.message || "Não foi possível salvar.");
     } finally {
@@ -74,7 +80,7 @@ export default function PromptsAdminDialog({ onClose }: Props) {
                     disabled={salvando === c.chave}
                     className="text-xs px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                   >
-                    {salvando === c.chave ? "Salvando..." : "Salvar"}
+                    {salvando === c.chave ? "Salvando..." : salvo === c.chave ? "Salvo ✓" : "Salvar"}
                   </button>
                 </div>
                 <textarea

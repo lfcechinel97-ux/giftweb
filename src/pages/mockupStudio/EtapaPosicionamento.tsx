@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, FabricImage, controlsUtils } from "fabric";
 import { Loader2, RotateCcw, RotateCw } from "lucide-react";
 import type { CaixaPosicao, LogoOriginal, ProdutoMockup, VisaoProduto } from "./types";
+import { removerFundoSeOpaco } from "./removerFundo";
 
 interface Props {
   produto: ProdutoMockup;
@@ -15,9 +16,10 @@ interface LimitesImagem { x0: number; y0: number; x1: number; y1: number }
 const CANVAS_MAX = 620;
 
 /**
- * Etapa 3: posicionamento 100% local, sem IA nenhuma. Mostra a logo
- * ORIGINAL (sem remover fundo -- isso deixava a prévia feia e não refletia
- * o que a IA ia receber). O que o vendedor recortar aqui com as alças de
+ * Etapa 3: posicionamento 100% local, sem IA nenhuma. Se a logo vier com
+ * fundo chapado (sem transparência), dá a opção de tirar esse fundo -- a IA
+ * trata o fundo como parte da arte e imprime o retângulo junto. A prévia
+ * mostra exatamente o que vai ser colado. O que o vendedor recortar aqui com as alças de
  * borda sai recortado de verdade no arquivo mandado pra Etapa 4 -- não é só
  * um guia visual, é o crop real (ex.: cortar um texto indesejado da logo).
  * A posição/tamanho/ângulo definidos aqui são GARANTIDOS na geração final
@@ -36,6 +38,32 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
   const [erro, setErro] = useState<string | null>(null);
   const [gerandoRecorte, setGerandoRecorte] = useState(false);
   const [angulo, setAngulo] = useState(0);
+  const semFundoRef = useRef<Promise<string | null> | null>(null);
+  const [temFundo, setTemFundo] = useState(false);
+  const [removerFundo, setRemoverFundo] = useState(true);
+  const removerFundoRef = useRef(true);
+
+  const logoEfetiva = async (): Promise<string> => {
+    semFundoRef.current ??= removerFundoSeOpaco(logo.url).catch(() => null);
+    const semFundo = await semFundoRef.current;
+    setTemFundo(!!semFundo);
+    return removerFundoRef.current && semFundo ? semFundo : logo.url;
+  };
+
+  const alternarFundo = async (remover: boolean) => {
+    removerFundoRef.current = remover;
+    setRemoverFundo(remover);
+    const canvas = fabricRef.current;
+    const logoObj = logoObjRef.current;
+    if (!canvas || !logoObj) return;
+    const el = new Image();
+    el.crossOrigin = "anonymous";
+    el.src = await logoEfetiva();
+    await el.decode();
+    // width/height explícitos preservam o recorte feito pelas alças.
+    logoObj.setElement(el, { width: logoObj.width, height: logoObj.height });
+    canvas.requestRenderAll();
+  };
 
   useEffect(() => {
     if (!canvasElRef.current) return;
@@ -71,7 +99,7 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
         bgImg.set({ scaleX: escala, scaleY: escala, selectable: false, evented: false });
         canvas.backgroundImage = bgImg;
 
-        const logoImg = await FabricImage.fromURL(logo.url, { crossOrigin: "anonymous" });
+        const logoImg = await FabricImage.fromURL(await logoEfetiva(), { crossOrigin: "anonymous" });
         if (cancelado) return;
 
         const larguraNatural = logoImg.width!;
@@ -167,7 +195,7 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
 
     setGerandoRecorte(true);
     try {
-      const logoRecortada = await recortarLogoOriginal(logo.url, logoObj.cropX || 0, logoObj.cropY || 0, logoObj.width!, logoObj.height!);
+      const logoRecortada = await recortarLogoOriginal(await logoEfetiva(),logoObj.cropX || 0, logoObj.cropY || 0, logoObj.width!, logoObj.height!);
       // Em vez de só pedir pra IA (tamanho/posição em texto, ou só marcar um
       // retângulo), cola a própria logo no produto, já girada, no tamanho/
       // posição exatos que o vendedor escolheu -- garantido por nós, não é
@@ -222,6 +250,13 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
         />
         <span className="text-sm text-slate-400">°</span>
       </div>
+
+      {temFundo && (
+        <label className="flex items-center gap-2 mt-3 text-sm text-slate-600 cursor-pointer">
+          <input type="checkbox" checked={removerFundo} onChange={(e) => alternarFundo(e.target.checked)} />
+          Remover o fundo da logo
+        </label>
+      )}
 
       {produto.visoes.length > 1 && (
         <div className="flex gap-2 mt-4">

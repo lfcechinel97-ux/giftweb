@@ -4,6 +4,8 @@ import type { CaixaPosicao, ProdutoMockup, Tecnica } from "./types";
 import { descreverPosicao } from "./posicaoDescricao";
 import { gerarMockupFinal } from "./gerarMockup";
 import { aplicarMarcaDagua } from "./marcaDagua";
+import { baixarImagem } from "./baixarImagem";
+import { formatarTokens, nomeModelo, type Geracao } from "./historico";
 
 interface Props {
   produto: ProdutoMockup;
@@ -18,6 +20,7 @@ interface Props {
   tecnica: Tecnica;
   box: CaixaPosicao;
   onAjustarPosicao: () => void;
+  onGerado: (geracao: Geracao) => void;
 }
 
 /**
@@ -26,10 +29,24 @@ interface Props {
  * a IA já devolve o mockup pronto e fotorrealista. Depois disso só entra
  * uma marca d'água leve (logo Gift Web), aplicada localmente.
  */
-export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao }: Props) {
+export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao, onGerado }: Props) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<string | null>(null);
+  const [geracao, setGeracao] = useState<Geracao | null>(null);
+  const [baixando, setBaixando] = useState(false);
+
+  const baixar = async () => {
+    if (!resultado) return;
+    setBaixando(true);
+    try {
+      await baixarImagem(resultado, `mockup-${produto.codigoAmigavel || "produto"}.png`);
+    } catch {
+      setErro("Não foi possível baixar a imagem.");
+    } finally {
+      setBaixando(false);
+    }
+  };
 
   const posicao = descreverPosicao(box);
   const pct = Math.round(box.wPct);
@@ -43,11 +60,14 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
         logoUrl,
         tecnica,
         nomeProduto: produto.nome,
+        produtoCodigo: produto.codigoAmigavel,
         pct,
         posicao,
       });
       const comMarca = await aplicarMarcaDagua(r.url);
       setResultado(comMarca);
+      setGeracao(r.geracao);
+      if (r.geracao) onGerado(r.geracao);
     } catch (e: any) {
       setErro(e?.message || "Não foi possível gerar o mockup agora.");
     } finally {
@@ -76,6 +96,12 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
         )}
       </div>
 
+      {geracao && !carregando && (
+        <p className="mt-2 text-xs text-slate-400 self-start">
+          {nomeModelo(geracao.modelo)} · {formatarTokens(geracao.tokens_total)} tokens · salvo no histórico
+        </p>
+      )}
+
       {erro && (
         <div className="mt-4 w-full text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{erro}</div>
       )}
@@ -94,13 +120,14 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
           Gerar novamente
         </button>
         {resultado && !carregando && (
-          <a
-            href={resultado}
-            download={`mockup-${produto.codigoAmigavel || "produto"}.png`}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700"
+          <button
+            type="button"
+            onClick={baixar}
+            disabled={baixando}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-50"
           >
-            <Download className="w-4 h-4" /> Baixar
-          </a>
+            {baixando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Baixar
+          </button>
         )}
       </div>
     </div>

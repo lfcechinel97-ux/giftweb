@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tecnica } from "./types";
+import type { Geracao } from "./historico";
 
 async function paraDataURL(src: string): Promise<string> {
   if (src.startsWith("data:")) return src;
@@ -18,6 +19,7 @@ interface GerarMockupParams {
   logoUrl: string;
   tecnica: Tecnica;
   nomeProduto: string;
+  produtoCodigo?: string;
   pct: number;
   posicao: string;
 }
@@ -26,7 +28,7 @@ interface GerarMockupParams {
  * já recortada pelo vendedor na Etapa 3, mais um prompt curto montado a
  * partir do template da técnica. Essa é a ÚNICA chamada de IA do fluxo
  * inteiro. */
-export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url: string }> {
+export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url: string; geracao: Geracao | null }> {
   const [produtoBase64, logoBase64] = await Promise.all([
     paraDataURL(params.produtoUrl),
     paraDataURL(params.logoUrl),
@@ -37,6 +39,7 @@ export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url
       logoBase64,
       tecnica: params.tecnica,
       nomeProduto: params.nomeProduto,
+      produtoCodigo: params.produtoCodigo,
       pct: params.pct,
       posicao: params.posicao,
     },
@@ -50,5 +53,5 @@ export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url
     throw new Error(msg);
   }
   if (data?.error) throw new Error(data.error);
-  return { url: data.url as string };
+  return { url: data.url as string, geracao: (data.geracao as Geracao | null) ?? null };
 }

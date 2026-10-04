@@ -98,8 +98,10 @@ export default function EtapaProduto({ onSelecionar }: Props) {
           <p className="text-sm text-slate-400">Este produto não tem fotos sincronizadas.</p>
         ) : (
           <div className="grid grid-cols-4 gap-3 mb-6">
-            {fotos.map((url) => (
-              <div key={url} className="aspect-square border rounded-lg overflow-hidden">
+            {/* key por posição: trocar de variante só troca o src, sem
+                desmontar as imagens (antes a grade sumia e voltava). */}
+            {fotos.map((url, i) => (
+              <div key={i} className="aspect-square border rounded-lg overflow-hidden bg-slate-50">
                 <img src={url} alt="" className="w-full h-full object-cover" />
               </div>
             ))}
