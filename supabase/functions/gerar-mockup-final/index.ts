@@ -119,7 +119,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3.1-flash-lite-image",
+        model: "google/gemini-3-pro-image",
         contents: [
           {
             role: "user",
