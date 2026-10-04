@@ -73,28 +73,22 @@ serve(async (req) => {
     .replace(/\{pct\}/g, String(Math.round(pct)))
     .replace(/\{posicao\}/g, posicao);
 
+  // Esse modelo não fala o endpoint de chat (/v1/chat/completions) -- é um
+  // modelo só-de-imagem, exposto em /v1/images/edits (formato OpenAI de
+  // edição de imagem: multipart/form-data, com uma ou mais "image[]" de
+  // referência + prompt).
   let resposta: Response;
   try {
-    resposta = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const form = new FormData();
+    form.append("model", "google/gemini-3.1-flash-lite-image");
+    form.append("prompt", prompt);
+    form.append("image[]", dataUrlParaBlob(produtoBase64), "produto.png");
+    form.append("image[]", dataUrlParaBlob(logoBase64), "logo.png");
+
+    resposta = await fetch("https://ai.gateway.lovable.dev/v1/images/edits", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${lovableKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-3.1-flash-lite-image",
-        messages: [
-          {
-            role: "user",
-            content: [
-              { type: "text", text: prompt },
-              { type: "image_url", image_url: { url: produtoBase64 } },
-              { type: "image_url", image_url: { url: logoBase64 } },
-            ],
-          },
-        ],
-        modalities: ["image", "text"],
-      }),
+      headers: { Authorization: `Bearer ${lovableKey}` },
+      body: form,
     });
   } catch {
     return json({ error: "Não foi possível falar com a IA agora." }, 502);
@@ -118,12 +112,21 @@ serve(async (req) => {
     return json({ error: `IA (${resposta.status}): ${msg}` }, 502);
   }
 
-  const imagemUrl = dados?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+  const item = dados?.data?.[0];
+  const imagemUrl = item?.b64_json ? `data:image/png;base64,${item.b64_json}` : item?.url;
   if (!imagemUrl) {
     console.error("Resposta sem imagem:", textoBruto.slice(0, 2000));
-    const textoResposta = dados?.choices?.[0]?.message?.content;
-    return json({ error: textoResposta ? `A IA respondeu sem imagem: "${textoResposta}"` : "A IA não retornou uma imagem." }, 502);
+    return json({ error: "A IA não retornou uma imagem." }, 502);
   }
 
   return json({ url: imagemUrl });
 });
+
+function dataUrlParaBlob(dataUrl: string): Blob {
+  const [cabecalho, base64] = dataUrl.split(",");
+  const mime = cabecalho.match(/data:(.*?);base64/)?.[1] || "image/png";
+  const binario = atob(base64);
+  const bytes = new Uint8Array(binario.length);
+  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
