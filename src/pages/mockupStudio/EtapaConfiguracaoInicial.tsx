@@ -1,102 +1,39 @@
-import { useEffect, useRef, useState } from "react";
-import { Upload, FileWarning, Check, Loader2, AlertTriangle, Sparkles } from "lucide-react";
-import { TECNICAS, type LogoOriginal, type LogoTratada, type Tecnica } from "./types";
-import { refinarLogoComIA } from "./iaTratamento";
+import { useRef, useState } from "react";
+import { Upload, FileWarning, Check } from "lucide-react";
+import { TECNICAS, type LogoOriginal, type Tecnica } from "./types";
 
 const TIPOS_AVALIADOS = /^(image\/(png|jpe?g|svg\+xml)|application\/pdf)$/i;
 const EXT_OK = /\.(png|jpe?g|svg|pdf)$/i;
 const RASTERIZAVEL = /^image\/(png|jpe?g)$/i;
 const MAX_BYTES = 15 * 1024 * 1024;
 
-/** Processamento determinístico local (sem IA): laser vira escala de cinza
- * com leve realce prateado, preservando o alpha; DTF mantém a arte original.
- * Serve de prévia instantânea; o refino real (remoção de fundo, acabamento)
- * é opcional e roda via Lovable AI (botão "Refinar com IA" abaixo). */
-async function processarLogo(logo: LogoOriginal, tecnica: Tecnica): Promise<LogoTratada> {
-  if (tecnica !== "laser") return { url: logo.url, tecnica };
-
-  const img = new Image();
-  img.src = logo.url;
-  await new Promise<void>((resolve, reject) => { img.onload = () => resolve(); img.onerror = () => reject(new Error("Não foi possível ler a imagem.")); });
-
-  const canvas = document.createElement("canvas");
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas indisponível neste navegador.");
-  ctx.drawImage(img, 0, 0);
-
-  const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const d = frame.data;
-  let pixelsVisiveis = 0;
-  for (let i = 0; i < d.length; i += 4) {
-    if (d[i + 3] > 10) pixelsVisiveis++;
-    const cinza = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-    const realcado = Math.min(255, Math.max(0, (cinza - 128) * 1.15 + 128 + 25));
-    d[i] = d[i + 1] = d[i + 2] = realcado;
-  }
-  ctx.putImageData(frame, 0, 0);
-
-  const avisoQualidade = pixelsVisiveis / (canvas.width * canvas.height) < 0.01
-    ? "A arte ficou com pouquíssimo conteúdo visível depois da conversão — revise o arquivo original."
-    : undefined;
-
-  return { url: canvas.toDataURL("image/png"), tecnica, avisoQualidade };
-}
-
 interface Props {
-  onConcluir: (logo: LogoOriginal, tratada: LogoTratada) => void;
+  onConcluir: (logo: LogoOriginal, tecnica: Tecnica) => void;
 }
 
+/**
+ * Etapa 1 do novo fluxo: só recolhe a logo original e a técnica -- nenhuma
+ * chamada de IA acontece aqui. O tratamento da logo (remover fundo,
+ * acabamento) saiu inteiramente pra Etapa 4, numa única geração final que já
+ * usa o arquivo original sem pré-processamento nenhum.
+ */
 export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
   const [logo, setLogo] = useState<LogoOriginal | null>(null);
   const [tecnica, setTecnica] = useState<Tecnica | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [arrastando, setArrastando] = useState(false);
-  const [processando, setProcessando] = useState(false);
-  const [tratada, setTratada] = useState<LogoTratada | null>(null);
-  const [refinando, setRefinando] = useState(false);
-  const [erroIA, setErroIA] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const refinarComIA = async () => {
-    if (!tratada) return;
-    setRefinando(true);
-    setErroIA(null);
-    try {
-      const resultado = await refinarLogoComIA(tratada.url, tratada.tecnica);
-      setTratada({ ...tratada, url: resultado.url, avisoQualidade: undefined });
-    } catch (e: any) {
-      setErroIA(e?.message || "Não foi possível refinar a logo com IA agora.");
-    } finally {
-      setRefinando(false);
-    }
-  };
 
   const validarEUsar = (file: File) => {
     setErro(null);
-    setTratada(null);
     const tipoOk = TIPOS_AVALIADOS.test(file.type) || EXT_OK.test(file.name);
     if (!tipoOk) { setErro("Formato não suportado. Use PNG, JPG, JPEG, SVG ou PDF."); return; }
     if (file.size > MAX_BYTES) { setErro(`Arquivo de ${(file.size / 1024 / 1024).toFixed(1)} MB excede o limite de 15 MB.`); return; }
-    if (!RASTERIZAVEL.test(file.type)) { setErro("Por enquanto o editor só trabalha com PNG ou JPG. Envie uma versão raster da logo."); return; }
+    if (!RASTERIZAVEL.test(file.type)) { setErro("Por enquanto o posicionamento só funciona com PNG ou JPG. Envie uma versão raster da logo."); return; }
     setLogo({ file, url: URL.createObjectURL(file), nome: file.name });
   };
 
   const handleFiles = (files: FileList | null) => { const f = files?.[0]; if (f) validarEUsar(f); };
-
-  useEffect(() => {
-    if (!logo || !tecnica) { setTratada(null); return; }
-    let cancelado = false;
-    setProcessando(true);
-    setErro(null);
-    setErroIA(null);
-    processarLogo(logo, tecnica)
-      .then((t) => { if (!cancelado) setTratada(t); })
-      .catch((e: Error) => { if (!cancelado) setErro(e.message); })
-      .finally(() => { if (!cancelado) setProcessando(false); });
-    return () => { cancelado = true; };
-  }, [logo, tecnica]);
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
@@ -157,55 +94,16 @@ export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
         </div>
       )}
 
-      {processando && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-slate-500">
-          <Loader2 className="w-4 h-4 animate-spin" /> Preparando a arte...
-        </div>
-      )}
-
-      {tratada && !processando && (
-        <div className="mt-6 border rounded-xl p-4">
-          <p className="text-xs font-medium text-slate-500 mb-2">Prévia (original × tratada)</p>
-          {tratada.avisoQualidade && (
-            <div className="mb-3 flex items-start gap-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" /><span>{tratada.avisoQualidade}</span>
-            </div>
-          )}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-slate-100 rounded-lg p-3 flex items-center justify-center h-28">
-              <img src={logo!.url} alt="original" className="max-h-full max-w-full object-contain" />
-            </div>
-            <div className="bg-slate-800 rounded-lg p-3 flex items-center justify-center h-28">
-              <img src={tratada.url} alt="tratada" className="max-h-full max-w-full object-contain" />
-            </div>
-          </div>
-          {erroIA && (
-            <div className="mt-3 flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-              <FileWarning className="w-4 h-4 mt-0.5 shrink-0" /><span>{erroIA}</span>
-            </div>
-          )}
-
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={refinarComIA}
-              disabled={refinando}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 text-sm font-medium disabled:opacity-50"
-              title="Remove fundo e refina o acabamento com IA, sem redesenhar a logo"
-            >
-              {refinando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-              {refinando ? "Refinando..." : "Refinar com IA"}
-            </button>
-            <button
-              type="button"
-              onClick={() => onConcluir(logo!, tratada)}
-              className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
-            >
-              Aprovar e escolher produto
-            </button>
-          </div>
-        </div>
-      )}
+      <div className="mt-6 flex justify-end">
+        <button
+          type="button"
+          disabled={!logo || !tecnica}
+          onClick={() => logo && tecnica && onConcluir(logo, tecnica)}
+          className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Continuar
+        </button>
+      </div>
     </div>
   );
 }

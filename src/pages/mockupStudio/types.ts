@@ -1,24 +1,15 @@
 export type Tecnica = "laser" | "dtf_uv" | "dtf_textil";
 
 export const TECNICAS: { id: Tecnica; nome: string; descricao: string }[] = [
-  { id: "laser", nome: "Gravação a Laser", descricao: "Logo monocromática, simulação prateada sobre aço inox." },
-  { id: "dtf_uv", nome: "DTF UV", descricao: "Impressão colorida com brilho e leve relevo de verniz." },
-  { id: "dtf_textil", nome: "DTF Têxtil", descricao: "Impressão colorida para aplicação sobre tecido." },
+  { id: "laser", nome: "Gravação a Laser", descricao: "Acabamento prateado, acabamento metálico real." },
+  { id: "dtf_uv", nome: "DTF UV", descricao: "Cores originais, brilho e leve relevo de verniz." },
+  { id: "dtf_textil", nome: "DTF Têxtil", descricao: "Cores originais, acabamento fosco sobre tecido." },
 ];
 
 export interface LogoOriginal {
   file: File;
   url: string;
   nome: string;
-}
-
-export interface LogoTratada {
-  /** Resultado do tratamento desta etapa — hoje é processamento determinístico
-   * local (ex.: conversão pra escala de cinza no laser); a remoção de fundo
-   * e o tratamento real por IA entram via Lovable AI (servidor). */
-  url: string;
-  tecnica: Tecnica;
-  avisoQualidade?: string;
 }
 
 export interface VisaoProduto {
@@ -32,4 +23,17 @@ export interface ProdutoMockup {
   nome: string;
   codigoAmigavel: string;
   visoes: VisaoProduto[];
+}
+
+/** Posição/tamanho da logo sobre o produto, em % das dimensões da foto --
+ * nunca em pixels ou mm, porque isso é o que vai direto pro prompt da IA. */
+export interface CaixaPosicao {
+  xPct: number;
+  yPct: number;
+  wPct: number;
+  hPct: number;
+}
+
+export interface ResultadoMockup {
+  url: string;
 }

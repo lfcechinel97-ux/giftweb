@@ -3,11 +3,9 @@ import { X, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const CHAVES = [
-  { chave: "logo_laser", label: "Logo — Gravação a Laser" },
-  { chave: "logo_dtf_uv", label: "Logo — DTF UV" },
-  { chave: "logo_dtf_textil", label: "Logo — DTF Têxtil" },
-  { chave: "composicao", label: "Refinar composição (produto + logo)" },
-  { chave: "produto", label: "Remover fundo do produto" },
+  { chave: "final_laser", label: "Gravação a Laser" },
+  { chave: "final_dtf_uv", label: "DTF UV" },
+  { chave: "final_dtf_textil", label: "DTF Têxtil" },
 ] as const;
 
 interface Props {
@@ -20,9 +18,6 @@ export default function PromptsAdminDialog({ onClose }: Props) {
   const [salvando, setSalvando] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
-  // A tabela mockup_ia_prompts é nova -- ainda não existe nos tipos gerados
-  // do Supabase (só entram depois da migration rodar e os tipos atualizarem),
-  // por isso o `as any`, no mesmo padrão já usado em useUserRole.ts.
   useEffect(() => {
     (async () => {
       const { data, error } = await (supabase as any).from("mockup_ia_prompts").select("chave, prompt");
@@ -57,10 +52,16 @@ export default function PromptsAdminDialog({ onClose }: Props) {
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
         <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h3 className="font-medium">Prompts de IA do Mockup Studio</h3>
+          <h3 className="font-medium">Prompts de geração do Mockup Studio</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
         </div>
         <div className="px-5 py-4 overflow-y-auto space-y-5">
+          <p className="text-[11px] text-slate-400">
+            Use <code className="bg-slate-100 px-1 rounded">{"{produto}"}</code>, <code className="bg-slate-100 px-1 rounded">{"{pct}"}</code> e{" "}
+            <code className="bg-slate-100 px-1 rounded">{"{posicao}"}</code> -- são substituídos pelo nome do produto, o % de largura da
+            logo e a posição, calculados automaticamente na Etapa 3. Escreva curto e descritivo: listas de "não faça isso" e pedidos de
+            resolução específica pioram o resultado.
+          </p>
           {carregando ? (
             <p className="text-sm text-slate-400 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Carregando...</p>
           ) : (
@@ -78,7 +79,7 @@ export default function PromptsAdminDialog({ onClose }: Props) {
                 </div>
                 <textarea
                   rows={4}
-                  className="w-full px-3 py-2 text-sm border rounded-lg font-mono"
+                  className="w-full px-3 py-2 text-sm border rounded-lg"
                   value={prompts[c.chave] || ""}
                   onChange={(e) => setPrompts((p) => ({ ...p, [c.chave]: e.target.value }))}
                 />
@@ -86,10 +87,6 @@ export default function PromptsAdminDialog({ onClose }: Props) {
             ))
           )}
           {erro && <p className="text-sm text-red-600">{erro}</p>}
-          <p className="text-[11px] text-slate-400">
-            Escrito em inglês porque é isso que o modelo de IA entende melhor. Evite remover as instruções de
-            "não redesenhar a logo" — é o que garante fidelidade à marca do cliente.
-          </p>
         </div>
       </div>
     </div>

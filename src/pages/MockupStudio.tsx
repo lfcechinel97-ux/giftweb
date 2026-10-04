@@ -3,23 +3,27 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Settings } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSistemaProducts } from "@/pages/sistema/useSistemaProducts";
-import type { LogoOriginal, LogoTratada, ProdutoMockup } from "./mockupStudio/types";
+import type { CaixaPosicao, LogoOriginal, ProdutoMockup, Tecnica, VisaoProduto } from "./mockupStudio/types";
 import EtapaConfiguracaoInicial from "./mockupStudio/EtapaConfiguracaoInicial";
 import EtapaProduto from "./mockupStudio/EtapaProduto";
-import MockupEditor from "./mockupStudio/MockupEditor";
+import EtapaPosicionamento from "./mockupStudio/EtapaPosicionamento";
+import EtapaGeracaoFinal from "./mockupStudio/EtapaGeracaoFinal";
 import PromptsAdminDialog from "./mockupStudio/PromptsAdminDialog";
+
+interface Posicionamento { visao: VisaoProduto; box: CaixaPosicao }
 
 export default function MockupStudio() {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
-  // Dispara a busca do catálogo (react-query) assim que o Mockup Studio
-  // abre, não só quando o vendedor chega na etapa de produto -- aí, com
-  // sorte, quando ele chegar lá (depois de subir a logo e escolher a
-  // técnica) o catálogo já está no cache e a busca é instantânea.
+  // Dispara a busca do catálogo assim que o Mockup Studio abre, não só
+  // quando o vendedor chega na etapa de produto -- com sorte já está em
+  // cache quando ele chegar lá.
   useSistemaProducts();
+
   const [logo, setLogo] = useState<LogoOriginal | null>(null);
-  const [tratada, setTratada] = useState<LogoTratada | null>(null);
+  const [tecnica, setTecnica] = useState<Tecnica | null>(null);
   const [produto, setProduto] = useState<ProdutoMockup | null>(null);
+  const [posicionamento, setPosicionamento] = useState<Posicionamento | null>(null);
   const [showPrompts, setShowPrompts] = useState(false);
 
   return (
@@ -40,16 +44,32 @@ export default function MockupStudio() {
         )}
       </header>
 
-      {!tratada && (
-        <EtapaConfiguracaoInicial onConcluir={(l, t) => { setLogo(l); setTratada(t); }} />
+      {!logo && (
+        <EtapaConfiguracaoInicial onConcluir={(l, t) => { setLogo(l); setTecnica(t); }} />
       )}
 
-      {tratada && !produto && (
+      {logo && tecnica && !produto && (
         <EtapaProduto onSelecionar={setProduto} />
       )}
 
-      {tratada && produto && (
-        <MockupEditor produto={produto} logoInicial={tratada} onTrocarProduto={() => setProduto(null)} />
+      {logo && tecnica && produto && !posicionamento && (
+        <EtapaPosicionamento
+          produto={produto}
+          logo={logo}
+          onVoltar={() => setProduto(null)}
+          onContinuar={(visao, box) => setPosicionamento({ visao, box })}
+        />
+      )}
+
+      {logo && tecnica && produto && posicionamento && (
+        <EtapaGeracaoFinal
+          produto={produto}
+          visao={posicionamento.visao}
+          logo={logo}
+          tecnica={tecnica}
+          box={posicionamento.box}
+          onAjustarPosicao={() => setPosicionamento(null)}
+        />
       )}
 
       {showPrompts && <PromptsAdminDialog onClose={() => setShowPrompts(false)} />}
