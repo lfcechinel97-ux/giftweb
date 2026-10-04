@@ -13,41 +13,33 @@ async function paraDataURL(src: string): Promise<string> {
   });
 }
 
-/** Etapa A -- gera (ou reaproveita do cache) o cenário em volta do produto,
- * sem logo nenhuma. Cacheado no servidor por visaoId. */
-export async function gerarCenario(params: {
-  produtoUrl: string; nomeProduto: string; visaoId: string; forcarNovo?: boolean;
-}): Promise<{ url: string; cache: boolean }> {
-  const produtoBase64 = await paraDataURL(params.produtoUrl);
-  const { data, error } = await supabase.functions.invoke("gerar-cenario-mockup", {
-    body: { produtoBase64, nomeProduto: params.nomeProduto, visaoId: params.visaoId, forcarNovo: !!params.forcarNovo },
-  });
-  if (error) {
-    let msg = error.message;
-    const ctx = (error as any)?.context;
-    if (ctx?.json) {
-      try { const body = await ctx.json(); if (body?.error) msg = body.error; } catch { /* mantém mensagem genérica */ }
-    }
-    throw new Error(msg);
-  }
-  if (data?.error) throw new Error(data.error);
-  return { url: data.url as string, cache: !!data.cache };
+interface GerarMockupParams {
+  produtoUrl: string;
+  logoUrl: string;
+  tecnica: Tecnica;
+  nomeProduto: string;
+  pct: number;
+  posicao: string;
 }
 
-/** Etapa C -- aplica a logo no cenário por inpainting com máscara real
- * (GPT Image 2). A posição é garantida pela máscara, não por instrução.
- * `tamanho` é o bucket (ex. "1024x1024") que o cenário/máscara já foram
- * encaixados pra bater com o que a API realmente aceita como saída. */
-export async function gerarMockupFinal(params: {
-  cenaUrl: string; logoUrl: string; maskUrl: string; tecnica: Tecnica; nomeProduto: string; tamanho: string;
-}): Promise<{ url: string }> {
-  const [cenaBase64, logoBase64, maskBase64] = await Promise.all([
-    paraDataURL(params.cenaUrl),
+/** Geração final -- manda a foto do produto sem pré-processamento e a logo
+ * já recortada pelo vendedor na Etapa 3, mais um prompt curto montado a
+ * partir do template da técnica. Essa é a ÚNICA chamada de IA do fluxo
+ * inteiro. */
+export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url: string }> {
+  const [produtoBase64, logoBase64] = await Promise.all([
+    paraDataURL(params.produtoUrl),
     paraDataURL(params.logoUrl),
-    paraDataURL(params.maskUrl),
   ]);
   const { data, error } = await supabase.functions.invoke("gerar-mockup-final", {
-    body: { cenaBase64, logoBase64, maskBase64, tecnica: params.tecnica, nomeProduto: params.nomeProduto, tamanho: params.tamanho },
+    body: {
+      produtoBase64,
+      logoBase64,
+      tecnica: params.tecnica,
+      nomeProduto: params.nomeProduto,
+      pct: params.pct,
+      posicao: params.posicao,
+    },
   });
   if (error) {
     let msg = error.message;

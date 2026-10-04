@@ -1,115 +1,81 @@
 import { useEffect, useState } from "react";
 import { Loader2, Download, Sparkles } from "lucide-react";
-import type { ProdutoMockup, Tecnica } from "./types";
-import type { ResultadoPosicionamento } from "./EtapaPosicionamento";
+import type { CaixaPosicao, ProdutoMockup, Tecnica } from "./types";
+import { descreverPosicao } from "./posicaoDescricao";
 import { gerarMockupFinal } from "./gerarMockup";
 import { aplicarMarcaDagua } from "./marcaDagua";
-import { recortarDeVoltaDoBucket } from "./bucketImagem";
-import { comporMockupLocal } from "./composicaoLocal";
 
 interface Props {
   produto: ProdutoMockup;
-  posicionamento: ResultadoPosicionamento;
+  /** Produto com a logo já colada (de verdade, por nós) no tamanho/posição
+   * exatos escolhidos na Etapa 3 -- a IA só dá acabamento, não decide mais
+   * tamanho/posição (pedir isso só em % de texto ou só um retângulo
+   * marcado não funcionava, a IA ainda tomava liberdade). */
+  composicaoUrl: string;
+  /** Logo já recortada na Etapa 3 (o que o vendedor manteve dentro do box) --
+   * não é mais o arquivo original intocado. */
+  logoUrl: string;
   tecnica: Tecnica;
+  box: CaixaPosicao;
   onAjustarPosicao: () => void;
 }
 
-type Versao = "fiel" | "ia";
-
 /**
- * Etapa 4. A versão padrão ("fiel") aplica a logo localmente, pixel a pixel,
- * exatamente onde/como o vendedor marcou -- a IA generativa redesenhava a
- * arte (trocava texto, puxava brasão de memória, ignorava rotação). A versão
- * com IA (inpainting com máscara, GPT Image 2) fica como opção sob demanda.
+ * Etapa 4: a única chamada de IA do fluxo inteiro. Substitui por completo o
+ * antigo editor com filtros locais (wrap around, brilho, rotação, cor) --
+ * a IA já devolve o mockup pronto e fotorrealista. Depois disso só entra
+ * uma marca d'água leve (logo Gift Web), aplicada localmente.
  */
-export default function EtapaGeracaoFinal({ produto, posicionamento, tecnica, onAjustarPosicao }: Props) {
-  const [versao, setVersao] = useState<Versao>("fiel");
-  const [fiel, setFiel] = useState<string | null>(null);
-  const [ia, setIa] = useState<string | null>(null);
-  const [gerandoFiel, setGerandoFiel] = useState(true);
-  const [gerandoIa, setGerandoIa] = useState(false);
+export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao }: Props) {
+  const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [resultado, setResultado] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const composta = await comporMockupLocal({
-          cenaUrl: posicionamento.cenaUrl,
-          logoUrl: posicionamento.logoRecortada,
-          box: posicionamento.box,
-          tecnica,
-        });
-        setFiel(await aplicarMarcaDagua(composta));
-      } catch (e: any) {
-        setErro(e?.message || "Não foi possível montar o mockup.");
-      } finally {
-        setGerandoFiel(false);
-      }
-    })();
-  }, [posicionamento, tecnica]);
+  const posicao = descreverPosicao(box);
+  const pct = Math.round(box.wPct);
 
-  const gerarComIa = async () => {
-    setVersao("ia");
-    setGerandoIa(true);
+  const gerar = async () => {
+    setCarregando(true);
     setErro(null);
     try {
       const r = await gerarMockupFinal({
-        cenaUrl: posicionamento.cenaBucketUrl,
-        logoUrl: posicionamento.logoReferencia,
-        maskUrl: posicionamento.maskBucketUrl,
+        produtoUrl: composicaoUrl,
+        logoUrl,
         tecnica,
         nomeProduto: produto.nome,
-        tamanho: posicionamento.tamanhoBucket,
+        pct,
+        posicao,
       });
-      const semLetterbox = await recortarDeVoltaDoBucket(r.url, posicionamento.ajuste, posicionamento.cenaLargura, posicionamento.cenaAltura);
-      setIa(await aplicarMarcaDagua(semLetterbox));
+      const comMarca = await aplicarMarcaDagua(r.url);
+      setResultado(comMarca);
     } catch (e: any) {
-      setErro(e?.message || "Não foi possível gerar a versão com IA agora.");
+      setErro(e?.message || "Não foi possível gerar o mockup agora.");
     } finally {
-      setGerandoIa(false);
+      setCarregando(false);
     }
   };
 
-  const carregando = versao === "fiel" ? gerandoFiel : gerandoIa;
-  const resultado = versao === "fiel" ? fiel : ia;
+  useEffect(() => { gerar(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-4 flex flex-col items-center">
       <h2 className="text-lg font-semibold text-slate-800 mb-1 self-start">Mockup final</h2>
-      <p className="text-sm text-slate-500 mb-4 self-start">
-        A versão fiel usa a arte original exatamente na posição, tamanho e ângulo marcados.
+      <p className="text-sm text-slate-500 mb-6 self-start">
+        Gerado por IA a partir da foto original do produto e da logo recortada na etapa anterior -- sem edição manual depois.
       </p>
-
-      {(ia || gerandoIa) && (
-        <div className="flex gap-1 mb-3 self-start bg-slate-100 rounded-lg p-1 text-sm">
-          {(["fiel", "ia"] as Versao[]).map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setVersao(v)}
-              className={`px-3 py-1.5 rounded-md ${versao === v ? "bg-white shadow-sm font-medium text-slate-800" : "text-slate-500"}`}
-            >
-              {v === "fiel" ? "Fiel" : "IA (experimental)"}
-            </button>
-          ))}
-        </div>
-      )}
 
       <div className="w-full border rounded-xl bg-slate-50 flex items-center justify-center min-h-[320px] overflow-hidden">
         {carregando && (
           <div className="flex flex-col items-center gap-2 py-16 text-slate-400">
             <Loader2 className="w-8 h-8 animate-spin" />
-            <p className="text-sm">{versao === "ia" ? "Gerando versão com IA..." : "Montando mockup..."}</p>
+            <p className="text-sm">Gerando mockup...</p>
           </div>
         )}
-        {!carregando && resultado && <img src={resultado} alt="Mockup gerado" className="w-full h-auto" />}
+        {!carregando && resultado && (
+          <img src={resultado} alt="Mockup gerado" className="w-full h-auto" />
+        )}
       </div>
 
-      {versao === "ia" && ia && !gerandoIa && (
-        <p className="mt-2 text-xs text-amber-700 self-start">
-          A IA pode alterar texto, tamanho ou ângulo da logo -- confira antes de mandar pro cliente.
-        </p>
-      )}
       {erro && (
         <div className="mt-4 w-full text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{erro}</div>
       )}
@@ -120,12 +86,12 @@ export default function EtapaGeracaoFinal({ produto, posicionamento, tecnica, on
         </button>
         <button
           type="button"
-          onClick={gerarComIa}
-          disabled={gerandoIa}
+          onClick={gerar}
+          disabled={carregando}
           className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 text-sm font-medium disabled:opacity-50"
         >
-          {gerandoIa ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          {ia ? "Gerar outra com IA" : "Tentar versão com IA"}
+          {carregando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          Gerar novamente
         </button>
         {resultado && !carregando && (
           <a
