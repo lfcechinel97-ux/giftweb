@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Loader2, Download, Sparkles, Plus, Move, Check } from "lucide-react";
 import { TECNICAS, type CaixaPosicao, type ProdutoMockup, type Tecnica } from "./types";
 import { COR_TECNICA, ui } from "./ui";
+import { registrarDuracao, tempoMedioMs, useProgressoEstimado } from "./tempoGeracao";
 import { descreverPosicao } from "./posicaoDescricao";
 import { gerarMockupFinal } from "./gerarMockup";
 import { aplicarMarcaDagua } from "./marcaDagua";
@@ -57,9 +58,14 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
   const posicao = descreverPosicao(box);
   const pct = Math.round(box.wPct);
 
+  const [mediaMs, setMediaMs] = useState(tempoMedioMs);
+  const progresso = useProgressoEstimado(carregando, mediaMs);
+
   const gerar = async () => {
+    setMediaMs(tempoMedioMs());
     setCarregando(true);
     setErro(null);
+    const inicio = performance.now();
     try {
       const r = await gerarMockupFinal({
         produtoUrl: composicaoUrl,
@@ -72,6 +78,7 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
         posicao,
       });
       const comMarca = await aplicarMarcaDagua(r.url);
+      registrarDuracao(performance.now() - inicio);
       setResultado(comMarca);
       setGeracao(r.geracao);
       if (r.geracao) onGerado(r.geracao);
@@ -101,14 +108,9 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
         <div className="mt-6 rounded-2xl overflow-hidden border border-[var(--gw-border)] bg-[var(--gw-surface-alt)] flex items-center justify-center min-h-[360px] shadow-[var(--gw-shadow-sm)]">
           {carregando && (
             <div className="flex flex-col items-center gap-3 py-20">
-              <div className="relative w-14 h-14">
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#2563EB] to-[#7C5CFF] opacity-20 animate-ping" />
-                <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-[#2563EB] to-[#7C5CFF] flex items-center justify-center shadow-[0_8px_24px_-8px_rgba(124,92,255,.8)]">
-                  <Sparkles className="w-6 h-6 text-white" />
-                </div>
-              </div>
+              <AnelProgresso progresso={progresso} />
               <p className="text-sm font-semibold text-[var(--gw-text)]">Gerando seu mockup...</p>
-              <p className="text-xs text-[var(--gw-text-muted)]">Costuma levar uns 15 segundos</p>
+              <p className="text-xs text-[var(--gw-text-muted)]">Costuma levar uns {Math.round(mediaMs / 1000)} segundos</p>
             </div>
           )}
           {!carregando && resultado && (
@@ -151,6 +153,33 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Anel que enche no tempo médio de geração -- só referência visual, sem número. */
+function AnelProgresso({ progresso }: { progresso: number }) {
+  const raio = 34;
+  const circ = 2 * Math.PI * raio;
+  return (
+    <div className="relative w-20 h-20">
+      <svg viewBox="0 0 80 80" className="w-20 h-20 -rotate-90">
+        <defs>
+          <linearGradient id="anel-mockup" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#2563EB" />
+            <stop offset="100%" stopColor="#7C5CFF" />
+          </linearGradient>
+        </defs>
+        <circle cx="40" cy="40" r={raio} fill="none" stroke="var(--gw-border)" strokeWidth="6" />
+        <circle
+          cx="40" cy="40" r={raio} fill="none" stroke="url(#anel-mockup)" strokeWidth="6" strokeLinecap="round"
+          strokeDasharray={circ} strokeDashoffset={circ * (1 - progresso)}
+          className="transition-[stroke-dashoffset] duration-100 ease-linear"
+        />
+      </svg>
+      <div className="absolute inset-[14px] rounded-full bg-gradient-to-br from-[#2563EB] to-[#7C5CFF] flex items-center justify-center shadow-[0_8px_24px_-8px_rgba(124,92,255,.8)]">
+        <Sparkles className="w-5 h-5 text-white animate-pulse" />
       </div>
     </div>
   );
