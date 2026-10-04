@@ -7,7 +7,7 @@ interface Props {
   produto: ProdutoMockup;
   logo: LogoOriginal;
   onVoltar: () => void;
-  onContinuar: (visao: VisaoProduto, box: CaixaPosicao, logoRecortada: string) => void;
+  onContinuar: (visao: VisaoProduto, box: CaixaPosicao, logoRecortada: string, imagemGuia: string) => void;
 }
 
 interface LimitesImagem { x0: number; y0: number; x1: number; y1: number }
@@ -131,16 +131,13 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
 
     setGerandoRecorte(true);
     try {
-      const logoRecortada = await recortarLogoOriginal(
-        logo.url,
-        logoObj.cropX || 0,
-        logoObj.cropY || 0,
-        logoObj.width!,
-        logoObj.height!,
-      );
-      onContinuar(visaoAtual, box, logoRecortada);
+      const [logoRecortada, imagemGuia] = await Promise.all([
+        recortarLogoOriginal(logo.url, logoObj.cropX || 0, logoObj.cropY || 0, logoObj.width!, logoObj.height!),
+        gerarImagemGuia(visaoAtual.fotoUrl, box),
+      ]);
+      onContinuar(visaoAtual, box, logoRecortada, imagemGuia);
     } catch (e: any) {
-      setErro(e?.message || "Não foi possível recortar a logo.");
+      setErro(e?.message || "Não foi possível preparar os arquivos.");
     } finally {
       setGerandoRecorte(false);
     }
@@ -211,6 +208,40 @@ async function recortarLogoOriginal(src: string, cropX: number, cropY: number, w
   const ctx = canvas.getContext("2d");
   if (!ctx) return src;
   ctx.drawImage(img, cropX, cropY, width, height, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/png");
+}
+
+/**
+ * Desenha um retângulo tracejado na foto do produto (resolução nativa),
+ * exatamente no lugar/tamanho que o vendedor definiu -- modelos de geração
+ * de imagem seguem marcação visual muito melhor do que porcentagem em
+ * texto, que é o que causava a IA ignorando o tamanho/posição pedidos.
+ */
+async function gerarImagemGuia(produtoUrl: string, box: CaixaPosicao): Promise<string> {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = produtoUrl;
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error("Não foi possível reler a foto do produto."));
+  });
+  const canvas = document.createElement("canvas");
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return produtoUrl;
+  ctx.drawImage(img, 0, 0);
+
+  const x = (box.xPct / 100) * canvas.width;
+  const y = (box.yPct / 100) * canvas.height;
+  const w = (box.wPct / 100) * canvas.width;
+  const h = (box.hPct / 100) * canvas.height;
+  const espessura = Math.max(2, canvas.width * 0.004);
+  ctx.strokeStyle = "#ff00ff";
+  ctx.lineWidth = espessura;
+  ctx.setLineDash([espessura * 2.5, espessura * 2.5]);
+  ctx.strokeRect(x, y, w, h);
+
   return canvas.toDataURL("image/png");
 }
 

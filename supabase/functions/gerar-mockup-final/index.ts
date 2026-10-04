@@ -3,12 +3,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 /* Geração final do mockup, numa ÚNICA chamada de IA via Lovable AI Gateway
    (LOVABLE_API_KEY já injetada no projeto, cobrança nos créditos do
-   workspace Lovable). Recebe a foto do produto sem pré-processamento e a
-   logo exatamente como o vendedor recortou na Etapa 3 (sem nenhum
-   acabamento/remoção de fundo aplicado por IA antes). O prompt é curto e
-   descritivo (sem listas de "não faça isso", sem pedir resolução
-   específica), montado a partir de um template por técnica editável pelo
-   admin. */
+   workspace Lovable). Recebe a foto do produto com um retângulo tracejado
+   marcando onde/quão grande a logo deve ficar (desenhado localmente na
+   Etapa 3 -- pedir o tamanho só em % de texto fazia a IA ignorar completamente
+   o tamanho/posição pedidos) e a logo exatamente como o vendedor recortou
+   (sem nenhum acabamento/remoção de fundo aplicado por IA antes). O prompt
+   por técnica é curto e descritivo (sem listas de "não faça isso", sem
+   pedir resolução específica), editável pelo admin. */
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -73,10 +74,24 @@ serve(async (req) => {
   const chave = `final_${tecnica}`;
   const { data: linhaPrompt } = await admin.from("mockup_ia_prompts").select("prompt").eq("chave", chave).maybeSingle();
   const template = linhaPrompt?.prompt || TEMPLATES[tecnica];
-  const prompt = template
+  const promptTecnica = template
     .replace(/\{produto\}/g, nomeProduto)
     .replace(/\{pct\}/g, String(Math.round(pct)))
     .replace(/\{posicao\}/g, posicao);
+
+  // Instrução fixa (não editável pelo admin -- é estrutural, não de
+  // acabamento): a primeira imagem já vem com um retângulo tracejado
+  // marcando onde/quão grande a logo deve ficar -- a IA segue marcação
+  // visual muito melhor do que % em texto sozinho, que estava sendo
+  // ignorado. Também trava a logo do cliente só no produto: nada de
+  // vazar pra parede, cartaz, caixa ou qualquer outro item do cenário --
+  // o resto da cena é sempre neutro/genérico, nunca com a marca do cliente.
+  const prompt =
+    "A primeira imagem mostra o produto com um retângulo tracejado rosa marcando exatamente onde a logo deve " +
+    "ficar e o tamanho que ela deve ter -- aplique a logo (segunda imagem) nesse local específico, do tamanho " +
+    "marcado pelo retângulo, substituindo o retângulo por completo (ele não deve aparecer no resultado). A logo " +
+    "do cliente deve aparecer SOMENTE sobre o produto, nunca em paredes, cartazes, caixas, roupas, telas ou " +
+    "qualquer outro objeto do cenário -- o resto da cena deve ficar neutro e genérico. " + promptTecnica;
 
   // Modelo Gemini: nem /v1/chat/completions (é só-de-imagem) nem
   // /v1/images/edits (esse é o formato OpenAI/DALL-E) -- é /v1/images/

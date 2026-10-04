@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { Loader2, Download, Sparkles } from "lucide-react";
-import type { CaixaPosicao, ProdutoMockup, Tecnica, VisaoProduto } from "./types";
+import type { CaixaPosicao, ProdutoMockup, Tecnica } from "./types";
 import { descreverPosicao } from "./posicaoDescricao";
 import { gerarMockupFinal } from "./gerarMockup";
+import { aplicarMarcaDagua } from "./marcaDagua";
 
 interface Props {
   produto: ProdutoMockup;
-  visao: VisaoProduto;
+  /** Foto do produto com um retângulo tracejado marcando onde a logo deve
+   * ficar -- a IA segue marcação visual muito melhor do que % em texto. */
+  produtoGuiaUrl: string;
   /** Logo já recortada na Etapa 3 (o que o vendedor manteve dentro do box) --
    * não é mais o arquivo original intocado. */
   logoUrl: string;
@@ -18,9 +21,11 @@ interface Props {
 /**
  * Etapa 4: a única chamada de IA do fluxo inteiro. Substitui por completo o
  * antigo editor com filtros locais (wrap around, brilho, rotação, cor) --
- * a IA já devolve o mockup pronto e fotorrealista.
+ * a IA já devolve o mockup pronto e fotorrealista. Depois disso só entra
+ * uma marca d'água leve (Gift Web + WhatsApp), aplicada localmente -- nunca
+ * pela IA, que erraria o texto do telefone.
  */
-export default function EtapaGeracaoFinal({ produto, visao, logoUrl, tecnica, box, onAjustarPosicao }: Props) {
+export default function EtapaGeracaoFinal({ produto, produtoGuiaUrl, logoUrl, tecnica, box, onAjustarPosicao }: Props) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<string | null>(null);
@@ -33,14 +38,15 @@ export default function EtapaGeracaoFinal({ produto, visao, logoUrl, tecnica, bo
     setErro(null);
     try {
       const r = await gerarMockupFinal({
-        produtoUrl: visao.fotoUrl,
+        produtoUrl: produtoGuiaUrl,
         logoUrl,
         tecnica,
         nomeProduto: produto.nome,
         pct,
         posicao,
       });
-      setResultado(r.url);
+      const comMarca = await aplicarMarcaDagua(r.url);
+      setResultado(comMarca);
     } catch (e: any) {
       setErro(e?.message || "Não foi possível gerar o mockup agora.");
     } finally {
