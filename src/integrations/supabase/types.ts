@@ -205,6 +205,51 @@ export type Database = {
         }
         Relationships: []
       }
+      mockup_geracoes: {
+        Row: {
+          criado_em: string
+          id: string
+          imagem_path: string
+          modelo: string
+          produto_codigo: string | null
+          produto_nome: string | null
+          tecnica: string
+          tokens_entrada: number | null
+          tokens_saida: number | null
+          tokens_total: number | null
+          user_id: string
+          uso: Json | null
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          imagem_path: string
+          modelo: string
+          produto_codigo?: string | null
+          produto_nome?: string | null
+          tecnica: string
+          tokens_entrada?: number | null
+          tokens_saida?: number | null
+          tokens_total?: number | null
+          user_id: string
+          uso?: Json | null
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          imagem_path?: string
+          modelo?: string
+          produto_codigo?: string | null
+          produto_nome?: string | null
+          tecnica?: string
+          tokens_entrada?: number | null
+          tokens_saida?: number | null
+          tokens_total?: number | null
+          user_id?: string
+          uso?: Json | null
+        }
+        Relationships: []
+      }
       mockup_ia_prompts: {
         Row: {
           atualizado_em: string
