@@ -3,11 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 /* Geração final do mockup, numa ÚNICA chamada de IA via Lovable AI Gateway
    (LOVABLE_API_KEY já injetada no projeto, cobrança nos créditos do
-   workspace Lovable). Recebe a foto do produto e o arquivo da logo SEM
-   nenhum pré-processamento -- nada de remoção de fundo local, nada de
-   acabamento aplicado antes. O prompt é curto e descritivo (sem listas de
-   "não faça isso", sem pedir resolução específica), montado a partir de um
-   template por técnica editável pelo admin. */
+   workspace Lovable). Recebe a foto do produto sem pré-processamento e a
+   logo exatamente como o vendedor recortou na Etapa 3 (sem nenhum
+   acabamento/remoção de fundo aplicado por IA antes). O prompt é curto e
+   descritivo (sem listas de "não faça isso", sem pedir resolução
+   específica), montado a partir de um template por técnica editável pelo
+   admin. */
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,10 +27,12 @@ const TEMPLATES: Record<Tecnica, string> = {
     "posicionada {posicao}. Mantenha as letras e o desenho da logo idênticos ao original. Coloque o produto em um " +
     "cenário de mostruário B2B profissional, pronto para enviar ao cliente.",
   dtf_uv:
-    "Coloque essa logo como se estivesse personalizada em DTF UV no {produto}, cores originais da logo, leve " +
-    "relevo e brilho de verniz. A logo deve ocupar cerca de {pct}% da largura visível do produto, posicionada " +
-    "{posicao}. Mantenha as letras e o desenho da logo idênticos ao original. Coloque o produto em um cenário de " +
-    "mostruário B2B profissional, pronto para enviar ao cliente.",
+    "Coloque essa logo como se estivesse personalizada em DTF UV no {produto}: mantenha as cores originais da " +
+    "logo (não deixe monocromática nem prateada, isso é acabamento de laser, não de DTF UV), com uma camada de " +
+    "verniz bem visível por cima -- brilhante, com leve relevo 3D e reflexo de luz na superfície impressa. A logo " +
+    "deve ocupar cerca de {pct}% da largura visível do produto, posicionada {posicao}. Mantenha as letras e o " +
+    "desenho da logo idênticos ao original. Coloque o produto em um cenário de mostruário B2B profissional, " +
+    "pronto para enviar ao cliente.",
   dtf_textil:
     "Coloque essa logo como se estivesse personalizada em DTF têxtil no {produto}, cores originais da logo, " +
     "acabamento fosco com a trama do tecido visível. A logo deve ocupar cerca de {pct}% da largura visível do " +

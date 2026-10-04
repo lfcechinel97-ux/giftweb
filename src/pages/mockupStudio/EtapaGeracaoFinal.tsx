@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { Loader2, Download, Sparkles } from "lucide-react";
-import type { CaixaPosicao, LogoOriginal, ProdutoMockup, Tecnica, VisaoProduto } from "./types";
+import type { CaixaPosicao, ProdutoMockup, Tecnica, VisaoProduto } from "./types";
 import { descreverPosicao } from "./posicaoDescricao";
 import { gerarMockupFinal } from "./gerarMockup";
 
 interface Props {
   produto: ProdutoMockup;
   visao: VisaoProduto;
-  logo: LogoOriginal;
+  /** Logo já recortada na Etapa 3 (o que o vendedor manteve dentro do box) --
+   * não é mais o arquivo original intocado. */
+  logoUrl: string;
   tecnica: Tecnica;
   box: CaixaPosicao;
   onAjustarPosicao: () => void;
@@ -18,7 +20,7 @@ interface Props {
  * antigo editor com filtros locais (wrap around, brilho, rotação, cor) --
  * a IA já devolve o mockup pronto e fotorrealista.
  */
-export default function EtapaGeracaoFinal({ produto, visao, logo, tecnica, box, onAjustarPosicao }: Props) {
+export default function EtapaGeracaoFinal({ produto, visao, logoUrl, tecnica, box, onAjustarPosicao }: Props) {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export default function EtapaGeracaoFinal({ produto, visao, logo, tecnica, box, 
     try {
       const r = await gerarMockupFinal({
         produtoUrl: visao.fotoUrl,
-        logoUrl: logo.url,
+        logoUrl,
         tecnica,
         nomeProduto: produto.nome,
         pct,
@@ -52,7 +54,7 @@ export default function EtapaGeracaoFinal({ produto, visao, logo, tecnica, box, 
     <div className="max-w-2xl mx-auto py-10 px-4 flex flex-col items-center">
       <h2 className="text-lg font-semibold text-slate-800 mb-1 self-start">Mockup final</h2>
       <p className="text-sm text-slate-500 mb-6 self-start">
-        Gerado por IA a partir da foto original do produto e da logo original -- sem edição manual depois.
+        Gerado por IA a partir da foto original do produto e da logo recortada na etapa anterior -- sem edição manual depois.
       </p>
 
       <div className="w-full border rounded-xl bg-slate-50 flex items-center justify-center min-h-[320px] overflow-hidden">

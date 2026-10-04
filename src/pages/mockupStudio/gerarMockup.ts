@@ -22,9 +22,10 @@ interface GerarMockupParams {
   posicao: string;
 }
 
-/** Geração final -- manda a foto do produto e a logo SEM nenhum
- * pré-processamento, mais um prompt curto montado a partir do template da
- * técnica. Essa é a ÚNICA chamada de IA do fluxo inteiro. */
+/** Geração final -- manda a foto do produto sem pré-processamento e a logo
+ * já recortada pelo vendedor na Etapa 3, mais um prompt curto montado a
+ * partir do template da técnica. Essa é a ÚNICA chamada de IA do fluxo
+ * inteiro. */
 export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url: string }> {
   const [produtoBase64, logoBase64] = await Promise.all([
     paraDataURL(params.produtoUrl),
