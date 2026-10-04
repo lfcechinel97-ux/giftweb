@@ -103,13 +103,27 @@ serve(async (req) => {
   if (resposta.status === 429) return json({ error: "Muitas requisições de IA agora -- aguarde um instante e tente de novo." }, 429);
   if (resposta.status === 402) return json({ error: "Créditos de IA do workspace Lovable esgotados." }, 402);
 
-  const dados = await resposta.json().catch(() => null);
+  const textoBruto = await resposta.text();
+  let dados: any = null;
+  try { dados = JSON.parse(textoBruto); } catch { /* resposta não era JSON */ }
+
   if (!resposta.ok) {
-    return json({ error: dados?.error?.message || "A IA recusou o pedido." }, 502);
+    console.error("Lovable AI gateway recusou:", resposta.status, textoBruto.slice(0, 2000));
+    const msg =
+      dados?.error?.message ||
+      (typeof dados?.error === "string" ? dados.error : null) ||
+      dados?.message ||
+      textoBruto.slice(0, 300) ||
+      "A IA recusou o pedido.";
+    return json({ error: `IA (${resposta.status}): ${msg}` }, 502);
   }
 
   const imagemUrl = dados?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-  if (!imagemUrl) return json({ error: "A IA não retornou uma imagem." }, 502);
+  if (!imagemUrl) {
+    console.error("Resposta sem imagem:", textoBruto.slice(0, 2000));
+    const textoResposta = dados?.choices?.[0]?.message?.content;
+    return json({ error: textoResposta ? `A IA respondeu sem imagem: "${textoResposta}"` : "A IA não retornou uma imagem." }, 502);
+  }
 
   return json({ url: imagemUrl });
 });
