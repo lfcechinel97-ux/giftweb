@@ -73,22 +73,31 @@ serve(async (req) => {
     .replace(/\{pct\}/g, String(Math.round(pct)))
     .replace(/\{posicao\}/g, posicao);
 
-  // Esse modelo não fala o endpoint de chat (/v1/chat/completions) -- é um
-  // modelo só-de-imagem, exposto em /v1/images/edits (formato OpenAI de
-  // edição de imagem: multipart/form-data, com uma ou mais "image[]" de
-  // referência + prompt).
+  // Modelo Gemini: nem /v1/chat/completions (é só-de-imagem) nem
+  // /v1/images/edits (esse é o formato OpenAI/DALL-E) -- é /v1/images/
+  // generations com o corpo nativo do Gemini (contents/parts/inlineData).
   let resposta: Response;
   try {
-    const form = new FormData();
-    form.append("model", "google/gemini-3.1-flash-lite-image");
-    form.append("prompt", prompt);
-    form.append("image[]", dataUrlParaBlob(produtoBase64), "produto.png");
-    form.append("image[]", dataUrlParaBlob(logoBase64), "logo.png");
-
-    resposta = await fetch("https://ai.gateway.lovable.dev/v1/images/edits", {
+    resposta = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
       method: "POST",
-      headers: { Authorization: `Bearer ${lovableKey}` },
-      body: form,
+      headers: {
+        Authorization: `Bearer ${lovableKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-3.1-flash-lite-image",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: prompt },
+              { inlineData: { mimeType: mimeDaDataUrl(produtoBase64), data: base64DaDataUrl(produtoBase64) } },
+              { inlineData: { mimeType: mimeDaDataUrl(logoBase64), data: base64DaDataUrl(logoBase64) } },
+            ],
+          },
+        ],
+        generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
+      }),
     });
   } catch {
     return json({ error: "Não foi possível falar com a IA agora." }, 502);
@@ -112,8 +121,14 @@ serve(async (req) => {
     return json({ error: `IA (${resposta.status}): ${msg}` }, 502);
   }
 
-  const item = dados?.data?.[0];
-  const imagemUrl = item?.b64_json ? `data:image/png;base64,${item.b64_json}` : item?.url;
+  // Formato nativo do Gemini: candidates[0].content.parts[] -- a parte com
+  // a imagem vem como inlineData (mimeType + base64), junto de uma parte
+  // de texto que é ignorada aqui.
+  const partes = dados?.candidates?.[0]?.content?.parts ?? [];
+  const parteImagem = partes.find((p: any) => p?.inlineData?.data);
+  const imagemUrl = parteImagem
+    ? `data:${parteImagem.inlineData.mimeType || "image/png"};base64,${parteImagem.inlineData.data}`
+    : null;
   if (!imagemUrl) {
     console.error("Resposta sem imagem:", textoBruto.slice(0, 2000));
     return json({ error: "A IA não retornou uma imagem." }, 502);
@@ -122,11 +137,10 @@ serve(async (req) => {
   return json({ url: imagemUrl });
 });
 
-function dataUrlParaBlob(dataUrl: string): Blob {
-  const [cabecalho, base64] = dataUrl.split(",");
-  const mime = cabecalho.match(/data:(.*?);base64/)?.[1] || "image/png";
-  const binario = atob(base64);
-  const bytes = new Uint8Array(binario.length);
-  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
-  return new Blob([bytes], { type: mime });
+function mimeDaDataUrl(dataUrl: string): string {
+  return dataUrl.match(/data:(.*?);base64/)?.[1] || "image/png";
+}
+
+function base64DaDataUrl(dataUrl: string): string {
+  return dataUrl.split(",")[1] || "";
 }
