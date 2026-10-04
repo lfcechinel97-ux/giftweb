@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Loader2, Download, Sparkles } from "lucide-react";
-import type { CaixaPosicao, ProdutoMockup, Tecnica } from "./types";
+import { Loader2, Download, Sparkles, Plus, Move, Check } from "lucide-react";
+import { TECNICAS, type CaixaPosicao, type ProdutoMockup, type Tecnica } from "./types";
+import { COR_TECNICA, ui } from "./ui";
 import { descreverPosicao } from "./posicaoDescricao";
 import { gerarMockupFinal } from "./gerarMockup";
 import { aplicarMarcaDagua } from "./marcaDagua";
@@ -21,6 +22,7 @@ interface Props {
   box: CaixaPosicao;
   onAjustarPosicao: () => void;
   onGerado: (geracao: Geracao) => void;
+  onNovoMockup: () => void;
 }
 
 /**
@@ -29,7 +31,9 @@ interface Props {
  * a IA já devolve o mockup pronto e fotorrealista. Depois disso só entra
  * uma marca d'água leve (logo Gift Web), aplicada localmente.
  */
-export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao, onGerado }: Props) {
+export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao, onGerado, onNovoMockup }: Props) {
+  const cor = COR_TECNICA[tecnica];
+  const nomeTecnica = TECNICAS.find((t) => t.id === tecnica)?.nome ?? tecnica;
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [resultado, setResultado] = useState<string | null>(null);
@@ -78,57 +82,68 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
   useEffect(() => { gerar(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4 flex flex-col items-center">
-      <h2 className="text-lg font-semibold text-slate-800 mb-1 self-start">Mockup final</h2>
-      <p className="text-sm text-slate-500 mb-6 self-start">
-        Gerado por IA a partir da foto original do produto e da logo recortada na etapa anterior -- sem edição manual depois.
-      </p>
+    <div className={ui.pagina}>
+      <div className={`${ui.card} p-6 sm:p-8`}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className={ui.titulo}>Mockup final</h2>
+            <p className={ui.subtitulo}>{produto.nome} · {produto.codigoAmigavel}</p>
+          </div>
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${cor.fundo} ${cor.texto}`}>
+            <span className={`w-2 h-2 rounded-full bg-gradient-to-br ${cor.solido}`} />
+            {nomeTecnica}
+          </span>
+        </div>
 
-      <div className="w-full border rounded-xl bg-slate-50 flex items-center justify-center min-h-[320px] overflow-hidden">
-        {carregando && (
-          <div className="flex flex-col items-center gap-2 py-16 text-slate-400">
-            <Loader2 className="w-8 h-8 animate-spin" />
-            <p className="text-sm">Gerando mockup...</p>
+        <div className="mt-6 rounded-2xl overflow-hidden border border-[var(--gw-border)] bg-[var(--gw-surface-alt)] flex items-center justify-center min-h-[360px] shadow-[var(--gw-shadow-sm)]">
+          {carregando && (
+            <div className="flex flex-col items-center gap-3 py-20">
+              <div className="relative w-14 h-14">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#2563EB] to-[#7C5CFF] opacity-20 animate-ping" />
+                <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-[#2563EB] to-[#7C5CFF] flex items-center justify-center shadow-[0_8px_24px_-8px_rgba(124,92,255,.8)]">
+                  <Sparkles className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <p className="text-sm font-semibold text-[var(--gw-text)]">Gerando seu mockup...</p>
+              <p className="text-xs text-[var(--gw-text-muted)]">Costuma levar uns 15 segundos</p>
+            </div>
+          )}
+          {!carregando && resultado && (
+            <img src={resultado} alt="Mockup gerado" className="w-full h-auto" />
+          )}
+        </div>
+
+        {geracao && !carregando && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+            <span className="px-2 py-0.5 rounded-full bg-[var(--gw-blue-soft)] text-[#1D4ED8] font-medium">{nomeModelo(geracao.modelo)}</span>
+            <span className="px-2 py-0.5 rounded-full bg-[var(--gw-violet-soft)] text-[#6D28D9] font-medium">{formatarTokens(geracao.tokens_total)} tokens</span>
+            <span className="px-2 py-0.5 rounded-full bg-[var(--gw-success-soft)] text-[#0E8A5C] font-medium inline-flex items-center gap-1">
+              <Check className="w-3 h-3" strokeWidth={3} /> Salvo no histórico
+            </span>
           </div>
         )}
-        {!carregando && resultado && (
-          <img src={resultado} alt="Mockup gerado" className="w-full h-auto" />
-        )}
-      </div>
 
-      {geracao && !carregando && (
-        <p className="mt-2 text-xs text-slate-400 self-start">
-          {nomeModelo(geracao.modelo)} · {formatarTokens(geracao.tokens_total)} tokens · salvo no histórico
-        </p>
-      )}
+        {erro && <div className={`${ui.erro} mt-4`}>{erro}</div>}
 
-      {erro && (
-        <div className="mt-4 w-full text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{erro}</div>
-      )}
-
-      <div className="mt-6 flex flex-wrap gap-3 justify-end w-full">
-        <button type="button" onClick={onAjustarPosicao} className="px-4 py-2.5 rounded-lg border text-sm font-medium hover:bg-slate-50">
-          Ajustar posição
-        </button>
-        <button
-          type="button"
-          onClick={gerar}
-          disabled={carregando}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-purple-200 text-purple-700 bg-purple-50 hover:bg-purple-100 text-sm font-medium disabled:opacity-50"
-        >
-          {carregando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-          Gerar novamente
-        </button>
-        {resultado && !carregando && (
-          <button
-            type="button"
-            onClick={baixar}
-            disabled={baixando}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 disabled:opacity-50"
-          >
-            {baixando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Baixar
+        <div className="mt-8 flex flex-wrap gap-3 justify-between items-center">
+          <button type="button" onClick={onNovoMockup} className={ui.btnSecundario}>
+            <Plus className="w-4 h-4" /> Gerar outro mockup
           </button>
-        )}
+          <div className="flex flex-wrap gap-3">
+            <button type="button" onClick={onAjustarPosicao} className={ui.btnSecundario}>
+              <Move className="w-4 h-4" /> Ajustar posição
+            </button>
+            <button type="button" onClick={gerar} disabled={carregando} className={ui.btnIA}>
+              {carregando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              Gerar novamente
+            </button>
+            {resultado && !carregando && (
+              <button type="button" onClick={baixar} disabled={baixando} className={ui.btnSucesso}>
+                {baixando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Baixar
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

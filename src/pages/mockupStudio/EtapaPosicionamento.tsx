@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, FabricImage, controlsUtils } from "fabric";
-import { Loader2, RotateCcw, RotateCw } from "lucide-react";
+import { Loader2, RotateCcw, RotateCw, Wand2 } from "lucide-react";
 import type { CaixaPosicao, LogoOriginal, ProdutoMockup, VisaoProduto } from "./types";
 import { removerFundoSeOpaco } from "./removerFundo";
+import { ui } from "./ui";
 
 interface Props {
   produto: ProdutoMockup;
@@ -214,76 +215,89 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8 px-4 flex flex-col items-center">
-      <h2 className="text-lg font-semibold text-slate-800 mb-1 self-start">Posicionar a logo</h2>
-      <p className="text-sm text-slate-500 mb-4 self-start">
-        Arraste pra mover, puxe os cantos pra redimensionar proporcionalmente, puxe as bordas pra recortar (ex.: tirar
-        um texto que não deve entrar), ou gire pela alça de cima ou pelos controles abaixo.
-      </p>
+    <div className={ui.pagina}>
+      <div className={`${ui.card} p-6 sm:p-8`}>
+        <h2 className={ui.titulo}>Posicionar a logo</h2>
+        <p className={ui.subtitulo}>
+          Arraste pra mover, puxe os cantos pra redimensionar, puxe as bordas pra recortar (ex.: tirar um texto que não
+          deve entrar) e gire pela alça de cima ou pelos controles abaixo.
+        </p>
 
-      <div className="bg-white rounded-lg shadow-[0_18px_40px_-12px_rgba(0,0,0,0.25)] relative">
-        <canvas ref={canvasElRef} />
-        {!pronto && !erro && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/70">
-            <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+        <div className="mt-6 flex flex-col items-center">
+          <div className="relative rounded-2xl p-3 bg-gradient-to-br from-[#EAF1FF] via-[#F5F8FC] to-[#F1EDFF] border border-[var(--gw-border)]">
+            <div className="bg-white rounded-xl overflow-hidden shadow-[var(--gw-shadow-lg)] relative">
+              <canvas ref={canvasElRef} />
+              {!pronto && !erro && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/70">
+                  <Loader2 className="w-7 h-7 text-[#2563EB] animate-spin" />
+                </div>
+              )}
+            </div>
           </div>
-        )}
-      </div>
-      {erro && <p className="text-sm text-red-600 mt-3">{erro}</p>}
+          {erro && <div className={`${ui.erro} mt-4 w-full`}>{erro}</div>}
 
-      <div className="flex items-center gap-2 mt-4 bg-white border rounded-lg px-3 py-2 shadow-sm">
-        <button type="button" onClick={() => girar(-90)} className="p-1.5 rounded hover:bg-slate-100" title="Girar -90°">
-          <RotateCcw className="w-4 h-4" />
-        </button>
-        <input
-          type="range" min={-180} max={180} value={angulo}
-          onChange={(e) => definirAngulo(Number(e.target.value))}
-          className="w-32"
-        />
-        <button type="button" onClick={() => girar(90)} className="p-1.5 rounded hover:bg-slate-100" title="Girar +90° (deixar na vertical)">
-          <RotateCw className="w-4 h-4" />
-        </button>
-        <input
-          type="number" value={angulo}
-          onChange={(e) => definirAngulo(Number(e.target.value) || 0)}
-          className="w-16 px-2 py-1 text-sm border rounded text-center"
-        />
-        <span className="text-sm text-slate-400">°</span>
-      </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
+            <div className="flex items-center gap-2 bg-white border border-[var(--gw-border)] rounded-xl px-3 py-2 shadow-[var(--gw-shadow-sm)]">
+              <button type="button" onClick={() => girar(-90)} className="p-1.5 rounded-lg text-[var(--gw-text-secondary)] hover:bg-[var(--gw-blue-soft)] hover:text-[#2563EB]" title="Girar -90°">
+                <RotateCcw className="w-4 h-4" />
+              </button>
+              <input
+                type="range" min={-180} max={180} value={angulo}
+                onChange={(e) => definirAngulo(Number(e.target.value))}
+                className="w-36 accent-[#2563EB]"
+              />
+              <button type="button" onClick={() => girar(90)} className="p-1.5 rounded-lg text-[var(--gw-text-secondary)] hover:bg-[var(--gw-blue-soft)] hover:text-[#2563EB]" title="Girar +90° (deixar na vertical)">
+                <RotateCw className="w-4 h-4" />
+              </button>
+              <div className="flex items-center gap-1 pl-2 border-l border-[var(--gw-border)]">
+                <input
+                  type="number" value={angulo}
+                  onChange={(e) => definirAngulo(Number(e.target.value) || 0)}
+                  className="w-16 px-2 py-1 text-sm font-semibold text-[var(--gw-text)] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] rounded-lg text-center focus:outline-none focus:border-[#2563EB]"
+                />
+                <span className="text-sm text-[var(--gw-text-muted)]">°</span>
+              </div>
+            </div>
 
-      {temFundo && (
-        <label className="flex items-center gap-2 mt-3 text-sm text-slate-600 cursor-pointer">
-          <input type="checkbox" checked={removerFundo} onChange={(e) => alternarFundo(e.target.checked)} />
-          Remover o fundo da logo
-        </label>
-      )}
+            {temFundo && (
+              <label className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm cursor-pointer transition-colors ${
+                removerFundo ? "border-[#7C5CFF]/40 bg-[var(--gw-violet-soft)] text-[#6D28D9] font-medium" : "border-[var(--gw-border)] bg-white text-[var(--gw-text-secondary)]"
+              }`}>
+                <input type="checkbox" checked={removerFundo} onChange={(e) => alternarFundo(e.target.checked)} className="accent-[#7C5CFF]" />
+                Remover o fundo da logo
+              </label>
+            )}
+          </div>
 
-      {produto.visoes.length > 1 && (
-        <div className="flex gap-2 mt-4">
-          {produto.visoes.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => setVisaoId(v.id)}
-              className={`border-2 rounded-lg overflow-hidden w-14 h-14 ${v.id === visaoId ? "border-blue-500" : "border-transparent hover:border-slate-300"}`}
-            >
-              <img src={v.fotoUrl} alt={v.nome} className="w-full h-full object-cover" />
-            </button>
-          ))}
+          {produto.visoes.length > 1 && (
+            <div className="mt-5">
+              <p className={`${ui.rotulo} text-center`}>Vistas do produto</p>
+              <div className="flex gap-2 justify-center">
+                {produto.visoes.map((v) => (
+                  <button
+                    key={v.id}
+                    onClick={() => setVisaoId(v.id)}
+                    className={`rounded-xl overflow-hidden w-16 h-16 bg-white transition-all ${
+                      v.id === visaoId ? "ring-2 ring-[#2563EB] ring-offset-2" : "border border-[var(--gw-border)] opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <img src={v.fotoUrl} alt={v.nome} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      )}
 
-      <div className="mt-8 flex gap-3 self-end">
-        <button type="button" onClick={onVoltar} className="px-5 py-2.5 rounded-lg border text-sm font-medium hover:bg-slate-50">
-          Voltar
-        </button>
-        <button
-          type="button"
-          disabled={!pronto || gerandoRecorte}
-          onClick={continuar}
-          className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-40"
-        >
-          {gerandoRecorte ? "Preparando..." : "Gerar mockup final"}
-        </button>
+        <div className="mt-8 flex gap-3 justify-end">
+          <button type="button" onClick={onVoltar} className={ui.btnSecundario}>
+            Voltar
+          </button>
+          <button type="button" disabled={!pronto || gerandoRecorte} onClick={continuar} className={ui.btnPrimario}>
+            {gerandoRecorte ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+            {gerandoRecorte ? "Preparando..." : "Gerar mockup final"}
+          </button>
+        </div>
       </div>
     </div>
   );

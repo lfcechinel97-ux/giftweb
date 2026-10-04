@@ -1,6 +1,9 @@
 import { useRef, useState } from "react";
-import { Upload, FileWarning, Check } from "lucide-react";
+import { Upload, FileWarning, Check, ArrowRight, Zap, Sparkles, Shirt, type LucideIcon } from "lucide-react";
 import { TECNICAS, type LogoOriginal, type Tecnica } from "./types";
+import { COR_TECNICA, ui } from "./ui";
+
+const ICONE_TECNICA: Record<Tecnica, LucideIcon> = { laser: Zap, dtf_uv: Sparkles, dtf_textil: Shirt };
 
 const TIPOS_AVALIADOS = /^(image\/(png|jpe?g|svg\+xml)|application\/pdf)$/i;
 const EXT_OK = /\.(png|jpe?g|svg|pdf)$/i;
@@ -36,73 +39,96 @@ export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
   const handleFiles = (files: FileList | null) => { const f = files?.[0]; if (f) validarEUsar(f); };
 
   return (
-    <div className="max-w-3xl mx-auto py-10 px-4">
-      <h2 className="text-lg font-semibold text-slate-800 mb-1">Novo mockup</h2>
-      <p className="text-sm text-slate-500 mb-6">Envie a logo do cliente e escolha a técnica de personalização.</p>
+    <div className={ui.pagina}>
+      <div className={`${ui.card} p-6 sm:p-8`}>
+        <h2 className={ui.titulo}>Novo mockup</h2>
+        <p className={ui.subtitulo}>Envie a logo do cliente e escolha a técnica de personalização.</p>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <p className="text-xs font-medium text-slate-500 mb-2">Logo</p>
-          <div
-            onDragOver={(e) => { e.preventDefault(); setArrastando(true); }}
-            onDragLeave={() => setArrastando(false)}
-            onDrop={(e) => { e.preventDefault(); setArrastando(false); handleFiles(e.dataTransfer.files); }}
-            onClick={() => inputRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors h-48 ${
-              arrastando ? "border-blue-500 bg-blue-50" : "border-slate-300 hover:border-blue-400 hover:bg-slate-50"
-            }`}
+        <div className="grid md:grid-cols-2 gap-6 mt-6">
+          <div>
+            <p className={ui.rotulo}>Logo do cliente</p>
+            <div
+              onDragOver={(e) => { e.preventDefault(); setArrastando(true); }}
+              onDragLeave={() => setArrastando(false)}
+              onDrop={(e) => { e.preventDefault(); setArrastando(false); handleFiles(e.dataTransfer.files); }}
+              onClick={() => inputRef.current?.click()}
+              className={`relative border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all h-56 ${
+                arrastando
+                  ? "border-[#2563EB] bg-[var(--gw-blue-soft)] scale-[1.01]"
+                  : logo
+                    ? "border-[#0EA36B]/50 bg-[var(--gw-success-soft)]/40"
+                    : "border-[var(--gw-border-strong)] bg-[var(--gw-surface-alt)] hover:border-[#2563EB] hover:bg-[var(--gw-blue-soft)]"
+              }`}
+            >
+              {logo ? (
+                <>
+                  <img src={logo.url} alt={logo.nome} className="max-h-36 max-w-full object-contain drop-shadow-sm" />
+                  <p className="text-[11px] text-[var(--gw-text-muted)] mt-3 truncate max-w-full">{logo.nome} · clique pra trocar</p>
+                </>
+              ) : (
+                <>
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#2563EB] to-[#7C5CFF] flex items-center justify-center mb-3 shadow-[0_8px_20px_-8px_rgba(37,99,235,.8)]">
+                    <Upload className="w-6 h-6 text-white" />
+                  </div>
+                  <p className="text-sm font-semibold text-[var(--gw-text)]">Arraste ou clique para enviar</p>
+                  <p className="text-[11px] text-[var(--gw-text-muted)] mt-1">PNG ou JPG — até 15 MB</p>
+                </>
+              )}
+              <input ref={inputRef} type="file" accept=".png,.jpg,.jpeg,.svg,.pdf" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+            </div>
+          </div>
+
+          <div>
+            <p className={ui.rotulo}>Técnica de personalização</p>
+            <div className="space-y-2.5">
+              {TECNICAS.map((t) => {
+                const cor = COR_TECNICA[t.id];
+                const Icone = ICONE_TECNICA[t.id];
+                const ativa = tecnica === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTecnica(t.id)}
+                    className={`w-full text-left border-2 rounded-xl p-3 flex items-center gap-3 transition-all ${
+                      ativa ? `${cor.borda} ${cor.fundo} shadow-[var(--gw-shadow-sm)]` : "border-[var(--gw-border)] bg-white hover:border-[var(--gw-border-strong)] hover:shadow-[var(--gw-shadow-sm)]"
+                    }`}
+                  >
+                    <span className={`w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br ${cor.solido} flex items-center justify-center text-white`}>
+                      <Icone className="w-5 h-5" />
+                    </span>
+                    <span className="flex-1 min-w-0">
+                      <span className={`block text-sm font-semibold ${ativa ? cor.texto : "text-[var(--gw-text)]"}`}>{t.nome}</span>
+                      <span className="block text-[11px] text-[var(--gw-text-muted)]">{t.descricao}</span>
+                    </span>
+                    {ativa && (
+                      <span className={`w-5 h-5 rounded-full bg-gradient-to-br ${cor.solido} flex items-center justify-center shrink-0`}>
+                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {erro && (
+          <div className={`${ui.erro} mt-5`}>
+            <FileWarning className="w-4 h-4 mt-0.5 shrink-0" /><span>{erro}</span>
+          </div>
+        )}
+
+        <div className="mt-8 flex justify-end">
+          <button
+            type="button"
+            disabled={!logo || !tecnica}
+            onClick={() => logo && tecnica && onConcluir(logo, tecnica)}
+            className={ui.btnPrimario}
           >
-            {logo ? (
-              <img src={logo.url} alt={logo.nome} className="max-h-32 object-contain" />
-            ) : (
-              <>
-                <Upload className="w-8 h-8 text-slate-400 mb-2" />
-                <p className="text-sm text-slate-600">Arraste ou clique para enviar</p>
-                <p className="text-[11px] text-slate-400 mt-1">PNG, JPG, JPEG, SVG ou PDF — até 15 MB</p>
-              </>
-            )}
-            <input ref={inputRef} type="file" accept=".png,.jpg,.jpeg,.svg,.pdf" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
-          </div>
+            Continuar <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
-
-        <div>
-          <p className="text-xs font-medium text-slate-500 mb-2">Técnica de personalização</p>
-          <div className="space-y-2">
-            {TECNICAS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTecnica(t.id)}
-                className={`w-full text-left border rounded-lg p-2.5 flex items-start justify-between gap-2 transition-colors ${
-                  tecnica === t.id ? "border-blue-500 bg-blue-50 ring-1 ring-blue-500" : "border-slate-200 hover:border-blue-300"
-                }`}
-              >
-                <div>
-                  <p className="text-sm font-medium text-slate-800">{t.nome}</p>
-                  <p className="text-[11px] text-slate-500">{t.descricao}</p>
-                </div>
-                {tecnica === t.id && <Check className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {erro && (
-        <div className="mt-4 flex items-start gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-          <FileWarning className="w-4 h-4 mt-0.5 shrink-0" /><span>{erro}</span>
-        </div>
-      )}
-
-      <div className="mt-6 flex justify-end">
-        <button
-          type="button"
-          disabled={!logo || !tecnica}
-          onClick={() => logo && tecnica && onConcluir(logo, tecnica)}
-          className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          Continuar
-        </button>
       </div>
     </div>
   );

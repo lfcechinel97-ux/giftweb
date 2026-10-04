@@ -1,21 +1,41 @@
 import { useEffect, useRef, useState } from "react";
-import { Search, ImageIcon } from "lucide-react";
+import { Search, ImageIcon, ArrowLeft, ArrowRight, Clock, Loader2, Package } from "lucide-react";
 import { useSistemaProducts, type SistemaProduct } from "@/pages/sistema/useSistemaProducts";
 import type { ProdutoMockup } from "./types";
+import { ui } from "./ui";
 
 interface Props {
   onSelecionar: (produto: ProdutoMockup) => void;
+  /** Códigos dos produtos mais usados no Mockup Studio, já ordenados. */
+  codigosRecentes: string[];
 }
 
-export default function EtapaProduto({ onSelecionar }: Props) {
+export default function EtapaProduto({ onSelecionar, codigosRecentes }: Props) {
   const { parentProducts, searchParents, getParentWithVariants, isLoading } = useSistemaProducts();
   const [termo, setTermo] = useState("");
   const [resultados, setResultados] = useState<SistemaProduct[]>([]);
   const [buscando, setBuscando] = useState(false);
   const [grupo, setGrupo] = useState<{ parent: SistemaProduct; variants: SistemaProduct[] } | null>(null);
   const [variante, setVariante] = useState<SistemaProduct | null>(null);
+  const [abrindo, setAbrindo] = useState<string | null>(null);
+  const [recentes, setRecentes] = useState<SistemaProduct[]>([]);
 
-  const listaExibida = termo.trim() ? resultados : parentProducts.slice(0, 20);
+  const chaveRecentes = codigosRecentes.join("|");
+  useEffect(() => {
+    if (!codigosRecentes.length) { setRecentes([]); return; }
+    let cancelado = false;
+    Promise.all(codigosRecentes.map((c) => searchParents(c, 1).then((r) => r[0]).catch(() => undefined)))
+      .then((lista) => {
+        if (cancelado) return;
+        const vistos = new Set<string>();
+        setRecentes(lista.filter((p): p is SistemaProduct => !!p && !vistos.has(p.id) && !!vistos.add(p.id)));
+      });
+    return () => { cancelado = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chaveRecentes]);
+
+  const idsRecentes = new Set(recentes.map((p) => p.id));
+  const sugestoes = parentProducts.filter((p) => p.has_image && !idsRecentes.has(p.id)).slice(0, 18);
 
   // Debounce: sem isso cada tecla digitada disparava uma busca -- era isso
   // que deixava a página "travada" enquanto o vendedor digitava o nome.
@@ -39,10 +59,15 @@ export default function EtapaProduto({ onSelecionar }: Props) {
   useEffect(() => () => window.clearTimeout(buscaTimer.current), []);
 
   const abrirProduto = async (p: SistemaProduct) => {
-    const g = await getParentWithVariants(p.codigo_amigavel);
-    if (!g) return;
-    setGrupo(g);
-    setVariante(g.parent.has_image ? g.parent : g.variants.find((v) => v.has_image) || g.parent);
+    setAbrindo(p.id);
+    try {
+      const g = await getParentWithVariants(p.codigo_amigavel);
+      if (!g) return;
+      setGrupo(g);
+      setVariante(g.parent.has_image ? g.parent : g.variants.find((v) => v.has_image) || g.parent);
+    } finally {
+      setAbrindo(null);
+    }
   };
 
   const confirmar = () => {
@@ -66,96 +91,143 @@ export default function EtapaProduto({ onSelecionar }: Props) {
     ));
 
     return (
-      <div className="max-w-3xl mx-auto py-10 px-4">
-        <button type="button" onClick={() => setGrupo(null)} className="text-sm text-blue-600 hover:underline mb-4">
-          ← Voltar à busca
-        </button>
-        <h2 className="text-lg font-semibold text-slate-800 mb-1">{grupo.parent.nome}</h2>
-        <p className="text-sm text-slate-500 mb-6">{grupo.parent.codigo_amigavel}</p>
+      <div className={ui.pagina}>
+        <div className={`${ui.card} p-6 sm:p-8`}>
+          <button
+            type="button"
+            onClick={() => setGrupo(null)}
+            className="inline-flex items-center gap-1 text-sm font-medium text-[#2563EB] hover:text-[#1D4ED8] mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" /> Voltar à busca
+          </button>
+          <h2 className={ui.titulo}>{grupo.parent.nome}</h2>
+          <p className="text-xs font-mono text-[var(--gw-text-muted)] mt-1">{grupo.parent.codigo_amigavel}</p>
 
-        {candidatos.length > 1 && (
-          <div className="mb-6">
-            <p className="text-xs font-medium text-slate-500 mb-2">Variante</p>
-            <div className="flex flex-wrap gap-2">
-              {candidatos.map((v) => (
-                <button
-                  key={v.id}
-                  type="button"
-                  onClick={() => setVariante(v)}
-                  className={`px-3 py-1.5 rounded-lg border text-sm min-w-[64px] text-center transition-colors ${variante?.id === v.id ? "border-blue-500 bg-blue-50 text-blue-700" : "border-slate-200 hover:border-blue-300"}`}
-                >
-                  {v.cor || v.codigo_amigavel}
-                </button>
+          {candidatos.length > 1 && (
+            <div className="mt-6">
+              <p className={ui.rotulo}>Variante</p>
+              <div className="flex flex-wrap gap-2">
+                {candidatos.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() => setVariante(v)}
+                    className={`px-3.5 py-1.5 rounded-full border text-sm min-w-[64px] text-center transition-colors ${
+                      variante?.id === v.id
+                        ? "border-transparent bg-gradient-to-r from-[#2563EB] to-[#5B52E8] text-white font-semibold shadow-[0_4px_12px_-4px_rgba(37,99,235,.7)]"
+                        : "border-[var(--gw-border-strong)] bg-white text-[var(--gw-text-secondary)] hover:border-[#2563EB]/60 hover:text-[#2563EB]"
+                    }`}
+                  >
+                    {v.cor || v.codigo_amigavel}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <p className={`${ui.rotulo} mt-6`}>
+            {fotos.length} foto{fotos.length !== 1 ? "s" : ""} — todas entram como vistas no editor
+          </p>
+          {fotos.length === 0 ? (
+            <p className="text-sm text-[var(--gw-text-muted)]">Este produto não tem fotos sincronizadas.</p>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+              {/* key por posição: trocar de variante só troca o src, sem
+                  desmontar as imagens (antes a grade sumia e voltava). */}
+              {fotos.map((url, i) => (
+                <div key={i} className="aspect-square border border-[var(--gw-border)] rounded-xl overflow-hidden bg-[var(--gw-surface-alt)]">
+                  <img src={url} alt="" className="w-full h-full object-contain" />
+                </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
 
-        <p className="text-xs font-medium text-slate-500 mb-2">
-          {fotos.length} foto{fotos.length !== 1 ? "s" : ""} — todas entram como vistas no editor
-        </p>
-        {fotos.length === 0 ? (
-          <p className="text-sm text-slate-400">Este produto não tem fotos sincronizadas.</p>
-        ) : (
-          <div className="grid grid-cols-4 gap-3 mb-6">
-            {/* key por posição: trocar de variante só troca o src, sem
-                desmontar as imagens (antes a grade sumia e voltava). */}
-            {fotos.map((url, i) => (
-              <div key={i} className="aspect-square border rounded-lg overflow-hidden bg-slate-50">
-                <img src={url} alt="" className="w-full h-full object-cover" />
-              </div>
-            ))}
+          <div className="mt-8 flex justify-end">
+            <button type="button" disabled={fotos.length === 0} onClick={confirmar} className={ui.btnPrimario}>
+              Usar este produto <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
-        )}
-
-        <button
-          type="button"
-          disabled={fotos.length === 0}
-          onClick={confirmar}
-          className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-40"
-        >
-          Usar este produto
-        </button>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="max-w-3xl mx-auto py-10 px-4">
-      <h2 className="text-lg font-semibold text-slate-800 mb-1">Selecionar produto</h2>
-      <p className="text-sm text-slate-500 mb-6">Busca no catálogo sincronizado da XBZ.</p>
-
-      <div className="relative mb-6">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-        <input
-          type="text"
-          value={termo}
-          onChange={(e) => buscar(e.target.value)}
-          placeholder="Nome ou código do produto..."
-          className="w-full pl-9 pr-3 py-2.5 border rounded-lg text-sm"
-        />
+  const cartao = (p: SistemaProduct) => (
+    <button
+      key={p.id}
+      type="button"
+      onClick={() => abrirProduto(p)}
+      disabled={!!abrindo}
+      className="group relative bg-white border border-[var(--gw-border)] rounded-2xl p-2.5 text-left transition-all hover:border-[#2563EB]/50 hover:shadow-[var(--gw-shadow-md)] hover:-translate-y-0.5 disabled:cursor-wait"
+    >
+      <div className="aspect-square bg-[var(--gw-surface-alt)] rounded-xl mb-2.5 flex items-center justify-center overflow-hidden">
+        {p.image_url
+          ? <img src={p.image_url} alt="" className="w-full h-full object-contain p-2 transition-transform group-hover:scale-105" />
+          : <ImageIcon className="w-6 h-6 text-[var(--gw-border-strong)]" />}
       </div>
-
-      {(isLoading || buscando) ? (
-        <p className="text-sm text-slate-400">Carregando...</p>
-      ) : (
-        <div className="grid grid-cols-3 gap-3">
-          {listaExibida.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              onClick={() => abrirProduto(p)}
-              className="border rounded-lg p-2 text-left hover:border-blue-400 hover:bg-blue-50"
-            >
-              <div className="aspect-square bg-slate-50 rounded mb-2 flex items-center justify-center overflow-hidden">
-                {p.image_url ? <img src={p.image_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-slate-300" />}
-              </div>
-              <p className="text-xs font-medium text-slate-700 truncate">{p.nome}</p>
-              <p className="text-[11px] text-slate-400">{p.codigo_amigavel}</p>
-            </button>
-          ))}
+      <p className="text-xs font-semibold text-[var(--gw-text)] truncate px-0.5">{p.nome}</p>
+      <p className="text-[11px] font-mono text-[var(--gw-text-muted)] px-0.5">{p.codigo_amigavel}</p>
+      {abrindo === p.id && (
+        <div className="absolute inset-0 rounded-2xl bg-white/70 flex items-center justify-center">
+          <Loader2 className="w-5 h-5 animate-spin text-[#2563EB]" />
         </div>
       )}
+    </button>
+  );
+
+  const buscandoAgora = termo.trim().length > 0;
+
+  return (
+    <div className={ui.pagina}>
+      <div className={`${ui.card} p-6 sm:p-8`}>
+        <h2 className={ui.titulo}>Selecionar produto</h2>
+        <p className={ui.subtitulo}>Busque no catálogo sincronizado da XBZ.</p>
+
+        <div className="relative mt-6 mb-6">
+          <Search className="w-4 h-4 text-[var(--gw-text-muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={termo}
+            onChange={(e) => buscar(e.target.value)}
+            placeholder="Nome ou código do produto..."
+            className="w-full pl-10 pr-10 py-3 bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] rounded-xl text-sm text-[var(--gw-text)] placeholder:text-[var(--gw-text-muted)] focus:outline-none focus:bg-white focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10 transition-all"
+          />
+          {buscando && <Loader2 className="w-4 h-4 animate-spin text-[#2563EB] absolute right-3.5 top-1/2 -translate-y-1/2" />}
+        </div>
+
+        {buscandoAgora ? (
+          buscando ? null : resultados.length === 0 ? (
+            <p className="text-sm text-[var(--gw-text-muted)] text-center py-10">Nenhum produto encontrado para “{termo}”.</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{resultados.map(cartao)}</div>
+          )
+        ) : isLoading ? (
+          <p className="text-sm text-[var(--gw-text-muted)] flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Carregando catálogo...</p>
+        ) : (
+          <>
+            {recentes.length > 0 && (
+              <section className="mb-8">
+                <h3 className="flex items-center gap-1.5 text-sm font-semibold text-[var(--gw-text)] mb-3">
+                  <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#F76B15] to-[#F5A524] flex items-center justify-center">
+                    <Clock className="w-3.5 h-3.5 text-white" />
+                  </span>
+                  Usados recentemente
+                </h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{recentes.map(cartao)}</div>
+              </section>
+            )}
+            <section>
+              <h3 className="flex items-center gap-1.5 text-sm font-semibold text-[var(--gw-text)] mb-3">
+                <span className="w-6 h-6 rounded-lg bg-gradient-to-br from-[#2563EB] to-[#7C5CFF] flex items-center justify-center">
+                  <Package className="w-3.5 h-3.5 text-white" />
+                </span>
+                {recentes.length > 0 ? "Outros produtos" : "Produtos do catálogo"}
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{sugestoes.map(cartao)}</div>
+            </section>
+          </>
+        )}
+      </div>
     </div>
   );
 }

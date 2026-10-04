@@ -55,11 +55,11 @@ export default function PromptsAdminDialog({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h3 className="font-medium">Prompts de geração do Mockup Studio</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+    <div className="fixed inset-0 bg-[#0B1D42]/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-[var(--gw-shadow-lg)] w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#0B1D42] to-[#1A3A7A] text-white">
+          <h3 className="font-bold font-['Plus_Jakarta_Sans',Inter,sans-serif]">Prompts de geração do Mockup Studio</h3>
+          <button onClick={onClose} className="text-white/70 hover:text-white"><X className="w-5 h-5" /></button>
         </div>
         <div className="px-5 py-4 overflow-y-auto space-y-5">
           <p className="text-[11px] text-slate-400">
@@ -74,18 +74,18 @@ export default function PromptsAdminDialog({ onClose }: Props) {
             CHAVES.map((c) => (
               <div key={c.chave}>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium text-slate-600">{c.label}</label>
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-[var(--gw-text-label)]">{c.label}</label>
                   <button
                     onClick={() => salvar(c.chave)}
                     disabled={salvando === c.chave}
-                    className="text-xs px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg text-white disabled:opacity-50 bg-gradient-to-r ${salvo === c.chave ? "from-[#0EA36B] to-[#10B981]" : "from-[#2563EB] to-[#5B52E8] hover:brightness-110"}`}
                   >
                     {salvando === c.chave ? "Salvando..." : salvo === c.chave ? "Salvo ✓" : "Salvar"}
                   </button>
                 </div>
                 <textarea
                   rows={4}
-                  className="w-full px-3 py-2 text-sm border rounded-lg"
+                  className="w-full px-3 py-2 text-sm text-[var(--gw-text)] bg-[var(--gw-surface-alt)] border border-[var(--gw-border)] rounded-xl focus:outline-none focus:bg-white focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10"
                   value={prompts[c.chave] || ""}
                   onChange={(e) => setPrompts((p) => ({ ...p, [c.chave]: e.target.value }))}
                 />
