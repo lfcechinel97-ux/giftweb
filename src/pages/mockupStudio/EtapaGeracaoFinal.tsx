@@ -24,6 +24,7 @@ interface Props {
   onGerado: (geracao: Geracao) => void;
   onNovoMockup: () => void;
   cliente: string;
+  isAdmin: boolean;
 }
 
 /**
@@ -32,7 +33,7 @@ interface Props {
  * a IA já devolve o mockup pronto e fotorrealista. Depois disso só entra
  * uma marca d'água leve (logo Gift Web), aplicada localmente.
  */
-export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao, onGerado, onNovoMockup, cliente }: Props) {
+export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao, onGerado, onNovoMockup, cliente, isAdmin }: Props) {
   const cor = COR_TECNICA[tecnica];
   const nomeTecnica = TECNICAS.find((t) => t.id === tecnica)?.nome ?? tecnica;
   const [carregando, setCarregando] = useState(true);
@@ -117,8 +118,12 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
 
         {geracao && !carregando && (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-            <span className="px-2 py-0.5 rounded-full bg-[var(--gw-blue-soft)] text-[#1D4ED8] font-medium">{nomeModelo(geracao.modelo)}</span>
-            <span className="px-2 py-0.5 rounded-full bg-[var(--gw-violet-soft)] text-[#6D28D9] font-medium">{formatarTokens(geracao.tokens_total)} tokens</span>
+            {isAdmin && (
+              <>
+                <span className="px-2 py-0.5 rounded-full bg-[var(--gw-blue-soft)] text-[#1D4ED8] font-medium">{nomeModelo(geracao.modelo)}</span>
+                <span className="px-2 py-0.5 rounded-full bg-[var(--gw-violet-soft)] text-[#6D28D9] font-medium">{formatarTokens(geracao.tokens_total)} tokens</span>
+              </>
+            )}
             <span className="px-2 py-0.5 rounded-full bg-[var(--gw-success-soft)] text-[#0E8A5C] font-medium inline-flex items-center gap-1">
               <Check className="w-3 h-3" strokeWidth={3} /> Salvo no histórico
             </span>

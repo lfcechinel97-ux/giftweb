@@ -115,7 +115,7 @@ export default function MockupStudio() {
       </header>
 
       <div className="flex flex-1 min-h-0">
-        <HistoricoGeracoes geracoes={geracoes} carregando={carregandoHistorico} erro={erroHistorico} meuId={userId} />
+        <HistoricoGeracoes geracoes={geracoes} carregando={carregandoHistorico} erro={erroHistorico} meuId={userId} isAdmin={isAdmin} />
 
         {/* scrollbar-gutter fixo: sem ele a barra de rolagem aparecia/sumia
             conforme a altura do conteúdo mudava e a tela "balançava". */}
@@ -150,6 +150,7 @@ export default function MockupStudio() {
               onGerado={registrarGeracao}
               onNovoMockup={novoMockup}
               cliente={cliente}
+              isAdmin={isAdmin}
             />
           )}
         </main>

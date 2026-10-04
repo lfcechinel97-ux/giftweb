@@ -12,6 +12,8 @@ interface Props {
   erro: string | null;
   /** Pra mostrar o vendedor nas gerações de outros (só o admin as recebe). */
   meuId: string | null;
+  /** Modelo de IA e tokens só aparecem pro admin. */
+  isAdmin: boolean;
 }
 
 const rotuloTecnica = (t: string) => TECNICAS.find((x) => x.id === t)?.nome ?? t;
@@ -20,7 +22,7 @@ function dataHora(iso: string): string {
   return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
-export default function HistoricoGeracoes({ geracoes: todas, carregando: carregandoTodas, erro: erroTodas, meuId }: Props) {
+export default function HistoricoGeracoes({ geracoes: todas, carregando: carregandoTodas, erro: erroTodas, meuId, isAdmin }: Props) {
   const [aberta, setAberta] = useState<Geracao | null>(null);
   const [busca, setBusca] = useState("");
   const [encontradas, setEncontradas] = useState<Geracao[]>([]);
@@ -79,10 +81,12 @@ export default function HistoricoGeracoes({ geracoes: todas, carregando: carrega
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#2563EB]/80">Gerações</p>
               <p className="text-base font-bold text-[#1D4ED8]">{geracoes.length}</p>
             </div>
-            <div className="flex-1 rounded-xl bg-[var(--gw-violet-soft)] px-3 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6D28D9]/80">Tokens</p>
-              <p className="text-base font-bold text-[#6D28D9]">{formatarTokens(totalTokens)}</p>
-            </div>
+            {isAdmin && (
+              <div className="flex-1 rounded-xl bg-[var(--gw-violet-soft)] px-3 py-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6D28D9]/80">Tokens</p>
+                <p className="text-base font-bold text-[#6D28D9]">{formatarTokens(totalTokens)}</p>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -119,28 +123,32 @@ export default function HistoricoGeracoes({ geracoes: todas, carregando: carrega
                   <span className={`px-1.5 py-px rounded-md text-[10px] font-semibold ${cor.fundo} ${cor.texto}`}>{rotuloTecnica(g.tecnica)}</span>
                   <span className="text-[10px] text-[var(--gw-text-muted)]">{dataHora(g.criado_em)}</span>
                 </div>
-                <p className="text-[10px] text-[var(--gw-text-muted)] truncate mt-1" title={g.modelo}>
-                  {g.user_id !== meuId && g.vendedor_nome ? <span className="font-semibold text-[#C2410C]">{g.vendedor_nome} · </span> : null}
-                  {nomeModelo(g.modelo)}
-                </p>
-                <p
-                  className="text-[10px] font-semibold text-[#6D28D9]"
-                  title={g.tokens_entrada != null && g.tokens_saida != null ? `${formatarTokens(g.tokens_entrada)} entrada / ${formatarTokens(g.tokens_saida)} saída` : undefined}
-                >
-                  {formatarTokens(g.tokens_total)} tokens
-                </p>
+                {g.user_id !== meuId && g.vendedor_nome && (
+                  <p className="text-[10px] font-semibold text-[#C2410C] truncate mt-1">{g.vendedor_nome}</p>
+                )}
+                {isAdmin && (
+                  <>
+                    <p className="text-[10px] text-[var(--gw-text-muted)] truncate mt-1" title={g.modelo}>{nomeModelo(g.modelo)}</p>
+                    <p
+                      className="text-[10px] font-semibold text-[#6D28D9]"
+                      title={g.tokens_entrada != null && g.tokens_saida != null ? `${formatarTokens(g.tokens_entrada)} entrada / ${formatarTokens(g.tokens_saida)} saída` : undefined}
+                    >
+                      {formatarTokens(g.tokens_total)} tokens
+                    </p>
+                  </>
+                )}
               </div>
             </button>
           );
         })}
       </div>
 
-      {aberta && <VisualizadorGeracao geracao={aberta} onFechar={() => setAberta(null)} />}
+      {aberta && <VisualizadorGeracao geracao={aberta} isAdmin={isAdmin} onFechar={() => setAberta(null)} />}
     </aside>
   );
 }
 
-function VisualizadorGeracao({ geracao, onFechar }: { geracao: Geracao; onFechar: () => void }) {
+function VisualizadorGeracao({ geracao, isAdmin, onFechar }: { geracao: Geracao; isAdmin: boolean; onFechar: () => void }) {
   const [imagem, setImagem] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -159,7 +167,8 @@ function VisualizadorGeracao({ geracao, onFechar }: { geracao: Geracao; onFechar
               {geracao.cliente && <span className="font-medium text-[var(--gw-text-secondary)]"> · {geracao.cliente}</span>}
             </p>
             <p className="text-xs text-[var(--gw-text-muted)]">
-              {rotuloTecnica(geracao.tecnica)} · {dataHora(geracao.criado_em)}{geracao.vendedor_nome ? ` · ${geracao.vendedor_nome}` : ""} · {nomeModelo(geracao.modelo)} · {formatarTokens(geracao.tokens_total)} tokens
+              {rotuloTecnica(geracao.tecnica)} · {dataHora(geracao.criado_em)}{geracao.vendedor_nome ? ` · ${geracao.vendedor_nome}` : ""}
+              {isAdmin && ` · ${nomeModelo(geracao.modelo)} · ${formatarTokens(geracao.tokens_total)} tokens`}
             </p>
           </div>
           <button onClick={onFechar} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
