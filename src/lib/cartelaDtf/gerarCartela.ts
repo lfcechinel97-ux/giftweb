@@ -27,6 +27,7 @@ export type Modo = "textil" | "uv";
 /** Opções que valem para a folha inteira. */
 export interface OpcoesCartela extends ParametrosFolha {
   modo: Modo;
+  /** Padrão para as logos que não dizem a sua própria contração. */
   contrair: boolean;
   distanciaMm: number;
   spot: string;
@@ -38,6 +39,9 @@ export interface ItemCartela {
   bytes: Uint8Array;
   larguraCm: number;
   qtd: number;
+  /** Contração do TOYO desta logo (DTF UV). Sem valor, vale o da folha. */
+  contrair?: boolean;
+  distanciaMm?: number;
 }
 
 export interface Cartela {
@@ -203,15 +207,17 @@ export async function gerarCartela(itens: ItemCartela[], o: OpcoesCartela): Prom
 
       let conteudo: string;
       let recursos: PDFDict;
-      if (o.contrair) {
-        const chave = `${itens[i].larguraCm}|${o.distanciaMm}`;
+      const contrair = itens[i].contrair ?? o.contrair;
+      const distanciaMm = itens[i].distanciaMm ?? o.distanciaMm;
+      if (contrair) {
+        const chave = `${itens[i].larguraCm}|${distanciaMm}`;
         let porLogo = cacheContracao.get(itens[i].bytes);
         if (!porLogo) cacheContracao.set(itens[i].bytes, (porLogo = new Map()));
         let feito = porLogo.get(chave);
         if (!feito) {
           const tol = (TOLERANCIA_CURVA_MM / 10) * CM / L.escala;
           const geo = interpretar(conteudoBase, recursosDe(recursosBase), tol);
-          feito = { geo, r: await contrairSilhueta(geo.pinturas, L.escala, o.distanciaMm) };
+          feito = { geo, r: await contrairSilhueta(geo.pinturas, L.escala, distanciaMm) };
           porLogo.set(chave, feito);
         }
         const { geo } = feito;
