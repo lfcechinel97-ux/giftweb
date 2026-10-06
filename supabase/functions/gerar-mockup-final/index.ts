@@ -32,9 +32,12 @@ const TEMPLATES: Record<Tecnica, string> = {
     "(não deixe monocromática nem prateada, isso é acabamento de laser, não de DTF UV), com uma camada de verniz " +
     "bem visível por cima -- brilhante, com leve relevo 3D e reflexo de luz na superfície impressa.",
   dtf_textil:
-    "A logo já colada no {produto} deve parecer personalizada em DTF têxtil: mantenha as cores originais da " +
-    "logo (não deixe monocromática nem prateada, isso é acabamento de laser, não de DTF têxtil), acabamento " +
-    "fosco (sem brilho de verniz) e com a trama do tecido levemente visível por baixo da estampa.",
+    "A logo já colada no {produto} deve parecer estampada em DTF têxtil, transferida a quente no tecido -- não " +
+    "uma imagem colada por cima. Mantenha as cores originais da logo (não deixe monocromática nem prateada, isso " +
+    "é acabamento de laser): cores sólidas e levemente vibrantes, alta definição de detalhes e um toque levemente " +
+    "emborrachado/encorpado sobre o tecido. A estampa acompanha o tecido: segue as dobras, costuras e a curvatura " +
+    "do produto, recebe a mesma luz e sombra do tecido em volta, e a textura do tecido aparece levemente por " +
+    "baixo dela. Acabamento acetinado, sem brilho de verniz.",
 };
 
 serve(async (req) => {
@@ -94,11 +97,13 @@ serve(async (req) => {
     "única tarefa é fazer ela parecer uma personalização real do produto (não um adesivo colado por cima): " +
     "acabamento, sombra de contato com a superfície, leve ajuste de perspectiva se a superfície for curva. A " +
     "segunda imagem é a logo do cliente em alta qualidade, use como referência de cor e nitidez. Capriche no " +
-    "cenário: ambiente de mostruário profissional, com contexto realista ao fundo (prateleiras, outros produtos " +
-    "desfocados, mesa, iluminação de estúdio). A logo do cliente aparece UMA única vez, só no produto principal -- " +
+    "cenário: o showroom da Gift Web Brindes (loja de brindes personalizados), com contexto realista ao fundo " +
+    "(prateleiras com outros brindes desfocados -- copos, garrafas, canecas, cadernos, mochilas --, mesa, " +
+    "iluminação de estúdio) e a logo da Gift Web Brindes (terceira imagem) numa placa ou display ao fundo. O " +
+    "cenário NÃO tem relação com o ramo do cliente: não monte uma loja, oficina ou ambiente do negócio dele, " +
+    "mesmo que a logo sugira um (ex.: máquinas de costura, materiais de construção). A logo do cliente aparece UMA única vez, só no produto principal -- " +
     "nada no fundo (parede, placas, caixas, outros produtos) pode ter a logo do cliente; os outros produtos ficam " +
-    "lisos. Se fizer sentido algum elemento de marca aparecer em outro lugar da cena, use a logo da Gift Web " +
-    "Brindes (terceira imagem), nunca a logo do cliente. " + promptTecnica;
+    "lisos. Marca no cenário, só a da Gift Web Brindes. " + promptTecnica;
 
   // Logo da Gift Web pra IA usar em elementos secundários do cenário (nunca
   // a logo do cliente) -- buscada aqui no servidor, não precisa vir do

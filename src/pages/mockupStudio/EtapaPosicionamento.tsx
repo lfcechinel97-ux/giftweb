@@ -9,7 +9,19 @@ interface Props {
   produto: ProdutoMockup;
   logo: LogoOriginal;
   onVoltar: () => void;
-  onContinuar: (visao: VisaoProduto, box: CaixaPosicao, logoRecortada: string, composicao: string) => void;
+  onContinuar: (visao: VisaoProduto, box: CaixaPosicao, logoRecortada: string, composicao: string, estado: EstadoPosicionamento) => void;
+  /** Último posicionamento (ao voltar pelo "Ajustar posição") -- a logo
+   * volta onde estava, em vez de recomeçar no centro. */
+  inicial?: EstadoPosicionamento | null;
+}
+
+/** Tudo que precisa pra reabrir a Etapa 3 do jeito que o vendedor deixou. */
+export interface EstadoPosicionamento {
+  visaoId: string;
+  box: CaixaPosicao;
+  recorte: { cropX: number; cropY: number; width: number; height: number };
+  removerFundo: boolean;
+  removerMiolo: boolean;
 }
 
 interface LimitesImagem { x0: number; y0: number; x1: number; y1: number }
@@ -28,8 +40,8 @@ const LOGO_REFERENCIA_MAX = 384;
  * A posição/tamanho/ângulo definidos aqui são GARANTIDOS na geração final
  * (colamos a logo de verdade antes de mandar pra IA -- ver gerarComposicao).
  */
-export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinuar }: Props) {
-  const [visaoId, setVisaoId] = useState(produto.visoes[0]?.id ?? "");
+export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinuar, inicial }: Props) {
+  const [visaoId, setVisaoId] = useState(inicial?.visaoId ?? produto.visoes[0]?.id ?? "");
   const visaoAtual = produto.visoes.find((v) => v.id === visaoId) ?? produto.visoes[0];
 
   const canvasElRef = useRef<HTMLCanvasElement>(null);
@@ -41,21 +53,28 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
   const [erro, setErro] = useState<string | null>(null);
   const [gerandoRecorte, setGerandoRecorte] = useState(false);
   const [angulo, setAngulo] = useState(0);
-  const semFundoRef = useRef<Promise<string | null> | null>(null);
+  const semFundoRef = useRef<Record<string, Promise<string | null>>>({});
   const [temFundo, setTemFundo] = useState(false);
-  const [removerFundo, setRemoverFundo] = useState(true);
-  const removerFundoRef = useRef(true);
+  const [removerFundo, setRemoverFundo] = useState(inicial?.removerFundo ?? true);
+  const removerFundoRef = useRef(inicial?.removerFundo ?? true);
+  const [removerMiolo, setRemoverMiolo] = useState(inicial?.removerMiolo ?? false);
+  const removerMioloRef = useRef(inicial?.removerMiolo ?? false);
+  const inicialRef = useRef(inicial ?? null);
 
   const logoEfetiva = async (): Promise<string> => {
-    semFundoRef.current ??= removerFundoSeOpaco(logo.url).catch(() => null);
-    const semFundo = await semFundoRef.current;
+    const miolo = removerMioloRef.current;
+    const chave = miolo ? "miolo" : "borda";
+    semFundoRef.current[chave] ??= removerFundoSeOpaco(logo.url, miolo).catch(() => null);
+    const semFundo = await semFundoRef.current[chave];
     setTemFundo(!!semFundo);
     return removerFundoRef.current && semFundo ? semFundo : logo.url;
   };
 
-  const alternarFundo = async (remover: boolean) => {
+  const alternarFundo = async (remover: boolean, miolo = removerMioloRef.current) => {
     removerFundoRef.current = remover;
     setRemoverFundo(remover);
+    removerMioloRef.current = miolo;
+    setRemoverMiolo(miolo);
     const canvas = fabricRef.current;
     const logoObj = logoObjRef.current;
     if (!canvas || !logoObj) return;
@@ -109,22 +128,25 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
         const alturaNatural = logoImg.height!;
         limitesRef.current = { x0: 0, y0: 0, x1: larguraNatural, y1: alturaNatural };
         const escalaInicial = Math.min((w * 0.3) / larguraNatural, (h * 0.3) / alturaNatural, 1);
+        // Volta do "Ajustar posição": reaplica recorte/posição/tamanho/ângulo
+        // de antes (só uma vez, e só se for a mesma vista do produto).
+        const anterior = inicialRef.current?.visaoId === visaoAtual.id ? inicialRef.current : null;
+        inicialRef.current = null;
+        const recorte = anterior?.recorte ?? { cropX: 0, cropY: 0, width: larguraNatural, height: alturaNatural };
+        const escalaLogo = anterior ? ((anterior.box.wPct / 100) * w) / recorte.width : escalaInicial;
 
         // Origem no centro -- assim left/top representam o centro da logo
         // e continuam corretos mesmo girada (a rotação do Fabric já é
         // sempre em torno do centro real do objeto).
         logoImg.set({
-          cropX: 0,
-          cropY: 0,
-          width: larguraNatural,
-          height: alturaNatural,
-          left: w / 2,
-          top: h / 2,
+          ...recorte,
+          left: anterior ? (anterior.box.xPct / 100) * w : w / 2,
+          top: anterior ? (anterior.box.yPct / 100) * h : h / 2,
           originX: "center",
           originY: "center",
-          scaleX: escalaInicial,
-          scaleY: escalaInicial,
-          angle: 0,
+          scaleX: escalaLogo,
+          scaleY: anterior ? ((anterior.box.hPct / 100) * h) / recorte.height : escalaLogo,
+          angle: anterior?.box.anguloGraus ?? 0,
           cornerColor: "#2563eb",
           cornerStyle: "circle",
           transparentCorners: false,
@@ -140,7 +162,7 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
         canvas.add(logoImg);
         canvas.setActiveObject(logoImg);
         logoObjRef.current = logoImg;
-        setAngulo(0);
+        setAngulo(Math.round(anterior?.box.anguloGraus ?? 0));
         canvas.requestRenderAll();
         setPronto(true);
       } catch (e: any) {
@@ -210,7 +232,13 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
       // E reduzida: em alta resolução ela vira o "assunto" da imagem e a IA
       // redesenhava a logo gigante no meio do produto.
       const logoReferencia = await reduzirLogo(await rotacionarLogo(logoRecortada, box.anguloGraus || 0), LOGO_REFERENCIA_MAX);
-      onContinuar(visaoAtual, box, logoReferencia, composicao);
+      onContinuar(visaoAtual, box, logoReferencia, composicao, {
+        visaoId: visaoAtual.id,
+        box,
+        recorte: { cropX: logoObj.cropX || 0, cropY: logoObj.cropY || 0, width: logoObj.width!, height: logoObj.height! },
+        removerFundo: removerFundoRef.current,
+        removerMiolo: removerMioloRef.current,
+      });
     } catch (e: any) {
       setErro(e?.message || "Não foi possível preparar os arquivos.");
     } finally {
@@ -269,6 +297,17 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
               }`}>
                 <input type="checkbox" checked={removerFundo} onChange={(e) => alternarFundo(e.target.checked)} className="accent-[#7C5CFF]" />
                 Remover o fundo da logo
+              </label>
+            )}
+            {temFundo && removerFundo && (
+              <label
+                title="Tira também a cor do fundo que fica presa entre os detalhes (vãos, miolo das letras). Desligue se sumir alguma parte da logo da mesma cor do fundo."
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm cursor-pointer transition-colors ${
+                  removerMiolo ? "border-[#7C5CFF]/40 bg-[var(--gw-violet-soft)] text-[#6D28D9] font-medium" : "border-[var(--gw-border)] bg-white text-[var(--gw-text-secondary)]"
+                }`}
+              >
+                <input type="checkbox" checked={removerMiolo} onChange={(e) => alternarFundo(true, e.target.checked)} className="accent-[#7C5CFF]" />
+                Também entre os detalhes
               </label>
             )}
           </div>

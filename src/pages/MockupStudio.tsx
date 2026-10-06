@@ -6,14 +6,14 @@ import { useSistemaProducts } from "@/pages/sistema/useSistemaProducts";
 import type { CaixaPosicao, LogoOriginal, ProdutoMockup, Tecnica, VisaoProduto } from "./mockupStudio/types";
 import EtapaConfiguracaoInicial from "./mockupStudio/EtapaConfiguracaoInicial";
 import EtapaProduto from "./mockupStudio/EtapaProduto";
-import EtapaPosicionamento from "./mockupStudio/EtapaPosicionamento";
+import EtapaPosicionamento, { type EstadoPosicionamento } from "./mockupStudio/EtapaPosicionamento";
 import EtapaGeracaoFinal from "./mockupStudio/EtapaGeracaoFinal";
 import PromptsAdminDialog from "./mockupStudio/PromptsAdminDialog";
 import HistoricoGeracoes from "./mockupStudio/HistoricoGeracoes";
 import { assinar, listarGeracoes, type Geracao } from "./mockupStudio/historico";
 import { useProdutosRecentes } from "./mockupStudio/useProdutosRecentes";
 
-interface Posicionamento { visao: VisaoProduto; box: CaixaPosicao; logoRecortada: string; composicao: string }
+interface Posicionamento { visao: VisaoProduto; box: CaixaPosicao; logoRecortada: string; composicao: string; estado: EstadoPosicionamento }
 
 const ETAPAS = ["Logo e técnica", "Produto", "Posição", "Mockup"];
 
@@ -30,6 +30,9 @@ export default function MockupStudio() {
   const [cliente, setCliente] = useState("");
   const [produto, setProduto] = useState<ProdutoMockup | null>(null);
   const [posicionamento, setPosicionamento] = useState<Posicionamento | null>(null);
+  // Sobrevive ao "Ajustar posição" (a Etapa 3 desmonta e remonta).
+  const [ultimaPosicao, setUltimaPosicao] = useState<EstadoPosicionamento | null>(null);
+  useEffect(() => { setUltimaPosicao(null); }, [produto, logo]);
   const [showPrompts, setShowPrompts] = useState(false);
 
   const [geracoes, setGeracoes] = useState<Geracao[]>([]);
@@ -135,7 +138,11 @@ export default function MockupStudio() {
               produto={produto}
               logo={logo}
               onVoltar={() => setProduto(null)}
-              onContinuar={(visao, box, logoRecortada, composicao) => setPosicionamento({ visao, box, logoRecortada, composicao })}
+              inicial={ultimaPosicao}
+              onContinuar={(visao, box, logoRecortada, composicao, estado) => {
+                setUltimaPosicao(estado);
+                setPosicionamento({ visao, box, logoRecortada, composicao, estado });
+              }}
             />
           )}
 
