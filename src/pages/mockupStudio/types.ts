@@ -40,3 +40,10 @@ export interface CaixaPosicao {
 export interface ResultadoMockup {
   url: string;
 }
+
+/** Outro produto na mesma foto (modo "colar por cima"), ex.: orçamento com
+ * caneca + garrafa. Usa a primeira vista do produto. */
+export interface ProdutoExtra {
+  produto: ProdutoMockup;
+  quantidade: number;
+}

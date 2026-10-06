@@ -62,6 +62,10 @@ serve(async (req) => {
     produtoBase64?: string; logoBase64?: string; tecnica?: Tecnica;
     nomeProduto?: string; produtoCodigo?: string; cliente?: string; pct?: number; posicao?: string;
     modo?: "acabamento" | "cenario"; acao?: "substituir_imagem"; geracaoId?: string; imagemBase64?: string;
+    /** Modo cenário: quantas unidades do produto principal e outros produtos
+     * na mesma foto (orçamento com vários itens). */
+    quantidadePrincipal?: number;
+    produtosExtras?: { fotoBase64?: string; nome?: string; quantidade?: number }[];
   };
 
   // Modo "cenário": depois que o vendedor cola a logo por cima do cenário
@@ -85,6 +89,12 @@ serve(async (req) => {
   if (!modoCenario && !logoBase64?.startsWith("data:image/")) return json({ error: "Envie a logo como data URL." }, 400);
   if (!tecnica || !TEMPLATES[tecnica]) return json({ error: "Técnica inválida." }, 400);
   if (!nomeProduto || (!modoCenario && (pct == null || !posicao))) return json({ error: "Faltam dados de produto/posição." }, 400);
+  const qtd = (n: unknown) => Math.min(4, Math.max(1, Math.round(Number(n) || 1)));
+  const quantidadePrincipal = modoCenario ? qtd(corpo.quantidadePrincipal) : 1;
+  const extras = modoCenario ? (corpo.produtosExtras ?? []).slice(0, 5) : [];
+  if (extras.some((e) => !e?.fotoBase64?.startsWith("data:image/") || !e.nome)) {
+    return json({ error: "Produto extra sem foto ou nome." }, 400);
+  }
 
   const chave = `final_${tecnica}`;
   const { data: linhaPrompt } = await admin.from("mockup_ia_prompts").select("prompt").eq("chave", chave).maybeSingle();
@@ -126,13 +136,27 @@ serve(async (req) => {
   // Modo "cenário" (logo em baixa qualidade, que a IA estragava): a IA só
   // monta produto + cenário, com a superfície do produto LISA -- a logo é
   // colada por cima depois, no navegador, pelo vendedor (fiel e móvel).
+  const unidades = (n: number, nome: string) => (n > 1 ? `${n} unidades iguais do ${nome}` : `1 ${nome}`);
+  const itensCena = [
+    `${unidades(quantidadePrincipal, nomeProduto)} (primeira imagem)`,
+    ...extras.map((e, i) => `${unidades(qtd(e.quantidade), e.nome!)} (imagem ${i + 2})`),
+  ];
+  const variosItens = itensCena.length > 1 || quantidadePrincipal > 1;
+  const indiceGiftWeb = extras.length + 2;
+  const fraseProdutos = variosItens
+    ? `Transforme as imagens de produto numa única foto de mostruário profissional com estes itens juntos, lado a ` +
+      `lado, todos inteiros, visíveis e de frente pra câmera, em destaque na mesa: ${itensCena.join("; ")}. Cada ` +
+      "produto fica exatamente como na sua foto (mesmo modelo, cor, formato e proporções reais entre eles), e não " +
+      "adicione outros produtos em destaque além desses. "
+    : `Transforme a primeira imagem numa foto de mostruário profissional do ${nomeProduto}. Mantenha o produto ` +
+      "exatamente como está (mesmo modelo, cor, formato e proporções), grande e em destaque, de frente pra câmera. ";
   const promptCenario =
-    `Transforme a primeira imagem numa foto de mostruário profissional do ${nomeProduto}. Mantenha o produto ` +
-    "exatamente como está (mesmo modelo, cor, formato e proporções), grande e em destaque, de frente pra câmera, " +
-    "com a superfície onde vai a personalização totalmente LISA e limpa -- sem nenhuma logo, estampa, texto ou " +
-    "gravação no produto. Capriche no cenário: o showroom da Gift Web Brindes (loja de brindes personalizados), " +
+    fraseProdutos +
+    "A superfície onde vai a personalização fica totalmente LISA e limpa em todos eles -- sem nenhuma logo, " +
+    "estampa, texto ou gravação nos produtos. Capriche no cenário: o showroom da Gift Web Brindes (loja de brindes personalizados), " +
     "com contexto realista ao fundo (prateleiras com outros brindes desfocados e lisos -- copos, garrafas, " +
-    "canecas, cadernos, mochilas --, mesa, iluminação de estúdio) e a logo da Gift Web Brindes (segunda imagem) " +
+    "canecas, cadernos, mochilas --, mesa, iluminação de estúdio) e a logo da Gift Web Brindes " +
+    `(imagem ${indiceGiftWeb}) ` +
     "numa placa ou display ao fundo. Nenhuma outra marca na cena.";
   const prompt = modoCenario ? promptCenario : promptAcabamento;
 
@@ -145,6 +169,9 @@ serve(async (req) => {
   ];
   if (!modoCenario && logoBase64) {
     partesImagens.push({ inlineData: { mimeType: mimeDaDataUrl(logoBase64), data: base64DaDataUrl(logoBase64) } });
+  }
+  for (const e of extras) {
+    partesImagens.push({ inlineData: { mimeType: mimeDaDataUrl(e.fotoBase64!), data: base64DaDataUrl(e.fotoBase64!) } });
   }
   try {
     const logoGiftWeb = await fetch("https://giftwebbrindes.com.br/logos/giftweb-logo.png");
@@ -241,7 +268,7 @@ serve(async (req) => {
     const { data: linha, error: erroInsert } = await admin.from("mockup_geracoes").insert({
       id,
       user_id: quem.user.id,
-      produto_nome: nomeProduto,
+      produto_nome: [nomeProduto, ...extras.map((e) => e.nome)].join(" + ").slice(0, 300),
       produto_codigo: produtoCodigo || null,
       cliente: cliente?.trim().slice(0, 120) || null,
       vendedor_nome: souInterno.nome || souInterno.email,

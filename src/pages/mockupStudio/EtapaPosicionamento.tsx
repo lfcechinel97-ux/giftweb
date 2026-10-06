@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, FabricImage, controlsUtils } from "fabric";
 import { Loader2, RotateCcw, RotateCw, Wand2 } from "lucide-react";
-import type { CaixaPosicao, LogoOriginal, ProdutoMockup, VisaoProduto } from "./types";
+import type { CaixaPosicao, LogoOriginal, ProdutoExtra, ProdutoMockup, VisaoProduto } from "./types";
+import ProdutosNaFoto from "./ProdutosNaFoto";
 import { removerFundoSeOpaco } from "./removerFundo";
 import { ui } from "./ui";
 
@@ -26,6 +27,10 @@ export interface EstadoPosicionamento {
   removerMiolo: boolean;
   /** IA gera só produto + cenário e a logo é colada por cima (fiel). */
   colarPorCima: boolean;
+  /** Unidades do produto principal e outros produtos na mesma foto (só no
+   * modo "colar por cima"). */
+  quantidadePrincipal: number;
+  extras: ProdutoExtra[];
 }
 
 /** Abaixo disso (lado maior, px) a IA costuma redesenhar a logo -- liga o
@@ -68,7 +73,13 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
   const [removerMiolo, setRemoverMiolo] = useState(inicial?.removerMiolo ?? false);
   const removerMioloRef = useRef(inicial?.removerMiolo ?? false);
   const inicialRef = useRef(inicial ?? null);
-  const [colarPorCima, setColarPorCima] = useState(inicial?.colarPorCima ?? false);
+  const [colarPorCimaEscolhido, setColarPorCima] = useState(inicial?.colarPorCima ?? false);
+  const [quantidadePrincipal, setQuantidadePrincipal] = useState(inicial?.quantidadePrincipal ?? 1);
+  const [extras, setExtras] = useState<ProdutoExtra[]>(inicial?.extras ?? []);
+  // Vários produtos/unidades só existem no modo "colar por cima" (a IA não
+  // consegue respeitar a logo colada em vários produtos ao mesmo tempo).
+  const variosItens = quantidadePrincipal > 1 || extras.length > 0;
+  const colarPorCima = colarPorCimaEscolhido || variosItens;
   useEffect(() => {
     if (inicial) return;
     const img = new Image();
@@ -255,6 +266,8 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
         removerFundo: removerFundoRef.current,
         removerMiolo: removerMioloRef.current,
         colarPorCima,
+        quantidadePrincipal: colarPorCima ? quantidadePrincipal : 1,
+        extras: colarPorCima ? extras : [],
       }, logoRecortada);
     } catch (e: any) {
       setErro(e?.message || "Não foi possível preparar os arquivos.");
@@ -352,15 +365,23 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
         <label className={`mt-6 flex items-start gap-3 px-4 py-3 rounded-xl border text-sm cursor-pointer transition-colors ${
           colarPorCima ? "border-[#7C5CFF]/40 bg-[var(--gw-violet-soft)]" : "border-[var(--gw-border)] bg-white"
         }`}>
-          <input type="checkbox" checked={colarPorCima} onChange={(e) => setColarPorCima(e.target.checked)} className="accent-[#7C5CFF] mt-0.5" />
+          <input type="checkbox" checked={colarPorCima} disabled={variosItens} onChange={(e) => setColarPorCima(e.target.checked)} className="accent-[#7C5CFF] mt-0.5" />
           <span>
             <span className="font-semibold text-[var(--gw-text)]">Colar a logo por cima (logo em baixa qualidade)</span>
             <span className="block text-xs text-[var(--gw-text-muted)] mt-0.5">
               A IA gera só o produto e o cenário, sem a logo. Depois você posiciona a logo original por cima do
               resultado -- fica fiel à arte e dá pra mover/redimensionar à vontade.
+              {variosItens && " Obrigatório com mais de um produto na foto."}
             </span>
           </span>
         </label>
+
+        <ProdutosNaFoto
+          principal={produto}
+          quantidadePrincipal={quantidadePrincipal}
+          extras={extras}
+          onChange={(q, e) => { setQuantidadePrincipal(q); setExtras(e); }}
+        />
 
         <div className="mt-8 flex gap-3 justify-end">
           <button type="button" onClick={onVoltar} className={ui.btnSecundario}>
