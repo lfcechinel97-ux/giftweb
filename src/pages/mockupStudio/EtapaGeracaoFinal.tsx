@@ -3,7 +3,7 @@ import { Loader2, Download, Sparkles, Plus, Move, Check } from "lucide-react";
 import { TECNICAS, type CaixaPosicao, type ProdutoMockup, type Tecnica } from "./types";
 import { COR_TECNICA, ui } from "./ui";
 import { registrarDuracao, tempoMedioMs, useProgressoEstimado } from "./tempoGeracao";
-import { descreverPosicao, larguraRelativa } from "./posicaoDescricao";
+import { descreverPosicao } from "./posicaoDescricao";
 import { gerarMockupFinal } from "./gerarMockup";
 import { aplicarMarcaDagua } from "./marcaDagua";
 import { baixarImagem } from "./baixarImagem";
@@ -56,7 +56,7 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
   };
 
   const posicao = descreverPosicao(box);
-  const pct = larguraRelativa(box);
+  const pct = Math.round(box.wPct);
 
   const [mediaMs, setMediaMs] = useState(tempoMedioMs);
   const progresso = useProgressoEstimado(carregando, mediaMs);

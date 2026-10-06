@@ -35,11 +35,6 @@ export interface CaixaPosicao {
   wPct: number;
   hPct: number;
   anguloGraus: number;
-  /** Retângulo que o produto ocupa na foto (em %, detectado pelo fundo
-   * claro do catálogo) -- usado pra descrever a logo em relação ao PRODUTO,
-   * não à foto, porque a IA reenquadra a cena. Ausente se não deu pra
-   * detectar (foto sem fundo claro). */
-  areaProduto?: { x0Pct: number; y0Pct: number; x1Pct: number; y1Pct: number };
 }
 
 export interface ResultadoMockup {

@@ -195,8 +195,6 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
       hPct: (logoObj.getScaledHeight() / h) * 100,
       anguloGraus: logoObj.angle || 0,
     };
-    const areaProduto = await detectarAreaProduto(visaoAtual.fotoUrl).catch(() => null);
-    if (areaProduto) box.areaProduto = areaProduto;
 
     setGerandoRecorte(true);
     try {
@@ -307,43 +305,6 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
       </div>
     </div>
   );
-}
-
-/**
- * Retângulo (em %) ocupado pelo produto na foto do catálogo: tudo que não é
- * fundo branco/transparente. Devolve null se não parece haver fundo claro
- * (ocupa quase a foto toda) ou se não achou quase nada.
- */
-async function detectarAreaProduto(src: string): Promise<NonNullable<CaixaPosicao["areaProduto"]> | null> {
-  const img = await carregarImagem(src);
-  const escala = Math.min(1, 256 / Math.max(img.naturalWidth, img.naturalHeight));
-  const w = Math.max(1, Math.round(img.naturalWidth * escala));
-  const h = Math.max(1, Math.round(img.naturalHeight * escala));
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return null;
-  ctx.drawImage(img, 0, 0, w, h);
-  const { data } = ctx.getImageData(0, 0, w, h);
-  let x0 = w, y0 = h, x1 = -1, y1 = -1;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = (y * w + x) * 4;
-      const fundo = data[i + 3] < 24 || (data[i] > 238 && data[i + 1] > 238 && data[i + 2] > 238);
-      if (fundo) continue;
-      if (x < x0) x0 = x;
-      if (x > x1) x1 = x;
-      if (y < y0) y0 = y;
-      if (y > y1) y1 = y;
-    }
-  }
-  if (x1 < 0) return null;
-  const area = { x0Pct: (x0 / w) * 100, y0Pct: (y0 / h) * 100, x1Pct: ((x1 + 1) / w) * 100, y1Pct: ((y1 + 1) / h) * 100 };
-  const largura = area.x1Pct - area.x0Pct;
-  const altura = area.y1Pct - area.y0Pct;
-  if (largura * altura > 97 * 97 || largura < 5 || altura < 5) return null;
-  return area;
 }
 
 /** Reduz a imagem pra caber em `max` px no lado maior (nunca aumenta). */
