@@ -16,13 +16,16 @@ async function paraDataURL(src: string): Promise<string> {
 
 interface GerarMockupParams {
   produtoUrl: string;
-  logoUrl: string;
+  /** Ausente no modo "cenario" (a IA não vê a logo). */
+  logoUrl?: string;
   tecnica: Tecnica;
   nomeProduto: string;
   produtoCodigo?: string;
   cliente?: string;
   pct: number;
   posicao: string;
+  /** "cenario": IA gera só produto liso + cenário; a logo é colada por cima depois, no navegador. */
+  modo?: "acabamento" | "cenario";
 }
 
 /** Geração final -- manda a foto do produto sem pré-processamento e a logo
@@ -32,7 +35,7 @@ interface GerarMockupParams {
 export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url: string; geracao: Geracao | null }> {
   const [produtoBase64, logoBase64] = await Promise.all([
     paraDataURL(params.produtoUrl),
-    paraDataURL(params.logoUrl),
+    params.logoUrl ? paraDataURL(params.logoUrl) : Promise.resolve(undefined),
   ]);
   const { data, error } = await supabase.functions.invoke("gerar-mockup-final", {
     body: {
@@ -44,6 +47,7 @@ export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url
       cliente: params.cliente,
       pct: params.pct,
       posicao: params.posicao,
+      modo: params.modo ?? "acabamento",
     },
   });
   if (error) {
@@ -56,4 +60,14 @@ export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url
   }
   if (data?.error) throw new Error(data.error);
   return { url: data.url as string, geracao: (data.geracao as Geracao | null) ?? null };
+}
+
+/** Modo "cenario": troca a imagem guardada no histórico pela versão final,
+ * com a logo que o vendedor colou por cima. */
+export async function substituirImagemGeracao(geracaoId: string, imagemDataUrl: string): Promise<void> {
+  const { data, error } = await supabase.functions.invoke("gerar-mockup-final", {
+    body: { acao: "substituir_imagem", geracaoId, imagemBase64: imagemDataUrl },
+  });
+  if (error) throw new Error(error.message);
+  if (data?.error) throw new Error(data.error);
 }

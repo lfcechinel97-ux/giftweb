@@ -13,7 +13,7 @@ import HistoricoGeracoes from "./mockupStudio/HistoricoGeracoes";
 import { assinar, listarGeracoes, type Geracao } from "./mockupStudio/historico";
 import { useProdutosRecentes } from "./mockupStudio/useProdutosRecentes";
 
-interface Posicionamento { visao: VisaoProduto; box: CaixaPosicao; logoRecortada: string; composicao: string; estado: EstadoPosicionamento }
+interface Posicionamento { visao: VisaoProduto; box: CaixaPosicao; logoRecortada: string; composicao: string; estado: EstadoPosicionamento; logoFiel: string }
 
 const ETAPAS = ["Logo e técnica", "Produto", "Posição", "Mockup"];
 
@@ -139,9 +139,9 @@ export default function MockupStudio() {
               logo={logo}
               onVoltar={() => setProduto(null)}
               inicial={ultimaPosicao}
-              onContinuar={(visao, box, logoRecortada, composicao, estado) => {
+              onContinuar={(visao, box, logoRecortada, composicao, estado, logoFiel) => {
                 setUltimaPosicao(estado);
-                setPosicionamento({ visao, box, logoRecortada, composicao, estado });
+                setPosicionamento({ visao, box, logoRecortada, composicao, estado, logoFiel });
               }}
             />
           )}
@@ -151,6 +151,9 @@ export default function MockupStudio() {
               produto={produto}
               composicaoUrl={posicionamento.composicao}
               logoUrl={posicionamento.logoRecortada}
+              colarPorCima={posicionamento.estado.colarPorCima}
+              logoFiel={posicionamento.logoFiel}
+              fotoProdutoUrl={posicionamento.visao.fotoUrl}
               tecnica={tecnica}
               box={posicionamento.box}
               onAjustarPosicao={() => setPosicionamento(null)}

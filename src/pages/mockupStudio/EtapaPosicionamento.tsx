@@ -9,7 +9,9 @@ interface Props {
   produto: ProdutoMockup;
   logo: LogoOriginal;
   onVoltar: () => void;
-  onContinuar: (visao: VisaoProduto, box: CaixaPosicao, logoRecortada: string, composicao: string, estado: EstadoPosicionamento) => void;
+  /** `logoFiel`: logo recortada na resolução original, sem girar -- usada no
+   * modo "colar por cima" (estado.colarPorCima). */
+  onContinuar: (visao: VisaoProduto, box: CaixaPosicao, logoRecortada: string, composicao: string, estado: EstadoPosicionamento, logoFiel: string) => void;
   /** Último posicionamento (ao voltar pelo "Ajustar posição") -- a logo
    * volta onde estava, em vez de recomeçar no centro. */
   inicial?: EstadoPosicionamento | null;
@@ -22,7 +24,13 @@ export interface EstadoPosicionamento {
   recorte: { cropX: number; cropY: number; width: number; height: number };
   removerFundo: boolean;
   removerMiolo: boolean;
+  /** IA gera só produto + cenário e a logo é colada por cima (fiel). */
+  colarPorCima: boolean;
 }
+
+/** Abaixo disso (lado maior, px) a IA costuma redesenhar a logo -- liga o
+ * "colar por cima" por padrão. */
+const LADO_LOGO_FRACA = 600;
 
 interface LimitesImagem { x0: number; y0: number; x1: number; y1: number }
 
@@ -60,6 +68,14 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
   const [removerMiolo, setRemoverMiolo] = useState(inicial?.removerMiolo ?? false);
   const removerMioloRef = useRef(inicial?.removerMiolo ?? false);
   const inicialRef = useRef(inicial ?? null);
+  const [colarPorCima, setColarPorCima] = useState(inicial?.colarPorCima ?? false);
+  useEffect(() => {
+    if (inicial) return;
+    const img = new Image();
+    img.onload = () => { if (Math.max(img.naturalWidth, img.naturalHeight) < LADO_LOGO_FRACA) setColarPorCima(true); };
+    img.src = logo.url;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const logoEfetiva = async (): Promise<string> => {
     const miolo = removerMioloRef.current;
@@ -238,7 +254,8 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
         recorte: { cropX: logoObj.cropX || 0, cropY: logoObj.cropY || 0, width: logoObj.width!, height: logoObj.height! },
         removerFundo: removerFundoRef.current,
         removerMiolo: removerMioloRef.current,
-      });
+        colarPorCima,
+      }, logoRecortada);
     } catch (e: any) {
       setErro(e?.message || "Não foi possível preparar os arquivos.");
     } finally {
@@ -331,6 +348,19 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
             </div>
           )}
         </div>
+
+        <label className={`mt-6 flex items-start gap-3 px-4 py-3 rounded-xl border text-sm cursor-pointer transition-colors ${
+          colarPorCima ? "border-[#7C5CFF]/40 bg-[var(--gw-violet-soft)]" : "border-[var(--gw-border)] bg-white"
+        }`}>
+          <input type="checkbox" checked={colarPorCima} onChange={(e) => setColarPorCima(e.target.checked)} className="accent-[#7C5CFF] mt-0.5" />
+          <span>
+            <span className="font-semibold text-[var(--gw-text)]">Colar a logo por cima (logo em baixa qualidade)</span>
+            <span className="block text-xs text-[var(--gw-text-muted)] mt-0.5">
+              A IA gera só o produto e o cenário, sem a logo. Depois você posiciona a logo original por cima do
+              resultado -- fica fiel à arte e dá pra mover/redimensionar à vontade.
+            </span>
+          </span>
+        </label>
 
         <div className="mt-8 flex gap-3 justify-end">
           <button type="button" onClick={onVoltar} className={ui.btnSecundario}>

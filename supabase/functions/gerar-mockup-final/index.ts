@@ -61,20 +61,38 @@ serve(async (req) => {
   const corpo = await req.json().catch(() => ({})) as {
     produtoBase64?: string; logoBase64?: string; tecnica?: Tecnica;
     nomeProduto?: string; produtoCodigo?: string; cliente?: string; pct?: number; posicao?: string;
+    modo?: "acabamento" | "cenario"; acao?: "substituir_imagem"; geracaoId?: string; imagemBase64?: string;
   };
+
+  // Modo "cenário": depois que o vendedor cola a logo por cima do cenário
+  // gerado (no navegador), troca a imagem do histórico pela versão final
+  // com a logo -- senão o histórico guardaria só o produto liso.
+  if (corpo.acao === "substituir_imagem") {
+    const { geracaoId, imagemBase64 } = corpo;
+    if (!geracaoId || !imagemBase64?.startsWith("data:image/")) return json({ error: "Faltam a geração e a imagem." }, 400);
+    const { data: linha } = await admin.from("mockup_geracoes").select("id, user_id, imagem_path").eq("id", geracaoId).maybeSingle();
+    if (!linha || linha.user_id !== quem.user.id) return json({ error: "Geração não encontrada." }, 404);
+    const bytes = Uint8Array.from(atob(base64DaDataUrl(imagemBase64)), (c) => c.charCodeAt(0));
+    const { error: erroUpload } = await admin.storage.from("mockup-geracoes")
+      .upload(linha.imagem_path, bytes, { contentType: mimeDaDataUrl(imagemBase64), upsert: true });
+    if (erroUpload) return json({ error: `Não foi possível salvar: ${erroUpload.message}` }, 500);
+    return json({ ok: true });
+  }
+
+  const modoCenario = corpo.modo === "cenario";
   const { produtoBase64, logoBase64, tecnica, nomeProduto, produtoCodigo, cliente, pct, posicao } = corpo;
   if (!produtoBase64?.startsWith("data:image/")) return json({ error: "Envie a foto do produto como data URL." }, 400);
-  if (!logoBase64?.startsWith("data:image/")) return json({ error: "Envie a logo como data URL." }, 400);
+  if (!modoCenario && !logoBase64?.startsWith("data:image/")) return json({ error: "Envie a logo como data URL." }, 400);
   if (!tecnica || !TEMPLATES[tecnica]) return json({ error: "Técnica inválida." }, 400);
-  if (!nomeProduto || pct == null || !posicao) return json({ error: "Faltam dados de produto/posição." }, 400);
+  if (!nomeProduto || (!modoCenario && (pct == null || !posicao))) return json({ error: "Faltam dados de produto/posição." }, 400);
 
   const chave = `final_${tecnica}`;
   const { data: linhaPrompt } = await admin.from("mockup_ia_prompts").select("prompt").eq("chave", chave).maybeSingle();
   const template = linhaPrompt?.prompt || TEMPLATES[tecnica];
   const promptTecnica = template
     .replace(/\{produto\}/g, nomeProduto)
-    .replace(/\{pct\}/g, String(Math.round(pct)))
-    .replace(/\{posicao\}/g, posicao);
+    .replace(/\{pct\}/g, String(Math.round(pct ?? 0)))
+    .replace(/\{posicao\}/g, posicao ?? "");
 
   // Instrução fixa (não editável pelo admin -- é estrutural, não de
   // acabamento): a primeira imagem já mostra a logo colada no produto, no
@@ -88,7 +106,7 @@ serve(async (req) => {
   // posição/tamanho por extenso relativos ao produto, e mandar um close da
   // composição no lugar da logo solta. O que funciona é este texto + a logo
   // de referência reduzida (Etapa 3).
-  const prompt =
+  const promptAcabamento =
     "A primeira imagem já mostra o produto com a logo do cliente colada exatamente no tamanho e na posição " +
     "corretos -- não mova, não redimensione, não reposicione e não gire essa logo de jeito nenhum (se ela está " +
     "inclinada, na vertical ou de cabeça pra baixo, é de propósito -- mantenha exatamente esse ângulo), ela já " +
@@ -105,14 +123,29 @@ serve(async (req) => {
     "nada no fundo (parede, placas, caixas, outros produtos) pode ter a logo do cliente; os outros produtos ficam " +
     "lisos. Marca no cenário, só a da Gift Web Brindes. " + promptTecnica;
 
+  // Modo "cenário" (logo em baixa qualidade, que a IA estragava): a IA só
+  // monta produto + cenário, com a superfície do produto LISA -- a logo é
+  // colada por cima depois, no navegador, pelo vendedor (fiel e móvel).
+  const promptCenario =
+    `Transforme a primeira imagem numa foto de mostruário profissional do ${nomeProduto}. Mantenha o produto ` +
+    "exatamente como está (mesmo modelo, cor, formato e proporções), grande e em destaque, de frente pra câmera, " +
+    "com a superfície onde vai a personalização totalmente LISA e limpa -- sem nenhuma logo, estampa, texto ou " +
+    "gravação no produto. Capriche no cenário: o showroom da Gift Web Brindes (loja de brindes personalizados), " +
+    "com contexto realista ao fundo (prateleiras com outros brindes desfocados e lisos -- copos, garrafas, " +
+    "canecas, cadernos, mochilas --, mesa, iluminação de estúdio) e a logo da Gift Web Brindes (segunda imagem) " +
+    "numa placa ou display ao fundo. Nenhuma outra marca na cena.";
+  const prompt = modoCenario ? promptCenario : promptAcabamento;
+
   // Logo da Gift Web pra IA usar em elementos secundários do cenário (nunca
   // a logo do cliente) -- buscada aqui no servidor, não precisa vir do
   // client. Se falhar por algum motivo, segue sem ela (só perde esse
   // detalhe, não trava a geração).
   const partesImagens = [
     { inlineData: { mimeType: mimeDaDataUrl(produtoBase64), data: base64DaDataUrl(produtoBase64) } },
-    { inlineData: { mimeType: mimeDaDataUrl(logoBase64), data: base64DaDataUrl(logoBase64) } },
   ];
+  if (!modoCenario && logoBase64) {
+    partesImagens.push({ inlineData: { mimeType: mimeDaDataUrl(logoBase64), data: base64DaDataUrl(logoBase64) } });
+  }
   try {
     const logoGiftWeb = await fetch("https://giftwebbrindes.com.br/logos/giftweb-logo.png");
     if (logoGiftWeb.ok) {
