@@ -26,6 +26,9 @@ interface GerarMockupParams {
   posicao: string;
   /** "cenario": IA gera só produto liso + cenário; a logo é colada por cima depois, no navegador. */
   modo?: "acabamento" | "cenario";
+  /** Só no modo "cenario": unidades do produto principal e outros produtos na foto. */
+  quantidadePrincipal?: number;
+  produtosExtras?: { fotoUrl: string; nome: string; quantidade: number }[];
 }
 
 /** Geração final -- manda a foto do produto sem pré-processamento e a logo
@@ -33,9 +36,12 @@ interface GerarMockupParams {
  * partir do template da técnica. Essa é a ÚNICA chamada de IA do fluxo
  * inteiro. */
 export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url: string; geracao: Geracao | null }> {
-  const [produtoBase64, logoBase64] = await Promise.all([
+  const [produtoBase64, logoBase64, produtosExtras] = await Promise.all([
     paraDataURL(params.produtoUrl),
     params.logoUrl ? paraDataURL(params.logoUrl) : Promise.resolve(undefined),
+    Promise.all((params.produtosExtras ?? []).map(async (e) => ({
+      fotoBase64: await paraDataURL(e.fotoUrl), nome: e.nome, quantidade: e.quantidade,
+    }))),
   ]);
   const { data, error } = await supabase.functions.invoke("gerar-mockup-final", {
     body: {
@@ -48,6 +54,8 @@ export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url
       pct: params.pct,
       posicao: params.posicao,
       modo: params.modo ?? "acabamento",
+      quantidadePrincipal: params.quantidadePrincipal ?? 1,
+      produtosExtras,
     },
   });
   if (error) {

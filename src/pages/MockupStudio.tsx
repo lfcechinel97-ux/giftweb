@@ -154,6 +154,8 @@ export default function MockupStudio() {
               colarPorCima={posicionamento.estado.colarPorCima}
               logoFiel={posicionamento.logoFiel}
               fotoProdutoUrl={posicionamento.visao.fotoUrl}
+              quantidadePrincipal={posicionamento.estado.quantidadePrincipal}
+              extras={posicionamento.estado.extras}
               tecnica={tecnica}
               box={posicionamento.box}
               onAjustarPosicao={() => setPosicionamento(null)}
