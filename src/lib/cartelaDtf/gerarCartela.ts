@@ -4,11 +4,11 @@
    spot Separation a 100% com overprint, por troca de cor ou contraído. */
 
 import {
-  PDFArray, PDFDict, PDFDocument, PDFName, PDFNumber, PDFRawStream, PDFStream,
+  PDFArray, PDFDict, PDFDocument, PDFName, PDFNumber, PDFRawStream, PDFRef, PDFStream,
   EncryptedPDFError, concatTransformationMatrix, decodePDFRawStream, drawObject,
   popGraphicsState, pushGraphicsState,
 } from "pdf-lib";
-import { CM, LIMITE_COMPRIMENTO_CM, ErroCartela, calcularLayout, nomeArquivo, type CaixaLogo, type Layout, type ParametrosLayout } from "./layout";
+import { CM, LIMITE_COMPRIMENTO_CM, ErroCartela, calcularLayoutCartela, nomeArquivo, type CaixaLogo, type LayoutCartela, type ParametrosFolha } from "./layout";
 import { avisosTrocaDeCor, bytesParaLatin1, latin1ParaBytes, trocarCoresPorSpot } from "./conteudoPdf";
 import { interpretar, type ExtGState, type Matriz, type Recursos, type ResultadoGeometria, type XObject } from "./geometria";
 import { contrairSilhueta, type ResultadoContracao } from "./contracao";
@@ -24,7 +24,8 @@ const ERRO_VETORIAL = "envie um PDF vetorial exportado do Corel/Illustrator.";
 
 export type Modo = "textil" | "uv";
 
-export interface OpcoesCartela extends ParametrosLayout {
+/** Opções que valem para a folha inteira. */
+export interface OpcoesCartela extends ParametrosFolha {
   modo: Modo;
   contrair: boolean;
   distanciaMm: number;
@@ -32,12 +33,20 @@ export interface OpcoesCartela extends ParametrosLayout {
   cmyk: [number, number, number, number];
 }
 
+/** Uma logo da cartela. A primeira fica no alto; as outras vão entrando embaixo. */
+export interface ItemCartela {
+  bytes: Uint8Array;
+  larguraCm: number;
+  qtd: number;
+}
+
 export interface Cartela {
   pdf: Uint8Array;
   nome: string;
-  layout: Layout;
+  layout: LayoutCartela;
   avisos: string[];
-  contracao: ResultadoContracao | null;
+  /** Resultado da contração de cada logo (null quando não contrai). */
+  contracoes: (ResultadoContracao | null)[];
 }
 
 export interface InfoLogo {
@@ -143,91 +152,110 @@ export async function lerLogo(bytes: Uint8Array): Promise<InfoLogo> {
 
 // a contração só depende da logo, da largura e da distância: muda a
 // quantidade/espaçamento e o resultado é reaproveitado
-let cacheContracao: { bytes: Uint8Array; chave: string; geo: ResultadoGeometria; r: ResultadoContracao } | null = null;
+const cacheContracao = new WeakMap<Uint8Array, Map<string, { geo: ResultadoGeometria; r: ResultadoContracao }>>();
 
-export async function gerarCartela(bytes: Uint8Array, o: OpcoesCartela): Promise<Cartela> {
-  const { pagina, caixa } = await abrirPdf(bytes);
-  const layout = calcularLayout(caixa, o);
+export async function gerarCartela(itens: ItemCartela[], o: OpcoesCartela): Promise<Cartela> {
+  const abertos = await Promise.all(itens.map((it) => abrirPdf(it.bytes)));
+  const layout = calcularLayoutCartela(
+    itens.map((it, i) => ({ caixa: abertos[i].caixa, larguraCm: it.larguraCm, qtd: it.qtd })),
+    o,
+  );
   const avisos: string[] = [];
+  const varias = itens.length > 1;
+  const avisar = (i: number, msg: string) =>
+    avisos.push(varias ? `Logo ${i + 1}: ${msg}` : msg.charAt(0).toUpperCase() + msg.slice(1));
   const toyo = o.modo === "uv";
 
   const out = await PDFDocument.create({ updateMetadata: false });
   out.setProducer("Gift Web Brindes - Cartela DTF");
   out.setCreator("giftwebbrindes.com.br/carteladtf");
   const folha = out.addPage([layout.larguraFolha, layout.alturaFolha]);
+  const ctx = out.context;
 
-  // BBox com a origem real do MediaBox: o padrão do pdf-lib assume 0 0 e
-  // cortaria/deslocaria as logos do Corel (origem -1 -1)
-  const { left: x0, bottom: y0, width: w, height: h } = caixa;
-  const base = await out.embedPage(pagina, { left: x0, bottom: y0, right: x0 + w, top: y0 + h });
-  await base.embed();
-
-  let nomeToyo: PDFName | null = null;
-  let contracao: ResultadoContracao | null = null;
+  // spot e overprint: os mesmos objetos para todas as logos
+  let separation: PDFRef | null = null;
+  let gsOp: PDFRef | null = null;
   if (toyo) {
-    const ctx = out.context;
-    const formBase = ctx.lookup(base.ref) as PDFRawStream;
-    const conteudoBase = bytesParaLatin1(decodePDFRawStream(formBase).decode());
-    const recursosBase = formBase.dict.lookupMaybe(PDFName.of("Resources"), PDFDict);
-
     const tint = ctx.obj({
       FunctionType: 2, Domain: [0, 1], C0: [0, 0, 0, 0], C1: o.cmyk.map((v) => v / 100), N: 1,
     });
-    const separation = ctx.obj([PDFName.of("Separation"), PDFName.of(o.spot), PDFName.of("DeviceCMYK"), tint]);
-    const gsOp = ctx.obj({ Type: "ExtGState", op: true, OP: true, OPM: 1 });
-
-    let conteudo: string;
-    let recursos: PDFDict;
-    if (o.contrair) {
-      const chave = `${o.larguraCm}|${o.distanciaMm}`;
-      let geo: ResultadoGeometria;
-      if (cacheContracao && cacheContracao.bytes === bytes && cacheContracao.chave === chave) {
-        geo = cacheContracao.geo;
-        contracao = cacheContracao.r;
-      } else {
-        const tol = (TOLERANCIA_CURVA_MM / 10) * CM / layout.escala;
-        geo = interpretar(conteudoBase, recursosDe(recursosBase), tol);
-        contracao = await contrairSilhueta(geo.pinturas, layout.escala, o.distanciaMm);
-        cacheContracao = { bytes, chave, geo, r: contracao };
-      }
-      if (geo.temTexto) avisos.push("A logo tem texto não convertido em curvas: o texto fica sem TOYO na contração. Converta o texto em curvas no Corel/Illustrator.");
-      if (geo.temImagem) avisos.push("A logo tem imagem: a imagem fica sem TOYO na contração.");
-      if (geo.temGradiente) avisos.push("A logo tem gradiente (shading): essa parte fica sem TOYO na contração.");
-      if (geo.temTracejado) avisos.push("A logo tem linha tracejada: na contração ela foi tratada como linha contínua.");
-      if (contracao.vazio || contracao.perdeuPartesFinas) avisos.push("Algumas partes finas da logo ficaram sem TOYO com essa distância.");
-      conteudo = "/GSop gs\n/CSspot cs 1 scn\n" + contracao.caminhos;
-      recursos = ctx.obj({ ColorSpace: { CSspot: separation }, ExtGState: { GSop: gsOp } });
-    } else {
-      avisos.push(...avisosTrocaDeCor(conteudoBase));
-      conteudo = trocarCoresPorSpot(conteudoBase);
-      recursos = recursosBase ? recursosBase.clone(ctx) : ctx.obj({});
-      const copiar = (chave: string) => {
-        const novo = ctx.obj({});
-        const antigo = recursos.lookupMaybe(PDFName.of(chave), PDFDict);
-        antigo?.entries().forEach(([k, v]) => novo.set(k, v));
-        recursos.set(PDFName.of(chave), novo);
-        return novo;
-      };
-      copiar("ColorSpace").set(PDFName.of("CSspot"), separation);
-      copiar("ExtGState").set(PDFName.of("GSop"), gsOp);
-    }
-
-    const formToyo = ctx.flateStream(latin1ParaBytes(conteudo), {
-      Type: "XObject", Subtype: "Form", FormType: 1,
-      BBox: [x0, y0, x0 + w, y0 + h], Matrix: [1, 0, 0, 1, -x0, -y0], Resources: recursos,
-    });
-    nomeToyo = folha.node.newXObject("FmT", ctx.register(formToyo));
+    separation = ctx.register(ctx.obj([PDFName.of("Separation"), PDFName.of(o.spot), PDFName.of("DeviceCMYK"), tint]));
+    gsOp = ctx.register(ctx.obj({ Type: "ExtGState", op: true, OP: true, OPM: 1 }));
   }
 
-  // um nome de recurso só para a base (o drawPage do pdf-lib cria um por cópia);
-  // cada cópia: q  s 0 0 s x y cm  /Fm Do  Q -- o /Matrix do form já desconta a origem
-  const nomeBase = folha.node.newXObject("FmB", base.ref);
-  const s = layout.escala;
-  const desenhar = (nome: PDFName, x: number, y: number) =>
-    folha.pushOperators(pushGraphicsState(), concatTransformationMatrix(s, 0, 0, s, x, y), drawObject(nome), popGraphicsState());
-  for (const { x, y } of layout.posicoes) {
-    desenhar(nomeBase, x, y);
-    if (nomeToyo) desenhar(nomeToyo, x, y); // TOYO sempre por cima da original
+  const contracoes: (ResultadoContracao | null)[] = [];
+  for (let i = 0; i < itens.length; i++) {
+    const { pagina, caixa } = abertos[i];
+    const L = layout.itens[i];
+
+    // BBox com a origem real do MediaBox: o padrão do pdf-lib assume 0 0 e
+    // cortaria/deslocaria as logos do Corel (origem -1 -1)
+    const { left: x0, bottom: y0, width: w, height: h } = caixa;
+    const base = await out.embedPage(pagina, { left: x0, bottom: y0, right: x0 + w, top: y0 + h });
+    await base.embed();
+
+    let nomeToyo: PDFName | null = null;
+    let contracao: ResultadoContracao | null = null;
+    if (toyo) {
+      const formBase = ctx.lookup(base.ref) as PDFRawStream;
+      const conteudoBase = bytesParaLatin1(decodePDFRawStream(formBase).decode());
+      const recursosBase = formBase.dict.lookupMaybe(PDFName.of("Resources"), PDFDict);
+
+      let conteudo: string;
+      let recursos: PDFDict;
+      if (o.contrair) {
+        const chave = `${itens[i].larguraCm}|${o.distanciaMm}`;
+        let porLogo = cacheContracao.get(itens[i].bytes);
+        if (!porLogo) cacheContracao.set(itens[i].bytes, (porLogo = new Map()));
+        let feito = porLogo.get(chave);
+        if (!feito) {
+          const tol = (TOLERANCIA_CURVA_MM / 10) * CM / L.escala;
+          const geo = interpretar(conteudoBase, recursosDe(recursosBase), tol);
+          feito = { geo, r: await contrairSilhueta(geo.pinturas, L.escala, o.distanciaMm) };
+          porLogo.set(chave, feito);
+        }
+        const { geo } = feito;
+        contracao = feito.r;
+        if (geo.temTexto) avisar(i, "a logo tem texto não convertido em curvas: o texto fica sem TOYO na contração. Converta o texto em curvas no Corel/Illustrator.");
+        if (geo.temImagem) avisar(i, "a logo tem imagem: a imagem fica sem TOYO na contração.");
+        if (geo.temGradiente) avisar(i, "a logo tem gradiente (shading): essa parte fica sem TOYO na contração.");
+        if (geo.temTracejado) avisar(i, "a logo tem linha tracejada: na contração ela foi tratada como linha contínua.");
+        if (contracao.vazio || contracao.perdeuPartesFinas) avisar(i, "algumas partes finas da logo ficaram sem TOYO com essa distância.");
+        conteudo = "/GSop gs\n/CSspot cs 1 scn\n" + contracao.caminhos;
+        recursos = ctx.obj({ ColorSpace: { CSspot: separation! }, ExtGState: { GSop: gsOp! } });
+      } else {
+        for (const a of avisosTrocaDeCor(conteudoBase)) avisar(i, a);
+        conteudo = trocarCoresPorSpot(conteudoBase);
+        recursos = recursosBase ? recursosBase.clone(ctx) : ctx.obj({});
+        const copiar = (chave: string) => {
+          const novo = ctx.obj({});
+          const antigo = recursos.lookupMaybe(PDFName.of(chave), PDFDict);
+          antigo?.entries().forEach(([k, v]) => novo.set(k, v));
+          recursos.set(PDFName.of(chave), novo);
+          return novo;
+        };
+        copiar("ColorSpace").set(PDFName.of("CSspot"), separation!);
+        copiar("ExtGState").set(PDFName.of("GSop"), gsOp!);
+      }
+
+      const formToyo = ctx.flateStream(latin1ParaBytes(conteudo), {
+        Type: "XObject", Subtype: "Form", FormType: 1,
+        BBox: [x0, y0, x0 + w, y0 + h], Matrix: [1, 0, 0, 1, -x0, -y0], Resources: recursos,
+      });
+      nomeToyo = folha.node.newXObject("FmT", ctx.register(formToyo));
+    }
+    contracoes.push(contracao);
+
+    // um nome de recurso só para a base (o drawPage do pdf-lib cria um por cópia);
+    // cada cópia: q  s 0 0 s x y cm  /Fm Do  Q -- o /Matrix do form já desconta a origem
+    const nomeBase = folha.node.newXObject("FmB", base.ref);
+    const s = L.escala;
+    const desenhar = (nome: PDFName, x: number, y: number) =>
+      folha.pushOperators(pushGraphicsState(), concatTransformationMatrix(s, 0, 0, s, x, y), drawObject(nome), popGraphicsState());
+    for (const { x, y } of L.posicoes) {
+      desenhar(nomeBase, x, y);
+      if (nomeToyo) desenhar(nomeToyo, x, y); // TOYO sempre por cima da original
+    }
   }
 
   const comprimentoCm = layout.alturaFolha / CM;
@@ -236,5 +264,6 @@ export async function gerarCartela(bytes: Uint8Array, o: OpcoesCartela): Promise
   }
 
   const pdf = await out.save({ useObjectStreams: false });
-  return { pdf, nome: nomeArquivo(o.qtd, o.larguraCm, toyo), layout, avisos, contracao };
+  const qtdTotal = itens.reduce((a, it) => a + it.qtd, 0);
+  return { pdf, nome: nomeArquivo(qtdTotal, itens[0].larguraCm, toyo, itens.length), layout, avisos, contracoes };
 }

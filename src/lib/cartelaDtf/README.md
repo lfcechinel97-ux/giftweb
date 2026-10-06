@@ -4,7 +4,8 @@ Ferramenta interna que gera a cartela de DTF (têxtil ou UV com TOYO) em **PDF
 vetorial, escala real 1:1**, pronta para o RIP. A pessoa sobe o PDF vetorial da
 logo, informa largura e quantidade e baixa o PDF.
 
-- Página: `src/pages/CartelaDtf.tsx` (rota em `src/App.tsx`).
+- Página: `src/pages/CartelaDtf.tsx` (rota em `src/App.tsx`); visualizador com zoom em
+  `src/pages/cartelaDtf/VisualizadorPdf.tsx`.
 - Núcleo: `src/lib/cartelaDtf/`
   - `layout.ts`: cálculo do grid (mesmas fórmulas da referência em Python).
   - `conteudoPdf.ts`: troca de cor pelo spot (as regex de `spot_layer()`) e o tokenizador do content stream.
@@ -47,7 +48,28 @@ só é baixado quando alguém liga "Contrair TOYO").
    Erros (bloqueiam): PDF sem página, protegido por senha, só imagem, logo que
    não cabe na folha.
 
-Nome do arquivo: `cartela_{qtd}x_{largura}cm[_toyo].pdf`.
+Nome do arquivo: `cartela_{qtd}x_{largura}cm[_toyo].pdf`; com várias logos,
+`cartela_{qtdTotal}x_{n}logos[_toyo].pdf`.
+
+### Várias logos na mesma cartela
+
+"Adicionar outra logo" cria mais um cartão (arquivo + largura + quantidade);
+também dá para soltar vários PDFs de uma vez num cartão. Tipo, contração,
+espaçamento, margem, largura da folha e distribuição valem para a folha toda.
+Cada logo forma um bloco com o seu próprio grid (colunas calculadas pela
+largura dela) e o bloco seguinte começa embaixo, a um espaçamento de
+distância; a largura da folha é a do bloco mais largo. Com uma logo só, o
+resultado é idêntico à referência em Python. Cada logo tem seu Form XObject
+base e o seu TOYO; o Separation e o ExtGState de overprint são compartilhados.
+Logo com largura/quantidade inválida fica fora da cartela, com aviso.
+
+### Pré-visualização com zoom
+
+O PDF gerado é desenhado pelo pdf.js só no pedaço visível, então dá para
+aproximar até 8.000% (100% ≈ tamanho real na tela) e ver a faixa da logo
+original em volta do TOYO contraído. Roda do mouse, pinça, duplo clique e
+arrastar; botões "Folha inteira" e "Ver logo N de perto". Ao mudar a distância
+o zoom e a posição são mantidos, para comparar no mesmo lugar.
 
 ## Como trocar o nome do spot ou a distância padrão
 
