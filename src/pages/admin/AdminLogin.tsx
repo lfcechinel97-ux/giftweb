@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, Lock, Mail, Kanban, ShoppingCart, BarChart3 } from 'lucide-react';
 import { rememberAdminAccess } from '@/lib/adminAccessCache';
 
@@ -13,6 +13,12 @@ const DESTAQUES = [
   { icone: BarChart3, texto: 'Resultados do mês sempre à mão' },
 ];
 
+/** Só aceita caminho interno do site (evita redirecionar para outro domínio). */
+const destinoSeguro = (next: string | null) =>
+  next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') && !next.startsWith('/admin/login')
+    ? next
+    : '/sistema';
+
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +26,7 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [params] = useSearchParams();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +51,7 @@ export default function AdminLogin() {
       rememberAdminAccess(data.user.id);
       // O vendedor salvo no navegador é de quem entrou antes; cada login recomeça pelo próprio.
       try { localStorage.removeItem('sistema_vendedor_v1'); } catch { /* armazenamento bloqueado */ }
-      navigate('/sistema');
+      navigate(destinoSeguro(params.get('next')), { replace: true });
     } catch (e) {
       setError('Erro de conexão. Tente novamente.');
       setLoading(false);
