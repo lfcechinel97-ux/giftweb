@@ -305,7 +305,7 @@ const mapTransp = (r: any): Transportadora => ({
   id: r.id, nome: r.nome, ativo: r.ativo,
   tipoFrete: r.tipo_frete ?? undefined, prazoEntrega: r.prazo_entrega ?? undefined,
 });
-const mapCliente = (r: any): Cliente => ({
+export const mapCliente = (r: any): Cliente => ({
   id: r.id, nome: r.nome, tipo: r.tipo, documento: r.documento, ie: r.ie ?? undefined,
   contatos: r.contatos ?? [], enderecos: r.enderecos ?? [], observacoes: r.observacoes ?? undefined,
   createdAt: r.created_at, updatedAt: r.updated_at,

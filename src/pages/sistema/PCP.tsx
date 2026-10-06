@@ -25,6 +25,7 @@ import { uploadAnexoPcp, uploadAnexoGenerico, uploadArquivoPedido, MockupUploadE
 import { cn } from "@/lib/utils";
 import { Money } from "@/components/sistema/ui/Money";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
+import PainelEnvioPedido from "./PainelEnvioPedido";
 import { COLUNAS_PCP, MOSTRAR_COLUNA_ANOTACOES, corDaColuna, corFundoDaColuna, statusCanonicoDaColuna, colunaDoStatus, statusInfo } from "@/lib/statusPedido";
 import { useSistema, type Pedido, type PedidoItem } from "@/contexts/SistemaContext";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
@@ -43,6 +44,9 @@ type PcpStatus =
   | "aguardando_coleta" | "enviado";
 
 type LocalProducao = "interna" | "terceirizada" | "fornecedor_para_terceirizada";
+
+/** Etapas em que o painel do item mostra os dados de envio do cliente. */
+const ETAPAS_ENVIO = ["inserir_medidas", "aguardando_coleta", "enviado"];
 
 interface PcpRow {
   producao_id: string;
@@ -793,12 +797,19 @@ function PcpCard({
       {/* Topo — pedido/item à esquerda; tempo na etapa + data de criação à
           direita, com o vendedor entre os dois. */}
       <div className="flex items-start justify-between gap-2 pl-3 pr-2.5 pt-2.5 pb-1.5">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="h-[7px] w-[7px] rounded-full shrink-0" style={{ backgroundColor: cor }} />
-          <OrderNumber value={row.pedido_numero} className="text-[13px] shrink-0" />
-          <span className="gw-body text-[12px] font-medium text-[var(--gw-text-secondary)] shrink-0">
-            Item {indice}/{total}
-          </span>
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="h-[7px] w-[7px] rounded-full shrink-0" style={{ backgroundColor: cor }} />
+            <OrderNumber value={row.pedido_numero} className="text-[13px] shrink-0" />
+            <span className="gw-body text-[12px] font-medium text-[var(--gw-text-secondary)] shrink-0">
+              Item {indice}/{total}
+            </span>
+          </div>
+          {row.cliente && (
+            <p className="text-[10px] leading-none text-[var(--gw-text-muted)] truncate pl-[13px] mt-[2px]" title={row.cliente}>
+              {row.cliente}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {!comFotos && <VendedorIcone nome={row.pedido_vendedor_nome} />}
@@ -1387,7 +1398,12 @@ export default function PCP() {
     let out = rows;
     if (tagsFiltro.length > 0) out = out.filter(r => tagsFiltro.every(t => (r.tags ?? []).includes(t)));
     const termo = buscaPedido.trim();
-    if (termo) out = out.filter(r => String(r.pedido_numero ?? "").includes(termo));
+    if (termo) {
+      const t = termo.toLocaleLowerCase("pt-BR");
+      out = out.filter(r =>
+        String(r.pedido_numero ?? "").includes(termo) || (r.cliente ?? "").toLocaleLowerCase("pt-BR").includes(t),
+      );
+    }
     return out;
   }, [rows, tagsFiltro, buscaPedido]);
 
@@ -2614,8 +2630,8 @@ export default function PCP() {
             <Input
               value={buscaPedido}
               onChange={e => setBuscaPedido(e.target.value)}
-              placeholder="Nº do pedido"
-              className="pl-8 h-9 w-[130px] text-[13px]"
+              placeholder="Nº do pedido ou cliente"
+              className="pl-8 h-9 w-[200px] text-[13px]"
             />
           </div>
           <div className="flex items-center rounded-[8px] border border-[var(--gw-border)] overflow-hidden text-[12px] font-semibold">
@@ -2998,7 +3014,13 @@ export default function PCP() {
                     própria, e o GiftChat preenche TODO o resto -- só ele rola,
                     em vez da coluna inteira rolar junto com ele. */}
                 <div className="flex flex-col min-h-0 overflow-hidden border-r border-[var(--gw-border)]">
-                <div className="shrink-0 overflow-y-auto max-h-[38vh]">
+                <div className={cn(
+                  "shrink-0 overflow-y-auto",
+                  ETAPAS_ENVIO.includes(colunaDoStatus(detalhe)) ? "max-h-[58vh]" : "max-h-[38vh]",
+                )}>
+                  {ETAPAS_ENVIO.includes(colunaDoStatus(detalhe)) && (
+                    <PainelEnvioPedido pedidoId={detalhe.pedido_id} />
+                  )}
                   {/* Etiquetas */}
                   <div className="px-5 py-2.5 border-b border-[var(--gw-border)] space-y-1.5">
                     <Label className="gw-label flex items-center gap-1.5">

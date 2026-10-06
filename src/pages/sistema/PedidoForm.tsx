@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ChevronLeft, Plus, Trash2, Pencil, AlertTriangle, Lock, Camera, Loader2,
   Minus, Upload, Paperclip, FileText, Truck, CreditCard, X, Download, ClipboardList, PackageSearch,
+  IdCard,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,6 +25,7 @@ import { useSistema, clienteDisplay, type Pedido, type PedidoItem, type QuoteIte
 import { useSistemaProducts } from "./useSistemaProducts";
 import { ItemDialog } from "./OrcamentoForm";
 import ClienteDialog from "./ClienteDialog";
+import DadosClienteEnvio from "./DadosClienteEnvio";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { uploadMockup, uploadArquivoPedido, MockupUploadError } from "@/lib/uploadMockup";
 import RecorteQuadrado from "@/components/sistema/RecorteQuadrado";
@@ -102,6 +104,7 @@ const PedidoForm: React.FC = () => {
   const [enviandoAnexoGeral, setEnviandoAnexoGeral] = useState(false);
 
   const [showClienteDialog, setShowClienteDialog] = useState(false);
+  const [editarClienteAberto, setEditarClienteAberto] = useState(false);
   const [showItemDialog, setShowItemDialog] = useState(false);
   const [editingItem, setEditingItem] = useState<QuoteItem | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -597,6 +600,19 @@ const PedidoForm: React.FC = () => {
               >
                 <Plus className="h-4 w-4" />
               </Button>
+              {clienteNome && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  onClick={() => setEditarClienteAberto(true)}
+                  aria-label="Editar cliente"
+                  title="Editar dados do cliente"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </label>
           <label className="space-y-1">
@@ -626,6 +642,17 @@ const PedidoForm: React.FC = () => {
               onChange={e => setPrazoProducaoDias(Number(e.target.value) || 0)} />
           </label>
         </div>
+      </SectionCard>
+
+      {/* Dados do cliente pra etiqueta/nota -- copiar campo a campo ou tudo,
+          e editar o cadastro sem sair do pedido. */}
+      <SectionCard icon={<IdCard className="h-4 w-4" />} title="Dados do cliente (envio e etiqueta)" color="var(--gw-violet, #7C5CFF)">
+        <DadosClienteEnvio
+          cliente={clienteNome ?? null}
+          snapshot={clienteNome ? null : pedido.clienteSnapshot ?? null}
+          contatoPedido={{ nome: contatoNome, telefone: contatoTelefone, email: contatoEmail }}
+          onEditar={clienteNome ? () => setEditarClienteAberto(true) : undefined}
+        />
       </SectionCard>
 
       {/* Produtos do pedido */}
@@ -993,6 +1020,14 @@ const PedidoForm: React.FC = () => {
           <span className="gw-meta text-[11px]">PNG, JPG, PDF, AI, CDR, EPS, SVG (máx. 30 MB)</span>
         </button>
       </SectionCard>
+
+      {editarClienteAberto && clienteNome && (
+        <ClienteDialog
+          open={editarClienteAberto}
+          onOpenChange={setEditarClienteAberto}
+          cliente={clienteNome}
+        />
+      )}
 
       {showClienteDialog && (
         <ClienteDialog
