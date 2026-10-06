@@ -54,8 +54,10 @@ Nome do arquivo: `cartela_{qtd}x_{largura}cm[_toyo].pdf`; com várias logos,
 ### Várias logos na mesma cartela
 
 "Adicionar outra logo" cria mais um cartão (arquivo + largura + quantidade);
-também dá para soltar vários PDFs de uma vez num cartão. Tipo, contração,
-espaçamento, margem, largura da folha e distribuição valem para a folha toda.
+também dá para soltar vários PDFs de uma vez num cartão. Tipo,
+espaçamento, margem, largura da folha e distribuição valem para a folha toda;
+no DTF UV, **"Contrair TOYO" e a distância são de cada logo** (uma logo nova
+começa com a mesma escolha da anterior, e dá para mudar).
 As logos entram em linhas, da esquerda para a direita: cada uma usa o seu
 número de colunas (calculado pela largura dela e pela distribuição). Com
 **"Aproveitar a sobra da linha"** (padrão), se uma logo termina no meio da
@@ -83,7 +85,7 @@ o zoom e a posição são mantidos, para comparar no mesmo lugar.
   `src/lib/cartelaDtf/gerarCartela.ts`:
   - `SPOT_PADRAO = "TOYO 0001pc"`
   - `CMYK_PADRAO = [33, 90, 3, 0]`
-  - `DISTANCIA_PADRAO_MM = 0.15` (distância padrão da contração)
+  - `DISTANCIA_PADRAO_MM = 0.15` (distância que aparece preenchida em cada logo)
 
   Depois é só publicar de novo (ver "Deploy").
 

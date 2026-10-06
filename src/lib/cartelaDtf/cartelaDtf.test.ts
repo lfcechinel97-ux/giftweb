@@ -195,6 +195,30 @@ describe("geração do PDF", () => {
     expect(bytesParaLatin1(c.pdf).match(/\/TOYO#200001pc/g)).toHaveLength(1);
   });
 
+  it("contração do TOYO por logo", async () => {
+    const quadrado = "0 0 0 1 k 10 10 300 300 re f";
+    const c = await gerarCartela(
+      [
+        { bytes: pdfTeste(quadrado), larguraCm: 7, qtd: 1, contrair: true, distanciaMm: 0.3 },
+        { bytes: pdfTeste(quadrado), larguraCm: 7, qtd: 1, contrair: false },
+        { bytes: pdfTeste(quadrado), larguraCm: 7, qtd: 1 }, // sem valor: vale o da folha (0,15)
+      ],
+      opcoes({ contrair: true, distanciaMm: 0.15 }),
+    );
+    expect(c.contracoes.map((x) => x !== null)).toEqual([true, false, true]);
+    const doc = await PDFDocument.load(c.pdf);
+    const xo = doc.getPage(0).node.Resources()!.lookup(PDFName.of("XObject"), PDFDict);
+    const toyos = xo.keys().filter((k) => k.asString().startsWith("/FmT"))
+      .map((k) => bytesParaLatin1(decodePDFRawStream(xo.lookup(k) as PDFRawStream).decode()));
+    const recuo = (t: string) => {
+      const xs = [...t.matchAll(/([-\d.]+) ([-\d.]+) [ml]\n/g)].map((m) => Number(m[1]));
+      return ((Math.min(...xs) - 10) * c.layout.itens[0].escala / CM) * 10;
+    };
+    expect(recuo(toyos[0])).toBeCloseTo(0.3, 3);
+    expect(toyos[1]).toContain("re f"); // sem contrair: troca de cor, mesma geometria
+    expect(recuo(toyos[2])).toBeCloseTo(0.15, 3);
+  });
+
   it("erros de PDF não vetorial", async () => {
     await expect(lerLogo(new Uint8Array([1, 2, 3]))).rejects.toThrow("PDF vetorial");
     await expect(lerLogo(pdfTeste("q 10 0 0 10 0 0 cm Q"))).rejects.toThrow("vazia");

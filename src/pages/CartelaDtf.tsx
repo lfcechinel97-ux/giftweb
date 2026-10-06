@@ -28,7 +28,7 @@ interface Logo {
   caixa: CaixaLogo;
 }
 
-/** Uma logo da lista: arquivo + largura + quantidade. */
+/** Uma logo da lista: arquivo, largura, quantidade e a contração do TOYO dela. */
 interface ItemForm {
   id: number;
   logo: Logo | null;
@@ -36,6 +36,8 @@ interface ItemForm {
   erro: string | null;
   largura: string;
   qtd: string;
+  contrair: boolean;
+  distancia: string;
 }
 
 interface Campos {
@@ -44,8 +46,6 @@ interface Campos {
   folha: string;
   margem: string;
   modo: Modo;
-  contrair: boolean;
-  distancia: string;
   distribuicao: Distribuicao;
   spot: string;
   cmyk: [string, string, string, string];
@@ -57,67 +57,86 @@ const INICIAL: Campos = {
   folha: "57",
   margem: "0,5",
   modo: "textil",
-  contrair: false,
-  distancia: fmtNum(DISTANCIA_PADRAO_MM),
   distribuicao: "equilibrada",
   spot: SPOT_PADRAO,
   cmyk: CMYK_PADRAO.map(String) as Campos["cmyk"],
 };
 
 let proximoId = 1;
-const novoItem = (): ItemForm => ({ id: proximoId++, logo: null, lendo: false, erro: null, largura: "", qtd: "" });
+/** Logo nova; a contração começa igual à da logo anterior (`base`), dá para mudar. */
+const novoItem = (base?: ItemForm): ItemForm => ({
+  id: proximoId++, logo: null, lendo: false, erro: null, largura: "", qtd: "",
+  contrair: base?.contrair ?? false,
+  distancia: base?.distancia ?? fmtNum(DISTANCIA_PADRAO_MM),
+});
 
 type Erros = Partial<Record<keyof Campos, string>>;
 
 /** Valida o que vale para a folha inteira. */
-function validarFolha(c: Campos): { opcoes: OpcoesCartela | null; erros: Erros; avisoDistancia: string | null } {
+function validarFolha(c: Campos): { opcoes: OpcoesCartela | null; erros: Erros } {
   const erros: Erros = {};
   const espaco = lerNumero(c.espaco);
   const folha = lerNumero(c.folha);
   const margem = lerNumero(c.margem);
-  const distancia = lerNumero(c.distancia);
   const cmyk = c.cmyk.map(lerNumero) as [number, number, number, number];
 
   if (!(espaco >= 0)) erros.espaco = "Espaçamento inválido.";
   if (!(folha > 0)) erros.folha = "Largura da folha inválida.";
   if (!(margem >= 0)) erros.margem = "Margem inválida.";
 
-  let avisoDistancia: string | null = null;
   if (c.modo === "uv") {
     if (!c.spot.trim()) erros.spot = "Informe o nome do spot.";
     if (cmyk.some((v) => !(v >= 0 && v <= 100))) erros.cmyk = "Cada valor CMYK vai de 0 a 100.";
-    if (c.contrair) {
-      if (Number.isNaN(distancia)) erros.distancia = "Distância inválida.";
-      else if (distancia <= 0) erros.distancia = "A distância precisa ser maior que 0 mm.";
-      else if (distancia > 2) erros.distancia = "A distância máxima é 2 mm.";
-      else if (distancia < 0.1 || distancia > 0.3) avisoDistancia = "Fora da faixa usual (0,10 a 0,30 mm). Confira se é isso mesmo.";
-    }
   }
 
-  if (Object.keys(erros).length) return { opcoes: null, erros, avisoDistancia };
+  if (Object.keys(erros).length) return { opcoes: null, erros };
   return {
     erros,
-    avisoDistancia,
     opcoes: {
       espacoCm: espaco, folhaMaxCm: folha, margemCm: margem,
-      distribuicao: c.distribuicao, continuarNaLinha: c.continuarNaLinha, modo: c.modo, contrair: c.modo === "uv" && c.contrair,
-      distanciaMm: distancia, spot: c.spot.trim(), cmyk,
+      distribuicao: c.distribuicao, continuarNaLinha: c.continuarNaLinha, modo: c.modo,
+      // a contração vem de cada logo (ItemCartela); aqui fica só o padrão
+      contrair: false, distanciaMm: DISTANCIA_PADRAO_MM, spot: c.spot.trim(), cmyk,
     },
   };
 }
 
-/** Valida largura e quantidade de uma logo. */
-function validarItem(it: ItemForm) {
-  const erros: { largura?: string; qtd?: string } = {};
+interface ErrosItem { largura?: string; qtd?: string; distancia?: string }
+
+/** Valida largura, quantidade e (no DTF UV com contração) a distância de uma logo. */
+function validarItem(it: ItemForm, modo: Modo) {
+  const erros: ErrosItem = {};
   const largura = lerNumero(it.largura);
   const qtd = lerNumero(it.qtd);
+  const contrair = modo === "uv" && it.contrair;
+  const distancia = lerNumero(it.distancia);
+  let avisoDistancia: string | null = null;
+  if (contrair) {
+    if (Number.isNaN(distancia)) erros.distancia = "Distância inválida.";
+    else if (distancia <= 0) erros.distancia = "A distância precisa ser maior que 0 mm.";
+    else if (distancia > 2) erros.distancia = "A distância máxima é 2 mm.";
+    else if (distancia < 0.1 || distancia > 0.3) avisoDistancia = "Fora da faixa usual (0,10 a 0,30 mm). Confira se é isso mesmo.";
+  }
   if (!it.largura.trim()) erros.largura = "Informe a largura da logo.";
   else if (!(largura > 0)) erros.largura = "Largura inválida: use um número maior que zero.";
   if (!it.qtd.trim()) erros.qtd = "Informe a quantidade.";
   else if (!(qtd >= 1) || !Number.isInteger(qtd)) erros.qtd = "Quantidade inválida: use um número inteiro a partir de 1.";
   else if (qtd > 20000) erros.qtd = "Quantidade muito alta (máximo 20.000 por logo).";
-  return { erros, largura, qtd, ok: !erros.largura && !erros.qtd };
+  return {
+    erros, largura, qtd, contrair, distancia, avisoDistancia,
+    ok: !erros.largura && !erros.qtd && !erros.distancia,
+  };
 }
+
+/** Como cada logo aparece no resumo (na ordem do layout). */
+interface Rotulo {
+  numero: number;
+  nome: string;
+  toyo: string;
+}
+
+const textoToyo = (contrair: boolean, distancia: number) =>
+  contrair ? `Contraído ${fmtNum(distancia)} mm` : "Sem contração";
 
 export default function CartelaDtf() {
   const [itens, setItens] = useState<ItemForm[]>(() => [novoItem()]);
@@ -125,7 +144,7 @@ export default function CartelaDtf() {
   const [avancado, setAvancado] = useState(false);
   const [cartela, setCartela] = useState<Cartela | null>(null);
   // número e nome de cada logo da cartela exibida (na ordem do layout)
-  const [rotulos, setRotulos] = useState<{ numero: number; nome: string }[]>([]);
+  const [rotulos, setRotulos] = useState<Rotulo[]>([]);
   const [gerando, setGerando] = useState(false);
   const [erroGeracao, setErroGeracao] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -137,7 +156,7 @@ export default function CartelaDtf() {
   const set = <K extends keyof Campos>(k: K, v: Campos[K]) => setCampos((c) => ({ ...c, [k]: v }));
   const mudarItem = (id: number, mud: Partial<ItemForm>) =>
     setItens((lista) => lista.map((it) => (it.id === id ? { ...it, ...mud } : it)));
-  const { opcoes, erros, avisoDistancia } = useMemo(() => validarFolha(campos), [campos]);
+  const { opcoes, erros } = useMemo(() => validarFolha(campos), [campos]);
 
   /** Lê os arquivos: o primeiro vai para a logo `id`, os outros viram logos novas. */
   const abrirArquivos = useCallback(async (id: number, files: File[]) => {
@@ -147,7 +166,9 @@ export default function CartelaDtf() {
     setItens((lista) => {
       const i = lista.findIndex((it) => it.id === id);
       const nova = lista.map((it) => (it.id === id ? { ...it, lendo: true, erro: null } : it));
-      nova.splice(i + 1, 0, ...extras.map((e) => ({ ...e, lendo: true })));
+      // as logos extras herdam a contração do cartão onde os arquivos foram soltos
+      const base = lista[i];
+      nova.splice(i + 1, 0, ...extras.map((e) => ({ ...e, lendo: true, contrair: base.contrair, distancia: base.distancia })));
       return nova;
     });
     await Promise.all(files.map(async (file, k) => {
@@ -168,8 +189,8 @@ export default function CartelaDtf() {
 
   const remover = (id: number) => setItens((lista) => (lista.length > 1 ? lista.filter((it) => it.id !== id) : lista));
 
-  // logos que entram na cartela: com arquivo e largura/quantidade válidas
-  const validacoes = itens.map(validarItem);
+  // logos que entram na cartela: com arquivo e largura/quantidade/distância válidas
+  const validacoes = itens.map((it) => validarItem(it, campos.modo));
   const prontos = itens
     .map((it, i) => ({ it, v: validacoes[i], numero: i + 1 }))
     .filter(({ it, v }) => it.logo && v.ok);
@@ -179,14 +200,16 @@ export default function CartelaDtf() {
 
   // gera de novo (com um pequeno atraso) sempre que algo muda
   const chave = opcoes && prontos.length
-    ? JSON.stringify({ o: opcoes, i: prontos.map(({ it, v }) => [it.id, it.logo!.nome, v.largura, v.qtd]) })
+    ? JSON.stringify({ o: opcoes, i: prontos.map(({ it, v }) => [it.id, it.logo!.nome, v.largura, v.qtd, v.contrair, v.distancia]) })
     : "";
-  const entradaRef = useRef<{ itens: ItemCartela[]; opcoes: OpcoesCartela; rotulos: { numero: number; nome: string }[] } | null>(null);
+  const entradaRef = useRef<{ itens: ItemCartela[]; opcoes: OpcoesCartela; rotulos: Rotulo[] } | null>(null);
   entradaRef.current = opcoes && prontos.length
     ? {
         opcoes,
-        itens: prontos.map(({ it, v }) => ({ bytes: it.logo!.bytes, larguraCm: v.largura, qtd: v.qtd })),
-        rotulos: prontos.map(({ it, numero }) => ({ numero, nome: it.logo!.nome })),
+        itens: prontos.map(({ it, v }) => ({
+          bytes: it.logo!.bytes, larguraCm: v.largura, qtd: v.qtd, contrair: v.contrair, distanciaMm: v.distancia,
+        })),
+        rotulos: prontos.map(({ it, v, numero }) => ({ numero, nome: it.logo!.nome, toyo: textoToyo(v.contrair, v.distancia) })),
       }
     : null;
   // a logo de cada item muda de bytes ao trocar o arquivo: entra na chave pela identidade
@@ -284,13 +307,29 @@ export default function CartelaDtf() {
       <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
         {/* Formulário */}
         <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div>
+            <Rotulo>Tipo</Rotulo>
+            <div className="grid grid-cols-2 gap-2">
+              <Opcao ativo={campos.modo === "textil"} onClick={() => set("modo", "textil")} titulo="DTF Têxtil" sub="Só a logo original" />
+              <Opcao ativo={campos.modo === "uv"} onClick={() => set("modo", "uv")} titulo="DTF UV com TOYO" sub="Original + camada spot" />
+            </div>
+          </div>
+
+          {campos.modo === "uv" && (
+            <p className="-mt-2 text-xs text-slate-500">
+              No DTF UV, cada logo tem a sua opção de contrair o TOYO.
+            </p>
+          )}
+
           <div className="space-y-3">
             {itens.map((it, i) => (
               <CartaoLogo
                 key={it.id}
                 numero={i + 1}
                 item={it}
-                erros={it.logo || it.largura.trim() ? validacoes[i].erros : {}}
+                erros={it.logo || it.largura.trim() ? validacoes[i].erros : { distancia: validacoes[i].erros.distancia }}
+                avisoDistancia={validacoes[i].avisoDistancia}
+                uv={campos.modo === "uv"}
                 podeRemover={itens.length > 1}
                 onArquivos={(files) => abrirArquivos(it.id, files)}
                 onMudar={(mud) => mudarItem(it.id, mud)}
@@ -299,7 +338,7 @@ export default function CartelaDtf() {
             ))}
             <button
               type="button"
-              onClick={() => setItens((l) => [...l, novoItem()])}
+              onClick={() => setItens((l) => [...l, novoItem(l[l.length - 1])])}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed text-[15px] font-semibold transition hover:bg-[#EEF4FD]"
               style={{ borderColor: "#BFD3F2", color: AZUL }}
             >
@@ -330,40 +369,6 @@ export default function CartelaDtf() {
             <CampoNumero rotulo="Margem das bordas (cm)" valor={campos.margem} onChange={(v) => set("margem", v)} erro={erros.margem} />
             <CampoNumero rotulo="Largura máx. da folha (cm)" valor={campos.folha} onChange={(v) => set("folha", v)} erro={erros.folha} />
           </div>
-
-          <div>
-            <Rotulo>Tipo</Rotulo>
-            <div className="grid grid-cols-2 gap-2">
-              <Opcao ativo={campos.modo === "textil"} onClick={() => set("modo", "textil")} titulo="DTF Têxtil" sub="Só a logo original" />
-              <Opcao ativo={campos.modo === "uv"} onClick={() => set("modo", "uv")} titulo="DTF UV com TOYO" sub="Original + camada spot" />
-            </div>
-          </div>
-
-          {campos.modo === "uv" && (
-            <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <label className="flex cursor-pointer items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={campos.contrair}
-                  onChange={(e) => set("contrair", e.target.checked)}
-                  className="h-5 w-5 rounded accent-[#1464D2]"
-                />
-                <span className="text-[15px] font-semibold text-slate-800">Contrair TOYO</span>
-              </label>
-              <p className="text-xs text-slate-500">
-                Encolhe a camada branca (TOYO) para dentro da logo, para não aparecer borda branca em volta. A logo original não muda.
-              </p>
-              {campos.contrair && (
-                <div className="grid grid-cols-[120px_1fr] items-start gap-3">
-                  <CampoNumero rotulo="Distância (mm)" valor={campos.distancia} onChange={(v) => set("distancia", v)} erro={erros.distancia} />
-                  <p className="pt-7 text-xs leading-relaxed text-slate-600">
-                    Geralmente utilizamos 0,15 mm, mas pode variar de 0,10 a 0,30 mm.
-                  </p>
-                  {avisoDistancia && <p className="col-span-2 -mt-1 text-xs font-medium text-amber-700">{avisoDistancia}</p>}
-                </div>
-              )}
-            </div>
-          )}
 
           <div>
             <Rotulo>Distribuição</Rotulo>
@@ -438,8 +443,8 @@ export default function CartelaDtf() {
                 </div>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-3">
                   <Info rotulo="Tipo" valor={opcoes?.modo === "uv" ? `DTF UV · ${opcoes.spot}` : "DTF Têxtil"} />
-                  {opcoes?.modo === "uv" && (
-                    <Info rotulo="TOYO" valor={opcoes.contrair ? `Contraído ${fmtNum(opcoes.distanciaMm)} mm` : "Sem contração"} />
+                  {opcoes?.modo === "uv" && L.itens.length === 1 && rotulos[0] && (
+                    <Info rotulo="TOYO" valor={rotulos[0].toyo} />
                   )}
                   {L.itens.length === 1 ? (
                     <>
@@ -461,6 +466,7 @@ export default function CartelaDtf() {
                           <th className="py-1.5 pr-3 font-medium">Logo</th>
                           <th className="py-1.5 pr-3 font-medium">Tamanho</th>
                           <th className="py-1.5 pr-3 font-medium">Colunas × linhas</th>
+                          {opcoes?.modo === "uv" && <th className="py-1.5 pr-3 font-medium">TOYO</th>}
                           <th className="py-1.5 font-medium">Qtd.</th>
                         </tr>
                       </thead>
@@ -472,6 +478,7 @@ export default function CartelaDtf() {
                             </td>
                             <td className="py-2 pr-3 tabular-nums">{fmt(li.W / CM)} × {fmt(li.H / CM)} cm</td>
                             <td className="py-2 pr-3 tabular-nums">{li.cols} × {li.linhas}</td>
+                            {opcoes?.modo === "uv" && <td className="py-2 pr-3">{rotulos[k]?.toyo}</td>}
                             <td className="py-2 tabular-nums">{li.posicoes.length}</td>
                           </tr>
                         ))}
@@ -483,7 +490,7 @@ export default function CartelaDtf() {
                 {(cartela.avisos.length > 0 || incompletos.length > 0) && (
                   <ul className="mt-4 space-y-2">
                     {incompletos.map(({ numero }) => (
-                      <Aviso key={`inc-${numero}`}>A logo {numero} está sem largura ou quantidade válida e ficou fora da cartela.</Aviso>
+                      <Aviso key={`inc-${numero}`}>A logo {numero} está com largura, quantidade ou distância inválida e ficou fora da cartela.</Aviso>
                     ))}
                     {cartela.avisos.map((a) => <Aviso key={a}>{a}</Aviso>)}
                   </ul>
@@ -528,7 +535,9 @@ export default function CartelaDtf() {
 function CartaoLogo(props: {
   numero: number;
   item: ItemForm;
-  erros: { largura?: string; qtd?: string };
+  erros: ErrosItem;
+  avisoDistancia: string | null;
+  uv: boolean;
   podeRemover: boolean;
   onArquivos: (files: File[]) => void;
   onMudar: (m: Partial<ItemForm>) => void;
@@ -596,6 +605,31 @@ function CartaoLogo(props: {
         <CampoNumero rotulo="Largura (cm)" valor={item.largura} onChange={(v) => props.onMudar({ largura: v })} erro={erros.largura} placeholder="ex.: 7" obrigatorio />
         <CampoNumero rotulo="Quantidade" valor={item.qtd} onChange={(v) => props.onMudar({ qtd: v })} erro={erros.qtd} placeholder="ex.: 30" obrigatorio inteiro />
       </div>
+      {props.uv && (
+        <div className="mt-3 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+          <label className="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              checked={item.contrair}
+              onChange={(e) => props.onMudar({ contrair: e.target.checked })}
+              className="h-5 w-5 rounded accent-[#1464D2]"
+            />
+            <span className="text-[15px] font-semibold text-slate-800">Contrair TOYO</span>
+          </label>
+          <p className="text-xs text-slate-500">
+            Encolhe a camada branca (TOYO) desta logo para dentro dela, para não aparecer borda branca em volta. A logo original não muda.
+          </p>
+          {item.contrair && (
+            <div className="grid grid-cols-[120px_1fr] items-start gap-3">
+              <CampoNumero rotulo="Distância (mm)" valor={item.distancia} onChange={(v) => props.onMudar({ distancia: v })} erro={erros.distancia} />
+              <p className="pt-7 text-xs leading-relaxed text-slate-600">
+                Geralmente utilizamos 0,15 mm, mas pode variar de 0,10 a 0,30 mm.
+              </p>
+              {props.avisoDistancia && <p className="col-span-2 -mt-1 text-xs font-medium text-amber-700">{props.avisoDistancia}</p>}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
