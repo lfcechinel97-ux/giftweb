@@ -75,22 +75,25 @@ serve(async (req) => {
 
   // Instrução fixa (não editável pelo admin -- é estrutural, não de
   // acabamento): a primeira imagem já mostra a logo colada no produto, no
-  // tamanho/posição exatos (marcar só com texto ou com um retângulo não
-  // bastava, a IA ainda tomava liberdade) -- a IA só pode dar acabamento,
-  // nunca mover/redimensionar. Também permite um cenário rico e realista
-  // de novo (antes tinha ficado genérico demais), mas trava a logo do
-  // cliente só no produto principal -- se quiser decorar o fundo com
-  // alguma marca, só pode ser a Gift Web (terceira imagem).
+  // tamanho/posição exatos. Só a colagem não bastava: pedindo um cenário
+  // novo, a IA reenquadrava a cena inteira e redesenhava a logo grande no
+  // meio do produto. Por isso: (1) o enquadramento do produto fica travado
+  // (só o fundo muda), (2) posição/tamanho vão SEMPRE por extenso, relativos
+  // ao produto, e (3) a logo de referência chega pequena (Etapa 3). A logo
+  // do cliente fica só no produto principal -- marca no fundo, só Gift Web.
   const prompt =
-    "A primeira imagem já mostra o produto com a logo do cliente colada exatamente no tamanho e na posição " +
-    "corretos -- não mova, não redimensione, não reposicione e não gire essa logo de jeito nenhum (se ela está " +
-    "inclinada, na vertical ou de cabeça pra baixo, é de propósito -- mantenha exatamente esse ângulo), ela já " +
-    "está certa. Mantenha todos os textos e elementos da logo, letra por letra, como estão na segunda imagem -- " +
-    "não remova nem resuma nada, e não troque por uma versão da marca que você conheça de memória. Sua " +
-    "única tarefa é fazer ela parecer uma personalização real do produto (não um adesivo colado por cima): " +
-    "acabamento, sombra de contato com a superfície, leve ajuste de perspectiva se a superfície for curva. A " +
-    "segunda imagem é a logo do cliente em alta qualidade, use como referência de cor e nitidez. Capriche no " +
-    "cenário: ambiente de mostruário profissional, com contexto realista ao fundo (prateleiras, outros produtos " +
+    "Tarefa: transformar a PRIMEIRA imagem numa foto de mostruário profissional, editando-a -- não crie uma " +
+    "composição nova. A primeira imagem já mostra o produto com a logo do cliente colada exatamente no tamanho e " +
+    "na posição corretos. Mantenha o produto no MESMO enquadramento: mesmo tamanho, mesma posição na imagem e " +
+    "mesmo ângulo de câmera. Não mova, não aumente, não diminua, não centralize e não gire a logo (se ela está " +
+    `inclinada, na vertical ou de cabeça pra baixo, é de propósito). Posição e tamanho da logo: ${posicao}. ` +
+    "Confira isso antes de entregar: se a logo foi colada pequena, ela continua pequena no resultado. " +
+    "Mantenha todos os textos e elementos da logo, letra por letra -- não remova nem resuma nada, e não troque " +
+    "por uma versão da marca que você conheça de memória. A segunda imagem é só uma referência de cor e nitidez " +
+    "da logo do cliente -- o tamanho dela não importa, o tamanho certo é o da primeira imagem. Faça a logo " +
+    "parecer uma personalização real do produto (não um adesivo colado por cima): acabamento, sombra de contato " +
+    "com a superfície, leve ajuste de perspectiva se a superfície for curva. Capriche no fundo ao redor do " +
+    "produto: ambiente de mostruário profissional, com contexto realista (prateleiras, outros produtos " +
     "desfocados, mesa, iluminação de estúdio). A logo do cliente só pode aparecer sobre o produto principal -- se " +
     "fizer sentido algum elemento de marca aparecer em outro lugar da cena (parede, sinalização, caixa ao fundo), " +
     "use a logo da Gift Web Brindes (terceira imagem), nunca a logo do cliente. " + promptTecnica;
