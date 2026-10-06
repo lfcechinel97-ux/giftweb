@@ -12,6 +12,7 @@ import PromptsAdminDialog from "./mockupStudio/PromptsAdminDialog";
 import HistoricoGeracoes from "./mockupStudio/HistoricoGeracoes";
 import { assinar, listarGeracoes, type Geracao } from "./mockupStudio/historico";
 import { useProdutosRecentes } from "./mockupStudio/useProdutosRecentes";
+import { useTarifaIa } from "./mockupStudio/custoIa";
 
 interface Posicionamento { visao: VisaoProduto; box: CaixaPosicao; logoRecortada: string; composicao: string; estado: EstadoPosicionamento; logoFiel: string }
 
@@ -20,6 +21,7 @@ const ETAPAS = ["Logo e técnica", "Produto", "Posição", "Mockup"];
 export default function MockupStudio() {
   const navigate = useNavigate();
   const { isAdmin, userId } = useUserRole();
+  const [tarifa, setTarifa] = useTarifaIa(isAdmin);
   // Dispara a busca do catálogo assim que o Mockup Studio abre, não só
   // quando o vendedor chega na etapa de produto -- com sorte já está em
   // cache quando ele chegar lá.
@@ -118,7 +120,7 @@ export default function MockupStudio() {
       </header>
 
       <div className="flex flex-1 min-h-0">
-        <HistoricoGeracoes geracoes={geracoes} carregando={carregandoHistorico} erro={erroHistorico} meuId={userId} isAdmin={isAdmin} />
+        <HistoricoGeracoes geracoes={geracoes} carregando={carregandoHistorico} erro={erroHistorico} meuId={userId} isAdmin={isAdmin} tarifa={tarifa} />
 
         {/* scrollbar-gutter fixo: sem ele a barra de rolagem aparecia/sumia
             conforme a altura do conteúdo mudava e a tela "balançava". */}
@@ -163,12 +165,13 @@ export default function MockupStudio() {
               onNovoMockup={novoMockup}
               cliente={cliente}
               isAdmin={isAdmin}
+              tarifa={tarifa}
             />
           )}
         </main>
       </div>
 
-      {showPrompts && <PromptsAdminDialog onClose={() => setShowPrompts(false)} />}
+      {showPrompts && <PromptsAdminDialog onClose={() => setShowPrompts(false)} tarifa={tarifa} onTarifaSalva={setTarifa} />}
     </div>
   );
 }

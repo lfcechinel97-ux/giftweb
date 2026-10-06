@@ -9,6 +9,7 @@ import EditorLogoPorCima, { type EstadoEditor } from "./EditorLogoPorCima";
 import { aplicarMarcaDagua } from "./marcaDagua";
 import { baixarImagem } from "./baixarImagem";
 import { formatarTokens, nomeModelo, type Geracao } from "./historico";
+import { custoReais, formatarReais, type TarifaIa } from "./custoIa";
 
 interface Props {
   produto: ProdutoMockup;
@@ -36,6 +37,7 @@ interface Props {
   /** Só no modo "colar por cima": unidades do principal e outros produtos. */
   quantidadePrincipal: number;
   extras: ProdutoExtra[];
+  tarifa: TarifaIa;
 }
 
 /**
@@ -44,7 +46,7 @@ interface Props {
  * a IA já devolve o mockup pronto e fotorrealista. Depois disso só entra
  * uma marca d'água leve (logo Gift Web), aplicada localmente.
  */
-export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao, onGerado, onNovoMockup, cliente, isAdmin, colarPorCima, logoFiel, fotoProdutoUrl, quantidadePrincipal, extras }: Props) {
+export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao, onGerado, onNovoMockup, cliente, isAdmin, colarPorCima, logoFiel, fotoProdutoUrl, quantidadePrincipal, extras, tarifa }: Props) {
   const cor = COR_TECNICA[tecnica];
   const nomeTecnica = TECNICAS.find((t) => t.id === tecnica)?.nome ?? tecnica;
   const [carregando, setCarregando] = useState(true);
@@ -160,7 +162,7 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
             {isAdmin && (
               <>
                 <span className="px-2 py-0.5 rounded-full bg-[var(--gw-blue-soft)] text-[#1D4ED8] font-medium">{nomeModelo(geracao.modelo)}</span>
-                <span className="px-2 py-0.5 rounded-full bg-[var(--gw-violet-soft)] text-[#6D28D9] font-medium">{formatarTokens(geracao.tokens_total)} tokens</span>
+                <span className="px-2 py-0.5 rounded-full bg-[var(--gw-violet-soft)] text-[#6D28D9] font-medium">{formatarReais(custoReais(geracao, tarifa))} · {formatarTokens(geracao.tokens_total)} tokens</span>
               </>
             )}
             <span className="px-2 py-0.5 rounded-full bg-[var(--gw-success-soft)] text-[#0E8A5C] font-medium inline-flex items-center gap-1">
