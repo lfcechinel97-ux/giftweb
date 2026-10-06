@@ -16,9 +16,8 @@ interface Props {
    * tamanho/posição (pedir isso só em % de texto ou só um retângulo
    * marcado não funcionava, a IA ainda tomava liberdade). */
   composicaoUrl: string;
-  /** Logo já recortada na Etapa 3 (o que o vendedor manteve dentro do box) --
-   * não é mais o arquivo original intocado. */
-  logoUrl: string;
+  /** Close da região da logo na composição (ver gerarDetalhe na Etapa 3). */
+  detalheUrl: string;
   tecnica: Tecnica;
   box: CaixaPosicao;
   onAjustarPosicao: () => void;
@@ -34,7 +33,7 @@ interface Props {
  * a IA já devolve o mockup pronto e fotorrealista. Depois disso só entra
  * uma marca d'água leve (logo Gift Web), aplicada localmente.
  */
-export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao, onGerado, onNovoMockup, cliente, isAdmin }: Props) {
+export default function EtapaGeracaoFinal({ produto, composicaoUrl, detalheUrl, tecnica, box, onAjustarPosicao, onGerado, onNovoMockup, cliente, isAdmin }: Props) {
   const cor = COR_TECNICA[tecnica];
   const nomeTecnica = TECNICAS.find((t) => t.id === tecnica)?.nome ?? tecnica;
   const [carregando, setCarregando] = useState(true);
@@ -69,7 +68,7 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
     try {
       const r = await gerarMockupFinal({
         produtoUrl: composicaoUrl,
-        logoUrl,
+        detalheUrl,
         tecnica,
         nomeProduto: produto.nome,
         produtoCodigo: produto.codigoAmigavel,
