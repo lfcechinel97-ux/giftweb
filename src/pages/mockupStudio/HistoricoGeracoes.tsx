@@ -5,6 +5,7 @@ import { COR_TECNICA, ui } from "./ui";
 import { formatarTokens, listarGeracoes, nomeModelo, type Geracao } from "./historico";
 import { aplicarMarcaDagua } from "./marcaDagua";
 import { baixarImagem } from "./baixarImagem";
+import { custoReais, formatarReais, gastoDoMes, type TarifaIa } from "./custoIa";
 
 interface Props {
   geracoes: Geracao[];
@@ -12,8 +13,9 @@ interface Props {
   erro: string | null;
   /** Pra mostrar o vendedor nas gerações de outros (só o admin as recebe). */
   meuId: string | null;
-  /** Modelo de IA e tokens só aparecem pro admin. */
+  /** Modelo de IA, tokens e custo só aparecem pro admin. */
   isAdmin: boolean;
+  tarifa: TarifaIa;
 }
 
 const rotuloTecnica = (t: string) => TECNICAS.find((x) => x.id === t)?.nome ?? t;
@@ -22,7 +24,15 @@ function dataHora(iso: string): string {
   return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 }
 
-export default function HistoricoGeracoes({ geracoes: todas, carregando: carregandoTodas, erro: erroTodas, meuId, isAdmin }: Props) {
+export default function HistoricoGeracoes({ geracoes: todas, carregando: carregandoTodas, erro: erroTodas, meuId, isAdmin, tarifa }: Props) {
+  // Gasto do mês corrente, somado no banco (a lista aqui é limitada às
+  // últimas gerações) -- refaz a conta a cada geração nova.
+  const [gastoMes, setGastoMes] = useState<{ total: number; quantidade: number } | null>(null);
+  useEffect(() => {
+    if (!isAdmin) return;
+    gastoDoMes(tarifa).then(setGastoMes).catch(() => setGastoMes(null));
+  }, [isAdmin, tarifa, todas]);
+  const nomeMes = new Date().toLocaleString("pt-BR", { month: "long" });
   const [aberta, setAberta] = useState<Geracao | null>(null);
   const [busca, setBusca] = useState("");
   const [encontradas, setEncontradas] = useState<Geracao[]>([]);
@@ -49,7 +59,6 @@ export default function HistoricoGeracoes({ geracoes: todas, carregando: carrega
   const geracoes = filtrando ? encontradas : todas;
   const carregando = filtrando ? buscando : carregandoTodas;
   const erro = filtrando ? erroBusca : erroTodas;
-  const totalTokens = geracoes.reduce((s, g) => s + (g.tokens_total ?? 0), 0);
 
   return (
     <aside className="hidden md:flex w-72 shrink-0 border-r border-[var(--gw-border)] bg-white flex-col min-h-0">
@@ -75,16 +84,19 @@ export default function HistoricoGeracoes({ geracoes: todas, carregando: carrega
             </button>
           )}
         </div>
-        {geracoes.length > 0 && (
+        {(geracoes.length > 0 || (isAdmin && gastoMes)) && (
           <div className="flex gap-2 mt-3">
             <div className="flex-1 rounded-xl bg-[var(--gw-blue-soft)] px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#2563EB]/80">Gerações</p>
               <p className="text-base font-bold text-[#1D4ED8]">{geracoes.length}</p>
             </div>
             {isAdmin && (
-              <div className="flex-1 rounded-xl bg-[var(--gw-violet-soft)] px-3 py-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6D28D9]/80">Tokens</p>
-                <p className="text-base font-bold text-[#6D28D9]">{formatarTokens(totalTokens)}</p>
+              <div
+                className="flex-1 rounded-xl bg-[var(--gw-violet-soft)] px-3 py-2"
+                title={gastoMes ? `${gastoMes.quantidade} gerações em ${nomeMes} (todos os vendedores). Estimativa pela tarifa configurada.` : undefined}
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#6D28D9]/80">Gasto em {nomeMes}</p>
+                <p className="text-base font-bold text-[#6D28D9]">{gastoMes ? formatarReais(gastoMes.total) : "—"}</p>
               </div>
             )}
           </div>
@@ -133,7 +145,7 @@ export default function HistoricoGeracoes({ geracoes: todas, carregando: carrega
                       className="text-[10px] font-semibold text-[#6D28D9]"
                       title={g.tokens_entrada != null && g.tokens_saida != null ? `${formatarTokens(g.tokens_entrada)} entrada / ${formatarTokens(g.tokens_saida)} saída` : undefined}
                     >
-                      {formatarTokens(g.tokens_total)} tokens
+                      {formatarReais(custoReais(g, tarifa))} <span className="font-normal text-[var(--gw-text-muted)]">· {formatarTokens(g.tokens_total)} tokens</span>
                     </p>
                   </>
                 )}
@@ -143,12 +155,12 @@ export default function HistoricoGeracoes({ geracoes: todas, carregando: carrega
         })}
       </div>
 
-      {aberta && <VisualizadorGeracao geracao={aberta} isAdmin={isAdmin} onFechar={() => setAberta(null)} />}
+      {aberta && <VisualizadorGeracao geracao={aberta} isAdmin={isAdmin} tarifa={tarifa} onFechar={() => setAberta(null)} />}
     </aside>
   );
 }
 
-function VisualizadorGeracao({ geracao, isAdmin, onFechar }: { geracao: Geracao; isAdmin: boolean; onFechar: () => void }) {
+function VisualizadorGeracao({ geracao, isAdmin, tarifa, onFechar }: { geracao: Geracao; isAdmin: boolean; tarifa: TarifaIa; onFechar: () => void }) {
   const [imagem, setImagem] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -168,7 +180,7 @@ function VisualizadorGeracao({ geracao, isAdmin, onFechar }: { geracao: Geracao;
             </p>
             <p className="text-xs text-[var(--gw-text-muted)]">
               {rotuloTecnica(geracao.tecnica)} · {dataHora(geracao.criado_em)}{geracao.vendedor_nome ? ` · ${geracao.vendedor_nome}` : ""}
-              {isAdmin && ` · ${nomeModelo(geracao.modelo)} · ${formatarTokens(geracao.tokens_total)} tokens`}
+              {isAdmin && ` · ${nomeModelo(geracao.modelo)} · ${formatarReais(custoReais(geracao, tarifa))} (${formatarTokens(geracao.tokens_total)} tokens)`}
             </p>
           </div>
           <button onClick={onFechar} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
