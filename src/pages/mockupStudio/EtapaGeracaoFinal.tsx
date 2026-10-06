@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Loader2, Download, Sparkles, Plus, Move, Check } from "lucide-react";
+import { Loader2, Download, Sparkles, Plus, Move, Check, Pencil } from "lucide-react";
 import { TECNICAS, type CaixaPosicao, type ProdutoMockup, type Tecnica } from "./types";
 import { COR_TECNICA, ui } from "./ui";
 import { registrarDuracao, tempoMedioMs, useProgressoEstimado } from "./tempoGeracao";
 import { descreverPosicao } from "./posicaoDescricao";
-import { gerarMockupFinal } from "./gerarMockup";
+import { gerarMockupFinal, substituirImagemGeracao } from "./gerarMockup";
+import EditorLogoPorCima, { type EstadoEditor } from "./EditorLogoPorCima";
 import { aplicarMarcaDagua } from "./marcaDagua";
 import { baixarImagem } from "./baixarImagem";
 import { formatarTokens, nomeModelo, type Geracao } from "./historico";
@@ -26,6 +27,12 @@ interface Props {
   onNovoMockup: () => void;
   cliente: string;
   isAdmin: boolean;
+  /** Modo "colar por cima": a IA gera só produto + cenário e o vendedor
+   * posiciona `logoFiel` (original, sem girar) por cima. */
+  colarPorCima: boolean;
+  logoFiel: string;
+  /** Foto do produto sem a logo (o modo "colar por cima" manda essa pra IA). */
+  fotoProdutoUrl: string;
 }
 
 /**
@@ -34,7 +41,7 @@ interface Props {
  * a IA já devolve o mockup pronto e fotorrealista. Depois disso só entra
  * uma marca d'água leve (logo Gift Web), aplicada localmente.
  */
-export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao, onGerado, onNovoMockup, cliente, isAdmin }: Props) {
+export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tecnica, box, onAjustarPosicao, onGerado, onNovoMockup, cliente, isAdmin, colarPorCima, logoFiel, fotoProdutoUrl }: Props) {
   const cor = COR_TECNICA[tecnica];
   const nomeTecnica = TECNICAS.find((t) => t.id === tecnica)?.nome ?? tecnica;
   const [carregando, setCarregando] = useState(true);
@@ -42,6 +49,10 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
   const [resultado, setResultado] = useState<string | null>(null);
   const [geracao, setGeracao] = useState<Geracao | null>(null);
   const [baixando, setBaixando] = useState(false);
+  // Modo "colar por cima": cenário cru da IA + o último ajuste da logo.
+  const [cenario, setCenario] = useState<string | null>(null);
+  const [editando, setEditando] = useState(false);
+  const [estadoEditor, setEstadoEditor] = useState<EstadoEditor | null>(null);
 
   const baixar = async () => {
     if (!resultado) return;
@@ -68,8 +79,9 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
     const inicio = performance.now();
     try {
       const r = await gerarMockupFinal({
-        produtoUrl: composicaoUrl,
-        logoUrl,
+        produtoUrl: colarPorCima ? fotoProdutoUrl : composicaoUrl,
+        logoUrl: colarPorCima ? undefined : logoUrl,
+        modo: colarPorCima ? "cenario" : "acabamento",
         tecnica,
         nomeProduto: produto.nome,
         produtoCodigo: produto.codigoAmigavel,
@@ -77,16 +89,29 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
         pct,
         posicao,
       });
-      const comMarca = await aplicarMarcaDagua(r.url);
       registrarDuracao(performance.now() - inicio);
-      setResultado(comMarca);
       setGeracao(r.geracao);
       if (r.geracao) onGerado(r.geracao);
+      if (colarPorCima) {
+        setCenario(r.url);
+        setResultado(null);
+        setEditando(true);
+      } else {
+        setResultado(await aplicarMarcaDagua(r.url));
+      }
     } catch (e: any) {
       setErro(e?.message || "Não foi possível gerar o mockup agora.");
     } finally {
       setCarregando(false);
     }
+  };
+
+  const concluirEdicao = async (imagem: string, estado: EstadoEditor) => {
+    setEstadoEditor(estado);
+    setEditando(false);
+    setResultado(await aplicarMarcaDagua(imagem));
+    // Histórico guarda a versão com a logo (sem marca d'água, como as outras).
+    if (geracao) substituirImagemGeracao(geracao.id, imagem).catch(() => setErro("Mockup pronto, mas não deu pra atualizar a imagem no histórico."));
   };
 
   useEffect(() => { gerar(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
@@ -113,7 +138,12 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
               <p className="text-xs text-[var(--gw-text-muted)]">Costuma levar uns {Math.round(mediaMs / 1000)} segundos</p>
             </div>
           )}
-          {!carregando && resultado && (
+          {!carregando && editando && cenario && (
+            <div className="w-full py-5 px-3 bg-white">
+              <EditorLogoPorCima cenarioUrl={cenario} logoUrl={logoFiel} tecnica={tecnica} box={box} inicial={estadoEditor} onConcluir={concluirEdicao} />
+            </div>
+          )}
+          {!carregando && !editando && resultado && (
             <img src={resultado} alt="Mockup gerado" className="w-full h-auto" />
           )}
         </div>
@@ -139,6 +169,11 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
             <Plus className="w-4 h-4" /> Gerar outro mockup
           </button>
           <div className="flex flex-wrap gap-3">
+            {colarPorCima && cenario && !editando && !carregando && (
+              <button type="button" onClick={() => setEditando(true)} className={ui.btnSecundario}>
+                <Pencil className="w-4 h-4" /> Mover/redimensionar logo
+              </button>
+            )}
             <button type="button" onClick={onAjustarPosicao} className={ui.btnSecundario}>
               <Move className="w-4 h-4" /> Ajustar posição
             </button>
@@ -146,7 +181,7 @@ export default function EtapaGeracaoFinal({ produto, composicaoUrl, logoUrl, tec
               {carregando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               Gerar novamente
             </button>
-            {resultado && !carregando && (
+            {resultado && !carregando && !editando && (
               <button type="button" onClick={baixar} disabled={baixando} className={ui.btnSucesso}>
                 {baixando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />} Baixar
               </button>
