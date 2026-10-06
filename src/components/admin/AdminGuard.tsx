@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { clearAdminAccess, hasFreshAdminAccess, rememberAdminAccess } from '@/lib/adminAccessCache';
@@ -19,6 +19,10 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
      (contexto, listas, caches) a cada clique no menu. */
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
+  // Depois do login, volta para a página que pediu o acesso (ex.: /carteladtf).
+  const location = useLocation();
+  const loginRef = useRef('');
+  loginRef.current = `/admin/login?next=${encodeURIComponent(location.pathname + location.search)}`;
 
 
   useEffect(() => {
@@ -32,7 +36,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       const session = sessionData.session;
       if (!session) {
         clearAdminAccess();
-        if (!cancelled) navigateRef.current('/admin/login');
+        if (!cancelled) navigateRef.current(loginRef.current);
         return;
       }
 
@@ -77,7 +81,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
         if (!data) {
           clearAdminAccess();
           await supabase.auth.signOut();
-          navigateRef.current('/admin/login');
+          navigateRef.current(loginRef.current);
           return;
         }
 
@@ -98,7 +102,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         clearAdminAccess();
-        navigateRef.current('/admin/login');
+        navigateRef.current(loginRef.current);
       }
     });
 
