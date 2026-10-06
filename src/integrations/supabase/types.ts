@@ -421,8 +421,10 @@ export type Database = {
           marca: string | null
           nome: string
           peso: number | null
+          preco_base: number | null
           preco_custo: number | null
           preco_custo_manual: boolean
+          preco_faixas: Json | null
           produto_pai: string | null
           profundidade: number | null
           site_link: string | null
@@ -459,8 +461,10 @@ export type Database = {
           marca?: string | null
           nome: string
           peso?: number | null
+          preco_base?: number | null
           preco_custo?: number | null
           preco_custo_manual?: boolean
+          preco_faixas?: Json | null
           produto_pai?: string | null
           profundidade?: number | null
           site_link?: string | null
@@ -497,8 +501,10 @@ export type Database = {
           marca?: string | null
           nome?: string
           peso?: number | null
+          preco_base?: number | null
           preco_custo?: number | null
           preco_custo_manual?: boolean
+          preco_faixas?: Json | null
           produto_pai?: string | null
           profundidade?: number | null
           site_link?: string | null
@@ -3319,6 +3325,13 @@ export type Database = {
         Returns: boolean
       }
       is_admin_user: { Args: never; Returns: boolean }
+      preco_base_exato: { Args: { p_custo: number }; Returns: number }
+      preco_faixas_custom: {
+        Args: { p_custo: number; p_tabela: Json }
+        Returns: Json
+      }
+      preco_markup: { Args: { p_custo: number }; Returns: number }
+      preco_to_num: { Args: { v: Json }; Returns: number }
       recalc_estoque_total: { Args: { p_id: string }; Returns: undefined }
       search_products_by_category:
         | {
