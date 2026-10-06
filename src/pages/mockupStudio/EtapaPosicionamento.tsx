@@ -9,14 +9,14 @@ interface Props {
   produto: ProdutoMockup;
   logo: LogoOriginal;
   onVoltar: () => void;
-  onContinuar: (visao: VisaoProduto, box: CaixaPosicao, detalhe: string, composicao: string) => void;
+  onContinuar: (visao: VisaoProduto, box: CaixaPosicao, logoRecortada: string, composicao: string) => void;
 }
 
 interface LimitesImagem { x0: number; y0: number; x1: number; y1: number }
 
 const CANVAS_MAX = 620;
-/** Lado do close da logo mandado pra IA como segunda imagem (px). */
-const DETALHE_LADO = 768;
+/** Lado maior da logo de referência mandada pra IA (px). */
+const LOGO_REFERENCIA_MAX = 384;
 
 /**
  * Etapa 3: posicionamento 100% local, sem IA nenhuma. Se a logo vier com
@@ -207,12 +207,12 @@ export default function EtapaPosicionamento({ produto, logo, onVoltar, onContinu
       // mais um "pedido" pra IA decidir. O trabalho da IA vira só dar
       // acabamento realista em cima disso, sem poder mexer em nada disso.
       const composicao = await gerarComposicao(visaoAtual.fotoUrl, logoRecortada, box);
-      // Segunda imagem pra IA: close da MESMA região da composição, com a
-      // logo na resolução dela. A logo solta (antes) virava "material de
-      // marca" -- a IA espalhava a logo do cliente pelo cenário e
-      // redesenhava grande; logo rasterizada pequena perdia os detalhes.
-      const detalhe = await gerarDetalhe(visaoAtual.fotoUrl, logoRecortada, box);
-      onContinuar(visaoAtual, box, detalhe, composicao);
+      // Referência já no ângulo final: reta, ela contradizia a colagem girada
+      // e a IA "desvirava" a logo.
+      // E reduzida: em alta resolução ela vira o "assunto" da imagem e a IA
+      // redesenhava a logo gigante no meio do produto.
+      const logoReferencia = await reduzirLogo(await rotacionarLogo(logoRecortada, box.anguloGraus || 0), LOGO_REFERENCIA_MAX);
+      onContinuar(visaoAtual, box, logoReferencia, composicao);
     } catch (e: any) {
       setErro(e?.message || "Não foi possível preparar os arquivos.");
     } finally {
@@ -346,6 +346,45 @@ async function detectarAreaProduto(src: string): Promise<NonNullable<CaixaPosica
   return area;
 }
 
+/** Reduz a imagem pra caber em `max` px no lado maior (nunca aumenta). */
+async function reduzirLogo(src: string, max: number): Promise<string> {
+  const img = await carregarImagem(src);
+  const escala = max / Math.max(img.naturalWidth, img.naturalHeight);
+  if (escala >= 1) return src;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * escala));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return src;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/png");
+}
+
+/** Gira a logo numa tela do tamanho do retângulo girado (sem cortar cantos). */
+async function rotacionarLogo(src: string, anguloGraus: number): Promise<string> {
+  if (!anguloGraus) return src;
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const el = new Image();
+    el.crossOrigin = "anonymous";
+    el.onload = () => resolve(el);
+    el.onerror = () => reject(new Error("Não foi possível girar a logo."));
+    el.src = src;
+  });
+  const rad = (anguloGraus * Math.PI) / 180;
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.ceil(Math.abs(w * Math.cos(rad)) + Math.abs(h * Math.sin(rad)));
+  canvas.height = Math.ceil(Math.abs(w * Math.sin(rad)) + Math.abs(h * Math.cos(rad)));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return src;
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate(rad);
+  ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  return canvas.toDataURL("image/png");
+}
+
 /** Recorta a logo ORIGINAL (não a prévia em tela) na resolução nativa, pela
  * janela cropX/cropY/width/height que o vendedor definiu com as alças. */
 async function recortarLogoOriginal(src: string, cropX: number, cropY: number, width: number, height: number): Promise<string> {
@@ -381,54 +420,16 @@ async function gerarComposicao(produtoUrl: string, logoUrl: string, box: CaixaPo
   if (!ctx) return produtoUrl;
   ctx.drawImage(produtoImg, 0, 0);
 
-  desenharLogo(ctx, logoImg, box, canvas.width, canvas.height);
-
-  return canvas.toDataURL("image/png");
-}
-
-/** Desenha a logo no tamanho/posição/ângulo do box, numa tela com o produto em W x H. */
-function desenharLogo(ctx: CanvasRenderingContext2D, logoImg: HTMLImageElement, box: CaixaPosicao, W: number, H: number) {
-  const w = (box.wPct / 100) * W;
-  const h = (box.hPct / 100) * H;
+  const cx = (box.xPct / 100) * canvas.width;
+  const cy = (box.yPct / 100) * canvas.height;
+  const w = (box.wPct / 100) * canvas.width;
+  const h = (box.hPct / 100) * canvas.height;
   ctx.save();
-  ctx.translate((box.xPct / 100) * W, (box.yPct / 100) * H);
+  ctx.translate(cx, cy);
   ctx.rotate(((box.anguloGraus || 0) * Math.PI) / 180);
   ctx.drawImage(logoImg, -w / 2, -h / 2, w, h);
   ctx.restore();
-}
 
-/**
- * Close (quadrado) da região da logo na composição, com folga em volta pra
- * mostrar que é um pedaço do produto. A logo é desenhada na resolução dela
- * (não reamostrada da foto do catálogo), então textos/detalhes de logo
- * rasterizada pequena continuam legíveis pra IA copiar.
- */
-async function gerarDetalhe(produtoUrl: string, logoUrl: string, box: CaixaPosicao): Promise<string> {
-  const [produtoImg, logoImg] = await Promise.all([carregarImagem(produtoUrl), carregarImagem(logoUrl)]);
-  const W = produtoImg.naturalWidth;
-  const H = produtoImg.naturalHeight;
-  const rad = ((box.anguloGraus || 0) * Math.PI) / 180;
-  const w = (box.wPct / 100) * W;
-  const h = (box.hPct / 100) * H;
-  const meiaLargura = (Math.abs(w * Math.cos(rad)) + Math.abs(h * Math.sin(rad))) / 2;
-  const meiaAltura = (Math.abs(w * Math.sin(rad)) + Math.abs(h * Math.cos(rad))) / 2;
-  const lado = Math.min(Math.max(meiaLargura, meiaAltura) * 2 * 1.5, W, H);
-  const x0 = Math.min(Math.max(0, (box.xPct / 100) * W - lado / 2), W - lado);
-  const y0 = Math.min(Math.max(0, (box.yPct / 100) * H - lado / 2), H - lado);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = DETALHE_LADO;
-  canvas.height = DETALHE_LADO;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Não foi possível preparar o detalhe da logo.");
-  ctx.imageSmoothingQuality = "high";
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, DETALHE_LADO, DETALHE_LADO);
-  const k = DETALHE_LADO / lado;
-  ctx.scale(k, k);
-  ctx.translate(-x0, -y0);
-  ctx.drawImage(produtoImg, 0, 0);
-  desenharLogo(ctx, logoImg, box, W, H);
   return canvas.toDataURL("image/png");
 }
 

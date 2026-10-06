@@ -16,7 +16,7 @@ async function paraDataURL(src: string): Promise<string> {
 
 interface GerarMockupParams {
   produtoUrl: string;
-  detalheUrl: string;
+  logoUrl: string;
   tecnica: Tecnica;
   nomeProduto: string;
   produtoCodigo?: string;
@@ -25,19 +25,19 @@ interface GerarMockupParams {
   posicao: string;
 }
 
-/** Geração final -- manda a foto do produto com a logo já colada e um close
- * dessa região (ambos montados na Etapa 3), mais um prompt curto montado a
+/** Geração final -- manda a foto do produto sem pré-processamento e a logo
+ * já recortada pelo vendedor na Etapa 3, mais um prompt curto montado a
  * partir do template da técnica. Essa é a ÚNICA chamada de IA do fluxo
  * inteiro. */
 export async function gerarMockupFinal(params: GerarMockupParams): Promise<{ url: string; geracao: Geracao | null }> {
-  const [produtoBase64, detalheBase64] = await Promise.all([
+  const [produtoBase64, logoBase64] = await Promise.all([
     paraDataURL(params.produtoUrl),
-    paraDataURL(params.detalheUrl),
+    paraDataURL(params.logoUrl),
   ]);
   const { data, error } = await supabase.functions.invoke("gerar-mockup-final", {
     body: {
       produtoBase64,
-      detalheBase64,
+      logoBase64,
       tecnica: params.tecnica,
       nomeProduto: params.nomeProduto,
       produtoCodigo: params.produtoCodigo,

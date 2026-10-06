@@ -13,7 +13,7 @@ import HistoricoGeracoes from "./mockupStudio/HistoricoGeracoes";
 import { assinar, listarGeracoes, type Geracao } from "./mockupStudio/historico";
 import { useProdutosRecentes } from "./mockupStudio/useProdutosRecentes";
 
-interface Posicionamento { visao: VisaoProduto; box: CaixaPosicao; detalhe: string; composicao: string }
+interface Posicionamento { visao: VisaoProduto; box: CaixaPosicao; logoRecortada: string; composicao: string }
 
 const ETAPAS = ["Logo e técnica", "Produto", "Posição", "Mockup"];
 
@@ -135,7 +135,7 @@ export default function MockupStudio() {
               produto={produto}
               logo={logo}
               onVoltar={() => setProduto(null)}
-              onContinuar={(visao, box, detalhe, composicao) => setPosicionamento({ visao, box, detalhe, composicao })}
+              onContinuar={(visao, box, logoRecortada, composicao) => setPosicionamento({ visao, box, logoRecortada, composicao })}
             />
           )}
 
@@ -143,7 +143,7 @@ export default function MockupStudio() {
             <EtapaGeracaoFinal
               produto={produto}
               composicaoUrl={posicionamento.composicao}
-              detalheUrl={posicionamento.detalhe}
+              logoUrl={posicionamento.logoRecortada}
               tecnica={tecnica}
               box={posicionamento.box}
               onAjustarPosicao={() => setPosicionamento(null)}
