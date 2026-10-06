@@ -577,9 +577,28 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
        pedidos tem cliente_id e nada em contato_nome. Resolve os ids que
        batem pelo nome antes de montar o filtro. */
     let clienteIdsAchados: string[] = [];
+    /* Busca de verdade é no servidor (sistema_buscar_pedidos): nº, cliente,
+       documento, contato e PRODUTO, sem diferenciar acento. Se a função
+       ainda não existir no banco, cai na busca antiga mais simples. */
+    let idsBusca: string[] | null = null;
     if (termo) {
-      const { data } = await supabase.from("sistema_clientes").select("id").ilike("nome", `%${termo}%`).limit(50);
-      clienteIdsAchados = (data ?? []).map((c: { id: string }) => c.id);
+      const { data: achados, error: erroBusca } = await supabase.rpc("sistema_buscar_pedidos" as any, { p_termo: termo });
+      if (!erroBusca) {
+        idsBusca = ((achados as string[] | null) ?? []).map(String);
+      } else {
+        const { data } = await supabase.from("sistema_clientes").select("id").ilike("nome", `%${termo}%`).limit(50);
+        clienteIdsAchados = (data ?? []).map((c: { id: string }) => c.id);
+      }
+    }
+    if (idsBusca) {
+      const daAba = opts?.ids ? new Set(opts.ids) : null;
+      const finais = daAba ? idsBusca.filter(id => daAba.has(id)) : idsBusca;
+      if (finais.length === 0) {
+        setData(prev => ({ ...prev, pedidos: [] }));
+        setPedidosTotal(0);
+        return { rows: [], total: 0 };
+      }
+      opts = { ...opts, ids: finais };
     }
     const res = await qc.fetchQuery({
       queryKey: ["sistema", "pedidos", "list", opts ?? null, restrito, clienteIdsAchados],
@@ -600,7 +619,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (opts?.status && opts.status !== "todos") q = q.eq("status", opts.status);
         if (opts?.dataInicio) q = q.gte("created_at", `${opts.dataInicio}T00:00:00`);
         if (opts?.dataFim) q = q.lte("created_at", `${opts.dataFim}T23:59:59`);
-        if (termo) {
+        if (termo && !idsBusca) {
           const like = `%${termo}%`;
           const partes = [
             `numero.ilike.${like}`,

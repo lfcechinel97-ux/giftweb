@@ -18,7 +18,7 @@ import {
 import { Thumb, StatusBadge } from "@/components/sistema/ui";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { statusInfo, ordemDaColuna, etapaPcpDoStatus, opcoesEtapasPcp } from "@/lib/statusPedido";
-import { ordenarTagsPorPrioridade, rotuloTag, corDaTag } from "@/lib/tagsPcp";
+import { ordenarTagsPorPrioridade, rotuloTag } from "@/lib/tagsPcp";
 import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaContext";
 import { supabase } from "@/integrations/supabase/client";
 import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
@@ -708,12 +708,12 @@ export default function Pedidos() {
                         />
                       </span>
                       {(producao?.tagsPorItem?.[item.id]?.length ?? 0) > 0 && (
-                        <span className="flex flex-wrap gap-1">
+                        <span className="flex flex-wrap gap-x-2.5 gap-y-1">
                           {ordenarTagsPorPrioridade(producao!.tagsPorItem[item.id]).map(t => (
                             <span
                               key={t}
-                              className="text-[10.5px] leading-none rounded-[5px] px-[7px] py-[4px] whitespace-nowrap"
-                              style={{ backgroundColor: corDaTag(t), color: "#FFFFFF", fontWeight: 700 }}
+                              className="text-[10.5px] leading-none whitespace-nowrap"
+                              style={{ color: "var(--gw-primary)", fontWeight: 600 }}
                             >
                               {rotuloTag(t)}
                             </span>
