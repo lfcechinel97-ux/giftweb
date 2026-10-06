@@ -11,6 +11,9 @@ const EXT_OK = /\.(png|jpe?g|pdf)$/i;
 const EH_PDF = (f: File) => f.type === "application/pdf" || /\.pdf$/i.test(f.name);
 const RASTER = /^image\/(png|jpe?g)$/i;
 const MAX_BYTES = 15 * 1024 * 1024;
+/** Abaixo disso (lado maior, px) a logo rasterizada costuma sair redesenhada
+ * pela IA -- textos pequenos ficam ilegíveis e ela "inventa". */
+const LADO_MIN_RECOMENDADO = 600;
 
 interface Props {
   onConcluir: (logo: LogoOriginal, tecnica: Tecnica, cliente: string) => void;
@@ -26,6 +29,7 @@ export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
   const [tecnica, setTecnica] = useState<Tecnica | null>(null);
   const [cliente, setCliente] = useState("");
   const [erro, setErro] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [arrastando, setArrastando] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -50,6 +54,7 @@ export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
 
   const validarEUsar = async (file: File) => {
     setErro(null);
+    setAviso(null);
     if (!(RASTER.test(file.type) || EXT_OK.test(file.name))) { setErro("Formato não suportado. Use PNG, JPG ou PDF."); return; }
     if (file.size > MAX_BYTES) { setErro(`Arquivo de ${(file.size / 1024 / 1024).toFixed(1)} MB excede o limite de 15 MB.`); return; }
     if (EH_PDF(file)) {
@@ -65,7 +70,20 @@ export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
       return;
     }
     setPdf(null);
-    setLogo({ file, url: URL.createObjectURL(file), nome: file.name });
+    const url = URL.createObjectURL(file);
+    setLogo({ file, url, nome: file.name });
+    setAviso(null);
+    const img = new Image();
+    img.onload = () => {
+      const lado = Math.max(img.naturalWidth, img.naturalHeight);
+      if (lado < LADO_MIN_RECOMENDADO) {
+        setAviso(
+          `Logo em baixa resolução (${img.naturalWidth}×${img.naturalHeight}px). A IA pode redesenhar detalhes e textos ` +
+          "-- se possível, peça ao cliente a logo em PDF/vetor ou PNG maior.",
+        );
+      }
+    };
+    img.src = url;
   };
 
   const handleFiles = (files: FileList | null) => { const f = files?.[0]; if (f) validarEUsar(f); };
@@ -190,6 +208,12 @@ export default function EtapaConfiguracaoInicial({ onConcluir }: Props) {
         {erro && (
           <div className={`${ui.erro} mt-5`}>
             <FileWarning className="w-4 h-4 mt-0.5 shrink-0" /><span>{erro}</span>
+          </div>
+        )}
+
+        {aviso && (
+          <div className="mt-5 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <FileWarning className="w-4 h-4 mt-0.5 shrink-0" /><span>{aviso}</span>
           </div>
         )}
 
