@@ -61,15 +61,15 @@ describe("layout da cartela", () => {
     expect(() => calcularLayout(caixa, opcoes({ larguraCm: 60 }))).toThrow("não cabe");
   });
 
-  it("várias logos: cada uma no seu bloco, uma embaixo da outra", () => {
+  it("várias logos, cada uma em linha nova (continuarNaLinha: false)", () => {
     const outra = { left: 0, bottom: 0, width: 200, height: 100 };
     const L = calcularLayoutCartela(
       [{ caixa, larguraCm: 7, qtd: 30 }, { caixa: outra, larguraCm: 20, qtd: 3 }],
-      opcoes(),
+      { ...opcoes(), continuarNaLinha: false },
     );
     const [a, b] = L.itens;
     expect([a.cols, a.linhas, b.cols, b.linhas]).toEqual([6, 5, 2, 2]);
-    // folha = bloco mais largo; altura = blocos + espaçamento entre eles
+    // folha = linha mais larga; altura = blocos + espaçamento entre eles
     expect((L.larguraFolha / CM).toFixed(2)).toBe("48.00");
     expect(L.alturaFolha / CM).toBeCloseTo(0.5 + 5 * a.H / CM + 4 + 1 + 2 * b.H / CM + 1 + 0.5, 6);
     // primeira logo do segundo bloco: um espaçamento abaixo da última linha do primeiro
@@ -81,6 +81,28 @@ describe("layout da cartela", () => {
       .toEqual(calcularLayout(caixa, opcoes()).posicoes);
     expect(() => calcularLayoutCartela([{ caixa, larguraCm: 7, qtd: 1 }, { caixa, larguraCm: 80, qtd: 1 }], opcoes()))
       .toThrow("A logo 2 não cabe");
+  });
+
+  it("várias logos: a próxima continua na sobra da última linha", () => {
+    const quadrado = { left: 0, bottom: 0, width: 100, height: 100 };
+    // A: 7 cm, 10 un., encher linha -> 7 + 3; sobra da 2ª linha: 24..56 cm
+    const L = calcularLayoutCartela(
+      [{ caixa: quadrado, larguraCm: 7, qtd: 10 }, { caixa: quadrado, larguraCm: 3, qtd: 20 }],
+      opcoes({ distribuicao: "encher" }),
+    );
+    const [a, b] = L.itens;
+    const cm = (v: number) => +(v / CM).toFixed(4);
+    expect(a.linhas).toBe(2);
+    // 8 cópias de B na mesma linha das 3 últimas de A, começando em 0,5 + 24 cm
+    const linha2 = a.posicoes[9].y + a.H; // topo da 2ª linha
+    const naLinha2 = b.posicoes.filter((p) => Math.abs(p.y + b.H - linha2) < 1e-6);
+    expect(naLinha2).toHaveLength(8);
+    expect(cm(naLinha2[0].x)).toBe(24.5);
+    expect(cm(naLinha2[7].x + b.W)).toBeLessThanOrEqual(56.5);
+    // as outras 12 vão para a linha de baixo, que começa um espaçamento abaixo da maior altura (7 cm)
+    expect(cm(linha2 - (b.posicoes[8].y + b.H))).toBe(8);
+    expect(b.linhas).toBe(2);
+    expect(cm(L.alturaFolha)).toBe(+(0.5 + 7 + 1 + 7 + 1 + 3 + 0.5).toFixed(4));
   });
 
   it("nome do arquivo e números com vírgula", () => {

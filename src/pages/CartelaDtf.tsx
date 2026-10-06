@@ -39,6 +39,7 @@ interface ItemForm {
 }
 
 interface Campos {
+  continuarNaLinha: boolean;
   espaco: string;
   folha: string;
   margem: string;
@@ -51,6 +52,7 @@ interface Campos {
 }
 
 const INICIAL: Campos = {
+  continuarNaLinha: true,
   espaco: "1",
   folha: "57",
   margem: "0,5",
@@ -98,7 +100,7 @@ function validarFolha(c: Campos): { opcoes: OpcoesCartela | null; erros: Erros; 
     avisoDistancia,
     opcoes: {
       espacoCm: espaco, folhaMaxCm: folha, margemCm: margem,
-      distribuicao: c.distribuicao, modo: c.modo, contrair: c.modo === "uv" && c.contrair,
+      distribuicao: c.distribuicao, continuarNaLinha: c.continuarNaLinha, modo: c.modo, contrair: c.modo === "uv" && c.contrair,
       distanciaMm: distancia, spot: c.spot.trim(), cmyk,
     },
   };
@@ -304,7 +306,22 @@ export default function CartelaDtf() {
               <Plus className="h-5 w-5" /> Adicionar outra logo
             </button>
             {itens.length > 1 && (
-              <p className="text-xs text-slate-500">Cada logo ocupa as suas linhas; a próxima entra logo embaixo, na mesma folha.</p>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 p-3">
+                <input
+                  type="checkbox"
+                  checked={campos.continuarNaLinha}
+                  onChange={(e) => set("continuarNaLinha", e.target.checked)}
+                  className="mt-0.5 h-5 w-5 shrink-0 rounded accent-[#1464D2]"
+                />
+                <span>
+                  <span className="block text-[14px] font-semibold text-slate-800">Aproveitar a sobra da linha</span>
+                  <span className="block text-xs text-slate-500">
+                    {campos.continuarNaLinha
+                      ? "Se uma logo termina no meio da linha, a próxima começa ali mesmo."
+                      : "Cada logo começa numa linha nova, embaixo da anterior."}
+                  </span>
+                </span>
+              </label>
             )}
           </div>
 

@@ -56,11 +56,15 @@ Nome do arquivo: `cartela_{qtd}x_{largura}cm[_toyo].pdf`; com várias logos,
 "Adicionar outra logo" cria mais um cartão (arquivo + largura + quantidade);
 também dá para soltar vários PDFs de uma vez num cartão. Tipo, contração,
 espaçamento, margem, largura da folha e distribuição valem para a folha toda.
-Cada logo forma um bloco com o seu próprio grid (colunas calculadas pela
-largura dela) e o bloco seguinte começa embaixo, a um espaçamento de
-distância; a largura da folha é a do bloco mais largo. Com uma logo só, o
-resultado é idêntico à referência em Python. Cada logo tem seu Form XObject
-base e o seu TOYO; o Separation e o ExtGState de overprint são compartilhados.
+As logos entram em linhas, da esquerda para a direita: cada uma usa o seu
+número de colunas (calculado pela largura dela e pela distribuição). Com
+**"Aproveitar a sobra da linha"** (padrão), se uma logo termina no meio da
+linha, a próxima começa ali mesmo, enquanto couber na largura máxima da folha;
+desligado, cada logo começa numa linha nova. Numa linha com logos de alturas
+diferentes, todas encostam no topo e a linha fica com a altura da maior. A
+largura da folha é a da linha mais larga. Com uma logo só, o resultado é
+idêntico à referência em Python. Cada logo tem seu Form XObject base e o seu
+TOYO; o Separation e o ExtGState de overprint são compartilhados.
 Logo com largura/quantidade inválida fica fora da cartela, com aviso.
 
 ### Pré-visualização com zoom
