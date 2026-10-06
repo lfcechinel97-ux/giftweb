@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { AlertTriangle, ChevronDown, Download, FileUp, Loader2, LogOut } from "lucide-react";
+import { AlertTriangle, ChevronDown, Download, FileUp, Loader2, LogOut, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CM, ErroCartela, lerNumero, type CaixaLogo, type Distribuicao } from "@/lib/cartelaDtf/layout";
 import {
   CMYK_PADRAO, DISTANCIA_PADRAO_MM, SPOT_PADRAO, gerarCartela, lerLogo,
-  type Cartela, type Modo, type OpcoesCartela,
+  type Cartela, type ItemCartela, type Modo, type OpcoesCartela,
 } from "@/lib/cartelaDtf/gerarCartela";
+import VisualizadorPdf, { type Alvo } from "./cartelaDtf/VisualizadorPdf";
 
 /* Gerador de cartela de DTF (têxtil e UV com TOYO). Ferramenta interna,
    atrás do AdminGuard. Tudo roda no navegador: a logo do cliente nunca
@@ -19,6 +20,7 @@ const AZUL = "#1464D2";
 const fmt = (v: number, casas = 2) =>
   v.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
 const fmtNum = (v: number) => v.toLocaleString("pt-BR", { maximumFractionDigits: 3 });
+const ERRO_PDF = "Não foi possível ler o PDF: envie um PDF vetorial exportado do Corel/Illustrator.";
 
 interface Logo {
   nome: string;
@@ -26,9 +28,18 @@ interface Logo {
   caixa: CaixaLogo;
 }
 
-interface Campos {
+/** Uma logo da lista: arquivo + largura + quantidade. */
+interface ItemForm {
+  id: number;
+  logo: Logo | null;
+  lendo: boolean;
+  erro: string | null;
   largura: string;
   qtd: string;
+}
+
+interface Campos {
+  continuarNaLinha: boolean;
   espaco: string;
   folha: string;
   margem: string;
@@ -41,8 +52,7 @@ interface Campos {
 }
 
 const INICIAL: Campos = {
-  largura: "",
-  qtd: "",
+  continuarNaLinha: true,
   espaco: "1",
   folha: "57",
   margem: "0,5",
@@ -54,24 +64,20 @@ const INICIAL: Campos = {
   cmyk: CMYK_PADRAO.map(String) as Campos["cmyk"],
 };
 
-type Erros = Partial<Record<keyof Campos | "cmyk", string>>;
+let proximoId = 1;
+const novoItem = (): ItemForm => ({ id: proximoId++, logo: null, lendo: false, erro: null, largura: "", qtd: "" });
 
-/** Valida os campos; devolve as opções prontas ou os erros por campo. */
-function validar(c: Campos): { opcoes: OpcoesCartela | null; erros: Erros; avisoDistancia: string | null } {
+type Erros = Partial<Record<keyof Campos, string>>;
+
+/** Valida o que vale para a folha inteira. */
+function validarFolha(c: Campos): { opcoes: OpcoesCartela | null; erros: Erros; avisoDistancia: string | null } {
   const erros: Erros = {};
-  const largura = lerNumero(c.largura);
-  const qtd = lerNumero(c.qtd);
   const espaco = lerNumero(c.espaco);
   const folha = lerNumero(c.folha);
   const margem = lerNumero(c.margem);
   const distancia = lerNumero(c.distancia);
   const cmyk = c.cmyk.map(lerNumero) as [number, number, number, number];
 
-  if (!c.largura.trim()) erros.largura = "Informe a largura da logo.";
-  else if (!(largura > 0)) erros.largura = "Largura inválida: use um número maior que zero.";
-  if (!c.qtd.trim()) erros.qtd = "Informe a quantidade.";
-  else if (!(qtd >= 1) || !Number.isInteger(qtd)) erros.qtd = "Quantidade inválida: use um número inteiro a partir de 1.";
-  else if (qtd > 20000) erros.qtd = "Quantidade muito alta (máximo 20.000 por cartela).";
   if (!(espaco >= 0)) erros.espaco = "Espaçamento inválido.";
   if (!(folha > 0)) erros.folha = "Largura da folha inválida.";
   if (!(margem >= 0)) erros.margem = "Margem inválida.";
@@ -93,83 +99,134 @@ function validar(c: Campos): { opcoes: OpcoesCartela | null; erros: Erros; aviso
     erros,
     avisoDistancia,
     opcoes: {
-      larguraCm: largura, qtd, espacoCm: espaco, folhaMaxCm: folha, margemCm: margem,
-      distribuicao: c.distribuicao, modo: c.modo, contrair: c.modo === "uv" && c.contrair,
+      espacoCm: espaco, folhaMaxCm: folha, margemCm: margem,
+      distribuicao: c.distribuicao, continuarNaLinha: c.continuarNaLinha, modo: c.modo, contrair: c.modo === "uv" && c.contrair,
       distanciaMm: distancia, spot: c.spot.trim(), cmyk,
     },
   };
 }
 
+/** Valida largura e quantidade de uma logo. */
+function validarItem(it: ItemForm) {
+  const erros: { largura?: string; qtd?: string } = {};
+  const largura = lerNumero(it.largura);
+  const qtd = lerNumero(it.qtd);
+  if (!it.largura.trim()) erros.largura = "Informe a largura da logo.";
+  else if (!(largura > 0)) erros.largura = "Largura inválida: use um número maior que zero.";
+  if (!it.qtd.trim()) erros.qtd = "Informe a quantidade.";
+  else if (!(qtd >= 1) || !Number.isInteger(qtd)) erros.qtd = "Quantidade inválida: use um número inteiro a partir de 1.";
+  else if (qtd > 20000) erros.qtd = "Quantidade muito alta (máximo 20.000 por logo).";
+  return { erros, largura, qtd, ok: !erros.largura && !erros.qtd };
+}
+
 export default function CartelaDtf() {
-  const [logo, setLogo] = useState<Logo | null>(null);
-  const [lendo, setLendo] = useState(false);
-  const [erroArquivo, setErroArquivo] = useState<string | null>(null);
-  const [arrastando, setArrastando] = useState(false);
+  const [itens, setItens] = useState<ItemForm[]>(() => [novoItem()]);
   const [campos, setCampos] = useState<Campos>(INICIAL);
   const [avancado, setAvancado] = useState(false);
   const [cartela, setCartela] = useState<Cartela | null>(null);
+  // número e nome de cada logo da cartela exibida (na ordem do layout)
+  const [rotulos, setRotulos] = useState<{ numero: number; nome: string }[]>([]);
   const [gerando, setGerando] = useState(false);
   const [erroGeracao, setErroGeracao] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
   }, []);
 
   const set = <K extends keyof Campos>(k: K, v: Campos[K]) => setCampos((c) => ({ ...c, [k]: v }));
-  const { opcoes, erros, avisoDistancia } = useMemo(() => validar(campos), [campos]);
-  // campo obrigatório vazio só fica vermelho depois que a logo foi enviada
-  const erroVisivel = (k: "largura" | "qtd") => (campos[k].trim() || logo ? erros[k] : undefined);
+  const mudarItem = (id: number, mud: Partial<ItemForm>) =>
+    setItens((lista) => lista.map((it) => (it.id === id ? { ...it, ...mud } : it)));
+  const { opcoes, erros, avisoDistancia } = useMemo(() => validarFolha(campos), [campos]);
 
-  const abrirArquivo = useCallback(async (file: File | undefined) => {
-    if (!file) return;
-    setErroArquivo(null);
-    setCartela(null);
-    if (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf") {
-      setErroArquivo("O arquivo precisa ser PDF: envie um PDF vetorial exportado do Corel/Illustrator.");
-      return;
-    }
-    setLendo(true);
-    try {
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      const { caixa } = await lerLogo(bytes);
-      setLogo({ nome: file.name, bytes, caixa });
-    } catch (e) {
-      setLogo(null);
-      setErroArquivo(e instanceof ErroCartela ? e.message : "Não foi possível ler o PDF: envie um PDF vetorial exportado do Corel/Illustrator.");
-    } finally {
-      setLendo(false);
-    }
+  /** Lê os arquivos: o primeiro vai para a logo `id`, os outros viram logos novas. */
+  const abrirArquivos = useCallback(async (id: number, files: File[]) => {
+    if (!files.length) return;
+    const extras = files.slice(1).map(() => novoItem());
+    const alvos = [id, ...extras.map((e) => e.id)];
+    setItens((lista) => {
+      const i = lista.findIndex((it) => it.id === id);
+      const nova = lista.map((it) => (it.id === id ? { ...it, lendo: true, erro: null } : it));
+      nova.splice(i + 1, 0, ...extras.map((e) => ({ ...e, lendo: true })));
+      return nova;
+    });
+    await Promise.all(files.map(async (file, k) => {
+      const alvo = alvos[k];
+      if (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf") {
+        mudarItem(alvo, { lendo: false, erro: "O arquivo precisa ser PDF: envie um PDF vetorial exportado do Corel/Illustrator." });
+        return;
+      }
+      try {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        const { caixa } = await lerLogo(bytes);
+        mudarItem(alvo, { lendo: false, logo: { nome: file.name, bytes, caixa } });
+      } catch (e) {
+        mudarItem(alvo, { lendo: false, logo: null, erro: e instanceof ErroCartela ? e.message : ERRO_PDF });
+      }
+    }));
   }, []);
 
-  // gera de novo (com um pequeno atraso) sempre que a logo ou os campos mudam
+  const remover = (id: number) => setItens((lista) => (lista.length > 1 ? lista.filter((it) => it.id !== id) : lista));
+
+  // logos que entram na cartela: com arquivo e largura/quantidade válidas
+  const validacoes = itens.map(validarItem);
+  const prontos = itens
+    .map((it, i) => ({ it, v: validacoes[i], numero: i + 1 }))
+    .filter(({ it, v }) => it.logo && v.ok);
+  const incompletos = itens
+    .map((it, i) => ({ it, v: validacoes[i], numero: i + 1 }))
+    .filter(({ it, v }) => it.logo && !v.ok);
+
+  // gera de novo (com um pequeno atraso) sempre que algo muda
+  const chave = opcoes && prontos.length
+    ? JSON.stringify({ o: opcoes, i: prontos.map(({ it, v }) => [it.id, it.logo!.nome, v.largura, v.qtd]) })
+    : "";
+  const entradaRef = useRef<{ itens: ItemCartela[]; opcoes: OpcoesCartela; rotulos: { numero: number; nome: string }[] } | null>(null);
+  entradaRef.current = opcoes && prontos.length
+    ? {
+        opcoes,
+        itens: prontos.map(({ it, v }) => ({ bytes: it.logo!.bytes, larguraCm: v.largura, qtd: v.qtd })),
+        rotulos: prontos.map(({ it, numero }) => ({ numero, nome: it.logo!.nome })),
+      }
+    : null;
+  // a logo de cada item muda de bytes ao trocar o arquivo: entra na chave pela identidade
+  const versoes = useRef(new WeakMap<Uint8Array, number>());
+  const versaoDe = (b: Uint8Array) => {
+    if (!versoes.current.has(b)) versoes.current.set(b, Math.random());
+    return versoes.current.get(b)!;
+  };
+  const chaveCompleta = chave + "|" + prontos.map(({ it }) => versaoDe(it.logo!.bytes)).join(",");
+
   const geracao = useRef(0);
   useEffect(() => {
-    if (!logo || !opcoes) {
+    const entrada = entradaRef.current;
+    if (!chave || !entrada) {
       setCartela(null);
       setErroGeracao(null);
+      setGerando(false);
       return;
     }
     const id = ++geracao.current;
     setGerando(true);
     const t = setTimeout(async () => {
       try {
-        const c = await gerarCartela(logo.bytes, opcoes);
+        const c = await gerarCartela(entrada.itens, entrada.opcoes);
         if (id !== geracao.current) return;
         setCartela(c);
+        setRotulos(entrada.rotulos);
         setErroGeracao(null);
       } catch (e) {
         if (id !== geracao.current) return;
         console.error("[carteladtf]", e);
         setCartela(null);
-        setErroGeracao(e instanceof ErroCartela ? e.message : "Não foi possível gerar a cartela com essa logo.");
+        setErroGeracao(e instanceof ErroCartela ? e.message : "Não foi possível gerar a cartela com essas logos.");
       } finally {
         if (id === geracao.current) setGerando(false);
       }
     }, 350);
     return () => clearTimeout(t);
-  }, [logo, opcoes]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chaveCompleta]);
 
   const baixar = () => {
     if (!cartela) return;
@@ -189,6 +246,13 @@ export default function CartelaDtf() {
 
   const L = cartela?.layout;
   const desatualizada = gerando && !!cartela;
+  const alvos: Alvo[] = L
+    ? L.itens.map((li, k) => ({
+        rotulo: L.itens.length > 1 ? `Ver logo ${rotulos[k]?.numero ?? k + 1} de perto` : "Ver logo de perto",
+        ret: { x: li.posicoes[0].x, y: li.posicoes[0].y, w: li.W, h: li.H },
+      }))
+    : [];
+  const temLogo = itens.some((it) => it.logo);
 
   return (
     <div className="min-h-screen" style={{ background: "#F5F7FA" }}>
@@ -220,51 +284,48 @@ export default function CartelaDtf() {
       <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
         {/* Formulário */}
         <section className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div>
-            <Rotulo>Arquivo da logo (PDF vetorial)</Rotulo>
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => inputRef.current?.click()}
-              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && inputRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setArrastando(true); }}
-              onDragLeave={() => setArrastando(false)}
-              onDrop={(e) => { e.preventDefault(); setArrastando(false); abrirArquivo(e.dataTransfer.files?.[0]); }}
-              className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-5 text-center transition"
-              style={{ borderColor: arrastando ? AZUL : "#CBD5E1", background: arrastando ? "#EEF4FD" : "#F8FAFC" }}
-            >
-              {lendo ? (
-                <Loader2 className="h-7 w-7 animate-spin text-slate-400" />
-              ) : (
-                <FileUp className="h-7 w-7 text-slate-400" />
-              )}
-              {logo ? (
-                <>
-                  <span className="break-all text-sm font-semibold text-slate-800">{logo.nome}</span>
-                  <span className="text-xs text-slate-500">
-                    Original: {fmt(logo.caixa.width / CM)} × {fmt(logo.caixa.height / CM)} cm · clique ou arraste para trocar
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className="text-sm font-semibold text-slate-700">Arraste o PDF aqui ou clique para escolher</span>
-                  <span className="text-xs text-slate-500">Página 1 do PDF. O arquivo não sai do seu computador.</span>
-                </>
-              )}
-              <input
-                ref={inputRef}
-                type="file"
-                accept="application/pdf,.pdf"
-                className="hidden"
-                onChange={(e) => { abrirArquivo(e.target.files?.[0]); e.target.value = ""; }}
+          <div className="space-y-3">
+            {itens.map((it, i) => (
+              <CartaoLogo
+                key={it.id}
+                numero={i + 1}
+                item={it}
+                erros={it.logo || it.largura.trim() ? validacoes[i].erros : {}}
+                podeRemover={itens.length > 1}
+                onArquivos={(files) => abrirArquivos(it.id, files)}
+                onMudar={(mud) => mudarItem(it.id, mud)}
+                onRemover={() => remover(it.id)}
               />
-            </div>
-            {erroArquivo && <Erro>{erroArquivo}</Erro>}
+            ))}
+            <button
+              type="button"
+              onClick={() => setItens((l) => [...l, novoItem()])}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed text-[15px] font-semibold transition hover:bg-[#EEF4FD]"
+              style={{ borderColor: "#BFD3F2", color: AZUL }}
+            >
+              <Plus className="h-5 w-5" /> Adicionar outra logo
+            </button>
+            {itens.length > 1 && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-slate-50 p-3">
+                <input
+                  type="checkbox"
+                  checked={campos.continuarNaLinha}
+                  onChange={(e) => set("continuarNaLinha", e.target.checked)}
+                  className="mt-0.5 h-5 w-5 shrink-0 rounded accent-[#1464D2]"
+                />
+                <span>
+                  <span className="block text-[14px] font-semibold text-slate-800">Aproveitar a sobra da linha</span>
+                  <span className="block text-xs text-slate-500">
+                    {campos.continuarNaLinha
+                      ? "Se uma logo termina no meio da linha, a próxima começa ali mesmo."
+                      : "Cada logo começa numa linha nova, embaixo da anterior."}
+                  </span>
+                </span>
+              </label>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <CampoNumero rotulo="Largura da logo (cm)" valor={campos.largura} onChange={(v) => set("largura", v)} erro={erroVisivel("largura")} placeholder="ex.: 7" obrigatorio />
-            <CampoNumero rotulo="Quantidade" valor={campos.qtd} onChange={(v) => set("qtd", v)} erro={erroVisivel("qtd")} placeholder="ex.: 30" obrigatorio inteiro />
+          <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-5">
             <CampoNumero rotulo="Espaço entre logos (cm)" valor={campos.espaco} onChange={(v) => set("espaco", v)} erro={erros.espaco} />
             <CampoNumero rotulo="Margem das bordas (cm)" valor={campos.margem} onChange={(v) => set("margem", v)} erro={erros.margem} />
             <CampoNumero rotulo="Largura máx. da folha (cm)" valor={campos.folha} onChange={(v) => set("folha", v)} erro={erros.folha} />
@@ -326,11 +387,7 @@ export default function CartelaDtf() {
                 <div className="space-y-3 border-t border-slate-200 p-4">
                   <label className="block">
                     <span className="mb-1.5 block text-[13px] font-semibold text-slate-700">Nome do spot</span>
-                    <input
-                      value={campos.spot}
-                      onChange={(e) => set("spot", e.target.value)}
-                      className={inputCls(!!erros.spot)}
-                    />
+                    <input value={campos.spot} onChange={(e) => set("spot", e.target.value)} className={inputCls(!!erros.spot)} />
                     {erros.spot && <Erro>{erros.spot}</Erro>}
                   </label>
                   <div>
@@ -362,10 +419,8 @@ export default function CartelaDtf() {
 
         {/* Resultado */}
         <section className="min-w-0 space-y-4">
-          {!logo && (
-            <Vazio>Envie a logo e informe a largura e a quantidade para ver a cartela.</Vazio>
-          )}
-          {logo && !opcoes && <Vazio>Preencha a largura e a quantidade para montar a cartela.</Vazio>}
+          {!temLogo && <Vazio>Envie a logo e informe a largura e a quantidade para ver a cartela.</Vazio>}
+          {temLogo && !prontos.length && <Vazio>Preencha a largura e a quantidade para montar a cartela.</Vazio>}
           {erroGeracao && (
             <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-[15px] font-semibold text-red-700">{erroGeracao}</div>
           )}
@@ -386,19 +441,51 @@ export default function CartelaDtf() {
                   {opcoes?.modo === "uv" && (
                     <Info rotulo="TOYO" valor={opcoes.contrair ? `Contraído ${fmtNum(opcoes.distanciaMm)} mm` : "Sem contração"} />
                   )}
-                  <Info rotulo="Colunas × linhas" valor={`${L.cols} × ${L.linhas} (${L.posicoes.length} logos)`} />
+                  {L.itens.length === 1 ? (
+                    <>
+                      <Info rotulo="Colunas × linhas" valor={`${L.itens[0].cols} × ${L.itens[0].linhas} (${L.itens[0].posicoes.length} logos)`} />
+                      <Info rotulo="Cada logo" valor={`${fmt(L.itens[0].W / CM)} × ${fmt(L.itens[0].H / CM)} cm`} />
+                    </>
+                  ) : (
+                    <Info rotulo="Logos na folha" valor={`${L.itens.length} logos · ${L.itens.reduce((a, li) => a + li.posicoes.length, 0)} unidades`} />
+                  )}
                   <Info rotulo="Folha (largura × comprimento)" valor={`${fmt(L.larguraFolha / CM)} × ${fmt(L.alturaFolha / CM)} cm`} />
-                  <Info rotulo="Cada logo" valor={`${fmt(L.W / CM)} × ${fmt(L.H / CM)} cm`} />
                   <Info rotulo="Mídia usada" valor={`${fmt(L.alturaFolha / CM / 100)} m lineares`} />
                 </dl>
 
-                {cartela.avisos.length > 0 && (
+                {L.itens.length > 1 && (
+                  <div className="mt-4 overflow-x-auto">
+                    <table className="w-full min-w-[420px] text-left text-sm">
+                      <thead className="text-xs text-slate-500">
+                        <tr>
+                          <th className="py-1.5 pr-3 font-medium">Logo</th>
+                          <th className="py-1.5 pr-3 font-medium">Tamanho</th>
+                          <th className="py-1.5 pr-3 font-medium">Colunas × linhas</th>
+                          <th className="py-1.5 font-medium">Qtd.</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {L.itens.map((li, k) => (
+                          <tr key={k} className="border-t border-slate-100">
+                            <td className="max-w-[180px] truncate py-2 pr-3 font-semibold text-slate-900">
+                              {rotulos[k]?.numero ?? k + 1}. {rotulos[k]?.nome}
+                            </td>
+                            <td className="py-2 pr-3 tabular-nums">{fmt(li.W / CM)} × {fmt(li.H / CM)} cm</td>
+                            <td className="py-2 pr-3 tabular-nums">{li.cols} × {li.linhas}</td>
+                            <td className="py-2 tabular-nums">{li.posicoes.length}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {(cartela.avisos.length > 0 || incompletos.length > 0) && (
                   <ul className="mt-4 space-y-2">
-                    {cartela.avisos.map((a) => (
-                      <li key={a} className="flex gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-[13px] font-medium text-amber-900">
-                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" /> {a}
-                      </li>
+                    {incompletos.map(({ numero }) => (
+                      <Aviso key={`inc-${numero}`}>A logo {numero} está sem largura ou quantidade válida e ficou fora da cartela.</Aviso>
                     ))}
+                    {cartela.avisos.map((a) => <Aviso key={a}>{a}</Aviso>)}
                   </ul>
                 )}
 
@@ -418,9 +505,10 @@ export default function CartelaDtf() {
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h2 className="mb-1 text-lg font-extrabold" style={{ color: AZUL_ESCURO }}>Pré-visualização</h2>
                 <p className="mb-3 text-xs text-slate-500">
-                  Render do PDF gerado.{opcoes?.modo === "uv" && " A camada TOYO aparece na cor de visualização, por cima da logo."}
+                  Render do PDF gerado.
+                  {opcoes?.modo === "uv" && " A camada TOYO aparece na cor de visualização, por cima da logo: aproxime para ver a borda da original em volta do TOYO."}
                 </p>
-                <Previa pdf={cartela.pdf} />
+                <VisualizadorPdf pdf={cartela.pdf} alvos={alvos} />
               </div>
             </>
           )}
@@ -435,61 +523,79 @@ export default function CartelaDtf() {
   );
 }
 
-/* ------------------------------------------------------------ pré-visualização */
+/* ------------------------------------------------------------ cartão de cada logo */
 
-const MAX_PIXELS = 24_000_000;
-
-function Previa({ pdf }: { pdf: Uint8Array }) {
-  const caixaRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [erro, setErro] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelado = false;
-    let tarefa: { cancel: () => void } | null = null;
-    (async () => {
-      try {
-        const pdfjs = await import("pdfjs-dist");
-        const { default: workerUrl } = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
-        pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-        // o pdf.js transfere o buffer para o worker: passa uma cópia
-        const doc = await pdfjs.getDocument({ data: pdf.slice() }).promise;
-        const pagina = await doc.getPage(1);
-        if (cancelado) return;
-        const base = pagina.getViewport({ scale: 1 });
-        const largura = caixaRef.current?.clientWidth || 600;
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        let escala = (largura / base.width) * dpr;
-        const px = base.width * base.height * escala * escala;
-        if (px > MAX_PIXELS) escala *= Math.sqrt(MAX_PIXELS / px);
-        const vp = pagina.getViewport({ scale: escala });
-        const canvas = canvasRef.current!;
-        canvas.width = Math.ceil(vp.width);
-        canvas.height = Math.ceil(vp.height);
-        canvas.style.width = `${largura}px`;
-        canvas.style.height = `${(largura * base.height) / base.width}px`;
-        const ctx = canvas.getContext("2d")!;
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        const render = pagina.render({ canvasContext: ctx, viewport: vp });
-        tarefa = render;
-        await render.promise;
-        setErro(null);
-      } catch (e: unknown) {
-        if (!cancelado && (e as { name?: string })?.name !== "RenderingCancelledException") {
-          setErro("Não foi possível desenhar a pré-visualização (o PDF para download não é afetado).");
-        }
-      }
-    })();
-    return () => {
-      cancelado = true;
-      tarefa?.cancel();
-    };
-  }, [pdf]);
+function CartaoLogo(props: {
+  numero: number;
+  item: ItemForm;
+  erros: { largura?: string; qtd?: string };
+  podeRemover: boolean;
+  onArquivos: (files: File[]) => void;
+  onMudar: (m: Partial<ItemForm>) => void;
+  onRemover: () => void;
+}) {
+  const { numero, item, erros } = props;
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [arrastando, setArrastando] = useState(false);
+  const logo = item.logo;
 
   return (
-    <div ref={caixaRef} className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 bg-[repeating-conic-gradient(#f1f5f9_0%_25%,#fff_0%_50%)] [background-size:16px_16px]">
-      {erro ? <p className="p-4 text-sm text-slate-500">{erro}</p> : <canvas ref={canvasRef} className="block" />}
+    <div className="rounded-xl border border-slate-200 p-3.5">
+      <div className="mb-2.5 flex items-center justify-between">
+        <span className="text-[13px] font-bold uppercase tracking-wide" style={{ color: AZUL_ESCURO }}>Logo {numero}</span>
+        {props.podeRemover && (
+          <button
+            type="button"
+            onClick={props.onRemover}
+            className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4" /> Remover
+          </button>
+        )}
+      </div>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && inputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setArrastando(true); }}
+        onDragLeave={() => setArrastando(false)}
+        onDrop={(e) => { e.preventDefault(); setArrastando(false); props.onArquivos(Array.from(e.dataTransfer.files ?? [])); }}
+        className={`flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed px-4 text-center transition ${logo ? "min-h-[76px] py-3" : "min-h-[110px] py-5"}`}
+        style={{ borderColor: arrastando ? AZUL : "#CBD5E1", background: arrastando ? "#EEF4FD" : "#F8FAFC" }}
+      >
+        {item.lendo ? (
+          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        ) : !logo ? (
+          <FileUp className="h-6 w-6 text-slate-400" />
+        ) : null}
+        {logo ? (
+          <>
+            <span className="break-all text-sm font-semibold text-slate-800">{logo.nome}</span>
+            <span className="text-xs text-slate-500">
+              Original: {fmt(logo.caixa.width / CM)} × {fmt(logo.caixa.height / CM)} cm · clique ou arraste para trocar
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="text-sm font-semibold text-slate-700">Arraste o PDF aqui ou clique para escolher</span>
+            <span className="text-xs text-slate-500">PDF vetorial, página 1. Pode soltar vários de uma vez.</span>
+          </>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          multiple
+          className="hidden"
+          onChange={(e) => { props.onArquivos(Array.from(e.target.files ?? [])); e.target.value = ""; }}
+        />
+      </div>
+      {item.erro && <Erro>{item.erro}</Erro>}
+      <div className="mt-3 grid grid-cols-2 gap-3">
+        <CampoNumero rotulo="Largura (cm)" valor={item.largura} onChange={(v) => props.onMudar({ largura: v })} erro={erros.largura} placeholder="ex.: 7" obrigatorio />
+        <CampoNumero rotulo="Quantidade" valor={item.qtd} onChange={(v) => props.onMudar({ qtd: v })} erro={erros.qtd} placeholder="ex.: 30" obrigatorio inteiro />
+      </div>
     </div>
   );
 }
@@ -507,6 +613,14 @@ function Rotulo({ children }: { children: React.ReactNode }) {
 
 function Erro({ children }: { children: React.ReactNode }) {
   return <p className="mt-1.5 text-[13px] font-medium text-red-600">{children}</p>;
+}
+
+function Aviso({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2.5 text-[13px] font-medium text-amber-900">
+      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" /> {children}
+    </li>
+  );
 }
 
 function Vazio({ children }: { children: React.ReactNode }) {
