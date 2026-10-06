@@ -48,7 +48,6 @@ function mapRow(r: any): CuratedProduct {
     codigo_amigavel: r.id,
     image_url: r.imagem_principal ?? null,
     image_urls,
-    preco_custo: null,
     preco_final: r.preco_exibicao != null ? Number(r.preco_exibicao) : null,
     quantidade_minima: r.moq ?? 20,
     descricao_curta: r.descricao_curta ?? null,

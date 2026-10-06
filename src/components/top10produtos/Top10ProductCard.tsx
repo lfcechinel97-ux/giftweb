@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatarBRL, getEffectiveUnitPrice } from "@/utils/price";
+import { formatarBRL } from "@/utils/price";
+import { precoUnitario, temPreco } from "@/utils/precoVenda";
 import { getCorHex } from "@/utils/colorHex";
 import type { Top10Produto } from "@/hooks/useTop10Xbz";
 
@@ -24,7 +25,7 @@ const STEP = 5;
 const TIERS = [20, 50, 100];
 
 const Top10ProductCard = ({ product, rank, onAdd, onOpen }: Props) => {
-  const { nome, image_urls, cores, preco_custo, tabela_precos } = product;
+  const { nome, image_urls, cores } = product;
   const [qtd, setQtd] = useState(MIN);
   const [corIdx, setCorIdx] = useState<number | null>(null);
 
@@ -35,7 +36,7 @@ const Top10ProductCard = ({ product, rank, onAdd, onOpen }: Props) => {
   const secondary = image_urls.find((u) => u && u !== primary) ?? null;
 
   const unitPrice = (qty: number) =>
-    preco_custo ? getEffectiveUnitPrice(tabela_precos, preco_custo, qty) : null;
+    temPreco(product) ? precoUnitario(product, qty) : null;
 
   const open = () => onOpen?.(product);
 

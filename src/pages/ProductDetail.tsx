@@ -2,7 +2,9 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
-import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup, getCustomMultiplier, getNormalizedPriceRows, getEffectiveUnitPrice, getEffectiveMinPrice, formatPercent2 } from "@/utils/price";
+import { formatarBRL, formatPercent2 } from "@/utils/price";
+import { linhasDePreco, precoMinimo, precoPadrao, precoUnitario, temPreco } from "@/utils/precoVenda";
+import { COLUNAS_PRODUTO_PUBLICO, type ProdutoPublico } from "@/utils/colunasProdutoPublico";
 import { getCorHex } from "@/utils/colorHex";
 import { WHATSAPP_REDIRECT_URL, SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
@@ -16,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Minus, Plus, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, Truck, Palette, Building2, ZoomIn, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
-type Product = Tables<"products_cache">;
+type Product = ProdutoPublico;
 
 interface VariantInfo {
   slug: string;
@@ -49,7 +51,7 @@ const ProductDetail = () => {
     setLoading(true);
     supabase
       .from("products_cache")
-      .select("*")
+      .select(COLUNAS_PRODUTO_PUBLICO)
       .eq("slug", slug)
       .eq("ativo", true)
       .single()
@@ -64,7 +66,7 @@ const ProductDetail = () => {
         if (data.is_variante && data.produto_pai) {
           const { data: parentData } = await supabase
             .from("products_cache")
-            .select("*")
+            .select(COLUNAS_PRODUTO_PUBLICO)
             .eq("id", data.produto_pai)
             .single();
           if (parentData) {
@@ -85,7 +87,7 @@ const ProductDetail = () => {
 
         const { data: relatedData } = await supabase
           .from("products_cache")
-          .select("*")
+          .select(COLUNAS_PRODUTO_PUBLICO)
           .eq("categoria", baseProduct.categoria!)
           .eq("ativo", true)
           .eq("has_image", true)
@@ -238,30 +240,16 @@ const ProductDetail = () => {
 
   const displayCodigo = selectedVariant?.codigo_amigavel || product?.codigo_amigavel || '';
   const displayEstoque = selectedVariant?.estoque ?? product?.estoque;
-  const displayPrecoCusto = product?.preco_custo;
   const displayNome = product?.nome || '';
 
-  const precoBase = displayPrecoCusto ? displayPrecoCusto * getMarkup(displayPrecoCusto) : 0;
-  const precoAtual = displayPrecoCusto ? getEffectiveUnitPrice(product?.tabela_precos, displayPrecoCusto, qty) : 0;
-  const precoMin = displayPrecoCusto ? getEffectiveMinPrice(product?.tabela_precos, displayPrecoCusto) : 0;
+  const precoAtual = precoUnitario(product, qty);
+  const precoMin = precoMinimo(product);
 
-  const tableRows = useMemo(() => {
-    if (!displayPrecoCusto) return [];
-    const custom = getNormalizedPriceRows(product?.tabela_precos, displayPrecoCusto);
-    if (custom && custom.length) return custom;
-    const fallback = QUANTITIES.map(q => ({
-      qty: q,
-      unit: calcularPreco(displayPrecoCusto, q),
-      base: precoBase,
-      desc: getDesconto(q),
-      descVsFirst: 0,
-    }));
-    const firstUnit = fallback[0]?.unit ?? 0;
-    return fallback.map(r => ({
-      ...r,
-      descVsFirst: firstUnit > 0 ? Math.max(0, 1 - r.unit / firstUnit) : 0,
-    }));
-  }, [displayPrecoCusto, precoBase, product?.tabela_precos]);
+  const tableRows = useMemo(
+    () => linhasDePreco(product, QUANTITIES),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [product?.preco_base, product?.preco_faixas],
+  );
 
   const handleSelectRow = (index: number) => {
     setSelectedRow(index);
@@ -317,7 +305,7 @@ const ProductDetail = () => {
             offers: {
               "@type": "Offer",
               priceCurrency: "BRL",
-              price: product.preco_custo ? calcularPreco(product.preco_custo, 20).toFixed(2) : "0",
+              price: temPreco(product) ? precoPadrao(product, 20).toFixed(2) : "0",
               availability: "https://schema.org/InStock",
               seller: { "@type": "Organization", name: "Gift Web Brindes" },
             },
@@ -527,7 +515,7 @@ const ProductDetail = () => {
                 )}
 
                 {/* Price */}
-                {displayPrecoCusto != null && displayPrecoCusto > 0 && (() => {
+                {temPreco(product) && (() => {
                   const precoPix = precoMin * 0.97;
                   const parcela2x = precoMin / 2;
                   return (
@@ -598,7 +586,7 @@ const ProductDetail = () => {
                 )}
 
                 {/* Pricing table */}
-                {displayPrecoCusto != null && displayPrecoCusto > 0 && (
+                {temPreco(product) && (
                   <div className="mt-1">
                     <h3 className="font-bold text-base text-foreground mb-2">Compre com desconto</h3>
                     <div className="rounded-xl border border-border overflow-x-auto">
@@ -703,7 +691,7 @@ const ProductDetail = () => {
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
-                  {displayPrecoCusto != null && displayPrecoCusto > 0 && (
+                  {temPreco(product) && (
                     <div className="mt-2">
                       <p className="text-muted-foreground text-xs">{qty}x — {formatarBRL(precoAtual)} / un</p>
                       <p className="text-foreground font-bold text-sm mt-0.5">Total: {formatarBRL(precoAtual * qty)}</p>
@@ -728,12 +716,12 @@ const ProductDetail = () => {
                       slug={p.slug}
                       image_url={p.image_url}
                       cor={p.cor}
-                      preco_custo={p.preco_custo}
+                      preco_base={p.preco_base}
                       codigo_amigavel={p.codigo_amigavel}
                       variantes={p.variantes as any}
                       estoque={p.estoque}
                       estoque_total={p.estoque_total}
-                      tabela_precos={p.tabela_precos}
+                      preco_faixas={p.preco_faixas}
                     />
                   ))}
                 </div>

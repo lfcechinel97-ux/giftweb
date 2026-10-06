@@ -8,7 +8,7 @@ export interface ProductCache {
   slug: string | null;
   image_url: string | null;
   cor: string | null;
-  preco_custo: number | null;
+  preco_base: number | null;
   categoria: string | null;
   estoque: number | null;
   codigo_amigavel: string;
@@ -24,7 +24,7 @@ async function fetchFeaturedProducts(): Promise<ProductCache[]> {
     FEATURED_CATEGORIES.map(cat =>
       supabase
         .from("products_cache")
-        .select("id,nome,slug,image_url,cor,preco_custo,categoria,estoque,codigo_amigavel,descricao,variantes,variantes_count")
+        .select("id,nome,slug,image_url,cor,preco_base,categoria,estoque,codigo_amigavel,descricao,variantes,variantes_count")
         .eq("categoria", cat)
       .eq("is_variante", false)
       .eq("ativo", true)
@@ -44,12 +44,12 @@ async function fetchFeaturedProducts(): Promise<ProductCache[]> {
 async function fetchHomepageData() {
   const randomOffset = Math.floor(Math.random() * 100);
 
-  const [maisVendidos, destaques, categorias, squeezesCount, baratosCount] = await Promise.all([
+  const [maisVendidos, destaques, categorias, squeezesCount] = await Promise.all([
     fetchFeaturedProducts(),
 
     supabase
       .from("products_cache")
-      .select("id,nome,slug,image_url,cor,preco_custo,categoria,estoque,codigo_amigavel,descricao")
+      .select("id,nome,slug,image_url,cor,preco_base,categoria,estoque,codigo_amigavel,descricao")
       .eq("ativo", true)
       .eq("has_image", true)
       .eq("is_variante", false)
@@ -76,16 +76,6 @@ async function fetchHomepageData() {
       .neq("is_hidden", true)
       .gt("estoque", 0)
       .or("nome.ilike.%SQUEEZE%,descricao.ilike.%SQUEEZE%"),
-
-    supabase
-      .from("products_cache")
-      .select("id", { count: "exact", head: true })
-      .eq("ativo", true)
-      .eq("has_image", true)
-      .eq("is_variante", false)
-      .neq("is_hidden", true)
-      .gt("estoque", 0)
-      .lte("preco_custo", 8),
   ]);
 
   const catCounts: Record<string, number> = {};
@@ -96,7 +86,6 @@ async function fetchHomepageData() {
     }
   }
   catCounts["squeezes"] = squeezesCount.count || 0;
-  catCounts["brindes-baratos"] = baratosCount.count || 0;
 
   return {
     maisVendidos: maisVendidos as ProductCache[],

@@ -222,13 +222,13 @@ const CategoryPage = () => {
                     slug={p.slug}
                     image_url={p.image_url}
                     cor={p.cor}
-                    preco_custo={p.preco_custo}
+                    preco_base={p.preco_base}
                     codigo_amigavel={p.codigo_amigavel}
                     image_urls={p.image_urls}
                     variantes={p.variantes}
                     estoque={p.estoque}
                     estoque_total={p.estoque_total}
-                    tabela_precos={p.tabela_precos}
+                    preco_faixas={p.preco_faixas}
                   />
                 ))}
               </div>

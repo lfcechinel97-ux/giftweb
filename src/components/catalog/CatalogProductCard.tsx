@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Plus, Minus, Check, ShoppingBag } from "lucide-react";
-import { formatarBRL, getEffectiveMinPrice, getEffectiveUnitPrice } from "@/utils/price";
+import { formatarBRL } from "@/utils/price";
+import { precoMinimo, precoUnitario, temPreco } from "@/utils/precoVenda";
 import { getCorHex, isLightColor } from "@/utils/colorHex";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuotation } from "@/contexts/QuotationContext";
@@ -39,7 +40,7 @@ export const CatalogProductCardSkeleton = () => (
 );
 
 const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
-  const { nome, slug, image_url, image_urls, cor, preco_custo, codigo_amigavel, variantes: rawVariantes, estoque, estoque_total } = product;
+  const { nome, slug, image_url, image_urls, cor, codigo_amigavel, variantes: rawVariantes, estoque, estoque_total } = product;
   const variantes = rawVariantes as unknown as VariantJson[] | null;
   const { addItem } = useQuotation();
 
@@ -106,8 +107,8 @@ const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
 
   if (!image_url || image_url.includes("placehold.co")) return null;
 
-  const precoMin = preco_custo ? getEffectiveMinPrice(product.tabela_precos, preco_custo) : null;
-  const preco20 = preco_custo ? getEffectiveUnitPrice(product.tabela_precos, preco_custo, 20) : null;
+  const precoMin = temPreco(product) ? precoMinimo(product) : null;
+  const preco20 = temPreco(product) ? precoUnitario(product, 20) : null;
   const href = slug ? `/catalogo/produto/${slug}` : `/catalogo/produto/${codigo_amigavel}`;
 
   const hasVariants = variantes && variantes.length > 0;
@@ -132,7 +133,7 @@ const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
         id: product.id,
         name: nome,
         image: image_url || "/placeholder-product.webp",
-        price: preco_custo,
+        precoBase: temPreco(product) ? product.preco_base : null,
         codigo_amigavel,
       },
       qty

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { X, Minus, Plus, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatarBRL, getEffectiveUnitPrice } from "@/utils/price";
+import { formatarBRL } from "@/utils/price";
+import { precoUnitario, temPreco } from "@/utils/precoVenda";
 import { getCorHex } from "@/utils/colorHex";
 import { useTopCart } from "@/contexts/TopProdutosCart";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -54,7 +55,7 @@ const Top10ProductModal = ({ product, onClose }: Props) => {
   const selectedCor = corIdx != null ? coresList[corIdx] : null;
   const mainImg = selectedCor?.imagem || gallery[activeImg] || product.image_url;
   const unitPrice = (qty: number) =>
-    product.preco_custo ? getEffectiveUnitPrice(product.tabela_precos, product.preco_custo, qty) : null;
+    temPreco(product) ? precoUnitario(product, qty) : null;
 
   const handleAdd = () => {
     const corNome = selectedCor?.nome;

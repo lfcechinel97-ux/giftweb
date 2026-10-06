@@ -16,7 +16,6 @@ export interface TopProduct {
   nome: string;
   image_url: string | null;
   image_urls?: string[] | null;
-  preco_custo: number | null;
   codigo_amigavel: string;
   quantidade_minima?: number | null;
   preco_final?: number | null;

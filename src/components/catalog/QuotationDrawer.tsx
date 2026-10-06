@@ -2,7 +2,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Button } from "@/components/ui/button";
 import { Minus, Plus, Trash2, ShoppingBag, Send } from "lucide-react";
 import { useQuotation } from "@/contexts/QuotationContext";
-import { calcularPreco, formatarBRL } from "@/utils/price";
+import { formatarBRL } from "@/utils/price";
+import { precoPadrao } from "@/utils/precoVenda";
 import { WHATSAPP_NUMBER } from "@/config/site";
 
 const QuotationDrawer = () => {
@@ -10,7 +11,7 @@ const QuotationDrawer = () => {
 
   const handleSendWhatsApp = () => {
     const lines = items.map((item, i) => {
-      const price = item.price ? formatarBRL(calcularPreco(item.price, item.quantity)) : "sob consulta";
+      const price = item.precoBase ? formatarBRL(precoPadrao({ preco_base: item.precoBase }, item.quantity)) : "sob consulta";
       return `${i + 1}. ${item.name} (Cód: ${item.codigo_amigavel}) — Qtd: ${item.quantity} — ${price}/un`;
     });
     const msg = `Olá! Gostaria de solicitar um orçamento:\n\n${lines.join("\n")}\n\nTotal de itens: ${totalItems}`;
@@ -37,7 +38,7 @@ const QuotationDrawer = () => {
           <>
             <div className="flex-1 overflow-y-auto space-y-3 py-4">
               {items.map(item => {
-                const unitPrice = item.price ? calcularPreco(item.price, item.quantity) : null;
+                const unitPrice = item.precoBase ? precoPadrao({ preco_base: item.precoBase }, item.quantity) : null;
                 return (
                   <div key={item.id} className="flex gap-3 p-3 rounded-xl bg-card border border-border">
                     <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover shrink-0" />

@@ -2,7 +2,9 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
-import { calcularPreco, getDesconto, formatarBRL, getPrecoMinimo, getMarkup, getCustomMultiplier, getNormalizedPriceRows, getEffectiveUnitPrice, getEffectiveMinPrice, formatPercent2 } from "@/utils/price";
+import { formatarBRL, formatPercent2 } from "@/utils/price";
+import { linhasDePreco, precoMinimo, precoUnitario, temPreco } from "@/utils/precoVenda";
+import { COLUNAS_PRODUTO_PUBLICO, type ProdutoPublico } from "@/utils/colunasProdutoPublico";
 import { getCorHex } from "@/utils/colorHex";
 import { WHATSAPP_NUMBER } from "@/config/site";
 import CatalogHeader from "@/components/catalog/CatalogHeader";
@@ -16,7 +18,7 @@ import { toast } from "sonner";
 import { Minus, Plus, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, ZoomIn, ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Send } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
-type Product = Tables<"products_cache">;
+type Product = ProdutoPublico;
 
 interface VariantInfo {
   slug: string;
@@ -52,7 +54,7 @@ const CatalogProductDetail = () => {
     setShowSuccess(false);
     supabase
       .from("products_cache")
-      .select("*")
+      .select(COLUNAS_PRODUTO_PUBLICO)
       .eq("slug", slug)
       .eq("ativo", true)
       .single()
@@ -64,7 +66,7 @@ const CatalogProductDetail = () => {
         if (data.is_variante && data.produto_pai) {
           const { data: parentData } = await supabase
             .from("products_cache")
-            .select("*")
+            .select(COLUNAS_PRODUTO_PUBLICO)
             .eq("id", data.produto_pai)
             .single();
           if (parentData) {
@@ -195,30 +197,16 @@ const CatalogProductDetail = () => {
 
   const displayCodigo = selectedVariant?.codigo_amigavel || product?.codigo_amigavel || '';
   const displayEstoque = selectedVariant?.estoque ?? product?.estoque;
-  const displayPrecoCusto = product?.preco_custo;
   const displayNome = product?.nome || '';
 
-  const precoBase = displayPrecoCusto ? displayPrecoCusto * getMarkup(displayPrecoCusto) : 0;
-  const precoAtual = displayPrecoCusto ? getEffectiveUnitPrice(product?.tabela_precos, displayPrecoCusto, qty) : 0;
-  const precoMin = displayPrecoCusto ? getEffectiveMinPrice(product?.tabela_precos, displayPrecoCusto) : 0;
+  const precoAtual = precoUnitario(product, qty);
+  const precoMin = precoMinimo(product);
 
-  const tableRows = useMemo(() => {
-    if (!displayPrecoCusto) return [];
-    const custom = getNormalizedPriceRows(product?.tabela_precos, displayPrecoCusto);
-    if (custom && custom.length) return custom;
-    const fallback = QUANTITIES.map(q => ({
-      qty: q,
-      unit: calcularPreco(displayPrecoCusto, q),
-      base: precoBase,
-      desc: getDesconto(q),
-      descVsFirst: 0,
-    }));
-    const firstUnit = fallback[0]?.unit ?? 0;
-    return fallback.map(r => ({
-      ...r,
-      descVsFirst: firstUnit > 0 ? Math.max(0, 1 - r.unit / firstUnit) : 0,
-    }));
-  }, [displayPrecoCusto, precoBase, product?.tabela_precos]);
+  const tableRows = useMemo(
+    () => linhasDePreco(product, QUANTITIES),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [product?.preco_base, product?.preco_faixas],
+  );
 
   const handleSelectRow = (index: number) => {
     setSelectedRow(index);
@@ -234,7 +222,7 @@ const CatalogProductDetail = () => {
         id: currentVariantData?.id || product.id,
         name: displayNome,
         image: displayedMain || product.image_url || "/placeholder-product.webp",
-        price: displayPrecoCusto,
+        precoBase: temPreco(product) ? product!.preco_base : null,
         codigo_amigavel: displayCodigo,
       },
       qty
@@ -244,7 +232,7 @@ const CatalogProductDetail = () => {
   };
 
   const handleSendWhatsApp = () => {
-    const price = displayPrecoCusto ? formatarBRL(getEffectiveUnitPrice(product?.tabela_precos, displayPrecoCusto, qty)) : "sob consulta";
+    const price = temPreco(product) ? formatarBRL(precoUnitario(product, qty)) : "sob consulta";
     const msg = `Olá! Gostaria de solicitar um orçamento:\n\n1. ${displayNome} (Cód: ${displayCodigo}) — Qtd: ${qty} — ${price}/un\n\nTotal de itens: ${qty}`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
   };
@@ -385,7 +373,7 @@ const CatalogProductDetail = () => {
                 <h1 className="font-black text-xl md:text-2xl leading-snug text-[#0F172A] break-words">{displayNome}</h1>
 
                 {/* Price — mobile only (right after title) */}
-                {displayPrecoCusto != null && displayPrecoCusto > 0 && (() => {
+                {temPreco(product) && (() => {
                   const precoPix = precoMin * 0.97;
                   const parcela2x = precoMin / 2;
                   return (
@@ -488,7 +476,7 @@ const CatalogProductDetail = () => {
                 )}
 
                 {/* Price — desktop only */}
-                {displayPrecoCusto != null && displayPrecoCusto > 0 && (() => {
+                {temPreco(product) && (() => {
                   const precoPix = precoMin * 0.97;
                   const parcela2x = precoMin / 2;
                   return (
@@ -528,7 +516,7 @@ const CatalogProductDetail = () => {
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
-                  {displayPrecoCusto != null && displayPrecoCusto > 0 && (
+                  {temPreco(product) && (
                     <div className="mt-2">
                       <p className="text-[#64748B] text-xs">{qty}x — {formatarBRL(precoAtual)} / un</p>
                       <p className="text-[#0F172A] font-bold text-sm mt-0.5">Total: {formatarBRL(precoAtual * qty)}</p>
@@ -573,7 +561,7 @@ const CatalogProductDetail = () => {
                 )}
 
                 {/* Pricing table */}
-                {displayPrecoCusto != null && displayPrecoCusto > 0 && (
+                {temPreco(product) && (
                   <div className="mt-1">
                     <h3 className="font-bold text-base text-[#0F172A] mb-2">Compre com desconto</h3>
                     <div className="rounded-xl border border-[#E5E7EB] overflow-x-auto">

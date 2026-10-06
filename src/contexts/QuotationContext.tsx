@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface QuotationItem {
   id: string;
   name: string;
   image: string;
-  price: number | null; // preco_custo
+  /** Preço unitário de venda sem desconto (products_cache.preco_base). */
+  precoBase: number | null;
   quantity: number;
   codigo_amigavel: string;
 }
@@ -24,7 +26,11 @@ const QuotationContext = createContext<QuotationContextType | null>(null);
 
 const STORAGE_KEY = "giftweb_quotation";
 
-function loadItems(): QuotationItem[] {
+// Carrinhos salvos antes guardavam o custo em `price`; o custo não é mais
+// usado no site, então esses itens têm o preço de venda buscado de novo.
+type ItemSalvo = Omit<QuotationItem, "precoBase"> & { precoBase?: number | null; price?: number | null };
+
+function loadItems(): ItemSalvo[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
@@ -34,8 +40,24 @@ function loadItems(): QuotationItem[] {
 }
 
 export function QuotationProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<QuotationItem[]>(loadItems);
+  const [items, setItems] = useState<QuotationItem[]>(() =>
+    loadItems().map(({ price: _legado, ...i }) => ({ ...i, precoBase: i.precoBase ?? null })),
+  );
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const legados = loadItems().filter((i) => i.precoBase === undefined && i.price).map((i) => i.id);
+    if (!legados.length) return;
+    supabase
+      .from("products_cache")
+      .select("id,preco_base")
+      .in("id", legados)
+      .then(({ data }) => {
+        if (!data?.length) return;
+        const porId = new Map(data.map((d) => [d.id, d.preco_base]));
+        setItems((prev) => prev.map((i) => (porId.has(i.id) ? { ...i, precoBase: porId.get(i.id) ?? null } : i)));
+      });
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));

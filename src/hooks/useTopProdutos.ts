@@ -5,7 +5,7 @@ import type { TopProduct } from "@/components/topprodutos/TopProductCard";
 async function fetchTopProdutos(limit = 3): Promise<TopProduct[]> {
   const { data, error } = await supabase
     .from("products_cache")
-    .select("id,nome,image_url,image_urls,preco_custo,codigo_amigavel")
+    .select("id,nome,image_url,image_urls,preco_base,codigo_amigavel")
     .eq("ativo", true)
     .eq("has_image", true)
     .eq("is_variante", false)

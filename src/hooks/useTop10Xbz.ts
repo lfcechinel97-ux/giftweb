@@ -22,8 +22,8 @@ export interface Top10Produto {
   image_urls: string[];
   codigo_amigavel: string;
   codigo_prefixo: string;
-  preco_custo: number | null;
-  tabela_precos: any;
+  preco_base: number | null;
+  preco_faixas: unknown;
   descricao: string | null;
   estoque: number | null;
   cores: Top10Cor[];
@@ -47,7 +47,7 @@ export interface Top10SecaoResolvida {
 }
 
 const SELECT =
-  "id,nome,slug,image_url,image_urls,cor,preco_custo,estoque,codigo_amigavel,codigo_prefixo,descricao,variantes,tabela_precos";
+  "id,nome,slug,image_url,image_urls,cor,preco_base,estoque,codigo_amigavel,codigo_prefixo,descricao,variantes,preco_faixas";
 
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -127,8 +127,8 @@ function toProduto(row: any, item: Top10Item, ordem: number): Top10Produto {
     image_urls: buildGaleria(row),
     codigo_amigavel: row.codigo_amigavel ?? item.codigoPrefixo,
     codigo_prefixo: item.codigoPrefixo,
-    preco_custo: row.preco_custo != null ? Number(row.preco_custo) : null,
-    tabela_precos: row.tabela_precos ?? null,
+    preco_base: row.preco_base != null ? Number(row.preco_base) : null,
+    preco_faixas: row.preco_faixas ?? null,
     descricao: row.descricao ?? null,
     estoque: row.estoque ?? null,
     cores: buildCores(row),

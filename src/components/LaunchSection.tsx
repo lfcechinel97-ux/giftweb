@@ -1,5 +1,6 @@
 import { useInView } from "@/hooks/useInView";
-import { calcularPreco, formatarBRL } from "@/utils/price";
+import { formatarBRL } from "@/utils/price";
+import { precoPadrao, temPreco } from "@/utils/precoVenda";
 import { ProductCache } from "@/hooks/useHomepageData";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,7 +34,7 @@ const LaunchSection = ({ products, loading }: Props) => {
                 </div>
               ))
             : products.map((p) => {
-                const precoMin = p.preco_custo ? calcularPreco(p.preco_custo, 1000) : null;
+                const precoMin = temPreco(p) ? precoPadrao(p, 1000) : null;
                 const href = p.slug ? `/produto/${p.slug}` : `/produto/${p.codigo_amigavel}`;
                 return (
                   <Link
