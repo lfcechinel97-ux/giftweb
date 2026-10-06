@@ -253,7 +253,9 @@ export default function CartelaDtf() {
 
   const baixar = () => {
     if (!cartela) return;
-    const url = URL.createObjectURL(new Blob([cartela.pdf], { type: "application/pdf" }));
+    // Cópia em ArrayBuffer puro: o Blob do navegador exige ArrayBuffer, e o
+    // Uint8Array vindo do pdf-lib é tipado como ArrayBufferLike.
+    const url = URL.createObjectURL(new Blob([new Uint8Array(cartela.pdf)], { type: "application/pdf" }));
     const a = document.createElement("a");
     a.href = url;
     a.download = cartela.nome;
