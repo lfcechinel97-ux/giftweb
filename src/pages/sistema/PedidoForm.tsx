@@ -27,6 +27,7 @@ import { ItemDialog } from "./OrcamentoForm";
 import ClienteDialog from "./ClienteDialog";
 import DadosClienteEnvio from "./DadosClienteEnvio";
 import { registrarAuditoria } from "@/lib/auditoria";
+import { diasUteisAte } from "@/lib/diasUteis";
 import { uploadMockup, uploadArquivoPedido, MockupUploadError } from "@/lib/uploadMockup";
 import RecorteQuadrado from "@/components/sistema/RecorteQuadrado";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -93,7 +94,10 @@ const PedidoForm: React.FC = () => {
   const [pagamentoId, setPagamentoId] = useState("");
   const [prazoEntrega, setPrazoEntrega] = useState(0);
   const [prazoProducaoDias, setPrazoProducaoDias] = useState(15);
-  const [dataDespacharAte, setDataDespacharAte] = useState("");
+  /* "Produzir até": data limite de produção (sem o prazo de frete). Grava em
+     data_produzir_ate e data_despachar_ate — o PCP ("Mais urgente"), a tela
+     de Pedidos (atraso) e a OP em PDF leem a data de despacho. */
+  const [dataProduzirAte, setDataProduzirAte] = useState("");
   const [observacoes, setObservacoes] = useState("");
 
   /* Anexos gerais do pedido (briefing, arte solta, logo) — array jsonb em
@@ -282,7 +286,8 @@ const PedidoForm: React.FC = () => {
         setPrazoEntrega(mapped.prazoEntrega || 0);
         setPrazoProducaoDias(mapped.prazoProducaoDias ?? 15);
         setObservacoes(mapped.observacoes || "");
-        setDataDespacharAte(mapped.dataDespacharAte ? mapped.dataDespacharAte.slice(0, 10) : "");
+        const produzirAte = mapped.dataDespacharAte ?? mapped.dataProduzirAte;
+        setDataProduzirAte(produzirAte ? produzirAte.slice(0, 10) : "");
         setAnexosGerais(((p as any).anexos as AnexoGeral[] | null) ?? []);
       }
       setCarregando(false);
@@ -316,6 +321,10 @@ const PedidoForm: React.FC = () => {
     }
   };
 
+  const diasUteisProducao = useMemo(
+    () => (dataProduzirAte ? diasUteisAte(dataProduzirAte) : 0),
+    [dataProduzirAte],
+  );
   const subtotal = useMemo(
     () => itens.reduce((s, i) => s + (num(i.total) || num(i.quantidade) * num(i.precoUnitario)), 0),
     [itens],
@@ -385,6 +394,7 @@ const PedidoForm: React.FC = () => {
     if (itens.length === 0) { toast.error("O pedido precisa ter ao menos um item."); return; }
     const numeroNovo = numero.trim();
     if (!numeroNovo) { toast.error("Informe o número do pedido."); return; }
+    if (!dataProduzirAte) { toast.error("Vendedor, informe a data limite para produção (Produzir até)."); return; }
     if (numeroNovo !== pedido.numero) {
       const { data: repetido } = await supabase
         .from("sistema_pedidos").select("id").eq("numero", numeroNovo).neq("id", id).maybeSingle();
@@ -423,7 +433,8 @@ const PedidoForm: React.FC = () => {
       prazo_entrega: prazoEntrega || null,
       pagamento_id: pagamentoId || null,
       prazo_producao_dias: prazoProducaoDias,
-      data_despachar_ate: dataDespacharAte || null,
+      data_produzir_ate: dataProduzirAte,
+      data_despachar_ate: dataProduzirAte,
       observacoes: observacoes || null,
       anexos: anexosGerais as never,
       updated_at: new Date().toISOString(),
@@ -637,9 +648,23 @@ const PedidoForm: React.FC = () => {
             <Input className="h-9" value={contatoEmail} onChange={e => setContatoEmail(e.target.value)} />
           </label>
           <label className="space-y-1">
-            <span className="gw-label">Prazo de produção (dias)</span>
-            <Input className="h-9" type="number" value={prazoProducaoDias}
-              onChange={e => setPrazoProducaoDias(Number(e.target.value) || 0)} />
+            <span className="gw-label">
+              Produzir até (data limite de produção) <span style={{ color: "var(--gw-danger)" }}>*</span>
+            </span>
+            <Input className="h-9" type="date" value={dataProduzirAte} required
+              onChange={e => setDataProduzirAte(e.target.value)}
+              style={!dataProduzirAte ? { borderColor: "var(--gw-danger)" } : undefined} />
+            {dataProduzirAte ? (
+              <span className="block text-[11px] font-semibold" style={{ color: diasUteisProducao <= 2 ? "var(--gw-danger)" : "var(--gw-primary)" }}>
+                {diasUteisProducao === 0
+                  ? "Nenhum dia útil p/ produção"
+                  : `${diasUteisProducao} ${diasUteisProducao === 1 ? "dia útil" : "dias úteis"} p/ produção`}
+              </span>
+            ) : (
+              <span className="block text-[11px]" style={{ color: "var(--gw-danger)" }}>
+                Vendedor, informe a data limite p/ produção (sem contar o prazo de frete).
+              </span>
+            )}
           </label>
         </div>
       </SectionCard>
@@ -932,11 +957,6 @@ const PedidoForm: React.FC = () => {
               <span className="gw-label">Prazo de entrega (dias)</span>
               <Input className="h-9" type="number" value={prazoEntrega}
                 onChange={e => setPrazoEntrega(Number(e.target.value) || 0)} />
-            </label>
-            <label className="space-y-1 block">
-              <span className="gw-label">Despachar até</span>
-              <Input className="h-9" type="date" value={dataDespacharAte}
-                onChange={e => setDataDespacharAte(e.target.value)} />
             </label>
           </div>
         </SectionCard>
