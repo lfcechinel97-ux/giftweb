@@ -26,6 +26,7 @@ import { useSistemaProducts } from "./useSistemaProducts";
 import { ItemDialog } from "./OrcamentoForm";
 import ClienteDialog from "./ClienteDialog";
 import DadosClienteEnvio from "./DadosClienteEnvio";
+import ClienteBusca from "@/components/sistema/ClienteBusca";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { diasUteisAte } from "@/lib/diasUteis";
 import { uploadMockup, uploadArquivoPedido, MockupUploadError } from "@/lib/uploadMockup";
@@ -591,15 +592,10 @@ const PedidoForm: React.FC = () => {
               className="h-9 gw-tnum"
             />
           </label>
-          <label className="space-y-1">
+          <div className="space-y-1">
             <span className="gw-label">Cliente</span>
             <div className="flex items-center gap-1.5">
-              <Select value={clienteId} onValueChange={setClienteId}>
-                <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  {clientes.map(c => <SelectItem key={c.id} value={c.id}>{clienteDisplay(c)}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <ClienteBusca clientes={clientes} value={clienteId} onChange={setClienteId} />
               <Button
                 type="button"
                 variant="outline"
@@ -625,7 +621,7 @@ const PedidoForm: React.FC = () => {
                 </Button>
               )}
             </div>
-          </label>
+          </div>
           <label className="space-y-1">
             <span className="gw-label">Vendedor</span>
             <Select value={vendedorId} onValueChange={setVendedorId} disabled={!!vendedorRestrito}>

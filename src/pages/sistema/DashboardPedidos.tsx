@@ -7,27 +7,25 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useSistema } from "@/contexts/SistemaContext";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
+import PainelEmpate from "./financeiro/PainelEmpate";
+import { CUSTO_FIXO_MENSAL_PADRAO, faixaDe, taxaCartaoDoMeio } from "@/lib/financeiroRegras";
 
 /* Dashboard por pedido (admin). Todo pedido lançado entra na hora.
    - Bruto (PV) = valor dos produtos, sem frete.
    - Imposto = % da config sobre o total do pedido.
    - Tx cartão = % da forma de pagamento do pedido (Cartão 1x…12x) sobre o
-     total; editável por pedido.
+     total; editável por pedido. Cartão parcelado "sem juros" cadastrado com
+     0% usa a tabela da maquininha pelo nº de parcelas (a empresa absorve).
    - Frete: CIF é custo da empresa e desconta do lucro; FOB é pago pelo
      cliente e só aparece para conferência.
    - Custo do produto e personalização são POR UNIDADE de cada produto.
    - Comissão: por vendedor no mês = soma(bruto − imposto − tx cartão) ×
-     faixa escalonada, aplicada ao total (52 mil => 4% de tudo). */
-
-const FAIXAS_COMISSAO: { ate: number; pct: number }[] = [
-  { ate: 20000, pct: 0 },
-  { ate: 30000, pct: 2 },
-  { ate: 40000, pct: 3 },
-  { ate: 50000, pct: 3.5 },
-  { ate: 70000, pct: 4 },
-  { ate: Infinity, pct: 5 },
-];
-const faixaDe = (base: number) => FAIXAS_COMISSAO.find(f => base <= f.ate)!;
+     faixa escalonada, aplicada ao total (52 mil => 4% de tudo). Cada pedido
+     desconta a comissão na faixa em que o vendedor está no mês.
+   - Lucro líquido = lucro − comissão. O custo fixo do mês (sistema_financeiro_
+     config; já inclui tráfego/aquisição) entra só no painel de empate.
+   - Custo do produto, nesta ordem: o digitado aqui no item > preço lançado
+     pelo admin na compra (página Compras) > custo do catálogo no item. */
 
 const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const pct = (n: number) => `${n.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`;
@@ -38,6 +36,20 @@ const aNum = (t: string) => {
 const paraTexto = (n: number | null | undefined) => (n == null ? "" : String(n).replace(".", ","));
 const mesLabel = (ano: number, mes: number) =>
   new Date(ano, mes, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+
+/** `.in()` em lotes: lista grande de ids estoura o tamanho da URL. */
+async function lerEmLotes<T>(
+  valores: string[],
+  consulta: (lote: string[]) => PromiseLike<{ data: T[] | null; error: { message?: string } | null }>,
+): Promise<{ data: T[]; error: { message?: string } | null }> {
+  const out: T[] = [];
+  for (let i = 0; i < valores.length; i += 150) {
+    const { data, error } = await consulta(valores.slice(i, i + 150));
+    if (error) return { data: out, error };
+    out.push(...(data ?? []));
+  }
+  return { data: out, error: null };
+}
 
 interface PedidoRow {
   id: string;
@@ -81,9 +93,11 @@ export default function DashboardPedidos() {
   const fim = new Date(ano, mes + 1, 1).toISOString();
   const chave = ["sistema", "dash-pedidos", ano, mes] as const;
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, dataUpdatedAt } = useQuery({
     queryKey: chave,
     staleTime: 15 * 1000,
+    // Rede de segurança do "ao vivo": se um evento do realtime se perder.
+    refetchInterval: 60 * 1000,
     queryFn: async () => {
       const { data: peds, error } = await supabase
         .from("sistema_pedidos")
@@ -98,23 +112,72 @@ export default function DashboardPedidos() {
       const ids = pedidos.map(p => p.id);
       const numeros = pedidos.map(p => String(p.numero));
 
-      const [fin, meios, cfg, custos, prod, itemFin] = await Promise.all([
+      const inicioHist = new Date(ano, mes - 3, 1).toISOString();
+      const inicioPassado = new Date(ano, mes - 1, 1).toISOString();
+      const [fin, meios, cfg, custos, prod, itemFin, hist, orcs] = await Promise.all([
         ids.length ? (supabase as any).from("sistema_pedido_financeiro").select("*").in("pedido_id", ids) : { data: [] },
         (supabase as any).from("sistema_meios_pagamento").select("id,nome,taxa_pct"),
-        (supabase as any).from("sistema_financeiro_config").select("imposto_pct").limit(1),
-        numeros.length ? (supabase as any).from("vw_custo_compras_por_item").select("producao_item_id,custo_unitario_medio").in("pedido_numero", numeros) : { data: [] },
+        (supabase as any).from("sistema_financeiro_config").select("*").limit(1),
+        numeros.length ? lerEmLotes(numeros, lote => (supabase as any).from("sistema_compras_itens")
+          .select("id,producao_item_id,pedido_numero,produto_nome,quantidade,compra:sistema_compras(numero)").in("pedido_numero", lote)) : { data: [], error: null },
         ids.length ? supabase.from("sistema_producao_itens").select("id,pedido_id,item_id").in("pedido_id", ids) : { data: [] },
         ids.length ? (supabase as any).from("sistema_item_financeiro").select("*").in("pedido_id", ids) : { data: [] },
+        // Pedidos dos 3 meses anteriores: comparativo e dicas.
+        supabase.from("sistema_pedidos").select("created_at,subtotal")
+          .neq("status", "cancelado").gte("created_at", inicioHist).lt("created_at", inicio).limit(5000),
+        supabase.from("sistema_orcamentos").select("created_at")
+          .gte("created_at", inicioPassado).lt("created_at", fim).limit(5000),
       ]);
 
-      // custo unitário real de compra por (pedido, item do pedido)
-      const unitCompra = new Map<string, number>(
-        (custos.data ?? []).map((c: any) => [c.producao_item_id as string, Number(c.custo_unitario_medio)]),
+      /* Custo real de compra por (pedido, item do pedido): preço que o admin
+         lançou em Compras, média ponderada se o item foi comprado mais de uma
+         vez. Lido direto das tabelas (sem depender da view) e com erro
+         visível — antes uma falha aqui virava custo zero em silêncio. */
+      if (custos.error) toast.error(`Não foi possível ler as compras. ${custos.error.message || ""}`);
+      const compraItens = (custos.data ?? []) as {
+        id: string; producao_item_id: string | null; pedido_numero: string | null;
+        produto_nome: string; quantidade: number; compra: { numero: number } | null;
+      }[];
+      const precos = compraItens.length
+        ? await lerEmLotes(compraItens.map(c => c.id), lote => (supabase as any)
+            .from("sistema_compras_precos").select("compra_item_id,valor_unitario").in("compra_item_id", lote))
+        : { data: [], error: null };
+      if (precos.error) toast.error(`Não foi possível ler os preços de compra. ${precos.error.message || ""}`);
+      const precoPor = new Map<string, number>(
+        ((precos.data ?? []) as { compra_item_id: string; valor_unitario: number }[])
+          .map(x => [x.compra_item_id, Number(x.valor_unitario)]),
       );
+      const itemDoProd = new Map<string, string>(
+        ((prod.data ?? []) as { id: string; pedido_id: string; item_id: string }[])
+          .map(r => [r.id, `${r.pedido_id}:${r.item_id}`]),
+      );
+      const pedidoPorNumero = new Map(pedidos.map(p => [String(p.numero), p]));
+      const norm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      const acc: Record<string, { valor: number; qtd: number; compras: Set<number> }> = {};
+      for (const ci of compraItens) {
+        const preco = precoPor.get(ci.id);
+        if (preco == null) continue;
+        let chaveItem = ci.producao_item_id ? itemDoProd.get(ci.producao_item_id) : undefined;
+        // Linha de compra sem vínculo com o card: casa pelo nº do pedido + nome.
+        if (!chaveItem && ci.pedido_numero) {
+          const ped = pedidoPorNumero.get(String(ci.pedido_numero));
+          const alvo = norm(ci.produto_nome || "");
+          const idx = (ped?.itens ?? []).findIndex(it => {
+            const n = norm(it.nome || "");
+            return n && alvo && (n === alvo || n.startsWith(alvo) || alvo.startsWith(n));
+          });
+          if (ped && idx >= 0) chaveItem = `${ped.id}:${String(ped.itens![idx].id ?? idx)}`;
+        }
+        if (!chaveItem) continue;
+        const a = (acc[chaveItem] ??= { valor: 0, qtd: 0, compras: new Set() });
+        const q = Number(ci.quantidade) || 0;
+        a.valor += q * preco; a.qtd += q;
+        if (ci.compra?.numero != null) a.compras.add(ci.compra.numero);
+      }
       const custoCompras: Record<string, number> = {};
-      for (const r of (prod.data ?? []) as { id: string; pedido_id: string; item_id: string }[]) {
-        const u = unitCompra.get(r.id);
-        if (u != null) custoCompras[`${r.pedido_id}:${r.item_id}`] = u;
+      const compraDoItem: Record<string, number[]> = {};
+      for (const [k, a] of Object.entries(acc)) {
+        if (a.qtd > 0) { custoCompras[k] = a.valor / a.qtd; compraDoItem[k] = [...a.compras]; }
       }
       const itemFinMap: Record<string, ItemFin> = {};
       for (const f of (itemFin.data ?? []) as ItemFin[]) itemFinMap[`${f.pedido_id}:${f.item_id}`] = f;
@@ -124,7 +187,13 @@ export default function DashboardPedidos() {
         fin: Object.fromEntries((fin.data ?? []).map((f: Fin) => [f.pedido_id, f])) as Record<string, Fin>,
         meios: Object.fromEntries((meios.data ?? []).map((m: any) => [m.id, { nome: m.nome as string, taxa: Number(m.taxa_pct) || 0 }])) as Record<string, { nome: string; taxa: number }>,
         imposto: Number(cfg.data?.[0]?.imposto_pct) || 0,
+        // Colunas novas (migration 20261009120000); sem elas, valem os padrões.
+        custoFixo: Number(cfg.data?.[0]?.custo_fixo_mensal) || CUSTO_FIXO_MENSAL_PADRAO,
+        historico: ((hist.data ?? []) as { created_at: string; subtotal: number | null }[])
+          .map(h => ({ created_at: h.created_at, bruto: Number(h.subtotal) || 0 })),
+        orcamentos: ((orcs.data ?? []) as { created_at: string }[]).map(o => o.created_at),
         custoCompras,
+        compraDoItem,
         itemFin: itemFinMap,
       };
     },
@@ -143,6 +212,8 @@ export default function DashboardPedidos() {
       .on("postgres_changes", { event: "*", schema: "public", table: "sistema_pedido_financeiro" }, recarregar)
       .on("postgres_changes", { event: "*", schema: "public", table: "sistema_item_financeiro" }, recarregar)
       .on("postgres_changes", { event: "*", schema: "public", table: "sistema_compras_itens" }, recarregar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "sistema_compras_precos" }, recarregar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "sistema_orcamentos" }, recarregar)
       .subscribe();
     return () => { clearTimeout(timer); supabase.removeChannel(canal); };
   }, [qc]);
@@ -154,7 +225,7 @@ export default function DashboardPedidos() {
       const bruto = Number(p.subtotal) || 0;
       const total = Number(p.total) || 0;
       const meio = p.pagamento_id ? data.meios[p.pagamento_id] : undefined;
-      const taxaPct = f?.taxa_cartao_pct ?? meio?.taxa ?? 0;
+      const taxaPct = f?.taxa_cartao_pct ?? (meio ? taxaCartaoDoMeio(meio.nome, meio.taxa) : 0);
       const taxa = total * taxaPct / 100;
       const imposto = total * data.imposto / 100;
 
@@ -164,10 +235,16 @@ export default function DashboardPedidos() {
         const fi = data.itemFin[chaveItem];
         const qtd = Number(it.quantidade) || 0;
         const pvUnit = Number(it.precoUnitario) || 0;
-        const custoUnit = fi?.custo_unitario ?? data.custoCompras[chaveItem] ?? (Number(it.precoCusto) || 0);
+        const compra = data.custoCompras[chaveItem];
+        const catalogo = Number(it.precoCusto) || 0;
+        // Um 0 salvo aqui não esconde o preço lançado na compra.
+        const editado = fi?.custo_unitario != null && (fi.custo_unitario > 0 || compra == null) ? Number(fi.custo_unitario) : null;
+        const custoUnit = editado ?? compra ?? catalogo;
+        const origemCusto = editado != null ? "editado" : compra != null ? "compra" : catalogo > 0 ? "catalogo" : "sem";
+        const comprasNum = data.compraDoItem[chaveItem] ?? [];
         const persUnit = fi?.custo_personalizacao_unit ?? 0;
         return {
-          itemId, nome: it.nome ?? "—", qtd, pvUnit, custoUnit, persUnit,
+          itemId, nome: it.nome ?? "—", qtd, pvUnit, custoUnit, persUnit, origemCusto, comprasNum,
           pv: qtd * pvUnit, custo: qtd * (custoUnit + persUnit),
         };
       });
@@ -200,10 +277,10 @@ export default function DashboardPedidos() {
   }, [linhas]);
 
   const comissoes = useMemo(() => {
-    const por = new Map<string, { nome: string; base: number; pedidos: number }>();
+    const por = new Map<string, { id: string; nome: string; base: number; pedidos: number }>();
     for (const l of linhas) {
       const k = l.p.vendedor_id ?? "—";
-      const acc = por.get(k) ?? { nome: l.vendedorNome, base: 0, pedidos: 0 };
+      const acc = por.get(k) ?? { id: k, nome: l.vendedorNome, base: 0, pedidos: 0 };
       acc.base += l.baseComissao; acc.pedidos += 1;
       por.set(k, acc);
     }
@@ -212,7 +289,32 @@ export default function DashboardPedidos() {
       .sort((a, b) => b.base - a.base);
   }, [linhas]);
   const totalComissao = comissoes.reduce((s, c) => s + c.valor, 0);
+  const custoFixo = data?.custoFixo ?? CUSTO_FIXO_MENSAL_PADRAO;
+
+  /* Comissão do pedido = base dele × faixa do vendedor no mês. */
+  const linhasLiq = useMemo(() => {
+    const pctPor = new Map(comissoes.map(c => [c.id, c.pct]));
+    return linhas.map(l => {
+      const comissaoPct = pctPor.get(l.p.vendedor_id ?? "—") ?? 0;
+      const comissao = l.baseComissao * comissaoPct / 100;
+      const lucroLiquido = l.lucro - comissao;
+      return {
+        ...l, comissaoPct, comissao, lucroLiquido,
+        margem: l.bruto > 0 ? lucroLiquido / l.bruto : 0,
+        temCusto: l.custoProduto > 0,
+        created_at: l.p.created_at,
+      };
+    });
+  }, [linhas, comissoes]);
   const lucroFinal = totais.lucro - totalComissao;
+
+  const salvarPremissas = async (novoFixo: number) => {
+    const { error } = await (supabase as any).from("sistema_financeiro_config")
+      .update({ custo_fixo_mensal: novoFixo }).eq("id", true);
+    if (error) { toast.error(`Não foi possível salvar as premissas. ${error.message || ""}`); return; }
+    toast.success("Premissas atualizadas.");
+    qc.invalidateQueries({ queryKey: ["sistema", "dash-pedidos"] });
+  };
 
   const salvar = async (pedidoId: string, campo: Campo, texto: string, atual: Fin | undefined) => {
     const valor = texto.trim() === "" ? null : aNum(texto);
@@ -272,11 +374,16 @@ export default function DashboardPedidos() {
       <header className="flex flex-wrap items-center gap-3">
         <div className="mr-auto">
           <h1 className="gw-display text-[20px]">Dashboard</h1>
-          <p className="gw-meta">
+          <p className="gw-meta flex flex-wrap items-center gap-x-2">
             Pedidos lançados no mês
-            <span className="inline-flex items-center gap-1 ml-2" style={{ color: "var(--gw-success)" }}>
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-[1px] text-[11px] font-bold" style={{ color: "#047857", background: "#05966918" }}>
+              <span className="relative inline-flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
               <Radio className="h-3 w-3" /> ao vivo
             </span>
+            {dataUpdatedAt > 0 && <span className="text-[11px]">atualizado às {new Date(dataUpdatedAt).toLocaleTimeString("pt-BR")}</span>}
           </p>
         </div>
         <div className="flex items-center gap-1">
@@ -290,6 +397,17 @@ export default function DashboardPedidos() {
         <div className="flex items-center gap-2 py-12 justify-center gw-meta"><Loader2 className="h-4 w-4 animate-spin" /> Carregando…</div>
       ) : (
         <>
+          <PainelEmpate
+            ano={ano}
+            mes={mes}
+            linhas={linhasLiq}
+            historico={data.historico}
+            orcamentos={data.orcamentos}
+            comissoes={comissoes}
+            custoFixo={custoFixo}
+            onSalvarPremissas={salvarPremissas}
+          />
+
           <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
             <div className="rounded-xl border p-5 space-y-4" style={{ background: "var(--gw-surface)", borderColor: "var(--gw-border)" }}>
               <div>
@@ -323,9 +441,17 @@ export default function DashboardPedidos() {
                 </div>
               ))}
               <div className="border-t pt-2 flex items-center justify-between" style={{ borderColor: "var(--gw-border)" }}>
-                <span className="gw-body font-bold">Lucro estimado</span>
+                <span className="gw-body font-bold">Lucro das vendas</span>
                 <span className="gw-num text-[20px]" style={{ color: lucroFinal < 0 ? "var(--gw-danger)" : "var(--gw-success)" }}>{brl(lucroFinal)}</span>
               </div>
+              <div className="flex items-center justify-between gw-body text-[13.5px]">
+                <span>Custo fixo do mês</span><span className="gw-num" style={{ color: "var(--gw-danger)" }}>− {brl(custoFixo)}</span>
+              </div>
+              <div className="border-t pt-2 flex items-center justify-between" style={{ borderColor: "var(--gw-border)" }}>
+                <span className="gw-body font-bold">Resultado do mês</span>
+                <span className="gw-num text-[20px]" style={{ color: lucroFinal - custoFixo < 0 ? "var(--gw-danger)" : "var(--gw-success)" }}>{brl(lucroFinal - custoFixo)}</span>
+              </div>
+              <p className="gw-meta text-[11px]">Pedido sem custo lançado entra com custo zero aqui; o painel do topo estima pela margem média.</p>
             </div>
           </div>
 
@@ -378,13 +504,16 @@ export default function DashboardPedidos() {
                     <th className="px-3 py-2 text-right">Tx cartão</th>
                     <th className="px-3 py-2 text-right">Frete</th>
                     <th className="px-3 py-2 text-right">Lucro</th>
+                    <th className="px-3 py-2 text-right">Comissão</th>
+                    <th className="px-3 py-2 text-right">Lucro líq.</th>
+                    <th className="px-3 py-2 text-right">Margem</th>
                     <th className="px-3 py-2 text-right">Recebido</th>
                     <th className="px-3 py-2 text-right">A receber</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y" style={{ borderColor: "var(--gw-border)" }}>
-                  {linhas.length === 0 && <tr><td colSpan={12} className="px-4 py-8 text-center gw-meta">Nenhum pedido neste mês.</td></tr>}
-                  {linhas.map(l => {
+                  {linhasLiq.length === 0 && <tr><td colSpan={15} className="px-4 py-8 text-center gw-meta">Nenhum pedido neste mês.</td></tr>}
+                  {linhasLiq.map(l => {
                     const aberto = abertos.has(l.p.id);
                     return (
                       <Fragment key={l.p.id}>
@@ -412,7 +541,22 @@ export default function DashboardPedidos() {
                               <span className="gw-meta text-[11.5px]" title="FOB: o cliente paga o frete. Não entra no lucro, só para conferência.">FOB {brl(l.fob)}</span>
                             ) : inputNumero(`${l.p.id}:frete`, l.frete, 2, t => void salvar(l.p.id, "frete", t, l.f))}
                           </td>
-                          <td className="px-3 py-1.5 text-right font-bold" style={{ color: l.lucro < 0 ? "var(--gw-danger)" : "var(--gw-success)" }}>{brl(l.lucro)}</td>
+                          <td className="px-3 py-1.5 text-right" style={{ color: l.lucro < 0 ? "var(--gw-danger)" : undefined }}>{brl(l.lucro)}</td>
+                          <td className="px-3 py-1.5 text-right" title={`Faixa do vendedor no mês: ${pct(l.comissaoPct)}`}>{brl(l.comissao)}</td>
+                          <td className="px-3 py-1.5 text-right font-bold" style={{ color: l.lucroLiquido < 0 ? "var(--gw-danger)" : "var(--gw-success)" }}>{brl(l.lucroLiquido)}</td>
+                          <td className="px-3 py-1.5 text-right">
+                            {l.bruto > 0 ? (
+                              <span
+                                className="inline-block rounded-full px-2 py-[1px] text-[11px] font-bold"
+                                style={l.margem < 0 ? { background: "#DB277720", color: "#BE185D" }
+                                  : l.margem < 0.15 ? { background: "#D9770620", color: "#B45309" }
+                                  : { background: "#05966920", color: "#047857" }}
+                                title={l.temCusto ? undefined : "Sem custo de produto lançado — margem superestimada"}
+                              >
+                                {(l.margem * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%{!l.temCusto && " *"}
+                              </span>
+                            ) : "—"}
+                          </td>
                           <td className="px-3 py-1.5 text-right" onClick={e => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1">
                               {inputNumero(`${l.p.id}:recebido`, l.recebido, 2, t => void salvar(l.p.id, "valor_recebido", t, l.f))}
@@ -426,7 +570,7 @@ export default function DashboardPedidos() {
                         </tr>
                         {aberto && (
                           <tr>
-                            <td colSpan={12} className="px-3 pb-3 pt-0" style={{ background: "var(--gw-surface-alt)" }}>
+                            <td colSpan={15} className="px-3 pb-3 pt-0" style={{ background: "var(--gw-surface-alt)" }}>
                               <table className="w-full text-[12px] mt-2">
                                 <thead className="text-[10.5px] uppercase" style={{ color: "var(--gw-text-secondary)" }}>
                                   <tr>
@@ -449,7 +593,20 @@ export default function DashboardPedidos() {
                                         <td className="text-right px-2">{x.qtd}</td>
                                         <td className="text-right px-2">{brl(x.pvUnit)}</td>
                                         <td className="text-right px-2">
-                                          {inputNumero(`${l.p.id}:${x.itemId}:cu`, x.custoUnit, 4, t => void salvarItem(l.p.id, x.itemId, "custo_unitario", t, atual))}
+                                          <span className="inline-flex items-center justify-end gap-1.5">
+                                            <span
+                                              className="text-[10px] font-semibold rounded-full px-1.5 py-[1px]"
+                                              style={x.origemCusto === "compra" ? { background: "#05966920", color: "#047857" }
+                                                : x.origemCusto === "editado" ? { background: "#2563EB1A", color: "#1D4ED8" }
+                                                : x.origemCusto === "catalogo" ? { background: "#94A3B833", color: "#475569" }
+                                                : { background: "#DB277720", color: "#BE185D" }}
+                                              title={x.origemCusto === "editado" ? "Digitado aqui. Apague o campo para voltar ao preço da compra." : undefined}
+                                            >
+                                              {x.origemCusto === "compra" ? `compra${x.comprasNum.length ? ` nº ${x.comprasNum.join(", ")}` : ""}`
+                                                : x.origemCusto === "editado" ? "editado" : x.origemCusto === "catalogo" ? "catálogo" : "sem custo"}
+                                            </span>
+                                            {inputNumero(`${l.p.id}:${x.itemId}:cu`, x.custoUnit, 4, t => void salvarItem(l.p.id, x.itemId, "custo_unitario", t, atual))}
+                                          </span>
                                         </td>
                                         <td className="text-right px-2">
                                           {inputNumero(`${l.p.id}:${x.itemId}:pu`, x.persUnit, 4, t => void salvarItem(l.p.id, x.itemId, "custo_personalizacao_unit", t, atual))}
@@ -462,7 +619,7 @@ export default function DashboardPedidos() {
                                   })}
                                 </tbody>
                               </table>
-                              <p className="gw-meta text-[11px] mt-1.5 px-2">Custo unitário: compra registrada em Compras, senão o custo do catálogo. Edite para ajustar. Frete, imposto e taxa de cartão são do pedido inteiro.</p>
+                              <p className="gw-meta text-[11px] mt-1.5 px-2">Custo unitário: o digitado aqui, senão o preço que você lançou na compra (Compras), senão o custo do catálogo. Apague o campo para voltar ao preço da compra. Frete, imposto e taxa de cartão são do pedido inteiro.</p>
                             </td>
                           </tr>
                         )}
