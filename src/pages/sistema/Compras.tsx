@@ -18,13 +18,17 @@ import { gerarPedidoCompraPDF } from "./pedidoCompraPDF";
 import { gerarRelatorioComprasPDF, gerarRelatorioComprasHTML, copiarRelatorioComprasTXT } from "./relatorioCompras";
 import { variacaoDoItem } from "./ordemProducaoPDF";
 import { ehTagCompra } from "@/lib/tagsPcp";
+import ConferenciaCompra, { ImpressoChip, ROTULO_STATUS, StatusCompraChip, statusCompra, type CompraConferivel, type StatusCompra } from "./compras/ConferenciaCompra";
 
 /* Compras: tudo que está em "Aguardando Mercadoria" no PCP.
    - Aba "A comprar": marca os produtos comprados (caixinha) e registra a
      compra num popup (fornecedor, quantidade, valores). Grava a MESMA
      etiqueta COMPRADO XBZ/SP do PCP, então os dois ficam ligados.
    - Aba "Pedidos de compra": cada compra registrada, com o PDF A4 (com ou
-     sem preço) para a expedição conferir. Preço só o admin vê. */
+     sem preço) para a expedição conferir. Preço só o admin vê. Baixar o PDF
+     marca "Impresso"; a produção confere o recebimento item a item
+     (compras/ConferenciaCompra) e o pedido fecha como RECEBIDO OK ou
+     RECEBIDO C/ FALTAS. */
 
 interface LinhaCompra {
   producao_id: string;
@@ -56,13 +60,10 @@ interface LinhaPopup {
   unitario: string;
 }
 
-interface CompraRegistrada {
-  id: string;
-  numero: number;
+interface CompraRegistrada extends CompraConferivel {
   fornecedor: string;
   criado_por_nome: string | null;
   criado_em: string;
-  itens: { id: string; produto_nome: string; pedido_numero: string | null; cliente: string | null; quantidade: number; ordem: number; sku: string | null; variacao: string | null; foto_url: string | null }[];
 }
 
 const FORNECEDORES = ["XBZ", "SP", "OUTRO"] as const;
@@ -169,7 +170,8 @@ export default function Compras() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("sistema_compras")
-        .select("id,numero,fornecedor,criado_por_nome,criado_em,itens:sistema_compras_itens(id,produto_nome,pedido_numero,cliente,quantidade,ordem,sku,variacao,foto_url)")
+        // "*" pra funcionar antes e depois da migration de impressão/recebimento.
+        .select("*,itens:sistema_compras_itens(*)")
         .order("numero", { ascending: false })
         .limit(100);
       if (error) {
@@ -194,6 +196,19 @@ export default function Compras() {
       .subscribe();
     return () => { clearTimeout(timer); supabase.removeChannel(canal); };
   }, [refetch]);
+
+  // Conferência feita em outra tela/aba aparece na hora.
+  useEffect(() => {
+    if (aba !== "pedidos") return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const recarregar = () => { clearTimeout(timer); timer = setTimeout(() => void refetchCompras(), 600); };
+    const canal = supabase
+      .channel("pedidos-compra-ao-vivo")
+      .on("postgres_changes", { event: "*", schema: "public", table: "sistema_compras" }, recarregar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "sistema_compras_itens" }, recarregar)
+      .subscribe();
+    return () => { clearTimeout(timer); supabase.removeChannel(canal); };
+  }, [aba, refetchCompras]);
 
   const ordenadas = useMemo(
     () => [...linhas].sort((a, b) =>
@@ -409,9 +424,22 @@ export default function Compras() {
         quantidade: Number(i.quantidade), valorUnitario: precos[i.id] ?? 0,
       })),
     });
+    // Marca o pedido de compra como impresso (último PDF baixado).
+    const { error: errImp } = await (supabase as any).from("sistema_compras")
+      .update({ impresso_em: new Date().toISOString(), impresso_por: nomeLogado ?? currentVendedor?.nome ?? null })
+      .eq("id", c.id);
+    if (errImp) toast.error(`PDF gerado, mas não foi possível marcar como impresso. ${errImp.message || ""}`);
+    else void refetchCompras();
   };
 
   const [abertos, setAbertos] = useState<Set<string>>(new Set());
+  const [filtroCompra, setFiltroCompra] = useState<"todos" | StatusCompra>("todos");
+  const contagemStatus = useMemo(() => {
+    const n: Record<StatusCompra, number> = { aguardando: 0, conferindo: 0, ok: 0, faltas: 0 };
+    for (const c of compras) n[statusCompra(c)]++;
+    return n;
+  }, [compras]);
+  const comprasFiltradas = filtroCompra === "todos" ? compras : compras.filter(c => statusCompra(c) === filtroCompra);
 
   return (
     <div className="space-y-4">
@@ -563,13 +591,39 @@ export default function Compras() {
         </>
       ) : (
         <div className="space-y-2">
+          {compras.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              {(["todos", "aguardando", "conferindo", "faltas", "ok"] as const).map(f => {
+                const ativo = filtroCompra === f;
+                const qtd = f === "todos" ? compras.length : contagemStatus[f];
+                const alerta = f === "faltas" && qtd > 0;
+                return (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setFiltroCompra(f)}
+                    className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12.5px] font-semibold transition-colors"
+                    style={ativo
+                      ? { background: alerta ? "#DC2626" : "var(--gw-primary)", borderColor: "transparent", color: "#FFFFFF" }
+                      : { background: "#FFFFFF", borderColor: alerta ? "#FCA5A5" : "var(--gw-border)", color: alerta ? "#B91C1C" : "var(--gw-text-secondary)" }}
+                  >
+                    {f === "todos" ? "Todos" : ROTULO_STATUS[f]}
+                    <span className="rounded-full px-1.5 text-[11px]" style={{ background: ativo ? "rgba(255,255,255,.25)" : "var(--gw-surface-alt)" }}>{qtd}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
           {compras.length === 0 ? (
             <div className="rounded-xl border border-[var(--gw-border)] bg-white py-12 text-center gw-meta">
               Nenhum pedido de compra ainda. Marque produtos como COMPRADO na aba Comprar.
             </div>
           ) : (
             <div className="rounded-xl border border-[var(--gw-border)] bg-white divide-y divide-[var(--gw-border)] overflow-hidden">
-              {compras.map(c => {
+              {comprasFiltradas.length === 0 && (
+                <div className="py-10 text-center gw-meta">Nenhum pedido de compra neste filtro.</div>
+              )}
+              {comprasFiltradas.map(c => {
                 const aberto = abertos.has(c.id);
                 const un = c.itens.reduce((s, i) => s + Number(i.quantidade), 0);
                 return (
@@ -584,6 +638,8 @@ export default function Compras() {
                         <span className="gw-body text-[14px] font-bold">Nº {String(c.numero).padStart(4, "0")}</span>
                         <span className="gw-meta">· {c.fornecedor} · {fmtData(c.criado_em)}</span>
                       </button>
+                      <StatusCompraChip compra={c} />
+                      <ImpressoChip compra={c} />
                       <span className="gw-meta">{c.itens.length} produto(s) · {un} un.</span>
                       <Button size="sm" variant="outline" onClick={() => baixarPdf(c, false)}>
                         <FileText className="h-3.5 w-3.5 mr-1.5" /> PDF sem preço
@@ -595,15 +651,7 @@ export default function Compras() {
                       )}
                     </div>
                     {aberto && (
-                      <div className="px-10 pb-3 space-y-1">
-                        {c.itens.map(i => (
-                          <p key={i.id} className="gw-body text-[13px]">
-                            <b>{Number(i.quantidade)}×</b> {i.produto_nome}
-                            {(i.sku || i.variacao) && <span className="gw-meta"> · {[i.sku, i.variacao].filter(Boolean).join(" · ")}</span>}
-                            {i.pedido_numero && <span className="gw-meta"> · #{i.pedido_numero} {i.cliente ? `· ${i.cliente}` : ""}</span>}
-                          </p>
-                        ))}
-                      </div>
+                      <ConferenciaCompra compra={c} nomeLogado={nomeLogado ?? currentVendedor?.nome ?? null} onMudou={() => void refetchCompras()} />
                     )}
                   </Fragment>
                 );
