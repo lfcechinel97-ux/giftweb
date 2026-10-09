@@ -613,13 +613,14 @@ export default function Pedidos() {
                     status={statusExibido}
                     nivel="pedido"
                     size="sm"
+                    variante="contorno"
                     onSelect={slug => alterarStatusPedido(p, slug)}
                   />
                   {etapasExtras.map(st => (
                     <span
                       key={st.slug}
                       className="inline-flex items-center h-[22px] px-2 rounded-full text-[11px] font-semibold whitespace-nowrap"
-                      style={{ background: st.cor, color: "#FFFFFF" }}
+                      style={{ background: "#FFFFFF", color: "#000000", border: "1px solid #000000" }}
                       title="Parte dos produtos deste pedido está nesta etapa"
                     >
                       {st.nome}
@@ -704,6 +705,7 @@ export default function Pedidos() {
                           status={statusDoItem(item.id)}
                           nivel="item"
                           size="sm"
+                          variante="contorno"
                           onSelect={slug => alterarStatusItem(p.id, item.id, slug)}
                         />
                       </span>
