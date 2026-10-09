@@ -41,10 +41,9 @@ export function taxaCartaoDoMeio(nome: string | null | undefined, taxaCadastrada
   return TAXA_CARTAO_PARCELAS[parcelas] ?? taxaCadastrada;
 }
 
-/** Premissas do empate (sobrescritas por sistema_financeiro_config quando
- *  as colunas existem). */
+/** Custo fixo do mês — já inclui tráfego/aquisição (sobrescrito por
+ *  sistema_financeiro_config.custo_fixo_mensal quando a coluna existe). */
 export const CUSTO_FIXO_MENSAL_PADRAO = 50000;
-export const CPA_PADRAO = 200;
 /** Margem de contribuição usada quando ainda não há pedido com custo no mês. */
 export const MARGEM_PADRAO = 0.35;
 

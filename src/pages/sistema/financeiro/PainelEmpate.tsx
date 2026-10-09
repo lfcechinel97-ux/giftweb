@@ -34,7 +34,6 @@ export interface LinhaPainel {
   bruto: number;
   total: number;
   taxa: number;
-  cpa: number;
   lucroLiquido: number;
   temCusto: boolean;
 }
@@ -51,11 +50,10 @@ interface Props {
   orcamentos: string[];
   comissoes: Comissionado[];
   custoFixo: number;
-  cpa: number;
-  onSalvarPremissas: (custoFixo: number, cpa: number) => Promise<void> | void;
+  onSalvarPremissas: (custoFixo: number) => Promise<void> | void;
 }
 
-export default function PainelEmpate({ ano, mes, linhas, historico, orcamentos, comissoes, custoFixo, cpa, onSalvarPremissas }: Props) {
+export default function PainelEmpate({ ano, mes, linhas, historico, orcamentos, comissoes, custoFixo, onSalvarPremissas }: Props) {
   const agora = new Date();
   const mesAtual = agora.getFullYear() === ano && agora.getMonth() === mes;
   const mesFuturo = new Date(ano, mes, 1) > agora;
@@ -74,9 +72,14 @@ export default function PainelEmpate({ ano, mes, linhas, historico, orcamentos, 
     const lucroComCusto = comCusto.reduce((s, l) => s + l.lucroLiquido, 0);
     const margemReal = brutoComCusto > 0 ? lucroComCusto / brutoComCusto : null;
     const margem = margemReal != null && margemReal > 0.01 ? margemReal : MARGEM_PADRAO;
-    const margemAntesCpa = brutoComCusto > 0
-      ? (lucroComCusto + comCusto.reduce((s, l) => s + l.cpa, 0)) / brutoComCusto
-      : null;
+    // Margem dos pedidos pequenos x grandes (só os que têm custo).
+    const faixaTicket = (f: (l: LinhaPainel) => boolean) => {
+      const g = comCusto.filter(f);
+      const b = g.reduce((s, l) => s + l.bruto, 0);
+      return g.length ? { n: g.length, margem: g.reduce((s, l) => s + l.lucroLiquido, 0) / b } : null;
+    };
+    const pequenos = faixaTicket(l => l.bruto < 1000);
+    const grandes = faixaTicket(l => l.bruto >= 1000);
     // Pedido sem custo lançado entra com a margem média dos que têm.
     const contribuicao = lucroComCusto + linhas.filter(l => !(l.temCusto && l.bruto > 0)).reduce((s, l) => s + l.bruto * margem, 0);
     const empate = custoFixo / margem;
@@ -134,7 +137,7 @@ export default function PainelEmpate({ ano, mes, linhas, historico, orcamentos, 
     const piorSemana = [...mediasSemana].sort((a, b) => a.media - b.media)[0];
 
     return {
-      bruto, margem, margemReal, margemAntesCpa, contribuicao, empate, falta, resultado, mediaDiaUtil, projecao,
+      bruto, margem, margemReal, pequenos, grandes, contribuicao, empate, falta, resultado, mediaDiaUtil, projecao,
       necessarioDia, taxas, prejuizo, semCusto, brutoPassadoAteHoje, brutoPassado, passado, passadoAteHoje,
       orcMes, orcPassadoAteHoje, conversao, conversaoPassado, diaEmpate, melhorSemana, piorSemana,
       ticket: linhas.length ? bruto / linhas.length : 0,
@@ -218,12 +221,11 @@ export default function PainelEmpate({ ano, mes, linhas, historico, orcamentos, 
           : `${txt}.`,
       });
     }
-    if (c.margemAntesCpa != null && c.margemAntesCpa > 0) {
-      const ticketMin = cpa / c.margemAntesCpa;
-      const abaixo = linhas.filter(l => l.bruto > 0 && l.bruto < ticketMin).length;
+    if (c.pequenos && c.grandes) {
+      const melhor = c.grandes.margem >= c.pequenos.margem;
       out.push({
-        icone: Target, cor: COR.violeta, titulo: "Ticket mínimo que paga o CPA",
-        texto: `Com margem de ${pctTxt(c.margemAntesCpa)} antes do CPA, pedido abaixo de ${brl0(ticketMin)} não paga os ${brl0(cpa)} de aquisição.${abaixo ? ` Este mês ${abaixo} pedido(s) ficaram abaixo — tente kits ou quantidade mínima maior.` : ""}`,
+        icone: Target, cor: COR.violeta, titulo: "Margem por tamanho de pedido",
+        texto: `Pedidos acima de R$ 1.000 deram margem de ${pctTxt(c.grandes.margem)} (${c.grandes.n}) e os menores ${pctTxt(c.pequenos.margem)} (${c.pequenos.n}). ${melhor ? "Kits e quantidade mínima maior puxam a margem pra cima." : "Os pedidos pequenos estão rendendo mais — confira o preço dos grandes."}`,
       });
     }
     if (c.melhorSemana && c.melhorSemana.media > 0) {
@@ -251,7 +253,7 @@ export default function PainelEmpate({ ano, mes, linhas, historico, orcamentos, 
     if (c.prejuizo > 0) {
       out.push({
         icone: AlertTriangle, cor: COR.rosa, titulo: "Pedidos no prejuízo",
-        texto: `${c.prejuizo} pedido(s) deram lucro negativo depois de comissão e CPA. Confira preço e frete na tabela abaixo (lucro em vermelho).`,
+        texto: `${c.prejuizo} pedido(s) deram lucro negativo depois de comissão. Confira preço e frete na tabela abaixo (lucro em vermelho).`,
       });
     }
     if (c.semCusto > 0) {
@@ -261,12 +263,11 @@ export default function PainelEmpate({ ano, mes, linhas, historico, orcamentos, 
       });
     }
     return out;
-  }, [c, linhas, cpa, comissoes, mesAtual, mesFuturo, dias.restantes, ultimoDiaVisto]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [c, linhas, comissoes, mesAtual, mesFuturo, dias.restantes, ultimoDiaVisto]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── Premissas editáveis ────────────────────────────────────────── */
   const [editando, setEditando] = useState(false);
   const [fixoTxt, setFixoTxt] = useState("");
-  const [cpaTxt, setCpaTxt] = useState("");
   const aNum = (t: string) => Number(t.replace(/\./g, "").replace(",", ".")) || 0;
 
   const progresso = c.empate > 0 ? Math.min(1, c.bruto / c.empate) : 0;
@@ -343,10 +344,8 @@ export default function PainelEmpate({ ano, mes, linhas, historico, orcamentos, 
             <>
               <span>Custo fixo/mês</span>
               <Input value={fixoTxt} onChange={e => setFixoTxt(e.target.value)} inputMode="decimal" className="h-7 w-[110px] bg-white text-black text-right" />
-              <span>CPA por pedido</span>
-              <Input value={cpaTxt} onChange={e => setCpaTxt(e.target.value)} inputMode="decimal" className="h-7 w-[80px] bg-white text-black text-right" />
               <button type="button" className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 font-semibold text-[#1E3A8A]"
-                onClick={async () => { await onSalvarPremissas(aNum(fixoTxt), aNum(cpaTxt)); setEditando(false); }}>
+                onClick={async () => { await onSalvarPremissas(aNum(fixoTxt)); setEditando(false); }}>
                 <Check className="h-3.5 w-3.5" /> Salvar
               </button>
               <button type="button" className="inline-flex items-center gap-1 rounded-md px-2 py-1 hover:bg-white/15" onClick={() => setEditando(false)}>
@@ -355,9 +354,9 @@ export default function PainelEmpate({ ano, mes, linhas, historico, orcamentos, 
             </>
           ) : (
             <>
-              <span>Premissas: custo fixo {brl0(custoFixo)}/mês (+ imposto de cada venda) · CPA {brl0(cpa)} por pedido · margem {c.margemReal != null ? "real dos pedidos com custo" : `padrão de ${pctTxt(MARGEM_PADRAO)} (ainda sem custo lançado)`}</span>
+              <span>Premissas: custo fixo {brl0(custoFixo)}/mês (com tráfego; + imposto de cada venda) · margem {c.margemReal != null ? "real dos pedidos com custo" : `padrão de ${pctTxt(MARGEM_PADRAO)} (ainda sem custo lançado)`}</span>
               <button type="button" className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 hover:bg-white/15"
-                onClick={() => { setFixoTxt(String(custoFixo).replace(".", ",")); setCpaTxt(String(cpa).replace(".", ",")); setEditando(true); }}>
+                onClick={() => { setFixoTxt(String(custoFixo).replace(".", ",")); setEditando(true); }}>
                 <Pencil className="h-3 w-3" /> ajustar
               </button>
             </>
@@ -371,7 +370,7 @@ export default function PainelEmpate({ ano, mes, linhas, historico, orcamentos, 
         <Kpi icone={ShoppingCart} cor={COR.violeta} rotulo="Pedidos" valor={String(linhas.length)} delta={deltaPct(linhas.length, c.passadoAteHoje.length)} />
         <Kpi icone={Receipt} cor={COR.ciano} rotulo="Ticket médio" valor={curto(c.ticket)} titulo={brl(c.ticket)} delta={deltaPct(c.ticket, c.ticketPassado)} />
         <Kpi icone={FileText} cor={COR.laranja} rotulo="Orçamentos" valor={String(c.orcMes.length)} sub={c.conversao != null ? `${pctTxt(c.conversao)} viram pedido` : undefined} delta={deltaPct(c.orcMes.length, c.orcPassadoAteHoje.length)} />
-        <Kpi icone={Percent} cor={COR.rosa} rotulo="Margem de contribuição" valor={pctTxt(c.margem)} sub="após custos, imposto, cartão, comissão e CPA" />
+        <Kpi icone={Percent} cor={COR.rosa} rotulo="Margem de contribuição" valor={pctTxt(c.margem)} sub="após custos, imposto, cartão, frete e comissão" />
         <Kpi icone={Wallet} cor={c.resultado >= 0 ? COR.verde : COR.rosa} rotulo="Resultado do mês" valor={curto(c.resultado)} titulo={brl(c.resultado)} sub={`contribuição ${curto(c.contribuicao)} − fixo`} />
       </div>
       <p className="gw-meta -mt-2 text-[11px]">▲▼ comparando com {nomeMes(mes - 1)} até o mesmo dia ({ultimoDiaVisto}).</p>
