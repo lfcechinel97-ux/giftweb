@@ -7,27 +7,23 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useSistema } from "@/contexts/SistemaContext";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
+import PainelEmpate from "./financeiro/PainelEmpate";
+import { CPA_PADRAO, CUSTO_FIXO_MENSAL_PADRAO, faixaDe, taxaCartaoDoMeio } from "@/lib/financeiroRegras";
 
 /* Dashboard por pedido (admin). Todo pedido lançado entra na hora.
    - Bruto (PV) = valor dos produtos, sem frete.
    - Imposto = % da config sobre o total do pedido.
    - Tx cartão = % da forma de pagamento do pedido (Cartão 1x…12x) sobre o
-     total; editável por pedido.
+     total; editável por pedido. Cartão parcelado "sem juros" cadastrado com
+     0% usa a tabela da maquininha pelo nº de parcelas (a empresa absorve).
    - Frete: CIF é custo da empresa e desconta do lucro; FOB é pago pelo
      cliente e só aparece para conferência.
    - Custo do produto e personalização são POR UNIDADE de cada produto.
    - Comissão: por vendedor no mês = soma(bruto − imposto − tx cartão) ×
-     faixa escalonada, aplicada ao total (52 mil => 4% de tudo). */
-
-const FAIXAS_COMISSAO: { ate: number; pct: number }[] = [
-  { ate: 20000, pct: 0 },
-  { ate: 30000, pct: 2 },
-  { ate: 40000, pct: 3 },
-  { ate: 50000, pct: 3.5 },
-  { ate: 70000, pct: 4 },
-  { ate: Infinity, pct: 5 },
-];
-const faixaDe = (base: number) => FAIXAS_COMISSAO.find(f => base <= f.ate)!;
+     faixa escalonada, aplicada ao total (52 mil => 4% de tudo). Cada pedido
+     desconta a comissão na faixa em que o vendedor está no mês.
+   - CPA (custo de aquisição) fixo por pedido; lucro líquido = lucro − comissão
+     − CPA. Custo fixo do mês e CPA vêm de sistema_financeiro_config. */
 
 const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const pct = (n: number) => `${n.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`;
@@ -81,7 +77,7 @@ export default function DashboardPedidos() {
   const fim = new Date(ano, mes + 1, 1).toISOString();
   const chave = ["sistema", "dash-pedidos", ano, mes] as const;
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, dataUpdatedAt } = useQuery({
     queryKey: chave,
     staleTime: 15 * 1000,
     queryFn: async () => {
@@ -98,13 +94,20 @@ export default function DashboardPedidos() {
       const ids = pedidos.map(p => p.id);
       const numeros = pedidos.map(p => String(p.numero));
 
-      const [fin, meios, cfg, custos, prod, itemFin] = await Promise.all([
+      const inicioHist = new Date(ano, mes - 3, 1).toISOString();
+      const inicioPassado = new Date(ano, mes - 1, 1).toISOString();
+      const [fin, meios, cfg, custos, prod, itemFin, hist, orcs] = await Promise.all([
         ids.length ? (supabase as any).from("sistema_pedido_financeiro").select("*").in("pedido_id", ids) : { data: [] },
         (supabase as any).from("sistema_meios_pagamento").select("id,nome,taxa_pct"),
-        (supabase as any).from("sistema_financeiro_config").select("imposto_pct").limit(1),
+        (supabase as any).from("sistema_financeiro_config").select("*").limit(1),
         numeros.length ? (supabase as any).from("vw_custo_compras_por_item").select("producao_item_id,custo_unitario_medio").in("pedido_numero", numeros) : { data: [] },
         ids.length ? supabase.from("sistema_producao_itens").select("id,pedido_id,item_id").in("pedido_id", ids) : { data: [] },
         ids.length ? (supabase as any).from("sistema_item_financeiro").select("*").in("pedido_id", ids) : { data: [] },
+        // Pedidos dos 3 meses anteriores: comparativo e dicas.
+        supabase.from("sistema_pedidos").select("created_at,subtotal")
+          .neq("status", "cancelado").gte("created_at", inicioHist).lt("created_at", inicio).limit(5000),
+        supabase.from("sistema_orcamentos").select("created_at")
+          .gte("created_at", inicioPassado).lt("created_at", fim).limit(5000),
       ]);
 
       // custo unitário real de compra por (pedido, item do pedido)
@@ -124,6 +127,12 @@ export default function DashboardPedidos() {
         fin: Object.fromEntries((fin.data ?? []).map((f: Fin) => [f.pedido_id, f])) as Record<string, Fin>,
         meios: Object.fromEntries((meios.data ?? []).map((m: any) => [m.id, { nome: m.nome as string, taxa: Number(m.taxa_pct) || 0 }])) as Record<string, { nome: string; taxa: number }>,
         imposto: Number(cfg.data?.[0]?.imposto_pct) || 0,
+        // Colunas novas (migration 20261009120000); sem elas, valem os padrões.
+        custoFixo: Number(cfg.data?.[0]?.custo_fixo_mensal) || CUSTO_FIXO_MENSAL_PADRAO,
+        cpa: cfg.data?.[0]?.cpa_pedido != null ? Number(cfg.data[0].cpa_pedido) : CPA_PADRAO,
+        historico: ((hist.data ?? []) as { created_at: string; subtotal: number | null }[])
+          .map(h => ({ created_at: h.created_at, bruto: Number(h.subtotal) || 0 })),
+        orcamentos: ((orcs.data ?? []) as { created_at: string }[]).map(o => o.created_at),
         custoCompras,
         itemFin: itemFinMap,
       };
@@ -143,6 +152,8 @@ export default function DashboardPedidos() {
       .on("postgres_changes", { event: "*", schema: "public", table: "sistema_pedido_financeiro" }, recarregar)
       .on("postgres_changes", { event: "*", schema: "public", table: "sistema_item_financeiro" }, recarregar)
       .on("postgres_changes", { event: "*", schema: "public", table: "sistema_compras_itens" }, recarregar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "sistema_compras_precos" }, recarregar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "sistema_orcamentos" }, recarregar)
       .subscribe();
     return () => { clearTimeout(timer); supabase.removeChannel(canal); };
   }, [qc]);
@@ -154,7 +165,7 @@ export default function DashboardPedidos() {
       const bruto = Number(p.subtotal) || 0;
       const total = Number(p.total) || 0;
       const meio = p.pagamento_id ? data.meios[p.pagamento_id] : undefined;
-      const taxaPct = f?.taxa_cartao_pct ?? meio?.taxa ?? 0;
+      const taxaPct = f?.taxa_cartao_pct ?? (meio ? taxaCartaoDoMeio(meio.nome, meio.taxa) : 0);
       const taxa = total * taxaPct / 100;
       const imposto = total * data.imposto / 100;
 
@@ -200,10 +211,10 @@ export default function DashboardPedidos() {
   }, [linhas]);
 
   const comissoes = useMemo(() => {
-    const por = new Map<string, { nome: string; base: number; pedidos: number }>();
+    const por = new Map<string, { id: string; nome: string; base: number; pedidos: number }>();
     for (const l of linhas) {
       const k = l.p.vendedor_id ?? "—";
-      const acc = por.get(k) ?? { nome: l.vendedorNome, base: 0, pedidos: 0 };
+      const acc = por.get(k) ?? { id: k, nome: l.vendedorNome, base: 0, pedidos: 0 };
       acc.base += l.baseComissao; acc.pedidos += 1;
       por.set(k, acc);
     }
@@ -212,7 +223,35 @@ export default function DashboardPedidos() {
       .sort((a, b) => b.base - a.base);
   }, [linhas]);
   const totalComissao = comissoes.reduce((s, c) => s + c.valor, 0);
-  const lucroFinal = totais.lucro - totalComissao;
+  const cpa = data?.cpa ?? CPA_PADRAO;
+  const custoFixo = data?.custoFixo ?? CUSTO_FIXO_MENSAL_PADRAO;
+
+  /* Comissão do pedido = base dele × faixa do vendedor no mês; CPA por pedido. */
+  const linhasLiq = useMemo(() => {
+    const pctPor = new Map(comissoes.map(c => [c.id, c.pct]));
+    return linhas.map(l => {
+      const comissaoPct = pctPor.get(l.p.vendedor_id ?? "—") ?? 0;
+      const comissao = l.baseComissao * comissaoPct / 100;
+      const cpaPedido = l.bruto > 0 ? cpa : 0;
+      const lucroLiquido = l.lucro - comissao - cpaPedido;
+      return {
+        ...l, comissaoPct, comissao, cpa: cpaPedido, lucroLiquido,
+        margem: l.bruto > 0 ? lucroLiquido / l.bruto : 0,
+        temCusto: l.custoProduto > 0,
+        created_at: l.p.created_at,
+      };
+    });
+  }, [linhas, comissoes, cpa]);
+  const totalCpa = linhasLiq.reduce((s, l) => s + l.cpa, 0);
+  const lucroFinal = totais.lucro - totalComissao - totalCpa;
+
+  const salvarPremissas = async (novoFixo: number, novoCpa: number) => {
+    const { error } = await (supabase as any).from("sistema_financeiro_config")
+      .update({ custo_fixo_mensal: novoFixo, cpa_pedido: novoCpa }).eq("id", true);
+    if (error) { toast.error(`Não foi possível salvar as premissas. ${error.message || ""}`); return; }
+    toast.success("Premissas atualizadas.");
+    qc.invalidateQueries({ queryKey: ["sistema", "dash-pedidos"] });
+  };
 
   const salvar = async (pedidoId: string, campo: Campo, texto: string, atual: Fin | undefined) => {
     const valor = texto.trim() === "" ? null : aNum(texto);
@@ -272,11 +311,16 @@ export default function DashboardPedidos() {
       <header className="flex flex-wrap items-center gap-3">
         <div className="mr-auto">
           <h1 className="gw-display text-[20px]">Dashboard</h1>
-          <p className="gw-meta">
+          <p className="gw-meta flex flex-wrap items-center gap-x-2">
             Pedidos lançados no mês
-            <span className="inline-flex items-center gap-1 ml-2" style={{ color: "var(--gw-success)" }}>
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2 py-[1px] text-[11px] font-bold" style={{ color: "#047857", background: "#05966918" }}>
+              <span className="relative inline-flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+              </span>
               <Radio className="h-3 w-3" /> ao vivo
             </span>
+            {dataUpdatedAt > 0 && <span className="text-[11px]">atualizado às {new Date(dataUpdatedAt).toLocaleTimeString("pt-BR")}</span>}
           </p>
         </div>
         <div className="flex items-center gap-1">
@@ -290,6 +334,18 @@ export default function DashboardPedidos() {
         <div className="flex items-center gap-2 py-12 justify-center gw-meta"><Loader2 className="h-4 w-4 animate-spin" /> Carregando…</div>
       ) : (
         <>
+          <PainelEmpate
+            ano={ano}
+            mes={mes}
+            linhas={linhasLiq}
+            historico={data.historico}
+            orcamentos={data.orcamentos}
+            comissoes={comissoes}
+            custoFixo={custoFixo}
+            cpa={cpa}
+            onSalvarPremissas={salvarPremissas}
+          />
+
           <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
             <div className="rounded-xl border p-5 space-y-4" style={{ background: "var(--gw-surface)", borderColor: "var(--gw-border)" }}>
               <div>
@@ -317,15 +373,24 @@ export default function DashboardPedidos() {
                 ["Comissões", totalComissao],
                 ["Custo dos produtos + personalização", totais.custos],
                 ["Frete (CIF)", totais.frete],
+                [`CPA (${brl(cpa)} por pedido)`, totalCpa],
               ] as [string, number][]).map(([r, v]) => (
                 <div key={r} className="flex items-center justify-between gw-body text-[13.5px]">
                   <span>{r}</span><span className="gw-num" style={{ color: "var(--gw-danger)" }}>− {brl(v)}</span>
                 </div>
               ))}
               <div className="border-t pt-2 flex items-center justify-between" style={{ borderColor: "var(--gw-border)" }}>
-                <span className="gw-body font-bold">Lucro estimado</span>
+                <span className="gw-body font-bold">Lucro das vendas</span>
                 <span className="gw-num text-[20px]" style={{ color: lucroFinal < 0 ? "var(--gw-danger)" : "var(--gw-success)" }}>{brl(lucroFinal)}</span>
               </div>
+              <div className="flex items-center justify-between gw-body text-[13.5px]">
+                <span>Custo fixo do mês</span><span className="gw-num" style={{ color: "var(--gw-danger)" }}>− {brl(custoFixo)}</span>
+              </div>
+              <div className="border-t pt-2 flex items-center justify-between" style={{ borderColor: "var(--gw-border)" }}>
+                <span className="gw-body font-bold">Resultado do mês</span>
+                <span className="gw-num text-[20px]" style={{ color: lucroFinal - custoFixo < 0 ? "var(--gw-danger)" : "var(--gw-success)" }}>{brl(lucroFinal - custoFixo)}</span>
+              </div>
+              <p className="gw-meta text-[11px]">Pedido sem custo lançado entra com custo zero aqui; o painel do topo estima pela margem média.</p>
             </div>
           </div>
 
@@ -378,13 +443,17 @@ export default function DashboardPedidos() {
                     <th className="px-3 py-2 text-right">Tx cartão</th>
                     <th className="px-3 py-2 text-right">Frete</th>
                     <th className="px-3 py-2 text-right">Lucro</th>
+                    <th className="px-3 py-2 text-right">Comissão</th>
+                    <th className="px-3 py-2 text-right">CPA</th>
+                    <th className="px-3 py-2 text-right">Lucro líq.</th>
+                    <th className="px-3 py-2 text-right">Margem</th>
                     <th className="px-3 py-2 text-right">Recebido</th>
                     <th className="px-3 py-2 text-right">A receber</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y" style={{ borderColor: "var(--gw-border)" }}>
-                  {linhas.length === 0 && <tr><td colSpan={12} className="px-4 py-8 text-center gw-meta">Nenhum pedido neste mês.</td></tr>}
-                  {linhas.map(l => {
+                  {linhasLiq.length === 0 && <tr><td colSpan={16} className="px-4 py-8 text-center gw-meta">Nenhum pedido neste mês.</td></tr>}
+                  {linhasLiq.map(l => {
                     const aberto = abertos.has(l.p.id);
                     return (
                       <Fragment key={l.p.id}>
@@ -412,7 +481,23 @@ export default function DashboardPedidos() {
                               <span className="gw-meta text-[11.5px]" title="FOB: o cliente paga o frete. Não entra no lucro, só para conferência.">FOB {brl(l.fob)}</span>
                             ) : inputNumero(`${l.p.id}:frete`, l.frete, 2, t => void salvar(l.p.id, "frete", t, l.f))}
                           </td>
-                          <td className="px-3 py-1.5 text-right font-bold" style={{ color: l.lucro < 0 ? "var(--gw-danger)" : "var(--gw-success)" }}>{brl(l.lucro)}</td>
+                          <td className="px-3 py-1.5 text-right" style={{ color: l.lucro < 0 ? "var(--gw-danger)" : undefined }}>{brl(l.lucro)}</td>
+                          <td className="px-3 py-1.5 text-right" title={`Faixa do vendedor no mês: ${pct(l.comissaoPct)}`}>{brl(l.comissao)}</td>
+                          <td className="px-3 py-1.5 text-right">{brl(l.cpa)}</td>
+                          <td className="px-3 py-1.5 text-right font-bold" style={{ color: l.lucroLiquido < 0 ? "var(--gw-danger)" : "var(--gw-success)" }}>{brl(l.lucroLiquido)}</td>
+                          <td className="px-3 py-1.5 text-right">
+                            {l.bruto > 0 ? (
+                              <span
+                                className="inline-block rounded-full px-2 py-[1px] text-[11px] font-bold"
+                                style={l.margem < 0 ? { background: "#DB277720", color: "#BE185D" }
+                                  : l.margem < 0.15 ? { background: "#D9770620", color: "#B45309" }
+                                  : { background: "#05966920", color: "#047857" }}
+                                title={l.temCusto ? undefined : "Sem custo de produto lançado — margem superestimada"}
+                              >
+                                {(l.margem * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%{!l.temCusto && " *"}
+                              </span>
+                            ) : "—"}
+                          </td>
                           <td className="px-3 py-1.5 text-right" onClick={e => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1">
                               {inputNumero(`${l.p.id}:recebido`, l.recebido, 2, t => void salvar(l.p.id, "valor_recebido", t, l.f))}
@@ -426,7 +511,7 @@ export default function DashboardPedidos() {
                         </tr>
                         {aberto && (
                           <tr>
-                            <td colSpan={12} className="px-3 pb-3 pt-0" style={{ background: "var(--gw-surface-alt)" }}>
+                            <td colSpan={16} className="px-3 pb-3 pt-0" style={{ background: "var(--gw-surface-alt)" }}>
                               <table className="w-full text-[12px] mt-2">
                                 <thead className="text-[10.5px] uppercase" style={{ color: "var(--gw-text-secondary)" }}>
                                   <tr>
