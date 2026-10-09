@@ -22,11 +22,14 @@ interface StatusBadgeProps {
   onSelect?: (slug: string) => void;
   nivel?: "pedido" | "item";
   size?: "sm" | "md";
+  /** "contorno": fundo branco, borda e letra pretas — pra telas em que a
+      cor sólida chama atenção demais (lista de Pedidos). */
+  variante?: "solido" | "contorno";
   className?: string;
 }
 
 export function StatusBadge({
-  status, onSelect, size = "md", className,
+  status, onSelect, size = "md", variante = "solido", className,
 }: StatusBadgeProps) {
   /* Mesmas etapas (nome e cor) das colunas do PCP: mudou lá, muda aqui. */
   const info = etapaPcpDoStatus(status);
@@ -39,11 +42,9 @@ export function StatusBadge({
     </>
   );
 
-  const estilo = {
-    background: info.cor,
-    color: "#FFFFFF",
-    fontWeight: 700,
-  } as const;
+  const estilo = variante === "contorno"
+    ? { background: "#FFFFFF", color: "#000000", border: "1px solid #000000", fontWeight: 600 } as const
+    : { background: info.cor, color: "#FFFFFF", fontWeight: 700 } as const;
 
   const classes = cn(
     "inline-flex items-center gap-1.5 rounded-full whitespace-nowrap max-w-full",
