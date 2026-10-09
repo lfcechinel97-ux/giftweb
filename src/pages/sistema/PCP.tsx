@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { sizedImage } from "@/lib/imageSize";
 import { uploadAnexoPcp, uploadAnexoGenerico, uploadArquivoPedido, MockupUploadError } from "@/lib/uploadMockup";
 import { cn } from "@/lib/utils";
+import { dataCurta as dataCurtaSemFuso } from "@/lib/diasUteis";
 import { Money } from "@/components/sistema/ui/Money";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 import PainelEnvioPedido from "./PainelEnvioPedido";
@@ -216,10 +217,9 @@ const classificarProducao = (r: Pick<PcpRow, "local_producao" | "tags">): "galpa
     trata "a etapa de teste" ou "a etapa de produção" precisa considerar as
     duas, já que Galpão e Terceirizada são só a mesma etapa em colunas
     separadas. */
-/* Ordenação por coluna do PCP. "urgente" usa a mesma data que a tela de
-   Pedidos já usa pra marcar atraso (pedido_data_despacho, vinda de
-   vw_pcp — despacho combinado, ou pedido + prazo padrão quando não
-   preenchido). Itens sem data vão pro final, em qualquer modo. */
+/* Ordenação por coluna do PCP. "urgente" usa a data "Produzir até" do
+   pedido (pedido_data_despacho, vinda de vw_pcp — o campo do pedido grava
+   a mesma data em data_despachar_ate; sem ela, pedido + prazo padrão). Itens sem data vão pro final, em qualquer modo. */
 type OrdemColuna = "antigo" | "etapa" | "urgente";
 const ORDEM_COLUNA_ROTULO: Record<OrdemColuna, string> = {
   antigo: "Pedido mais antigo",
@@ -720,6 +720,7 @@ function PcpCard({
   onInserirMedidas: (row: PcpRow) => void;
 }) {
   const foto = row.mockup_url || row.imagem_catalogo_url;
+  const produzirAte = dataCurtaSemFuso(row.pedido_data_despacho);
   const cor = corDoPedido(row);
   const tempo = tempoNaEtapaCurto(row.horas_na_etapa);
   const dataCriacao = dataCurta(row.item_criado_em);
@@ -852,6 +853,17 @@ function PcpCard({
               </div>
             )}
             <VendedorIcone nome={row.pedido_vendedor_nome} className="absolute right-1.5 top-1.5" />
+            {/* Data limite de produção do pedido — a produção se guia por ela
+                (mesma data que o "Mais urgente" usa pra ordenar). */}
+            {produzirAte && (
+              <span
+                className="absolute left-1/2 top-1.5 -translate-x-1/2 flex flex-col items-center leading-none rounded-[5px] px-[7px] py-[3px] bg-white text-black border border-[var(--gw-border)]"
+                title="Data limite de produção"
+              >
+                <span className="text-[8px] font-semibold tracking-wide">PRODUZIR ATÉ</span>
+                <span className="text-[13px] font-extrabold gw-num mt-[2px]">{produzirAte}</span>
+              </span>
+            )}
             {(chat?.nao_lidas || mencoes.length > 0) && (
               <div className="absolute left-1.5 top-1.5 flex flex-col items-start gap-1">
                 {!!chat?.nao_lidas && (
@@ -907,6 +919,9 @@ function PcpCard({
             </span>
             {tecnica && (
               <span className="text-[11px] text-[var(--gw-text-secondary)] truncate">{tecnica}</span>
+            )}
+            {produzirAte && (
+              <span className="ml-auto shrink-0 text-[10px] font-bold text-black">Produzir até {produzirAte}</span>
             )}
           </div>
         )}

@@ -137,11 +137,11 @@ export async function gerarOrdemProducaoPDF(pedido: Pedido, sis: Sis): Promise<v
     const celulas: { rotulo: string; valor: string; destaque?: boolean; peso: number }[] = compacto
       ? [
           { rotulo: "PEDIDO Nº", valor: pedido.numero, peso: 1, destaque: true },
-          { rotulo: "DATA PARA DESPACHAR", valor: dataDespacho, peso: 1.1, destaque: true },
+          { rotulo: "PRODUZIR ATÉ", valor: dataDespacho, peso: 1.1, destaque: true },
           { rotulo: "CLIENTE", valor: clienteNome, peso: 1.6 },
         ]
       : [
-          { rotulo: "DATA PARA DESPACHAR", valor: dataDespacho, peso: 1.1, destaque: true },
+          { rotulo: "PRODUZIR ATÉ", valor: dataDespacho, peso: 1.1, destaque: true },
           { rotulo: "CLIENTE", valor: clienteNome, peso: 1.9 },
           { rotulo: "DATA DO PEDIDO", valor: dataPedido, peso: 1 },
         ];
