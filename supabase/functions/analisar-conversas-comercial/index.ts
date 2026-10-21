@@ -143,7 +143,8 @@ function montarTranscricao(mensagens: MensagemDC[]): { texto: string; total: num
   let atendente: string | null = null;
   const linhas = ordenadas.map((m) => {
     if (!atendente) {
-      const nome = m.attendants?.find((a) => a?.name)?.name;
+      const nome = (m as { attendant?: { name?: string } }).attendant?.name
+        ?? m.attendants?.find((a) => a?.name)?.name;
       if (nome) atendente = nome;
     }
     const quem = m.received ? "Cliente" : "Atendente";
@@ -159,8 +160,11 @@ function montarTranscricao(mensagens: MensagemDC[]): { texto: string; total: num
 
 function extrairLista(dados: unknown): unknown[] {
   if (Array.isArray(dados)) return dados;
-  if (dados && typeof dados === "object" && Array.isArray((dados as { data?: unknown }).data)) {
-    return (dados as { data: unknown[] }).data;
+  if (dados && typeof dados === "object") {
+    const obj = dados as Record<string, unknown>;
+    for (const chave of ["data", "messages"]) {
+      if (Array.isArray(obj[chave])) return obj[chave] as unknown[];
+    }
   }
   return [];
 }
