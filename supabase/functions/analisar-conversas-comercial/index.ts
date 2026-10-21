@@ -78,13 +78,34 @@ const SCHEMA_ANALISE = {
     etapa_funil: { type: ["string", "null"], description: "Etapa atual do funil, em poucas palavras" },
     resumo: { type: ["string", "null"], description: "Resumo objetivo em 2 a 4 frases" },
     pontos_fortes: { type: ["array", "null"], items: { type: "string" } },
-    melhorias: { type: ["array", "null"], items: { type: "string" } },
+    melhorias: {
+      type: ["array", "null"],
+      items: {
+        type: "object",
+        properties: {
+          titulo: { type: "string" },
+          detalhe: { type: "string", description: "O que aconteceu (com trecho) e o que fazer diferente" },
+          prioridade: { type: "string", enum: ["alta", "media", "baixa"] },
+        },
+        required: ["titulo", "detalhe", "prioridade"],
+        additionalProperties: false,
+      },
+    },
     objecoes: {
       type: ["array", "null"],
       items: {
         type: "object",
-        properties: { objecao: { type: ["string", "null"] }, como_quebrar: { type: ["string", "null"] } },
-        required: ["objecao", "como_quebrar"],
+        properties: {
+          categoria: {
+            type: "string",
+            enum: ["preco", "prazo", "quantidade_minima", "frete", "qualidade", "confianca", "concorrente", "aprovacao_interna", "vou_pensar", "sumiu", "outra"],
+          },
+          trecho_cliente: { type: "string" },
+          como_vendedor_lidou: { type: "string" },
+          foi_contornada: { type: "boolean" },
+          resposta_sugerida: { type: "string", description: "Mensagem pronta para WhatsApp que quebra a objeção" },
+        },
+        required: ["categoria", "trecho_cliente", "como_vendedor_lidou", "foi_contornada", "resposta_sugerida"],
         additionalProperties: false,
       },
     },
@@ -98,6 +119,8 @@ const SCHEMA_ANALISE = {
 const PROMPT_SISTEMA = `Você é um auditor de atendimento comercial B2B da Gift Web Brindes (brindes personalizados: canecas, garrafas, camisetas, sacolas, kit corporativo etc.). Analise a transcrição de uma conversa de WhatsApp entre um cliente e um atendente/vendedor da equipe.
 
 Avalie o atendimento do ponto de vista comercial: o atendente qualificou o cliente, apresentou bem os produtos, lidou com preço e prazo, conduziu para o pedido/orçamento? As mensagens "Cliente:" vêm do cliente e "Atendente:" do vendedor.
+
+Seja específico e cite trechos reais. Para cada objeção do cliente (preço, prazo, quantidade mínima, frete, qualidade, "vou pensar", concorrente, aprovação interna, cliente que sumiu etc.), diga como o atendente lidou, se ela foi contornada, e escreva uma resposta curta e natural para WhatsApp que ele poderia ter usado para quebrá-la. Nas melhorias, priorize o que mais aumenta a chance de fechar: tempo de resposta, perguntas de qualificação (quantidade, data do evento, logo, orçamento), condução para o próximo passo, urgência pelo prazo de produção, ancoragem de valor e follow-up.
 
 Não invente fatos que não estejam na transcrição. Se a transcrição for muito curta ou sem conteúdo comercial, use nota baixa e resultado "indefinido".`;
 
@@ -152,7 +175,8 @@ function montarTranscricao(mensagens: MensagemDC[]): { texto: string; total: num
     return `${quem}: ${texto}`;
   });
   let texto = linhas.join("\n");
-  if (texto.length > MAX_CARACTERES_TRANSCRICAO) texto = texto.slice(0, MAX_CARACTERES_TRANSCRICAO);
+  // Conversa longa: a negociação fecha (ou morre) no final -- guarda o final.
+  if (texto.length > MAX_CARACTERES_TRANSCRICAO) texto = texto.slice(-MAX_CARACTERES_TRANSCRICAO);
   return { texto, total: ordenadas.length, atendente };
 }
 
@@ -274,40 +298,49 @@ serve(async (req) => {
   if (!dcKey) return json({ error: "DATACRAZY_API_KEY não configurada no projeto." }, 500);
   if (!lovableKey) return json({ error: "LOVABLE_API_KEY não encontrada neste projeto." }, 500);
 
-  // Só equipe interna (mesmo gate das demais funções administrativas).
+  // Só admin por enquanto (as tabelas também só são legíveis por admin).
   const authHeader = req.headers.get("Authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) return json({ error: "Autenticação necessária." }, 401);
   const chamador = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
   const { data: quem, error: erroQuem } = await chamador.auth.getUser();
   if (erroQuem || !quem?.user) return json({ error: "Sessão inválida." }, 401);
   const admin = createClient(url, serviceKey);
-  const { data: souInterno } = await admin.from("admin_users").select("id").eq("id", quem.user.id).maybeSingle();
-  if (!souInterno) return json({ error: "Acesso restrito à equipe interna." }, 403);
+  const { data: ehAdmin } = await admin.rpc("has_role", { _user_id: quem.user.id, _role: "admin" });
+  if (!ehAdmin) return json({ error: "Apenas administradores podem analisar conversas." }, 403);
 
   const corpo = await req.json().catch(() => ({})) as {
     openWindow?: "last24h" | "all";
     limite?: number;
     skip?: number;
     reanalizar?: boolean;
+    /** Reanalisa só esta conversa (já gravada), sem listar no Data Crazy. */
+    conversaId?: string;
   };
   const openWindow = corpo.openWindow === "all" ? "all" : "last24h";
   const limite = Math.min(30, Math.max(1, soNumeros(corpo.limite) || 10));
   const skip = Math.max(0, soNumeros(corpo.skip));
   const reanalizar = corpo.reanalizar === true;
 
-  // ---- Etapa 1: lista de conversas no Data Crazy ----
-  // Filtros na API do Data Crazy usam sintaxe colchetada: filter[campo]=valor.
-  let resposta: Response;
-  try {
-    resposta = await dcGet(`/api/v1/conversations?take=${limite}&skip=${skip}&filter[openWindow]=${openWindow}`, dcKey);
-  } catch {
-    return json({ error: "Não foi possível falar com o Data Crazy agora." }, 502);
+  let conversas: ConversaDC[];
+  if (corpo.conversaId) {
+    const { data: gravada } = await admin.from("comercial_conversas").select("bruto").eq("id", corpo.conversaId).maybeSingle();
+    if (!gravada) return json({ error: "Conversa não encontrada." }, 404);
+    conversas = [{ ...(gravada.bruto as ConversaDC), id: corpo.conversaId }];
+  } else {
+    // ---- Etapa 1: lista de conversas no Data Crazy ----
+    // Filtros na API do Data Crazy usam sintaxe colchetada: filter[campo]=valor.
+    let resposta: Response;
+    try {
+      resposta = await dcGet(`/api/v1/conversations?take=${limite}&skip=${skip}&filter[openWindow]=${openWindow}`, dcKey);
+    } catch {
+      return json({ error: "Não foi possível falar com o Data Crazy agora." }, 502);
+    }
+    if (!resposta.ok) {
+      return json({ error: `Data Crazy recusou a busca de conversas: ${resposta.status} ${(await resposta.text()).slice(0, 200)}` }, 502);
+    }
+    const payloadDC = await resposta.json().catch(() => null);
+    conversas = extrairLista(payloadDC) as ConversaDC[];
   }
-  if (!resposta.ok) {
-    return json({ error: `Data Crazy recusou a busca de conversas: ${resposta.status} ${(await resposta.text()).slice(0, 200)}` }, 502);
-  }
-  const payloadDC = await resposta.json().catch(() => null);
-  const conversas = extrairLista(payloadDC) as ConversaDC[];
   if (conversas.length === 0) {
     return json({
       ok: true, recebidas: 0, sincronizadas: 0, analisadas: 0, puladas: 0, erros: [],
