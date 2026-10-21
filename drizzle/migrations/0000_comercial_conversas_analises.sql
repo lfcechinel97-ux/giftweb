@@ -71,3 +71,6 @@ revoke all on public.comercial_conversas from anon;
 revoke all on public.comercial_analises from anon;
 grant select on public.comercial_conversas to authenticated;
 grant select on public.comercial_analises to authenticated;
+-- Escrita fica com a edge function analisar-conversas-comercial (service role).
+grant all on public.comercial_conversas to service_role;
+grant all on public.comercial_analises to service_role;

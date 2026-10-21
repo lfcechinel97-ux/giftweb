@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Sparkles, Bug, RefreshCw, Search, ShieldAlert, TrendingUp, MessageSquareText, Star } from "lucide-react";
+import { Loader2, Sparkles, RefreshCw, Search, ShieldAlert, TrendingUp, MessageSquareText, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,8 @@ interface Objecao {
   categoria: string;
   trecho_cliente: string;
   como_vendedor_lidou: string;
-  foi_contornada: boolean;
+  /** Ausente nas análises do formato antigo ({ objecao, como_quebrar }). */
+  foi_contornada?: boolean;
   resposta_sugerida: string;
 }
 interface Melhoria { titulo: string; detalhe: string; prioridade: "alta" | "media" | "baixa" }
@@ -52,6 +53,19 @@ interface Conversa {
   comercial_analises: Analise[];
 }
 type ConversaComAnalise = Conversa & { analise: Analise | null };
+
+/* As primeiras análises (teste da edge function) gravaram melhorias como
+   texto solto e objeções como { objecao, como_quebrar } -- converte para o
+   formato atual para a tela não quebrar. */
+function normalizar(a: Analise): Analise {
+  const melhorias = (a.melhorias ?? []).map((m: Melhoria | string) =>
+    typeof m === "string" ? { titulo: m, detalhe: "", prioridade: "media" as const } : m);
+  const objecoes = (a.objecoes ?? []).map((o: Objecao & { objecao?: string; como_quebrar?: string }) =>
+    o.objecao !== undefined && o.trecho_cliente === undefined
+      ? { categoria: "outra", trecho_cliente: o.objecao ?? "", como_vendedor_lidou: "", resposta_sugerida: o.como_quebrar ?? "" }
+      : o);
+  return { ...a, melhorias, objecoes, pontos_fortes: a.pontos_fortes ?? [], oportunidades_perdidas: a.oportunidades_perdidas ?? [] };
+}
 
 const ROTULO_OBJECAO: Record<string, string> = {
   preco: "Preço",
@@ -98,28 +112,27 @@ async function chamar(corpo: Record<string, unknown>) {
 
 export default function AnaliseConversas() {
   const qc = useQueryClient();
-  const [dias, setDias] = useState("7");
-  const [limite, setLimite] = useState("20");
+  const [janela, setJanela] = useState<"last24h" | "all">("last24h");
+  const [limite, setLimite] = useState("10");
   const [rodando, setRodando] = useState(false);
   const [vendedor, setVendedor] = useState("todos");
   const [busca, setBusca] = useState("");
   const [aberta, setAberta] = useState<ConversaComAnalise | null>(null);
   const [reanalisando, setReanalisando] = useState(false);
-  const [diagnostico, setDiagnostico] = useState<{ conversas: string; mensagens: string | null; leitura: unknown } | null>(null);
 
   const { data: conversas = [], isLoading } = useQuery({
     queryKey: ["sistema", "analise-comercial"],
     queryFn: async (): Promise<ConversaComAnalise[]> => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("comercial_conversas")
         .select("id, ultima_mensagem_em, contato_nome, contato_telefone, atendente, canal, total_mensagens, transcricao, comercial_analises(*)")
         .order("ultima_mensagem_em", { ascending: false, nullsFirst: false })
         .limit(500);
       if (error) throw error;
-      return ((data ?? []) as Conversa[]).map((c) => ({
-        ...c,
-        analise: [...(c.comercial_analises ?? [])].sort((a, b) => b.criado_em.localeCompare(a.criado_em))[0] ?? null,
-      }));
+      return ((data ?? []) as unknown as Conversa[]).map((c) => {
+        const ultima = [...(c.comercial_analises ?? [])].sort((a, b) => b.criado_em.localeCompare(a.criado_em))[0];
+        return { ...c, analise: ultima ? normalizar(ultima) : null };
+      });
     },
   });
 
@@ -189,21 +202,10 @@ export default function AnaliseConversas() {
   const sincronizar = async () => {
     setRodando(true);
     try {
-      const r = await chamar({ acao: "sincronizar", dias: Number(dias), limite: Number(limite) });
-      toast.success(`${r.analisadas} analisada(s), ${r.sem_mudanca} sem mudança, ${r.curtas} curta(s) demais.`);
+      const r = await chamar({ openWindow: janela, limite: Number(limite) });
+      toast.success(r.mensagem ?? `${r.recebidas} conversa(s): ${r.analisadas} analisada(s), ${r.puladas} sem mensagem nova.`);
       if (r.erros?.length) toast.error(`${r.erros.length} erro(s): ${r.erros[0]}`);
       await qc.invalidateQueries({ queryKey: ["sistema", "analise-comercial"] });
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setRodando(false);
-    }
-  };
-
-  const verDiagnostico = async () => {
-    setRodando(true);
-    try {
-      setDiagnostico(await chamar({ acao: "diagnostico" }));
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -214,8 +216,9 @@ export default function AnaliseConversas() {
   const reanalisar = async (c: ConversaComAnalise) => {
     setReanalisando(true);
     try {
-      const r = await chamar({ acao: "analisar", conversaId: c.id });
-      if (r.status === "curta") toast.info("Conversa curta demais para analisar.");
+      const r = await chamar({ conversaId: c.id, reanalizar: true });
+      if (r.erros?.length) toast.error(r.erros[0]);
+      else if (!r.analisadas) toast.info("Conversa curta demais para analisar.");
       const atualizadas = await qc.fetchQuery({ queryKey: ["sistema", "analise-comercial"], staleTime: 0 }) as ConversaComAnalise[];
       setAberta(atualizadas.find((x) => x.id === c.id) ?? null);
     } catch (e) {
@@ -235,24 +238,22 @@ export default function AnaliseConversas() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Select value={dias} onValueChange={setDias}>
-            <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+          <Select value={janela} onValueChange={(v) => setJanela(v as "last24h" | "all")}>
+            <SelectTrigger className="w-[190px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {["1", "3", "7", "15", "30"].map((d) => <SelectItem key={d} value={d}>Últimos {d} dia(s)</SelectItem>)}
+              <SelectItem value="last24h">Janela aberta (24h)</SelectItem>
+              <SelectItem value="all">Todas as conversas</SelectItem>
             </SelectContent>
           </Select>
           <Select value={limite} onValueChange={setLimite}>
             <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {["10", "20", "40"].map((n) => <SelectItem key={n} value={n}>Até {n} conversas</SelectItem>)}
+              {["10", "20", "30"].map((n) => <SelectItem key={n} value={n}>Até {n} conversas</SelectItem>)}
             </SelectContent>
           </Select>
           <Button className="bg-blue-700 hover:bg-blue-800 text-white" onClick={sincronizar} disabled={rodando}>
             {rodando ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1" />}
             Importar e analisar
-          </Button>
-          <Button variant="outline" size="icon" title="Diagnóstico da API do Datacrazy" onClick={verDiagnostico} disabled={rodando}>
-            <Bug className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -430,21 +431,6 @@ export default function AnaliseConversas() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!diagnostico} onOpenChange={(v) => !v && setDiagnostico(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Diagnóstico da API do Datacrazy</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            Resposta crua da API e como o sistema leu cada campo. Se contato, vendedor ou direção das mensagens
-            vierem vazios/errados, os nomes de campo precisam ser ajustados na edge function.
-          </p>
-          <h4 className="font-semibold text-sm">Como foi lido</h4>
-          <pre className="text-xs bg-muted p-3 rounded overflow-x-auto">{JSON.stringify(diagnostico?.leitura, null, 2)}</pre>
-          <h4 className="font-semibold text-sm">GET /conversations</h4>
-          <pre className="text-xs bg-muted p-3 rounded overflow-x-auto max-h-[300px]">{diagnostico?.conversas}</pre>
-          <h4 className="font-semibold text-sm">GET /conversations/:id/messages</h4>
-          <pre className="text-xs bg-muted p-3 rounded overflow-x-auto max-h-[300px]">{diagnostico?.mensagens ?? "—"}</pre>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
@@ -475,11 +461,15 @@ function CartaoObjecao({ objecao: o, conversa, onAbrir }: { objecao: Objecao; co
     <div className="rounded-md border border-border p-3 text-sm space-y-1.5">
       <div className="flex items-start justify-between gap-2">
         <p className="italic">“{o.trecho_cliente}”</p>
-        <Badge variant="outline" className={cn("shrink-0", o.foi_contornada ? "text-emerald-700 border-emerald-300" : "text-red-700 border-red-300")}>
-          {o.foi_contornada ? "contornada" : "não contornada"}
-        </Badge>
+        {o.foi_contornada !== undefined && (
+          <Badge variant="outline" className={cn("shrink-0", o.foi_contornada ? "text-emerald-700 border-emerald-300" : "text-red-700 border-red-300")}>
+            {o.foi_contornada ? "contornada" : "não contornada"}
+          </Badge>
+        )}
       </div>
-      <p className="text-muted-foreground"><span className="font-medium text-foreground">Como lidou:</span> {o.como_vendedor_lidou}</p>
+      {o.como_vendedor_lidou && (
+        <p className="text-muted-foreground"><span className="font-medium text-foreground">Como lidou:</span> {o.como_vendedor_lidou}</p>
+      )}
       <p className="bg-emerald-50 dark:bg-emerald-950/30 rounded p-2"><span className="font-medium">Resposta sugerida:</span> {o.resposta_sugerida}</p>
       {conversa && onAbrir && (
         <button className="text-xs text-blue-700 hover:underline" onClick={onAbrir}>
@@ -516,7 +506,7 @@ function DetalheAnalise({ analise: a }: { analise: Analise }) {
                   <Badge variant="outline" className={corPrioridade[m.prioridade] ?? ""}>{m.prioridade}</Badge>
                   <span className="font-medium">{m.titulo}</span>
                 </div>
-                <p className="text-muted-foreground mt-0.5">{m.detalhe}</p>
+                {m.detalhe && <p className="text-muted-foreground mt-0.5">{m.detalhe}</p>}
               </li>
             ))}
           </ul>
