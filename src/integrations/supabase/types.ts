@@ -134,12 +134,14 @@ export type Database = {
           melhorias: Json
           modelo: string
           nota: number | null
+          nota_sdr: number | null
           objecoes: Json
           oportunidades_perdidas: Json
           pontos_fortes: Json
           proximo_passo: string | null
           resultado: string | null
           resumo: string | null
+          sdr: Json | null
           tokens_entrada: number | null
           tokens_saida: number | null
           transcricao_hash: string | null
@@ -153,12 +155,14 @@ export type Database = {
           melhorias?: Json
           modelo: string
           nota?: number | null
+          nota_sdr?: number | null
           objecoes?: Json
           oportunidades_perdidas?: Json
           pontos_fortes?: Json
           proximo_passo?: string | null
           resultado?: string | null
           resumo?: string | null
+          sdr?: Json | null
           tokens_entrada?: number | null
           tokens_saida?: number | null
           transcricao_hash?: string | null
@@ -172,12 +176,14 @@ export type Database = {
           melhorias?: Json
           modelo?: string
           nota?: number | null
+          nota_sdr?: number | null
           objecoes?: Json
           oportunidades_perdidas?: Json
           pontos_fortes?: Json
           proximo_passo?: string | null
           resultado?: string | null
           resumo?: string | null
+          sdr?: Json | null
           tokens_entrada?: number | null
           tokens_saida?: number | null
           transcricao_hash?: string | null
@@ -192,18 +198,43 @@ export type Database = {
           },
         ]
       }
+      comercial_configuracoes: {
+        Row: {
+          atualizado_em: string
+          chave: string
+          valor: string
+        }
+        Insert: {
+          atualizado_em?: string
+          chave: string
+          valor?: string
+        }
+        Update: {
+          atualizado_em?: string
+          chave?: string
+          valor?: string
+        }
+        Relationships: []
+      }
       comercial_conversas: {
         Row: {
           atendente: string | null
           atualizado_em: string
           bruto: Json | null
           canal: string | null
+          cliente_sem_resposta: boolean | null
           contato_nome: string | null
           contato_telefone: string | null
           criado_em: string
           id: string
           iniciada_em: string | null
+          origem_detectada: string | null
+          primeira_mensagem_bruto: Json | null
+          primeira_mensagem_cliente: string | null
+          primeira_mensagem_em: string | null
           status: string | null
+          tempo_mediano_resposta_seg: number | null
+          tempo_primeira_resposta_seg: number | null
           total_mensagens: number
           transcricao: string | null
           transcricao_hash: string | null
@@ -214,12 +245,19 @@ export type Database = {
           atualizado_em?: string
           bruto?: Json | null
           canal?: string | null
+          cliente_sem_resposta?: boolean | null
           contato_nome?: string | null
           contato_telefone?: string | null
           criado_em?: string
           id: string
           iniciada_em?: string | null
+          origem_detectada?: string | null
+          primeira_mensagem_bruto?: Json | null
+          primeira_mensagem_cliente?: string | null
+          primeira_mensagem_em?: string | null
           status?: string | null
+          tempo_mediano_resposta_seg?: number | null
+          tempo_primeira_resposta_seg?: number | null
           total_mensagens?: number
           transcricao?: string | null
           transcricao_hash?: string | null
@@ -230,16 +268,77 @@ export type Database = {
           atualizado_em?: string
           bruto?: Json | null
           canal?: string | null
+          cliente_sem_resposta?: boolean | null
           contato_nome?: string | null
           contato_telefone?: string | null
           criado_em?: string
           id?: string
           iniciada_em?: string | null
+          origem_detectada?: string | null
+          primeira_mensagem_bruto?: Json | null
+          primeira_mensagem_cliente?: string | null
+          primeira_mensagem_em?: string | null
           status?: string | null
+          tempo_mediano_resposta_seg?: number | null
+          tempo_primeira_resposta_seg?: number | null
           total_mensagens?: number
           transcricao?: string | null
           transcricao_hash?: string | null
           ultima_mensagem_em?: string | null
+        }
+        Relationships: []
+      }
+      comercial_diagnosticos: {
+        Row: {
+          conteudo: Json
+          criado_em: string
+          id: string
+          modelo: string | null
+          periodo_fim: string | null
+          periodo_inicio: string | null
+          total_conversas: number | null
+        }
+        Insert: {
+          conteudo: Json
+          criado_em?: string
+          id?: string
+          modelo?: string | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          total_conversas?: number | null
+        }
+        Update: {
+          conteudo?: Json
+          criado_em?: string
+          id?: string
+          modelo?: string | null
+          periodo_fim?: string | null
+          periodo_inicio?: string | null
+          total_conversas?: number | null
+        }
+        Relationships: []
+      }
+      comercial_origens_regras: {
+        Row: {
+          campanha: string | null
+          criado_em: string
+          id: string
+          origem: string
+          padrao: string
+        }
+        Insert: {
+          campanha?: string | null
+          criado_em?: string
+          id?: string
+          origem: string
+          padrao: string
+        }
+        Update: {
+          campanha?: string | null
+          criado_em?: string
+          id?: string
+          origem?: string
+          padrao?: string
         }
         Relationships: []
       }
