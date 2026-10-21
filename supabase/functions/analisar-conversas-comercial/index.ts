@@ -285,6 +285,7 @@ serve(async (req) => {
     limite?: number;
     skip?: number;
     reanalizar?: boolean;
+    debug?: boolean;
   };
   const openWindow = corpo.openWindow === "all" ? "all" : "last24h";
   const limite = Math.min(30, Math.max(1, soNumeros(corpo.limite) || 10));
