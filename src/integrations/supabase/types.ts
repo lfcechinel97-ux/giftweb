@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -121,6 +121,125 @@ export type Database = {
           preco?: number | null
           subcategoria?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      comercial_analises: {
+        Row: {
+          bruto: Json | null
+          conversa_id: string
+          criado_em: string
+          etapa_funil: string | null
+          id: string
+          melhorias: Json
+          modelo: string
+          nota: number | null
+          objecoes: Json
+          oportunidades_perdidas: Json
+          pontos_fortes: Json
+          proximo_passo: string | null
+          resultado: string | null
+          resumo: string | null
+          tokens_entrada: number | null
+          tokens_saida: number | null
+          transcricao_hash: string | null
+        }
+        Insert: {
+          bruto?: Json | null
+          conversa_id: string
+          criado_em?: string
+          etapa_funil?: string | null
+          id?: string
+          melhorias?: Json
+          modelo: string
+          nota?: number | null
+          objecoes?: Json
+          oportunidades_perdidas?: Json
+          pontos_fortes?: Json
+          proximo_passo?: string | null
+          resultado?: string | null
+          resumo?: string | null
+          tokens_entrada?: number | null
+          tokens_saida?: number | null
+          transcricao_hash?: string | null
+        }
+        Update: {
+          bruto?: Json | null
+          conversa_id?: string
+          criado_em?: string
+          etapa_funil?: string | null
+          id?: string
+          melhorias?: Json
+          modelo?: string
+          nota?: number | null
+          objecoes?: Json
+          oportunidades_perdidas?: Json
+          pontos_fortes?: Json
+          proximo_passo?: string | null
+          resultado?: string | null
+          resumo?: string | null
+          tokens_entrada?: number | null
+          tokens_saida?: number | null
+          transcricao_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comercial_analises_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "comercial_conversas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comercial_conversas: {
+        Row: {
+          atendente: string | null
+          atualizado_em: string
+          bruto: Json | null
+          canal: string | null
+          contato_nome: string | null
+          contato_telefone: string | null
+          criado_em: string
+          id: string
+          iniciada_em: string | null
+          status: string | null
+          total_mensagens: number
+          transcricao: string | null
+          transcricao_hash: string | null
+          ultima_mensagem_em: string | null
+        }
+        Insert: {
+          atendente?: string | null
+          atualizado_em?: string
+          bruto?: Json | null
+          canal?: string | null
+          contato_nome?: string | null
+          contato_telefone?: string | null
+          criado_em?: string
+          id: string
+          iniciada_em?: string | null
+          status?: string | null
+          total_mensagens?: number
+          transcricao?: string | null
+          transcricao_hash?: string | null
+          ultima_mensagem_em?: string | null
+        }
+        Update: {
+          atendente?: string | null
+          atualizado_em?: string
+          bruto?: Json | null
+          canal?: string | null
+          contato_nome?: string | null
+          contato_telefone?: string | null
+          criado_em?: string
+          id?: string
+          iniciada_em?: string | null
+          status?: string | null
+          total_mensagens?: number
+          transcricao?: string | null
+          transcricao_hash?: string | null
+          ultima_mensagem_em?: string | null
         }
         Relationships: []
       }
@@ -981,24 +1100,36 @@ export type Database = {
           criado_por_nome: string | null
           fornecedor: string
           id: string
+          impresso_em: string | null
+          impresso_por: string | null
           numero: number
           observacao: string | null
+          recebido_em: string | null
+          recebido_por: string | null
         }
         Insert: {
           criado_em?: string
           criado_por_nome?: string | null
           fornecedor: string
           id?: string
+          impresso_em?: string | null
+          impresso_por?: string | null
           numero?: never
           observacao?: string | null
+          recebido_em?: string | null
+          recebido_por?: string | null
         }
         Update: {
           criado_em?: string
           criado_por_nome?: string | null
           fornecedor?: string
           id?: string
+          impresso_em?: string | null
+          impresso_por?: string | null
           numero?: never
           observacao?: string | null
+          recebido_em?: string | null
+          recebido_por?: string | null
         }
         Relationships: []
       }
@@ -1006,12 +1137,15 @@ export type Database = {
         Row: {
           cliente: string | null
           compra_id: string
+          conferido_em: string | null
+          conferido_por: string | null
           foto_url: string | null
           id: string
           ordem: number
           pedido_numero: string | null
           producao_item_id: string | null
           produto_nome: string
+          qtd_recebida: number | null
           quantidade: number
           sku: string | null
           variacao: string | null
@@ -1019,12 +1153,15 @@ export type Database = {
         Insert: {
           cliente?: string | null
           compra_id: string
+          conferido_em?: string | null
+          conferido_por?: string | null
           foto_url?: string | null
           id?: string
           ordem?: number
           pedido_numero?: string | null
           producao_item_id?: string | null
           produto_nome: string
+          qtd_recebida?: number | null
           quantidade: number
           sku?: string | null
           variacao?: string | null
@@ -1032,12 +1169,15 @@ export type Database = {
         Update: {
           cliente?: string | null
           compra_id?: string
+          conferido_em?: string | null
+          conferido_por?: string | null
           foto_url?: string | null
           id?: string
           ordem?: number
           pedido_numero?: string | null
           producao_item_id?: string | null
           produto_nome?: string
+          qtd_recebida?: number | null
           quantidade?: number
           sku?: string | null
           variacao?: string | null
@@ -1415,6 +1555,7 @@ export type Database = {
       sistema_financeiro_config: {
         Row: {
           comissao_pct: number
+          custo_fixo_mensal: number
           id: boolean
           imposto_pct: number
           taxa_cartao_pct: number
@@ -1422,6 +1563,7 @@ export type Database = {
         }
         Insert: {
           comissao_pct?: number
+          custo_fixo_mensal?: number
           id?: boolean
           imposto_pct?: number
           taxa_cartao_pct?: number
@@ -1429,6 +1571,7 @@ export type Database = {
         }
         Update: {
           comissao_pct?: number
+          custo_fixo_mensal?: number
           id?: boolean
           imposto_pct?: number
           taxa_cartao_pct?: number
@@ -3332,34 +3475,36 @@ export type Database = {
       }
       preco_markup: { Args: { p_custo: number }; Returns: number }
       preco_to_num: { Args: { v: Json }; Returns: number }
+      produtos_sem_custo: { Args: { p_resultado: Json }; Returns: Json }
       recalc_estoque_total: { Args: { p_id: string }; Returns: undefined }
-      search_products_by_category:
-        | {
-            Args: {
-              p_apenas_estoque?: boolean
-              p_category_slug: string
-              p_cor?: string[]
-              p_page?: number
-              p_page_size?: number
-              p_search?: string
-              p_sort?: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_apenas_estoque?: boolean
-              p_category_slug: string
-              p_cor?: string[]
-              p_page?: number
-              p_page_size?: number
-              p_preco_max?: number
-              p_preco_min?: number
-              p_search?: string
-              p_sort?: string
-            }
-            Returns: Json
-          }
+      search_products_by_category: {
+        Args: {
+          p_apenas_estoque?: boolean
+          p_category_slug: string
+          p_cor?: string[]
+          p_page?: number
+          p_page_size?: number
+          p_preco_max?: number
+          p_preco_min?: number
+          p_search?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
+      search_products_by_category_interno: {
+        Args: {
+          p_apenas_estoque?: boolean
+          p_category_slug: string
+          p_cor?: string[]
+          p_page?: number
+          p_page_size?: number
+          p_preco_max?: number
+          p_preco_min?: number
+          p_search?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
       search_products_by_collection: {
         Args: {
           p_apenas_estoque?: boolean
@@ -3374,31 +3519,46 @@ export type Database = {
         }
         Returns: Json
       }
-      search_products_global:
-        | {
-            Args: {
-              p_apenas_estoque?: boolean
-              p_cor?: string[]
-              p_page?: number
-              p_page_size?: number
-              p_search?: string
-              p_sort?: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_apenas_estoque?: boolean
-              p_cor?: string[]
-              p_page?: number
-              p_page_size?: number
-              p_preco_max?: number
-              p_preco_min?: number
-              p_search?: string
-              p_sort?: string
-            }
-            Returns: Json
-          }
+      search_products_by_collection_interno: {
+        Args: {
+          p_apenas_estoque?: boolean
+          p_collection_slug: string
+          p_cor?: string[]
+          p_page?: number
+          p_page_size?: number
+          p_preco_max?: number
+          p_preco_min?: number
+          p_search?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
+      search_products_global: {
+        Args: {
+          p_apenas_estoque?: boolean
+          p_cor?: string[]
+          p_page?: number
+          p_page_size?: number
+          p_preco_max?: number
+          p_preco_min?: number
+          p_search?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
+      search_products_global_interno: {
+        Args: {
+          p_apenas_estoque?: boolean
+          p_cor?: string[]
+          p_page?: number
+          p_page_size?: number
+          p_preco_max?: number
+          p_preco_min?: number
+          p_search?: string
+          p_sort?: string
+        }
+        Returns: Json
+      }
       set_variantes_por_prefixo: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
