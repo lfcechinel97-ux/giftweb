@@ -124,6 +124,125 @@ export type Database = {
         }
         Relationships: []
       }
+      comercial_analises: {
+        Row: {
+          bruto: Json | null
+          conversa_id: string
+          criado_em: string
+          etapa_funil: string | null
+          id: string
+          melhorias: Json
+          modelo: string
+          nota: number | null
+          objecoes: Json
+          oportunidades_perdidas: Json
+          pontos_fortes: Json
+          proximo_passo: string | null
+          resultado: string | null
+          resumo: string | null
+          tokens_entrada: number | null
+          tokens_saida: number | null
+          transcricao_hash: string | null
+        }
+        Insert: {
+          bruto?: Json | null
+          conversa_id: string
+          criado_em?: string
+          etapa_funil?: string | null
+          id?: string
+          melhorias?: Json
+          modelo: string
+          nota?: number | null
+          objecoes?: Json
+          oportunidades_perdidas?: Json
+          pontos_fortes?: Json
+          proximo_passo?: string | null
+          resultado?: string | null
+          resumo?: string | null
+          tokens_entrada?: number | null
+          tokens_saida?: number | null
+          transcricao_hash?: string | null
+        }
+        Update: {
+          bruto?: Json | null
+          conversa_id?: string
+          criado_em?: string
+          etapa_funil?: string | null
+          id?: string
+          melhorias?: Json
+          modelo?: string
+          nota?: number | null
+          objecoes?: Json
+          oportunidades_perdidas?: Json
+          pontos_fortes?: Json
+          proximo_passo?: string | null
+          resultado?: string | null
+          resumo?: string | null
+          tokens_entrada?: number | null
+          tokens_saida?: number | null
+          transcricao_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comercial_analises_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "comercial_conversas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comercial_conversas: {
+        Row: {
+          atendente: string | null
+          atualizado_em: string
+          bruto: Json | null
+          canal: string | null
+          contato_nome: string | null
+          contato_telefone: string | null
+          criado_em: string
+          id: string
+          iniciada_em: string | null
+          status: string | null
+          total_mensagens: number
+          transcricao: string | null
+          transcricao_hash: string | null
+          ultima_mensagem_em: string | null
+        }
+        Insert: {
+          atendente?: string | null
+          atualizado_em?: string
+          bruto?: Json | null
+          canal?: string | null
+          contato_nome?: string | null
+          contato_telefone?: string | null
+          criado_em?: string
+          id: string
+          iniciada_em?: string | null
+          status?: string | null
+          total_mensagens?: number
+          transcricao?: string | null
+          transcricao_hash?: string | null
+          ultima_mensagem_em?: string | null
+        }
+        Update: {
+          atendente?: string | null
+          atualizado_em?: string
+          bruto?: Json | null
+          canal?: string | null
+          contato_nome?: string | null
+          contato_telefone?: string | null
+          criado_em?: string
+          id?: string
+          iniciada_em?: string | null
+          status?: string | null
+          total_mensagens?: number
+          transcricao?: string | null
+          transcricao_hash?: string | null
+          ultima_mensagem_em?: string | null
+        }
+        Relationships: []
+      }
       homepage_featured_showcase: {
         Row: {
           badge_text: string | null
