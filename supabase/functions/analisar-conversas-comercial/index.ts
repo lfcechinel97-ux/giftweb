@@ -71,7 +71,6 @@ type AnaliseIA = {
 // json_schema estrito para o /v1/responses: objeto na raiz, todas as
 // propriedades em required, opcionais como nullable, sem additionalProperties.
 const SCHEMA_ANALISE = {
-  name: "analise_conversa",
   type: "object",
   strict: true,
   properties: {
