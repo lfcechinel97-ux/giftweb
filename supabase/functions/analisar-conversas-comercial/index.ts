@@ -4,12 +4,19 @@
 // public.comercial_analises (nota, resultado, resumo, pontos fortes,
 // melhorias, objeções, oportunidades perdidas e próximo passo).
 //
-// Escrita via service role; a chamada exige sessão da equipe interna
-// (admin_users), como nas demais funções administrativas.
+// A análise usa o Lovable AI Gateway (/v1/responses, modelo padrão de
+// chat, saída JSON com json_schema estrito, LOVABLE_API_KEY já injetada
+// no projeto). Escrita via service role; a chamada exige sessão da
+// equipe interna (admin_users), como nas demais funções administrativas.
 // Rate limit da rota de conversas do Data Crazy: 20 req/min — por isso
 // as buscas de mensagens são sequenciais com pausa entre elas.
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  createLovableAiGatewayRunIdFetch,
+  getLovableAiGatewayRunId,
+} from "../_shared/run-id.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,12 +26,12 @@ const corsHeaders = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
+const GATEWAY_BASE = "https://ai.gateway.lovable.dev";
+const MODELO = "openai/gpt-6-astra";
 const DC_BASE = "https://api.g1.datacrazy.io";
 // Rota de conversas: 20 req/min — pausa entre chamadas de mensagens.
 const PAUSA_ENTRE_CONVERSAS_MS = 3300;
 const PAUSA_APOS_429_MS = 65_000;
-// Tentativas de modelo no Lovable AI Gateway (em ordem).
-const MODELOS = ["openai/gpt-6-astra", "google/gemini-3.1-flash"];
 const MAX_CARACTERES_TRANSCRICAO = 60_000;
 
 type ConversaDC = {
@@ -38,7 +45,6 @@ type ConversaDC = {
   finished?: boolean;
   lastMessageIsAutomation?: boolean;
   lastMessageDate?: string;
-  currentDepartment?: { name?: string } | null;
 };
 
 type MensagemDC = {
@@ -51,16 +57,51 @@ type MensagemDC = {
 };
 
 type AnaliseIA = {
-  nota?: number;
-  resultado?: string;
-  etapa_funil?: string;
-  resumo?: string;
-  pontos_fortes?: unknown[];
-  melhorias?: unknown[];
-  objecoes?: unknown[];
-  oportunidades_perdidas?: unknown[];
-  proximo_passo?: string;
+  nota?: number | null;
+  resultado?: string | null;
+  etapa_funil?: string | null;
+  resumo?: string | null;
+  pontos_fortes?: unknown[] | null;
+  melhorias?: unknown[] | null;
+  objecoes?: unknown[] | null;
+  oportunidades_perdidas?: unknown[] | null;
+  proximo_passo?: string | null;
 };
+
+// json_schema estrito para o /v1/responses: objeto na raiz, todas as
+// propriedades em required, opcionais como nullable, sem additionalProperties.
+const SCHEMA_ANALISE = {
+  name: "analise_conversa",
+  type: "object",
+  strict: true,
+  properties: {
+    nota: { type: ["number", "null"], description: "Nota de 0 a 10 para o atendimento" },
+    resultado: { type: ["string", "null"], description: "venda | em_andamento | perdida | sem_interesse | indefinido" },
+    etapa_funil: { type: ["string", "null"], description: "Etapa atual do funil, em poucas palavras" },
+    resumo: { type: ["string", "null"], description: "Resumo objetivo em 2 a 4 frases" },
+    pontos_fortes: { type: ["array", "null"], items: { type: "string" } },
+    melhorias: { type: ["array", "null"], items: { type: "string" } },
+    objecoes: {
+      type: ["array", "null"],
+      items: {
+        type: "object",
+        properties: { objecao: { type: ["string", "null"] }, como_quebrar: { type: ["string", "null"] } },
+        required: ["objecao", "como_quebrar"],
+        additionalProperties: false,
+      },
+    },
+    oportunidades_perdidas: { type: ["array", "null"], items: { type: "string" } },
+    proximo_passo: { type: ["string", "null"], description: "Ação concreta e imediata do atendente" },
+  },
+  required: ["nota", "resultado", "etapa_funil", "resumo", "pontos_fortes", "melhorias", "objecoes", "oportunidades_perdidas", "proximo_passo"],
+  additionalProperties: false,
+} as const;
+
+const PROMPT_SISTEMA = `Você é um auditor de atendimento comercial B2B da Gift Web Brindes (brindes personalizados: canecas, garrafas, camisetas, sacolas, kit corporativo etc.). Analise a transcrição de uma conversa de WhatsApp entre um cliente e um atendente/vendedor da equipe.
+
+Avalie o atendimento do ponto de vista comercial: o atendente qualificou o cliente, apresentou bem os produtos, lidou com preço e prazo, conduziu para o pedido/orçamento? As mensagens "Cliente:" vêm do cliente e "Atendente:" do vendedor.
+
+Não invente fatos que não estejam na transcrição. Se a transcrição for muito curta ou sem conteúdo comercial, use nota baixa e resultado "indefinido".`;
 
 const soNumeros = (v: unknown): number => {
   const n = typeof v === "number" ? v : Number(v);
@@ -89,7 +130,6 @@ async function dcGet(caminho: string, apiKey: string): Promise<Response> {
     }
     return resposta;
   }
-  // Inalcançável, mas TypeScript exige retorno.
   return await fetch(`${DC_BASE}${caminho}`, {
     headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
   });
@@ -132,79 +172,94 @@ function statusConversa(conv: ConversaDC): string {
   return "opened";
 }
 
-const PROMPT_SISTEMA = `Você é um auditor de atendimento comercial B2B da Gift Web Brindes (brindes personalizados: canecas, garrafas, camisetas, sacolas, kit corporativo etc.). Analise a transcrição de uma conversa de WhatsApp entre um cliente e um atendente/vendedor da equipe.
-
-Responda EXCLUSIVAMENTE um JSON válido, sem texto fora dele, neste formato:
-{
-  "nota": 0-10 (qualidade do atendimento, com uma casa decimal se precisar),
-  "resultado": "venda" | "em_andamento" | "perdida" | "sem_interesse" | "indefinido",
-  "etapa_funil": etapa atual do funil em poucas palavras (ex: "primeiro contato", "orçamento enviado", "negociação", "fechado", "pós-venda"),
-  "resumo": resumo objetivo da conversa em 2 a 4 frases,
-  "pontos_fortes": lista de strings — o que o atendente fez bem (seja específico, cite comportamento, não elogio genérico),
-  "melhorias": lista de strings — o que o atendente poderia ter feito melhor (seja específico e prático),
-  "objecoes": lista de objetos {"objecao": "...", "como_quebrar": "..."} — objeções ou dúvidas do cliente e a melhor forma de contornar cada uma; lista vazia se não houver,
-  "oportunidades_perdidas": lista de strings — vendas ou próximos passos que o atendente deixou de explorar,
-  "proximo_passo": a ação concreta e imediata que o atendente deve executar (ou "Nenhuma — conversa concluída." se encerrada).
-}
-
-Se a transcrição for muito curta ou sem conteúdo comercial, use nota baixa e resultado "indefinido". Não invente fatos que não estejam na transcrição.`;
-
-/** Chama o Lovable AI e devolve a análise JSON + uso de tokens. */
+/** Chama o Lovable AI (/v1/responses, stream) e devolve a análise JSON + uso de tokens. */
 async function analisarComIA(
+  request: Request,
   transcricao: string,
   apiKey: string,
 ): Promise<{ analise: AnaliseIA; modelo: string; tokensEntrada?: number; tokensSaida?: number } | { erro: string }> {
-  let ultimoErro = "";
-  for (const modelo of MODELOS) {
-    try {
-      const resposta = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: modelo,
-          messages: [
-            { role: "system", content: PROMPT_SISTEMA },
-            { role: "user", content: `Transcrição da conversa:\n\n${transcricao}` },
-          ],
-          temperature: 0.2,
-        }),
-      });
-      if (!resposta.ok) {
-        ultimoErro = `${resposta.status} ${(await resposta.text()).slice(0, 300)}`;
-        continue;
-      }
-      const payload = await resposta.json();
-      const conteudo = payload?.choices?.[0]?.message?.content;
-      if (typeof conteudo !== "string" || !conteudo.trim()) {
-        ultimoErro = "resposta da IA sem conteúdo";
-        continue;
-      }
-      // A resposta deve ser JSON; remove cercas de código se vierem.
-      const limpo = conteudo.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
-      const inicio = limpo.indexOf("{");
-      const fim = limpo.lastIndexOf("}");
-      if (inicio < 0 || fim <= inicio) {
-        ultimoErro = "IA não devolveu JSON";
-        continue;
-      }
-      const analise = JSON.parse(limpo.slice(inicio, fim + 1)) as AnaliseIA;
-      const notaBruta = soNumeros(analise?.nota);
-      if (notaBruta > 10) analise.nota = 10;
-      else analise.nota = Math.round(notaBruta * 10) / 10;
-      return {
-        analise,
-        modelo,
-        tokensEntrada: payload?.usage?.prompt_tokens ?? undefined,
-        tokensSaida: payload?.usage?.completion_tokens ?? undefined,
-      };
-    } catch (e) {
-      ultimoErro = e instanceof Error ? e.message : String(e);
-    }
+  const gateway = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(request));
+  let resposta: Response;
+  try {
+    resposta = await gateway.fetch(`${GATEWAY_BASE}/v1/responses`, {
+      method: "POST",
+      signal: request.signal,
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" },
+      body: JSON.stringify({
+        model: MODELO,
+        stream: true,
+        store: false,
+        reasoning: { effort: "medium", summary: "auto" },
+        include: ["reasoning.encrypted_content"],
+        input: [
+          { role: "system", content: PROMPT_SISTEMA },
+          { role: "user", content: `Analise a transcrição JSON abaixo da conversa:\n\n${transcricao}` },
+        ],
+        text: { format: { type: "json_schema", ...SCHEMA_ANALISE } },
+      }),
+    });
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : String(e) };
   }
-  return { erro: ultimoErro || "falha desconhecida no Lovable AI" };
+  if (!resposta.ok) {
+    return { erro: `${resposta.status} ${(await resposta.text()).slice(0, 400)}` };
+  }
+
+  // Lê o stream SSE: junta os deltas de texto e captura o uso no evento final.
+  let texto = "";
+  let tokensEntrada: number | undefined;
+  let tokensSaida: number | undefined;
+  try {
+    const reader = resposta.body?.getReader();
+    if (!reader) return { erro: "resposta do gateway sem corpo" };
+    const decoder = new TextDecoder();
+    let pendente = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      pendente += decoder.decode(value, { stream: true });
+      const linhas = pendente.split("\n");
+      pendente = linhas.pop() ?? "";
+      for (const linha of linhas) {
+        const data = linha.startsWith("data: ") ? linha.slice(6).trim() : "";
+        if (!data || data === "[DONE]") continue;
+        let evento: Record<string, unknown>;
+        try {
+          evento = JSON.parse(data);
+        } catch {
+          continue;
+        }
+        if (evento.type === "response.output_text.delta" && typeof evento.delta === "string") {
+          texto += evento.delta;
+        } else if (evento.type === "response.completed" && evento.response && typeof evento.response === "object") {
+          const finalizada = evento.response as { usage?: { input_tokens?: number; output_tokens?: number } };
+          tokensEntrada = finalizada.usage?.input_tokens;
+          tokensSaida = finalizada.usage?.output_tokens;
+          if (!texto) {
+            // Fallback: extrai o texto completo do evento final.
+            const itens = (finalizada.response as { output?: { content?: { text?: string }[] }[] }).output ?? [];
+            texto = itens.flatMap((i) => (i.content ?? []).map((c) => c.text ?? "")).join("");
+          }
+        }
+      }
+    }
+  } catch (e) {
+    return { erro: e instanceof Error ? e.message : String(e) };
+  }
+
+  const limpo = texto.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+  if (!limpo) return { erro: "IA não devolveu texto" };
+  try {
+    const analise = JSON.parse(limpo) as AnaliseIA;
+    const notaBruta = soNumeros(analise?.nota);
+    analise.nota = notaBruta > 10 ? 10 : Math.round(notaBruta * 10) / 10;
+    return { analise, modelo: MODELO, tokensEntrada, tokensSaida };
+  } catch {
+    return { erro: `IA devolveu texto fora do JSON: ${limpo.slice(0, 200)}` };
+  }
 }
 
-serve(async (req: Request) => {
+serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const url = Deno.env.get("SUPABASE_URL") ?? "";
@@ -250,7 +305,10 @@ serve(async (req: Request) => {
   const payloadDC = await resposta.json().catch(() => null);
   const conversas = extrairLista(payloadDC) as ConversaDC[];
   if (conversas.length === 0) {
-    return json({ ok: true, sincronizadas: 0, analisadas: 0, puladas: 0, erros: [] as string[], mensagem: "Nenhuma conversa nova no período." });
+    return json({
+      ok: true, recebidas: 0, sincronizadas: 0, analisadas: 0, puladas: 0, erros: [],
+      mensagem: "Nenhuma conversa no período consultado.",
+    });
   }
 
   // ---- Etapa 2: sincroniza cada conversa e analisa quando mudou ----
@@ -324,12 +382,13 @@ serve(async (req: Request) => {
         .limit(1);
       if (!reanalizar && (analiseAnterior?.length ?? 0) > 0) continue;
 
-      const resultadoIA = await analisarComIA(transcricao, lovableKey);
+      const resultadoIA = await analisarComIA(req, transcricao, lovableKey);
       if ("erro" in resultadoIA) {
         erros.push(`${conv.id}: IA (${resultadoIA.erro})`);
         continue;
       }
       const a = resultadoIA.analise;
+      const lista = (v: unknown) => (Array.isArray(v) ? v : []);
       const { error: erroAnalise } = await admin.from("comercial_analises").insert({
         conversa_id: conv.id,
         transcricao_hash: linha.transcricao_hash,
@@ -338,10 +397,10 @@ serve(async (req: Request) => {
         resultado: a.resultado ?? "indefinido",
         etapa_funil: a.etapa_funil ?? null,
         resumo: a.resumo ?? null,
-        pontos_fortes: Array.isArray(a.pontos_fortes) ? a.pontos_fortes : [],
-        melhorias: Array.isArray(a.melhorias) ? a.melhorias : [],
-        objecoes: Array.isArray(a.objecoes) ? a.objecoes : [],
-        oportunidades_perdidas: Array.isArray(a.oportunidades_perdidas) ? a.oportunidades_perdidas : [],
+        pontos_fortes: lista(a.pontos_fortes),
+        melhorias: lista(a.melhorias),
+        objecoes: lista(a.objecoes),
+        oportunidades_perdidas: lista(a.oportunidades_perdidas),
         proximo_passo: a.proximo_passo ?? null,
         tokens_entrada: resultadoIA.tokensEntrada ?? null,
         tokens_saida: resultadoIA.tokensSaida ?? null,
@@ -366,6 +425,3 @@ serve(async (req: Request) => {
     erros,
   });
 });
-
-// Deno serve global disponível no ambiente de edge functions do Supabase.
-declare function serve(handler: (req: Request) => Promise<Response>): void;
