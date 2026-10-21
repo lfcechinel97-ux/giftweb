@@ -347,8 +347,12 @@ serve(async (req) => {
         erros.push(`${conv.id}: Data Crazy recusou as mensagens (${respMsg.status})`);
         continue;
       }
-      const payloadMsg = await respMsg.json().catch(() => null);
-      const mensagens = extrairLista(payloadMsg) as MensagemDC[];
+  const payloadMsg = await respMsg.json().catch(() => null);
+  if (corpo.debug) {
+    const amostra = JSON.stringify(payloadMsg)?.slice(0, 1500) ?? "null";
+    return json({ debug: true, conversaId: conv.id, tipo: typeof payloadMsg, chaves: payloadMsg && typeof payloadMsg === "object" ? Object.keys(payloadMsg) : null, amostra });
+  }
+  const mensagens = extrairLista(payloadMsg) as MensagemDC[];
       const { texto: transcricao, total, atendente } = montarTranscricao(mensagens);
 
       const linha = {
