@@ -292,10 +292,10 @@ serve(async (req) => {
   const reanalizar = corpo.reanalizar === true;
 
   // ---- Etapa 1: lista de conversas no Data Crazy ----
-  const filtro = encodeURIComponent(JSON.stringify({ openWindow }));
+  // Filtros na API do Data Crazy usam sintaxe colchetada: filter[campo]=valor.
   let resposta: Response;
   try {
-    resposta = await dcGet(`/api/v1/conversations?take=${limite}&skip=${skip}&filter=${filtro}`, dcKey);
+    resposta = await dcGet(`/api/v1/conversations?take=${limite}&skip=${skip}&filter[openWindow]=${openWindow}`, dcKey);
   } catch {
     return json({ error: "Não foi possível falar com o Data Crazy agora." }, 502);
   }
