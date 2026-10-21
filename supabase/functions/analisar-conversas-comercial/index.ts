@@ -289,7 +289,6 @@ serve(async (req) => {
     limite?: number;
     skip?: number;
     reanalizar?: boolean;
-    debug?: boolean;
   };
   const openWindow = corpo.openWindow === "all" ? "all" : "last24h";
   const limite = Math.min(30, Math.max(1, soNumeros(corpo.limite) || 10));
@@ -352,10 +351,6 @@ serve(async (req) => {
         continue;
       }
   const payloadMsg = await respMsg.json().catch(() => null);
-  if (corpo.debug) {
-    const amostra = JSON.stringify(payloadMsg)?.slice(0, 1500) ?? "null";
-    return json({ debug: true, conversaId: conv.id, tipo: typeof payloadMsg, chaves: payloadMsg && typeof payloadMsg === "object" ? Object.keys(payloadMsg) : null, amostra });
-  }
   const mensagens = extrairLista(payloadMsg) as MensagemDC[];
       const { texto: transcricao, total, atendente } = montarTranscricao(mensagens);
 
