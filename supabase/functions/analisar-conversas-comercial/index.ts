@@ -72,7 +72,6 @@ type AnaliseIA = {
 // propriedades em required, opcionais como nullable, sem additionalProperties.
 const SCHEMA_ANALISE = {
   type: "object",
-  strict: true,
   properties: {
     nota: { type: ["number", "null"], description: "Nota de 0 a 10 para o atendimento" },
     resultado: { type: ["string", "null"], description: "venda | em_andamento | perdida | sem_interesse | indefinido" },
@@ -198,7 +197,9 @@ async function analisarComIA(
           { role: "system", content: PROMPT_SISTEMA },
           { role: "user", content: `Analise a transcrição JSON abaixo da conversa:\n\n${transcricao}` },
         ],
-        text: { format: { type: "json_schema", ...SCHEMA_ANALISE } },
+        text: {
+          format: { type: "json_schema", name: "analise_conversa", strict: true, schema: SCHEMA_ANALISE },
+        },
       }),
     });
   } catch (e) {
