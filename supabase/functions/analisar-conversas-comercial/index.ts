@@ -14,8 +14,17 @@
 //       atividade no período (sem IA); devolve proximoSkip/terminou.
 //   { acao: "analisar_pendentes", inicio, fim } -> analisa por IA as
 //       conversas do período que mudaram desde a última análise.
-//   { acao: "diagnostico_geral", inicio, fim } -> síntese da IA sobre as
-//       análises do período (pontos fracos recorrentes, por vendedor...).
+//       (ou só das conversaIds; forcar=true reanalisa mesmo sem mudança).
+//   { acao: "avaliar_conjunto", inicio, fim | conversaIds, instrucoes, titulo }
+//       -> avaliação geral de um conjunto (período, vendedor, seleção): lê
+//       as transcrições inteiras quando cabem, senão as análises.
+//   { acao: "recalcular", skip } -> refaz transcrição/papéis a partir das
+//       mensagens já gravadas (sem Data Crazy).
+//   { acao: "amostra_mensagens", conversaId } -> JSON cru do Data Crazy.
+//   { acao: "baixar_planilha", url } -> CSV de uma planilha Google.
+//   { acao: "vincular_leads" } -> liga leads do Meta às conversas.
+//   { acao: "perguntar", pergunta, historico } -> assistente: responde
+//       perguntas sobre os leads/conversas ("como foram os leads de ontem?").
 //   { conversaId, reanalizar: true } -> reimporta e reanalisa uma conversa.
 // Rate limit da rota de conversas do Data Crazy: 20 req/min -- toda
 // chamada passa pelo dcGet, que espaça as requisições; num 429 a função
@@ -53,6 +62,9 @@ const ORCAMENTO_ANALISAR_MS = 55_000;
 const ANALISES_EM_PARALELO = 4;
 const MIN_CARACTERES_PARA_ANALISAR = 40;
 const MAX_CARACTERES_DIAGNOSTICO = 250_000;
+// Avaliação em conjunto lê as transcrições inteiras até este tamanho.
+const MAX_CARACTERES_TRANSCRICOES_CONJUNTO = 150_000;
+const ORCAMENTO_RECALCULAR_MS = 60_000;
 
 type ConversaDC = {
   id: string;
@@ -189,7 +201,7 @@ const SCHEMA_ANALISE = {
 
 const PROMPT_SISTEMA = `Você é um auditor de atendimento comercial B2B da Gift Web Brindes (brindes personalizados: canecas, garrafas, camisetas, sacolas, kit corporativo etc.). Analise a transcrição de uma conversa de WhatsApp entre um cliente e um atendente/vendedor da equipe.
 
-O atendimento tem duas etapas: primeiro o "SDR" (Felipe, uma IA de pré-venda) qualifica o lead e manda o "Resumo do projeto"; depois o "Consultor" (vendedor humano) faz a prévia, o orçamento e fecha. As mensagens "Cliente:" vêm do cliente, "SDR:" da IA e "Consultor:" do vendedor humano; o horário vem entre colchetes -- use-o para avaliar o tempo de resposta. Se uma mensagem vier marcada só como "Atendente:", decida pelo contexto se foi o SDR ou o consultor.
+O atendimento tem duas etapas: primeiro o "SDR (IA)" (Felipe, uma IA de pré-venda) qualifica o lead e manda o "Resumo do projeto"; depois o "Consultor" (vendedor humano) entra, se apresenta pelo nome e assume. As mensagens "Cliente:" vêm do cliente, "SDR (IA):" da IA e "Consultor (nome):" do vendedor humano; o horário vem entre colchetes -- use-o para avaliar o tempo de resposta. A marcação de quem enviou é automática: se o conteúdo deixar claro que uma mensagem foi do outro papel (ex.: alguém se apresentando pelo nome, que não é o Felipe), considere o conteúdo. Nunca atribua ao consultor um erro do SDR, nem o contrário.
 
 Os campos nota, resultado, melhorias, objeções, oportunidades perdidas e próximo passo avaliam o CONSULTOR humano (o fechamento) -- se a conversa não chegou ao consultor, avalie a conversa como um todo e diga nas melhorias o que impediu a passagem. Os campos nota_sdr e sdr avaliam o SDR de IA contra as regras do prompt dele (abaixo): cada regra quebrada vira uma violação com o trecho e a mensagem correta; em sugestoes_prompt, proponha mudanças objetivas no prompt (o que acrescentar, tirar ou reescrever) que teriam evitado os problemas.
 
@@ -200,6 +212,30 @@ Não invente fatos que não estejam na transcrição. Se a transcrição for mui
 const SCHEMA_DIAGNOSTICO = {
   type: "object",
   properties: {
+    avaliacao_atendimento: {
+      type: "object",
+      description: "O atendimento deste conjunto está bom? Avaliado contra o processo de atendimento da empresa",
+      properties: {
+        nota_geral: { type: "number", description: "0 a 10" },
+        esta_bom: { type: "boolean" },
+        veredito: { type: "string", description: "2 a 4 frases, direto ao ponto" },
+        criterios: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              criterio: { type: "string", description: "Etapa ou exigência do processo (ex.: perguntou a quantidade)" },
+              nota: { type: "number", description: "0 a 10" },
+              avaliacao: { type: "string", description: "Como o time se saiu, com números/exemplos" },
+            },
+            required: ["criterio", "nota", "avaliacao"],
+            additionalProperties: false,
+          },
+        },
+      },
+      required: ["nota_geral", "esta_bom", "veredito", "criterios"],
+      additionalProperties: false,
+    },
     prompt_sdr: {
       type: "object",
       properties: {
@@ -285,11 +321,11 @@ const SCHEMA_DIAGNOSTICO = {
     },
     acoes_prioritarias: { type: "array", items: { type: "string" } },
   },
-  required: ["resumo_geral", "pontos_fracos", "por_vendedor", "por_origem", "scripts_recomendados", "acoes_prioritarias", "prompt_sdr"],
+  required: ["avaliacao_atendimento", "resumo_geral", "pontos_fracos", "por_vendedor", "por_origem", "scripts_recomendados", "acoes_prioritarias", "prompt_sdr"],
   additionalProperties: false,
 } as const;
 
-const PROMPT_DIAGNOSTICO = `Você é o gestor comercial da Gift Web Brindes (brindes personalizados B2B, venda por WhatsApp). Abaixo estão as análises individuais das conversas do período (uma por linha, em JSON compacto) e métricas objetivas de atendimento. Faça um diagnóstico do time: quais pontos estão deixando a desejar com mais frequência e mais impacto em vendas, o que cada vendedor precisa melhorar, diferenças entre origens do lead (Google, Meta etc.), mensagens-modelo para as situações mais problemáticas e as ações prioritárias para a próxima semana. Baseie-se só nos dados; cite números quando houver.
+const PROMPT_DIAGNOSTICO = `Você é o gestor comercial da Gift Web Brindes (brindes personalizados B2B, venda por WhatsApp). Abaixo vem um conjunto de conversas para avaliar -- ou as transcrições completas, ou as análises individuais de cada conversa (uma por linha, em JSON compacto) com métricas objetivas de atendimento. Primeiro diga se o atendimento deste conjunto está bom, critério a critério, comparando com o processo de atendimento da empresa (abaixo). Depois faça o diagnóstico do time: quais pontos estão deixando a desejar com mais frequência e mais impacto em vendas, o que cada vendedor precisa melhorar, diferenças entre origens do lead (Google, Meta etc.), mensagens-modelo para as situações mais problemáticas e as ações prioritárias para a próxima semana. Baseie-se só nos dados; cite números quando houver.
 
 O atendimento começa com um SDR de IA (Felipe) que qualifica e passa para o consultor humano; "por_vendedor" é sobre os consultores humanos. Em "prompt_sdr", avalie o SDR a partir das violações e sugestões de cada conversa e proponha alterações no prompt dele (que vem abaixo) com o texto pronto para colar -- priorize o que mais faz lead morrer ou chegar mal qualificado ao consultor.`;
 
@@ -357,58 +393,100 @@ async function buscarMensagens(conversaId: string, apiKey: string): Promise<Mens
     .sort((a, b) => new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime());
 }
 
-const hora = (iso?: string) =>
+const hora = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "";
 
 const nomeAtendente = (m: MensagemDC) =>
   (m as { attendant?: { name?: string } }).attendant?.name ?? m.attendants?.find((a) => a?.name)?.name ?? null;
 
-/** Mensagem marcada como automação/bot pelo Data Crazy (nome do campo não confirmado: aceita os comuns). */
-const ehAutomacao = (m: MensagemDC) => {
+/** Campos que o Data Crazy pode usar para marcar automação/IA (nome não confirmado: aceita os comuns). */
+const CAMPOS_AUTOMACAO = ["isAutomation", "automation", "fromAutomation", "isBot", "bot", "isAi", "fromAi", "isAgent", "sentByAi"];
+
+/** Mensagem compacta guardada em comercial_conversas.mensagens: dá para recalcular quem mandou o quê sem o Data Crazy. */
+type Msg = { t: string | null; r: boolean; b: string; a: string | null; auto: boolean; anx?: string[] };
+
+function compactar(m: MensagemDC): Msg {
   const o = m as Record<string, unknown>;
-  return ["isAutomation", "automation", "fromAutomation", "isBot", "bot", "isAi", "fromAi"].some((k) => o[k] === true);
-};
-
-/** A mensagem "Resumo do projeto" do SDR dispara a transferência para o consultor. */
-const ehResumoSdr = (m: MensagemDC) => !m.received && /resumo do projeto/i.test(m.body ?? "");
-
-/**
- * Monta a transcrição legível: "[dd/mm hh:mm] Quem: mensagem", separando o
- * SDR de IA do consultor humano. Até o "Resumo do projeto", mensagem enviada
- * sem atendente identificado (ou marcada como automação) é do SDR; mensagem
- * com atendente é do consultor.
- */
-function montarTranscricao(ordenadas: MensagemDC[]): { texto: string; atendente: string | null } {
-  let atendente: string | null = null;
-  let passouParaConsultor = false;
-  const linhas = ordenadas.map((m) => {
-    const nome = m.received ? null : nomeAtendente(m);
-    if (nome && !atendente) atendente = nome;
-    let quem = "Cliente";
-    if (!m.received) {
-      if (ehAutomacao(m) || (!nome && !passouParaConsultor)) quem = "SDR";
-      else quem = nome ? `Consultor (${nome})` : "Consultor";
-      if (ehResumoSdr(m)) passouParaConsultor = true;
-    }
-    let texto = (m.body ?? "").trim();
-    const anexos = (m.attachments ?? []).map((a) => a?.fileName || a?.mimeType).filter(Boolean);
-    if (anexos.length > 0) texto += (texto ? " " : "") + `[anexo: ${anexos.join(", ")}]`;
-    return `[${hora(m.createdAt)}] ${quem}: ${texto}`;
-  });
-  let texto = linhas.join("\n");
-  // Conversa longa: a negociação fecha (ou morre) no final -- guarda o final.
-  if (texto.length > MAX_CARACTERES_TRANSCRICAO) texto = texto.slice(-MAX_CARACTERES_TRANSCRICAO);
-  return { texto, atendente };
+  const anexos = (m.attachments ?? []).map((a) => a?.fileName || a?.mimeType).filter(Boolean) as string[];
+  return {
+    t: m.createdAt ?? null,
+    r: !!m.received,
+    b: (m.body ?? "").trim(),
+    a: m.received ? null : nomeAtendente(m),
+    auto: CAMPOS_AUTOMACAO.some((k) => o[k] === true),
+    ...(anexos.length ? { anx: anexos } : {}),
+  };
 }
 
-/** Métricas objetivas: tempo até a 1ª resposta, mediana das respostas e se o cliente ficou sem resposta. */
-function metricasAtendimento(ordenadas: MensagemDC[]) {
+const NOME_SDR = /\bfelipe\b/i;
+const RE_APRESENTACAO_SDR = /\b(?:sou o|aqui (?:é|e) o|me chamo|meu nome (?:é|e))\s+felipe\b/i;
+// Prefixo em qualquer caixa, mas o nome tem de vir com inicial maiúscula (evita "sou o responsável").
+// "Sou o Guilherme", "aqui é a Priscila", "me chamo...", "meu nome é..." -- o consultor se apresenta ao entrar.
+const RE_APRESENTACAO = /\b(?:[Ss]ou [oa]|[Aa]qui (?:é|e) [oa]|[Mm]e chamo|[Mm]eu nome (?:é|e))\s+([A-ZÁÉÍÓÚÂÊÔÃÕÇ][a-záéíóúâêôãõç]+)/;
+/** A mensagem "Resumo do projeto" do SDR dispara a transferência para o consultor. */
+const ehResumo = (m: Msg) => !m.r && /resumo do projeto/i.test(m.b);
+
+type Papel = { papel: "cliente" | "sdr" | "consultor"; nome: string | null };
+
+/**
+ * Quem mandou cada mensagem. O SDR de IA sempre começa; o consultor humano
+ * entra depois e se apresenta. É consultor a mensagem enviada:
+ *  - com atendente identificado que não seja uma conta usada pelo SDR
+ *    (conta que aparece em mensagem claramente do SDR: automação, "Resumo do
+ *    projeto" ou "sou o Felipe");
+ *  - com apresentação de alguém que não é o Felipe;
+ *  - depois que o consultor já entrou ou depois do "Resumo do projeto".
+ * Fora isso, é do SDR.
+ */
+function atribuirPapeis(msgs: Msg[]) {
+  const doSdr = (m: Msg) => m.auto || ehResumo(m) || RE_APRESENTACAO_SDR.test(m.b);
+  const contasSdr = new Set<string>();
+  for (const m of msgs) if (!m.r && m.a && (doSdr(m) || NOME_SDR.test(m.a))) contasSdr.add(m.a);
+
+  let consultor: string | null = null;
+  let consultorAtivo = false;
+  let handoffEm: string | null = null;
+  let consultorEntrouEm: string | null = null;
+  const papeis: Papel[] = msgs.map((m) => {
+    if (m.r) return { papel: "cliente", nome: null };
+    if (doSdr(m)) {
+      if (ehResumo(m)) handoffEm ??= m.t;
+      return { papel: "sdr", nome: "Felipe" };
+    }
+    const humano = m.a && !contasSdr.has(m.a) ? m.a : null;
+    const apresentado = RE_APRESENTACAO.exec(m.b)?.[1];
+    const nomeApresentado = apresentado && !NOME_SDR.test(apresentado) ? apresentado : null;
+    if (humano || nomeApresentado || consultorAtivo || handoffEm) {
+      consultorAtivo = true;
+      consultor ??= humano ?? nomeApresentado;
+      consultorEntrouEm ??= m.t;
+      return { papel: "consultor", nome: humano ?? consultor };
+    }
+    return { papel: "sdr", nome: "Felipe" };
+  });
+  return { papeis, consultor, handoffEm, consultorEntrouEm };
+}
+
+/** Transcrição legível ("[dd/mm hh:mm] Quem: mensagem"), papéis e métricas a partir das mensagens compactas. */
+function camposDasMensagens(msgs: Msg[]) {
+  const { papeis, consultor, handoffEm, consultorEntrouEm } = atribuirPapeis(msgs);
+  const linhas = msgs.map((m, i) => {
+    const p = papeis[i];
+    const quem = p.papel === "cliente" ? "Cliente" : p.papel === "sdr" ? "SDR (IA)" : `Consultor${p.nome ? ` (${p.nome})` : ""}`;
+    const texto = [m.b, m.anx?.length ? `[anexo: ${m.anx.join(", ")}]` : ""].filter(Boolean).join(" ");
+    return `[${hora(m.t)}] ${quem}: ${texto}`;
+  });
+  let transcricao = linhas.join("\n");
+  // Conversa longa: a negociação fecha (ou morre) no final -- guarda o final.
+  if (transcricao.length > MAX_CARACTERES_TRANSCRICAO) transcricao = transcricao.slice(-MAX_CARACTERES_TRANSCRICAO);
+
+  // Tempos de resposta (a qualquer resposta da empresa, SDR ou consultor).
   const tempos: number[] = [];
   let aguardandoDesde: number | null = null;
-  for (const m of ordenadas) {
-    const t = new Date(m.createdAt ?? 0).getTime();
-    if (!t) continue;
-    if (m.received) {
+  for (const m of msgs) {
+    const t = ms(m.t);
+    if (Number.isNaN(t)) continue;
+    if (m.r) {
       if (aguardandoDesde == null) aguardandoDesde = t;
     } else if (aguardandoDesde != null) {
       tempos.push(Math.round((t - aguardandoDesde) / 1000));
@@ -416,10 +494,23 @@ function metricasAtendimento(ordenadas: MensagemDC[]) {
     }
   }
   const ordenados = [...tempos].sort((a, b) => a - b);
+  const primeiraCliente = msgs.find((m) => m.r);
+  const emails = [...new Set(msgs.filter((m) => m.r).flatMap((m) => m.b.toLowerCase().match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/g) ?? []))];
+
   return {
+    transcricao,
+    atendente: consultor,
+    total_mensagens: msgs.length,
+    primeira_mensagem_cliente: primeiraCliente?.b || null,
+    primeira_mensagem_em: primeiraCliente?.t ?? null,
     tempo_primeira_resposta_seg: tempos[0] ?? null,
     tempo_mediano_resposta_seg: ordenados.length ? ordenados[Math.floor(ordenados.length / 2)] : null,
     cliente_sem_resposta: aguardandoDesde != null,
+    mensagens_sdr: papeis.filter((p) => p.papel === "sdr").length,
+    mensagens_consultor: papeis.filter((p) => p.papel === "consultor").length,
+    handoff_em: handoffEm,
+    consultor_entrou_em: consultorEntrouEm,
+    emails: emails.length ? emails : null,
   };
 }
 
@@ -446,6 +537,7 @@ async function chamarIA<T>(
   entrada: string,
   nomeSchema: string,
   schema: unknown,
+  esforco: "low" | "medium" = "medium",
 ): Promise<{ resultado: T; tokensEntrada?: number; tokensSaida?: number } | { erro: string }> {
   const gateway = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(request));
   let resposta: Response;
@@ -458,7 +550,7 @@ async function chamarIA<T>(
         model: MODELO,
         stream: true,
         store: false,
-        reasoning: { effort: "medium", summary: "auto" },
+        reasoning: { effort: esforco, summary: "auto" },
         include: ["reasoning.encrypted_content"],
         input: [
           { role: "system", content: sistema },
@@ -531,41 +623,45 @@ async function chamarIA<T>(
 
 /** Busca as mensagens de uma conversa e grava (sem IA). */
 async function importarConversa(admin: SupabaseClient, conv: ConversaDC, dcKey: string) {
-  const mensagens = await buscarMensagens(conv.id, dcKey);
-  const { texto: transcricao, atendente } = montarTranscricao(mensagens);
-  const primeiraCliente = mensagens.find((m) => m.received);
+  const brutas = await buscarMensagens(conv.id, dcKey);
+  const msgs = brutas.map(compactar);
+  const campos = camposDasMensagens(msgs);
+  const primeiraCliente = brutas.find((m) => m.received);
   const linha = {
     id: conv.id,
-    iniciada_em: conv.createdAt ?? mensagens[0]?.createdAt ?? null,
+    iniciada_em: conv.createdAt ?? brutas[0]?.createdAt ?? null,
     atualizado_em: conv.updatedAt ?? new Date().toISOString(),
-    ultima_mensagem_em: conv.lastMessageDate ?? mensagens.at(-1)?.createdAt ?? null,
+    ultima_mensagem_em: conv.lastMessageDate ?? brutas.at(-1)?.createdAt ?? null,
     contato_nome: conv.contact?.name ?? conv.name ?? null,
     contato_telefone: conv.contact?.contactId ?? null,
-    atendente,
     canal: conv.contact?.platform ?? conv.instance?.platform ?? "WHATSAPP",
     status: statusConversa(conv),
-    total_mensagens: mensagens.length,
-    transcricao,
-    transcricao_hash: await sha256(transcricao),
     bruto: conv,
-    primeira_mensagem_cliente: primeiraCliente?.body?.trim() || null,
-    primeira_mensagem_em: primeiraCliente?.createdAt ?? null,
     primeira_mensagem_bruto: primeiraCliente ?? null,
     origem_detectada: detectarOrigem(conv, primeiraCliente),
-    ...metricasAtendimento(mensagens),
+    mensagens: msgs,
+    ...campos,
+    transcricao_hash: await sha256(campos.transcricao),
   };
   const { error } = await admin.from("comercial_conversas").upsert(linha);
   if (error) throw new Error(`erro ao gravar conversa (${error.message})`);
   return linha;
 }
 
-/** Prompt atual do SDR de IA (salvo na tela /whatsapp), anexado às instruções da análise. */
-async function blocoPromptSdr(admin: SupabaseClient): Promise<string> {
-  const { data } = await admin.from("comercial_configuracoes").select("valor").eq("chave", "prompt_sdr").maybeSingle();
-  const prompt = (data?.valor ?? "").trim();
-  return prompt
-    ? `\n\nPROMPT ATUAL DO SDR DE IA (as regras que ele deveria seguir):\n<prompt_sdr>\n${prompt}\n</prompt_sdr>`
-    : "\n\n(O prompt do SDR não foi cadastrado: avalie o SDR por boas práticas de pré-venda.)";
+async function lerConfig(admin: SupabaseClient, chave: string): Promise<string> {
+  const { data } = await admin.from("comercial_configuracoes").select("valor").eq("chave", chave).maybeSingle();
+  return (data?.valor ?? "").trim();
+}
+
+/** Prompt do SDR e processo de atendimento (salvos na tela /whatsapp), anexados às instruções da IA. */
+async function blocoContexto(admin: SupabaseClient): Promise<string> {
+  const [prompt, processo] = await Promise.all([lerConfig(admin, "prompt_sdr"), lerConfig(admin, "processo_atendimento")]);
+  return (processo
+    ? `\n\nPROCESSO DE ATENDIMENTO DA EMPRESA (critério de avaliação):\n<processo>\n${processo}\n</processo>`
+    : "") +
+    (prompt
+      ? `\n\nPROMPT ATUAL DO SDR DE IA (as regras que ele deveria seguir):\n<prompt_sdr>\n${prompt}\n</prompt_sdr>`
+      : "\n\n(O prompt do SDR não foi cadastrado: avalie o SDR por boas práticas de pré-venda.)");
 }
 
 /** Analisa por IA uma conversa já gravada e salva em comercial_analises. */
@@ -573,14 +669,14 @@ async function analisarConversa(
   admin: SupabaseClient,
   req: Request,
   lovableKey: string,
-  promptSdr: string,
+  contexto: string,
   c: { id: string; transcricao: string; transcricao_hash: string; atendente: string | null; contato_nome: string | null },
 ) {
-  const contexto = [c.contato_nome && `Cliente: ${c.contato_nome}`, c.atendente && `Atendente responsável: ${c.atendente}`]
+  const cabecalho = [c.contato_nome && `Cliente: ${c.contato_nome}`, c.atendente && `Consultor responsável: ${c.atendente}`]
     .filter(Boolean).join("\n");
   const ia = await chamarIA<AnaliseIA>(
-    req, lovableKey, PROMPT_SISTEMA + promptSdr,
-    `${contexto}\n\nAnalise a transcrição abaixo da conversa:\n\n${c.transcricao}`,
+    req, lovableKey, PROMPT_SISTEMA + contexto,
+    `${cabecalho}\n\nAnalise a transcrição abaixo da conversa:\n\n${c.transcricao}`,
     "analise_conversa", SCHEMA_ANALISE,
   );
   if ("erro" in ia) throw new Error(`IA (${ia.erro})`);
@@ -635,6 +731,141 @@ async function conversasDoPeriodo<T>(admin: SupabaseClient, colunas: string, ini
   }
 }
 
+/** Conversas por id (em blocos: a URL do .in() tem limite de tamanho). */
+async function conversasPorIds<T>(admin: SupabaseClient, colunas: string, ids: string[]): Promise<T[]> {
+  const todas: T[] = [];
+  for (let i = 0; i < ids.length; i += 150) {
+    const { data, error } = await admin.from("comercial_conversas").select(colunas).in("id", ids.slice(i, i + 150));
+    if (error) throw new Error(error.message);
+    todas.push(...((data ?? []) as T[]));
+  }
+  return todas;
+}
+
+/** Todas as linhas de uma tabela (paginado). */
+async function todasAsLinhas<T>(admin: SupabaseClient, tabela: string, colunas: string): Promise<T[]> {
+  const todas: T[] = [];
+  for (let de = 0; ; de += 1000) {
+    const { data, error } = await admin.from(tabela).select(colunas).order("id").range(de, de + 999);
+    if (error) throw new Error(error.message);
+    todas.push(...((data ?? []) as T[]));
+    if ((data?.length ?? 0) < 1000) return todas;
+  }
+}
+
+// ---------- Leads do Meta x conversas ----------
+
+/** DDD + 8 últimos dígitos (ignora +55 e o 9º dígito, que às vezes falta). */
+function chaveTelefone(v?: string | null): string | null {
+  let d = (v ?? "").replace(/\D/g, "");
+  if (d.length >= 12 && d.startsWith("55")) d = d.slice(2);
+  if (d.length < 10 || d.length > 11) return null;
+  return d.slice(0, 2) + d.slice(-8);
+}
+
+const PALAVRAS_IGNORADAS = new Set(["de", "da", "do", "das", "dos", "e"]);
+const tokensNome = (v?: string | null) =>
+  (v ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z\s]/g, " ")
+    .split(/\s+/).filter((t) => t.length > 1 && !PALAVRAS_IGNORADAS.has(t));
+
+type LeadLinha = { id: string; chave: string; nome: string | null; telefone: string | null; email: string | null; lead_criado_em: string | null; vinculo_metodo: string | null };
+type ConversaVinculo = { id: string; contato_nome: string | null; contato_telefone: string | null; iniciada_em: string | null; primeira_mensagem_em: string | null; emails: string[] | null };
+
+function vincularLeads(leads: LeadLinha[], conversas: ConversaVinculo[]) {
+  const porTelefone = new Map<string, ConversaVinculo[]>();
+  const porEmail = new Map<string, ConversaVinculo[]>();
+  for (const c of conversas) {
+    const k = chaveTelefone(c.contato_telefone);
+    if (k) porTelefone.set(k, [...(porTelefone.get(k) ?? []), c]);
+    for (const e of c.emails ?? []) porEmail.set(e, [...(porEmail.get(e) ?? []), c]);
+  }
+  const inicio = (c: ConversaVinculo) => ms(c.iniciada_em ?? c.primeira_mensagem_em);
+  const maisProxima = (cs: ConversaVinculo[], t: number) =>
+    Number.isNaN(t) ? cs[0] : [...cs].sort((a, b) => Math.abs(inicio(a) - t) - Math.abs(inicio(b) - t))[0];
+  const porInicio = conversas.filter((c) => !Number.isNaN(inicio(c))).sort((a, b) => inicio(a) - inicio(b));
+
+  const resultado: { id: string; chave: string; conversa_id: string | null; vinculo_metodo: string | null; vinculo_score: number | null }[] = [];
+  for (const l of leads) {
+    if (l.vinculo_metodo === "manual") continue;
+    const t = ms(l.lead_criado_em);
+    let achou: { c: ConversaVinculo; metodo: string; score: number } | null = null;
+
+    const tel = chaveTelefone(l.telefone);
+    if (tel && porTelefone.has(tel)) achou = { c: maisProxima(porTelefone.get(tel)!, t), metodo: "telefone", score: 100 };
+
+    const email = l.email?.trim().toLowerCase();
+    if (!achou && email && porEmail.has(email)) achou = { c: maisProxima(porEmail.get(email)!, t), metodo: "email", score: 95 };
+
+    if (!achou && !Number.isNaN(t)) {
+      // Conversa que começou de 30 min antes até 3 h depois do lead.
+      const janela = porInicio.filter((c) => inicio(c) >= t - 30 * 60_000 && inicio(c) <= t + 180 * 60_000);
+      const nomeLead = tokensNome(l.nome);
+      let melhor: { c: ConversaVinculo; score: number } | null = null;
+      for (const c of janela) {
+        const nomeConversa = tokensNome(c.contato_nome);
+        if (!nomeLead.length || !nomeConversa.length || nomeLead[0] !== nomeConversa[0]) continue;
+        const sobrenome = nomeLead.slice(1).some((x) => nomeConversa.slice(1).includes(x));
+        const score = (sobrenome ? 85 : 70) - Math.min(15, Math.abs(inicio(c) - t) / 60_000 / 12);
+        if (!melhor || score > melhor.score) melhor = { c, score: Math.round(score) };
+      }
+      if (melhor) achou = { ...melhor, metodo: "nome_horario" };
+      else {
+        // Só pelo horário: uma única conversa começando até 15 min depois do lead.
+        const proximas = janela.filter((c) => inicio(c) >= t - 2 * 60_000 && inicio(c) <= t + 15 * 60_000);
+        if (proximas.length === 1) achou = { c: proximas[0], metodo: "horario", score: 40 };
+      }
+    }
+    resultado.push({
+      id: l.id, chave: l.chave,
+      conversa_id: achou?.c.id ?? null, vinculo_metodo: achou?.metodo ?? null, vinculo_score: achou?.score ?? null,
+    });
+  }
+  return resultado;
+}
+
+/** Link de planilha Google -> URL de download em CSV (aba indicada pelo gid). */
+function urlCsvGoogle(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (!/docs\.google\.com$/.test(u.hostname)) return null;
+    const gid = u.searchParams.get("gid") ?? /gid=(\d+)/.exec(u.hash)?.[1] ?? "0";
+    const publicada = /\/spreadsheets\/d\/e\/([^/]+)/.exec(u.pathname);
+    if (publicada) return `https://docs.google.com/spreadsheets/d/e/${publicada[1]}/pub?output=csv&gid=${gid}`;
+    const id = /\/spreadsheets\/d\/([^/]+)/.exec(u.pathname)?.[1];
+    return id ? `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}` : null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------- Assistente (perguntas livres sobre os dados) ----------
+
+const SCHEMA_PLANO = {
+  type: "object",
+  properties: {
+    inicio: { type: ["string", "null"], description: "Data inicial AAAA-MM-DD (inclusiva) ou null se a pergunta não fala de período" },
+    fim: { type: ["string", "null"], description: "Data final AAAA-MM-DD (inclusiva)" },
+    campo_data: { type: "string", enum: ["inicio_conversa", "atividade"], description: "inicio_conversa para 'leads que chegaram'; atividade para 'conversas/atendimentos do período'" },
+    origem: { type: ["string", "null"], enum: ["google", "meta", "organico", "indicacao", "outro", "nao_identificada", null] },
+    consultor: { type: ["string", "null"], description: "Nome do consultor exatamente como na lista, ou null" },
+    precisa_transcricoes: { type: "boolean", description: "true se a resposta exige ler as conversas em si (poucas conversas)" },
+  },
+  required: ["inicio", "fim", "campo_data", "origem", "consultor", "precisa_transcricoes"],
+  additionalProperties: false,
+} as const;
+
+const SCHEMA_RESPOSTA = {
+  type: "object",
+  properties: {
+    resposta: { type: "string", description: "Resposta em markdown simples (parágrafos, listas com '-', **negrito**, títulos com ###)" },
+    conversas_citadas: { type: "array", items: { type: "string" }, description: "ids das conversas citadas na resposta (no máximo 10)" },
+  },
+  required: ["resposta", "conversas_citadas"],
+  additionalProperties: false,
+} as const;
+
+const PROMPT_ASSISTENTE = `Você é o assistente comercial da Gift Web Brindes (brindes personalizados B2B, venda por WhatsApp). O dono da empresa faz perguntas sobre os leads e os atendimentos; você responde só com base nos dados fornecidos (conversas importadas do Data Crazy, análises feitas por IA e leads da planilha do Meta Ads). O atendimento começa sempre pelo SDR de IA (Felipe) e passa para um consultor humano. Responda em português, direto, com números (quantidades, porcentagens, médias) e cite clientes/consultores pelo nome quando ajudar. Se os dados não bastarem para responder (ex.: conversas ainda não analisadas), diga exatamente o que falta. Nunca invente números.`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const inicioChamada = Date.now();
@@ -658,33 +889,263 @@ serve(async (req) => {
   if (!ehAdmin) return json({ error: "Apenas administradores podem analisar conversas." }, 403);
 
   const corpo = await req.json().catch(() => ({})) as {
-    acao?: "importar" | "analisar_pendentes" | "diagnostico_geral";
+    acao?: "importar" | "analisar_pendentes" | "avaliar_conjunto" | "diagnostico_geral" | "recalcular"
+      | "amostra_mensagens" | "baixar_planilha" | "vincular_leads" | "perguntar";
+    pergunta?: string;
+    historico?: { papel: "usuario" | "assistente"; texto: string }[];
     inicio?: string;
     fim?: string;
     skip?: number;
     reanalizar?: boolean;
+    /** importar: busca de novo as mensagens mesmo sem mudança (preenche as mensagens das importações antigas). */
+    atualizarTudo?: boolean;
+    /** analisar_pendentes/avaliar_conjunto: restringe a estas conversas. */
+    conversaIds?: string[];
+    /** analisar_pendentes: reanalisa mesmo sem mudança (só com conversaIds). */
+    forcar?: boolean;
+    /** analisar_pendentes: inclui as já analisadas cuja conversa mudou depois. */
+    incluirDesatualizadas?: boolean;
+    instrucoes?: string;
+    titulo?: string;
+    url?: string;
     /** Reimporta e reanalisa só esta conversa (já gravada). */
     conversaId?: string;
   };
+  const conversaIds = Array.isArray(corpo.conversaIds) ? corpo.conversaIds.filter((x) => typeof x === "string") : null;
 
   try {
+    // ---- Assistente ----
+    if (corpo.acao === "perguntar") {
+      const pergunta = (corpo.pergunta ?? "").trim();
+      if (!pergunta) return json({ error: "Faça uma pergunta." }, 400);
+      const historico = (corpo.historico ?? []).slice(-6)
+        .map((h) => `${h.papel === "usuario" ? "Usuário" : "Assistente"}: ${String(h.texto).slice(0, 2000)}`).join("\n");
+      const hoje = new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
+      const diaSemana = new Date().toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo", weekday: "long" });
+
+      const { data: consultoresRows } = await admin.from("comercial_conversas").select("atendente").not("atendente", "is", null).limit(5000);
+      const consultores = [...new Set((consultoresRows ?? []).map((r) => r.atendente as string))];
+
+      // 1) Entende a pergunta: período, origem, consultor.
+      const plano = await chamarIA<{ inicio: string | null; fim: string | null; campo_data: string; origem: string | null; consultor: string | null; precisa_transcricoes: boolean }>(
+        req, lovableKey,
+        `Converta a pergunta em filtros. Hoje é ${hoje} (${diaSemana}), fuso de Brasília. "Ontem" = o dia anterior; "esta semana" = de segunda até hoje; "mês passado" = o mês calendário anterior. Sem período na pergunta (nem no histórico): últimos 30 dias. Consultores existentes: ${consultores.join(", ") || "nenhum"}.`,
+        `${historico ? `Conversa até aqui:\n${historico}\n\n` : ""}Pergunta: ${pergunta}`,
+        "plano_pergunta", SCHEMA_PLANO, "low",
+      );
+      if ("erro" in plano) return json({ error: `IA: ${plano.erro}` }, 502);
+      const pl = plano.resultado;
+      const per2 = periodo(pl.inicio ?? undefined, pl.fim ?? undefined) ?? periodo(
+        new Date(Date.now() - 30 * 86_400_000).toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" }), hoje)!;
+
+      // 2) Carrega os dados do recorte.
+      type Linha = {
+        id: string; contato_nome: string | null; atendente: string | null; iniciada_em: string | null; ultima_mensagem_em: string | null;
+        primeira_mensagem_cliente: string | null; origem_detectada: string | null; tempo_primeira_resposta_seg: number | null;
+        cliente_sem_resposta: boolean | null; mensagens_sdr: number | null; mensagens_consultor: number | null;
+        consultor_entrou_em: string | null; handoff_em: string | null; total_mensagens: number; transcricao_hash: string | null;
+      };
+      const colunas = "id, contato_nome, atendente, iniciada_em, ultima_mensagem_em, primeira_mensagem_cliente, origem_detectada, tempo_primeira_resposta_seg, cliente_sem_resposta, mensagens_sdr, mensagens_consultor, consultor_entrou_em, handoff_em, total_mensagens, transcricao_hash";
+      let conversas: Linha[] = [];
+      for (let de = 0; ; de += 1000) {
+        let q = admin.from("comercial_conversas").select(colunas);
+        q = pl.campo_data === "inicio_conversa"
+          ? q.gte("iniciada_em", per2.inicioIso).lte("iniciada_em", per2.fimIso)
+          : q.gte("ultima_mensagem_em", per2.inicioIso).lte("iniciada_em", per2.fimIso);
+        const { data, error } = await q.order("iniciada_em", { ascending: false }).range(de, de + 999);
+        if (error) throw new Error(error.message);
+        conversas.push(...((data ?? []) as Linha[]));
+        if ((data?.length ?? 0) < 1000) break;
+      }
+      if (pl.consultor) conversas = conversas.filter((c) => c.atendente === pl.consultor);
+
+      const { data: regras } = await admin.from("comercial_origens_regras").select("padrao, origem, campanha");
+      const leadsVinc = new Map<string, { campanha: string | null; anuncio: string | null }>();
+      for (let i = 0; i < conversas.length; i += 150) {
+        const { data } = await admin.from("comercial_leads_meta").select("conversa_id, campanha, anuncio").in("conversa_id", conversas.slice(i, i + 150).map((c) => c.id));
+        for (const l of data ?? []) leadsVinc.set(l.conversa_id as string, { campanha: l.campanha, anuncio: l.anuncio });
+      }
+      const normalizar = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+      const origemDe = (c: Linha) => {
+        const lead = leadsVinc.get(c.id);
+        if (lead) return { origem: "meta", campanha: lead.campanha };
+        const msg = normalizar(c.primeira_mensagem_cliente ?? "");
+        const regra = (regras ?? []).find((r) => msg && msg.includes(normalizar(r.padrao)));
+        return regra ? { origem: regra.origem as string, campanha: regra.campanha as string | null } : { origem: c.origem_detectada ?? "nao_identificada", campanha: null };
+      };
+      const comOrigem = conversas.map((c) => ({ c, ...origemDe(c) })).filter((x) => !pl.origem || x.origem === pl.origem);
+
+      const ultimas = new Map<string, Record<string, unknown>>();
+      for (let i = 0; i < comOrigem.length; i += 150) {
+        const { data } = await admin.from("comercial_analises")
+          .select("conversa_id, criado_em, nota, nota_sdr, resultado, etapa_funil, resumo, objecoes, melhorias, proximo_passo, sdr")
+          .in("conversa_id", comOrigem.slice(i, i + 150).map((x) => x.c.id)).order("criado_em", { ascending: false });
+        for (const a of data ?? []) if (!ultimas.has(a.conversa_id)) ultimas.set(a.conversa_id, a);
+      }
+
+      // Leads do Meta que chegaram no período (inclusive os que nunca viraram conversa).
+      const { data: leadsPeriodo } = await admin.from("comercial_leads_meta").select("campanha, conversa_id")
+        .gte("lead_criado_em", per2.inicioIso).lte("lead_criado_em", per2.fimIso).limit(10000);
+
+      const conta = <K extends string>(xs: K[]) => xs.reduce((m, k) => ({ ...m, [k]: (m[k] ?? 0) + 1 }), {} as Record<string, number>);
+      const notas = [...ultimas.values()].map((a) => a.nota as number | null).filter((n): n is number => n != null);
+      const totais = {
+        periodo: `${hora(per2.inicioIso)} a ${hora(per2.fimIso)}`,
+        filtro_data: pl.campo_data,
+        conversas: comOrigem.length,
+        analisadas: ultimas.size,
+        por_origem: conta(comOrigem.map((x) => x.origem)),
+        por_campanha: conta(comOrigem.filter((x) => x.campanha).map((x) => x.campanha!)),
+        por_consultor: conta(comOrigem.map((x) => x.c.atendente ?? "sem consultor (só SDR)")),
+        por_resultado: conta([...ultimas.values()].map((a) => (a.resultado as string) ?? "indefinido")),
+        nota_media: notas.length ? Math.round((notas.reduce((s, n) => s + n, 0) / notas.length) * 10) / 10 : null,
+        consultor_nao_assumiu: comOrigem.filter((x) => !x.c.mensagens_consultor).length,
+        cliente_sem_resposta: comOrigem.filter((x) => x.c.cliente_sem_resposta).length,
+        leads_meta_no_periodo: leadsPeriodo?.length ?? 0,
+        leads_meta_sem_conversa: (leadsPeriodo ?? []).filter((l) => !l.conversa_id).length,
+        leads_meta_por_campanha: conta((leadsPeriodo ?? []).map((l) => (l.campanha as string) ?? "(sem campanha)")),
+      };
+      const linhas = comOrigem.map(({ c, origem, campanha }) => {
+        const a = ultimas.get(c.id);
+        return JSON.stringify({
+          id: c.id, cliente: c.contato_nome, inicio: hora(c.iniciada_em), ultima: hora(c.ultima_mensagem_em), origem, campanha,
+          consultor: c.atendente, msgs: c.total_mensagens, msgs_sdr: c.mensagens_sdr, msgs_consultor: c.mensagens_consultor,
+          consultor_assumiu: hora(c.consultor_entrou_em) || null,
+          primeira_resposta_min: c.tempo_primeira_resposta_seg != null ? Math.round(c.tempo_primeira_resposta_seg / 60) : null,
+          sem_resposta: c.cliente_sem_resposta, primeira_msg: (c.primeira_mensagem_cliente ?? "").slice(0, 120),
+          analise: a ? {
+            nota: a.nota, nota_sdr: a.nota_sdr, resultado: a.resultado, etapa: a.etapa_funil, resumo: a.resumo,
+            objecoes: ((a.objecoes as { categoria?: string; foi_contornada?: boolean }[]) ?? []).map((o) => `${o.categoria}${o.foi_contornada ? "(contornada)" : ""}`),
+            melhorias: ((a.melhorias as { titulo?: string }[]) ?? []).map((m) => m.titulo).slice(0, 4),
+            proximo_passo: a.proximo_passo,
+          } : "não analisada",
+        });
+      });
+      let dados = linhas.join("\n");
+      if (dados.length > MAX_CARACTERES_DIAGNOSTICO) dados = dados.slice(0, dados.lastIndexOf("\n", MAX_CARACTERES_DIAGNOSTICO)) + "\n(… lista cortada; use os totais)";
+
+      let transcricoes = "";
+      if (pl.precisa_transcricoes && comOrigem.length && comOrigem.length <= 15) {
+        const { data } = await admin.from("comercial_conversas").select("id, contato_nome, transcricao").in("id", comOrigem.map((x) => x.c.id));
+        transcricoes = (data ?? []).map((d) => `### ${d.contato_nome ?? d.id} (id ${d.id})\n${d.transcricao ?? ""}`).join("\n\n").slice(0, 120_000);
+      }
+
+      // 3) Responde.
+      const resposta = await chamarIA<{ resposta: string; conversas_citadas: string[] }>(
+        req, lovableKey, PROMPT_ASSISTENTE + `\nHoje é ${hoje} (${diaSemana}).`,
+        `${historico ? `Conversa até aqui:\n${historico}\n\n` : ""}PERGUNTA: ${pergunta}\n\n` +
+          `FILTRO APLICADO: ${JSON.stringify({ ...pl, periodo: totais.periodo })}\n\n` +
+          `TOTAIS (calculados, confiáveis):\n${JSON.stringify(totais)}\n\nCONVERSAS (uma por linha):\n${dados || "(nenhuma)"}` +
+          (transcricoes ? `\n\nTRANSCRIÇÕES:\n${transcricoes}` : ""),
+        "resposta_assistente", SCHEMA_RESPOSTA,
+      );
+      if ("erro" in resposta) return json({ error: `IA: ${resposta.erro}` }, 502);
+      return json({
+        ok: true,
+        resposta: resposta.resultado.resposta,
+        conversas: (resposta.resultado.conversas_citadas ?? []).filter((id) => comOrigem.some((x) => x.c.id === id)).slice(0, 10),
+        filtro: { ...pl, inicio: per2.inicioIso, fim: per2.fimIso, conversas: comOrigem.length },
+        tokens: (plano.tokensEntrada ?? 0) + (plano.tokensSaida ?? 0) + (resposta.tokensEntrada ?? 0) + (resposta.tokensSaida ?? 0),
+      });
+    }
+
+    // ---- JSON cru do Data Crazy de uma conversa (para conferir os campos) ----
+    if (corpo.acao === "amostra_mensagens") {
+      if (!corpo.conversaId) return json({ error: "Informe a conversa." }, 400);
+      const bruto = await dcGet(`/api/v1/conversations/${corpo.conversaId}/messages?take=40&skip=0`, dcKey);
+      const msgs = (extrairLista(bruto) as MensagemDC[])
+        .filter((m) => m && !m.deletedAt)
+        .sort((a, b) => ms(a.createdAt) - ms(b.createdAt));
+      const compactas = msgs.map(compactar);
+      const { papeis } = atribuirPapeis(compactas);
+      return json({
+        ok: true,
+        atribuicao: compactas.map((m, i) => ({ quando: hora(m.t), papel: papeis[i].papel, nome: papeis[i].nome, atendente_dc: m.a, automacao: m.auto, texto: m.b.slice(0, 160) })),
+        bruto: JSON.stringify(bruto, null, 2).slice(0, 40_000),
+      });
+    }
+
+    // ---- Planilha Google em CSV (precisa estar compartilhada por link ou publicada) ----
+    if (corpo.acao === "baixar_planilha") {
+      const csvUrl = urlCsvGoogle(corpo.url ?? "");
+      if (!csvUrl) return json({ error: "Link de planilha Google inválido." }, 400);
+      const r = await fetch(csvUrl, { redirect: "follow" });
+      const tipo = r.headers.get("content-type") ?? "";
+      const texto = await r.text();
+      if (!r.ok || tipo.includes("text/html")) {
+        return json({ error: "A planilha não está acessível pelo link. Compartilhe como \"Qualquer pessoa com o link: leitor\" ou publique na Web, ou envie o arquivo CSV." }, 400);
+      }
+      if (texto.length > 15_000_000) return json({ error: "Planilha grande demais (máx. 15 MB)." }, 400);
+      return json({ ok: true, csv: texto });
+    }
+
+    // ---- Liga os leads do Meta às conversas ----
+    if (corpo.acao === "vincular_leads") {
+      const leads = await todasAsLinhas<LeadLinha>(admin, "comercial_leads_meta", "id, chave, nome, telefone, email, lead_criado_em, vinculo_metodo");
+      const conversas = await todasAsLinhas<ConversaVinculo>(admin, "comercial_conversas", "id, contato_nome, contato_telefone, iniciada_em, primeira_mensagem_em, emails");
+      // Importações antigas não têm a coluna emails: procura na transcrição.
+      const semEmails = conversas.filter((c) => c.emails == null);
+      for (let i = 0; i < semEmails.length; i += 100) {
+        const { data } = await admin.from("comercial_conversas").select("id, transcricao").in("id", semEmails.slice(i, i + 100).map((c) => c.id));
+        for (const row of data ?? []) {
+          const achados = ((row.transcricao as string | null) ?? "").toLowerCase().match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/g);
+          const c = conversas.find((x) => x.id === row.id);
+          if (c && achados) c.emails = [...new Set(achados)];
+        }
+      }
+      const resultado = vincularLeads(leads, conversas);
+      const agora = new Date().toISOString();
+      for (let i = 0; i < resultado.length; i += 500) {
+        const { error } = await admin.from("comercial_leads_meta")
+          .upsert(resultado.slice(i, i + 500).map((r) => ({ ...r, vinculado_em: r.conversa_id ? agora : null })));
+        if (error) throw new Error(`erro ao gravar vínculos (${error.message})`);
+      }
+      const conta = (m: string) => resultado.filter((r) => r.vinculo_metodo === m).length;
+      return json({
+        ok: true, leads: leads.length, vinculados: resultado.filter((r) => r.conversa_id).length,
+        porMetodo: { telefone: conta("telefone"), email: conta("email"), nome_horario: conta("nome_horario"), horario: conta("horario") },
+      });
+    }
+
+    // ---- Recalcula transcrição e papéis a partir das mensagens já gravadas ----
+    if (corpo.acao === "recalcular") {
+      let skip = Math.max(0, soNumeros(corpo.skip));
+      let recalculadas = 0;
+      while (Date.now() - inicioChamada < ORCAMENTO_RECALCULAR_MS) {
+        const { data, error } = await admin.from("comercial_conversas").select("id, mensagens")
+          .not("mensagens", "is", null).order("id").range(skip, skip + 49);
+        if (error) throw new Error(error.message);
+        for (const row of data ?? []) {
+          const campos = camposDasMensagens(row.mensagens as Msg[]);
+          const { error: e2 } = await admin.from("comercial_conversas")
+            .update({ ...campos, transcricao_hash: await sha256(campos.transcricao) }).eq("id", row.id);
+          if (e2) throw new Error(e2.message);
+          recalculadas++;
+        }
+        skip += data?.length ?? 0;
+        if ((data?.length ?? 0) < 50) return json({ ok: true, terminou: true, proximoSkip: skip, recalculadas });
+      }
+      return json({ ok: true, terminou: false, proximoSkip: skip, recalculadas });
+    }
+
     // ---- Reanálise de uma conversa ----
-    if (corpo.conversaId) {
+    if (corpo.conversaId && !corpo.acao) {
       const { data: gravada } = await admin.from("comercial_conversas").select("bruto").eq("id", corpo.conversaId).maybeSingle();
       if (!gravada) return json({ error: "Conversa não encontrada." }, 404);
       const linha = await importarConversa(admin, { ...(gravada.bruto as ConversaDC), id: corpo.conversaId }, dcKey);
       if (linha.transcricao.trim().length < MIN_CARACTERES_PARA_ANALISAR) return json({ ok: true, analisadas: 0 });
-      await analisarConversa(admin, req, lovableKey, await blocoPromptSdr(admin), linha);
+      await analisarConversa(admin, req, lovableKey, await blocoContexto(admin), linha);
       return json({ ok: true, analisadas: 1 });
     }
 
     const per = periodo(corpo.inicio, corpo.fim);
-    if (!per) return json({ error: "Informe o período (inicio e fim no formato AAAA-MM-DD)." }, 400);
+    if (!per && !conversaIds) return json({ error: "Informe o período (inicio e fim no formato AAAA-MM-DD) ou as conversas." }, 400);
 
     // ---- Importação (sem IA), em lotes com orçamento de tempo ----
     // A lista do Data Crazy vem da conversa mais recente para a mais antiga;
     // quando uma página inteira é anterior ao início do período, terminou.
     if (corpo.acao === "importar") {
+      if (!per) return json({ error: "Informe o período." }, 400);
       let skip = Math.max(0, soNumeros(corpo.skip));
       let importadas = 0;
       let puladas = 0;
@@ -704,7 +1165,7 @@ serve(async (req) => {
 
           const ids = pagina.map((c) => c.id).filter(Boolean);
           const { data: gravadas } = await admin.from("comercial_conversas")
-            .select("id, ultima_mensagem_em, primeira_mensagem_em").in("id", ids);
+            .select("id, ultima_mensagem_em, primeira_mensagem_em, mensagens_sdr").in("id", ids);
           const gravadasMap = new Map((gravadas ?? []).map((g) => [g.id as string, g]));
 
           let i = 0;
@@ -716,8 +1177,8 @@ serve(async (req) => {
             const comeco = conv.createdAt ?? ultima;
             if (ms(ultima) < per.inicioMs || ms(comeco) > per.fimMs) { foraDoPeriodo++; continue; }
             const g = gravadasMap.get(conv.id);
-            // Já gravada, sem mensagem nova e com os campos da importação atual.
-            if (!corpo.reanalizar && g && g.primeira_mensagem_em && ultima &&
+            // Já gravada, sem mensagem nova e no formato atual (mensagens_sdr só existe a partir dele).
+            if (!corpo.reanalizar && !(corpo.atualizarTudo && g?.mensagens_sdr == null) && g && g.primeira_mensagem_em && ultima &&
               ms(g.ultima_mensagem_em) === ms(ultima)) { puladas++; continue; }
             try {
               await importarConversa(admin, conv, dcKey);
@@ -742,24 +1203,36 @@ serve(async (req) => {
       }
     }
 
-    // ---- Análise por IA das conversas do período que mudaram ----
+    // ---- Análise por IA (período ou seleção) ----
     if (corpo.acao === "analisar_pendentes") {
       // Só os hashes aqui; a transcrição (pesada) é lida na hora de analisar cada uma.
       type Linha = { id: string; transcricao_hash: string | null; atendente: string | null; contato_nome: string | null; total_mensagens: number };
-      const conversas = (await conversasDoPeriodo<Linha>(admin, "id, transcricao_hash, atendente, contato_nome, total_mensagens", per.inicioIso, per.fimIso))
+      const colunas = "id, transcricao_hash, atendente, contato_nome, total_mensagens";
+      const conversas = (conversaIds
+        ? await conversasPorIds<Linha>(admin, colunas, conversaIds)
+        : await conversasDoPeriodo<Linha>(admin, colunas, per!.inicioIso, per!.fimIso))
         .filter((c) => c.transcricao_hash && c.total_mensagens >= 2);
-      const analisadasHash = new Set<string>();
-      for (let i = 0; i < conversas.length; i += 200) {
+      const hashesAnalisados = new Map<string, Set<string>>();
+      for (let i = 0; i < conversas.length; i += 150) {
         const { data } = await admin.from("comercial_analises").select("conversa_id, transcricao_hash")
-          .in("conversa_id", conversas.slice(i, i + 200).map((c) => c.id));
-        for (const a of data ?? []) analisadasHash.add(`${a.conversa_id}|${a.transcricao_hash}`);
+          .in("conversa_id", conversas.slice(i, i + 150).map((c) => c.id));
+        for (const a of data ?? []) {
+          hashesAnalisados.set(a.conversa_id, (hashesAnalisados.get(a.conversa_id) ?? new Set()).add(a.transcricao_hash));
+        }
       }
-      const pendentes = conversas.filter((c) => !analisadasHash.has(`${c.id}|${c.transcricao_hash}`));
+      const forcar = !!corpo.forcar && !!conversaIds;
+      const pendentes = conversas.filter((c) => {
+        if (forcar) return true;
+        const hashes = hashesAnalisados.get(c.id);
+        if (!hashes) return true; // nunca analisada
+        return !!corpo.incluirDesatualizadas && !hashes.has(c.transcricao_hash!);
+      });
 
-      const promptSdr = await blocoPromptSdr(admin);
+      const contexto = await blocoContexto(admin);
       let analisadas = 0;
       let curtas = 0;
       const erros: string[] = [];
+      const processados: string[] = [];
       let proxima = 0;
       // Só começa uma análise nova enquanto houver tempo para ela terminar.
       await Promise.all(Array.from({ length: ANALISES_EM_PARALELO }, async () => {
@@ -769,78 +1242,123 @@ serve(async (req) => {
             const { data: t } = await admin.from("comercial_conversas").select("transcricao").eq("id", c.id).maybeSingle();
             const transcricao = (t?.transcricao as string | null) ?? "";
             if (transcricao.trim().length < MIN_CARACTERES_PARA_ANALISAR) { curtas++; continue; }
-            await analisarConversa(admin, req, lovableKey, promptSdr, { ...c, transcricao, transcricao_hash: c.transcricao_hash! });
+            await analisarConversa(admin, req, lovableKey, contexto, { ...c, transcricao, transcricao_hash: c.transcricao_hash! });
             analisadas++;
           } catch (e) {
             erros.push(`${c.contato_nome ?? c.id}: ${e instanceof Error ? e.message : String(e)}`);
+          } finally {
+            processados.push(c.id);
           }
         }
       }));
       const restantes = pendentes.length - proxima;
-      return json({ ok: true, analisadas, curtas, restantes, erros, terminou: restantes === 0 });
+      return json({ ok: true, analisadas, curtas, restantes, erros, processados, terminou: restantes === 0 });
     }
 
-    // ---- Diagnóstico geral do período ----
-    if (corpo.acao === "diagnostico_geral") {
+    // ---- Avaliação em conjunto (período inteiro, um vendedor, uma seleção) ----
+    if (corpo.acao === "avaliar_conjunto" || corpo.acao === "diagnostico_geral") {
       type Linha = {
-        id: string; atendente: string | null; origem_detectada: string | null; primeira_mensagem_cliente: string | null;
-        tempo_primeira_resposta_seg: number | null; tempo_mediano_resposta_seg: number | null; cliente_sem_resposta: boolean | null;
+        id: string; atendente: string | null; contato_nome: string | null; origem_detectada: string | null; primeira_mensagem_cliente: string | null;
+        tempo_primeira_resposta_seg: number | null; cliente_sem_resposta: boolean | null; transcricao_caracteres: number | null;
+        iniciada_em: string | null;
       };
-      const conversas = await conversasDoPeriodo<Linha>(admin,
-        "id, atendente, origem_detectada, primeira_mensagem_cliente, tempo_primeira_resposta_seg, tempo_mediano_resposta_seg, cliente_sem_resposta",
-        per.inicioIso, per.fimIso);
+      const colunas = "id, atendente, contato_nome, origem_detectada, primeira_mensagem_cliente, tempo_primeira_resposta_seg, cliente_sem_resposta, transcricao_caracteres, iniciada_em";
+      const conversas = conversaIds
+        ? await conversasPorIds<Linha>(admin, colunas, conversaIds)
+        : await conversasDoPeriodo<Linha>(admin, colunas, per!.inicioIso, per!.fimIso);
+      if (!conversas.length) return json({ error: "Nenhuma conversa no conjunto." }, 400);
+
       const { data: regras } = await admin.from("comercial_origens_regras").select("padrao, origem, campanha");
+      const { data: leads } = await admin.from("comercial_leads_meta").select("conversa_id, campanha").not("conversa_id", "is", null);
+      const campanhaMeta = new Map((leads ?? []).map((l) => [l.conversa_id as string, l.campanha as string | null]));
       const normalizar = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
       const origemDe = (c: Linha) => {
+        if (campanhaMeta.has(c.id)) return `meta${campanhaMeta.get(c.id) ? ` (${campanhaMeta.get(c.id)})` : ""}`;
         const msg = normalizar(c.primeira_mensagem_cliente ?? "");
         const regra = (regras ?? []).find((r) => msg && msg.includes(normalizar(r.padrao)));
         return regra ? `${regra.origem}${regra.campanha ? ` (${regra.campanha})` : ""}` : c.origem_detectada ?? "nao_identificada";
       };
 
-      const ultimas = new Map<string, Record<string, unknown>>();
-      for (let i = 0; i < conversas.length; i += 200) {
-        const { data } = await admin.from("comercial_analises")
-          .select("conversa_id, criado_em, nota, resultado, etapa_funil, resumo, melhorias, objecoes, oportunidades_perdidas, nota_sdr, sdr")
-          .in("conversa_id", conversas.slice(i, i + 200).map((c) => c.id))
-          .order("criado_em", { ascending: false });
-        for (const a of data ?? []) if (!ultimas.has(a.conversa_id)) ultimas.set(a.conversa_id, a);
-      }
-      if (ultimas.size === 0) return json({ error: "Nenhuma conversa analisada no período." }, 400);
-
-      const linhas = conversas.filter((c) => ultimas.has(c.id)).map((c) => {
-        const a = ultimas.get(c.id)!;
-        return JSON.stringify({
-          vendedor: c.atendente, origem: origemDe(c), nota: a.nota, resultado: a.resultado, etapa: a.etapa_funil,
-          resumo: a.resumo, melhorias: a.melhorias, objecoes: (a.objecoes as { categoria?: string; foi_contornada?: boolean; trecho_cliente?: string }[] ?? [])
-            .map((o) => ({ categoria: o.categoria, contornada: o.foi_contornada, trecho: o.trecho_cliente })),
-          oportunidades_perdidas: a.oportunidades_perdidas,
-          nota_sdr: a.nota_sdr,
-          sdr: a.sdr ? {
-            handoff: (a.sdr as AnaliseSdr).handoff_feito,
-            qualificado: (a.sdr as AnaliseSdr).lead_qualificado,
-            catalogo: (a.sdr as AnaliseSdr).catalogo_enviado,
-            violacoes: ((a.sdr as AnaliseSdr).violacoes ?? []).map((v) => v.regra),
-            sugestoes: (a.sdr as AnaliseSdr).sugestoes_prompt,
-          } : null,
-          primeira_resposta_min: c.tempo_primeira_resposta_seg != null ? Math.round(c.tempo_primeira_resposta_seg / 60) : null,
-          cliente_sem_resposta: c.cliente_sem_resposta,
+      // Cabe inteiro? Então a IA lê as transcrições (melhor avaliação); senão, as análises de cada conversa.
+      const totalCaracteres = conversas.reduce((s, c) => s + (c.transcricao_caracteres ?? 0) + 150, 0);
+      const modo = totalCaracteres <= MAX_CARACTERES_TRANSCRICOES_CONJUNTO ? "transcricoes" : "analises";
+      let entrada = "";
+      let usadas = 0;
+      if (modo === "transcricoes") {
+        const partes: string[] = [];
+        for (let i = 0; i < conversas.length; i += 50) {
+          const { data } = await admin.from("comercial_conversas").select("id, transcricao").in("id", conversas.slice(i, i + 50).map((c) => c.id));
+          const mapa = new Map((data ?? []).map((d) => [d.id as string, d.transcricao as string | null]));
+          for (const c of conversas.slice(i, i + 50)) {
+            const t = mapa.get(c.id);
+            if (!t?.trim()) continue;
+            usadas++;
+            partes.push(`### Conversa ${usadas} — cliente: ${c.contato_nome ?? "?"} — consultor: ${c.atendente ?? "não identificado"} — origem: ${origemDe(c)} — início: ${hora(c.iniciada_em)}\n${t}`);
+          }
+        }
+        entrada = partes.join("\n\n");
+      } else {
+        const ultimas = new Map<string, Record<string, unknown>>();
+        for (let i = 0; i < conversas.length; i += 150) {
+          const { data } = await admin.from("comercial_analises")
+            .select("conversa_id, criado_em, nota, resultado, etapa_funil, resumo, melhorias, objecoes, oportunidades_perdidas, nota_sdr, sdr")
+            .in("conversa_id", conversas.slice(i, i + 150).map((c) => c.id))
+            .order("criado_em", { ascending: false });
+          for (const a of data ?? []) if (!ultimas.has(a.conversa_id)) ultimas.set(a.conversa_id, a);
+        }
+        if (ultimas.size === 0) return json({ error: "O conjunto é grande demais para ler as transcrições e nenhuma conversa dele foi analisada ainda. Analise as conversas primeiro ou selecione menos." }, 400);
+        const linhas = conversas.filter((c) => ultimas.has(c.id)).map((c) => {
+          const a = ultimas.get(c.id)!;
+          return JSON.stringify({
+            consultor: c.atendente, origem: origemDe(c), nota: a.nota, resultado: a.resultado, etapa: a.etapa_funil,
+            resumo: a.resumo, melhorias: a.melhorias, objecoes: (a.objecoes as { categoria?: string; foi_contornada?: boolean; trecho_cliente?: string }[] ?? [])
+              .map((o) => ({ categoria: o.categoria, contornada: o.foi_contornada, trecho: o.trecho_cliente })),
+            oportunidades_perdidas: a.oportunidades_perdidas,
+            nota_sdr: a.nota_sdr,
+            sdr: a.sdr ? {
+              handoff: (a.sdr as AnaliseSdr).handoff_feito,
+              qualificado: (a.sdr as AnaliseSdr).lead_qualificado,
+              catalogo: (a.sdr as AnaliseSdr).catalogo_enviado,
+              violacoes: ((a.sdr as AnaliseSdr).violacoes ?? []).map((v) => v.regra),
+              sugestoes: (a.sdr as AnaliseSdr).sugestoes_prompt,
+            } : null,
+            primeira_resposta_min: c.tempo_primeira_resposta_seg != null ? Math.round(c.tempo_primeira_resposta_seg / 60) : null,
+            cliente_sem_resposta: c.cliente_sem_resposta,
+          });
         });
-      });
-      // Limite para caber no contexto e no tempo da função; as linhas vêm da
-      // conversa mais recente para a mais antiga, então corta as mais antigas.
-      let entrada = linhas.join("\n");
-      if (entrada.length > MAX_CARACTERES_DIAGNOSTICO) entrada = entrada.slice(0, entrada.lastIndexOf("\n", MAX_CARACTERES_DIAGNOSTICO));
+        usadas = linhas.length;
+        // Limite para caber no contexto e no tempo da função; corta as mais antigas.
+        entrada = linhas.join("\n");
+        if (entrada.length > MAX_CARACTERES_DIAGNOSTICO) {
+          entrada = entrada.slice(0, entrada.lastIndexOf("\n", MAX_CARACTERES_DIAGNOSTICO));
+          usadas = entrada.split("\n").length;
+        }
+      }
 
+      const instrucoes = (corpo.instrucoes ?? "").trim();
+      const escopoTexto = conversaIds
+        ? `${conversas.length} conversas selecionadas`
+        : `Período: ${corpo.inicio} a ${corpo.fim}, ${conversas.length} conversas`;
       const ia = await chamarIA<Record<string, unknown>>(
-        req, lovableKey, PROMPT_DIAGNOSTICO + (await blocoPromptSdr(admin)),
-        `Período: ${corpo.inicio} a ${corpo.fim}. ${linhas.length} conversas analisadas.\n\n${entrada}`,
+        req, lovableKey, PROMPT_DIAGNOSTICO + (await blocoContexto(admin)),
+        `${escopoTexto}. ${modo === "transcricoes" ? `Transcrições completas de ${usadas} conversas` : `Análises de ${usadas} conversas`}.` +
+          (instrucoes ? `\n\nINSTRUÇÕES DESTA AVALIAÇÃO (prioridade sobre o resto):\n${instrucoes}` : "") +
+          `\n\n${entrada}`,
         "diagnostico_comercial", SCHEMA_DIAGNOSTICO,
       );
       if ("erro" in ia) return json({ error: `IA: ${ia.erro}` }, 502);
+      const vendedores = [...new Set(conversas.map((c) => c.atendente).filter(Boolean))];
       const { data: salvo, error } = await admin.from("comercial_diagnosticos").insert({
-        periodo_inicio: corpo.inicio, periodo_fim: corpo.fim, total_conversas: linhas.length, modelo: MODELO, conteudo: ia.resultado,
+        periodo_inicio: per ? corpo.inicio : null, periodo_fim: per ? corpo.fim : null,
+        total_conversas: usadas, modelo: MODELO, conteudo: ia.resultado,
+        titulo: (corpo.titulo ?? "").trim() || null,
+        instrucoes: instrucoes || null,
+        escopo: { selecao: !!conversaIds, conversas: conversas.length, vendedores, conversaIds: conversaIds?.slice(0, 2000) ?? null },
+        modo,
+        tokens_entrada: ia.tokensEntrada ?? null,
+        tokens_saida: ia.tokensSaida ?? null,
       }).select().single();
-      if (error) throw new Error(`erro ao gravar diagnóstico (${error.message})`);
+      if (error) throw new Error(`erro ao gravar avaliação (${error.message})`);
       return json({ ok: true, diagnostico: salvo });
     }
 
