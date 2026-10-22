@@ -12,14 +12,14 @@ export default function WhatsApp() {
   const { isAdmin, isLoading } = useUserRole();
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="bg-card border-b border-border">
+    <div className="min-h-screen bg-white text-slate-900">
+      <header className="bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white shadow">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/sistema")} title="Voltar ao sistema">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-white/15 hover:text-white" onClick={() => navigate("/sistema")} title="Voltar ao sistema">
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <MessageCircle className="h-5 w-5 text-emerald-600" />
-          <h1 className="font-semibold">WhatsApp comercial</h1>
+          <span className="h-8 w-8 rounded-lg bg-white/20 flex items-center justify-center"><MessageCircle className="h-5 w-5" /></span>
+          <h1 className="text-lg font-semibold">WhatsApp comercial</h1>
         </div>
       </header>
       <main className="max-w-7xl mx-auto px-4 py-6">
