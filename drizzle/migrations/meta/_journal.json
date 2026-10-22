@@ -15,6 +15,13 @@
       "when": 1792619133866,
       "tag": "0001_whatsapp_origem_e_diagnostico",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792675447539,
+      "tag": "0002_whatsapp_leads_meta_selecao",
+      "breakpoints": true
     }
   ]
 }

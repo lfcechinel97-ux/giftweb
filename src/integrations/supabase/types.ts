@@ -223,11 +223,17 @@ export type Database = {
           bruto: Json | null
           canal: string | null
           cliente_sem_resposta: boolean | null
+          consultor_entrou_em: string | null
           contato_nome: string | null
           contato_telefone: string | null
           criado_em: string
+          emails: string[] | null
+          handoff_em: string | null
           id: string
           iniciada_em: string | null
+          mensagens: Json | null
+          mensagens_consultor: number | null
+          mensagens_sdr: number | null
           origem_detectada: string | null
           primeira_mensagem_bruto: Json | null
           primeira_mensagem_cliente: string | null
@@ -237,6 +243,7 @@ export type Database = {
           tempo_primeira_resposta_seg: number | null
           total_mensagens: number
           transcricao: string | null
+          transcricao_caracteres: number | null
           transcricao_hash: string | null
           ultima_mensagem_em: string | null
         }
@@ -246,11 +253,17 @@ export type Database = {
           bruto?: Json | null
           canal?: string | null
           cliente_sem_resposta?: boolean | null
+          consultor_entrou_em?: string | null
           contato_nome?: string | null
           contato_telefone?: string | null
           criado_em?: string
+          emails?: string[] | null
+          handoff_em?: string | null
           id: string
           iniciada_em?: string | null
+          mensagens?: Json | null
+          mensagens_consultor?: number | null
+          mensagens_sdr?: number | null
           origem_detectada?: string | null
           primeira_mensagem_bruto?: Json | null
           primeira_mensagem_cliente?: string | null
@@ -260,6 +273,7 @@ export type Database = {
           tempo_primeira_resposta_seg?: number | null
           total_mensagens?: number
           transcricao?: string | null
+          transcricao_caracteres?: number | null
           transcricao_hash?: string | null
           ultima_mensagem_em?: string | null
         }
@@ -269,11 +283,17 @@ export type Database = {
           bruto?: Json | null
           canal?: string | null
           cliente_sem_resposta?: boolean | null
+          consultor_entrou_em?: string | null
           contato_nome?: string | null
           contato_telefone?: string | null
           criado_em?: string
+          emails?: string[] | null
+          handoff_em?: string | null
           id?: string
           iniciada_em?: string | null
+          mensagens?: Json | null
+          mensagens_consultor?: number | null
+          mensagens_sdr?: number | null
           origem_detectada?: string | null
           primeira_mensagem_bruto?: Json | null
           primeira_mensagem_cliente?: string | null
@@ -283,6 +303,7 @@ export type Database = {
           tempo_primeira_resposta_seg?: number | null
           total_mensagens?: number
           transcricao?: string | null
+          transcricao_caracteres?: number | null
           transcricao_hash?: string | null
           ultima_mensagem_em?: string | null
         }
@@ -292,31 +313,117 @@ export type Database = {
         Row: {
           conteudo: Json
           criado_em: string
+          escopo: Json | null
           id: string
+          instrucoes: string | null
           modelo: string | null
+          modo: string | null
           periodo_fim: string | null
           periodo_inicio: string | null
+          titulo: string | null
+          tokens_entrada: number | null
+          tokens_saida: number | null
           total_conversas: number | null
         }
         Insert: {
           conteudo: Json
           criado_em?: string
+          escopo?: Json | null
           id?: string
+          instrucoes?: string | null
           modelo?: string | null
+          modo?: string | null
           periodo_fim?: string | null
           periodo_inicio?: string | null
+          titulo?: string | null
+          tokens_entrada?: number | null
+          tokens_saida?: number | null
           total_conversas?: number | null
         }
         Update: {
           conteudo?: Json
           criado_em?: string
+          escopo?: Json | null
           id?: string
+          instrucoes?: string | null
           modelo?: string | null
+          modo?: string | null
           periodo_fim?: string | null
           periodo_inicio?: string | null
+          titulo?: string | null
+          tokens_entrada?: number | null
+          tokens_saida?: number | null
           total_conversas?: number | null
         }
         Relationships: []
+      }
+      comercial_leads_meta: {
+        Row: {
+          anuncio: string | null
+          campanha: string | null
+          chave: string
+          conjunto: string | null
+          conversa_id: string | null
+          dados: Json | null
+          email: string | null
+          formulario: string | null
+          id: string
+          importado_em: string
+          lead_criado_em: string | null
+          nome: string | null
+          plataforma: string | null
+          telefone: string | null
+          vinculado_em: string | null
+          vinculo_metodo: string | null
+          vinculo_score: number | null
+        }
+        Insert: {
+          anuncio?: string | null
+          campanha?: string | null
+          chave: string
+          conjunto?: string | null
+          conversa_id?: string | null
+          dados?: Json | null
+          email?: string | null
+          formulario?: string | null
+          id?: string
+          importado_em?: string
+          lead_criado_em?: string | null
+          nome?: string | null
+          plataforma?: string | null
+          telefone?: string | null
+          vinculado_em?: string | null
+          vinculo_metodo?: string | null
+          vinculo_score?: number | null
+        }
+        Update: {
+          anuncio?: string | null
+          campanha?: string | null
+          chave?: string
+          conjunto?: string | null
+          conversa_id?: string | null
+          dados?: Json | null
+          email?: string | null
+          formulario?: string | null
+          id?: string
+          importado_em?: string
+          lead_criado_em?: string | null
+          nome?: string | null
+          plataforma?: string | null
+          telefone?: string | null
+          vinculado_em?: string | null
+          vinculo_metodo?: string | null
+          vinculo_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comercial_leads_meta_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "comercial_conversas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       comercial_origens_regras: {
         Row: {
