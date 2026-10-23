@@ -10,7 +10,8 @@
  *    (mesma moldura do card) em vez de deixar buraco;
  *  - bolinha de litragem só aparece quando o produto tem litragem;
  *  - colunas/linhas da grade em minmax(0,1fr) e h1 com color:inherit, para
- *    nome longo não alargar uma coluna e o CSS base do site não pintar o h1.
+ *    nome longo não alargar uma coluna e o CSS base do site não pintar o h1;
+ *  - nome longo reduz a fonte até caber na barra (ajustarNomes).
  */
 
 export interface Recurso { i: string; t: string }
@@ -30,18 +31,16 @@ export interface ProdutoCatalogo {
 export interface ConfigCatalogo {
   tag: string;
   titulo: string;
-  sub: string;
   slogan: string;
   faixas: string[];
   beneficios: { i: string; t: string; s: string }[];
-  contatos: { t: string; n: string; wa: boolean }[];
+  contatos: { n: string; i: string }[];
 }
 
 export const LOGO = "/catalogo-whatsapp/logo-giftweb.png";
 
 export const CONFIG_PADRAO: ConfigCatalogo = {
   tag: "CATÁLOGO DE", titulo: "MOCHILAS",
-  sub: "PRATICIDADE | QUALIDADE | PERSONALIZAÇÃO",
   slogan: "Sua marca em todos os destinos",
   faixas: ["20 UN.", "50 UN.", "100+ UN."],
   beneficios: [
@@ -51,18 +50,18 @@ export const CONFIG_PADRAO: ConfigCatalogo = {
     { i: "presente", t: "PERSONALIZAÇÃO COM SUA MARCA", s: "Fortaleça seu negócio" },
   ],
   contatos: [
-    { t: "WHATSAPP SC", n: "(48) 99665-2844", wa: true },
-    { t: "WHATSAPP SP", n: "(11) 97016-9697", wa: true },
-    { t: "SITE", n: "giftwebbrindes.com.br", wa: false },
+    { n: "(48) 99665-2844", i: "whatsapp" },
+    { n: "(11) 97016-9697", i: "whatsapp" },
+    { n: "giftwebbrindes.com.br", i: "globo" },
   ],
 };
 
 export const CSS = `
   .catwa{
     --navy:#0a2342; --navy2:#0f3a5f; --green:#1db35f; --green2:#148f4a;
-    --ink:#1c2a39; --muted:#4a5a6a; --soft:#f2f6f8;
+    --ink:#0a2342; --muted:#3d5675; --line:#cfd8e3;
     --font:"Montserrat","Helvetica Neue",Arial,sans-serif;
-    background:#cfd6dc;font-family:var(--font)
+    background:#ffffff;font-family:var(--font);line-height:normal
   }
   .catwa *{box-sizing:border-box;margin:0;padding:0}
   .catwa .page{width:1080px;height:1350px;background:#fff;position:relative;overflow:hidden;margin:0 auto 24px;display:flex;flex-direction:column}
@@ -72,50 +71,48 @@ export const CSS = `
 
   .catwa .head{height:200px;background:linear-gradient(110deg,var(--navy) 55%,#0d4a45 100%);color:#fff;display:flex;align-items:center;padding:0 44px;gap:34px;position:relative}
   .catwa .head:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:26px;background:#fff;border-radius:50% 50% 0 0/100% 100% 0 0}
-  .catwa .head .logo{height:150px;width:auto;max-width:none}
+  .catwa .head .logo{height:136px;width:auto;max-width:none;flex:none;margin-top:-14px}
   .catwa .head .tit{flex:1;text-align:center}
   .catwa .head .tag{display:inline-block;background:var(--green);border-radius:8px;padding:5px 22px;font-weight:700;letter-spacing:4px;font-size:17px}
   .catwa .head h1{font-size:68px;font-weight:900;line-height:1;margin-top:8px;letter-spacing:-1px;color:inherit}
-  .catwa .head .sub{font-size:12px;letter-spacing:1.5px;white-space:nowrap;margin-top:10px;opacity:.9}
   .catwa .head .slogan{width:190px;font-style:italic;font-size:27px;line-height:1.1;color:#7ff0b0;text-align:center;font-family:"Brush Script MT","Segoe Script",cursive}
 
   .catwa .grid{flex:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:20px 22px;padding:6px 28px 16px;min-height:0}
-  .catwa .card{background:#fff;border-radius:22px;padding:14px 14px 12px;display:flex;flex-direction:column;min-height:0;border:2px solid #d3dee6}
-  .catwa .ct{display:flex;align-items:center;background:linear-gradient(90deg,var(--green2),var(--green));border-radius:30px;height:46px;color:#fff;margin-left:6px}
+  .catwa .card{background:#fff;border-radius:22px;padding:14px 14px 12px;display:flex;flex-direction:column;min-height:0;border:2px solid var(--line)}
+  .catwa .ct{display:flex;align-items:center;background:var(--navy);border-radius:30px;height:46px;color:#fff;margin-left:6px}
   .catwa .ct .ic{width:54px;height:54px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:28px;margin-left:-12px;border:3px solid #fff;flex:none}
-  .catwa .ct .nm{font-size:22px;font-weight:800;padding-left:14px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;margin-right:14px}
+  .catwa .ct .nm{font-size:22px;font-weight:400;padding-left:14px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;margin-right:14px}
   .catwa .cb{display:flex;gap:12px;margin-top:10px;flex:1;min-height:0}
-  .catwa .ph{width:218px;flex:none;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .catwa .ph{width:218px;flex:none;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fff}
   .catwa .ph img{width:218px;height:218px;max-width:none;object-fit:contain}
-  .catwa .ph .lt{position:absolute;left:0;bottom:6px;width:54px;height:54px;border-radius:50%;background:var(--green);border:3px solid #fff;color:#fff;font-weight:900;font-size:19px;display:flex;align-items:center;justify-content:center;}
+  .catwa .ph .lt{position:absolute;left:0;bottom:6px;width:54px;height:54px;border-radius:50%;background:var(--navy);border:3px solid #fff;color:#fff;font-weight:900;font-size:19px;display:flex;align-items:center;justify-content:center;}
   .catwa .inf{flex:1;min-width:0;display:flex;flex-direction:column}
-  .catwa .cod{align-self:center;border:2px solid var(--navy);border-radius:20px;padding:3px 16px;font-size:14px;font-weight:700;color:var(--navy)}
+  .catwa .cod{align-self:center;border:1.5px solid var(--navy);border-radius:14px;padding:1px 12px;font-size:11px;font-weight:700;color:var(--navy)}
   .catwa .cod b{font-weight:900}
-  .catwa .ds{font-size:13px;line-height:1.32;color:var(--ink);margin-top:8px;max-height:92px;overflow:hidden}
-  .catwa .rs{margin-top:auto;display:flex;flex-direction:column;gap:5px}
+  .catwa .ds{font-size:13px;line-height:1.32;color:var(--ink);margin-top:8px;flex:1;min-height:0;overflow:hidden}
+  .catwa .rs{margin-top:6px;display:flex;flex-direction:column;gap:5px}
   .catwa .r{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--ink)}
   .catwa .r .i{font-size:20px;color:var(--navy)}
   .catwa .pr{display:flex;gap:10px;margin-top:8px}
-  .catwa .p{flex:1;border-radius:10px;overflow:hidden;background:var(--soft);text-align:center;border:1px solid #dfe8ee}
+  .catwa .p{flex:1;border-radius:10px;overflow:hidden;background:#fff;text-align:center;border:1.5px solid var(--line)}
   .catwa .p .f{background:linear-gradient(90deg,var(--green2),var(--green));color:#fff;font-weight:800;font-size:14px;padding:3px 0}
   .catwa .p .v{font-size:25px;font-weight:900;color:var(--navy);padding-top:4px;white-space:nowrap}
   .catwa .p .v small{font-size:14px;font-weight:800;margin-right:3px}
   .catwa .p .v i{font-style:normal;font-size:16px}
   .catwa .p .c{font-size:11px;font-weight:600;color:var(--muted);padding-bottom:4px}
 
-  .catwa .ben{background:var(--navy);color:#fff;display:flex;align-items:stretch;padding:0 22px;height:104px;position:relative}
-  .catwa .ben:before{content:"";position:absolute;left:0;right:0;top:-14px;height:28px;background:var(--navy);border-radius:50% 50% 0 0/100% 100% 0 0}
-  .catwa .b{flex:1;display:flex;align-items:center;gap:12px;padding:0 14px;border-left:1px solid rgba(255,255,255,.2);position:relative;z-index:1}
+  .catwa .foot{background:var(--navy);color:#fff;position:relative}
+  .catwa .foot:before{content:"";position:absolute;left:0;right:0;top:-14px;height:28px;background:var(--navy);border-radius:50% 50% 0 0/100% 100% 0 0}
+  .catwa .ben{display:flex;align-items:stretch;padding:0 22px;height:80px;position:relative;z-index:1}
+  .catwa .b{flex:1;display:flex;align-items:center;gap:12px;padding:0 14px;border-left:1px solid rgba(255,255,255,.25)}
   .catwa .b:first-child{border-left:0}
-  .catwa .b .i{font-size:46px;color:var(--green)}
-  .catwa .b .t{font-weight:800;font-size:15px;line-height:1.15}
-  .catwa .b .s{font-size:12px;opacity:.8;margin-top:4px}
-  .catwa .con{background:#fff;height:92px;display:flex;align-items:center;padding:0 40px;gap:26px;color:var(--navy)}
-  .catwa .cn{display:flex;align-items:center;gap:12px;flex:1}
-  .catwa .cn .wa{width:46px;height:46px;border-radius:50%;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;flex:none}
-  .catwa .cn .wa.gl{background:var(--navy)}
-  .catwa .cn .t{font-size:12px;font-weight:700;letter-spacing:.5px}
-  .catwa .cn .n{font-size:18px;font-weight:900;margin-top:2px;white-space:nowrap}
+  .catwa .b .i{font-size:32px;color:var(--green)}
+  .catwa .b .t{font-weight:400;font-size:12.5px;line-height:1.2}
+  .catwa .b .s{font-weight:400;font-size:10.5px;opacity:.85;margin-top:2px}
+  .catwa .con{height:58px;margin:0 40px;border-top:1px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;gap:70px;position:relative;z-index:1}
+  .catwa .cn{display:flex;align-items:center;gap:10px}
+  .catwa .cn .i{font-size:26px;color:var(--green)}
+  .catwa .cn .n{font-size:17px;font-weight:400;white-space:nowrap}
 
   /* card de apoio: ocupa a vaga de produto que faltou na última página */
   .catwa .card.apoio{background:linear-gradient(150deg,var(--navy) 55%,#0d4a45 100%);border-color:var(--navy);color:#fff;align-items:center;justify-content:center;text-align:center;gap:14px;padding:24px 34px}
@@ -164,7 +161,9 @@ const brl = (v: number | null) => {
   const [a, b] = v.toFixed(2).split(".");
   return `<small>R$</small><span contenteditable>${Number(a).toLocaleString("pt-BR")},${b}</span>`;
 };
-export const trunc = (s: string, n = 120) => (s.length > n ? s.slice(0, n).replace(/\s+\S*$/, "") + "…" : s);
+/** Corta na última palavra inteira, sem pontuação antes das reticências. */
+const cortar = (s: string, n: number) => s.slice(0, n).replace(/\s+\S*$/, "").replace(/[\s,;:.\-–]+$/, "") + "…";
+export const trunc = (s: string, n = 240) => (s.length > n ? cortar(s, n) : s);
 const E = (t: string, tag = "span", cls = "") => `<${tag} ${cls ? `class="${cls}"` : ""} contenteditable>${esc(t)}</${tag}>`;
 
 const card = (p: ProdutoCatalogo, cfg: ConfigCatalogo) => `
@@ -174,7 +173,7 @@ const card = (p: ProdutoCatalogo, cfg: ConfigCatalogo) => `
     <div class="ph" title="Clique para trocar a foto"><img src="${esc(p.foto)}" alt="">${p.litros ? E(p.litros, "span", "lt") : ""}</div>
     <div class="inf">
       <div class="cod">CÓD. <b contenteditable>${esc(p.codigo)}</b></div>
-      ${E(trunc(p.desc), "div", "ds")}
+      <div class="ds" contenteditable data-full="${esc(trunc(p.desc))}">${esc(trunc(p.desc))}</div>
       <div class="rs">${p.recursos.slice(0, 4).map((r) => `<div class="r">${ico(r.i)}${E(r.t)}</div>`).join("")}</div>
     </div>
   </div>
@@ -207,12 +206,14 @@ export function renderPaginas(produtos: ProdutoCatalogo[], cfg: ConfigCatalogo):
  <section class="page" id="catwa-pg${n + 1}">
   <div class="head">
     <img class="logo" src="${LOGO}" alt="Gift Web Brindes">
-    <div class="tit">${E(cfg.tag, "div", "tag")}${E(cfg.titulo, "h1")}${E(cfg.sub, "div", "sub")}</div>
+    <div class="tit">${E(cfg.tag, "div", "tag")}${E(cfg.titulo, "h1")}</div>
     ${E(cfg.slogan, "div", "slogan")}
   </div>
   <div class="grid">${g.map((p) => card(p, cfg)).join("")}${Array.from({ length: 4 - g.length }, (_, k) => apoio(k)).join("")}</div>
-  <div class="ben">${cfg.beneficios.map((b) => `<div class="b">${ico(b.i)}<div>${E(b.t, "div", "t")}${E(b.s, "div", "s")}</div></div>`).join("")}</div>
-  <div class="con">${cfg.contatos.map((c) => `<div class="cn"><div class="wa ${c.wa ? "" : "gl"}">${ico(c.wa ? "whatsapp" : "globo")}</div><div>${E(c.t, "div", "t")}${E(c.n, "div", "n")}</div></div>`).join("")}</div>
+  <div class="foot">
+    <div class="ben">${cfg.beneficios.map((b) => `<div class="b">${ico(b.i)}<div>${E(b.t, "div", "t")}${E(b.s, "div", "s")}</div></div>`).join("")}</div>
+    <div class="con">${cfg.contatos.map((c) => `<div class="cn">${ico(c.i)}${E(c.n, "div", "n")}</div>`).join("")}</div>
+  </div>
  </section>`).join("");
 }
 
@@ -260,7 +261,30 @@ export async function paginaParaCanvas(el: HTMLElement): Promise<HTMLCanvasEleme
   }
 }
 
-/** Nome longo: reduz a fonte até caber na faixa verde (mantém uma linha). */
+/**
+ * Descrição ocupa todo o espaço livre entre o código e os recursos: mostra o
+ * texto inteiro se couber, senão corta na última palavra que cabe e termina
+ * com "…" (busca binária medindo a altura, como o fitDesc do template).
+ */
+export function fitDesc(el: HTMLElement) {
+  const full = el.dataset.full ?? "";
+  const cabe = () => el.scrollHeight <= el.clientHeight + 1;
+  el.textContent = full;
+  if (cabe()) return;
+  let lo = 0;
+  let hi = full.length;
+  while (lo < hi - 1) {
+    const m = (lo + hi) >> 1;
+    el.textContent = cortar(full, m);
+    if (cabe()) lo = m;
+    else hi = m;
+  }
+  el.textContent = cortar(full, lo);
+}
+
+export const ajustarDescricoes = (root: ParentNode) => root.querySelectorAll<HTMLElement>(".ds[data-full]").forEach(fitDesc);
+
+/** Nome longo: reduz a fonte até caber na faixa (mantém uma linha). */
 export function ajustarNomes(root: ParentNode) {
   root.querySelectorAll<HTMLElement>(".ct .nm").forEach((nm) => {
     const ct = nm.parentElement!;

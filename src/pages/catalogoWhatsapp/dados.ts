@@ -141,7 +141,7 @@ export function placeholder(t: string): string {
   return (
     "data:image/svg+xml;utf8," +
     encodeURIComponent(
-      `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='600' height='600' fill='#eef1f3'/><text x='300' y='308' font-family='Arial' font-size='34' fill='#9aa5ae' text-anchor='middle'>${t}</text></svg>`,
+      `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><rect width='600' height='600' fill='#ffffff'/><text x='300' y='308' font-family='Arial' font-size='34' fill='#9fb0c4' text-anchor='middle'>${t}</text></svg>`,
     )
   );
 }

@@ -19,11 +19,12 @@ describe("catálogo WhatsApp - dados", () => {
     expect(extrairLitragem("Caneta metálica", "Escrita em 2 lados")).toBe("");
   });
 
-  it("limpa HTML da descrição e trunca em ~120 caracteres sem cortar palavra", () => {
+  it("limpa HTML da descrição e trunca em ~240 caracteres sem cortar palavra nem deixar pontuação", () => {
     expect(limparDescricao("<p>Mochila&nbsp;em<br>nylon</p>")).toBe("Mochila em nylon");
-    const t = trunc("palavra ".repeat(30).trim());
-    expect(t.length).toBeLessThanOrEqual(121);
+    const t = trunc("palavra ".repeat(60).trim());
+    expect(t.length).toBeLessThanOrEqual(241);
     expect(t.endsWith("palavra…")).toBe(true);
+    expect(trunc("bolsos, ".repeat(40))).toMatch(/bolsos…$/);
   });
 
   it("deriva até 4 recursos com ícones existentes no dicionário", () => {

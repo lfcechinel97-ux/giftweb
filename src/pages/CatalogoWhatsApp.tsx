@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ajustarNomes, CONFIG_PADRAO, CSS, paginaParaCanvas, paginar, renderPaginas, to600, type ProdutoCatalogo } from "./catalogoWhatsapp/template";
+import { ajustarDescricoes, ajustarNomes, CONFIG_PADRAO, CSS, paginaParaCanvas, paginar, renderPaginas, to600, type ProdutoCatalogo } from "./catalogoWhatsapp/template";
 import { buscarProdutos, lerCodigos } from "./catalogoWhatsapp/dados";
 
 /**
@@ -34,8 +34,12 @@ export default function CatalogoWhatsApp() {
     root.innerHTML = renderPaginas(produtos, { ...CONFIG_PADRAO, titulo: titulo.trim().toUpperCase() || CONFIG_PADRAO.titulo });
     setPaginas(paginar(produtos).length);
 
-    ajustarNomes(root);
-    document.fonts?.ready.then(() => ajustarNomes(root));
+    const ajustar = () => {
+      ajustarNomes(root);
+      ajustarDescricoes(root);
+    };
+    ajustar();
+    document.fonts?.ready.then(ajustar);
 
     // clicar na foto troca a imagem (reduzida para 600x600)
     root.querySelectorAll<HTMLElement>(".ph").forEach((el) =>

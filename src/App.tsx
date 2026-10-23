@@ -140,6 +140,7 @@ const App = () => (
               <Route path="/mockup" element={<AdminGuard><MockupStudio /></AdminGuard>} />
               <Route path="/carteladtf" element={<AdminGuard><CartelaDtf /></AdminGuard>} />
               <Route path="/catalogo-whatsapp" element={<AdminGuard><CatalogoWhatsApp /></AdminGuard>} />
+              <Route path="/fotocatalogo" element={<AdminGuard><CatalogoWhatsApp /></AdminGuard>} />
               <Route path="/whatsapp" element={<AdminGuard><WhatsApp /></AdminGuard>} />
               <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
                 <Route path="sync" element={<AdminSync />} />
