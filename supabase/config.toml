@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.importar-pedido-calcme]
 verify_jwt = true
+
+[functions.catalogo-imagem]
+verify_jwt = false
