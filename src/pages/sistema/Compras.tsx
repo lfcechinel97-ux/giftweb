@@ -92,7 +92,7 @@ type Aba = "comprar" | "pedidos";
 export default function Compras() {
   const queryClient = useQueryClient();
   const { currentVendedor } = useSistema();
-  const { isAdmin, nome: nomeLogado } = useUserRole();
+  const { isGestor: isAdmin, nome: nomeLogado } = useUserRole(); // admin ou gerente: preço de compra
   const [aba, setAba] = useState<Aba>("comprar");
   const [filtro, setFiltro] = useState<Filtro>("pendentes");
   const [busca, setBusca] = useState("");

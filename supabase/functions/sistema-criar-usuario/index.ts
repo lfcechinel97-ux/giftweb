@@ -14,7 +14,7 @@ const corsHeaders = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-const PAPEIS = ["admin", "vendedor", "producao"];
+const PAPEIS = ["admin", "gerente", "vendedor", "producao"];
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });

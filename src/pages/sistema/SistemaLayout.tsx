@@ -45,7 +45,7 @@ const RouteSkeleton = () => (
 
 export default function SistemaLayout() {
   const { vendedores, currentVendedor, setCurrentVendedor, loading } = useSistema();
-  const { isAdmin, papel, nome: nomeUsuario, email, vendedorId, isLoading: perfilCarregando } = useUserRole();
+  const { isAdmin, isGestor, papel, nome: nomeUsuario, email, vendedorId, isLoading: perfilCarregando } = useUserRole();
 
   /* Usuário vinculado a um vendedor assina o histórico com ele. Só o admin
      pode trocar de vendedor à vontade; os demais ficam presos ao próprio. */
@@ -53,15 +53,15 @@ export default function SistemaLayout() {
     if (perfilCarregando || vendedores.length === 0) return;
     if (!vendedorId) {
       // Sem vendedor vinculado, não herda o vendedor de quem usou o navegador antes.
-      if (!isAdmin && currentVendedor) setCurrentVendedor(null);
+      if (!isGestor && currentVendedor) setCurrentVendedor(null);
       return;
     }
     if (currentVendedor?.id === vendedorId) return;
-    if (isAdmin && currentVendedor) return;
+    if (isGestor && currentVendedor) return;
     const v = vendedores.find(x => x.id === vendedorId);
     if (v) setCurrentVendedor(v);
-  }, [perfilCarregando, vendedorId, vendedores, currentVendedor, isAdmin, setCurrentVendedor]);
-  const podeTrocarVendedor = isAdmin || !vendedorId;
+  }, [perfilCarregando, vendedorId, vendedores, currentVendedor, isGestor, setCurrentVendedor]);
+  const podeTrocarVendedor = isGestor || !vendedorId;
 
   // No topo sempre aparece quem está logado, não o vendedor selecionado.
   const nomeLogado = nomeUsuario

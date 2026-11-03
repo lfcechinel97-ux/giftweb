@@ -74,7 +74,7 @@ const PedidoForm: React.FC = () => {
   const navigate = useNavigate();
   const { clientes, transportadoras, meiosPagamento, vendedores, ensureClientes, refreshPedidos } = useSistema();
   const { parentProducts, searchParents, getParentWithVariants, isLoading } = useSistemaProducts();
-  const { isAdmin, vendedorRestrito } = useUserRole();
+  const { isGestor: isAdmin, vendedorRestrito } = useUserRole(); // admin ou gerente
 
   useEffect(() => { void ensureClientes(); }, [ensureClientes]);
 

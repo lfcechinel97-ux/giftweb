@@ -170,7 +170,8 @@ function Painel({ titulo, acao, children }: {
 /* ── Página ───────────────────────────────────────────────────────────── */
 
 /* Resultado, custo, despesa e caixa são dados internos: só o admin abre o
-   dashboard financeiro. O resto do time vê o painel das próprias vendas. */
+   dashboard financeiro. O resto do time vê o painel comercial (gerente e
+   produção: a equipe toda; comercial: só as próprias vendas). */
 export default function Dashboard() {
   const { isAdmin, isLoading } = useUserRole();
   if (isLoading) return null;

@@ -21,11 +21,12 @@ interface UsuarioRow {
   vendedor_id: string | null;
 }
 
-const PAPEIS: AppRole[] = ["admin", "vendedor", "producao"];
+const PAPEIS: AppRole[] = ["admin", "gerente", "vendedor", "producao"];
 const SEM_VENDEDOR = "__nenhum__";
 
 const DESCRICAO_PAPEL: Record<AppRole, string> = {
   admin: "Vê tudo, inclusive resultado, custos e despesas.",
+  gerente: "Tudo do admin (PCP de todos, compras com custo, pedidos…) menos o dashboard financeiro, o fluxo de vendas e os usuários.",
   vendedor: "Pedidos, orçamentos, PCP e clientes. Sem resultado nem custos.",
   producao: "Mesmos acessos do comercial. Sem resultado nem custos.",
 };

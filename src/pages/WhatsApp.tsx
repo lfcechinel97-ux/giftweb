@@ -9,7 +9,7 @@ import AnaliseConversas from "./whatsapp/AnaliseConversas";
    papel é conferido aqui (e de novo no RLS e na edge function). */
 export default function WhatsApp() {
   const navigate = useNavigate();
-  const { isAdmin, isLoading } = useUserRole();
+  const { isGestor: isAdmin, isLoading } = useUserRole(); // admin ou gerente
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
