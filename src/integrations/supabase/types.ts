@@ -3674,6 +3674,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin_user: { Args: never; Returns: boolean }
+      is_gestor: { Args: { _user_id: string }; Returns: boolean }
       preco_base_exato: { Args: { p_custo: number }; Returns: number }
       preco_faixas_custom: {
         Args: { p_custo: number; p_tabela: Json }
@@ -4026,7 +4027,7 @@ export type Database = {
       unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
-      app_role: "admin" | "vendedor" | "producao"
+      app_role: "admin" | "vendedor" | "producao" | "gerente"
       local_producao_tipo:
         | "interna"
         | "terceirizada"
@@ -4168,7 +4169,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "vendedor", "producao"],
+      app_role: ["admin", "vendedor", "producao", "gerente"],
       local_producao_tipo: [
         "interna",
         "terceirizada",
