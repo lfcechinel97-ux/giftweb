@@ -24,6 +24,8 @@ export interface ItemCompra {
   qtd_recebida?: number | null;
   conferido_em?: string | null;
   conferido_por?: string | null;
+  /** Só vem preenchido para admin (preço é RLS só admin). */
+  valor_unitario?: number | null;
 }
 
 export interface CompraConferivel {
@@ -99,11 +101,34 @@ export function ImpressoChip({ compra }: { compra: CompraConferivel }) {
   );
 }
 
-export default function ConferenciaCompra({ compra, nomeLogado, onMudou }: {
+export default function ConferenciaCompra({ compra, nomeLogado, podeVerPreco = false, onMudou }: {
   compra: CompraConferivel;
   nomeLogado: string | null;
+  /** Admin: mostra e deixa lançar o valor unitário (é o custo do dashboard). */
+  podeVerPreco?: boolean;
   onMudou: () => void;
 }) {
+  const [precoEdit, setPrecoEdit] = useState<Record<string, string>>({});
+  const salvarPreco = async (item: ItemCompra) => {
+    const txt = precoEdit[item.id];
+    setPrecoEdit(p => { const n = { ...p }; delete n[item.id]; return n; });
+    if (txt === undefined) return;
+    const t = txt.trim();
+    const valor = Number(!t.includes(",") && /^\d+\.\d{1,2}$/.test(t) ? t : t.replace(/\./g, "").replace(",", "."));
+    if (txt.trim() === "") {
+      if (item.valor_unitario == null) return;
+      const { error } = await (supabase as any).from("sistema_compras_precos").delete().eq("compra_item_id", item.id);
+      if (error) toast.error(`Não foi possível apagar o preço. ${error.message || ""}`); else onMudou();
+      return;
+    }
+    if (!Number.isFinite(valor) || valor < 0) { toast.error("Valor inválido."); return; }
+    if (valor === Number(item.valor_unitario)) return;
+    const { error } = await (supabase as any).from("sistema_compras_precos")
+      .upsert({ compra_item_id: item.id, valor_unitario: valor }, { onConflict: "compra_item_id" });
+    if (error) { toast.error(`Não foi possível salvar o preço. ${error.message || ""}`); return; }
+    toast.success("Preço salvo — já entra no custo do dashboard.");
+    onMudou();
+  };
   const [salvando, setSalvando] = useState<string | null>(null);
   const [faltaAberta, setFaltaAberta] = useState<Record<string, string>>({});
   const st = statusCompra(compra);
@@ -187,6 +212,23 @@ export default function ConferenciaCompra({ compra, nomeLogado, onMudou }: {
                     {i.pedido_numero && ` · #${i.pedido_numero}`}{i.cliente && ` · ${i.cliente}`}
                   </p>
                 </div>
+                {podeVerPreco && (
+                  <label className="flex items-center gap-1.5 shrink-0" title="Valor unitário pago ao fornecedor — é o custo do produto no dashboard">
+                    <span className="text-[11px] font-semibold uppercase" style={{ color: i.valor_unitario == null ? "#B45309" : "var(--gw-text-muted)" }}>
+                      {i.valor_unitario == null ? "Sem preço" : "R$ unit."}
+                    </span>
+                    <Input
+                      value={precoEdit[i.id] ?? (i.valor_unitario == null ? "" : String(i.valor_unitario).replace(".", ","))}
+                      onChange={e => setPrecoEdit(p => ({ ...p, [i.id]: e.target.value }))}
+                      onBlur={() => void salvarPreco(i)}
+                      onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+                      inputMode="decimal"
+                      placeholder="0,00"
+                      className="h-8 w-[90px] text-right"
+                      style={i.valor_unitario == null ? { borderColor: "#F59E0B" } : undefined}
+                    />
+                  </label>
+                )}
 
                 {ok && !editandoFalta ? (
                   <div className="flex items-center gap-2">
