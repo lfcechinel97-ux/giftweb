@@ -47,6 +47,18 @@ export const CUSTO_FIXO_MENSAL_PADRAO = 50000;
 /** Margem de contribuição usada quando ainda não há pedido com custo no mês. */
 export const MARGEM_PADRAO = 0.35;
 
+/** Custo da personalização na terceirizada, por unidade e por aplicação. */
+export const CUSTO_PERSONALIZACAO_TERCEIRIZADA: Record<string, number> = {
+  dtf_uv: 3.5,
+  dtf_textil: 2.5,
+  laser: 1.0,
+  silk: 1.8,
+};
+export const custoPersonalizacaoTerceirizada = (tipo?: string | null, aplicacoes?: number | null) => {
+  const unit = tipo ? CUSTO_PERSONALIZACAO_TERCEIRIZADA[tipo] ?? 0 : 0;
+  return unit * (aplicacoes && aplicacoes > 0 ? aplicacoes : 1);
+};
+
 /* ── Dias úteis (seg-sex, sem feriados) ─────────────────────────────── */
 
 const ehUtil = (d: Date) => d.getDay() !== 0 && d.getDay() !== 6;

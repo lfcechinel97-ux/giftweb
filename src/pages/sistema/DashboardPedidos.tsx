@@ -8,7 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSistema } from "@/contexts/SistemaContext";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 import PainelEmpate from "./financeiro/PainelEmpate";
-import { CUSTO_FIXO_MENSAL_PADRAO, faixaDe, taxaCartaoDoMeio } from "@/lib/financeiroRegras";
+import { CUSTO_FIXO_MENSAL_PADRAO, custoPersonalizacaoTerceirizada, faixaDe, taxaCartaoDoMeio } from "@/lib/financeiroRegras";
+import { rotuloPersonalizacao } from "@/lib/personalizacao";
 
 /* Dashboard por pedido (admin). Todo pedido lançado entra na hora.
    - Bruto (PV) = valor dos produtos, sem frete.
@@ -63,7 +64,7 @@ interface PedidoRow {
   pagamento_id: string | null;
   cliente_id: string | null;
   cliente_snapshot: { nome?: string } | null;
-  itens: { id?: string; nome?: string; quantidade?: number; precoUnitario?: number; precoCusto?: number }[] | null;
+  itens: { id?: string; nome?: string; quantidade?: number; precoUnitario?: number; precoCusto?: number; personalizacao?: string; aplicacoes?: number }[] | null;
 }
 interface ItemFin {
   pedido_id: string;
@@ -120,7 +121,7 @@ export default function DashboardPedidos() {
         (supabase as any).from("sistema_financeiro_config").select("*").limit(1),
         numeros.length ? lerEmLotes(numeros, lote => (supabase as any).from("sistema_compras_itens")
           .select("id,producao_item_id,pedido_numero,produto_nome,quantidade,compra:sistema_compras(numero)").in("pedido_numero", lote)) : { data: [], error: null },
-        ids.length ? supabase.from("sistema_producao_itens").select("id,pedido_id,item_id").in("pedido_id", ids) : { data: [] },
+        ids.length ? (supabase as any).from("sistema_producao_itens").select("id,pedido_id,item_id,local_producao,terceirizada_id,tags,status").in("pedido_id", ids) : { data: [] },
         ids.length ? (supabase as any).from("sistema_item_financeiro").select("*").in("pedido_id", ids) : { data: [] },
         // Pedidos dos 3 meses anteriores: comparativo e dicas.
         supabase.from("sistema_pedidos").select("created_at,subtotal")
@@ -147,16 +148,25 @@ export default function DashboardPedidos() {
         ((precos.data ?? []) as { compra_item_id: string; valor_unitario: number }[])
           .map(x => [x.compra_item_id, Number(x.valor_unitario)]),
       );
-      const itemDoProd = new Map<string, string>(
-        ((prod.data ?? []) as { id: string; pedido_id: string; item_id: string }[])
-          .map(r => [r.id, `${r.pedido_id}:${r.item_id}`]),
-      );
+      type ProdRow = { id: string; pedido_id: string; item_id: string; local_producao: string | null; terceirizada_id: string | null; tags: string[] | null; status: string | null };
+      const prodRows = (prod.data ?? []) as ProdRow[];
+      const itemDoProd = new Map<string, string>(prodRows.map(r => [r.id, `${r.pedido_id}:${r.item_id}`]));
+      // Item que vai (ou foi) pra terceirizada: a personalização é custo de fora.
+      const terceirizado: Record<string, boolean> = {};
+      for (const r of prodRows) {
+        terceirizado[`${r.pedido_id}:${r.item_id}`] =
+          r.local_producao === "terceirizada" || r.local_producao === "fornecedor_para_terceirizada"
+          || !!r.terceirizada_id
+          || (r.status ?? "").includes("terceirizada")
+          || (r.tags ?? []).some(t => t.toUpperCase().startsWith("TERCEIRIZADA"));
+      }
       const pedidoPorNumero = new Map(pedidos.map(p => [String(p.numero), p]));
       const norm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
       const acc: Record<string, { valor: number; qtd: number; compras: Set<number> }> = {};
+      // Item com linha de compra mas sem preço lançado — mostrado no dashboard.
+      const compraSemPreco: Record<string, number[]> = {};
       for (const ci of compraItens) {
         const preco = precoPor.get(ci.id);
-        if (preco == null) continue;
         let chaveItem = ci.producao_item_id ? itemDoProd.get(ci.producao_item_id) : undefined;
         // Linha de compra sem vínculo com o card: casa pelo nº do pedido + nome.
         if (!chaveItem && ci.pedido_numero) {
@@ -169,6 +179,10 @@ export default function DashboardPedidos() {
           if (ped && idx >= 0) chaveItem = `${ped.id}:${String(ped.itens![idx].id ?? idx)}`;
         }
         if (!chaveItem) continue;
+        if (preco == null) {
+          if (ci.compra?.numero != null) (compraSemPreco[chaveItem] ??= []).push(ci.compra.numero);
+          continue;
+        }
         const a = (acc[chaveItem] ??= { valor: 0, qtd: 0, compras: new Set() });
         const q = Number(ci.quantidade) || 0;
         a.valor += q * preco; a.qtd += q;
@@ -194,6 +208,8 @@ export default function DashboardPedidos() {
         orcamentos: ((orcs.data ?? []) as { created_at: string }[]).map(o => o.created_at),
         custoCompras,
         compraDoItem,
+        compraSemPreco,
+        terceirizado,
         itemFin: itemFinMap,
       };
     },
@@ -240,11 +256,18 @@ export default function DashboardPedidos() {
         // Um 0 salvo aqui não esconde o preço lançado na compra.
         const editado = fi?.custo_unitario != null && (fi.custo_unitario > 0 || compra == null) ? Number(fi.custo_unitario) : null;
         const custoUnit = editado ?? compra ?? catalogo;
-        const origemCusto = editado != null ? "editado" : compra != null ? "compra" : catalogo > 0 ? "catalogo" : "sem";
-        const comprasNum = data.compraDoItem[chaveItem] ?? [];
-        const persUnit = fi?.custo_personalizacao_unit ?? 0;
+        const origemCusto = editado != null ? "editado" : compra != null ? "compra" : catalogo > 0 ? "catalogo"
+          : data.compraSemPreco[chaveItem] ? "compra_sem_preco" : "sem";
+        const comprasNum = data.compraDoItem[chaveItem] ?? data.compraSemPreco[chaveItem] ?? [];
+        // Personalização: digitada aqui (> 0) ou, se o item é terceirizado,
+        // o preço da técnica × aplicações. Galpão = 0 (custo interno).
+        const persEditada = Number(fi?.custo_personalizacao_unit) || 0;
+        const persAuto = data.terceirizado[chaveItem] ? custoPersonalizacaoTerceirizada(it.personalizacao, it.aplicacoes) : 0;
+        const persUnit = persEditada > 0 ? persEditada : persAuto;
+        const origemPers = persEditada > 0 ? "editado" : persAuto > 0 ? "auto" : data.terceirizado[chaveItem] ? "sem" : "galpao";
         return {
-          itemId, nome: it.nome ?? "—", qtd, pvUnit, custoUnit, persUnit, origemCusto, comprasNum,
+          itemId, nome: it.nome ?? "—", qtd, pvUnit, custoUnit, persUnit, origemCusto, comprasNum, origemPers,
+          tecnica: rotuloPersonalizacao(it.personalizacao), aplicacoes: Number(it.aplicacoes) || 1,
           pv: qtd * pvUnit, custo: qtd * (custoUnit + persUnit),
         };
       });
@@ -599,17 +622,35 @@ export default function DashboardPedidos() {
                                               style={x.origemCusto === "compra" ? { background: "#05966920", color: "#047857" }
                                                 : x.origemCusto === "editado" ? { background: "#2563EB1A", color: "#1D4ED8" }
                                                 : x.origemCusto === "catalogo" ? { background: "#94A3B833", color: "#475569" }
+                                                : x.origemCusto === "compra_sem_preco" ? { background: "#F59E0B26", color: "#B45309" }
                                                 : { background: "#DB277720", color: "#BE185D" }}
-                                              title={x.origemCusto === "editado" ? "Digitado aqui. Apague o campo para voltar ao preço da compra." : undefined}
+                                              title={x.origemCusto === "editado" ? "Digitado aqui. Apague o campo para voltar ao preço da compra."
+                                                : x.origemCusto === "compra_sem_preco" ? "A compra foi registrada sem valor unitário. Lance o preço em Compras → Pedido de compra."
+                                                : x.origemCusto === "sem" ? "Nenhuma compra registrada para este produto deste pedido." : undefined}
                                             >
                                               {x.origemCusto === "compra" ? `compra${x.comprasNum.length ? ` nº ${x.comprasNum.join(", ")}` : ""}`
-                                                : x.origemCusto === "editado" ? "editado" : x.origemCusto === "catalogo" ? "catálogo" : "sem custo"}
+                                                : x.origemCusto === "editado" ? "editado" : x.origemCusto === "catalogo" ? "catálogo"
+                                                : x.origemCusto === "compra_sem_preco" ? `compra nº ${x.comprasNum.join(", ")} sem preço` : "não comprado"}
                                             </span>
                                             {inputNumero(`${l.p.id}:${x.itemId}:cu`, x.custoUnit, 4, t => void salvarItem(l.p.id, x.itemId, "custo_unitario", t, atual))}
                                           </span>
                                         </td>
                                         <td className="text-right px-2">
-                                          {inputNumero(`${l.p.id}:${x.itemId}:pu`, x.persUnit, 4, t => void salvarItem(l.p.id, x.itemId, "custo_personalizacao_unit", t, atual))}
+                                          <span className="inline-flex items-center justify-end gap-1.5">
+                                            {x.origemPers !== "galpao" && (
+                                              <span
+                                                className="text-[10px] font-semibold rounded-full px-1.5 py-[1px] whitespace-nowrap"
+                                                style={x.origemPers === "editado" ? { background: "#2563EB1A", color: "#1D4ED8" }
+                                                  : x.origemPers === "auto" ? { background: "#7C3AED1A", color: "#6D28D9" }
+                                                  : { background: "#F59E0B26", color: "#B45309" }}
+                                                title={x.origemPers === "auto" ? `Terceirizada: ${x.tecnica} × ${x.aplicacoes} aplicação(ões). Digite outro valor para trocar.`
+                                                  : x.origemPers === "sem" ? "Item terceirizado sem técnica definida no pedido." : "Digitado aqui. Apague para voltar ao preço da técnica."}
+                                              >
+                                                {x.origemPers === "auto" ? `terceir. · ${x.tecnica}${x.aplicacoes > 1 ? ` ×${x.aplicacoes}` : ""}` : x.origemPers === "editado" ? "editado" : "terceir. s/ técnica"}
+                                              </span>
+                                            )}
+                                            {inputNumero(`${l.p.id}:${x.itemId}:pu`, x.persUnit, 4, t => void salvarItem(l.p.id, x.itemId, "custo_personalizacao_unit", t, atual))}
+                                          </span>
                                         </td>
                                         <td className="text-right px-2">{brl(x.pv)}</td>
                                         <td className="text-right px-2">{brl(x.custo)}</td>
@@ -619,7 +660,7 @@ export default function DashboardPedidos() {
                                   })}
                                 </tbody>
                               </table>
-                              <p className="gw-meta text-[11px] mt-1.5 px-2">Custo unitário: o digitado aqui, senão o preço que você lançou na compra (Compras), senão o custo do catálogo. Apague o campo para voltar ao preço da compra. Frete, imposto e taxa de cartão são do pedido inteiro.</p>
+                              <p className="gw-meta text-[11px] mt-1.5 px-2">Custo unitário: o digitado aqui, senão o preço que você lançou na compra (Compras), senão o custo do catálogo. Apague o campo para voltar ao preço da compra. Personalização de item terceirizado já vem com o preço da técnica (DTF UV 3,50 · DTF têxtil 2,50 · laser 1,00 · silk 1,80, por aplicação). Frete, imposto e taxa de cartão são do pedido inteiro.</p>
                             </td>
                           </tr>
                         )}

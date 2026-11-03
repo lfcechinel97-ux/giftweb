@@ -1,10 +1,11 @@
 import { useQuery, type QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "vendedor" | "producao";
+export type AppRole = "admin" | "gerente" | "vendedor" | "producao";
 
 export const ROTULO_PAPEL: Record<AppRole, string> = {
   admin: "Admin",
+  gerente: "Gerente",
   vendedor: "Comercial",
   producao: "Produção",
 };
@@ -37,7 +38,9 @@ async function buscarPerfil(): Promise<Perfil> {
 }
 
 const papelDe = (roles: AppRole[]): AppRole =>
-  roles.includes("admin") ? "admin" : roles.includes("producao") ? "producao" : "vendedor";
+  roles.includes("admin") ? "admin"
+  : roles.includes("gerente") ? "gerente"
+  : roles.includes("producao") ? "producao" : "vendedor";
 
 /* Comercial só enxerga as próprias vendas; sem vendedor vinculado não enxerga
    nenhuma (id que nunca casa), em vez de cair no "ver tudo". */
@@ -64,7 +67,14 @@ export function useUserRole() {
   return {
     roles,
     papel: papelDe(roles),
+    /** Admin de verdade: financeiro (dashboard de lucro, fluxo de vendas) e
+     *  cadastro de usuários. */
     isAdmin: roles.includes("admin"),
+    /** Admin OU gerente: todo o resto que antes era só admin (ver tudo de
+     *  todos os vendedores, custo de compra, excluir pedido…). No banco é
+     *  public.is_gestor(). */
+    isGestor: roles.includes("admin") || roles.includes("gerente"),
+    isGerente: roles.includes("gerente") && !roles.includes("admin"),
     isVendedor: roles.includes("vendedor"),
     isProducao: roles.includes("producao"),
     userId: data?.userId ?? null,

@@ -77,8 +77,11 @@ const fmtData = (iso: string | null) => {
   const [a, m, d] = iso.slice(0, 10).split("-");
   return `${d}/${m}/${a}`;
 };
+/* "1.234,56" e "3,50" no formato BR; "3.50" (ponto como decimal, até 2
+   casas, sem vírgula) também vale 3,50 — antes virava 350. */
 const aNumero = (txt: string) => {
-  const n = Number(String(txt).trim().replace(/\./g, "").replace(",", "."));
+  const t = String(txt).trim();
+  const n = Number(!t.includes(",") && /^\d+\.\d{1,2}$/.test(t) ? t : t.replace(/\./g, "").replace(",", "."));
   return Number.isFinite(n) ? n : 0;
 };
 const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -89,7 +92,7 @@ type Aba = "comprar" | "pedidos";
 export default function Compras() {
   const queryClient = useQueryClient();
   const { currentVendedor } = useSistema();
-  const { isAdmin, nome: nomeLogado } = useUserRole();
+  const { isGestor: isAdmin, nome: nomeLogado } = useUserRole(); // admin ou gerente: preço de compra
   const [aba, setAba] = useState<Aba>("comprar");
   const [filtro, setFiltro] = useState<Filtro>("pendentes");
   const [busca, setBusca] = useState("");
@@ -164,7 +167,7 @@ export default function Compras() {
   });
 
   const { data: compras = [], refetch: refetchCompras } = useQuery({
-    queryKey: ["sistema", "compras", "registradas"],
+    queryKey: ["sistema", "compras", "registradas", isAdmin],
     enabled: aba === "pedidos",
     staleTime: 0,
     queryFn: async () => {
@@ -178,7 +181,20 @@ export default function Compras() {
         toast.error(`Não foi possível carregar os pedidos de compra. ${error.message || ""}`);
         throw error;
       }
-      return (data as CompraRegistrada[]).map(c => ({ ...c, itens: [...(c.itens ?? [])].sort((a, b) => a.ordem - b.ordem) }));
+      const lista = (data as CompraRegistrada[]).map(c => ({ ...c, itens: [...(c.itens ?? [])].sort((a, b) => a.ordem - b.ordem) }));
+      // Preço (só admin, RLS): vai junto pra poder lançar/corrigir aqui.
+      if (isAdmin) {
+        const ids = lista.flatMap(c => c.itens.map(i => i.id));
+        const precos: Record<string, number> = {};
+        for (let i = 0; i < ids.length; i += 150) {
+          const { data: pr, error: errPr } = await (supabase as any).from("sistema_compras_precos")
+            .select("compra_item_id,valor_unitario").in("compra_item_id", ids.slice(i, i + 150));
+          if (errPr) { toast.error(`Não foi possível ler os preços. ${errPr.message || ""}`); break; }
+          for (const x of pr ?? []) precos[x.compra_item_id] = Number(x.valor_unitario);
+        }
+        for (const c of lista) for (const it of c.itens) it.valor_unitario = precos[it.id] ?? null;
+      }
+      return lista;
     },
   });
 
@@ -651,7 +667,7 @@ export default function Compras() {
                       )}
                     </div>
                     {aberto && (
-                      <ConferenciaCompra compra={c} nomeLogado={nomeLogado ?? currentVendedor?.nome ?? null} onMudou={() => void refetchCompras()} />
+                      <ConferenciaCompra compra={c} nomeLogado={nomeLogado ?? currentVendedor?.nome ?? null} podeVerPreco={isAdmin} onMudou={() => void refetchCompras()} />
                     )}
                   </Fragment>
                 );

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { TrendingUp, ShoppingCart, FileText, Percent, Receipt } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { GraficoDiario } from "./financeiro/Graficos";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const brl = (v: number) => BRL.format(Number.isFinite(v) ? v : 0);
@@ -39,6 +40,8 @@ function Kpi({ label, valor, icone: Icone, cor, rodape }: {
 
 /* Sempre o mês corrente: vira no dia 1, sem seletor de período. */
 export default function DashboardComercial() {
+  // Gerente recebe a equipe toda da RPC (is_gestor no banco).
+  const { isGerente } = useUserRole();
   const { data, isLoading, isError } = useQuery<PainelComercial>({
     queryKey: ["sistema", "dashboard-comercial"],
     staleTime: 60 * 1000,
@@ -67,7 +70,7 @@ export default function DashboardComercial() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="gw-display text-[20px]">Meu mês</h1>
+        <h1 className="gw-display text-[20px]">{isGerente ? "Mês da equipe" : "Meu mês"}</h1>
         <p className="gw-meta">
           {mes.charAt(0).toUpperCase() + mes.slice(1)}
           {data && <> · {dataBR(data.inicio)} a {dataBR(data.fim)}</>}
