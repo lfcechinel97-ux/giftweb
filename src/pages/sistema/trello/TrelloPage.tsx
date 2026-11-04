@@ -5,6 +5,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { lerFundo } from "./api";
 import { useBoardMutations, useBoards, useBoardRealtime, useSignedUrls } from "./hooks";
 import BoardHeader, { type Visao } from "./BoardHeader";
+import KanbanView from "./KanbanView";
+import CardDetailsDialog from "./CardDetailsDialog";
 
 /* Preferências por usuário no navegador (só conveniência; o banco não depende disso). */
 const ler = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -19,6 +21,7 @@ export default function TrelloPage() {
   const chaveQuadro = `trello_quadro:${userId ?? "anon"}`;
   const [visao, setVisao] = useState<Visao>("quadro");
   const [boardId, setBoardId] = useState<string | null>(null);
+  const [cartaoAberto, setCartaoAberto] = useState<string | null>(null);
 
   // Restaura visão/quadro quando o usuário é conhecido.
   useEffect(() => {
@@ -71,10 +74,16 @@ export default function TrelloPage() {
           className="relative rounded-[var(--gw-radius-lg)] overflow-hidden h-[calc(100vh-130px)] min-h-[420px]"
           style={estiloFundo}
         >
-          <div className="h-full flex items-center justify-center text-white/80 text-sm">
-            {visao === "quadro" ? "Quadro" : "Calendário"}
-          </div>
+          {visao === "quadro" ? (
+            <KanbanView board={board} onOpenCard={setCartaoAberto} />
+          ) : (
+            <div className="h-full flex items-center justify-center text-white/80 text-sm">Calendário</div>
+          )}
         </div>
+      )}
+
+      {board && (
+        <CardDetailsDialog boardId={board.id} cardId={cartaoAberto} onClose={() => setCartaoAberto(null)} />
       )}
     </div>
   );
