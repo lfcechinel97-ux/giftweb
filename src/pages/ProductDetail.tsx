@@ -765,6 +765,7 @@ const ProductDetail = () => {
                       cor={p.cor}
                       preco_base={p.preco_base}
                       codigo_amigavel={p.codigo_amigavel}
+                    codigo_prefixo={p.codigo_prefixo}
                       variantes={p.variantes as any}
                       estoque={p.estoque}
                       estoque_total={p.estoque_total}

@@ -224,6 +224,7 @@ const CategoryPage = () => {
                     cor={p.cor}
                     preco_base={p.preco_base}
                     codigo_amigavel={p.codigo_amigavel}
+                    codigo_prefixo={p.codigo_prefixo}
                     image_urls={p.image_urls}
                     variantes={p.variantes}
                     estoque={p.estoque}
