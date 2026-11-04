@@ -2,7 +2,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Suspense, useCallback, useEffect } from "react";
 import {
   FileText, ShoppingCart, Boxes, Package, Globe, User, Users, Settings, ChevronDown, Kanban, LayoutDashboard, Wallet,
-  ShoppingBag, LogOut,
+  ShoppingBag, LogOut, SquareKanban,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -12,12 +12,14 @@ import { useSistema } from "@/contexts/SistemaContext";
 import { useUserRole, ROTULO_PAPEL } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 
-const menu: { icon: typeof LayoutDashboard; label: string; path: string; chunk: () => Promise<unknown>; soAdmin?: boolean }[] = [
+/* chunk opcional: item sem chunk não pré-carrega nada no hover. */
+const menu: { icon: typeof LayoutDashboard; label: string; path: string; chunk?: () => Promise<unknown>; soAdmin?: boolean }[] = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/sistema/dashboard", chunk: () => import("./Dashboard.tsx") },
   { icon: Wallet, label: "Fluxo de vendas", path: "/sistema/vendas", chunk: () => import("./Vendas.tsx"), soAdmin: true },
   { icon: FileText, label: "Orçamentos", path: "/sistema/orcamentos", chunk: () => import("./Orcamentos.tsx") },
   { icon: ShoppingCart, label: "Pedidos", path: "/sistema/pedidos", chunk: () => import("./Pedidos.tsx") },
   { icon: Kanban, label: "PCP", path: "/sistema/pcp", chunk: () => import("./PCP.tsx") },
+  { icon: SquareKanban, label: "Trello", path: "/sistema/trello" },
   { icon: ShoppingBag, label: "Compras", path: "/sistema/compras", chunk: () => import("./Compras.tsx") },
   { icon: Boxes, label: "Estoque", path: "/sistema/estoque", chunk: () => import("./Estoque.tsx") },
   { icon: Package, label: "Produtos", path: "/sistema/produtos", chunk: () => import("./ProdutosCatalogo.tsx") },
@@ -86,7 +88,7 @@ export default function SistemaLayout() {
   /* Pré-carregamento no hover: SOMENTE o chunk de código da rota (leve).
      Buscar dados por movimento de mouse multiplicava requisições sem ganho. */
   const prefetch = useCallback((item: typeof menu[number]) => {
-    item.chunk().catch(() => undefined);
+    item.chunk?.().catch(() => undefined);
   }, []);
 
 
