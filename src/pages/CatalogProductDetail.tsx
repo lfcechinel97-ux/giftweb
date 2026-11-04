@@ -9,8 +9,7 @@ import { getCorHex } from "@/utils/colorHex";
 import { WHATSAPP_NUMBER } from "@/config/site";
 import CatalogHeader from "@/components/catalog/CatalogHeader";
 import CatalogFooter from "@/components/catalog/CatalogFooter";
-import QuotationDrawer from "@/components/catalog/QuotationDrawer";
-import QuotationBar from "@/components/catalog/QuotationBar";
+import CartFab from "@/components/CartFab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuotation } from "@/contexts/QuotationContext";
@@ -223,6 +222,7 @@ const CatalogProductDetail = () => {
         name: displayNome,
         image: displayedMain || product.image_url || "/placeholder-product.webp",
         precoBase: temPreco(product) ? product!.preco_base : null,
+        precoFaixas: product!.preco_faixas,
         codigo_amigavel: displayCodigo,
       },
       qty
@@ -267,7 +267,6 @@ const CatalogProductDetail = () => {
 
       <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
         <CatalogHeader />
-        <QuotationBar />
         <main className="flex-1">
           <div className="w-full max-w-5xl mx-auto px-4 py-4 md:py-8">
             {/* Back button */}
@@ -654,7 +653,7 @@ const CatalogProductDetail = () => {
           </div>
         </main>
         <CatalogFooter />
-        <QuotationDrawer />
+        <CartFab />
 
         {/* Lightbox */}
         {lightbox && (() => {

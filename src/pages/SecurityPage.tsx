@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import CartFab from "@/components/CartFab";
 import { SITE_URL } from "@/config/site";
 
 const SecurityPage = () => (
@@ -70,7 +70,7 @@ const SecurityPage = () => (
         </div>
       </main>
       <Footer />
-      <FloatingWhatsApp />
+      <CartFab />
     </div>
   </>
 );

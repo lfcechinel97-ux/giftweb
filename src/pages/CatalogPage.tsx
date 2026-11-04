@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { SITE_URL } from "@/config/site";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import CartFab from "@/components/CartFab";
 import CatalogHeader from "@/components/catalog/CatalogHeader";
 import CatalogFooter from "@/components/catalog/CatalogFooter";
 import CatalogStoryCategories from "@/components/catalog/CatalogStoryCategories";
@@ -11,8 +11,6 @@ import CatalogPagination from "@/components/CatalogPagination";
 import CatalogFilterBar from "@/components/catalog/CatalogFilterBar";
 import CatalogMobileFilters from "@/components/catalog/CatalogMobileFilters";
 import CatalogProductCard, { CatalogProductCardSkeleton } from "@/components/catalog/CatalogProductCard";
-import QuotationBar from "@/components/catalog/QuotationBar";
-import QuotationDrawer from "@/components/catalog/QuotationDrawer";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = Tables<"products_cache">;
@@ -268,9 +266,7 @@ const CatalogPage = () => {
         </main>
 
         <CatalogFooter />
-        <FloatingWhatsApp />
-        <QuotationBar />
-        <QuotationDrawer />
+        <CartFab />
       </div>
     </>
   );

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import CartFab from "@/components/CartFab";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard, { ProductCardSkeleton } from "@/components/ProductCard";
 import CatalogFilters from "@/components/CatalogFilters";
@@ -148,7 +148,7 @@ const AllProducts = () => {
           </div>
         </main>
         <Footer />
-        <FloatingWhatsApp />
+        <CartFab />
       </div>
     </>
   );
