@@ -26,18 +26,15 @@ import { useKanban, useLabels, useSignedUrls, useUsers } from "./hooks";
 import { useCardMutations, useLabelMutations } from "./mutations";
 import { Avatar, DueBadge, LabelChips } from "./cardUi";
 import { InlineInput } from "./KanbanView";
+import LembreteCampo from "./LembreteCampo";
 
 interface Props {
   boardId: string;
   cardId: string | null;
   onClose: () => void;
-  /** Bloco de lembrete (injetado pela parte de lembretes). */
-  renderLembrete?: (card: Card, detalhe: CardDetail) => React.ReactNode;
-  /** Chamado depois que a data de entrega muda (para recalcular lembretes). */
-  onDueChange?: (card: Card, novoDue: string | null) => void;
 }
 
-export default function CardDetailsDialog({ boardId, cardId, onClose, renderLembrete, onDueChange }: Props) {
+export default function CardDetailsDialog({ boardId, cardId, onClose }: Props) {
   const { userId } = useUserRole();
   const { data, isLoading } = useQuery({
     queryKey: qk.card(cardId ?? "-"),
@@ -64,8 +61,6 @@ export default function CardDetailsDialog({ boardId, cardId, onClose, renderLemb
             boardId={boardId}
             detalhe={data}
             onClose={onClose}
-            renderLembrete={renderLembrete}
-            onDueChange={onDueChange}
           />
         )}
       </DialogContent>
@@ -99,15 +94,7 @@ function useAutoSave(valor: string, original: string, salvar: (v: string) => voi
   return status;
 }
 
-function Conteudo({
-  boardId, detalhe, onClose, renderLembrete, onDueChange,
-}: {
-  boardId: string;
-  detalhe: CardDetail;
-  onClose: () => void;
-  renderLembrete?: Props["renderLembrete"];
-  onDueChange?: Props["onDueChange"];
-}) {
+function Conteudo({ boardId, detalhe, onClose }: { boardId: string; detalhe: CardDetail; onClose: () => void }) {
   const qc = useQueryClient();
   const { userId } = useUserRole();
   const { card, checklist, attachments, comments } = detalhe;
@@ -246,10 +233,8 @@ function Conteudo({
     toast("Cartão arquivado", { action: { label: "Desfazer", onClick: () => cardMut.atualizar.mutate({ id: card.id, patch: { archived: false } }) } });
   };
 
-  const mudarEntrega = (due_at: string | null, has_time: boolean) => {
-    patch({ due_at, has_time });
-    onDueChange?.({ ...card, due_at, has_time }, due_at);
-  };
+  // Os lembretes acompanham a nova data dentro da própria mutação (ver mutations.ts).
+  const mudarEntrega = (due_at: string | null, has_time: boolean) => patch({ due_at, has_time });
 
   const capaUrl = card.cover_url ? urls[card.cover_url] : undefined;
 
@@ -344,7 +329,7 @@ function Conteudo({
               )}
             </div>
 
-            {renderLembrete?.(card, detalhe)}
+            <LembreteCampo card={card} reminder={detalhe.reminder} />
 
             {/* Descrição */}
             <Secao icone={AlignLeft} titulo="Descrição / observações">

@@ -1,12 +1,14 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { SquareKanban, Plus } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useUserRole } from "@/hooks/useUserRole";
-import { lerFundo } from "./api";
+import { db, lerFundo } from "./api";
 import { useBoardMutations, useBoards, useBoardRealtime, useSignedUrls } from "./hooks";
 import BoardHeader, { type Visao } from "./BoardHeader";
 import KanbanView from "./KanbanView";
 import CardDetailsDialog from "./CardDetailsDialog";
+import NotificationBell from "./NotificationBell";
 
 // Calendário em chunk separado: só baixa quando alguém abre essa visão.
 const CalendarView = lazy(() => import("./CalendarView"));
@@ -46,6 +48,14 @@ export default function TrelloPage() {
   useBoardRealtime(board?.id ?? null);
 
   const selecionar = (id: string) => { setBoardId(id); gravar(chaveQuadro, id); };
+
+  /* Notificação pode ser de cartão de outro quadro: troca de quadro e abre. */
+  const abrirCartaoDeQualquerQuadro = async (cardId: string) => {
+    const { data } = await db.from("trello_cards").select("board_id").eq("id", cardId).maybeSingle();
+    if (!data) { toast.error("Este cartão não existe mais."); return; }
+    if (data.board_id !== boardId) selecionar(data.board_id);
+    setCartaoAberto(cardId);
+  };
   const mudarVisao = (v: Visao) => { setVisao(v); gravar(chaveVisao, v); };
 
   const fundo = lerFundo(board?.background);
@@ -59,7 +69,14 @@ export default function TrelloPage() {
 
   return (
     <div className="flex flex-col gap-4 -mx-2 sm:mx-0">
-      <BoardHeader boards={boards} board={board} onSelect={selecionar} visao={visao} onVisao={mudarVisao} />
+      <BoardHeader
+        boards={boards}
+        board={board}
+        onSelect={selecionar}
+        visao={visao}
+        onVisao={mudarVisao}
+        extra={<NotificationBell userId={userId} onOpenCard={(id) => void abrirCartaoDeQualquerQuadro(id)} />}
+      />
 
       {isLoading ? (
         <div className="animate-pulse h-[60vh] rounded-[var(--gw-radius-lg)] bg-muted" />

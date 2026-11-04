@@ -4,6 +4,7 @@ import {
   CARD_SELECT, db, normalizaCard, posicaoEntre, qk, removerArquivo,
   type Card, type CardDetail, type Column, type Label,
 } from "./api";
+import { ajustarLembretesAposEntrega } from "./reminders";
 
 type KanbanData = { columns: Column[]; cards: Card[] };
 export type CardPatch = Partial<Pick<Card,
@@ -22,6 +23,18 @@ function restaurar(qc: QueryClient, snap: ReturnType<typeof snapshot> | undefine
   if (!snap) return;
   for (const [key, data] of snap.board) qc.setQueryData(key, data);
   if (snap.cardId) qc.setQueryData(qk.card(snap.cardId), snap.card);
+}
+
+/** due_at atual do cartão em qualquer cache (antes do patch otimista). */
+function dueEmCache(qc: QueryClient, boardId: string, cardId: string): string | null | undefined {
+  const det = qc.getQueryData<CardDetail>(qk.card(cardId));
+  if (det) return det.card.due_at;
+  for (const [, data] of qc.getQueriesData({ queryKey: qk.board(boardId) })) {
+    const lista = Array.isArray(data) ? (data as Card[]) : (data as KanbanData | undefined)?.cards;
+    const c = lista?.find?.((x) => x.id === cardId);
+    if (c) return c.due_at;
+  }
+  return undefined;
 }
 
 /** Aplica um patch no cartão em todos os caches que o mostram (atualização otimista). */
@@ -55,20 +68,28 @@ export function useCardMutations(boardId: string) {
   const invalidar = () => qc.invalidateQueries({ queryKey: qk.board(boardId) });
 
   const atualizar = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: CardPatch }) => {
+    mutationFn: async ({ id, patch, dueAntigo }: { id: string; patch: CardPatch; dueAntigo?: string | null }) => {
       const { error } = await db.from("trello_cards").update(patch).eq("id", id);
       if (error) throw new Error(error.message);
+      // Mudou a entrega (modal, calendário, onde for): lembretes acompanham.
+      if ("due_at" in patch && dueAntigo !== undefined) {
+        await ajustarLembretesAposEntrega(id, dueAntigo, patch.due_at ?? null);
+      }
     },
-    onMutate: async ({ id, patch }) => {
+    onMutate: async (vars) => {
       await qc.cancelQueries({ queryKey: qk.board(boardId) });
-      const snap = snapshot(qc, boardId, id);
-      aplicarNoCache(qc, boardId, id, patch);
+      const snap = snapshot(qc, boardId, vars.id);
+      // O React Query v5 passa este mesmo objeto `vars` ao mutationFn (que roda
+      // depois do onMutate): é assim que a data ANTIGA chega lá, antes do patch.
+      if ("due_at" in vars.patch && vars.dueAntigo === undefined) vars.dueAntigo = dueEmCache(qc, boardId, vars.id);
+      aplicarNoCache(qc, boardId, vars.id, vars.patch);
       return snap;
     },
     onError: (e, _v, snap) => { restaurar(qc, snap); falhou(e); },
     // Data mudou: o cartão pode ter entrado/saído de um mês do calendário.
-    onSettled: (_d, _e, { patch }) => {
+    onSettled: (_d, _e, { id, patch }) => {
       if ("due_at" in patch || "archived" in patch) invalidar();
+      if ("due_at" in patch) qc.invalidateQueries({ queryKey: qk.card(id) });
     },
   });
 
