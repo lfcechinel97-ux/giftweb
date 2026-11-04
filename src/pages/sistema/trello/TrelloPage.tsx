@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { SquareKanban, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -7,6 +7,9 @@ import { useBoardMutations, useBoards, useBoardRealtime, useSignedUrls } from ".
 import BoardHeader, { type Visao } from "./BoardHeader";
 import KanbanView from "./KanbanView";
 import CardDetailsDialog from "./CardDetailsDialog";
+
+// Calendário em chunk separado: só baixa quando alguém abre essa visão.
+const CalendarView = lazy(() => import("./CalendarView"));
 
 /* Preferências por usuário no navegador (só conveniência; o banco não depende disso). */
 const ler = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -77,7 +80,9 @@ export default function TrelloPage() {
           {visao === "quadro" ? (
             <KanbanView board={board} onOpenCard={setCartaoAberto} />
           ) : (
-            <div className="h-full flex items-center justify-center text-white/80 text-sm">Calendário</div>
+            <Suspense fallback={<div className="m-3 h-[calc(100%-24px)] rounded-[var(--gw-radius-lg)] bg-white/70 animate-pulse" />}>
+              <CalendarView board={board} onOpenCard={setCartaoAberto} />
+            </Suspense>
           )}
         </div>
       )}
