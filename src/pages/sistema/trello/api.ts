@@ -82,7 +82,10 @@ export interface CardDetail {
 /* ------------------------------------------------------------------ */
 export const qk = {
   all: ["trello"] as const,
-  boards: ["trello", "boards"] as const,
+  boardsAll: ["trello", "boards"] as const,
+  /** Lista de quadros: do colaborador `dono` (visão do gestor) ou os meus (null). */
+  boards: (dono: string | null) => ["trello", "boards", dono ?? "meus"] as const,
+  donos: ["trello", "donos"] as const,
   board: (boardId: string) => ["trello", "b", boardId] as const,
   kanban: (boardId: string) => ["trello", "b", boardId, "kanban"] as const,
   labels: (boardId: string) => ["trello", "b", boardId, "labels"] as const,
@@ -107,8 +110,23 @@ const ok = <T,>({ data, error }: { data: T; error: { message: string } | null })
 /* ------------------------------------------------------------------ */
 /* Leitura                                                            */
 /* ------------------------------------------------------------------ */
-export async function fetchBoards(): Promise<Board[]> {
-  return ok(await db.from("trello_boards").select("id,owner_id,title,background,created_at").order("created_at"));
+/**
+ * dono = null: tudo que o RLS libera (os meus + os que sou membro).
+ * dono = id: só os quadros daquele colaborador (gestor vê todos pelo RLS,
+ * então ele SEMPRE filtra por dono — inclusive para ver os próprios).
+ */
+export async function fetchBoards(dono: string | null): Promise<Board[]> {
+  let q = db.from("trello_boards").select("id,owner_id,title,background,created_at");
+  if (dono) q = q.eq("owner_id", dono);
+  return ok(await q.order("created_at"));
+}
+
+/** Quantos quadros cada colaborador tem (só para o seletor do gestor; consulta leve). */
+export async function fetchDonos(): Promise<Record<string, number>> {
+  const rows = ok(await db.from("trello_boards").select("owner_id")) as { owner_id: string }[];
+  const out: Record<string, number> = {};
+  for (const r of rows) out[r.owner_id] = (out[r.owner_id] ?? 0) + 1;
+  return out;
 }
 
 export async function fetchKanban(boardId: string): Promise<{ columns: Column[]; cards: Card[] }> {

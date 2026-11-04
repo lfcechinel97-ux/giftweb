@@ -2,15 +2,26 @@ import { useEffect, useMemo, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  assinarUrls, db, fetchBoards, fetchKanban, fetchLabels, fetchUsers, posicaoEntre, qk,
+  assinarUrls, db, fetchBoards, fetchDonos, fetchKanban, fetchLabels, fetchUsers, posicaoEntre, qk,
   type Board,
 } from "./api";
 
 /* staleTime alto + Realtime para atualizar: sem refetch a cada foco/montagem. */
 const STALE = 60 * 1000;
 
-export function useBoards() {
-  return useQuery({ queryKey: qk.boards, queryFn: fetchBoards, staleTime: 5 * STALE });
+export function useBoards(dono: string | null, enabled = true) {
+  return useQuery({
+    queryKey: qk.boards(dono),
+    queryFn: () => fetchBoards(dono),
+    enabled,
+    staleTime: 5 * STALE,
+    // Trocar de colaborador não pode mostrar os quadros do anterior.
+    placeholderData: undefined,
+  });
+}
+
+export function useDonos(enabled: boolean) {
+  return useQuery({ queryKey: qk.donos, queryFn: fetchDonos, enabled, staleTime: 5 * STALE });
 }
 
 export function useKanban(boardId: string | null) {
@@ -89,14 +100,16 @@ export function useBoardRealtime(boardId: string | null) {
 /* ------------------------------------------------------------------ */
 const COLUNAS_INICIAIS = ["A fazer", "Fazendo", "Concluído"];
 
-export function useBoardMutations() {
+/** dono: de quem é a lista aberta (null = meus quadros). Quadro novo nasce desse dono. */
+export function useBoardMutations(dono: string | null = null) {
   const qc = useQueryClient();
+  const lista = qk.boards(dono);
   const erro = (e: Error) => toast.error(e.message || "Não foi possível salvar");
 
   const criar = useMutation({
     mutationFn: async (title: string): Promise<Board> => {
       const { data, error } = await db.from("trello_boards")
-        .insert({ title, background: "color:var(--gw-sidebar)" })
+        .insert({ title, background: "color:var(--gw-sidebar)", ...(dono ? { owner_id: dono } : {}) })
         .select("id,owner_id,title,background,created_at").single();
       if (error) throw new Error(error.message);
       let prev: number | null = null;
@@ -108,7 +121,10 @@ export function useBoardMutations() {
       await db.from("trello_columns").insert(cols);
       return data as Board;
     },
-    onSuccess: (b) => qc.setQueryData<Board[]>(qk.boards, (old) => [...(old ?? []), b]),
+    onSuccess: (b) => {
+      qc.setQueryData<Board[]>(lista, (old) => [...(old ?? []), b]);
+      qc.invalidateQueries({ queryKey: qk.donos });
+    },
     onError: erro,
   });
 
@@ -118,12 +134,12 @@ export function useBoardMutations() {
       if (error) throw new Error(error.message);
     },
     onMutate: async ({ id, ...campos }) => {
-      await qc.cancelQueries({ queryKey: qk.boards });
-      const antes = qc.getQueryData<Board[]>(qk.boards);
-      qc.setQueryData<Board[]>(qk.boards, (old) => old?.map((b) => (b.id === id ? { ...b, ...campos } : b)));
+      await qc.cancelQueries({ queryKey: lista });
+      const antes = qc.getQueryData<Board[]>(lista);
+      qc.setQueryData<Board[]>(lista, (old) => old?.map((b) => (b.id === id ? { ...b, ...campos } : b)));
       return { antes };
     },
-    onError: (e: Error, _v, ctx) => { if (ctx?.antes) qc.setQueryData(qk.boards, ctx.antes); erro(e); },
+    onError: (e: Error, _v, ctx) => { if (ctx?.antes) qc.setQueryData(lista, ctx.antes); erro(e); },
   });
 
   const excluir = useMutation({
@@ -132,7 +148,8 @@ export function useBoardMutations() {
       if (error) throw new Error(error.message);
     },
     onSuccess: (_d, id) => {
-      qc.setQueryData<Board[]>(qk.boards, (old) => old?.filter((b) => b.id !== id));
+      qc.setQueryData<Board[]>(lista, (old) => old?.filter((b) => b.id !== id));
+      qc.invalidateQueries({ queryKey: qk.donos });
       qc.removeQueries({ queryKey: qk.board(id) });
     },
     onError: erro,

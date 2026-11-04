@@ -27,10 +27,19 @@ interface Props {
   onVisao: (v: Visao) => void;
   /** Sino de notificações (fica no cabeçalho). */
   extra?: React.ReactNode;
+  /** Seletor de colaborador (só gestor), ao lado do título. */
+  colaborador?: React.ReactNode;
+  /** Dono da lista aberta (null = eu). Muda rótulos e quem pode excluir. */
+  nomeDono?: string | null;
+  podeExcluir?: boolean;
+  /** Dono da lista: quadro novo nasce dele. */
+  dono?: string | null;
 }
 
-export default function BoardHeader({ boards, board, onSelect, visao, onVisao, extra }: Props) {
-  const { criar, atualizar, excluir } = useBoardMutations();
+export default function BoardHeader({
+  boards, board, onSelect, visao, onVisao, extra, colaborador, nomeDono = null, podeExcluir = true, dono = null,
+}: Props) {
+  const { criar, atualizar, excluir } = useBoardMutations(dono);
   const [dialog, setDialog] = useState<null | "novo" | "renomear">(null);
   const [nome, setNome] = useState("");
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
@@ -56,6 +65,7 @@ export default function BoardHeader({ boards, board, onSelect, visao, onVisao, e
       <div className="flex items-center gap-2 mr-auto min-w-0">
         <SquareKanban className="h-5 w-5 text-[var(--gw-primary)] shrink-0" />
         <h1 className="gw-title text-[20px] shrink-0">Trello</h1>
+        {colaborador}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -68,7 +78,7 @@ export default function BoardHeader({ boards, board, onSelect, visao, onVisao, e
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64">
-            <DropdownMenuLabel className="text-[12px] text-muted-foreground font-medium">Seus quadros</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-[12px] text-muted-foreground font-medium">{nomeDono ? `Quadros de ${nomeDono}` : "Seus quadros"}</DropdownMenuLabel>
             {boards.length === 0 && <DropdownMenuItem disabled>Nenhum quadro ainda</DropdownMenuItem>}
             {boards.map((b) => (
               <DropdownMenuItem key={b.id} onClick={() => onSelect(b.id)} className="gap-2">
@@ -78,16 +88,18 @@ export default function BoardHeader({ boards, board, onSelect, visao, onVisao, e
             ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => abrir("novo")} className="gap-2">
-              <Plus className="h-4 w-4" /> Novo quadro
+              <Plus className="h-4 w-4" /> {nomeDono ? `Novo quadro para ${nomeDono}` : "Novo quadro"}
             </DropdownMenuItem>
             {board && (
               <>
                 <DropdownMenuItem onClick={() => abrir("renomear")} className="gap-2">
                   <Pencil className="h-4 w-4" /> Renomear quadro
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setConfirmarExclusao(true)} className="gap-2 text-[var(--gw-danger)] focus:text-[var(--gw-danger)]">
-                  <Trash2 className="h-4 w-4" /> Excluir quadro
-                </DropdownMenuItem>
+                {podeExcluir && (
+                  <DropdownMenuItem onClick={() => setConfirmarExclusao(true)} className="gap-2 text-[var(--gw-danger)] focus:text-[var(--gw-danger)]">
+                    <Trash2 className="h-4 w-4" /> Excluir quadro
+                  </DropdownMenuItem>
+                )}
               </>
             )}
           </DropdownMenuContent>
@@ -119,7 +131,7 @@ export default function BoardHeader({ boards, board, onSelect, visao, onVisao, e
       <Dialog open={dialog !== null} onOpenChange={(o) => !o && setDialog(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>{dialog === "novo" ? "Novo quadro" : "Renomear quadro"}</DialogTitle>
+            <DialogTitle>{dialog === "novo" ? (nomeDono ? `Novo quadro para ${nomeDono}` : "Novo quadro") : "Renomear quadro"}</DialogTitle>
           </DialogHeader>
           <Input
             autoFocus
