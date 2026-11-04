@@ -6,16 +6,18 @@ import { formatarBRL, formatPercent2 } from "@/utils/price";
 import { linhasDePreco, precoMinimo, precoPadrao, precoUnitario, temPreco } from "@/utils/precoVenda";
 import { COLUNAS_PRODUTO_PUBLICO, type ProdutoPublico } from "@/utils/colunasProdutoPublico";
 import { getCorHex } from "@/utils/colorHex";
-import { WHATSAPP_REDIRECT_URL, SITE_URL } from "@/config/site";
+import { SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import CartFab from "@/components/CartFab";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard from "@/components/ProductCard";
 import HowItWorks from "@/components/HowItWorks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Minus, Plus, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, Truck, Palette, Building2, ZoomIn, ChevronLeft, ChevronRight } from "lucide-react";
+import { Minus, Plus, X, Ruler, Weight, ArrowUpDown, MoveHorizontal, Truck, Palette, Building2, ZoomIn, ChevronLeft, ChevronRight, ShoppingCart, Check } from "lucide-react";
+import { toast } from "sonner";
+import { useQuotation } from "@/contexts/QuotationContext";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Product = ProdutoPublico;
@@ -29,6 +31,7 @@ interface VariantInfo {
 }
 
 const QUANTITIES = [20, 50, 100, 200, 300, 500, 1000];
+const QTD_MINIMA = 20;
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -38,8 +41,12 @@ const ProductDetail = () => {
   const [selectedVariant, setSelectedVariant] = useState<VariantInfo | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [qty, setQty] = useState(20);
-  const [selectedRow, setSelectedRow] = useState(0);
+  const [qty, setQty] = useState(QTD_MINIMA);
+  // Texto do campo separado do número: deixa apagar e digitar "150" sem o
+  // campo pular para 20 no meio da digitação.
+  const [qtyInput, setQtyInput] = useState(String(QTD_MINIMA));
+  const [justAdded, setJustAdded] = useState(false);
+  const { addItem, setIsOpen } = useQuotation();
   const [lightbox, setLightbox] = useState(false);
   const [lbActive, setLbActive] = useState(0);
   const [activeImg, setActiveImg] = useState(0);
@@ -251,11 +258,42 @@ const ProductDetail = () => {
     [product?.preco_base, product?.preco_faixas],
   );
 
+  useEffect(() => { setQtyInput(String(qty)); }, [qty]);
+
+  // Linha destacada da tabela = faixa em que a quantidade atual cai.
+  const selectedRow = useMemo(() => {
+    let idx = 0;
+    tableRows.forEach((r, i) => { if (r.qty <= qty) idx = i; });
+    return idx;
+  }, [tableRows, qty]);
+
   const handleSelectRow = (index: number) => {
-    setSelectedRow(index);
     const rowQty = tableRows[index]?.qty ?? QUANTITIES[index];
     setQty(rowQty);
     qtySelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    const cor = selectedVariant?.cor || product.cor;
+    addItem(
+      {
+        // Uma linha por cor: o código amigável muda de variante para variante
+        id: displayCodigo || product.id,
+        name: cor ? `${displayNome} - ${cor}` : displayNome,
+        image: selectedVariant?.image || product.image_url || "/placeholder-product.webp",
+        precoBase: temPreco(product) ? product.preco_base : null,
+        precoFaixas: product.preco_faixas,
+        codigo_amigavel: displayCodigo,
+      },
+      qty,
+    );
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1500);
+    toast.success(`${qty} unidades adicionadas ao carrinho`, {
+      action: { label: "Ver carrinho", onClick: () => setIsOpen(true) },
+      duration: 3500,
+    });
   };
 
   if (loading) {
@@ -533,19 +571,58 @@ const ProductDetail = () => {
                   );
                 })()}
 
-                {/* WhatsApp CTA */}
-                <a
-                  href={WHATSAPP_REDIRECT_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full rounded-xl flex items-center justify-center gap-2 text-white font-semibold text-sm py-3 px-4 transition-opacity duration-150 hover:opacity-90 active:scale-[0.98]"
-                  style={{ backgroundColor: '#25D366' }}
+                {/* Qty selector — acima da tabela de valores */}
+                <div ref={qtySelectorRef} className="p-3 rounded-xl bg-card border border-border">
+                  <label htmlFor="qtd-produto" className="block text-xs font-semibold text-foreground mb-2">Quantidade</label>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      aria-label="Diminuir quantidade"
+                      onClick={() => setQty(Math.max(QTD_MINIMA, qty - 10))}
+                      className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-foreground hover:border-green-cta transition-colors shrink-0"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <input
+                      id="qtd-produto"
+                      type="number"
+                      inputMode="numeric"
+                      min={QTD_MINIMA}
+                      value={qtyInput}
+                      onChange={(e) => {
+                        setQtyInput(e.target.value);
+                        const n = parseInt(e.target.value);
+                        if (n >= QTD_MINIMA) setQty(n);
+                      }}
+                      onBlur={() => setQtyInput(String(qty))}
+                      className="flex-1 min-w-0 text-center py-2 rounded-lg bg-card border border-border text-foreground font-bold text-base focus:outline-none focus:border-green-cta"
+                    />
+                    <button
+                      type="button"
+                      aria-label="Aumentar quantidade"
+                      onClick={() => setQty(qty + 10)}
+                      className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-foreground hover:border-green-cta transition-colors shrink-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {temPreco(product) && (
+                    <div className="mt-2 flex items-baseline justify-between gap-2">
+                      <p className="text-muted-foreground text-xs">{qty}x — {formatarBRL(precoAtual)} / un</p>
+                      <p className="text-foreground font-bold text-sm">Total: {formatarBRL(precoAtual * qty)}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Adicionar ao carrinho de orçamento */}
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="w-full rounded-xl flex items-center justify-center gap-2 text-white font-semibold text-sm py-3 px-4 bg-green-cta transition-opacity duration-150 hover:opacity-90 active:scale-[0.98]"
                 >
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                  </svg>
-                  Solicitar orçamento no WhatsApp
-                </a>
+                  {justAdded ? <Check className="w-4 h-4 shrink-0" /> : <ShoppingCart className="w-4 h-4 shrink-0" />}
+                  {justAdded ? "Adicionado ao carrinho!" : "Adicionar ao carrinho de orçamento"}
+                </button>
 
                 {/* Micro copy */}
                 <div className="text-muted-foreground text-xs leading-relaxed">
@@ -668,36 +745,6 @@ const ProductDetail = () => {
                   </div>
                 </div>
 
-                {/* Qty selector */}
-                <div ref={qtySelectorRef} className="p-3 rounded-xl bg-card border border-border">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setQty(Math.max(20, qty - 10))}
-                      className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-foreground hover:border-green-cta transition-colors shrink-0"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <input
-                      type="number"
-                      min={20}
-                      value={qty}
-                      onChange={(e) => setQty(Math.max(20, parseInt(e.target.value) || 20))}
-                      className="flex-1 min-w-0 text-center py-2 rounded-lg bg-card border border-border text-foreground font-bold text-base focus:outline-none focus:border-green-cta"
-                    />
-                    <button
-                      onClick={() => setQty(qty + 10)}
-                      className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-foreground hover:border-green-cta transition-colors shrink-0"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                  {temPreco(product) && (
-                    <div className="mt-2">
-                      <p className="text-muted-foreground text-xs">{qty}x — {formatarBRL(precoAtual)} / un</p>
-                      <p className="text-foreground font-bold text-sm mt-0.5">Total: {formatarBRL(precoAtual * qty)}</p>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 
@@ -718,6 +765,7 @@ const ProductDetail = () => {
                       cor={p.cor}
                       preco_base={p.preco_base}
                       codigo_amigavel={p.codigo_amigavel}
+                    codigo_prefixo={p.codigo_prefixo}
                       variantes={p.variantes as any}
                       estoque={p.estoque}
                       estoque_total={p.estoque_total}
@@ -732,7 +780,7 @@ const ProductDetail = () => {
           <HowItWorks />
         </main>
         <Footer />
-        <FloatingWhatsApp />
+        <CartFab />
 
         {/* Lightbox — shows all images (API + admin) */}
         {lightbox && (() => {

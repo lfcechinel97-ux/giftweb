@@ -12,7 +12,7 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import HowItWorks from "@/components/HowItWorks";
 import TrustSection from "@/components/TrustSection";
 import Footer from "@/components/Footer";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import CartFab from "@/components/CartFab";
 import CorporateQuotation from "@/components/CorporateQuotation";
 
 import FAQSection from "@/components/FAQSection";
@@ -106,7 +106,7 @@ const Index = () => {
           </LazySection>
         </main>
         <Footer />
-        <FloatingWhatsApp />
+        <CartFab />
       </div>
   );
 };

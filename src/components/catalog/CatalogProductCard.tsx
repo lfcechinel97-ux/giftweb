@@ -134,6 +134,7 @@ const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
         name: nome,
         image: image_url || "/placeholder-product.webp",
         precoBase: temPreco(product) ? product.preco_base : null,
+        precoFaixas: product.preco_faixas,
         codigo_amigavel,
       },
       qty

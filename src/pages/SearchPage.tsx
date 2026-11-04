@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import CartFab from "@/components/CartFab";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard, { ProductCardSkeleton } from "@/components/ProductCard";
 import CatalogFilters from "@/components/CatalogFilters";
@@ -166,7 +166,8 @@ const SearchPage = () => {
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {products.map((p: any) => (
-                  <ProductCard key={p.id} id={p.id} nome={p.nome} slug={p.slug} image_url={p.image_url} image_urls={p.image_urls} cor={p.cor} preco_base={p.preco_base} codigo_amigavel={p.codigo_amigavel} variantes={p.variantes} estoque={p.estoque} estoque_total={p.estoque_total} preco_faixas={p.preco_faixas} />
+                  <ProductCard key={p.id} id={p.id} nome={p.nome} slug={p.slug} image_url={p.image_url} image_urls={p.image_urls} cor={p.cor} preco_base={p.preco_base} codigo_amigavel={p.codigo_amigavel}
+                    codigo_prefixo={p.codigo_prefixo} variantes={p.variantes} estoque={p.estoque} estoque_total={p.estoque_total} preco_faixas={p.preco_faixas} />
                 ))}
               </div>
             )}
@@ -174,7 +175,7 @@ const SearchPage = () => {
           </div>
         </main>
         <Footer />
-        <FloatingWhatsApp />
+        <CartFab />
       </div>
     </>
   );

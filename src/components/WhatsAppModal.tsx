@@ -32,8 +32,11 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
     name: "",
     phone: "",
     item: ITEM_OPTIONS[0],
-    budget: BUDGET_OPTIONS[0],
+    // Sem pré-seleção de propósito: com "Até R$ 1.000" já marcado o cliente
+    // nem olhava o campo. Agora ele precisa escolher (obrigatório).
+    budget: "",
   });
+  const [budgetError, setBudgetError] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -49,6 +52,11 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.budget) {
+      setBudgetError(true);
+      document.getElementById("wa-budget")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
 
     const name = form.name.trim().slice(0, 100);
     const phone = form.phone.trim().slice(0, 30);
@@ -140,12 +148,41 @@ const WhatsAppModal = ({ open, onClose }: WhatsAppModalProps) => {
             options={ITEM_OPTIONS}
           />
 
-          <FieldSelect
-            label="Orçamento para seus brindes"
-            value={form.budget}
-            onChange={(v) => setField("budget", v)}
-            options={BUDGET_OPTIONS}
-          />
+          <fieldset id="wa-budget" className="flex flex-col gap-1.5">
+            <legend className="text-xs font-semibold text-foreground mb-1.5">
+              Orçamento para seus brindes<span className="text-green-cta ml-0.5">*</span>
+            </legend>
+            <div role="radiogroup" className="grid grid-cols-2 gap-2">
+              {BUDGET_OPTIONS.map((o) => {
+                const marcado = form.budget === o;
+                return (
+                  <label
+                    key={o}
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-sm cursor-pointer transition-colors ${
+                      marcado
+                        ? "border-green-cta bg-green-cta/10 text-foreground font-semibold"
+                        : budgetError
+                          ? "border-destructive/60 bg-background text-foreground"
+                          : "border-border bg-background text-foreground hover:border-green-cta/60"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="budget"
+                      value={o}
+                      checked={marcado}
+                      onChange={() => { setField("budget", o); setBudgetError(false); }}
+                      className="accent-green-600 w-4 h-4 shrink-0"
+                    />
+                    <span className="leading-tight">{o}</span>
+                  </label>
+                );
+              })}
+            </div>
+            {budgetError && (
+              <p className="text-xs text-destructive font-medium">Selecione uma faixa de orçamento para continuar.</p>
+            )}
+          </fieldset>
 
           <button
             type="submit"

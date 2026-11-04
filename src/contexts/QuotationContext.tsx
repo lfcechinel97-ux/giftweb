@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { precoUnitario, temPreco } from "@/utils/precoVenda";
 
 export interface QuotationItem {
   id: string;
@@ -7,6 +8,9 @@ export interface QuotationItem {
   image: string;
   /** Preço unitário de venda sem desconto (products_cache.preco_base). */
   precoBase: number | null;
+  /** Tabela de faixas do produto (products_cache.preco_faixas), quando houver.
+      Com ela o unitário do carrinho bate com o da página do produto. */
+  precoFaixas?: unknown;
   quantity: number;
   codigo_amigavel: string;
 }
@@ -91,6 +95,12 @@ export function QuotationProvider({ children }: { children: ReactNode }) {
       {children}
     </QuotationContext.Provider>
   );
+}
+
+/** Unitário do item para a quantidade atual (null quando o produto não tem preço). */
+export function unitarioDoItem(item: QuotationItem): number | null {
+  if (!temPreco({ preco_base: item.precoBase })) return null;
+  return precoUnitario({ preco_base: item.precoBase, preco_faixas: item.precoFaixas }, item.quantity);
 }
 
 export function useQuotation() {

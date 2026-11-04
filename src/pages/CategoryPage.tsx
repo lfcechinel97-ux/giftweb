@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SITE_URL } from "@/config/site";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import CartFab from "@/components/CartFab";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import ProductCard, { ProductCardSkeleton } from "@/components/ProductCard";
 import CatalogFilters from "@/components/CatalogFilters";
@@ -224,6 +224,7 @@ const CategoryPage = () => {
                     cor={p.cor}
                     preco_base={p.preco_base}
                     codigo_amigavel={p.codigo_amigavel}
+                    codigo_prefixo={p.codigo_prefixo}
                     image_urls={p.image_urls}
                     variantes={p.variantes}
                     estoque={p.estoque}
@@ -238,7 +239,7 @@ const CategoryPage = () => {
           </div>
         </main>
         <Footer />
-        <FloatingWhatsApp />
+        <CartFab />
       </div>
     </>
   );
