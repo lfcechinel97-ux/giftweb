@@ -244,13 +244,18 @@ const COLUNAS_PRODUZIR = ["em_producao", "em_producao_terceirizada"];
 const TAG_COBRAR_RESTANTE = "COBRAR 50% RESTANTE";
 const TAG_PAGO_CARTAO = "PAGO CARTÃO";
 const TAG_DESPACHAR_PREFIXO = "DESPACHAR";
+/* "assim que o card é arrastado p/ expedição já aparece a tag CONFERIR
+   PAGAMENTO" — sai quando o vendedor responde "PEDIDO PAGO 100%?" no
+   popup de despacho, trocando por PEDIDO 100% PAGO. */
+const TAG_CONFERIR_PAGAMENTO = "CONFERIR PAGAMENTO";
+const TAG_PEDIDO_PAGO = "PEDIDO 100% PAGO";
 
 /* Tags do fluxo de teste — todas se excluem mutuamente, nunca coexistem no
    mesmo card (uma etapa por vez). */
 const TAGS_FLUXO_TESTE = [TAG_TESTE_ENVIADO, TAG_TESTE_REFEITO, TAG_TESTE_APROVADO, TAG_TESTE_RECUSADO];
 /* Tags de pagamento/expedição — também se excluem mutuamente; "todas as
    tags saem" ao confirmar o despacho vira só isso: filtrar essas fora. */
-const TAGS_EXPEDICAO = [TAG_COBRAR_RESTANTE, TAG_PAGO_CARTAO];
+const TAGS_EXPEDICAO = [TAG_COBRAR_RESTANTE, TAG_PAGO_CARTAO, TAG_CONFERIR_PAGAMENTO, TAG_PEDIDO_PAGO];
 
 /* "Ele também já coloca a tag de transportadora tipo: Coleta Braspress,
    Coleta Melhor Envio, Envio por Lalamove." — fixas por enquanto (as 3 que
@@ -528,15 +533,17 @@ function EtiquetaCombobox({ opcoes, onSelect }: { opcoes: string[]; onSelect: (n
 /** Card único do pedido numa coluna (modo "Agrupado"). Só o cabeçalho é
     arrastável: arrastar o card move todos os produtos do pedido que estão
     nesta coluna; os cards individuais (expandidos) se arrastam sozinhos. */
-const COLUNAS_AGRUPAVEIS = ["organizando_comercial", "organizando_pedido", "aguardando_mercadoria", "inserir_medidas"];
+const COLUNAS_AGRUPAVEIS = ["organizando_comercial", "organizando_pedido", "aguardando_mercadoria", "inserir_medidas", "aguardando_coleta"];
 
 function PcpPedidoCard({
-  rows, coluna, totalPedido, cor, comFotos, vendedorNome, expandido, dragging, highlight, atrasado, critico, imprimindoOP,
-  onAlternar, onImprimirOP, onHover, onDragStart, onDragEnd,
+  rows, coluna, totalPedido, faltamExpedicao = 0, cor, comFotos, vendedorNome, expandido, dragging, highlight, atrasado, critico, imprimindoOP,
+  onAlternar, onImprimirOP, onDespachar, onHover, onDragStart, onDragEnd,
 }: {
   rows: PcpRow[];
   coluna: string;
   totalPedido: number;
+  /** Só Expedição: produtos do pedido que ainda não chegaram nela. */
+  faltamExpedicao?: number;
   cor: string;
   comFotos: boolean;
   vendedorNome: string | null;
@@ -548,11 +555,19 @@ function PcpPedidoCard({
   imprimindoOP: boolean;
   onAlternar: () => void;
   onImprimirOP: () => void;
+  onDespachar?: (row: PcpRow) => void;
   onHover: (pedidoId: string | null) => void;
   onDragStart: () => void;
   onDragEnd: () => void;
 }) {
   const primeiro = rows[0];
+  const naExpedicao = coluna === "aguardando_coleta";
+  /* Expedição: as tags dos produtos viram as tags do pedido (volumes,
+     pagamento, despacho) — sem repetir a mesma tag de cada produto. */
+  const tagsPedido = naExpedicao
+    ? ordenarTagsPorPrioridade([...new Set(rows.flatMap(r => r.tags ?? []))])
+    : [];
+  const despachado = rows.every(r => (r.tags ?? []).some(t => t.toUpperCase().startsWith(TAG_DESPACHAR_PREFIXO)));
   const parcial = rows.length < totalPedido;
   const qtd = rows.reduce((s, r) => s + Number(r.quantidade ?? 0), 0);
   const maxHoras = Math.max(...rows.map(r => r.horas_na_etapa ?? 0));
@@ -626,6 +641,30 @@ function PcpPedidoCard({
             </ul>
           )}
 
+          {naExpedicao && faltamExpedicao > 0 && (
+            <p
+              className="gw-body text-[12px] font-bold rounded-[6px] px-2 py-1 w-fit text-white"
+              style={{ backgroundColor: "#EA580C" }}
+              title="O vendedor gera a etiqueta do pedido todo — espere os outros produtos chegarem na Expedição"
+            >
+              FALTA {faltamExpedicao} {faltamExpedicao === 1 ? "PRODUTO" : "PRODUTOS"}
+            </p>
+          )}
+
+          {naExpedicao && tagsPedido.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {tagsPedido.map(t => (
+                <span
+                  key={t}
+                  className="text-[10px] rounded-[4px] px-[6px] py-[3px] font-bold"
+                  style={{ backgroundColor: corDaTag(t), color: "#FFFFFF" }}
+                >
+                  {rotuloTag(t)}
+                </span>
+              ))}
+            </div>
+          )}
+
           {coluna === "aguardando_mercadoria" && (() => {
             const compradas = rows.filter(r => (r.tags ?? []).some(t => /^comprado/i.test(t.trim())));
             const tudo = compradas.length === rows.length;
@@ -679,6 +718,21 @@ function PcpPedidoCard({
           >
             {imprimindoOP ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <FileText className="h-3.5 w-3.5 mr-1.5" />}
             Imprimir O.P.
+          </Button>
+        </div>
+      )}
+
+      {/* Despacho é do pedido todo (a etiqueta sai do pedido inteiro), por
+          isso o botão só aparece quando todos os produtos estão aqui. */}
+      {naExpedicao && onDespachar && !despachado && faltamExpedicao === 0 && (
+        <div className="px-3 pb-2.5">
+          <Button
+            size="sm"
+            className="w-full h-8 text-white"
+            style={{ backgroundColor: "#0EA5E9" }}
+            onClick={e => { e.stopPropagation(); onDespachar(primeiro); }}
+          >
+            Confirmar despacho
           </Button>
         </div>
       )}
@@ -1181,6 +1235,7 @@ export default function PCP() {
   const [despachoNotaFiscalUrl, setDespachoNotaFiscalUrl] = useState<string | null>(null);
   const [despachoEtiquetaUrl, setDespachoEtiquetaUrl] = useState<string | null>(null);
   const [despachoSaving, setDespachoSaving] = useState(false);
+  const [pagoIntegralSaving, setPagoIntegralSaving] = useState(false);
   const [enviandoDespachoArquivo, setEnviandoDespachoArquivo] = useState<"nota_fiscal" | "etiqueta" | null>(null);
   const despachoNotaFiscalInputRef = useRef<HTMLInputElement | null>(null);
   const despachoEtiquetaInputRef = useRef<HTMLInputElement | null>(null);
@@ -2250,8 +2305,11 @@ export default function PCP() {
     /* Cada item abre seu próprio popup de volumes/expedição — não espera
        mais o pedido inteiro chegar junto (uma caixa pode não levar todos
        os itens do pedido). */
-    if (targetStatus === "aguardando_coleta" && !liberadoRef.current) {
-      const faltam = faltamNaExpedicao(row.pedido_id);
+    /* "Continuar assim mesmo" só pula o aviso de produto faltando — o popup
+       de volumes abre do mesmo jeito (é nele que entram as tags de volume e
+       a CONFERIR PAGAMENTO). */
+    if (targetStatus === "aguardando_coleta") {
+      const faltam = liberadoRef.current ? 0 : faltamNaExpedicao(row.pedido_id);
       if (faltam > 0) {
         bloquear(`${faltam} PRODUTO(S) DO PEDIDO AINDA NÃO ESTÃO EM INSERIR MEDIDAS.`, () => handleDrop(targetStatus, id), row.producao_id);
         return;
@@ -2284,6 +2342,12 @@ export default function PCP() {
   const faltamNaExpedicao = (pedidoId: string) =>
     rows.filter(r => r.pedido_id === pedidoId
       && !["inserir_medidas", "aguardando_coleta", "enviado"].includes(colunaDoStatus(r))).length;
+
+  /* Produtos do pedido que ainda não chegaram na Expedição (nem já saíram
+     dela) — é o "FALTA X PRODUTOS" do card do pedido. */
+  const faltamChegarNaExpedicao = (pedidoId: string) =>
+    rows.filter(r => r.pedido_id === pedidoId
+      && !["aguardando_coleta", "enviado", "cancelado"].includes(colunaDoStatus(r))).length;
 
   const handleDropPedido = (targetStatus: PcpStatus, pedidoId: string, colunaOrigem: string) => {
     setDragOverStatus(null);
@@ -2328,8 +2392,8 @@ export default function PCP() {
         return;
       }
     }
-    if (targetStatus === "aguardando_coleta" && !liberadoRef.current) {
-      const faltam = faltamNaExpedicao(pedidoId);
+    if (targetStatus === "aguardando_coleta") {
+      const faltam = liberadoRef.current ? 0 : faltamNaExpedicao(pedidoId);
       if (faltam > 0) {
         bloquear(`${faltam} PRODUTO(S) DO PEDIDO AINDA NÃO ESTÃO EM INSERIR MEDIDAS.`, retry, row.producao_id);
         return;
@@ -2480,7 +2544,12 @@ export default function PCP() {
         return;
       }
 
-      await salvarTags(alvo, agruparVolumesEmTags(volumesPayload.itens));
+      // Entrou na Expedição: volumes + CONFERIR PAGAMENTO (ou PEDIDO 100%
+      // PAGO, se o vendedor já confirmou antes).
+      await salvarTags(alvo, [
+        ...agruparVolumesEmTags(volumesPayload.itens),
+        alvo.pedido_pago_integral ? TAG_PEDIDO_PAGO : TAG_CONFERIR_PAGAMENTO,
+      ]);
 
       await mudarStatus(alvo.producao_id, statusCanonicoDaColuna(target), observacaoHistorico);
     }
@@ -2565,8 +2634,50 @@ export default function PCP() {
     }
   };
 
+  /* O despacho é do PEDIDO: a etiqueta gerada pelo vendedor é do pedido
+     todo, então vale pra todos os produtos dele que estão na Expedição. */
+  const itensDespacho = despachoModal
+    ? rows.filter(r => r.pedido_id === despachoModal.row.pedido_id && colunaDoStatus(r) === "aguardando_coleta")
+    : [];
+  const despachoPedidoPago = despachoModal
+    ? rows.some(r => r.pedido_id === despachoModal.row.pedido_id && r.pedido_pago_integral)
+    : false;
+
+  /* "PEDIDO PAGO 100%?" — grava no pedido e troca a tag CONFERIR PAGAMENTO
+     por PEDIDO 100% PAGO em todos os produtos dele na Expedição. */
+  const confirmarPedidoPagoIntegral = async () => {
+    if (!despachoModal) return;
+    const { row } = despachoModal;
+    setPagoIntegralSaving(true);
+    const { error } = await supabase
+      .from("sistema_pedidos")
+      .update({
+        pago_integral: true,
+        pago_integral_em: new Date().toISOString(),
+        pago_integral_por: currentVendedor?.id ?? null,
+      })
+      .eq("id", row.pedido_id);
+    if (error) {
+      console.error("[PCP] gravar pago integral falhou:", error);
+      toast.error(`Não foi possível salvar. ${error.message || ""}`);
+      setPagoIntegralSaving(false);
+      return;
+    }
+    setRows(prev => prev.map(r => (r.pedido_id === row.pedido_id ? { ...r, pedido_pago_integral: true } : r)));
+    for (const item of itensDespacho) {
+      const semPagamento = (item.tags ?? []).filter(
+        t => ![TAG_CONFERIR_PAGAMENTO, TAG_COBRAR_RESTANTE, TAG_PAGO_CARTAO, TAG_PEDIDO_PAGO].includes(t),
+      );
+      await salvarTags(item, [...semPagamento, TAG_PEDIDO_PAGO]);
+    }
+    await registrarNotaHistorico(row, `Pagamento conferido: pedido 100% pago${row.pagamento_nome ? ` (${row.pagamento_nome})` : ""}`);
+    setPagoIntegralSaving(false);
+    toast.success("Pedido marcado como 100% pago.");
+  };
+
   const confirmarDespacho = async () => {
     if (!despachoModal) return;
+    if (!despachoPedidoPago) { toast.error("Confirme que o pedido está 100% pago antes de despachar."); return; }
     const transp = despachoTransportadoraLivre.trim() || despachoTransportadora;
     if (!transp) { toast.error("Informe a transportadora."); return; }
     if (!despachoNotaFiscalUrl) { toast.error("Anexe a nota fiscal."); return; }
@@ -2574,11 +2685,14 @@ export default function PCP() {
 
     setDespachoSaving(true);
     const { row } = despachoModal;
-    await salvarTags(row, [`${TAG_DESPACHAR_PREFIXO} ${transp}`]);
-    await registrarNotaHistorico(row, `Despacho confirmado: nota fiscal e etiqueta anexadas, transportadora ${transp}`);
+    const alvos = itensDespacho.length ? itensDespacho : [row];
+    for (const item of alvos) {
+      await salvarTags(item, [`${TAG_DESPACHAR_PREFIXO} ${transp}`, TAG_PEDIDO_PAGO]);
+      await registrarNotaHistorico(item, `Despacho confirmado: nota fiscal e etiqueta anexadas, transportadora ${transp}`);
+    }
     setDespachoSaving(false);
     setDespachoModal(null);
-    toast.success("Despacho confirmado.");
+    toast.success(alvos.length > 1 ? `Despacho confirmado para os ${alvos.length} produtos do pedido.` : "Despacho confirmado.");
   };
 
   const totalItens = rowsFiltradas.length;
@@ -2888,9 +3002,16 @@ export default function PCP() {
                         // Em Inserir Medidas os produtos do mesmo pedido sempre se agrupam
                         // (o pedido segue junto para a Expedição), mesmo que parte dele
                         // ainda esteja em etapas anteriores.
+                        // Na Expedição o pedido sempre vira um card só (mesmo com parte
+                        // dos produtos ainda faltando — aí o card mostra "FALTA X
+                        // PRODUTOS"): o vendedor gera a etiqueta do pedido todo.
+                        const totalPedido = indices[primeiro.producao_id]?.total ?? g.rows.length;
+                        const faltamExp = col.value === "aguardando_coleta" ? faltamChegarNaExpedicao(g.pedidoId) : 0;
                         const soltos = col.value === "inserir_medidas"
                           ? g.rows.length < 2
-                          : g.rows.length < (indices[primeiro.producao_id]?.total ?? g.rows.length);
+                          : col.value === "aguardando_coleta"
+                            ? g.rows.length + faltamExp < 2
+                            : g.rows.length < totalPedido;
                         if (soltos) {
                           return g.rows.map(renderCard);
                         }
@@ -2899,7 +3020,9 @@ export default function PCP() {
                             <PcpPedidoCard
                               rows={g.rows}
                               coluna={col.value}
-                              totalPedido={indices[primeiro.producao_id]?.total ?? g.rows.length}
+                              totalPedido={totalPedido}
+                              faltamExpedicao={faltamExp}
+                              onDespachar={abrirDespachoModal}
                               cor={corDoPedido(primeiro)}
                               comFotos={comFotos}
                               vendedorNome={primeiro.pedido_vendedor_nome}
@@ -3810,6 +3933,75 @@ export default function PCP() {
           </DialogHeader>
           {despachoModal && (
             <div className="space-y-3 py-1">
+              {/* Pergunta obrigatória — cartão normalmente já está todo pago;
+                  PIX 50% + 50% precisa cobrar o restante antes de despachar. */}
+              {(() => {
+                const pag = despachoModal.row.pagamento_nome;
+                const total = Number(despachoModal.row.pedido_total ?? 0);
+                const cartao = isPagamentoCartao(pag);
+                const pix = isPagamentoPix(pag);
+                const pixMetade = pix && semAcento(pag ?? "").includes("50");
+                const dica = cartao
+                  ? "Cartão de crédito — normalmente já está 100% pago."
+                  : pixMetade
+                    ? `PIX 50% + 50% — cobrar os 50% restantes${total > 0 ? ` (${(total / 2).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})` : ""} antes de despachar.`
+                    : pix
+                      ? "PIX — conferir se o valor total entrou."
+                      : "Conferir se o pedido foi pago por completo.";
+                return (
+                  <div
+                    className="rounded-[8px] border-2 p-3 space-y-2"
+                    style={despachoPedidoPago
+                      ? { borderColor: "#15803D", backgroundColor: pastelizar("#15803D", 0.9) }
+                      : { borderColor: "#DC2626", backgroundColor: pastelizar("#DC2626", 0.92) }}
+                  >
+                    <p className="text-[13px] font-extrabold" style={{ color: despachoPedidoPago ? "#15803D" : "#DC2626" }}>
+                      PEDIDO PAGO 100%? <span className="text-[var(--gw-danger)]">*</span>
+                    </p>
+                    <div className="text-[12px] space-y-0.5">
+                      <p>
+                        <span className="text-[var(--gw-text-muted)]">Pagamento: </span>
+                        <span className="font-semibold">{pag || "Não informado no pedido"}</span>
+                      </p>
+                      {total > 0 && (
+                        <p>
+                          <span className="text-[var(--gw-text-muted)]">Total do pedido: </span>
+                          <Money value={total} bold className="text-[12px]" />
+                        </p>
+                      )}
+                      <p className="font-medium" style={{ color: pixMetade && !despachoPedidoPago ? "#DC2626" : "var(--gw-text-secondary)" }}>{dica}</p>
+                    </div>
+                    {despachoPedidoPago ? (
+                      <p className="flex items-center gap-1.5 text-[12px] font-bold" style={{ color: "#15803D" }}>
+                        <CheckCircle2 className="h-4 w-4" /> PEDIDO 100% PAGO
+                      </p>
+                    ) : (
+                      <Button
+                        size="sm"
+                        className="w-full text-white"
+                        style={{ backgroundColor: "#15803D" }}
+                        onClick={confirmarPedidoPagoIntegral}
+                        disabled={pagoIntegralSaving}
+                      >
+                        {pagoIntegralSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                        Pago 100%
+                      </Button>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {itensDespacho.length > 1 && (
+                <p className="text-[12px] text-[var(--gw-text-secondary)]">
+                  O despacho vale para os {itensDespacho.length} produtos deste pedido na Expedição.
+                </p>
+              )}
+              {faltamChegarNaExpedicao(despachoModal.row.pedido_id) > 0 && (
+                <p className="text-[12px] font-semibold" style={{ color: "#EA580C" }}>
+                  Atenção: falta {faltamChegarNaExpedicao(despachoModal.row.pedido_id)} produto(s) deste pedido chegar na Expedição.
+                </p>
+              )}
+
               <input
                 ref={despachoNotaFiscalInputRef}
                 type="file"
@@ -3872,7 +4064,7 @@ export default function PCP() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setDespachoModal(null)} disabled={despachoSaving}>Cancelar</Button>
-            <Button onClick={confirmarDespacho} disabled={despachoSaving}>
+            <Button onClick={confirmarDespacho} disabled={despachoSaving || !despachoPedidoPago} title={!despachoPedidoPago ? "Confirme antes que o pedido está 100% pago" : undefined}>
               {despachoSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Confirmar despacho
             </Button>
