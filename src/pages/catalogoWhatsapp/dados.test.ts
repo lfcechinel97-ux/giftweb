@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 
-import { ajustarNome, derivarRecursos, extrairLitragem, iconeDoCard, lerCodigos, limparDescricao, paraCatalogo } from "./dados";
+import { ajustarNome, derivarRecursos, extrairLitragem, iconeDoCard, lerCodigos, limparDescricao, outrasCores, paraCatalogo } from "./dados";
 import { P, renderPaginas, CONFIG_PADRAO, trunc } from "./template";
 
 const base = { nome: "", descricao: "", altura: null, largura: null, profundidade: null };
@@ -70,5 +70,31 @@ describe("catálogo WhatsApp - dados", () => {
     expect(html.match(/class="card apoio"/g)).toHaveLength(3);
     expect(html).not.toContain("<b>x</b>");
     expect(html).not.toContain('class="lt"');
+  });
+});
+
+describe("catálogo WhatsApp - outras cores", () => {
+  const row = (codigo: string, cor: string, extra: Record<string, unknown> = {}) =>
+    ({ codigo_amigavel: codigo, codigo_prefixo: "01320", cor, image_url: `https://x/${codigo}.jpg`, ativo: true, is_hidden: false, estoque_total: 10, ...extra }) as never;
+
+  it("lista as outras cores, sem a principal, inativas, sem foto ou repetidas", () => {
+    const principal = row("01320-VM", "Vermelho");
+    const grupo = [
+      principal,
+      row("01320-PRE", "Preto", { estoque_total: 50 }),
+      row("01320-AZ", "Azul"),
+      row("01320-AZ2", "azul"),
+      row("01320-CZ", "Cinza", { ativo: false }),
+      row("01320-BR", "Branco", { image_url: null }),
+    ];
+    expect(outrasCores(principal, grupo).map((c) => c.codigo)).toEqual(["01320-PRE", "01320-AZ"]);
+  });
+
+  it("card só mostra o bloco CORES quando há cores", () => {
+    const p = { ...paraCatalogo({ ...base, codigo_amigavel: "01320", nome: "Mochila", image_url: null } as never) };
+    expect(renderPaginas([p], CONFIG_PADRAO)).not.toContain('class="cores"');
+    const html = renderPaginas([{ ...p, cores: [{ codigo: "01320-PRE", cor: "Preto", foto: "f.jpg" }] }], CONFIG_PADRAO);
+    expect(html).toContain("CORES:");
+    expect(html).toContain('title="Preto (clique para remover)"');
   });
 });
