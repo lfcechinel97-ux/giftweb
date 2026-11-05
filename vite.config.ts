@@ -12,6 +12,13 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
+  build: {
+    // Imagens pequenas viravam base64 dentro do JS principal — aumentam o
+    // pacote que o celular precisa baixar e processar antes de pintar a tela.
+    // Como arquivo separado, carregam em paralelo (e com loading="lazy").
+    assetsInlineLimit: (filePath: string) =>
+      /\.(png|jpe?g|webp|avif|gif)$/i.test(filePath) ? false : undefined,
+  },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {

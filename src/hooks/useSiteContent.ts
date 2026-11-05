@@ -78,7 +78,8 @@ export function useSiteContent(section?: string) {
 
     const { error } = await supabase.storage
       .from('site-images')
-      .upload(path, file, { upsert: true, contentType: file.type });
+      // Cache de 1 ano: a URL usada no site leva ?v=<updated_at>, então trocar a imagem já fura o cache.
+      .upload(path, file, { upsert: true, contentType: file.type, cacheControl: "31536000" });
 
     if (error) throw error;
 

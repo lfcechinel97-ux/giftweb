@@ -7,6 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { useMaxPrice } from "@/hooks/useMaxPrice";
 import { getVersionedRowValue } from "@/utils/siteContentImage";
 import HeroCategoryPicker from "@/components/HeroCategoryPicker";
+import { sizedImage, sizedSrcSet } from "@/lib/imageSize";
 
 const PRICE_MIN_LIMIT = 0;
 const HERO_FALLBACK_VERSION = "local-hero";
@@ -61,9 +62,16 @@ const getBannerSources = (
   return { deskSrc, mobSrc, link };
 };
 
+/* Larguras servidas pelo Storage já redimensionadas: o celular baixa ~30–80 KB
+   em vez do arquivo original enviado no painel. */
+const MOB_WIDTHS = [480, 720, 960];
+const DESK_WIDTHS = [640, 960, 1280, 1706];
+const DESK_SIZES = "(min-width: 1024px) 60vw, 100vw";
+const PRELOAD_KEY = "gw_hero_preload_v1";
+
 const HeroSection = () => {
   const { data: categories, isLoading: categoriesLoading } = useBaseCategories();
-  const { getBySection } = useSiteContentContext();
+  const { getBySection, loading: contentLoading } = useSiteContentContext();
   const bannerRows = getBySection("banners");
   const maxPriceLimit = useMaxPrice();
 
@@ -97,6 +105,21 @@ const HeroSection = () => {
 
   const { deskSrc, mobSrc, link: bannerLink } = getBannerSources(currentSlide, bannerRows);
   const hasActiveBanner = deskSrc || mobSrc;
+  const mobSrcSet = sizedSrcSet(mobSrc, MOB_WIDTHS);
+  const deskSrcSet = sizedSrcSet(deskSrc || mobSrc, DESK_WIDTHS);
+
+  /* Guarda o srcset do 1º banner para o index.html pré-carregar a imagem na
+     próxima visita, antes mesmo do JavaScript rodar (melhora o LCP). */
+  useEffect(() => {
+    if (currentSlide !== 0) return;
+    try {
+      if (mobSrcSet || deskSrcSet) {
+        localStorage.setItem(PRELOAD_KEY, JSON.stringify({ mob: mobSrcSet || null, desk: deskSrcSet || null, sizes: DESK_SIZES }));
+      } else if (!contentLoading) {
+        localStorage.removeItem(PRELOAD_KEY);
+      }
+    } catch { /* ignore */ }
+  }, [currentSlide, mobSrcSet, deskSrcSet, contentLoading]);
   const isExternalLink = !!bannerLink && /^https?:\/\//i.test(bannerLink);
   const handleBannerClick = () => {
     if (!bannerLink) return;
@@ -357,6 +380,11 @@ const HeroSection = () => {
           `}</style>
 
           <div className="hero-carousel-viewport relative w-full max-w-full overflow-hidden">
+            {/* Enquanto o conteúdo carrega, reserva o espaço do banner (mesma
+                proporção) para a página não "pular" quando a imagem chega. */}
+            {!hasActiveBanner && contentLoading && (
+              <div className="hero-carousel-frame w-full max-w-full overflow-hidden" aria-hidden="true" />
+            )}
             {hasActiveBanner && (
               <div
                 key={currentSlide}
@@ -367,9 +395,11 @@ const HeroSection = () => {
                 onKeyDown={bannerLink ? (e) => { if (e.key === "Enter") handleBannerClick(); } : undefined}
               >
                 <picture>
-                  {mobSrc && <source media="(max-width: 767px)" srcSet={mobSrc} />}
+                  {mobSrc && <source media="(max-width: 767px)" srcSet={mobSrcSet || mobSrc} sizes="100vw" />}
                   <img
-                    src={deskSrc || mobSrc || ""}
+                    src={sizedImage(deskSrc || mobSrc, 1280, 75) || ""}
+                    srcSet={deskSrcSet}
+                    sizes={deskSrcSet ? DESK_SIZES : undefined}
                     alt="Brindes corporativos personalizados"
                     className="hero-carousel-media block w-full max-w-full"
                     loading={currentSlide === 0 ? "eager" : "lazy"}

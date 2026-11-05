@@ -24,18 +24,44 @@ interface SiteContentContextValue {
 
 const SiteContentContext = createContext<SiteContentContextValue | null>(null);
 
+/* Cópia local do conteúdo do site: na segunda visita o banner e os textos já
+   aparecem na primeira pintura, sem esperar a consulta ao banco (que roda em
+   seguida e atualiza o que tiver mudado). */
+const CACHE_KEY = "gw_site_content_v1";
+
+function readCache(): SiteContentRow[] {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCache(rows: SiteContentRow[]) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(rows)); } catch { /* sem espaço / modo privado */ }
+}
+
 export function SiteContentProvider({ children }: { children: ReactNode }) {
-  const [rows, setRows] = useState<SiteContentRow[]>([]);
+  const [rows, setRows] = useState<SiteContentRow[]>(readCache);
   const [loading, setLoading] = useState(true);
 
   const refresh = async () => {
-    const { data } = await supabase.from("site_content").select("*");
-    setRows((data as SiteContentRow[] | null) ?? []);
+    const { data, error } = await supabase.from("site_content").select("*");
+    if (!error && data) {
+      setRows(data as SiteContentRow[]);
+      writeCache(data as SiteContentRow[]);
+    }
     setLoading(false);
   };
 
   useEffect(() => {
     refresh();
+
+    // Atualização ao vivo só interessa a quem edita o conteúdo (painel /admin).
+    // Para o visitante isso abria um WebSocket a cada página — custo sem ganho.
+    if (!window.location.pathname.startsWith("/admin")) return;
 
     const channel = supabase
       .channel("site-content-live")

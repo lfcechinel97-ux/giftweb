@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
 import bannerB2B from "@/assets/banner-b2b.webp";
 import { buildVersionedCmsUrl, getVersionedRowValue } from "@/utils/siteContentImage";
+import { sizedImage } from "@/lib/imageSize";
 
 const BannerSeparator = () => {
   const { getBySection } = useSiteContentContext();
@@ -26,7 +27,7 @@ const BannerSeparator = () => {
 
   const img = (
     <img
-      src={src}
+      src={sizedImage(src, isMobile ? 960 : 1920, 75)}
       alt="Brindes que fortalecem sua marca — Gift Web"
       loading="lazy"
       width={1200}

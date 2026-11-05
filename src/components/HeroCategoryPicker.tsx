@@ -3,16 +3,16 @@ import { ChevronDown, Check, Search, LayoutGrid, Plus, Minus } from "lucide-reac
 import { CATEGORY_GROUPS } from "@/config/categoryGroups";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-import imgCopos from "@/assets/cat-copos.jpg";
-import imgMochilas from "@/assets/cat-mochilas.jpg";
-import imgNecessaires from "@/assets/cat-necessaires.jpg";
-import imgCadernetas from "@/assets/cat-cadernetas.jpg";
-import imgChaveiros from "@/assets/cat-chaveiros.jpg";
-import imgEletronicos from "@/assets/cat-eletronicos.jpg";
-import imgSacolas from "@/assets/cat-sacolas.jpg";
-import imgChurrasco from "@/assets/cat-churrasco.jpg";
-import imgMarmitas from "@/assets/cat-marmitas.jpg";
-import imgGuardaChuvas from "@/assets/cat-guarda-chuvas.jpg";
+import imgCopos from "@/assets/cat-copos-thumb.webp";
+import imgMochilas from "@/assets/cat-mochilas-thumb.webp";
+import imgNecessaires from "@/assets/cat-necessaires-thumb.webp";
+import imgCadernetas from "@/assets/cat-cadernetas-thumb.webp";
+import imgChaveiros from "@/assets/cat-chaveiros-thumb.webp";
+import imgEletronicos from "@/assets/cat-eletronicos-thumb.webp";
+import imgSacolas from "@/assets/cat-sacolas-thumb.webp";
+import imgChurrasco from "@/assets/cat-churrasco-thumb.webp";
+import imgMarmitas from "@/assets/cat-marmitas-thumb.webp";
+import imgGuardaChuvas from "@/assets/cat-guarda-chuvas-thumb.webp";
 
 const GROUP_IMAGES: Record<string, string> = {
   "Copos, Garrafas e Canecas": imgCopos,

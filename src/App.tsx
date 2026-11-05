@@ -9,7 +9,6 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import { SiteContentProvider } from "@/contexts/SiteContentContext";
 import { QuotationProvider } from "@/contexts/QuotationContext";
-import { SistemaProvider } from "@/contexts/SistemaContext";
 
 /**
  * Importa chunks de rota com tolerância a deploys: se o arquivo com hash antigo
@@ -81,6 +80,10 @@ const CatalogoClientes = lazyRetry(() => import("./pages/CatalogoClientes.tsx"))
 const CatalogProductDetail = lazyRetry(() => import("./pages/CatalogProductDetail.tsx"));
 const TopProdutos = lazyRetry(() => import("./pages/TopProdutos.tsx"));
 const Top10Produtos = lazyRetry(() => import("./pages/Top10Produtos.tsx"));
+// Provider do sistema interno carregado só nas rotas /sistema (fora do pacote do site público)
+const SistemaProvider = lazyRetry(() =>
+  import("@/contexts/SistemaContext").then((m) => ({ default: m.SistemaProvider })),
+);
 const SistemaLayout = lazyRetry(() => import("./pages/sistema/SistemaLayout.tsx"));
 const SistemaDashboard = lazyRetry(() => import("./pages/sistema/Dashboard.tsx"));
 const SistemaVendas = lazyRetry(() => import("./pages/sistema/Vendas.tsx"));

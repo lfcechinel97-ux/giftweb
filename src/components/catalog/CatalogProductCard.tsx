@@ -21,6 +21,8 @@ interface VariantJson {
 
 interface CatalogProductCardProps {
   product: Product;
+  /** Cards da primeira dobra: imagem carrega já, com prioridade (LCP). */
+  priority?: boolean;
 }
 
 const MAX_DOTS = 5;
@@ -39,7 +41,7 @@ export const CatalogProductCardSkeleton = () => (
   </div>
 );
 
-const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
+const CatalogProductCard = ({ product, priority = false }: CatalogProductCardProps) => {
   const { nome, slug, image_url, image_urls, cor, codigo_amigavel, variantes: rawVariantes, estoque, estoque_total } = product;
   const variantes = rawVariantes as unknown as VariantJson[] | null;
   const { addItem } = useQuotation();
@@ -155,7 +157,9 @@ const CatalogProductCard = ({ product }: CatalogProductCardProps) => {
           <img
             src={displayImage}
             alt={nome}
-            loading="lazy"
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : "auto"}
+            decoding="async"
             width={400}
             height={400}
             className="w-full h-full object-cover"

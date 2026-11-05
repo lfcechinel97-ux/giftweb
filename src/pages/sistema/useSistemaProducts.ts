@@ -30,6 +30,23 @@ async function fetchSystemProducts(term = "", limit = DEFAULT_PAGE_SIZE): Promis
   return (result?.rows ?? []) as SistemaProduct[];
 }
 
+/* Cache curto das buscas: repetir "copo térmico" (ou voltar uma letra ao
+   apagar) responde na hora, sem nova ida ao banco. Chamadas iguais em voo
+   compartilham a mesma promessa. */
+const SEARCH_TTL_MS = 5 * 60 * 1000;
+const searchCache = new Map<string, { at: number; promise: Promise<SistemaProduct[]> }>();
+
+function cachedSearch(term: string, limit: number): Promise<SistemaProduct[]> {
+  const key = `${term.trim().toLowerCase()}|${limit}`;
+  const hit = searchCache.get(key);
+  if (hit && Date.now() - hit.at < SEARCH_TTL_MS) return hit.promise;
+  const promise = fetchSystemProducts(term.trim(), limit);
+  searchCache.set(key, { at: Date.now(), promise });
+  promise.catch(() => searchCache.delete(key));
+  if (searchCache.size > 200) searchCache.delete(searchCache.keys().next().value as string);
+  return promise;
+}
+
 export interface SistemaProductsResult {
   /** Todos os produtos (pais + variantes) */
   allProducts: SistemaProduct[];
@@ -90,7 +107,7 @@ export function useSistemaProducts(): SistemaProductsResult {
    * Busca representantes por texto (nome ou código).
    * Retorna até 30, um por grupo de prefixo.
    */
-  const searchParents = useCallback((term: string, limit = 60) => fetchSystemProducts(term, limit), []);
+  const searchParents = useCallback((term: string, limit = 60) => cachedSearch(term, limit), []);
 
   /**
    * Retorna { parent, variants } para um dado código.

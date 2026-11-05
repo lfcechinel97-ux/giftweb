@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useInView } from "@/hooks/useInView";
 import { Star } from "lucide-react";
-import photoMariana from "@/assets/testimonial-mariana.jpg";
-import photoRicardo from "@/assets/testimonial-ricardo.jpg";
-import photoFernanda from "@/assets/testimonial-fernanda.jpg";
-import photoLucas from "@/assets/testimonial-lucas.jpg";
+import photoMariana from "@/assets/testimonial-mariana.webp";
+import photoRicardo from "@/assets/testimonial-ricardo.webp";
+import photoFernanda from "@/assets/testimonial-fernanda.webp";
+import photoLucas from "@/assets/testimonial-lucas.webp";
 
 const testimonials = [
   {
