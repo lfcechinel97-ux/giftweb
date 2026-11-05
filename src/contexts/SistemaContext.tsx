@@ -157,6 +157,9 @@ export interface PedidoItem {
       mockup (foto do produto pronto): este é o insumo, aquele é o
       resultado. Campo novo dentro do jsonb, sem migration. */
   arteAnexoUrl?: string;
+  /** Todas as artes/logos do item (pode ser mais de uma). `arteAnexoUrl`
+      continua sendo a primeira, por compatibilidade. Ver src/lib/artesItem.ts. */
+  artesAnexos?: { url: string; nome: string }[];
   personalizacao?: TipoPersonalizacao;
   aplicacoes?: number;
   /** Item trazido do Calcme na migração: mantém o nome de lá, sem vínculo com o catálogo. */

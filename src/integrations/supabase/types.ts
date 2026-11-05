@@ -3509,6 +3509,7 @@ export type Database = {
       vw_pcp: {
         Row: {
           arte_anexo_url: string | null
+          artes_anexos: Json | null
           cliente: string | null
           coleta_solicitada_em: string | null
           coluna_pcp: string | null
