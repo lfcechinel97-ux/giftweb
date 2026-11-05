@@ -22,6 +22,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { supabase } from "@/integrations/supabase/client";
 import { sizedImage } from "@/lib/imageSize";
 import { uploadAnexoPcp, uploadAnexoGenerico, uploadArquivoPedido, MockupUploadError } from "@/lib/uploadMockup";
+import { artesDoItem } from "@/lib/artesItem";
 import { cn } from "@/lib/utils";
 import { dataCurta as dataCurtaSemFuso } from "@/lib/diasUteis";
 import { Money } from "@/components/sistema/ui/Money";
@@ -116,6 +117,8 @@ interface PcpRow {
   /** Posição do item dentro do pedido (1, 2, 3…), na ordem de lançamento. */
   item_posicao?: number | null;
   arte_anexo_url: string | null;
+  /** Todas as artes/logos do item (itens antigos só têm arte_anexo_url). */
+  artes_anexos: { url: string; nome: string }[] | null;
   pedido_anexos: { url: string; nome: string; criadoEm: string }[] | null;
 }
 
@@ -3535,27 +3538,29 @@ export default function PCP() {
                       editar pedido (arte de personalização do item + anexos
                       gerais do pedido). Só leitura aqui: pra trocar, edita no
                       pedido — é de lá que vem. */}
-                  {(detalhe.arte_anexo_url || (detalhe.pedido_anexos?.length ?? 0) > 0) && (
+                  {(artesDoItem({ arteAnexoUrl: detalhe.arte_anexo_url ?? undefined, artesAnexos: detalhe.artes_anexos ?? undefined }).length > 0
+                    || (detalhe.pedido_anexos?.length ?? 0) > 0) && (
                     <div className="px-5 py-4 border-b border-[var(--gw-border)] space-y-2">
                       <p className="gw-label flex items-center gap-1.5">
                         <Paperclip className="h-3.5 w-3.5" /> Anexos do pedido
                       </p>
                       <div className="space-y-1.5">
-                        {detalhe.arte_anexo_url && (
+                        {artesDoItem({ arteAnexoUrl: detalhe.arte_anexo_url ?? undefined, artesAnexos: detalhe.artes_anexos ?? undefined }).map(a => (
                           <a
-                            href={detalhe.arte_anexo_url}
+                            key={a.url}
+                            href={a.url}
                             target="_blank"
                             rel="noreferrer"
                             className="flex items-center gap-2.5 rounded-[8px] border border-[var(--gw-border)] px-2.5 py-2 hover:border-[var(--gw-border-strong)]"
                           >
                             <FileText className="h-8 w-8 p-1.5 rounded bg-[var(--gw-surface-alt)] text-[var(--gw-text-secondary)] shrink-0" />
                             <div className="min-w-0 flex-1">
-                              <p className="text-[12px] font-semibold text-[var(--gw-text)] truncate">Arte de personalização</p>
-                              <p className="text-[11px] text-[var(--gw-text-muted)]">Anexado no item do pedido</p>
+                              <p className="text-[12px] font-semibold text-[var(--gw-text)] truncate">{a.nome || "Arte de personalização"}</p>
+                              <p className="text-[11px] text-[var(--gw-text-muted)]">Arte anexada no item do pedido</p>
                             </div>
                             <Download className="h-4 w-4 shrink-0 text-[var(--gw-primary)]" />
                           </a>
-                        )}
+                        ))}
                         {(detalhe.pedido_anexos ?? []).map(a => (
                           <a
                             key={a.url}

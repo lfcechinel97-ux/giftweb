@@ -33,6 +33,7 @@ import { uploadMockup, uploadArquivoPedido, MockupUploadError } from "@/lib/uplo
 import RecorteQuadrado from "@/components/sistema/RecorteQuadrado";
 import { useUserRole } from "@/hooks/useUserRole";
 import { resumoPersonalizacao } from "@/lib/personalizacao";
+import { artesDoItem, comArtes, type ArteAnexo } from "@/lib/artesItem";
 
 const brl = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v);
@@ -196,22 +197,32 @@ const PedidoForm: React.FC = () => {
     arteInputRef.current?.click();
   };
 
+  /* Aceita várias logos por item (seleção múltipla e cliques repetidos
+     acumulam). Cada arquivo sobe separado; um que falhar não derruba os
+     outros. */
   const handleArteItem = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const files = Array.from(e.target.files ?? []);
     const itemId = itemAlvoArte.current;
     e.target.value = "";
-    if (!file || !itemId || !id) return;
+    if (files.length === 0 || !itemId || !id) return;
     setEnviandoArte(itemId);
-    try {
-      const { url } = await uploadArquivoPedido(file, id);
-      setItens(prev => prev.map(i => (i.id === itemId ? { ...i, arteAnexoUrl: url } : i)));
-      toast.success("Arte anexada.");
-    } catch (err) {
-      toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o arquivo.");
-    } finally {
-      setEnviandoArte(null);
+    const novas: ArteAnexo[] = [];
+    for (const file of files) {
+      try {
+        novas.push(await uploadArquivoPedido(file, id));
+      } catch (err) {
+        toast.error(`${file.name}: ${err instanceof MockupUploadError ? err.message : "não foi possível enviar o arquivo."}`);
+      }
     }
+    if (novas.length > 0) {
+      setItens(prev => prev.map(i => (i.id === itemId ? comArtes(i, [...artesDoItem(i), ...novas]) : i)));
+      toast.success(novas.length > 1 ? `${novas.length} artes anexadas.` : "Arte anexada.");
+    }
+    setEnviandoArte(null);
   };
+
+  const removerArteItem = (itemId: string, url: string) =>
+    setItens(prev => prev.map(i => (i.id === itemId ? comArtes(i, artesDoItem(i).filter(a => a.url !== url)) : i)));
 
   /* ── Anexos gerais do pedido ───────────────────────────────────────── */
   const handleAnexoGeral = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -348,7 +359,10 @@ const PedidoForm: React.FC = () => {
     novo.total = num(novo.quantidade) * num(novo.precoUnitario);
     if (editingItemId) {
       novo.id = editingItemId;
-      setItens(prev => prev.map(i => (i.id === editingItemId ? novo : i)));
+      // O diálogo não conhece as artes anexadas — mantém as do item anterior.
+      setItens(prev => prev.map(i => (i.id === editingItemId
+        ? (artesDoItem(novo).length > 0 ? novo : comArtes(novo, artesDoItem(i)))
+        : i)));
     } else {
       novo.id = crypto.randomUUID();
       setItens(prev => [...prev, novo]);
@@ -703,6 +717,7 @@ const PedidoForm: React.FC = () => {
           ref={arteInputRef}
           type="file"
           accept="image/*,application/pdf,.ai,.cdr,.eps,.svg"
+          multiple
           className="hidden"
           onChange={handleArteItem}
         />
@@ -890,28 +905,38 @@ const PedidoForm: React.FC = () => {
                     onClick={() => escolherArte(item.id)}
                     disabled={enviandoArte === item.id}
                     className="shrink-0 inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-[11px] font-semibold"
-                    style={{
-                      background: item.arteAnexoUrl ? "var(--gw-primary-soft)" : "var(--gw-surface-alt)",
-                      color: item.arteAnexoUrl ? "var(--gw-primary)" : "var(--gw-text-secondary)",
-                    }}
+                    style={{ background: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)" }}
                   >
                     {enviandoArte === item.id
                       ? <Loader2 className="h-3 w-3 animate-spin" />
-                      : <Paperclip className="h-3 w-3" />}
-                    {item.arteAnexoUrl ? "Arte anexada" : "Anexar arte"}
+                      : artesDoItem(item).length > 0 ? <Plus className="h-3 w-3" /> : <Paperclip className="h-3 w-3" />}
+                    {artesDoItem(item).length > 0 ? "Outra arte" : "Anexar arte"}
                   </button>
-                  {item.arteAnexoUrl && (
-                    <a
-                      href={item.arteAnexoUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="shrink-0 text-[var(--gw-primary)]"
-                      aria-label="Abrir arte"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                    </a>
-                  )}
                 </div>
+                {artesDoItem(item).length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pl-[68px]">
+                    {artesDoItem(item).map((a, idx) => (
+                      <span
+                        key={a.url}
+                        className="inline-flex items-center gap-1 h-6 pl-2 pr-1 rounded text-[11px] font-semibold max-w-[220px]"
+                        style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
+                      >
+                        <a href={a.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 min-w-0" title={a.nome}>
+                          <Download className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{a.nome || `Arte ${idx + 1}`}</span>
+                        </a>
+                        <button
+                          type="button"
+                          aria-label="Remover arte"
+                          onClick={() => removerArteItem(item.id, a.url)}
+                          className="inline-flex items-center justify-center h-4 w-4 rounded hover:bg-[rgba(239,68,68,0.12)] hover:text-[var(--gw-danger)]"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
