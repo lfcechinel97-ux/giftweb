@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ajustarDescricoes, ajustarNomes, CONFIG_PADRAO, CSS, fitDesc, MINI_COR, paginaParaCanvas, paginar, prepararFoto, renderPaginas, type ProdutoCatalogo } from "./catalogoWhatsapp/template";
+import { ajustarDescricoes, ajustarNomes, CONFIG_PADRAO, corDaFoto, CSS, fitDesc, paginaParaCanvas, paginar, prepararFoto, renderPaginas, type ProdutoCatalogo } from "./catalogoWhatsapp/template";
 import { buscarProdutos, lerCodigos } from "./catalogoWhatsapp/dados";
 import { carregarHistorico, registrarGeracao, type GeracaoCatalogo } from "./catalogoWhatsapp/historico";
 
@@ -75,13 +75,13 @@ export default function CatalogoWhatsApp() {
       }),
     );
 
-    // miniatura de cor: clicar remove; sem nenhuma, some o bloco "CORES:"
-    root.querySelectorAll<HTMLElement>(".cores img").forEach((im) =>
-      im.addEventListener("click", () => {
-        const bloco = im.parentElement!;
-        const ds = im.closest(".card")?.querySelector<HTMLElement>(".ds[data-full]");
-        im.remove();
-        if (!bloco.querySelector("img")) {
+    // bolinha de cor: clicar remove; sem nenhuma, some o bloco "CORES:"
+    root.querySelectorAll<HTMLElement>(".cores .bc").forEach((bc) =>
+      bc.addEventListener("click", () => {
+        const bloco = bc.parentElement!;
+        const ds = bc.closest(".card")?.querySelector<HTMLElement>(".ds[data-full]");
+        bc.remove();
+        if (!bloco.querySelector(".bc")) {
           bloco.remove();
           if (ds) fitDesc(ds); // a descrição ganha o espaço do bloco
         }
@@ -94,8 +94,10 @@ export default function CatalogoWhatsApp() {
       ...Array.from(root.querySelectorAll<HTMLImageElement>(".ph img")).map(async (im) => {
         if (!im.src.startsWith("data:")) im.src = await prepararFoto(im.src);
       }),
-      ...Array.from(root.querySelectorAll<HTMLImageElement>(".cores img")).map(async (im) => {
-        if (!im.src.startsWith("data:")) im.src = await prepararFoto(im.src, MINI_COR, MINI_COR);
+      // cor com nome desconhecido: pinta a bolinha com a cor predominante da foto
+      ...Array.from(root.querySelectorAll<HTMLElement>(".cores .bc[data-foto]")).map(async (bc) => {
+        const hex = await corDaFoto(bc.dataset.foto!);
+        if (hex) bc.style.background = hex;
       }),
     ]);
   };
@@ -190,7 +192,7 @@ export default function CatalogoWhatsApp() {
         </div>
         {paginas > 0 && (
           <div style={{ marginTop: 8, opacity: 0.85 }}>
-            Clique em qualquer texto para editar. Clique na foto para trocar. Clique numa miniatura de cor para removê-la. Gerar de novo descarta as edições.
+            Clique em qualquer texto para editar. Clique na foto para trocar. Clique numa bolinha de cor para removê-la. Gerar de novo descarta as edições.
           </div>
         )}
         {erro && <div style={{ marginTop: 8, color: "#ff8a8a", fontWeight: 700 }}>{erro}</div>}

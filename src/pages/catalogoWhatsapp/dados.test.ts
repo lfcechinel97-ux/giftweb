@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 
-import { ajustarNome, derivarRecursos, extrairLitragem, iconeDoCard, lerCodigos, limparDescricao, outrasCores, paraCatalogo } from "./dados";
+import { ajustarNome, derivarRecursos, extrairLitragem, iconeDoCard, hexDaCor, lerCodigos, limparDescricao, outrasCores, paraCatalogo } from "./dados";
 import { P, renderPaginas, CONFIG_PADRAO, trunc } from "./template";
 
 const base = { nome: "", descricao: "", altura: null, largura: null, profundidade: null };
@@ -90,11 +90,19 @@ describe("catálogo WhatsApp - outras cores", () => {
     expect(outrasCores(principal, grupo).map((c) => c.codigo)).toEqual(["01320-PRE", "01320-AZ"]);
   });
 
+  it("converte o nome da cor em hex; nome desconhecido fica null", () => {
+    expect(hexDaCor("Preto")).toBe("#111827");
+    expect(hexDaCor("Azul Marinho")).toBe("#1E3A5F");
+    expect(hexDaCor("Furta-cor")).toBeNull();
+    expect(hexDaCor("")).toBeNull();
+  });
+
   it("card só mostra o bloco CORES quando há cores", () => {
     const p = { ...paraCatalogo({ ...base, codigo_amigavel: "01320", nome: "Mochila", image_url: null } as never) };
     expect(renderPaginas([p], CONFIG_PADRAO)).not.toContain('class="cores"');
-    const html = renderPaginas([{ ...p, cores: [{ codigo: "01320-PRE", cor: "Preto", foto: "f.jpg" }] }], CONFIG_PADRAO);
+    const html = renderPaginas([{ ...p, cores: [{ codigo: "01320-PRE", cor: "Preto", hex: null, foto: "f.jpg" }] }], CONFIG_PADRAO);
     expect(html).toContain("CORES:");
     expect(html).toContain('title="Preto (clique para remover)"');
+    expect(html).toContain('data-foto="f.jpg"'); // sem hex: cor sai da foto
   });
 });
