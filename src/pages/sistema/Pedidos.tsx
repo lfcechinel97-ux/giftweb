@@ -23,8 +23,11 @@ import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaConte
 import { supabase } from "@/integrations/supabase/client";
 import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
 import { resumoPersonalizacao } from "@/lib/personalizacao";
-import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+
+// jsPDF (~400 KB) só é baixado quando o PDF é gerado, não ao abrir a tela.
+const gerarOrdemProducaoPDF = (...args: Parameters<typeof import("./ordemProducaoPDF").gerarOrdemProducaoPDF>) =>
+  import("./ordemProducaoPDF").then((m) => m.gerarOrdemProducaoPDF(...args));
 
 type PedidoStatus = Pedido["status"];
 

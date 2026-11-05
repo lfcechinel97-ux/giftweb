@@ -78,7 +78,8 @@ export default function AdminVitrine() {
     const path = `vitrine/slot-${slot.position}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage
       .from("site-images")
-      .upload(path, file, { upsert: true });
+      // Nome único por envio (Date.now()), então o arquivo nunca muda: pode ficar 1 ano em cache.
+      .upload(path, file, { upsert: true, cacheControl: "31536000" });
     if (error) {
       toast.error("Erro no upload: " + error.message);
       setUploading(null);

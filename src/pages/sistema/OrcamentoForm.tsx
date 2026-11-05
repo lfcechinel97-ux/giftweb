@@ -14,9 +14,12 @@ import { uploadMockup } from "@/lib/uploadMockup";
 import RecorteQuadrado from "@/components/sistema/RecorteQuadrado";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OPCOES_PERSONALIZACAO, resumoPersonalizacao, type TipoPersonalizacao } from "@/lib/personalizacao";
-import { gerarPDFOrcamento } from "./pdf";
 import { supabase } from "@/integrations/supabase/client";
 import { Truck } from "lucide-react";
+
+// jsPDF (~400 KB) só é baixado quando o PDF é gerado, não ao abrir a tela.
+const gerarPDFOrcamento = (...args: Parameters<typeof import("./pdf").gerarPDFOrcamento>) =>
+  import("./pdf").then((m) => m.gerarPDFOrcamento(...args));
 
 const FRETE_TIPOS = [
   { value: "CIF", label: "CIF (Frete incluso)" },
@@ -1139,7 +1142,8 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
     let cancelled = false;
     setIsSearchingProducts(true);
     const timer = window.setTimeout(() => {
-      searchParents(searchTerm, 30)
+      // A lista mostra 10; pedir só 10 deixa a resposta do banco menor.
+      searchParents(searchTerm, 10)
         .then((rows) => {
           if (!cancelled) setFilteredProducts(rows.slice(0, 10));
         })
@@ -1385,7 +1389,9 @@ export const ItemDialog: React.FC<ItemDialogProps> = ({
                       autoFocus
                     />
                   </div>
-                  {isLoading || isSearchingProducts ? (
+                  {/* A carga inicial só importa com o campo vazio; ao digitar, a
+                      busca roda sozinha, sem esperar a lista inicial. */}
+                  {(searchTerm.trim() ? isSearchingProducts : isLoading) ? (
                     <div className="text-center py-8 text-gray-500">Carregando produtos...</div>
                   ) : filteredProducts.length > 0 ? (
                     <div className="border rounded-lg mt-2 max-h-64 overflow-auto">

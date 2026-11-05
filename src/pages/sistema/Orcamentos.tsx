@@ -25,8 +25,11 @@ import {
   useSistema, formatBRL, calcSubtotal, calcTotal, clienteDisplay,
   type Orcamento, type OrcamentoStatus
 } from "@/contexts/SistemaContext";
-import { gerarPDFOrcamento } from "./pdf";
 import { supabase } from "@/integrations/supabase/client";
+
+// jsPDF (~400 KB) só é baixado quando o PDF é gerado, não ao abrir a tela.
+const gerarPDFOrcamento = (...args: Parameters<typeof import("./pdf").gerarPDFOrcamento>) =>
+  import("./pdf").then((m) => m.gerarPDFOrcamento(...args));
 
 
 const brlOrc = (v: number) =>

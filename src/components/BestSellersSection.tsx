@@ -3,6 +3,7 @@ import { useInView } from "@/hooks/useInView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import { sizedImage } from "@/lib/imageSize";
 
 interface ShowcaseItem {
   id: number;
@@ -82,7 +83,7 @@ const ShowcaseCard = ({ item }: { item: ShowcaseItem }) => {
       >
         {item.image_url ? (
           <img
-            src={item.image_url}
+            src={sizedImage(item.image_url, 480, 75)}
             alt={item.title || "Produto"}
             loading="lazy"
             className="w-full h-full object-contain p-2 transition-transform duration-300 group-hover:scale-[1.04]"

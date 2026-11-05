@@ -4,6 +4,7 @@ import { Download } from "lucide-react";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
 import catalogGeral from "@/assets/catalog-geral.webp";
 import catalogCorporativo from "@/assets/catalog-corporativo.webp";
+import { sizedImage } from "@/lib/imageSize";
 
 interface CatalogItem {
   img: string;
@@ -79,7 +80,7 @@ const CatalogSection = () => {
                 }}
               >
                 <img
-                  src={cat.img}
+                  src={sizedImage(cat.img, 640, 75)}
                   alt={cat.title || `Catálogo ${i + 1}`}
                   loading="lazy"
                   width={220}

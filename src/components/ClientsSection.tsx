@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useInView } from "@/hooks/useInView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSiteContentContext } from "@/contexts/SiteContentContext";
+import { sizedImage } from "@/lib/imageSize";
 
 const defaultLogos = [
   { value: "/logos/petrobras.webp" },
@@ -113,7 +114,7 @@ const ClientsSection = () => {
             >
               {logo?.value && (
                 <img
-                  src={logo.value}
+                  src={sizedImage(logo.value, 320, 75)}
                   alt="Logo de cliente parceiro"
                   loading="lazy"
                   width={160}

@@ -5,32 +5,32 @@ const steps = [
     num: "01",
     title: "Escolha o produto",
     desc: "Explore nosso catálogo com centenas de brindes corporativos prontos para personalizar.",
-    img: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600",
+    img: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&q=70&auto=format",
   },
   {
     num: "02",
     title: "Envie sua logo",
     desc: "Mande o arquivo da sua marca por WhatsApp ou e-mail. Aceitamos AI, PDF, PNG e SVG.",
-    img: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600",
+    img: "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&q=70&auto=format",
   },
   {
     num: "03",
     title: "Aprove a arte",
     desc: "Nossa equipe cria o mock-up gratuitamente. Você aprova antes de qualquer produção.",
-    img: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=600",
+    img: "https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=600&q=70&auto=format",
   },
   {
     num: "04",
     title: "Produção",
     desc: "Fabricação com controle de qualidade. Você recebe fotos do lote antes do envio.",
-    img: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600",
+    img: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600&q=70&auto=format",
     badge: "⚡ 2 a 7 dias úteis",
   },
   {
     num: "05",
     title: "Entrega",
     desc: "Enviamos para todo o Brasil com rastreamento em tempo real.",
-    img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600",
+    img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=70&auto=format",
   },
 ];
 
