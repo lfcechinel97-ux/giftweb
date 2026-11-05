@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ajustarDescricoes, ajustarNomes, CONFIG_PADRAO, CSS, paginaParaCanvas, paginar, prepararFoto, renderPaginas, type ProdutoCatalogo } from "./catalogoWhatsapp/template";
+import { ajustarDescricoes, ajustarNomes, CONFIG_PADRAO, CSS, fitDesc, MINI_COR, paginaParaCanvas, paginar, prepararFoto, renderPaginas, type ProdutoCatalogo } from "./catalogoWhatsapp/template";
 import { buscarProdutos, lerCodigos } from "./catalogoWhatsapp/dados";
 import { carregarHistorico, registrarGeracao, type GeracaoCatalogo } from "./catalogoWhatsapp/historico";
 
@@ -75,13 +75,29 @@ export default function CatalogoWhatsApp() {
       }),
     );
 
-    // fotos da API: o proxy entrega com CORS; converter para data: (na
-    // proporção da área, sem margem branca) deixa o html2canvas sem nenhuma requisição externa na hora de baixar
-    fotosProntas.current = Promise.all(
-      Array.from(root.querySelectorAll<HTMLImageElement>(".ph img")).map(async (im) => {
-        if (!im.src.startsWith("data:")) im.src = await prepararFoto(im.src);
+    // miniatura de cor: clicar remove; sem nenhuma, some o bloco "CORES:"
+    root.querySelectorAll<HTMLElement>(".cores img").forEach((im) =>
+      im.addEventListener("click", () => {
+        const bloco = im.parentElement!;
+        const ds = im.closest(".card")?.querySelector<HTMLElement>(".ds[data-full]");
+        im.remove();
+        if (!bloco.querySelector("img")) {
+          bloco.remove();
+          if (ds) fitDesc(ds); // a descrição ganha o espaço do bloco
+        }
       }),
     );
+
+    // fotos da API: o proxy entrega com CORS; converter para data: (na
+    // proporção da área, sem margem branca) deixa o html2canvas sem nenhuma requisição externa na hora de baixar
+    fotosProntas.current = Promise.all([
+      ...Array.from(root.querySelectorAll<HTMLImageElement>(".ph img")).map(async (im) => {
+        if (!im.src.startsWith("data:")) im.src = await prepararFoto(im.src);
+      }),
+      ...Array.from(root.querySelectorAll<HTMLImageElement>(".cores img")).map(async (im) => {
+        if (!im.src.startsWith("data:")) im.src = await prepararFoto(im.src, MINI_COR, MINI_COR);
+      }),
+    ]);
   };
 
   const gerar = async () => {
@@ -174,7 +190,7 @@ export default function CatalogoWhatsApp() {
         </div>
         {paginas > 0 && (
           <div style={{ marginTop: 8, opacity: 0.85 }}>
-            Clique em qualquer texto para editar. Clique na foto para trocar. Gerar de novo descarta as edições.
+            Clique em qualquer texto para editar. Clique na foto para trocar. Clique numa miniatura de cor para removê-la. Gerar de novo descarta as edições.
           </div>
         )}
         {erro && <div style={{ marginTop: 8, color: "#ff8a8a", fontWeight: 700 }}>{erro}</div>}

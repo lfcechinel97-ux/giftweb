@@ -28,7 +28,16 @@ export interface ProdutoCatalogo {
   recursos: Recurso[];
   /** [20, 50, 100+]; null = produto sem preço na API (fica "consulte"). */
   precos: (number | null)[];
+  /** Outras cores do produto (só quando o código colado foi o prefixo). */
+  cores?: CorVariante[];
 }
+
+export interface CorVariante { codigo: string; cor: string; foto: string }
+
+/** Tamanho (px) das miniaturas de cor no card. */
+export const MINI_COR = 26;
+/** Máximo de miniaturas de cor por card (duas linhas). */
+export const MAX_CORES = 12;
 
 export interface ConfigCatalogo {
   tag: string;
@@ -100,6 +109,10 @@ export const CSS = `
   .catwa .cod{align-self:center;border:1.5px solid var(--navy);border-radius:14px;padding:1px 12px;font-size:11px;font-weight:700;color:var(--navy)}
   .catwa .cod b{font-weight:900}
   .catwa .ds{font-size:13px;line-height:1.32;color:var(--ink);margin-top:8px;flex:1;min-height:0;overflow:hidden}
+  .catwa .cores{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px}
+  .catwa .cores .cl{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-right:2px}
+  .catwa .cores img{display:inline-block;width:${MINI_COR}px;height:${MINI_COR}px;max-width:none;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+  .catwa .cores img:hover{outline:2px solid #e5484d;outline-offset:1px}
   .catwa .rs{margin-top:6px;display:flex;flex-direction:column;gap:5px}
   .catwa .r{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--ink)}
   .catwa .r .i{font-size:20px;color:var(--navy)}
@@ -184,11 +197,21 @@ const card = (p: ProdutoCatalogo, cfg: ConfigCatalogo) => `
     <div class="inf">
       <div class="cod">CÓD. <b contenteditable>${esc(p.codigo)}</b></div>
       <div class="ds" contenteditable data-full="${esc(trunc(p.desc))}">${esc(trunc(p.desc))}</div>
+      ${cores(p.cores)}
       <div class="rs">${p.recursos.slice(0, 4).map((r) => `<div class="r">${ico(r.i)}${E(r.t)}</div>`).join("")}</div>
     </div>
   </div>
   <div class="pr">${p.precos.map((v, i) => `<div class="p"><div class="f" contenteditable>${esc(cfg.faixas[i] ?? "")}</div><div class="v">${brl(v)}</div><div class="c">CADA</div></div>`).join("")}</div>
  </div>`;
+
+/** Miniaturas das outras cores; clicar numa remove (ver CatalogoWhatsApp). */
+const cores = (lista: CorVariante[] | undefined) =>
+  lista?.length
+    ? `<div class="cores"><span class="cl" contenteditable>CORES:</span>${lista
+        .slice(0, MAX_CORES)
+        .map((c) => `<img src="${esc(c.foto)}" alt="" title="${esc(`${c.cor || c.codigo} (clique para remover)`)}">`)
+        .join("")}</div>`
+    : "";
 
 /** Cards que completam a última página (nunca sobra buraco na grade 2x2). */
 const APOIO = [
@@ -247,18 +270,18 @@ function areaUtil(d: Uint8ClampedArray, w: number, h: number) {
 }
 
 /**
- * Converte a foto em data: JPEG no tamanho da área do card (2x, FOTO_W x
- * FOTO_H), cortando a margem branca da foto original para o produto ficar
+ * Converte a foto em data: JPEG no tamanho pedido (2x; padrão: área da
+ * foto do card, FOTO_W x FOTO_H), cortando a margem branca da foto original para o produto ficar
  * o maior possível (contain, com uma folga pequena).
  */
-export function prepararFoto(src: string): Promise<string> {
+export function prepararFoto(src: string, larg = FOTO_W, alt = FOTO_H): Promise<string> {
   return new Promise((res) => {
     const im = new Image();
     im.crossOrigin = "anonymous";
     im.onload = () => {
       try {
-        const W = FOTO_W * 2;
-        const H = FOTO_H * 2;
+        const W = larg * 2;
+        const H = alt * 2;
         let area = { x: 0, y: 0, w: im.naturalWidth || im.width, h: im.naturalHeight || im.height };
         // mede a borda numa cópia reduzida (rápido) e converte para o tamanho real
         const esc = Math.min(1, 300 / Math.max(area.w, area.h));

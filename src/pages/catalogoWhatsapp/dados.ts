@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { COLUNAS_PRODUTO_PUBLICO, type ProdutoPublico } from "@/utils/colunasProdutoPublico";
 import { precoUnitario, temPreco } from "@/utils/precoVenda";
-import type { ProdutoCatalogo, Recurso } from "./template";
+import { MAX_CORES, type CorVariante, type ProdutoCatalogo, type Recurso } from "./template";
 
 /** Quantidades das três faixas do catálogo (20 / 50 / 100+ un.). */
 export const QTDS_FAIXA = [20, 50, 100] as const;
@@ -161,6 +161,28 @@ export function paraCatalogo(p: ProdutoPublico): ProdutoCatalogo {
   };
 }
 
+/**
+ * Outras cores de um produto pedido só pelo prefixo: variantes ativas, com
+ * foto, sem a que já está na foto principal e sem cor repetida; as de mais
+ * estoque primeiro.
+ */
+export function outrasCores(principal: ProdutoPublico, grupo: ProdutoPublico[]): CorVariante[] {
+  const corDe = (p: ProdutoPublico) => String(p.cor ?? "").trim().toUpperCase();
+  const vistas = new Set<string>([corDe(principal) || principal.codigo_amigavel.toUpperCase()]);
+  const fotoPrincipal = principal.image_url;
+  return grupo
+    .filter((p) => p.codigo_amigavel !== principal.codigo_amigavel && p.ativo !== false && !p.is_hidden && p.image_url && p.image_url !== fotoPrincipal)
+    .sort((a, b) => (b.estoque_total ?? b.estoque ?? 0) - (a.estoque_total ?? a.estoque ?? 0))
+    .filter((p) => {
+      const k = corDe(p) || p.codigo_amigavel.toUpperCase();
+      if (vistas.has(k)) return false;
+      vistas.add(k);
+      return true;
+    })
+    .slice(0, MAX_CORES)
+    .map((p) => ({ codigo: p.codigo_amigavel, cor: String(p.cor ?? "").trim(), foto: fotoProxy(p.image_url) }));
+}
+
 /** Quando o código bate em várias linhas (prefixo + cores), escolhe a principal. */
 function melhor(a: ProdutoPublico, b: ProdutoPublico): ProdutoPublico {
   const nota = (p: ProdutoPublico) =>
@@ -179,6 +201,7 @@ export interface ResultadoBusca {
 /**
  * Busca os códigos no products_cache. Aceita o código completo (11329-VM) ou
  * só o prefixo (11329); o completo tem prioridade. Mantém a ordem colada.
+ * Pelo prefixo, o card também leva as outras cores (outrasCores).
  */
 export async function buscarProdutos(codigos: string[]): Promise<ResultadoBusca> {
   if (!codigos.length) return { produtos: [], naoEncontrados: [], avisos: [] };
@@ -192,10 +215,12 @@ export async function buscarProdutos(codigos: string[]): Promise<ResultadoBusca>
   const porCodigo = new Map<string, ProdutoPublico>();
   for (const r of (exatos.data ?? []) as unknown as ProdutoPublico[]) porCodigo.set(r.codigo_amigavel.toUpperCase(), r);
   const porPrefixo = new Map<string, ProdutoPublico>();
+  const grupos = new Map<string, ProdutoPublico[]>();
   for (const r of (prefixos.data ?? []) as unknown as ProdutoPublico[]) {
     const k = String(r.codigo_prefixo ?? "").toUpperCase();
     const atual = porPrefixo.get(k);
     porPrefixo.set(k, atual ? melhor(atual, r) : r);
+    grupos.set(k, [...(grupos.get(k) ?? []), r]);
   }
 
   const produtos: ProdutoCatalogo[] = [];
@@ -210,7 +235,14 @@ export async function buscarProdutos(codigos: string[]): Promise<ResultadoBusca>
     if (row.ativo === false || row.is_hidden) avisos.push(`${c}: produto inativo/oculto no site.`);
     if (!temPreco(row)) avisos.push(`${c}: sem preço na API — faixas ficaram "consulte".`);
     if (!row.image_url) avisos.push(`${c}: sem foto na API — clique na foto para enviar uma.`);
-    produtos.push(paraCatalogo(row));
+    const produto = paraCatalogo(row);
+    // código só com o prefixo (01320): mostra as outras cores; com a cor (01320-PRE), não
+    const grupo = grupos.get(c);
+    if (grupo && grupo.length > 1) {
+      const cores = outrasCores(row, grupo);
+      if (cores.length) produto.cores = cores;
+    }
+    produtos.push(produto);
   }
   return { produtos, naoEncontrados, avisos };
 }
