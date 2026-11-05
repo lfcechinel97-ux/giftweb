@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { ajustarDescricoes, ajustarNomes, CONFIG_PADRAO, CSS, paginaParaCanvas, paginar, renderPaginas, to600, type ProdutoCatalogo } from "./catalogoWhatsapp/template";
+import { ajustarDescricoes, ajustarNomes, CONFIG_PADRAO, CSS, paginaParaCanvas, paginar, prepararFoto, renderPaginas, type ProdutoCatalogo } from "./catalogoWhatsapp/template";
 import { buscarProdutos, lerCodigos } from "./catalogoWhatsapp/dados";
+import { carregarHistorico, registrarGeracao, type GeracaoCatalogo } from "./catalogoWhatsapp/historico";
 
 /**
  * Gerador de catálogo em PNG para WhatsApp (/catalogo-whatsapp).
@@ -23,9 +24,22 @@ export default function CatalogoWhatsApp() {
   const [baixando, setBaixando] = useState<number | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const fotosProntas = useRef<Promise<unknown>>(Promise.resolve());
+  const [historico, setHistorico] = useState<GeracaoCatalogo[]>([]);
+  const [erroHistorico, setErroHistorico] = useState("");
+  const [verHistorico, setVerHistorico] = useState(false);
+
+  const atualizarHistorico = async () => {
+    try {
+      setHistorico(await carregarHistorico());
+      setErroHistorico("");
+    } catch (e) {
+      setErroHistorico(`Histórico indisponível: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
 
   useEffect(() => {
     document.title = "Catálogo WhatsApp | Gift Web";
+    atualizarHistorico();
   }, []);
 
   const montar = (produtos: ProdutoCatalogo[]) => {
@@ -41,7 +55,7 @@ export default function CatalogoWhatsApp() {
     ajustar();
     document.fonts?.ready.then(ajustar);
 
-    // clicar na foto troca a imagem (reduzida para 600x600)
+    // clicar na foto troca a imagem (ajustada ao tamanho da área da foto)
     root.querySelectorAll<HTMLElement>(".ph").forEach((el) =>
       el.addEventListener("click", (e) => {
         if ((e.target as HTMLElement).classList.contains("lt")) return;
@@ -53,7 +67,7 @@ export default function CatalogoWhatsApp() {
           if (!arq) return;
           const r = new FileReader();
           r.onload = async () => {
-            el.querySelector("img")!.src = await to600(String(r.result));
+            el.querySelector("img")!.src = await prepararFoto(String(r.result));
           };
           r.readAsDataURL(arq);
         };
@@ -61,11 +75,11 @@ export default function CatalogoWhatsApp() {
       }),
     );
 
-    // fotos da API: o proxy já entrega 600x600 com CORS; converter para data:
-    // deixa o html2canvas sem nenhuma requisição externa na hora de baixar
+    // fotos da API: o proxy entrega com CORS; converter para data: (na
+    // proporção da área, sem margem branca) deixa o html2canvas sem nenhuma requisição externa na hora de baixar
     fotosProntas.current = Promise.all(
       Array.from(root.querySelectorAll<HTMLImageElement>(".ph img")).map(async (im) => {
-        if (!im.src.startsWith("data:")) im.src = await to600(im.src);
+        if (!im.src.startsWith("data:")) im.src = await prepararFoto(im.src);
       }),
     );
   };
@@ -91,6 +105,15 @@ export default function CatalogoWhatsApp() {
         return;
       }
       montar(r.produtos);
+      const tituloFinal = titulo.trim().toUpperCase() || CONFIG_PADRAO.titulo;
+      registrarGeracao({
+        titulo: tituloFinal,
+        codigos: r.produtos.map((p) => p.codigo),
+        naoEncontrados: r.naoEncontrados,
+        paginas: paginar(r.produtos).length,
+      })
+        .then(atualizarHistorico)
+        .catch((e) => setErroHistorico(`Não foi possível salvar no histórico: ${e instanceof Error ? e.message : String(e)}`));
     } catch (e) {
       setErro(`Erro ao buscar produtos: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
@@ -158,6 +181,43 @@ export default function CatalogoWhatsApp() {
         {avisos.map((a) => (
           <div key={a} style={{ marginTop: 4, color: "#ffd479" }}>{a}</div>
         ))}
+        <div style={{ marginTop: 10 }}>
+          <button onClick={() => setVerHistorico((v) => !v)} style={{ ...btn, background: "#2b3a4f", padding: "5px 12px", fontSize: 13 }}>
+            {verHistorico ? "Ocultar histórico" : `Histórico de gerações (${historico.length})`}
+          </button>
+          {erroHistorico && <span style={{ marginLeft: 10, color: "#ff8a8a" }}>{erroHistorico}</span>}
+        </div>
+        {verHistorico && (
+          <div style={{ marginTop: 8, maxHeight: 320, overflowY: "auto", background: "#1b1b1b", borderRadius: 6, padding: 8 }}>
+            {historico.length === 0 && <div style={{ opacity: 0.7 }}>Nenhuma geração registrada ainda.</div>}
+            {historico.map((h) => (
+              <div key={h.id} style={{ padding: "8px 4px", borderBottom: "1px solid #333", display: "flex", gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
+                <div style={{ minWidth: 150 }}>
+                  <div style={{ fontWeight: 700 }}>{fmtDataHora(h.created_at)}</div>
+                  <div style={{ fontSize: 12, opacity: 0.75 }}>{h.usuario || "—"}</div>
+                </div>
+                <div style={{ flex: 1, minWidth: 220 }}>
+                  <div style={{ fontWeight: 700 }}>
+                    {h.titulo} <span style={{ fontWeight: 400, fontSize: 12, opacity: 0.75 }}>· {h.codigos.length} produto(s) · {h.paginas} página(s)</span>
+                  </div>
+                  <div style={{ fontFamily: "monospace", fontSize: 12, marginTop: 3, wordBreak: "break-word" }}>{h.codigos.join(", ")}</div>
+                  {h.nao_encontrados.length > 0 && (
+                    <div style={{ fontSize: 12, color: "#ffd479", marginTop: 2 }}>Não encontrados: {h.nao_encontrados.join(", ")}</div>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    setCodigos(h.codigos.join("\n"));
+                    setTitulo(h.titulo);
+                  }}
+                  style={{ ...btn, padding: "4px 10px", fontSize: 12 }}
+                >
+                  Usar estes códigos
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <div style={{ padding: "20px 0", overflowX: "auto" }}>
         <div ref={rootRef} />
@@ -165,6 +225,9 @@ export default function CatalogoWhatsApp() {
     </div>
   );
 }
+
+const fmtDataHora = (iso: string) =>
+  new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 const btn: React.CSSProperties = {
   background: "#1db35f",

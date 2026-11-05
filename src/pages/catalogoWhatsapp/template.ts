@@ -11,7 +11,9 @@
  *  - bolinha de litragem só aparece quando o produto tem litragem;
  *  - colunas/linhas da grade em minmax(0,1fr) e h1 com color:inherit, para
  *    nome longo não alargar uma coluna e o CSS base do site não pintar o h1;
- *  - nome longo reduz a fonte até caber na barra (ajustarNomes).
+ *  - nome longo reduz a fonte até caber na barra (ajustarNomes);
+ *  - foto ocupa toda a coluna da esquerda (do título até os preços), com a
+ *    bolinha de litragem por cima e a margem branca cortada (prepararFoto).
  */
 
 export interface Recurso { i: string; t: string }
@@ -56,6 +58,14 @@ export const CONFIG_PADRAO: ConfigCatalogo = {
   ],
 };
 
+/**
+ * Área da foto no card (px). A foto ocupa toda a coluna da esquerda, do
+ * título até a faixa de preços. O html2canvas ignora object-fit, então
+ * prepararFoto() já entrega a imagem nessa mesma proporção.
+ */
+export const FOTO_W = 262;
+export const FOTO_H = 318;
+
 export const CSS = `
   .catwa{
     --navy:#0a2342; --navy2:#0f3a5f; --green:#1db35f; --green2:#148f4a;
@@ -82,10 +92,10 @@ export const CSS = `
   .catwa .ct{display:flex;align-items:center;background:var(--navy);border-radius:30px;height:46px;color:#fff;margin-left:6px}
   .catwa .ct .ic{width:54px;height:54px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:28px;margin-left:-12px;border:3px solid #fff;flex:none}
   .catwa .ct .nm{font-size:22px;font-weight:400;padding-left:14px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;margin-right:14px}
-  .catwa .cb{display:flex;gap:12px;margin-top:10px;flex:1;min-height:0}
-  .catwa .ph{width:218px;flex:none;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#fff}
-  .catwa .ph img{width:218px;height:218px;max-width:none;object-fit:contain}
-  .catwa .ph .lt{position:absolute;left:0;bottom:6px;width:54px;height:54px;border-radius:50%;background:var(--navy);border:3px solid #fff;color:#fff;font-weight:900;font-size:19px;display:flex;align-items:center;justify-content:center;}
+  .catwa .cb{display:flex;gap:10px;margin-top:6px;flex:1;min-height:0}
+  .catwa .ph{width:${FOTO_W}px;flex:none;position:relative;cursor:pointer;background:#fff;overflow:hidden;border-radius:12px}
+  .catwa .ph img{display:block;width:${FOTO_W}px;height:${FOTO_H}px;max-width:none;object-fit:contain}
+  .catwa .ph .lt{position:absolute;left:4px;bottom:4px;z-index:1;width:54px;height:54px;border-radius:50%;background:var(--navy);border:3px solid #fff;color:#fff;font-weight:900;font-size:19px;display:flex;align-items:center;justify-content:center;}
   .catwa .inf{flex:1;min-width:0;display:flex;flex-direction:column}
   .catwa .cod{align-self:center;border:1.5px solid var(--navy);border-radius:14px;padding:1px 12px;font-size:11px;font-weight:700;color:var(--navy)}
   .catwa .cod b{font-weight:900}
@@ -217,20 +227,63 @@ export function renderPaginas(produtos: ProdutoCatalogo[], cfg: ConfigCatalogo):
  </section>`).join("");
 }
 
-/* ===== FOTO 600x600 (fundo branco, contain) ===== */
-export function to600(src: string): Promise<string> {
+/* ===== FOTO (proporção da área do card, fundo branco, sem margem sobrando) ===== */
+
+/** Retângulo do conteúdo da imagem, ignorando a borda branca/transparente. */
+function areaUtil(d: Uint8ClampedArray, w: number, h: number) {
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const k = (y * w + x) * 4;
+      if (d[k + 3] > 20 && (d[k] < 235 || d[k + 1] < 235 || d[k + 2] < 235)) {
+        if (x < x0) x0 = x;
+        if (x > x1) x1 = x;
+        if (y < y0) y0 = y;
+        if (y > y1) y1 = y;
+      }
+    }
+  }
+  return x1 < 0 ? null : { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 };
+}
+
+/**
+ * Converte a foto em data: JPEG no tamanho da área do card (2x, FOTO_W x
+ * FOTO_H), cortando a margem branca da foto original para o produto ficar
+ * o maior possível (contain, com uma folga pequena).
+ */
+export function prepararFoto(src: string): Promise<string> {
   return new Promise((res) => {
     const im = new Image();
     im.crossOrigin = "anonymous";
     im.onload = () => {
       try {
+        const W = FOTO_W * 2;
+        const H = FOTO_H * 2;
+        let area = { x: 0, y: 0, w: im.naturalWidth || im.width, h: im.naturalHeight || im.height };
+        // mede a borda numa cópia reduzida (rápido) e converte para o tamanho real
+        const esc = Math.min(1, 300 / Math.max(area.w, area.h));
+        const m = document.createElement("canvas");
+        m.width = Math.max(1, Math.round(area.w * esc));
+        m.height = Math.max(1, Math.round(area.h * esc));
+        const mx = m.getContext("2d", { willReadFrequently: true })!;
+        mx.drawImage(im, 0, 0, m.width, m.height);
+        try {
+          const u = areaUtil(mx.getImageData(0, 0, m.width, m.height).data, m.width, m.height);
+          if (u) area = { x: u.x / esc, y: u.y / esc, w: u.w / esc, h: u.h / esc };
+        } catch {
+          /* canvas sem CORS: usa a imagem inteira */
+        }
         const c = document.createElement("canvas");
-        c.width = c.height = 600;
+        c.width = W;
+        c.height = H;
         const x = c.getContext("2d")!;
         x.fillStyle = "#fff";
-        x.fillRect(0, 0, 600, 600);
-        const s = Math.min(600 / im.width, 600 / im.height);
-        x.drawImage(im, (600 - im.width * s) / 2, (600 - im.height * s) / 2, im.width * s, im.height * s);
+        x.fillRect(0, 0, W, H);
+        const folga = 0.04;
+        const s = Math.min((W * (1 - folga * 2)) / area.w, (H * (1 - folga * 2)) / area.h);
+        const dw = area.w * s;
+        const dh = area.h * s;
+        x.drawImage(im, area.x, area.y, area.w, area.h, (W - dw) / 2, (H - dh) / 2, dw, dh);
         res(c.toDataURL("image/jpeg", 0.92));
       } catch {
         res(src);
