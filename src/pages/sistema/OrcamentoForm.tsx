@@ -101,6 +101,7 @@ export const OrcamentoForm: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [saving, setSaving] = useState(false);
   const [baixarPdf, setBaixarPdf] = useState(false);
+  const [baixarPng, setBaixarPng] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hydratedRef = useRef<string | null>(null);
 
@@ -348,6 +349,13 @@ export const OrcamentoForm: React.FC = () => {
     setShowItemDialog(false);
   };
 
+  const baixarArquivos = (orc: Parameters<typeof gerarPDFOrcamento>[0]) => {
+    gerarPDFOrcamento(orc, sis, clienteSelecionado?.nome, { pdf: baixarPdf, png: baixarPng }).catch((e) => {
+      console.error("[Sistema] download do orçamento falhou:", e);
+      toast.error("Orçamento salvo, mas não foi possível gerar o arquivo para download.");
+    });
+  };
+
   const handleSalvar = async () => {
     if (saving) return;
     if (!formData.clienteId || formData.itens.length === 0) {
@@ -398,15 +406,15 @@ export const OrcamentoForm: React.FC = () => {
     try {
       if (isEdit && id) {
         await updateOrcamento(id, orcData);
-        if (baixarPdf) {
+        if (baixarPdf || baixarPng) {
           const orc = orcamentos.find((o) => o.id === id);
-          if (orc) gerarPDFOrcamento({ ...orc, ...orcData }, sis, clienteSelecionado?.nome);
+          if (orc) baixarArquivos({ ...orc, ...orcData });
         }
         toast.success("Orçamento salvo com sucesso.");
         navigate("/sistema/orcamentos");
       } else {
         const novo = await addOrcamento(orcData);
-        if (baixarPdf) gerarPDFOrcamento(novo, sis, clienteSelecionado?.nome);
+        if (baixarPdf || baixarPng) baixarArquivos(novo);
         toast.success("Orçamento salvo com sucesso.");
         navigate("/sistema/orcamentos");
       }
@@ -489,15 +497,6 @@ export const OrcamentoForm: React.FC = () => {
           <p className="text-sm text-gray-500">Preencha os dados do orçamento</p>
         </div>
         <div className="ml-auto flex items-center gap-3">
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={baixarPdf}
-              onChange={(e) => setBaixarPdf(e.target.checked)}
-              className="w-4 h-4 accent-primary cursor-pointer"
-            />
-            Baixar orçamento em PDF
-          </label>
           <button onClick={() => navigate("/sistema/orcamentos")} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">
             Cancelar
           </button>
@@ -1046,7 +1045,28 @@ export const OrcamentoForm: React.FC = () => {
                 <div className="text-xl font-bold text-primary">Total: {formatCurrency(total)}</div>
               </div>
             </div>
-            <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+            <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 mt-4 pt-4 border-t">
+              <div className="flex items-center gap-4 mr-auto text-sm text-gray-700">
+                <span className="text-gray-500">Baixar ao salvar:</span>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={baixarPdf}
+                    onChange={(e) => setBaixarPdf(e.target.checked)}
+                    className="w-4 h-4 accent-primary cursor-pointer"
+                  />
+                  Orçamento PDF
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={baixarPng}
+                    onChange={(e) => setBaixarPng(e.target.checked)}
+                    className="w-4 h-4 accent-primary cursor-pointer"
+                  />
+                  Orçamento PNG
+                </label>
+              </div>
               <button
                 onClick={() => navigate("/sistema/orcamentos")}
                 className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg"
@@ -1054,10 +1074,11 @@ export const OrcamentoForm: React.FC = () => {
                 Cancelar
               </button>
               <button
+                disabled={saving}
                 onClick={handleSalvar}
-                className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 font-medium"
+                className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 font-medium disabled:opacity-60"
               >
-                Salvar Orçamento
+                {saving ? "Salvando..." : "Salvar Orçamento"}
               </button>
             </div>
           </section>

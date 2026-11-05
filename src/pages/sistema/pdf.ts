@@ -111,7 +111,62 @@ function drawFooterPagina(doc: jsPDF) {
 }
 
 // ─── PDF principal ─────────────────────────────────────────────────────────
-export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?: string): Promise<void> {
+export interface FormatosOrcamento {
+  pdf?: boolean;
+  png?: boolean;
+}
+
+function baixarBlob(blob: Blob, nome: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nome;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Renderiza todas as páginas do PDF e empilha numa única imagem PNG. */
+async function pdfParaPng(pdfBytes: ArrayBuffer): Promise<Blob> {
+  const pdfjs = await import("pdfjs-dist");
+  const { default: workerUrl } = await import("pdfjs-dist/build/pdf.worker.min.mjs?url");
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  const pdf = await pdfjs.getDocument({ data: new Uint8Array(pdfBytes) }).promise;
+  const escala = 2;
+  const paginas: HTMLCanvasElement[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: escala });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    await page.render({ canvasContext: canvas.getContext("2d")!, viewport }).promise;
+    paginas.push(canvas);
+  }
+  const final = document.createElement("canvas");
+  final.width = Math.max(...paginas.map((c) => c.width));
+  final.height = paginas.reduce((s, c) => s + c.height, 0);
+  const ctx = final.getContext("2d")!;
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, final.width, final.height);
+  let y = 0;
+  for (const c of paginas) {
+    ctx.drawImage(c, 0, y);
+    y += c.height;
+  }
+  await pdf.destroy();
+  return new Promise((resolve, reject) =>
+    final.toBlob((b) => (b ? resolve(b) : reject(new Error("Falha ao gerar PNG"))), "image/png"),
+  );
+}
+
+export async function gerarPDFOrcamento(
+  orc: Orcamento,
+  sis?: Sis,
+  clienteNome?: string,
+  formatos: FormatosOrcamento = { pdf: true },
+): Promise<void> {
   const sistema = sis || { clientes: [], vendedores: [], meiosPagamento: [], transportadoras: [], origens: [] };
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const W = doc.internal.pageSize.getWidth();
@@ -555,7 +610,12 @@ export async function gerarPDFOrcamento(orc: Orcamento, sis?: Sis, clienteNome?:
     .replace(/[^a-zA-Z0-9\s]/g, "")
     .trim()
     .replace(/\s+/g, " ");
-  doc.save(`Proposta GiftWeb x ${nomeClienteLimpo} - ${orc.numero}.pdf`);
+  const nomeArquivo = `Proposta GiftWeb x ${nomeClienteLimpo} - ${orc.numero}`;
+  if (formatos.pdf) doc.save(`${nomeArquivo}.pdf`);
+  if (formatos.png) {
+    const png = await pdfParaPng(doc.output("arraybuffer"));
+    baixarBlob(png, `${nomeArquivo}.png`);
+  }
 }
 
 // ─── Pedido (mantém formato simples) ──────────────────────────────────────
