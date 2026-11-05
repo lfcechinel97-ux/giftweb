@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { COLUNAS_PRODUTO_PUBLICO, type ProdutoPublico } from "@/utils/colunasProdutoPublico";
 import { precoUnitario, temPreco } from "@/utils/precoVenda";
+import { getCorHex } from "@/utils/colorHex";
 import { MAX_CORES, type CorVariante, type ProdutoCatalogo, type Recurso } from "./template";
 
 /** Quantidades das três faixas do catálogo (20 / 50 / 100+ un.). */
@@ -163,7 +164,7 @@ export function paraCatalogo(p: ProdutoPublico): ProdutoCatalogo {
 
 /**
  * Outras cores de um produto pedido só pelo prefixo: variantes ativas, com
- * foto, sem a que já está na foto principal e sem cor repetida; as de mais
+ * foto (usada para tirar a cor quando o nome não é conhecido), sem a que já está na foto principal e sem cor repetida; as de mais
  * estoque primeiro.
  */
 export function outrasCores(principal: ProdutoPublico, grupo: ProdutoPublico[]): CorVariante[] {
@@ -180,7 +181,17 @@ export function outrasCores(principal: ProdutoPublico, grupo: ProdutoPublico[]):
       return true;
     })
     .slice(0, MAX_CORES)
-    .map((p) => ({ codigo: p.codigo_amigavel, cor: String(p.cor ?? "").trim(), foto: fotoProxy(p.image_url) }));
+    .map((p) => {
+      const cor = String(p.cor ?? "").trim();
+      return { codigo: p.codigo_amigavel, cor, hex: hexDaCor(cor), foto: fotoProxy(p.image_url) };
+    });
+}
+
+const COR_DESCONHECIDA = getCorHex(null);
+/** Hex pelo nome da cor (mesmo mapa do site); null se o nome não for conhecido. */
+export function hexDaCor(cor: string): string | null {
+  const h = cor ? getCorHex(cor) : COR_DESCONHECIDA;
+  return h === COR_DESCONHECIDA ? null : h;
 }
 
 /** Quando o código bate em várias linhas (prefixo + cores), escolhe a principal. */

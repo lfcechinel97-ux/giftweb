@@ -32,11 +32,15 @@ export interface ProdutoCatalogo {
   cores?: CorVariante[];
 }
 
-export interface CorVariante { codigo: string; cor: string; foto: string }
+/**
+ * hex = cor pelo nome (utils/colorHex); null = nome desconhecido, a página
+ * tira a cor da foto da variação (corDaFoto).
+ */
+export interface CorVariante { codigo: string; cor: string; hex: string | null; foto: string }
 
-/** Tamanho (px) das miniaturas de cor no card. */
-export const MINI_COR = 26;
-/** Máximo de miniaturas de cor por card (duas linhas). */
+/** Diâmetro (px) da bolinha de cor no card. */
+export const BOLINHA_COR = 16;
+/** Máximo de bolinhas de cor por card. */
 export const MAX_CORES = 12;
 
 export interface ConfigCatalogo {
@@ -109,10 +113,10 @@ export const CSS = `
   .catwa .cod{align-self:center;border:1.5px solid var(--navy);border-radius:14px;padding:1px 12px;font-size:11px;font-weight:700;color:var(--navy)}
   .catwa .cod b{font-weight:900}
   .catwa .ds{font-size:13px;line-height:1.32;color:var(--ink);margin-top:8px;flex:1;min-height:0;overflow:hidden}
-  .catwa .cores{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px}
-  .catwa .cores .cl{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-right:2px}
-  .catwa .cores img{display:inline-block;width:${MINI_COR}px;height:${MINI_COR}px;max-width:none;border:1px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
-  .catwa .cores img:hover{outline:2px solid #e5484d;outline-offset:1px}
+  .catwa .cores{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:6px}
+  .catwa .cores .cl{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;margin-right:1px}
+  .catwa .cores .bc{display:inline-block;width:${BOLINHA_COR}px;height:${BOLINHA_COR}px;border-radius:50%;border:1px solid rgba(10,35,66,.25);background:#cfd8e3;cursor:pointer;flex:none}
+  .catwa .cores .bc:hover{outline:2px solid #e5484d;outline-offset:1px}
   .catwa .rs{margin-top:6px;display:flex;flex-direction:column;gap:5px}
   .catwa .r{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--ink)}
   .catwa .r .i{font-size:20px;color:var(--navy)}
@@ -204,14 +208,62 @@ const card = (p: ProdutoCatalogo, cfg: ConfigCatalogo) => `
   <div class="pr">${p.precos.map((v, i) => `<div class="p"><div class="f" contenteditable>${esc(cfg.faixas[i] ?? "")}</div><div class="v">${brl(v)}</div><div class="c">CADA</div></div>`).join("")}</div>
  </div>`;
 
-/** Miniaturas das outras cores; clicar numa remove (ver CatalogoWhatsApp). */
+/** Bolinhas das outras cores; clicar numa remove (ver CatalogoWhatsApp). */
 const cores = (lista: CorVariante[] | undefined) =>
   lista?.length
     ? `<div class="cores"><span class="cl" contenteditable>CORES:</span>${lista
         .slice(0, MAX_CORES)
-        .map((c) => `<img src="${esc(c.foto)}" alt="" title="${esc(`${c.cor || c.codigo} (clique para remover)`)}">`)
+        .map((c) => {
+          const titulo = esc(`${c.cor || c.codigo} (clique para remover)`);
+          return c.hex
+            ? `<span class="bc" style="background:${esc(c.hex)}" title="${titulo}"></span>`
+            : `<span class="bc" data-foto="${esc(c.foto)}" title="${titulo}"></span>`;
+        })
         .join("")}</div>`
     : "";
+
+/**
+ * Cor predominante da foto (para cor sem nome conhecido): ignora o fundo
+ * branco, agrupa os pixels em faixas de cor e devolve a média da faixa
+ * mais frequente. null se a foto não carregar.
+ */
+export function corDaFoto(src: string): Promise<string | null> {
+  return new Promise((res) => {
+    const im = new Image();
+    im.crossOrigin = "anonymous";
+    im.onload = () => {
+      try {
+        const n = 48;
+        const c = document.createElement("canvas");
+        c.width = c.height = n;
+        const x = c.getContext("2d", { willReadFrequently: true })!;
+        x.drawImage(im, 0, 0, n, n);
+        const d = x.getImageData(0, 0, n, n).data;
+        const faixas = new Map<number, { q: number; r: number; g: number; b: number }>();
+        for (let k = 0; k < d.length; k += 4) {
+          const [r, g, b, a] = [d[k], d[k + 1], d[k + 2], d[k + 3]];
+          if (a < 128 || (r > 235 && g > 235 && b > 235)) continue;
+          const chave = ((r >> 5) << 6) | ((g >> 5) << 3) | (b >> 5);
+          const f = faixas.get(chave) ?? { q: 0, r: 0, g: 0, b: 0 };
+          f.q++;
+          f.r += r;
+          f.g += g;
+          f.b += b;
+          faixas.set(chave, f);
+        }
+        let m: { q: number; r: number; g: number; b: number } | null = null;
+        for (const f of faixas.values()) if (!m || f.q > m.q) m = f;
+        if (!m) return res("#f5f5f5"); // foto toda branca: produto branco
+        const h = (v: number) => Math.round(v / m!.q).toString(16).padStart(2, "0");
+        res(`#${h(m.r)}${h(m.g)}${h(m.b)}`);
+      } catch {
+        res(null);
+      }
+    };
+    im.onerror = () => res(null);
+    im.src = src;
+  });
+}
 
 /** Cards que completam a última página (nunca sobra buraco na grade 2x2). */
 const APOIO = [
