@@ -1,47 +1,12 @@
 import { toast } from "sonner";
-import { Bot, type LucideIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import type { LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
-/* Tipos, rótulos e peças visuais compartilhadas pelas abas do /whatsapp. */
+/* Tipos, rótulos, origem do lead, exportação e peças visuais compartilhadas
+   pelas abas do /whatsapp. Sem IA: tudo aqui vem do que foi importado do
+   Data Crazy e da planilha de leads do Meta. */
 
-export interface Objecao {
-  categoria: string;
-  trecho_cliente: string;
-  como_vendedor_lidou: string;
-  /** Ausente nas análises do formato antigo ({ objecao, como_quebrar }). */
-  foi_contornada?: boolean;
-  resposta_sugerida: string;
-}
-export interface Melhoria { categoria?: string; titulo: string; detalhe: string; prioridade: "alta" | "media" | "baixa" }
-export interface AnaliseSdr {
-  handoff_feito: boolean;
-  lead_qualificado: boolean;
-  catalogo_enviado: boolean;
-  acertos: string[];
-  violacoes: { regra: string; trecho: string; correcao: string }[];
-  sugestoes_prompt: string[];
-}
-export interface Analise {
-  id: string;
-  criado_em: string;
-  modelo: string;
-  transcricao_hash: string | null;
-  nota: number | null;
-  resultado: string | null;
-  etapa_funil: string | null;
-  resumo: string | null;
-  pontos_fortes: string[];
-  melhorias: Melhoria[];
-  objecoes: Objecao[];
-  oportunidades_perdidas: string[];
-  proximo_passo: string | null;
-  nota_sdr: number | null;
-  sdr: AnaliseSdr | null;
-  tokens_entrada: number | null;
-  tokens_saida: number | null;
-}
 export interface Conversa {
   id: string;
   iniciada_em: string | null;
@@ -50,18 +15,14 @@ export interface Conversa {
   contato_telefone: string | null;
   atendente: string | null;
   total_mensagens: number;
-  transcricao_hash: string | null;
-  transcricao_caracteres: number | null;
   primeira_mensagem_cliente: string | null;
   origem_detectada: string | null;
   tempo_primeira_resposta_seg: number | null;
-  tempo_mediano_resposta_seg: number | null;
   cliente_sem_resposta: boolean | null;
   mensagens_sdr: number | null;
   mensagens_consultor: number | null;
   handoff_em: string | null;
   consultor_entrou_em: string | null;
-  comercial_analises: Analise[];
 }
 export interface LeadMeta {
   id: string;
@@ -79,78 +40,31 @@ export interface LeadMeta {
   vinculo_metodo: string | null;
   vinculo_score: number | null;
 }
-export type StatusAnalise = "analisada" | "nao_analisada" | "desatualizada";
-export type ConversaComAnalise = Conversa & {
-  analise: Analise | null;
-  status: StatusAnalise;
+export type ConversaComOrigem = Conversa & {
   origem: string;
   campanha: string | null;
+  /** Por que a conversa recebeu essa origem (para o usuário conferir). */
+  motivo: string;
   lead: LeadMeta | null;
 };
 export interface Regra { id: string; padrao: string; origem: string; campanha: string | null }
+
+export const COLUNAS_CONVERSA =
+  "id, iniciada_em, ultima_mensagem_em, contato_nome, contato_telefone, atendente, total_mensagens, " +
+  "primeira_mensagem_cliente, origem_detectada, tempo_primeira_resposta_seg, cliente_sem_resposta, " +
+  "mensagens_sdr, mensagens_consultor, handoff_em, consultor_entrou_em";
 
 // Tabelas/colunas novas ainda não estão nos tipos gerados do Supabase.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const tabela = (nome: string) => (supabase as any).from(nome);
 
-/* As primeiras análises (teste da edge function) gravaram melhorias como
-   texto solto e objeções como { objecao, como_quebrar } -- converte para o
-   formato atual para a tela não quebrar. */
-export function normalizar(a: Analise): Analise {
-  const melhorias = (a.melhorias ?? []).map((m: Melhoria | string) =>
-    typeof m === "string" ? { titulo: m, detalhe: "", prioridade: "media" as const } : m);
-  const objecoes = (a.objecoes ?? []).map((o: Objecao & { objecao?: string; como_quebrar?: string }) =>
-    o.objecao !== undefined && o.trecho_cliente === undefined
-      ? { categoria: "outra", trecho_cliente: o.objecao ?? "", como_vendedor_lidou: "", resposta_sugerida: o.como_quebrar ?? "" }
-      : o);
-  return {
-    ...a, melhorias, objecoes,
-    pontos_fortes: a.pontos_fortes ?? [], oportunidades_perdidas: a.oportunidades_perdidas ?? [],
-    nota_sdr: a.nota_sdr ?? null, sdr: a.sdr ?? null,
-  };
-}
-
-export const ROTULO_OBJECAO: Record<string, string> = {
-  preco: "Preço",
-  prazo: "Prazo",
-  quantidade_minima: "Quantidade mínima",
-  frete: "Frete",
-  qualidade: "Qualidade",
-  confianca: "Confiança",
-  concorrente: "Concorrente",
-  aprovacao_interna: "Aprovação interna",
-  vou_pensar: "Vou pensar",
-  sumiu: "Cliente sumiu",
-  outra: "Outra",
-};
-
-export const ROTULO_MELHORIA: Record<string, string> = {
-  tempo_resposta: "Tempo de resposta",
-  qualificacao: "Qualificação",
-  apresentacao_produto: "Apresentação do produto",
-  preco_negociacao: "Preço e negociação",
-  follow_up: "Follow-up",
-  fechamento: "Condução ao fechamento",
-  informacao_incorreta: "Informação incorreta",
-  organizacao_atendimento: "Organização do atendimento",
-  outra: "Outros",
-};
-
-export const ROTULO_RESULTADO: Record<string, string> = {
-  venda: "Venda",
-  em_andamento: "Em andamento",
-  perdida: "Perdida",
-  sem_interesse: "Sem interesse",
-  indefinido: "Indefinido",
-};
-
 export const ROTULO_ORIGEM: Record<string, string> = {
-  google: "Google Ads",
   meta: "Meta Ads",
+  google: "Google Ads",
   organico: "Orgânico",
   indicacao: "Indicação",
   outro: "Outro",
-  nao_identificada: "Não identificada",
+  nao_identificada: "Sem sinal de anúncio",
 };
 
 export const COR_ORIGEM: Record<string, string> = {
@@ -162,27 +76,21 @@ export const COR_ORIGEM: Record<string, string> = {
   nao_identificada: "bg-slate-50 text-slate-500 border-slate-200",
 };
 
-export const ROTULO_STATUS: Record<StatusAnalise, string> = {
-  analisada: "Analisada",
-  nao_analisada: "Não analisada",
-  desatualizada: "Desatualizada",
-};
-
-export const COR_STATUS: Record<StatusAnalise, string> = {
-  analisada: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  nao_analisada: "bg-slate-100 text-slate-600 border-slate-200",
-  desatualizada: "bg-amber-100 text-amber-800 border-amber-200",
+const ROTULO_VINCULO: Record<string, string> = {
+  telefone: "telefone",
+  email: "e-mail",
+  nome_horario: "nome e horário",
+  horario: "só pelo horário (conferir)",
+  manual: "manual",
 };
 
 export const SEM_VENDEDOR = "(sem consultor)";
 
-export const corNota = (n: number | null | undefined) =>
-  n == null ? "text-muted-foreground" : n >= 8 ? "text-emerald-600" : n >= 6 ? "text-amber-600" : "text-rose-600";
-
 export const dataCurta = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—";
+const dataCompleta = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
 
-export const media = (ns: number[]) => (ns.length ? ns.reduce((s, n) => s + n, 0) / ns.length : null);
 export const mediana = (ns: number[]) => {
   if (!ns.length) return null;
   const o = [...ns].sort((a, b) => a - b);
@@ -199,25 +107,37 @@ export function duracao(seg: number | null | undefined) {
   return `${Math.round(seg / 86400)} d`;
 }
 
+export const tempoAssumir = (c: Conversa) =>
+  c.handoff_em && c.consultor_entrou_em ? Math.max(0, (new Date(c.consultor_entrou_em).getTime() - new Date(c.handoff_em).getTime()) / 1000) : null;
+
 /** Sem acento, minúsculo, espaços simples -- para comparar textos. */
 export const normalizarTexto = (s: string) =>
   s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 
-/** Lead da planilha do Meta > regra da 1ª mensagem > o que o Data Crazy mandou do anúncio. */
+/** Lead da planilha do Meta > regra da 1ª mensagem > sinal de anúncio que o Data Crazy mandou. */
 export function classificarOrigem(c: Conversa, regras: Regra[], lead: LeadMeta | null) {
-  if (lead) return { origem: "meta", campanha: lead.campanha };
+  if (lead) {
+    return {
+      origem: "meta",
+      campanha: lead.campanha,
+      motivo: `Está na planilha de leads do Meta (ligado por ${ROTULO_VINCULO[lead.vinculo_metodo ?? ""] ?? "vínculo"})` +
+        (lead.anuncio ? ` · anúncio: ${lead.anuncio}` : ""),
+    };
+  }
   const msg = normalizarTexto(c.primeira_mensagem_cliente ?? "");
   const regra = msg ? regras.find((r) => msg.includes(normalizarTexto(r.padrao))) : undefined;
-  if (regra) return { origem: regra.origem, campanha: regra.campanha };
-  return { origem: c.origem_detectada ?? "nao_identificada", campanha: null };
+  if (regra) return { origem: regra.origem, campanha: regra.campanha, motivo: `1ª mensagem contém "${regra.padrao}"` };
+  if (c.origem_detectada === "meta") return { origem: "meta", campanha: null, motivo: "O Data Crazy marcou a conversa como vinda de anúncio do Meta (clique para WhatsApp)" };
+  if (c.origem_detectada === "google") return { origem: "google", campanha: null, motivo: "Há um código de clique do Google Ads na conversa" };
+  return {
+    origem: "nao_identificada",
+    campanha: null,
+    motivo: "Nenhum sinal de anúncio: não está na planilha do Meta, nenhuma regra bate com a 1ª mensagem e o Data Crazy não marcou anúncio. Provável orgânico ou indicação.",
+  };
 }
 
-export function montarConversa(c: Conversa, regras: Regra[], lead: LeadMeta | null): ConversaComAnalise {
-  const ultima = [...(c.comercial_analises ?? [])].sort((a, b) => b.criado_em.localeCompare(a.criado_em))[0];
-  const status: StatusAnalise = !ultima ? "nao_analisada"
-    : c.transcricao_hash && !c.comercial_analises.some((a) => a.transcricao_hash === c.transcricao_hash) ? "desatualizada"
-    : "analisada";
-  return { ...c, analise: ultima ? normalizar(ultima) : null, status, lead, ...classificarOrigem(c, regras, lead) };
+export function montarConversa(c: Conversa, regras: Regra[], lead: LeadMeta | null): ConversaComOrigem {
+  return { ...c, lead, ...classificarOrigem(c, regras, lead) };
 }
 
 export async function chamar(corpo: Record<string, unknown>) {
@@ -246,6 +166,8 @@ export async function chamar(corpo: Record<string, unknown>) {
 
 export const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/* ---------- exportação ---------- */
+
 export function baixarArquivo(nome: string, conteudo: string, tipo: string) {
   const blob = new Blob([conteudo], { type: tipo });
   const url = URL.createObjectURL(blob);
@@ -254,6 +176,67 @@ export function baixarArquivo(nome: string, conteudo: string, tipo: string) {
   a.download = nome;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+const hoje = () => new Date().toISOString().slice(0, 10);
+const nomeArquivo = (s: string) => normalizarTexto(s).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "conversa";
+
+function csvCampo(v: unknown) {
+  const s = v == null ? "" : String(v);
+  return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+/** Planilha (CSV com ";" e BOM: o Excel em português abre direto, com acentos). */
+export function exportarCsv(lista: ConversaComOrigem[], prefixo = "conversas-whatsapp") {
+  const cabecalho = [
+    "cliente", "telefone", "origem", "campanha", "como_chegou", "primeira_mensagem_cliente",
+    "lead_meta_nome", "lead_meta_email", "lead_meta_anuncio", "lead_meta_chegou_em",
+    "consultor", "iniciada_em", "ultima_mensagem_em", "mensagens", "mensagens_sdr", "mensagens_consultor",
+    "primeira_resposta_min", "consultor_assumiu_em", "cliente_sem_resposta", "id_conversa",
+  ];
+  const linhas = lista.map((c) => [
+    c.contato_nome, c.contato_telefone, ROTULO_ORIGEM[c.origem] ?? c.origem, c.campanha, c.motivo, c.primeira_mensagem_cliente,
+    c.lead?.nome, c.lead?.email, c.lead?.anuncio, dataCompleta(c.lead?.lead_criado_em),
+    c.atendente, dataCompleta(c.iniciada_em), dataCompleta(c.ultima_mensagem_em), c.total_mensagens, c.mensagens_sdr, c.mensagens_consultor,
+    c.tempo_primeira_resposta_seg != null ? Math.round(c.tempo_primeira_resposta_seg / 60) : "", dataCompleta(c.consultor_entrou_em),
+    c.cliente_sem_resposta ? "sim" : "não", c.id,
+  ].map(csvCampo).join(";"));
+  baixarArquivo(`${prefixo}-${hoje()}.csv`, "﻿" + [cabecalho.join(";"), ...linhas].join("\r\n"), "text/csv;charset=utf-8");
+}
+
+function blocoTexto(c: ConversaComOrigem, transcricao: string) {
+  return [
+    "=".repeat(80),
+    `Cliente: ${c.contato_nome ?? "—"} · Telefone: ${c.contato_telefone ?? "—"}`,
+    `Origem: ${ROTULO_ORIGEM[c.origem] ?? c.origem}${c.campanha ? ` / ${c.campanha}` : ""}`,
+    `Como chegou: ${c.motivo}`,
+    `Consultor: ${c.atendente ?? "—"} · Início: ${dataCompleta(c.iniciada_em)} · Última mensagem: ${dataCompleta(c.ultima_mensagem_em)}`,
+    "=".repeat(80),
+    transcricao || "(sem mensagens)",
+    "",
+  ].join("\n");
+}
+
+async function buscarTranscricoes(ids: string[]) {
+  const mapa = new Map<string, string>();
+  for (let i = 0; i < ids.length; i += 100) {
+    const { data, error } = await tabela("comercial_conversas").select("id, transcricao").in("id", ids.slice(i, i + 100));
+    if (error) throw error;
+    for (const d of (data ?? []) as { id: string; transcricao: string | null }[]) mapa.set(d.id, d.transcricao ?? "");
+  }
+  return mapa;
+}
+
+/** Todas as conversas num .txt só, uma depois da outra. */
+export async function exportarTranscricoes(lista: ConversaComOrigem[], prefixo = "conversas-whatsapp") {
+  const mapa = await buscarTranscricoes(lista.map((c) => c.id));
+  baixarArquivo(`${prefixo}-${hoje()}.txt`, lista.map((c) => blocoTexto(c, mapa.get(c.id) ?? "")).join("\n"), "text/plain;charset=utf-8");
+}
+
+/** Uma conversa, num .txt com o nome do cliente. */
+export async function exportarUma(c: ConversaComOrigem) {
+  const mapa = await buscarTranscricoes([c.id]);
+  baixarArquivo(`${nomeArquivo(c.contato_nome ?? c.contato_telefone ?? "conversa")}.txt`, blocoTexto(c, mapa.get(c.id) ?? ""), "text/plain;charset=utf-8");
 }
 
 /* ---------- Visual ---------- */
@@ -310,122 +293,6 @@ export function Bloco({ titulo, icone: Icone, cor = "blue", acao, children }: {
   );
 }
 
-export const Vazio = ({ texto = "Nada analisado ainda." }: { texto?: string }) => <p className="text-sm text-muted-foreground">{texto}</p>;
+export const Vazio = ({ texto = "Nada por aqui ainda." }: { texto?: string }) => <p className="text-sm text-muted-foreground">{texto}</p>;
 
-export function CartaoObjecao({ objecao: o, conversa, onAbrir }: { objecao: Objecao; conversa?: ConversaComAnalise; onAbrir?: () => void }) {
-  return (
-    <div className="rounded-lg border border-slate-200 p-3 text-sm space-y-1.5">
-      <div className="flex items-start justify-between gap-2">
-        <p className="italic">“{o.trecho_cliente}”</p>
-        {o.foi_contornada !== undefined && (
-          <Badge variant="outline" className={cn("shrink-0", o.foi_contornada ? "bg-emerald-50 text-emerald-700 border-emerald-300" : "bg-rose-50 text-rose-700 border-rose-300")}>
-            {o.foi_contornada ? "contornada" : "não contornada"}
-          </Badge>
-        )}
-      </div>
-      {o.como_vendedor_lidou && (
-        <p className="text-muted-foreground"><span className="font-medium text-foreground">Como lidou:</span> {o.como_vendedor_lidou}</p>
-      )}
-      <p className="bg-emerald-50 rounded p-2"><span className="font-medium">Resposta sugerida:</span> {o.resposta_sugerida}</p>
-      {conversa && onAbrir && (
-        <button className="text-xs text-blue-700 hover:underline" onClick={onAbrir}>
-          {conversa.contato_nome || "abrir conversa"} · {conversa.atendente || SEM_VENDEDOR}
-        </button>
-      )}
-    </div>
-  );
-}
-
-export function DetalheAnalise({ analise: a }: { analise: Analise }) {
-  const corPrioridade = { alta: "bg-rose-50 text-rose-700 border-rose-300", media: "bg-amber-50 text-amber-700 border-amber-300", baixa: "text-muted-foreground" };
-  return (
-    <div className="space-y-4">
-      {a.resumo && <p className="text-sm">{a.resumo}</p>}
-      {a.proximo_passo && (
-        <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm">
-          <span className="font-semibold">Próximo passo:</span> {a.proximo_passo}
-        </div>
-      )}
-      {a.sdr && (
-        <div className="rounded-lg border border-violet-200 bg-violet-50/50 p-3 space-y-2">
-          <h4 className="font-semibold text-sm flex items-center gap-2 text-violet-800">
-            <Bot className="h-4 w-4" /> SDR de IA (Felipe)
-            {a.nota_sdr != null && <span className={corNota(a.nota_sdr)}>{a.nota_sdr}/10</span>}
-          </h4>
-          <div className="flex flex-wrap gap-1.5">
-            {([["handoff_feito", "passou p/ consultor"], ["lead_qualificado", "lead qualificado"], ["catalogo_enviado", "mandou catálogo"]] as const).map(([k, r]) => (
-              <Badge key={k} variant="outline" className={a.sdr![k] ? "bg-white text-emerald-700 border-emerald-300" : "bg-white text-rose-700 border-rose-300"}>
-                {a.sdr![k] ? "✓" : "✗"} {r}
-              </Badge>
-            ))}
-          </div>
-          {!!a.sdr.violacoes?.length && (
-            <ul className="space-y-1.5">
-              {a.sdr.violacoes.map((v, i) => (
-                <li key={i} className="text-sm">
-                  <span className="font-medium">{v.regra}</span>
-                  <p className="text-rose-700">✗ “{v.trecho}”</p>
-                  <p className="text-emerald-700">✓ {v.correcao}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-          {!!a.sdr.sugestoes_prompt?.length && (
-            <div className="text-sm">
-              <span className="font-medium">Sugestões para o prompt:</span>
-              <ul className="list-disc pl-5">{a.sdr.sugestoes_prompt.map((s, i) => <li key={i}>{s}</li>)}</ul>
-            </div>
-          )}
-        </div>
-      )}
-      {!!a.pontos_fortes?.length && (
-        <div>
-          <h4 className="font-semibold text-sm mb-1 text-emerald-700">Pontos fortes</h4>
-          <ul className="list-disc pl-5 text-sm space-y-0.5">{a.pontos_fortes.map((p, i) => <li key={i}>{p}</li>)}</ul>
-        </div>
-      )}
-      {!!a.melhorias?.length && (
-        <div>
-          <h4 className="font-semibold text-sm mb-1 text-rose-700">Melhorias (consultor)</h4>
-          <ul className="space-y-2">
-            {a.melhorias.map((m, i) => (
-              <li key={i} className="text-sm">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline" className={corPrioridade[m.prioridade] ?? ""}>{m.prioridade}</Badge>
-                  {m.categoria && <span className="text-xs text-muted-foreground">{ROTULO_MELHORIA[m.categoria] ?? m.categoria}</span>}
-                  <span className="font-medium">{m.titulo}</span>
-                </div>
-                {m.detalhe && <p className="text-muted-foreground mt-0.5">{m.detalhe}</p>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {!!a.objecoes?.length && (
-        <div>
-          <h4 className="font-semibold text-sm mb-1 text-amber-700">Objeções</h4>
-          <div className="space-y-2">
-            {a.objecoes.map((o, i) => (
-              <div key={i}>
-                <div className="text-xs font-medium text-muted-foreground mb-1">{ROTULO_OBJECAO[o.categoria] ?? o.categoria}</div>
-                <CartaoObjecao objecao={o} />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {!!a.oportunidades_perdidas?.length && (
-        <div>
-          <h4 className="font-semibold text-sm mb-1">Oportunidades perdidas</h4>
-          <ul className="list-disc pl-5 text-sm space-y-0.5">{a.oportunidades_perdidas.map((p, i) => <li key={i}>{p}</li>)}</ul>
-        </div>
-      )}
-      <p className="text-xs text-muted-foreground">
-        Analisado em {dataCurta(a.criado_em)} · {a.modelo}
-        {a.tokens_entrada != null && ` · ${numero(a.tokens_entrada + (a.tokens_saida ?? 0))} tokens`}
-      </p>
-    </div>
-  );
-}
-
-export const copiar = (texto: string) => navigator.clipboard.writeText(texto).then(() => toast.success("Copiado."));
+export const avisarErro = (e: unknown) => toast.error((e as Error).message);
