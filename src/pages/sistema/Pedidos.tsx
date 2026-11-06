@@ -234,7 +234,10 @@ export default function Pedidos() {
   /* Escolher a etapa do pedido leva TODOS os produtos dele para lá. */
   const alterarStatusPedido = async (p: Pedido, slug: string) => {
     updatePedido(p.id, { status: slug as PedidoStatus });
-    const { error } = await supabase.from("sistema_producao_itens").update({ status: slug }).eq("pedido_id", p.id);
+    // Produto removido do pedido (cancelado) não volta pro fluxo.
+    let q = supabase.from("sistema_producao_itens").update({ status: slug }).eq("pedido_id", p.id);
+    if (slug !== "cancelado") q = q.neq("status", "cancelado");
+    const { error } = await q;
     if (error) toast.error(`Não foi possível mover os produtos. ${error.message || ""}`);
     qc.invalidateQueries({ queryKey: ["sistema", "pedidos", "producao"] });
     qc.invalidateQueries({ queryKey: ["sistema", "pcp", "rows"] });

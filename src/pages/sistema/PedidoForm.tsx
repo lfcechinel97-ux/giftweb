@@ -307,6 +307,55 @@ const PedidoForm: React.FC = () => {
     return () => { cancel = true; };
   }, [id]);
 
+  /* Ao vivo: o que muda no PCP (etapa de cada produto) aparece aqui na hora.
+     O status do pedido é recalculado no banco a partir dos produtos
+     (migration 20261106120000), então relê os dois — só a etapa, sem mexer
+     no que está sendo editado no formulário. */
+  useEffect(() => {
+    if (!id) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const reler = () => {
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        const [{ data: prod }, { data: p }] = await Promise.all([
+          supabase.from("sistema_producao_itens").select("id,item_id,status").eq("pedido_id", id),
+          supabase.from("sistema_pedidos").select("status").eq("id", id).maybeSingle(),
+        ]);
+        if (prod) setProducao(prod as ProducaoRow[]);
+        if (p?.status) setPedido(atual => (atual ? { ...atual, status: p.status as Pedido["status"] } : atual));
+      }, 300);
+    };
+    const canal = supabase
+      .channel(`pedido-${id}-ao-vivo`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "sistema_producao_itens", filter: `pedido_id=eq.${id}` }, reler)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "sistema_pedidos", filter: `id=eq.${id}` }, reler)
+      .subscribe();
+    return () => { clearTimeout(timer); supabase.removeChannel(canal); };
+  }, [id]);
+
+  /* Escolher a etapa do pedido leva TODOS os produtos dele para lá (mesma
+     regra da lista de Pedidos) — e é gravado na hora, não no "Salvar". */
+  const alterarStatusPedido = async (slug: string) => {
+    if (!pedido) return;
+    const anterior = { status: pedido.status, producao };
+    setPedido(p => (p ? { ...p, status: slug as Pedido["status"] } : p));
+    // Produto removido do pedido (cancelado) não volta pro fluxo.
+    const move = (st: string) => slug === "cancelado" || st !== "cancelado";
+    setProducao(prev => prev.map(r => (move(r.status) ? { ...r, status: slug } : r)));
+    let qItens = supabase.from("sistema_producao_itens").update({ status: slug }).eq("pedido_id", pedido.id);
+    if (slug !== "cancelado") qItens = qItens.neq("status", "cancelado");
+    const [itensRes, pedidoRes] = await Promise.all([
+      qItens,
+      supabase.from("sistema_pedidos").update({ status: slug }).eq("id", pedido.id),
+    ]);
+    const erro = itensRes.error || pedidoRes.error;
+    if (erro) {
+      setPedido(p => (p ? { ...p, status: anterior.status } : p));
+      setProducao(anterior.producao);
+      toast.error(`Não foi possível mudar a etapa do pedido. ${erro.message || ""}`);
+    }
+  };
+
   /* Sem linha de produção o item não tem etapa — devolver um status inventado
      mentiria na tela. O badge mostra "Sem status" e o backfill da migration
      20260916130000 resolve a origem. */
@@ -438,7 +487,8 @@ const PedidoForm: React.FC = () => {
       contato_telefone: contatoTelefone || null,
       contato_email: contatoEmail || null,
       vendedor_id: vendedorId || null,
-      status: pedido.status,
+      // status fica de fora: segue o PCP (gatilho no banco) e a troca manual
+      // já grava na hora — regravar aqui voltaria a etapa que estava na tela.
       itens: itens as never,
       subtotal,
       frete_tipo: freteTipo || null,
@@ -575,7 +625,7 @@ const PedidoForm: React.FC = () => {
                 status={pedido.status}
                 nivel="pedido"
                 size="sm"
-                onSelect={slug => setPedido(p => (p ? { ...p, status: slug as Pedido["status"] } : p))}
+                onSelect={slug => void alterarStatusPedido(slug)}
               />
             </div>
           </div>
