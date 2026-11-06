@@ -8,8 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSistema } from "@/contexts/SistemaContext";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 import PainelEmpate from "./financeiro/PainelEmpate";
-import { CUSTO_FIXO_MENSAL_PADRAO, custoPersonalizacaoTerceirizada, faixaDe, taxaCartaoDoMeio } from "@/lib/financeiroRegras";
-import { rotuloPersonalizacao } from "@/lib/personalizacao";
+import { CUSTO_FIXO_MENSAL_PADRAO, faixaDe } from "@/lib/financeiroRegras";
+import { calcularPedido, carregarBaseResultado, type Fin, type ItemFin } from "@/lib/resultadoPedidos";
 
 /* Dashboard por pedido (admin). Todo pedido lançado entra na hora.
    - Bruto (PV) = valor dos produtos, sem frete.
@@ -38,46 +38,6 @@ const paraTexto = (n: number | null | undefined) => (n == null ? "" : String(n).
 const mesLabel = (ano: number, mes: number) =>
   new Date(ano, mes, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
-/** `.in()` em lotes: lista grande de ids estoura o tamanho da URL. */
-async function lerEmLotes<T>(
-  valores: string[],
-  consulta: (lote: string[]) => PromiseLike<{ data: T[] | null; error: { message?: string } | null }>,
-): Promise<{ data: T[]; error: { message?: string } | null }> {
-  const out: T[] = [];
-  for (let i = 0; i < valores.length; i += 150) {
-    const { data, error } = await consulta(valores.slice(i, i + 150));
-    if (error) return { data: out, error };
-    out.push(...(data ?? []));
-  }
-  return { data: out, error: null };
-}
-
-interface PedidoRow {
-  id: string;
-  numero: string;
-  created_at: string;
-  total: number | null;
-  subtotal: number | null;
-  frete_tipo: string | null;
-  frete_valor: number | null;
-  vendedor_id: string | null;
-  pagamento_id: string | null;
-  cliente_id: string | null;
-  cliente_snapshot: { nome?: string } | null;
-  itens: { id?: string; nome?: string; quantidade?: number; precoUnitario?: number; precoCusto?: number; personalizacao?: string; aplicacoes?: number }[] | null;
-}
-interface ItemFin {
-  pedido_id: string;
-  item_id: string;
-  custo_unitario: number | null;
-  custo_personalizacao_unit: number;
-}
-interface Fin {
-  pedido_id: string;
-  taxa_cartao_pct: number | null;
-  frete: number | null;
-  valor_recebido: number;
-}
 type Campo = "taxa_cartao_pct" | "frete" | "valor_recebido";
 type CampoItem = "custo_unitario" | "custo_personalizacao_unit";
 
@@ -100,117 +60,21 @@ export default function DashboardPedidos() {
     // Rede de segurança do "ao vivo": se um evento do realtime se perder.
     refetchInterval: 60 * 1000,
     queryFn: async () => {
-      const { data: peds, error } = await supabase
-        .from("sistema_pedidos")
-        .select("id,numero,created_at,total,subtotal,frete_tipo,frete_valor,vendedor_id,pagamento_id,cliente_id,cliente_snapshot,itens")
-        .neq("status", "cancelado")
-        .gte("created_at", inicio)
-        .lt("created_at", fim)
-        .order("created_at", { ascending: false })
-        .limit(1000);
-      if (error) throw error;
-      const pedidos = (peds ?? []) as unknown as PedidoRow[];
-      const ids = pedidos.map(p => p.id);
-      const numeros = pedidos.map(p => String(p.numero));
-
       const inicioHist = new Date(ano, mes - 3, 1).toISOString();
       const inicioPassado = new Date(ano, mes - 1, 1).toISOString();
-      const [fin, meios, cfg, custos, prod, itemFin, hist, orcs] = await Promise.all([
-        ids.length ? (supabase as any).from("sistema_pedido_financeiro").select("*").in("pedido_id", ids) : { data: [] },
-        (supabase as any).from("sistema_meios_pagamento").select("id,nome,taxa_pct"),
-        (supabase as any).from("sistema_financeiro_config").select("*").limit(1),
-        numeros.length ? lerEmLotes(numeros, lote => (supabase as any).from("sistema_compras_itens")
-          .select("id,producao_item_id,pedido_numero,produto_nome,quantidade,compra:sistema_compras(numero)").in("pedido_numero", lote)) : { data: [], error: null },
-        ids.length ? (supabase as any).from("sistema_producao_itens").select("id,pedido_id,item_id,local_producao,terceirizada_id,tags,status").in("pedido_id", ids) : { data: [] },
-        ids.length ? (supabase as any).from("sistema_item_financeiro").select("*").in("pedido_id", ids) : { data: [] },
+      const [base, hist, orcs] = await Promise.all([
+        carregarBaseResultado({ inicio, fim }),
         // Pedidos dos 3 meses anteriores: comparativo e dicas.
         supabase.from("sistema_pedidos").select("created_at,subtotal")
           .neq("status", "cancelado").gte("created_at", inicioHist).lt("created_at", inicio).limit(5000),
         supabase.from("sistema_orcamentos").select("created_at")
           .gte("created_at", inicioPassado).lt("created_at", fim).limit(5000),
       ]);
-
-      /* Custo real de compra por (pedido, item do pedido): preço que o admin
-         lançou em Compras, média ponderada se o item foi comprado mais de uma
-         vez. Lido direto das tabelas (sem depender da view) e com erro
-         visível — antes uma falha aqui virava custo zero em silêncio. */
-      if (custos.error) toast.error(`Não foi possível ler as compras. ${custos.error.message || ""}`);
-      const compraItens = (custos.data ?? []) as {
-        id: string; producao_item_id: string | null; pedido_numero: string | null;
-        produto_nome: string; quantidade: number; compra: { numero: number } | null;
-      }[];
-      const precos = compraItens.length
-        ? await lerEmLotes(compraItens.map(c => c.id), lote => (supabase as any)
-            .from("sistema_compras_precos").select("compra_item_id,valor_unitario").in("compra_item_id", lote))
-        : { data: [], error: null };
-      if (precos.error) toast.error(`Não foi possível ler os preços de compra. ${precos.error.message || ""}`);
-      const precoPor = new Map<string, number>(
-        ((precos.data ?? []) as { compra_item_id: string; valor_unitario: number }[])
-          .map(x => [x.compra_item_id, Number(x.valor_unitario)]),
-      );
-      type ProdRow = { id: string; pedido_id: string; item_id: string; local_producao: string | null; terceirizada_id: string | null; tags: string[] | null; status: string | null };
-      const prodRows = (prod.data ?? []) as ProdRow[];
-      const itemDoProd = new Map<string, string>(prodRows.map(r => [r.id, `${r.pedido_id}:${r.item_id}`]));
-      // Item que vai (ou foi) pra terceirizada: a personalização é custo de fora.
-      const terceirizado: Record<string, boolean> = {};
-      for (const r of prodRows) {
-        terceirizado[`${r.pedido_id}:${r.item_id}`] =
-          r.local_producao === "terceirizada" || r.local_producao === "fornecedor_para_terceirizada"
-          || !!r.terceirizada_id
-          || (r.status ?? "").includes("terceirizada")
-          || (r.tags ?? []).some(t => t.toUpperCase().startsWith("TERCEIRIZADA"));
-      }
-      const pedidoPorNumero = new Map(pedidos.map(p => [String(p.numero), p]));
-      const norm = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-      const acc: Record<string, { valor: number; qtd: number; compras: Set<number> }> = {};
-      // Item com linha de compra mas sem preço lançado — mostrado no dashboard.
-      const compraSemPreco: Record<string, number[]> = {};
-      for (const ci of compraItens) {
-        const preco = precoPor.get(ci.id);
-        let chaveItem = ci.producao_item_id ? itemDoProd.get(ci.producao_item_id) : undefined;
-        // Linha de compra sem vínculo com o card: casa pelo nº do pedido + nome.
-        if (!chaveItem && ci.pedido_numero) {
-          const ped = pedidoPorNumero.get(String(ci.pedido_numero));
-          const alvo = norm(ci.produto_nome || "");
-          const idx = (ped?.itens ?? []).findIndex(it => {
-            const n = norm(it.nome || "");
-            return n && alvo && (n === alvo || n.startsWith(alvo) || alvo.startsWith(n));
-          });
-          if (ped && idx >= 0) chaveItem = `${ped.id}:${String(ped.itens![idx].id ?? idx)}`;
-        }
-        if (!chaveItem) continue;
-        if (preco == null) {
-          if (ci.compra?.numero != null) (compraSemPreco[chaveItem] ??= []).push(ci.compra.numero);
-          continue;
-        }
-        const a = (acc[chaveItem] ??= { valor: 0, qtd: 0, compras: new Set() });
-        const q = Number(ci.quantidade) || 0;
-        a.valor += q * preco; a.qtd += q;
-        if (ci.compra?.numero != null) a.compras.add(ci.compra.numero);
-      }
-      const custoCompras: Record<string, number> = {};
-      const compraDoItem: Record<string, number[]> = {};
-      for (const [k, a] of Object.entries(acc)) {
-        if (a.qtd > 0) { custoCompras[k] = a.valor / a.qtd; compraDoItem[k] = [...a.compras]; }
-      }
-      const itemFinMap: Record<string, ItemFin> = {};
-      for (const f of (itemFin.data ?? []) as ItemFin[]) itemFinMap[`${f.pedido_id}:${f.item_id}`] = f;
-
       return {
-        pedidos,
-        fin: Object.fromEntries((fin.data ?? []).map((f: Fin) => [f.pedido_id, f])) as Record<string, Fin>,
-        meios: Object.fromEntries((meios.data ?? []).map((m: any) => [m.id, { nome: m.nome as string, taxa: Number(m.taxa_pct) || 0 }])) as Record<string, { nome: string; taxa: number }>,
-        imposto: Number(cfg.data?.[0]?.imposto_pct) || 0,
-        // Colunas novas (migration 20261009120000); sem elas, valem os padrões.
-        custoFixo: Number(cfg.data?.[0]?.custo_fixo_mensal) || CUSTO_FIXO_MENSAL_PADRAO,
+        ...base,
         historico: ((hist.data ?? []) as { created_at: string; subtotal: number | null }[])
           .map(h => ({ created_at: h.created_at, bruto: Number(h.subtotal) || 0 })),
         orcamentos: ((orcs.data ?? []) as { created_at: string }[]).map(o => o.created_at),
-        custoCompras,
-        compraDoItem,
-        compraSemPreco,
-        terceirizado,
-        itemFin: itemFinMap,
       };
     },
   });
@@ -237,52 +101,10 @@ export default function DashboardPedidos() {
   const linhas = useMemo(() => {
     if (!data) return [];
     return data.pedidos.map(p => {
-      const f = data.fin[p.id];
-      const bruto = Number(p.subtotal) || 0;
-      const total = Number(p.total) || 0;
-      const meio = p.pagamento_id ? data.meios[p.pagamento_id] : undefined;
-      const taxaPct = f?.taxa_cartao_pct ?? (meio ? taxaCartaoDoMeio(meio.nome, meio.taxa) : 0);
-      const taxa = total * taxaPct / 100;
-      const imposto = total * data.imposto / 100;
-
-      const produtos = (p.itens ?? []).map((it, idx) => {
-        const itemId = String(it.id ?? idx);
-        const chaveItem = `${p.id}:${itemId}`;
-        const fi = data.itemFin[chaveItem];
-        const qtd = Number(it.quantidade) || 0;
-        const pvUnit = Number(it.precoUnitario) || 0;
-        const compra = data.custoCompras[chaveItem];
-        const catalogo = Number(it.precoCusto) || 0;
-        // Um 0 salvo aqui não esconde o preço lançado na compra.
-        const editado = fi?.custo_unitario != null && (fi.custo_unitario > 0 || compra == null) ? Number(fi.custo_unitario) : null;
-        const custoUnit = editado ?? compra ?? catalogo;
-        const origemCusto = editado != null ? "editado" : compra != null ? "compra" : catalogo > 0 ? "catalogo"
-          : data.compraSemPreco[chaveItem] ? "compra_sem_preco" : "sem";
-        const comprasNum = data.compraDoItem[chaveItem] ?? data.compraSemPreco[chaveItem] ?? [];
-        // Personalização: digitada aqui (> 0) ou, se o item é terceirizado,
-        // o preço da técnica × aplicações. Galpão = 0 (custo interno).
-        const persEditada = Number(fi?.custo_personalizacao_unit) || 0;
-        const persAuto = data.terceirizado[chaveItem] ? custoPersonalizacaoTerceirizada(it.personalizacao, it.aplicacoes) : 0;
-        const persUnit = persEditada > 0 ? persEditada : persAuto;
-        const origemPers = persEditada > 0 ? "editado" : persAuto > 0 ? "auto" : data.terceirizado[chaveItem] ? "sem" : "galpao";
-        return {
-          itemId, nome: it.nome ?? "—", qtd, pvUnit, custoUnit, persUnit, origemCusto, comprasNum, origemPers,
-          tecnica: rotuloPersonalizacao(it.personalizacao), aplicacoes: Number(it.aplicacoes) || 1,
-          pv: qtd * pvUnit, custo: qtd * (custoUnit + persUnit),
-        };
-      });
-      const custoProduto = produtos.reduce((s, x) => s + x.qtd * x.custoUnit, 0);
-      const custoPers = produtos.reduce((s, x) => s + x.qtd * x.persUnit, 0);
-
-      const fob = p.frete_tipo === "FOB" ? Number(p.frete_valor) || 0 : 0;
-      const frete = p.frete_tipo === "FOB" ? 0 : (f?.frete ?? (p.frete_tipo === "CIF" ? Number(p.frete_valor) || 0 : 0));
-      const lucro = bruto - custoProduto - custoPers - imposto - taxa - frete;
-      const recebido = f?.valor_recebido ?? 0;
+      const r = calcularPedido(p, data);
       const cliente = clientes.find(c => c.id === p.cliente_id) as any;
       return {
-        p, f, bruto, total, meio, taxaPct, taxa, imposto, custoProduto, custoPers, frete, fob, produtos, lucro, recebido,
-        aReceber: Math.max(0, total - recebido),
-        baseComissao: bruto - imposto - taxa,
+        ...r,
         clienteNome: cliente?.nome || cliente?.razaoSocial || p.cliente_snapshot?.nome || "—",
         vendedorNome: vendedores.find(v => v.id === p.vendedor_id)?.nome ?? "Sem vendedor",
       };

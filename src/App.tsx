@@ -98,6 +98,7 @@ const SistemaProdutos = lazyRetry(() => import("./pages/sistema/ProdutosCatalogo
 const SistemaClientes = lazyRetry(() => import("./pages/sistema/Clientes.tsx"));
 const SistemaConfiguracoes = lazyRetry(() => import("./pages/sistema/Configuracoes.tsx"));
 const SistemaTrello = lazyRetry(() => import("./pages/sistema/trello/TrelloPage.tsx"));
+const SistemaRelatorios = lazyRetry(() => import("./pages/sistema/relatorios/Relatorios.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -204,6 +205,7 @@ const App = () => (
                 <Route path="clientes" element={<SistemaClientes />} />
                 <Route path="configuracoes" element={<SistemaConfiguracoes />} />
                 <Route path="trello" element={<SistemaTrello />} />
+                <Route path="relatorios" element={<SistemaRelatorios />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
