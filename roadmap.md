@@ -9,3 +9,9 @@
 - [x] Propostas escritas em `docs/seguranca-propostas.md` (bucket privado, A2, A3)
 
 Aguardando decisão do usuário: aplicar bucket `financeiro-docs`, A2 (papéis) e A3 (senha de exclusão).
+
+## PR #30 — publicação
+- [x] Republicar `analisar-conversas-comercial` sem IA e verificar 401 sem sessão.
+- [x] Manter `LOVABLE_API_KEY` intacto.
+- [x] Revisar os quatro alertas de leitura pública, sem alterar permissões: dados de catálogo/preços, sem campos pessoais; leitura inclui produtos inativos.
+- [ ] Publicar o site após a decisão do usuário sobre os acessos revisados.
