@@ -2,7 +2,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Suspense, useCallback, useEffect } from "react";
 import {
   FileText, ShoppingCart, Boxes, Package, Globe, User, Users, Settings, ChevronDown, Kanban, LayoutDashboard, Wallet,
-  ShoppingBag, LogOut, SquareKanban,
+  ShoppingBag, LogOut, SquareKanban, FileBarChart,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -24,6 +24,7 @@ const menu: { icon: typeof LayoutDashboard; label: string; path: string; chunk?:
   { icon: Boxes, label: "Estoque", path: "/sistema/estoque", chunk: () => import("./Estoque.tsx") },
   { icon: Package, label: "Produtos", path: "/sistema/produtos", chunk: () => import("./ProdutosCatalogo.tsx") },
   { icon: Users, label: "Clientes", path: "/sistema/clientes", chunk: () => import("./Clientes.tsx") },
+  { icon: FileBarChart, label: "Relatórios", path: "/sistema/relatorios", chunk: () => import("./relatorios/Relatorios.tsx"), soAdmin: true },
   { icon: Settings, label: "Configurações", path: "/sistema/configuracoes", chunk: () => import("./Configuracoes.tsx") },
 ];
 
