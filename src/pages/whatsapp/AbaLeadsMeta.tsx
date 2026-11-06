@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { Bloco, Kpi, Vazio, chamar, dataCurta, media, numero, pct, tabela, type ConversaComAnalise, type LeadMeta } from "./comum";
+import { Bloco, Kpi, Vazio, chamar, dataCurta, numero, pct, tabela, type ConversaComOrigem, type LeadMeta } from "./comum";
 
 /* Leads do Meta Ads (planilha) x conversas do WhatsApp. A planilha entra
    por arquivo CSV (Google Planilhas: Arquivo > Fazer download > .csv) ou
@@ -91,8 +91,8 @@ async function hash(texto: string) {
 
 export default function AbaLeadsMeta({ leads, conversas, onAbrir }: {
   leads: LeadMeta[];
-  conversas: ConversaComAnalise[];
-  onAbrir: (c: ConversaComAnalise) => void;
+  conversas: ConversaComOrigem[];
+  onAbrir: (c: ConversaComOrigem) => void;
 }) {
   const qc = useQueryClient();
   const [link, setLink] = useState("");
@@ -208,18 +208,16 @@ export default function AbaLeadsMeta({ leads, conversas, onAbrir }: {
   const visiveis = leads.filter((l) =>
     filtro === "todos" || (filtro === "vinculados" && l.conversa_id) || (filtro === "sem" && !l.conversa_id) || (filtro === "conferir" && l.vinculo_metodo === "horario"));
 
-  // Por campanha: leads, quantos viraram conversa, nota média e vendas.
+  // Por campanha: leads, quantos viraram conversa e em quantas o consultor entrou.
   const porCampanha = useMemo(() => {
     const m = new Map<string, LeadMeta[]>();
     for (const l of leads) m.set(l.campanha ?? "(sem campanha)", [...(m.get(l.campanha ?? "(sem campanha)") ?? []), l]);
     return [...m.entries()].map(([campanha, ls]) => {
-      const cs = ls.map((l) => (l.conversa_id ? porId.get(l.conversa_id) : undefined)).filter(Boolean) as ConversaComAnalise[];
-      const an = cs.filter((c) => c.analise);
+      const cs = ls.map((l) => (l.conversa_id ? porId.get(l.conversa_id) : undefined)).filter(Boolean) as ConversaComOrigem[];
       return {
         campanha, leads: ls.length, conversas: cs.length,
-        nota: media(an.map((c) => c.analise!.nota).filter((n): n is number => n != null)),
-        vendas: an.filter((c) => c.analise!.resultado === "venda").length,
-        analisadas: an.length,
+        consultorEntrou: cs.filter((c) => c.mensagens_consultor).length,
+        semResposta: cs.filter((c) => c.cliente_sem_resposta).length,
       };
     }).sort((a, b) => b.leads - a.leads);
   }, [leads, porId]);
@@ -325,9 +323,8 @@ export default function AbaLeadsMeta({ leads, conversas, onAbrir }: {
                   <TableHead>Campanha</TableHead>
                   <TableHead className="text-right">Leads</TableHead>
                   <TableHead className="text-right">Viraram conversa</TableHead>
-                  <TableHead className="text-right">Analisadas</TableHead>
-                  <TableHead className="text-right">Nota média</TableHead>
-                  <TableHead className="text-right">Vendas</TableHead>
+                  <TableHead className="text-right">Consultor entrou</TableHead>
+                  <TableHead className="text-right">Sem resposta</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -336,9 +333,8 @@ export default function AbaLeadsMeta({ leads, conversas, onAbrir }: {
                     <TableCell className="font-medium">{c.campanha}</TableCell>
                     <TableCell className="text-right">{c.leads}</TableCell>
                     <TableCell className="text-right">{c.conversas} <span className="text-muted-foreground">({pct(c.conversas, c.leads)})</span></TableCell>
-                    <TableCell className="text-right">{c.analisadas}</TableCell>
-                    <TableCell className="text-right">{c.nota?.toFixed(1) ?? "—"}</TableCell>
-                    <TableCell className="text-right">{c.vendas}</TableCell>
+                    <TableCell className="text-right">{c.consultorEntrou}</TableCell>
+                    <TableCell className="text-right">{c.semResposta}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

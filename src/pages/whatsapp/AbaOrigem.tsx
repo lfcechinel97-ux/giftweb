@@ -6,31 +6,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-import { Bloco, ROTULO_ORIGEM, Vazio, corNota, media, normalizarTexto, pct, tabela, type ConversaComAnalise, type Regra } from "./comum";
+import { Bloco, ROTULO_ORIGEM, Vazio, duracao, mediana, normalizarTexto, pct, tabela, type ConversaComOrigem, type Regra } from "./comum";
 
 /* Aba Origem: leads por origem/campanha e as mensagens iniciais agrupadas,
    para criar regras "1ª mensagem contém X -> Google/Meta (campanha)". */
 
-export default function AbaOrigem({ conversas, regras, onAbrir }: { conversas: ConversaComAnalise[]; regras: Regra[]; onAbrir: (c: ConversaComAnalise) => void }) {
+export default function AbaOrigem({ conversas, regras, onAbrir }: { conversas: ConversaComOrigem[]; regras: Regra[]; onAbrir: (c: ConversaComOrigem) => void }) {
   const qc = useQueryClient();
   const [nova, setNova] = useState<{ padrao: string; origem: string; campanha: string } | null>(null);
 
   const porOrigem = useMemo(() => {
-    const m = new Map<string, ConversaComAnalise[]>();
+    const m = new Map<string, ConversaComOrigem[]>();
     for (const c of conversas) {
       const chave = c.campanha ? `${c.origem}|${c.campanha}` : c.origem;
       m.set(chave, [...(m.get(chave) ?? []), c]);
     }
     return [...m.entries()].map(([chave, cs]) => {
       const [origem, campanha] = chave.split("|");
-      const an = cs.filter((c) => c.analise);
       return {
         chave, origem, campanha,
         leads: cs.length,
-        analisadas: an.length,
-        nota: media(an.map((c) => c.analise!.nota).filter((n): n is number => n != null)),
-        vendas: an.filter((c) => c.analise!.resultado === "venda").length,
+        consultorEntrou: cs.filter((c) => c.mensagens_consultor).length,
+        primeiraResposta: mediana(cs.map((c) => c.tempo_primeira_resposta_seg).filter((n): n is number => n != null)),
         semResposta: cs.filter((c) => c.cliente_sem_resposta).length,
       };
     }).sort((a, b) => b.leads - a.leads);
@@ -38,7 +35,7 @@ export default function AbaOrigem({ conversas, regras, onAbrir }: { conversas: C
 
   // Mensagens iniciais agrupadas: o texto pré-preenchido de cada anúncio aparece muitas vezes igual.
   const grupos = useMemo(() => {
-    const m = new Map<string, { texto: string; conversas: ConversaComAnalise[] }>();
+    const m = new Map<string, { texto: string; conversas: ConversaComOrigem[] }>();
     for (const c of conversas) {
       const texto = c.primeira_mensagem_cliente?.trim();
       if (!texto) continue;
@@ -74,11 +71,10 @@ export default function AbaOrigem({ conversas, regras, onAbrir }: { conversas: C
               <TableHeader>
                 <TableRow>
                   <TableHead>Origem</TableHead>
-                  <TableHead className="text-right">Leads</TableHead>
-                  <TableHead className="text-right">Analisadas</TableHead>
-                  <TableHead className="text-right">Nota média</TableHead>
-                  <TableHead className="text-right">Vendas</TableHead>
-                  <TableHead className="text-right">Conversão</TableHead>
+                  <TableHead className="text-right">Conversas</TableHead>
+                  <TableHead className="text-right">% do total</TableHead>
+                  <TableHead className="text-right">Consultor entrou</TableHead>
+                  <TableHead className="text-right">1ª resposta (mediana)</TableHead>
                   <TableHead className="text-right">Sem resposta</TableHead>
                 </TableRow>
               </TableHeader>
@@ -90,10 +86,9 @@ export default function AbaOrigem({ conversas, regras, onAbrir }: { conversas: C
                       {o.campanha && <span className="text-muted-foreground font-normal"> · {o.campanha}</span>}
                     </TableCell>
                     <TableCell className="text-right">{o.leads}</TableCell>
-                    <TableCell className="text-right">{o.analisadas}</TableCell>
-                    <TableCell className={cn("text-right font-semibold", corNota(o.nota))}>{o.nota?.toFixed(1) ?? "—"}</TableCell>
-                    <TableCell className="text-right">{o.vendas}</TableCell>
-                    <TableCell className="text-right">{pct(o.vendas, o.analisadas)}</TableCell>
+                    <TableCell className="text-right">{pct(o.leads, conversas.length)}</TableCell>
+                    <TableCell className="text-right">{pct(o.consultorEntrou, o.leads)}</TableCell>
+                    <TableCell className="text-right">{duracao(o.primeiraResposta)}</TableCell>
                     <TableCell className="text-right">{o.semResposta}</TableCell>
                   </TableRow>
                 ))}
@@ -103,7 +98,7 @@ export default function AbaOrigem({ conversas, regras, onAbrir }: { conversas: C
         ) : <Vazio />}
         <p className="text-xs text-muted-foreground mt-2">
           A origem vem, nesta ordem: lead da planilha do Meta (aba Leads Meta), regras abaixo (1ª mensagem contém o texto) e o que o Data Crazy mandar do anúncio
-          (ex.: referral de anúncio do Meta); se não houver nada, fica "Não identificada".
+          (ex.: referral de anúncio do Meta); se não houver nada, fica "Sem sinal de anúncio" (provável orgânico ou indicação).
         </p>
       </Bloco>
 
