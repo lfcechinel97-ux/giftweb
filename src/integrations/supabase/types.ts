@@ -124,6 +124,39 @@ export type Database = {
         }
         Relationships: []
       }
+      catalogo_whatsapp_historico: {
+        Row: {
+          codigos: string[]
+          created_at: string
+          id: string
+          nao_encontrados: string[]
+          paginas: number
+          titulo: string
+          user_id: string | null
+          usuario: string | null
+        }
+        Insert: {
+          codigos?: string[]
+          created_at?: string
+          id?: string
+          nao_encontrados?: string[]
+          paginas?: number
+          titulo?: string
+          user_id?: string | null
+          usuario?: string | null
+        }
+        Update: {
+          codigos?: string[]
+          created_at?: string
+          id?: string
+          nao_encontrados?: string[]
+          paginas?: number
+          titulo?: string
+          user_id?: string | null
+          usuario?: string | null
+        }
+        Relationships: []
+      }
       comercial_analises: {
         Row: {
           bruto: Json | null
@@ -3380,6 +3413,385 @@ export type Database = {
         }
         Relationships: []
       }
+      trello_attachments: {
+        Row: {
+          card_id: string
+          created_at: string
+          file_name: string
+          file_url: string
+          id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          file_name: string
+          file_url: string
+          id?: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_attachments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "trello_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_board_members: {
+        Row: {
+          board_id: string
+          created_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_board_members_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "trello_boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_boards: {
+        Row: {
+          background: string | null
+          created_at: string
+          id: string
+          owner_id: string
+          title: string
+        }
+        Insert: {
+          background?: string | null
+          created_at?: string
+          id?: string
+          owner_id?: string
+          title: string
+        }
+        Update: {
+          background?: string | null
+          created_at?: string
+          id?: string
+          owner_id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      trello_card_labels: {
+        Row: {
+          card_id: string
+          label_id: string
+        }
+        Insert: {
+          card_id: string
+          label_id: string
+        }
+        Update: {
+          card_id?: string
+          label_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_card_labels_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "trello_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trello_card_labels_label_id_fkey"
+            columns: ["label_id"]
+            isOneToOne: false
+            referencedRelation: "trello_labels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_cards: {
+        Row: {
+          archived: boolean
+          assignee_id: string | null
+          board_id: string
+          column_id: string
+          completed: boolean
+          cover_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_at: string | null
+          has_time: boolean
+          id: string
+          position: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          archived?: boolean
+          assignee_id?: string | null
+          board_id: string
+          column_id: string
+          completed?: boolean
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_at?: string | null
+          has_time?: boolean
+          id?: string
+          position?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          archived?: boolean
+          assignee_id?: string | null
+          board_id?: string
+          column_id?: string
+          completed?: boolean
+          cover_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_at?: string | null
+          has_time?: boolean
+          id?: string
+          position?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_cards_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "trello_boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trello_cards_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "trello_columns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_checklist_items: {
+        Row: {
+          card_id: string
+          done: boolean
+          id: string
+          position: number
+          text: string
+        }
+        Insert: {
+          card_id: string
+          done?: boolean
+          id?: string
+          position?: number
+          text: string
+        }
+        Update: {
+          card_id?: string
+          done?: boolean
+          id?: string
+          position?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_checklist_items_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "trello_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_columns: {
+        Row: {
+          board_id: string
+          created_at: string
+          id: string
+          position: number
+          title: string
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          id?: string
+          position?: number
+          title: string
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          id?: string
+          position?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_columns_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "trello_boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_comments: {
+        Row: {
+          card_id: string
+          created_at: string
+          id: string
+          text: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          id?: string
+          text: string
+          user_id?: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          id?: string
+          text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_comments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "trello_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_labels: {
+        Row: {
+          board_id: string
+          color: string
+          id: string
+          name: string
+        }
+        Insert: {
+          board_id: string
+          color: string
+          id?: string
+          name?: string
+        }
+        Update: {
+          board_id?: string
+          color?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_labels_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "trello_boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_notifications: {
+        Row: {
+          body: string | null
+          card_id: string | null
+          created_at: string
+          id: string
+          read: boolean
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          card_id?: string | null
+          created_at?: string
+          id?: string
+          read?: boolean
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          card_id?: string | null
+          created_at?: string
+          id?: string
+          read?: boolean
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_notifications_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "trello_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trello_reminders: {
+        Row: {
+          card_id: string
+          id: string
+          remind_at: string
+          sent: boolean
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          id?: string
+          remind_at: string
+          sent?: boolean
+          user_id?: string
+        }
+        Update: {
+          card_id?: string
+          id?: string
+          remind_at?: string
+          sent?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trello_reminders_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "trello_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -4025,6 +4437,20 @@ export type Database = {
         Returns: boolean
       }
       terceirizada_id_atual: { Args: never; Returns: string }
+      trello_card_acesso: { Args: { p_card: string }; Returns: boolean }
+      trello_dono: { Args: { p_board: string }; Returns: boolean }
+      trello_listar_usuarios: {
+        Args: never
+        Returns: {
+          email: string
+          nome: string
+          user_id: string
+        }[]
+      }
+      trello_nome_usuario: { Args: { p_user: string }; Returns: string }
+      trello_processar_lembretes: { Args: never; Returns: number }
+      trello_storage_acesso: { Args: { p_name: string }; Returns: boolean }
+      trello_tem_acesso: { Args: { p_board: string }; Returns: boolean }
       unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
