@@ -66,7 +66,7 @@ serve(async (req) => {
     const original = new Uint8Array(await resp.arrayBuffer());
     if (original.byteLength > MAX_BYTES) return erro(413, "Imagem grande demais");
 
-    let corpo = original;
+    let corpo: Uint8Array = original;
     let tipo = resp.headers.get("content-type") ?? "image/jpeg";
     try {
       corpo = await reduzir(original);
