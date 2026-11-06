@@ -133,13 +133,16 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
       toast.error("Informe o documento (CNPJ/CPF).");
       return;
     }
+    let salvo: Cliente = c;
     if (cliente) {
       updateCliente(c.id, c);
     } else {
-      addCliente(c);
+      // addCliente gera o id definitivo — repassa o cliente retornado para que
+      // quem abriu o diálogo (ex.: orçamento) consiga selecioná-lo direto.
+      salvo = addCliente(c);
     }
     toast.success("Cliente salvo!");
-    onSaved?.(c);
+    onSaved?.(salvo);
     onOpenChange(false);
   };
 
