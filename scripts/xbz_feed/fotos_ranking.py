@@ -82,7 +82,11 @@ def get(sessao: requests.Session, url: str) -> requests.Response | None:
 
 def candidatos_url(item: dict) -> list[str]:
     cod = item["codigo"]
-    c = [cod, re.sub(r"[A-Z]+$", "", cod), item["variacao"], item["variacao"].split("-")[0]]
+    sem_prefixo = re.sub(r"^[^0-9]*@", "", cod)          # P@18596 -> 18596
+    m = re.match(r"^(\d+)([A-Z]*)$", sem_prefixo)
+    zerado = m.group(1).zfill(5) + m.group(2) if m else ""  # 9139A -> 09139A
+    c = [cod, zerado, sem_prefixo, re.sub(r"[A-Z]+$", "", cod),
+         item["variacao"], item["variacao"].split("-")[0]]
     vistos, saida = set(), []
     for x in c:
         if x and x not in vistos:
