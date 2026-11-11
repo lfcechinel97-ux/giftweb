@@ -131,12 +131,14 @@ São referências padrão, **não cotação do seu workspace**, antes de franqui
 
 ## 6. Plano proposto para aprovação
 
-1. Registrar linha de base em janelas de uso real e sync, com métricas, consultas e erros; sem teste de carga agressivo em produção.
-2. Corrigir a consulta de maior preço com índice direcionado e cache; validar plano e catálogo.
-3. Otimizar contagens e busca textual preservando os resultados de negócio.
-4. Tornar leituras de orçamentos leves e propor execução separada da migração de imagens antigas após export e validação por amostra; nenhuma exclusão de dados.
-5. Medir e otimizar RLS redundante com testes de todos os papéis, sem ampliar permissões.
-6. Rever custo de revalidações e sincronizações somente onde houver medição; manter frequências atuais até aprovação específica.
-7. Comparar os mesmos fluxos antes/depois: catálogo, quantidade do orçamento, pedido, PCP, Kanban e CRM. Reavaliar Mini separadamente; **esta aprovação não autoriza redimensionamento**.
+**Decisão do usuário: somente acompanhar a estabilidade.** As otimizações descritas acima ficam como recomendações, não serão executadas.
+
+1. Fazer acompanhamento somente de leitura durante a sessão: disponibilidade, RAM, conexões, disco e consultas lentas.
+2. Comparar as amostras sem confundir alertas históricos com pressão atual. Na amostra mais recente, banco e pool estão funcionando, RAM **59%**, conexões **17/60**, clientes do pool **1/200** e disco **12%**.
+3. Investigar em leitura o contador de transações desfeitas: passou de **1 para 1.963** entre amostras. A busca recente nos logs não retornou erros que expliquem o aumento; não atribuir causa sem evidência. Isso merece atenção mesmo sem saturação de RAM/conexões.
+4. Se o site ficar sem dados novamente ou surgir novo alerta, conferir disponibilidade e métricas naquele momento e apresentar o resultado antes de qualquer intervenção.
+5. Não alterar instância, índices, RLS, dados, frequências de atualização ou tarefas agendadas. Não instalar monitoramento nem criar jobs.
+
+**Limite do acompanhamento:** as verificações são pontuais enquanto esta sessão executa; não há acompanhamento contínuo por este assistente após o fim da resposta. Para uma nova conferência, enviar uma mensagem, preferencialmente no momento da lentidão ou do alerta.
 
 Não executar VACUUM pesado, limpeza em massa, mudanças de cron, alteração de permissões de negócio ou redimensionamento nesta etapa sem aprovação específica. Estatísticas parciais pós-reinício, como contagens zeradas de tabelas que contêm dados, não são evidência de tabela vazia ou ausência de manutenção.
