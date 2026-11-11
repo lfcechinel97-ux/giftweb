@@ -1,0 +1,79 @@
+# Volumes de despacho (`/medidadespacho`)
+
+Calculadora interna: SKU(s) + quantidade → quantos volumes, peso real, peso
+cubado e dimensão de cada volume. Atrás do `AdminGuard` (qualquer pessoa da
+equipe com conta: admin, gerente, vendedor), com `noindex`.
+
+- Página: `src/pages/MedidaDespacho.tsx` (rota em `src/App.tsx`); componentes em `src/pages/medidaDespacho/`.
+- Núcleo (sem React, com testes): `src/lib/medidaDespacho/`
+  - `regras.ts`: 0 = ausente, palavras de item cilíndrico/dobrável, mediana.
+  - `caixaMaster.ts`: classificação das linhas da planilha master e configurações por produto.
+  - `fontes.ts`: de onde vem a medida e o peso de cada produto (hierarquia, alertas, confiança).
+  - `calculo.ts`: encaixe físico, preenchimento sequencial dos volumes, cubagem, sugestão do último volume.
+  - `resumo.ts`: texto para WhatsApp/orçamento.
+  - `dados.ts` / `importarMaster.ts`: leitura do Supabase e importação da planilha.
+  - `medidaDespacho.test.ts`: casos de teste (`npx vitest run src/lib/medidaDespacho`).
+
+## Como rodar
+
+1. Rodar `supabase/migrations/20261111120000_medidadespacho.sql` no SQL Editor (idempotente).
+2. `npm run dev` e abrir `/medidadespacho` logado.
+3. Em **Dados → Planilha de caixa master**, importar `Medidas_Caixa_*.xlsx`.
+
+## De onde vêm os dados
+
+- **API XBZ**: não é chamada pela página. As medidas (peso em g, altura,
+  largura, profundidade em cm) vêm do `products_cache`, que a edge function
+  `sync-products` já atualiza todo dia às 05h (pg_cron, migration
+  `20260929120000_agendamento_sync_produtos.sql`). A URL com CNPJ e token
+  fica só no secret `XBZ_API_URL` da edge function — nunca no front nem no
+  repositório. O botão **Atualizar agora** chama a mesma `sync-products`
+  (≈3 min). O `0` da API já vira `NULL` no sync e, por garantia, a calculadora
+  trata qualquer `0` como ausente.
+- **Produto** = `codigo_prefixo` do `products_cache` (CodigoAmigavel da XBZ,
+  ex.: `01116`); as cores são variantes e compartilham a medida.
+- **Caixa master** (`xbz_caixa_master`): ligada pela `REFERÊNCIA` sem os `#`
+  (`#10078#-AZU` → `10078-AZU`) = CodigoComposto = `products_cache.codigo_amigavel`.
+  O `ID` (X000272) é guardado, mas o `products_cache` não tem o CodigoXbz.
+
+## Reimportar a planilha master
+
+Na própria página (Dados → Escolher planilha → Importar). A planilha é lida no
+navegador, cada linha é classificada e a tabela é **substituída** numa
+transação (RPC `importar_caixa_master`). Classificação:
+
+| status | quando | entra no cálculo? |
+|---|---|---|
+| `revisar` | dimensão vazia/≤ 0, dimensão > 120 cm, qtd ≤ 0 ou > 20.000, volume por unidade < 1 cm³ (ex.: caixas 1×1×1) | não |
+| `inativo` | referência não existe no `products_cache` (descontinuado) | não |
+| `ok` | o resto | sim |
+
+Para corrigir uma linha em revisão: corrigir na planilha e importar de novo.
+IDs repetidos com caixas diferentes: todas as configurações ficam; o padrão
+é a **mediana do volume por unidade**, e o vendedor pode escolher outra.
+
+## Cálculo
+
+Prioridade da medida (por produto):
+
+0. **Manual** – o que o vendedor digitou na linha (vence tudo: é o que ele está vendo).
+1. **Calibrado** – mediana dos despachos reais (Fase 3); sem fator de aproveitamento.
+2. **Override** – medida fechada/peso/fator de compressão salvos (`medidas_override`).
+3. **Caixa master** – `vol_un = L×A×C da master ÷ qtd`, aproveitamento 0,90.
+4. **API** – 3 dimensões > 0 × fator de compressão, aproveitamento 0,85.
+   Cilíndrico (CANETA, LÁPIS, COPO…) sem profundidade → profundidade = largura.
+
+Peso: manual > override > API > calibrado. Sem medida: "sem medida — preencha"
+(nunca calcula com zero). Cada unidade "gasta" `vol_un ÷ aproveitamento` da
+caixa; as caixas são preenchidas do maior para o menor item, misturando SKUs,
+até acabar o volume ou o peso (`peso máx − tara`). Peso cubado =
+`m³ da caixa × fator` (300 rodoviário / 167 aéreo). Último volume parcial:
+sugere a mesma largura×comprimento com altura proporcional à ocupação, de 5 em
+5 cm, mínimo 10 cm.
+
+Confiança: calibrado por `n` (< 3 baixa, 3–9 média, ≥ 10 alta); override alta;
+caixa master média; API média (baixa se dobrável sem compressão, profundidade
+assumida ou medida > 120 cm); manual baixa.
+
+Valores padrão em `calc_config` (caixa 60×40×40, 25 kg, tara 0, fatores 0,85 e
+0,90, cubagem 300/167). Editar direto na tabela; a tela usa como padrão.
