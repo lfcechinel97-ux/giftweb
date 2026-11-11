@@ -77,3 +77,14 @@ assumida ou medida > 120 cm); manual baixa.
 
 Valores padrão em `calc_config` (caixa 60×40×40, 25 kg, tara 0, fatores 0,85 e
 0,90, cubagem 300/167). Editar direto na tabela; a tela usa como padrão.
+
+## 3D (ilustrativo)
+
+Botão **Ver em 3D** no resultado. `three@0.170.0` (versão fixa), carregado só
+ao abrir (`Visualizador3D.tsx`, chunk separado). `empacotamento.ts` monta cada
+volume em camadas com prateleiras 2D, testando as 6 orientações de cada SKU;
+um `InstancedMesh` por SKU aguenta milhares de unidades. Sem dimensões reais
+(só caixa master/calibrado), a unidade vira um paralelepípedo com o volume
+efetivo e as proporções da caixa master ("forma aproximada"). Se o 3D couber
+menos unidades do que o cálculo, aparece o aviso — o cálculo por volume
+continua sendo o oficial.

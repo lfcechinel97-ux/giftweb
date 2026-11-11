@@ -1,10 +1,11 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useQueryClient } from "@tanstack/react-query";
-import { ImageOff, Loader2, LogOut, Plus, RotateCcw, Search } from "lucide-react";
+import { Box, ImageOff, Loader2, LogOut, Plus, RotateCcw, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { calcularVolumes, type ItemCalculo } from "@/lib/medidaDespacho/calculo";
 import { buscarProdutos, CONFIG_PADRAO, db, type ProdutoIndice } from "@/lib/medidaDespacho/dados";
+import { formaParaDesenho, type Forma } from "@/lib/medidaDespacho/empacotamento";
 import type { Calibrado } from "@/lib/medidaDespacho/fontes";
 import BlocoDados from "./medidaDespacho/BlocoDados";
 import BlocoResultado from "./medidaDespacho/BlocoResultado";
@@ -31,6 +32,8 @@ const caixaDoConfig = (c: typeof CONFIG_PADRAO): CaixaForm => ({
 });
 
 const SEM_CALIBRADOS = new Map<string, Calibrado>();
+// Three.js só é baixado quando alguém abre o 3D
+const Visualizador3D = lazy(() => import("./medidaDespacho/Visualizador3D"));
 
 export default function MedidaDespacho() {
   const dados = useDadosDespacho();
@@ -40,6 +43,7 @@ export default function MedidaDespacho() {
   const [linhas, setLinhas] = useState<LinhaForm[]>([]);
   const [email, setEmail] = useState<string | null>(null);
   const configAplicada = useRef(false);
+  const [ver3d, setVer3d] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
@@ -77,6 +81,14 @@ export default function MedidaDespacho() {
       .map((r) => ({ id: String(r.linha.uid), rotulo: rotulos.get(String(r.linha.uid))!, qtd: r.qtd, medida: r.medida! }));
     return calcularVolumes(itens, params);
   }, [resolvidas, params, rotulos]);
+  const formas = useMemo(() => {
+    const m = new Map<string, Forma>();
+    for (const r of resolvidas) {
+      const f = r.medida && formaParaDesenho(r.medida);
+      if (f) m.set(String(r.linha.uid), f);
+    }
+    return m;
+  }, [resolvidas]);
   const erroPorLinha = useMemo(() => new Map((resultado?.erros ?? []).map((e) => [e.id, e.texto])), [resultado]);
 
   const mudar = (uid: number, m: Partial<LinhaForm>) => setLinhas((ls) => ls.map((l) => (l.uid === uid ? { ...l, ...m } : l)));
@@ -196,7 +208,21 @@ export default function MedidaDespacho() {
         </Bloco>
 
         {resultado && params && (
-          <BlocoResultado resultado={resultado} caixa={params.caixa} rotuloDe={(id) => rotulos.get(id) ?? id} />
+          <BlocoResultado
+            resultado={resultado}
+            caixa={params.caixa}
+            rotuloDe={(id) => rotulos.get(id) ?? id}
+            acaoExtra={
+              <button type="button" onClick={() => setVer3d(true)} className="flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                <Box className="h-4 w-4" /> Ver em 3D
+              </button>
+            }
+          />
+        )}
+        {ver3d && resultado && params && resultado.volumes.length > 0 && (
+          <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40"><Loader2 className="h-8 w-8 animate-spin text-white" /></div>}>
+            <Visualizador3D volumes={resultado.volumes} caixa={params.caixa} formas={formas} rotulos={rotulos} onFechar={() => setVer3d(false)} />
+          </Suspense>
         )}
 
         <BlocoDados

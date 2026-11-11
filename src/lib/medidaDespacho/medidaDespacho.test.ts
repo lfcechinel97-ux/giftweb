@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { calcularVolumes, type ParamsCalculo } from "./calculo";
 import { classificarLinhaMaster, configsMaster } from "./caixaMaster";
+import { encaixar, formaParaDesenho, type Posicao } from "./empacotamento";
 import { resolverMedida, type ProdutoApi } from "./fontes";
 import { ehDobravel, medida, normalizarReferencia } from "./regras";
 import { resumoTexto } from "./resumo";
@@ -144,5 +145,44 @@ describe("resultado", () => {
     expect(ultimo.sugestao?.caixa).toEqual({ largura: 60, altura: 25, comprimento: 40 });
     expect(r.volumes[0].pesoCubadoKg).toBeCloseTo(28.8, 6);
     expect(resumoTexto(r, PARAMS.caixa)).toContain("2 volumes de 60×40×40 cm: 1 cheio (6,2 kg) + 1 parcial 60×40×25 (3,8 kg).");
+  });
+});
+
+describe("encaixe 3D (ilustrativo)", () => {
+  const caixa = { largura: 60, altura: 40, comprimento: 40 };
+  const semSobreposicao = (ps: Posicao[]) =>
+    ps.every((a, i) => ps.slice(i + 1).every((b) =>
+      a.x + a.w <= b.x + 1e-6 || b.x + b.w <= a.x + 1e-6 || a.y + a.h <= b.y + 1e-6 || b.y + b.h <= a.y + 1e-6 || a.z + a.d <= b.z + 1e-6 || b.z + b.d <= a.z + 1e-6));
+  const dentro = (ps: Posicao[]) => ps.every((p) => p.x + p.w <= 60 + 1e-6 && p.y + p.h <= 40 + 1e-6 && p.z + p.d <= 40 + 1e-6);
+
+  it("cubos de 10 cm: 96 cabem; 81 pedidos entram todos", () => {
+    expect(encaixar([{ id: "a", qtd: 200, dims: [10, 10, 10] }], caixa).colocadas).toBe(96);
+    const r = encaixar([{ id: "a", qtd: 81, dims: [10, 10, 10] }], caixa);
+    expect(r.colocadas).toBe(81);
+    expect(semSobreposicao(r.porItem.get("a")!)).toBe(true);
+  });
+
+  it("testa orientações e mistura SKUs sem sobrepor nem sair da caixa", () => {
+    const r = encaixar([{ id: "copo", qtd: 20, dims: [8, 10, 8] }, { id: "caneta", qtd: 50, dims: [1, 14, 1] }, { id: "livro", qtd: 4, dims: [35, 3, 25] }], caixa);
+    expect(r.colocadas).toBe(74);
+    const todas = [...r.porItem.values()].flat();
+    expect(semSobreposicao(todas)).toBe(true);
+    expect(dentro(todas)).toBe(true);
+  });
+
+  it("item que não cabe não é posicionado; 1.000+ unidades rodam rápido", () => {
+    expect(encaixar([{ id: "a", qtd: 1, dims: [70, 10, 10] }], caixa).colocadas).toBe(0);
+    const t = performance.now();
+    const r = encaixar([{ id: "a", qtd: 5000, dims: [2, 2, 2] }], caixa);
+    expect(r.colocadas).toBe(5000);
+    expect(performance.now() - t).toBeLessThan(200);
+  });
+
+  it("só caixa master: forma aproximada com o volume efetivo e as proporções da master", () => {
+    const m = resolverMedida({ produto: produto(), fatores: FATORES, configsMaster: configsMaster([masterOk(38, 48, 38, 50)]) });
+    const f = formaParaDesenho(m)!;
+    expect(f.aproximada).toBe(true);
+    expect(f.dims[0] * f.dims[1] * f.dims[2]).toBeCloseTo(1386.24, 3);
+    expect(f.dims[1] / f.dims[0]).toBeCloseTo(48 / 38, 6);
   });
 });
