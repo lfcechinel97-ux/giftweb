@@ -51,6 +51,8 @@ const OpTerceirizada = lazyRetry(() => import("./pages/OpTerceirizada.tsx"));
 const PcpTerceirizada = lazyRetry(() => import("./pages/PcpTerceirizada.tsx"));
 const MockupStudio = lazyRetry(() => import("./pages/MockupStudio.tsx"));
 const CartelaDtf = lazyRetry(() => import("./pages/CartelaDtf.tsx"));
+const MedidaDespacho = lazyRetry(() => import("./pages/MedidaDespacho.tsx"));
+const MedidaDespachoCalibrar = lazyRetry(() => import("./pages/MedidaDespachoCalibrar.tsx"));
 const CatalogoWhatsApp = lazyRetry(() => import("./pages/CatalogoWhatsApp.tsx"));
 const WhatsApp = lazyRetry(() => import("./pages/WhatsApp.tsx"));
 const AdminLayout = lazyRetry(() => import("./pages/admin/AdminLayout.tsx"));
@@ -144,6 +146,8 @@ const App = () => (
               <Route path="/pcp/terceirizada" element={<PcpTerceirizada />} />
               <Route path="/mockup" element={<AdminGuard><MockupStudio /></AdminGuard>} />
               <Route path="/carteladtf" element={<AdminGuard><CartelaDtf /></AdminGuard>} />
+              <Route path="/medidadespacho" element={<AdminGuard><MedidaDespacho /></AdminGuard>} />
+              <Route path="/medidadespacho/calibrar" element={<AdminGuard><MedidaDespachoCalibrar /></AdminGuard>} />
               <Route path="/catalogo-whatsapp" element={<AdminGuard><CatalogoWhatsApp /></AdminGuard>} />
               <Route path="/fotocatalogo" element={<AdminGuard><CatalogoWhatsApp /></AdminGuard>} />
               <Route path="/whatsapp" element={<AdminGuard><WhatsApp /></AdminGuard>} />
