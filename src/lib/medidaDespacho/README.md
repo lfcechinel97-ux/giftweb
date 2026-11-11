@@ -88,3 +88,30 @@ um `InstancedMesh` por SKU aguenta milhares de unidades. Sem dimensões reais
 efetivo e as proporções da caixa master ("forma aproximada"). Se o 3D couber
 menos unidades do que o cálculo, aparece o aviso — o cálculo por volume
 continua sendo o oficial.
+
+## Calibração (`/medidadespacho/calibrar`)
+
+Qualquer pessoa da equipe registra e valida (`is_admin_user()`), e o e-mail de
+quem registrou e de quem validou fica gravado no despacho (auditoria).
+
+- **Registrar despacho**: data, pedido, caixa (L×C×A), peso real, ocupação
+  (100% = cheia), itens. Ao salvar roda o cálculo atual com os mesmos itens e
+  caixa e grava a estimativa (`despachos_historico.estimativa`) → estimado × real.
+  Entra como `pendente`. RPC `registrar_despacho` (cabeçalho + itens numa transação).
+- **Importar em lote**: CSV (;) ou .xlsx, modelo para download na tela. Colunas:
+  `despacho;data;pedido;largura_cm;comprimento_cm;altura_cm;peso_real_kg;ocupacao_pct;codigo;qtd;observacao`.
+  Linhas com o mesmo `despacho` = uma caixa com vários produtos.
+- **Histórico**: validar / descartar / voltar para pendente.
+- **Calibração** (`calibracao.ts`): só despachos **validados com 1 produto**:
+  `vol_un = vol_caixa × ocupação ÷ qtd`, `peso_un = (peso − tara) ÷ qtd`. Valor
+  = mediana dos últimos 10; os que fogem > 50% da mediana ficam fora e aparecem
+  no histórico como "revise". Confiança: n < 3 baixa, 3–9 média, ≥ 10 alta.
+  Despachos com vários produtos só medem o erro do modelo.
+- **Produtos calibrados**: n, mediana, mín–máx, fonte anterior × calibrada.
+  *Promover a override* grava a mediana em `medidas_override.vol_efetivo_un_cm3`
+  (e o peso, se o override não tiver) e liga `ignorar_calibracao` (valor
+  congelado). *Reverter* liga `ignorar_calibracao` sem gravar volume (volta à
+  fonte anterior). *Usar calibração* desliga.
+- **Erro do modelo**: erro médio (com sinal e absoluto) de volume e peso,
+  geral, por fonte da medida, por palavra-chave (1ª palavra do nome) e por
+  produto. Positivo = superestima → subir o fator de aproveitamento em `calc_config`.

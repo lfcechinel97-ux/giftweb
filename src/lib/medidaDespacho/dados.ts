@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { configsMaster, type ConfigMaster, type LinhaMaster } from "./caixaMaster";
+import type { Despacho, ItemDespacho } from "./calibracao";
 import type { Override, ProdutoApi } from "./fontes";
 import { medida, normalizar } from "./regras";
 
@@ -205,4 +206,23 @@ export async function ultimaSync(): Promise<string | null> {
   const { data } = await supabase.from("sync_log").select("synced_at")
     .like("status", "success%").order("synced_at", { ascending: false }).limit(1).maybeSingle();
   return data?.synced_at ?? null;
+}
+
+/** Histórico de despachos reais com os itens (é pequeno: lido inteiro). */
+export async function carregarDespachos(): Promise<Despacho[]> {
+  const [cab, itens] = await Promise.all([
+    lerTudo<Omit<Despacho, "itens">>("despachos_historico", "*"),
+    lerTudo<ItemDespacho & { despacho_id: number }>("despachos_historico_itens", "id, despacho_id, codigo_amigavel, codigo_composto, qtd"),
+  ]);
+  const porDespacho = new Map<number, ItemDespacho[]>();
+  for (const i of itens) porDespacho.set(i.despacho_id, [...(porDespacho.get(i.despacho_id) ?? []), i]);
+  const num = (v: unknown) => Number(v);
+  return cab
+    .map((d) => ({
+      ...d,
+      caixa_larg_cm: num(d.caixa_larg_cm), caixa_alt_cm: num(d.caixa_alt_cm), caixa_comp_cm: num(d.caixa_comp_cm),
+      ocupacao_pct: num(d.ocupacao_pct), peso_real_kg: num(d.peso_real_kg),
+      itens: porDespacho.get(d.id) ?? [],
+    }))
+    .sort((a, b) => b.data.localeCompare(a.data) || b.id - a.id);
 }

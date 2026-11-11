@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { calcularVolumes, type ParamsCalculo } from "./calculo";
 import { classificarLinhaMaster, configsMaster } from "./caixaMaster";
+import { agruparErros, amostraDe, calibrar, confiancaCalibrado, errosDoDespacho, palavraChave, type Despacho } from "./calibracao";
+import { lerCsv, lerData, modeloCsv, montarDespachos } from "./importarHistorico";
 import { encaixar, formaParaDesenho, type Posicao } from "./empacotamento";
 import { resolverMedida, type ProdutoApi } from "./fontes";
 import { ehDobravel, medida, normalizarReferencia } from "./regras";
@@ -184,5 +186,63 @@ describe("encaixe 3D (ilustrativo)", () => {
     expect(f.aproximada).toBe(true);
     expect(f.dims[0] * f.dims[1] * f.dims[2]).toBeCloseTo(1386.24, 3);
     expect(f.dims[1] / f.dims[0]).toBeCloseTo(48 / 38, 6);
+  });
+});
+
+describe("calibração", () => {
+  const desp = (id: number, data: string, itens: [string, number][], peso: number, ocup = 100, status: Despacho["status"] = "validado"): Despacho => ({
+    id, data, referencia_pedido: null, caixa_larg_cm: 60, caixa_alt_cm: 40, caixa_comp_cm: 40, ocupacao_pct: ocup, peso_real_kg: peso,
+    status, observacao: null, estimativa: null, criado_por_nome: null, criado_em: data, validado_por_nome: null, validado_em: null,
+    itens: itens.map(([c, q]) => ({ codigo_amigavel: c, qtd: q })),
+  });
+
+  it("1 SKU: vol_un = vol_caixa × ocupação ÷ qtd e peso_un = (peso − tara) ÷ qtd", () => {
+    const a = amostraDe(desp(1, "2026-10-01", [["A", 50]], 18.5, 75), 0.5)!;
+    expect(a.volUn).toBeCloseTo((96000 * 0.75) / 50, 6);
+    expect(a.pesoUnG).toBeCloseTo(360, 6);
+    expect(amostraDe(desp(2, "2026-10-01", [["A", 10], ["B", 10]], 5), 0)).toBeNull();
+    expect(amostraDe(desp(3, "2026-10-01", [["A", 10], ["A", 10]], 5), 0)!.volUn).toBeCloseTo(4800, 6);
+  });
+
+  it("mediana das últimas 10 validadas, fora da curva (> 50%) sai, n define a confiança", () => {
+    const lista = [
+      ...Array.from({ length: 12 }, (_, i) => desp(i + 1, `2026-10-${String(i + 1).padStart(2, "0")}`, [["A", 100]], 10)),
+      desp(50, "2026-10-20", [["A", 30]], 10), // 3.200 cm³/un: foge > 50% de 960
+      desp(51, "2026-10-21", [["A", 1]], 10, 100, "pendente"),
+      desp(52, "2026-10-22", [["A", 1]], 10, 100, "descartado"),
+      desp(53, "2026-10-23", [["A", 50], ["B", 50]], 10),
+    ];
+    const c = calibrar(lista, 0).get("A")!;
+    expect(c.volUn).toBeCloseTo(960, 6);
+    expect(c.pesoUnG).toBeCloseTo(100, 6);
+    expect(c.foraDaCurva).toEqual([50]);
+    expect(c.n).toBe(9); // as 10 mais recentes, menos a fora da curva
+    expect(confiancaCalibrado(c.n)).toBe("media");
+    expect(confiancaCalibrado(2)).toBe("baixa");
+    expect(confiancaCalibrado(10)).toBe("alta");
+    expect(calibrar(lista, 0).has("B")).toBe(false);
+  });
+
+  it("erro do modelo: estimado x real e agrupamento por palavra-chave", () => {
+    const d = { ...desp(1, "2026-10-01", [["A", 50]], 20, 80), estimativa: { ocupacao: 1, pesoKg: 18, volumes: 1, fontes: {}, completa: true } };
+    expect(errosDoDespacho(d)).toEqual({ id: 1, volume: expect.closeTo(0.25, 6), peso: expect.closeTo(-0.1, 6) });
+    expect(palavraChave("Caneta metálica")).toBe("CANETA");
+    const g = agruparErros([d, { ...d, id: 2 }], () => "CANETA");
+    expect(g[0]).toMatchObject({ chave: "CANETA", n: 2 });
+    expect(g[0].volAbsMedio).toBeCloseTo(0.25, 6);
+  });
+
+  it("importação em lote: agrupa por DESPACHO, aceita ; e vírgula decimal, aponta erros", () => {
+    const linhas = lerCsv(modeloCsv() + "3;xx;;60;40;40;5;100;99999;1;\n");
+    const r = montarDespachos(linhas, (c) => (c === "99999" ? null : { codigo_amigavel: c.split("-")[0], codigo_composto: c.includes("-") ? c : null }));
+    expect(r.despachos).toHaveLength(2);
+    expect(r.despachos[0]).toMatchObject({ data: "2026-10-15", peso_real_kg: 18.4, ocupacao_pct: 100, referencia_pedido: "PED-1234" });
+    expect(r.despachos[1].itens).toEqual([
+      { codigo_amigavel: "00001", codigo_composto: null, qtd: 500 },
+      { codigo_amigavel: "10078", codigo_composto: "10078-AZU", qtd: 20 },
+    ]);
+    expect(r.erros).toEqual(['Linha 5: código "99999" não encontrado.']);
+    expect(lerData("2026-01-05")).toBe("2026-01-05");
+    expect(lerData("46000")).toBe("2025-12-09");
   });
 });

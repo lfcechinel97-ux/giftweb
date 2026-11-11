@@ -35,6 +35,8 @@ export interface Override {
   peso_g: number | null;
   fator_compressao: number | null;
   vol_efetivo_un_cm3: number | null;
+  /** true = não usar a calibração deste produto (revertida ou promovida a override). */
+  ignorar_calibracao?: boolean;
 }
 
 export interface Calibrado {

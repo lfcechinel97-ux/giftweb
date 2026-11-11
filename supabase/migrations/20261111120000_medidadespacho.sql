@@ -136,3 +136,49 @@ end;
 $$;
 revoke all on function public.importar_caixa_master(jsonb) from public, anon;
 grant execute on function public.importar_caixa_master(jsonb) to authenticated;
+
+-- 7) Calibração (fase 3) ---------------------------------------------------
+-- ignorar_calibracao: "reverter" (volta para a fonte anterior) ou "promover a
+-- override" (congela a mediana no override); novos despachos continuam sendo
+-- registrados, mas não mudam a medida até reativar.
+alter table public.medidas_override add column if not exists ignorar_calibracao boolean not null default false;
+alter table public.despachos_historico add column if not exists criado_por_nome text;
+alter table public.despachos_historico add column if not exists validado_por_nome text;
+
+-- Registra um despacho real com os itens numa transação só.
+-- dados = {data, referencia_pedido, caixa_larg_cm, caixa_alt_cm, caixa_comp_cm,
+--          ocupacao_pct, peso_real_kg, observacao, estimativa, criado_por_nome,
+--          itens: [{codigo_amigavel, codigo_composto, qtd}]}
+create or replace function public.registrar_despacho(dados jsonb)
+returns bigint
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare novo bigint;
+begin
+  if jsonb_array_length(coalesce(dados->'itens', '[]'::jsonb)) = 0 then
+    raise exception 'despacho sem itens';
+  end if;
+  insert into public.despachos_historico
+    (data, referencia_pedido, caixa_larg_cm, caixa_alt_cm, caixa_comp_cm, ocupacao_pct,
+     peso_real_kg, observacao, estimativa, criado_por_nome)
+  values (
+    coalesce(nullif(dados->>'data', '')::date, current_date),
+    nullif(dados->>'referencia_pedido', ''),
+    (dados->>'caixa_larg_cm')::numeric, (dados->>'caixa_alt_cm')::numeric, (dados->>'caixa_comp_cm')::numeric,
+    coalesce(nullif(dados->>'ocupacao_pct', '')::numeric, 100),
+    (dados->>'peso_real_kg')::numeric,
+    nullif(dados->>'observacao', ''),
+    dados->'estimativa',
+    nullif(dados->>'criado_por_nome', '')
+  )
+  returning id into novo;
+  insert into public.despachos_historico_itens (despacho_id, codigo_amigavel, codigo_composto, qtd)
+  select novo, i->>'codigo_amigavel', nullif(i->>'codigo_composto', ''), (i->>'qtd')::integer
+  from jsonb_array_elements(dados->'itens') i;
+  return novo;
+end;
+$$;
+revoke all on function public.registrar_despacho(jsonb) from public, anon;
+grant execute on function public.registrar_despacho(jsonb) to authenticated;

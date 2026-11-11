@@ -1,7 +1,10 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { calcularVolumes, volumeCaixa, type Caixa } from "@/lib/medidaDespacho/calculo";
+import { calibrar, type Calibracao, type Estimativa, type ItemDespacho } from "@/lib/medidaDespacho/calibracao";
 import type { ConfigMaster } from "@/lib/medidaDespacho/caixaMaster";
 import {
-  carregarConfig, carregarMaster, carregarOverrides, carregarProdutos, ultimaSync,
+  CONFIG_PADRAO, carregarConfig, carregarDespachos, carregarMaster, carregarOverrides, carregarProdutos, ultimaSync,
   type Config, type MasterProduto, type OverrideDb, type ProdutoIndice,
 } from "@/lib/medidaDespacho/dados";
 import { resolverMedida, type Calibrado, type EntradaManual, type MedidaResolvida } from "@/lib/medidaDespacho/fontes";
@@ -42,7 +45,55 @@ export function useDadosDespacho() {
   const overrides = useQuery({ queryKey: ["medidadespacho", "overrides"], queryFn: carregarOverrides, staleTime: 5 * 60 * 1000 });
   const config = useQuery({ queryKey: ["medidadespacho", "config"], queryFn: carregarConfig, staleTime: HORA });
   const sync = useQuery({ queryKey: ["medidadespacho", "sync"], queryFn: ultimaSync, staleTime: HORA });
-  return { produtos, master, overrides, config, sync };
+  const despachos = useQuery({ queryKey: ["medidadespacho", "despachos"], queryFn: carregarDespachos, staleTime: 5 * 60 * 1000 });
+  return { produtos, master, overrides, config, sync, despachos };
+}
+
+const SEM_CALIBRACAO = new Map<string, Calibracao>();
+
+/** Medianas calibradas por produto (só despachos validados). */
+export function useCalibracoes(d: ReturnType<typeof useDadosDespacho>) {
+  const tara = d.config.data?.taraKg ?? 0;
+  const lista = d.despachos.data;
+  return useMemo(() => (lista ? calibrar(lista, tara) : SEM_CALIBRACAO), [lista, tara]);
+}
+
+/** Contexto do cálculo (produtos, master, overrides, calibração, config). */
+export function useContexto(d: ReturnType<typeof useDadosDespacho>) {
+  const calibracoes = useCalibracoes(d);
+  const config = d.config.data ?? CONFIG_PADRAO;
+  const mapa = useMemo(() => new Map((d.produtos.data ?? []).map((p) => [p.codigo, p])), [d.produtos.data]);
+  const ctx: Contexto = useMemo(() => ({
+    mapa,
+    master: d.master.data?.porProduto ?? new Map(),
+    overrides: d.overrides.data ?? new Map(),
+    calibrados: calibracoes,
+    config,
+  }), [mapa, d.master.data, d.overrides.data, calibracoes, config]);
+  return { ctx, calibracoes };
+}
+
+/** Roda o cálculo atual para os itens de um despacho real (estimado x real). */
+export function estimarDespacho(itens: ItemDespacho[], caixa: Caixa, ctx: Contexto): Estimativa {
+  const rs = itens.map((i) => resolverLinha(novaLinha(i.codigo_amigavel, String(i.qtd), i.codigo_composto ?? null), ctx));
+  let vol = 0, peso = 0, completa = true;
+  const fontes: Record<string, string | null> = {};
+  for (const r of rs) {
+    fontes[r.linha.codigo] = r.medida?.fonte ?? null;
+    if (r.medida?.volEquivalente) vol += r.medida.volEquivalente * r.qtd; else completa = false;
+    if (r.medida?.pesoG) peso += (r.medida.pesoG * r.qtd) / 1000; else completa = false;
+  }
+  const calc = calcularVolumes(
+    rs.filter((r) => r.medida).map((r) => ({ id: String(r.linha.uid), rotulo: r.linha.codigo, qtd: r.qtd, medida: r.medida! })),
+    { caixa, pesoMaxKg: ctx.config.pesoMaxKg, taraKg: ctx.config.taraKg, fatorCubagem: ctx.config.cubagemRodoviario },
+  );
+  return {
+    ocupacao: vol > 0 ? vol / volumeCaixa(caixa) : null,
+    pesoKg: peso > 0 ? peso + ctx.config.taraKg : null,
+    volumes: calc.totais.volumes,
+    fontes,
+    completa,
+  };
 }
 
 export interface Contexto {
@@ -75,7 +126,7 @@ export function resolverLinha(l: LinhaForm, ctx: Contexto): LinhaResolvida {
     masterEscolhida: l.master,
     masterEmRevisao: mp?.emRevisao ?? 0,
     override: ctx.overrides.get(produto.codigo) ?? null,
-    calibrado: ctx.calibrados.get(produto.codigo) ?? null,
+    calibrado: ctx.overrides.get(produto.codigo)?.ignorar_calibracao ? null : ctx.calibrados.get(produto.codigo) ?? null,
   };
   const digitadas = [lerNum(l.altura), lerNum(l.largura), lerNum(l.profundidade)];
   const manual: EntradaManual = { pesoG: lerNum(l.peso), fatorCompressao: lerNum(l.compressao) };
