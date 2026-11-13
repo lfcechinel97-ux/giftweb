@@ -1110,6 +1110,14 @@ export default function PCP() {
   const [hoverPedido, setHoverPedido] = useState<string | null>(null);
   const [tagsFiltro, setTagsFiltro] = useState<string[]>([]);
   const [buscaPedido, setBuscaPedido] = useState("");
+  /* Filtro "Produzir até" (data de despacho do pedido). "De" começa em
+     hoje; o filtro só passa a valer quando o "Até" é preenchido. */
+  const hojeIso = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const [produzirDe, setProduzirDe] = useState<string>(hojeIso);
+  const [produzirAte, setProduzirAte] = useState<string>("");
   /* "Com fotos / Sem fotos" — preferência por usuário, local ao navegador
      (não é dado do pedido, é jeito de olhar o quadro). */
   const [comFotos, setComFotos] = useState<boolean>(() => {
@@ -1478,8 +1486,15 @@ export default function PCP() {
         String(r.pedido_numero ?? "").includes(termo) || (r.cliente ?? "").toLocaleLowerCase("pt-BR").includes(t),
       );
     }
+    if (produzirAte) {
+      const de = produzirDe || "0000-01-01";
+      out = out.filter(r => {
+        const d = r.pedido_data_despacho?.slice(0, 10);
+        return !!d && d >= de && d <= produzirAte;
+      });
+    }
     return out;
-  }, [rows, tagsFiltro, buscaPedido]);
+  }, [rows, tagsFiltro, buscaPedido, produzirDe, produzirAte]);
 
   const byStatus = useMemo(() => {
     const map: Record<string, PcpRow[]> = {};
@@ -2710,14 +2725,14 @@ export default function PCP() {
       <input ref={testeInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleAnexoTeste} />
       <input ref={producaoAnexoInputRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleAnexoProducao} />
       <input ref={anexoGenericoInputRef} type="file" accept="image/*,video/*,application/pdf" className="hidden" onChange={handleAnexoGenerico} />
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="gw-display">PCP — Produção</h1>
           <p className="gw-meta">
             Acompanhe cada item de pedido pelo fluxo de produção. Arraste os cards entre as colunas.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-end gap-3">
           {/* Mensagem e menção são contadores DISTINTOS -- mensagem é
               qualquer coisa não lida no chat; menção é só quando alguém
               usou @. Cada botão abre o primeiro item da própria lista; ao
@@ -2758,6 +2773,40 @@ export default function PCP() {
               <Clock className="h-4 w-4" /> {testeEnviadoPendentes.length} em Teste Enviado
             </button>
           )}
+          <div
+            className={cn(
+              "flex items-center gap-1.5 h-9 px-2.5 rounded-[8px] border text-[12px] shrink-0",
+              produzirAte ? "border-[var(--gw-primary)] bg-[var(--gw-primary-soft)]" : "border-[var(--gw-border)] bg-white",
+            )}
+            title="Filtra os pedidos pela data “Produzir até”"
+          >
+            <span className="font-semibold text-[var(--gw-text-secondary)] whitespace-nowrap">Produzir até</span>
+            <span className="text-[var(--gw-text-muted)]">de</span>
+            <input
+              type="date"
+              value={produzirDe}
+              onChange={e => setProduzirDe(e.target.value)}
+              className="h-7 rounded border border-[var(--gw-border)] px-1 text-[12px] bg-white"
+            />
+            <span className="text-[var(--gw-text-muted)]">até</span>
+            <input
+              type="date"
+              value={produzirAte}
+              min={produzirDe || undefined}
+              onChange={e => setProduzirAte(e.target.value)}
+              className="h-7 rounded border border-[var(--gw-border)] px-1 text-[12px] bg-white"
+            />
+            {produzirAte && (
+              <button
+                type="button"
+                onClick={() => { setProduzirAte(""); setProduzirDe(hojeIso()); }}
+                className="text-[var(--gw-text-muted)] hover:text-[var(--gw-text)]"
+                title="Limpar filtro"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
           <div className="relative">
             <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--gw-text-muted)]" />
             <Input
@@ -4228,8 +4277,14 @@ export default function PCP() {
         </DialogContent>
       </Dialog>
       {/* Resumo: vendedor recebe só os próprios pedidos (rows já vem filtrado
-          por vendedorRestritoDe); admin/gerente/produção, a visão geral. */}
-      <ResumoPcp rows={rows} geral={meuPapel !== "vendedor"} />
+          por vendedorRestritoDe); admin/gerente/produção, a visão geral.
+          Usa as linhas filtradas, então o filtro "Produzir até" vale aqui. */}
+      <ResumoPcp
+        rows={rowsFiltradas}
+        geral={meuPapel !== "vendedor"}
+        nomeUsuario={nomePorUsuarioId}
+        periodo={produzirAte ? `Produzir até: de ${dataCurtaSemFuso(produzirDe) || "início"} até ${dataCurtaSemFuso(produzirAte)}` : null}
+      />
     </div>
   );
 }
