@@ -28,6 +28,7 @@ import { dataCurta as dataCurtaSemFuso } from "@/lib/diasUteis";
 import { Money } from "@/components/sistema/ui/Money";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 import PainelEnvioPedido from "./PainelEnvioPedido";
+import ResumoPcp from "./ResumoPcp";
 import { COLUNAS_PCP, MOSTRAR_COLUNA_ANOTACOES, corDaColuna, corFundoDaColuna, statusCanonicoDaColuna, colunaDoStatus, statusInfo } from "@/lib/statusPedido";
 import { useSistema, type Pedido, type PedidoItem } from "@/contexts/SistemaContext";
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
@@ -1098,7 +1099,7 @@ export default function PCP() {
      auth.uid(), que é sempre a mesma pessoa fisicamente logada. */
   const { vendedores, currentVendedor, clientes, transportadoras: transportadorasCadastro } = useSistema();
   const vendedorNome = (id: string | null) => vendedores.find(v => v.id === id)?.nome || null;
-  const { email: emailUsuario, nome: nomeCadastro, vendedorId: vendedorDoUsuario, userId: meuUserId } = useUserRole();
+  const { email: emailUsuario, nome: nomeCadastro, vendedorId: vendedorDoUsuario, userId: meuUserId, papel: meuPapel } = useUserRole();
   const nomeUsuario = nomeCadastro || vendedorNome(vendedorDoUsuario);
   const queryClient = useQueryClient();
 
@@ -4226,6 +4227,9 @@ export default function PCP() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Resumo: vendedor recebe só os próprios pedidos (rows já vem filtrado
+          por vendedorRestritoDe); admin/gerente/produção, a visão geral. */}
+      <ResumoPcp rows={rows} geral={meuPapel !== "vendedor"} />
     </div>
   );
 }
