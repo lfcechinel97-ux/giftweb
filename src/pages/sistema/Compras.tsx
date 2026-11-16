@@ -118,7 +118,7 @@ export default function Compras() {
         .from("vw_pcp" as any)
         .select("producao_id,pedido_id,pedido_numero,cliente,produto_nome,quantidade,mockup_url,imagem_catalogo_url,item_posicao,data_entrega_item,tags,status")
         .eq("coluna_pcp", "aguardando_mercadoria");
-      if (restrito) q = q.eq("pedido_vendedor_id", restrito);
+      if (restrito) q = q.in("pedido_vendedor_id", restrito);
       const { data, error } = await q;
       if (error) {
         toast.error(`Não foi possível carregar as compras. ${error.message || ""}`);

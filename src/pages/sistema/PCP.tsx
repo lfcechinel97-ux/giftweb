@@ -1344,7 +1344,7 @@ export default function PCP() {
         .from("vw_pcp" as any)
         .select("*")
         .or(`coluna_pcp.neq.enviado,etapa_desde.gte.${cortaEnviadoAntes}`);
-      if (restrito) q = q.eq("pedido_vendedor_id", restrito);
+      if (restrito) q = q.in("pedido_vendedor_id", restrito);
       const { data, error } = await q.order("data_entrega_item", { ascending: true, nullsFirst: false });
       if (error) {
         console.error("[PCP] carregar itens falhou:", error);

@@ -16,6 +16,9 @@ export interface Perfil {
   email: string | null;
   nome: string | null;
   vendedorId: string | null;
+  /** Todos os vendedores que o usuário enxerga: o principal + os extras
+   *  (admin_users.vendedores_extras). */
+  vendedorIds: string[];
 }
 
 export const PERFIL_QUERY_KEY = ["sistema", "user-roles"] as const;
@@ -23,10 +26,12 @@ export const PERFIL_QUERY_KEY = ["sistema", "user-roles"] as const;
 async function buscarPerfil(): Promise<Perfil> {
   const { data: auth } = await supabase.auth.getUser();
   const uid = auth?.user?.id;
-  if (!uid) return { roles: [], userId: null, email: null, nome: null, vendedorId: null };
+  if (!uid) return { roles: [], userId: null, email: null, nome: null, vendedorId: null, vendedorIds: [] };
   const [{ data: rows }, { data: perfil }] = await Promise.all([
     supabase.from("user_roles").select("role").eq("user_id", uid),
-    (supabase as any).from("admin_users").select("nome, vendedor_id").eq("id", uid).maybeSingle(),
+    /* "*" e não a lista de colunas: se a coluna vendedores_extras ainda não
+       existir no banco, o perfil continua carregando (só sem os extras). */
+    (supabase as any).from("admin_users").select("*").eq("id", uid).maybeSingle(),
   ]);
   return {
     roles: ((rows ?? []) as { role: AppRole }[]).map(r => r.role),
@@ -34,6 +39,10 @@ async function buscarPerfil(): Promise<Perfil> {
     email: auth?.user?.email ?? null,
     nome: (perfil?.nome as string | null) ?? null,
     vendedorId: (perfil?.vendedor_id as string | null) ?? null,
+    vendedorIds: [...new Set([
+      perfil?.vendedor_id as string | null,
+      ...(((perfil?.vendedores_extras as string[] | null) ?? [])),
+    ].filter((x): x is string => !!x))],
   };
 }
 
@@ -42,11 +51,14 @@ const papelDe = (roles: AppRole[]): AppRole =>
   : roles.includes("gerente") ? "gerente"
   : roles.includes("producao") ? "producao" : "vendedor";
 
-/* Comercial só enxerga as próprias vendas; sem vendedor vinculado não enxerga
-   nenhuma (id que nunca casa), em vez de cair no "ver tudo". */
+/* Comercial só enxerga as vendas dos vendedores vinculados a ele (principal +
+   extras); sem vendedor vinculado não enxerga nenhuma (id que nunca casa), em
+   vez de cair no "ver tudo". null = sem restrição (admin/gerente/produção). */
 const NENHUM_VENDEDOR = "00000000-0000-0000-0000-000000000000";
-export const vendedorRestritoDe = (p: Perfil): string | null =>
-  papelDe(p.roles) === "vendedor" ? (p.vendedorId ?? NENHUM_VENDEDOR) : null;
+export const vendedorRestritoDe = (p: Perfil): string[] | null =>
+  papelDe(p.roles) === "vendedor"
+    ? (p.vendedorIds?.length ? p.vendedorIds : [p.vendedorId ?? NENHUM_VENDEDOR])
+    : null;
 
 /** Perfil garantido (do cache ou do banco) para usar antes de uma consulta. */
 export const obterPerfil = (qc: QueryClient) =>
@@ -81,6 +93,7 @@ export function useUserRole() {
     email: data?.email ?? null,
     nome: data?.nome ?? null,
     vendedorId: data?.vendedorId ?? null,
+    vendedorIds: data?.vendedorIds ?? [],
     vendedorRestrito: data ? vendedorRestritoDe(data) : null,
     isLoading,
   };

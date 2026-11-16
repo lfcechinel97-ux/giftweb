@@ -456,7 +456,16 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       queryKey: ["sistema", "orcamentos", "list", opts ?? null, restrito],
       staleTime: 60 * 1000,
       queryFn: () => supabase.rpc("sistema_list_orcamentos", {
-        p_vendedor_id: restrito ?? (opts?.vendedorId || null),
+        /* Restrito a 1 vendedor: igual antes. A vários (usuário vinculado a
+           mais de um): filtra pela lista -- ou só por um deles, se escolheu
+           no filtro. */
+        ...(() => {
+          const escolhido = opts?.vendedorId || null;
+          if (!restrito) return { p_vendedor_id: escolhido };
+          if (restrito.length === 1) return { p_vendedor_id: restrito[0] };
+          if (escolhido && restrito.includes(escolhido)) return { p_vendedor_id: escolhido };
+          return { p_vendedor_id: null, p_vendedor_ids: restrito };
+        })(),
         p_status: opts?.status && opts.status !== "todos" ? opts.status : null,
         p_search: opts?.search || null,
         p_cliente: opts?.cliente || null,
@@ -617,7 +626,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .order("created_at", { ascending: asc })
           .order("id", { ascending: asc });
         // Filtros ANTES do recorte da página
-        if (restrito) q = q.eq("vendedor_id", restrito);
+        if (restrito) q = q.in("vendedor_id", restrito);
         if (opts?.ids) q = q.in("id", opts.ids);
         if (opts?.status && opts.status !== "todos") q = q.eq("status", opts.status);
         if (opts?.dataInicio) q = q.gte("created_at", `${opts.dataInicio}T00:00:00`);
