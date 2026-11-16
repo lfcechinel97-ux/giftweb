@@ -639,10 +639,11 @@ const PedidoForm: React.FC = () => {
           </div>
           <label className="space-y-1">
             <span className="gw-label">Vendedor</span>
-            <Select value={vendedorId} onValueChange={setVendedorId} disabled={!!vendedorRestrito}>
+            <Select value={vendedorId} onValueChange={setVendedorId} disabled={!!vendedorRestrito && vendedorRestrito.length <= 1}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
-                {vendedores.map(v => <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>)}
+                {/* Vinculado a mais de um vendedor: escolhe só entre os dele. */}
+                {vendedores.filter(v => !vendedorRestrito || vendedorRestrito.includes(v.id) || v.id === vendedorId).map(v => <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>)}
               </SelectContent>
             </Select>
           </label>

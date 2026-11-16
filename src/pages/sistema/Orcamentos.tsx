@@ -438,7 +438,7 @@ export default function Orcamentos() {
     filtroBusca ? { key: "busca", label: `Busca: ${filtroBusca}`, clear: () => setFiltroBusca("") } : null,
     filtroCliente ? { key: "cliente", label: `Cliente: ${filtroCliente}`, clear: () => setFiltroCliente("") } : null,
     filtroStatus !== "todos" ? { key: "status", label: `Status: ${statusStyles[filtroStatus as OrcamentoStatus].label}`, clear: () => setFiltroStatus("todos") } : null,
-    filtroVendedor !== "todos" && !vendedorRestrito ? { key: "vendedor", label: `Vendedor: ${getVendedorNome(filtroVendedor)}`, clear: () => setFiltroVendedor("todos") } : null,
+    filtroVendedor !== "todos" && (!vendedorRestrito || vendedorRestrito.length > 1) ? { key: "vendedor", label: `Vendedor: ${getVendedorNome(filtroVendedor)}`, clear: () => setFiltroVendedor("todos") } : null,
     dataInicio ? { key: "de", label: `De: ${dateBR(dataInicio)}`, clear: () => setDataInicio("") } : null,
     dataFim ? { key: "ate", label: `Até: ${dateBR(dataFim)}`, clear: () => setDataFim("") } : null,
   ].filter(Boolean) as { key: string; label: string; clear: () => void }[];
@@ -494,14 +494,14 @@ export default function Orcamentos() {
             ))}
           </SelectContent>
         </Select>
-        {!vendedorRestrito && (
+        {(!vendedorRestrito || vendedorRestrito.length > 1) && (
           <Select value={filtroVendedor} onValueChange={setFiltroVendedor}>
             <SelectTrigger className="h-9 w-[190px]">
               <SelectValue placeholder="Vendedor" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">Todos os vendedores</SelectItem>
-              {vendedores.map(v => (
+              {vendedores.filter(v => !vendedorRestrito || vendedorRestrito.includes(v.id)).map(v => (
                 <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>
               ))}
             </SelectContent>

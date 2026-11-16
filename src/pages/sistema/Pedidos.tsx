@@ -151,10 +151,13 @@ export default function Pedidos() {
       const zero = Object.fromEntries(ABAS.map(a => [a.id, 0])) as Record<AbaId, number>;
       const restrito = vendedorRestritoDe(await obterPerfil(qc));
       const [porEtapa, totalReal] = await Promise.all([
-        supabase.rpc("sistema_contar_pedidos_por_etapa" as any, { p_vendedor_id: restrito }),
+        /* 1 vendedor: chamada antiga (funciona mesmo antes da migration de
+           vários vendedores); mais de 1: lista. */
+        supabase.rpc("sistema_contar_pedidos_por_etapa" as any,
+          restrito && restrito.length > 1 ? { p_vendedor_ids: restrito } : { p_vendedor_id: restrito?.[0] ?? null }),
         (() => {
           let q = supabase.from("sistema_pedidos").select("id", { count: "exact", head: true });
-          if (restrito) q = q.eq("vendedor_id", restrito);
+          if (restrito) q = q.in("vendedor_id", restrito);
           return q;
         })(),
       ]);
