@@ -827,9 +827,30 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
      sob demanda elas gerariam número duplicado. */
 
 
+  /* Orçamentos sendo aprovados agora: clique duplo no "Aprovar" não dispara
+     duas aprovações em paralelo. */
+  const aprovandoRef = useRef<Set<string>>(new Set());
+
   const aprovarOrcamento = useCallback(async (id: string): Promise<Pedido | null> => {
     let orcamento = data.orcamentos.find(o => o.id === id);
     if (!orcamento || orcamento.status !== "aberto") return null;
+    if (aprovandoRef.current.has(id)) return null;
+    aprovandoRef.current.add(id);
+    try {
+    const marcarAprovadoLocal = (quando: string) => setData(prev => ({
+      ...prev,
+      orcamentos: prev.orcamentos.map(o => o.id === id ? { ...o, status: "aprovado" as const, aprovadoEm: quando, updatedAt: quando } : o),
+    }));
+
+    /* Um orçamento gera UM pedido só. Confere no banco (outra aba, outro
+       vendedor ou a lista desatualizada podem ter aprovado antes). */
+    const { data: jaTem } = await supabase
+      .from("sistema_pedidos").select("id, numero").eq("orcamento_id", id).limit(1).maybeSingle();
+    if (jaTem) {
+      toast.info(`Esse orçamento já foi aprovado e gerou o pedido ${(jaTem as any).numero}.`);
+      marcarAprovadoLocal(new Date().toISOString());
+      return null;
+    }
 
     // A listagem é "leve" (itens vazios). Sem recarregar o orçamento completo,
     // o pedido seria criado com itens: [] — causa da tabela vazia em /sistema/pedidos.
@@ -870,12 +891,28 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       orcamentoId: orcamento.id, pedidoId: pedido.id, createdAt: now,
     }));
 
-    /* O pedido primeiro, e só com ele gravado o orçamento vira "aprovado":
-       antes os três iam juntos, e um pedido rejeitado deixava o orçamento
-       aprovado sem pedido nenhum. */
+    /* Trava: só quem conseguir passar o orçamento de "aberto" para
+       "aprovado" cria o pedido -- a 2ª aprovação simultânea não acha mais o
+       orçamento aberto e para aqui. */
+    const { data: travado, error: erroTrava } = await supabase
+      .from("sistema_orcamentos")
+      .update({ status: "aprovado", aprovado_em: now, updated_at: now })
+      .eq("id", id).eq("status", "aberto")
+      .select("id");
+    if (erroTrava) { reportDbError("orçamento")({ error: erroTrava }); return null; }
+    if (!travado?.length) {
+      toast.info("Esse orçamento já foi aprovado — não foi criado outro pedido.");
+      marcarAprovadoLocal(now);
+      return null;
+    }
+
     const resPedido = await dbWrite("pedido", () =>
       supabase.from("sistema_pedidos").insert({ ...pedidoToDb(pedido), created_at: now }));
-    if (resPedido?.error) return null;
+    if (resPedido?.error) {
+      // Pedido não gravou: devolve o orçamento para "aberto" (não fica aprovado sem pedido).
+      await supabase.from("sistema_orcamentos").update({ status: "aberto", aprovado_em: null, updated_at: now }).eq("id", id);
+      return null;
+    }
 
     setData(prev => ({
       ...prev,
@@ -884,15 +921,15 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ajustesEstoque: [...reservas, ...prev.ajustesEstoque],
     }));
 
-    await Promise.all([
-      dbWrite("orçamento", () => supabase.from("sistema_orcamentos").update({ status: "aprovado", aprovado_em: now, updated_at: now }).eq("id", id)),
-      dbWrite("reserva de estoque", () => supabase.from("sistema_ajustes_estoque").insert(reservas.map(r => ({
-        id: r.id, produto_id: r.produtoId, codigo_composto: r.codigoComposto, variante_slug: r.varianteSlug,
-        tipo: r.tipo, quantidade: r.quantidade, motivo: r.motivo, orcamento_id: r.orcamentoId, pedido_id: r.pedidoId,
-      })))),
-    ]);
+    await dbWrite("reserva de estoque", () => supabase.from("sistema_ajustes_estoque").insert(reservas.map(r => ({
+      id: r.id, produto_id: r.produtoId, codigo_composto: r.codigoComposto, variante_slug: r.varianteSlug,
+      tipo: r.tipo, quantidade: r.quantidade, motivo: r.motivo, orcamento_id: r.orcamentoId, pedido_id: r.pedidoId,
+    }))));
 
     return pedido;
+    } finally {
+      aprovandoRef.current.delete(id);
+    }
   }, [data.orcamentos]);
 
   const updatePedido = useCallback((id: string, changes: Partial<Pedido>) => {

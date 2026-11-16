@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { excluirPedidoDefinitivo } from "@/lib/excluirPedido";
 import { formatTelefone } from "@/lib/telefone";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -518,14 +519,12 @@ const PedidoForm: React.FC = () => {
         return;
       }
     }
-    await registrarAuditoria({
-      entidade: "pedido", entidadeId: id, entidadeNumero: pedido.numero, acao: "pedido_excluido",
+    const erro = await excluirPedidoDefinitivo({
+      id, numero: pedido.numero, orcamentoId: pedido.orcamentoId,
       detalhes: { itens: itens.map(i => i.nome), total },
     });
-    await supabase.from("sistema_producao_itens").delete().eq("pedido_id", id);
-    const { error } = await supabase.from("sistema_pedidos").delete().eq("id", id);
     setExcluindo(false);
-    if (error) { toast.error(`Não foi possível excluir. ${error.message}`); return; }
+    if (erro) { toast.error(`Não foi possível excluir. ${erro}`); return; }
     toast.success(`Pedido ${pedido.numero} excluído.`);
     void refreshPedidos({ page: 1, pageSize: 10 });
     navigate("/sistema/pedidos");
