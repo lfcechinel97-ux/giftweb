@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { formatTelefone } from "@/lib/telefone";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, Plus, Trash2, Upload, X, Search, ImageIcon, Package, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -122,7 +123,7 @@ export const OrcamentoForm: React.FC = () => {
     setFormData({
       clienteId: orcamentoExistente.clienteId,
       contatoNome: orcamentoExistente.contatoNome || "",
-      contatoTelefone: orcamentoExistente.contatoTelefone || "",
+      contatoTelefone: formatTelefone(orcamentoExistente.contatoTelefone),
       contatoEmail: orcamentoExistente.contatoEmail || "",
       vendedorId: orcamentoExistente.vendedorId || currentVendedor?.id || "",
       origemId: orcamentoExistente.origemId || "",
@@ -314,7 +315,7 @@ export const OrcamentoForm: React.FC = () => {
       ...prev,
       clienteId: cliente.id,
       contatoNome: contato?.nome || cliente.nome,
-      contatoTelefone: contato?.telefone || "",
+      contatoTelefone: formatTelefone(contato?.telefone),
       contatoEmail: contato?.email || "",
     }));
     setSearchTerm("");
@@ -531,7 +532,7 @@ export const OrcamentoForm: React.FC = () => {
                   </p>
                   {clienteSelecionado.contatos[0] && (
                     <p className="text-sm text-gray-500">
-                      {clienteSelecionado.contatos[0].telefone}
+                      {formatTelefone(clienteSelecionado.contatos[0].telefone)}
                       {clienteSelecionado.contatos[0].email && ` • ${clienteSelecionado.contatos[0].email}`}
                     </p>
                   )}
@@ -593,7 +594,7 @@ export const OrcamentoForm: React.FC = () => {
                     type="text"
                     className="w-full px-3 py-2 border rounded-lg"
                     value={formData.contatoTelefone}
-                    onChange={(e) => setFormData((p) => ({ ...p, contatoTelefone: e.target.value }))}
+                    onChange={(e) => setFormData((p) => ({ ...p, contatoTelefone: formatTelefone(e.target.value) }))}
                     placeholder="(00) 00000-0000"
                   />
                 </div>

@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import {
   ChevronDown, ChevronRight, Package, Loader2, RefreshCw, Search, Boxes, Phone, Layers, ShoppingBag, Clock, History,
   Tag, X, MessageSquare, Send, Camera, Video, CheckCircle2, Upload, Download, Paperclip, FileText,
-  ArrowUpDown, Eye, EyeOff, Check, User,
+  ArrowUpDown, Eye, EyeOff, Check, User, Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -34,6 +34,7 @@ import { useSistema, type Pedido, type PedidoItem } from "@/contexts/SistemaCont
 import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
 import { resumoPersonalizacao, rotuloPersonalizacao } from "@/lib/personalizacao";
+import { formatTelefone } from "@/lib/telefone";
 import { ordenarTagsPorPrioridade, rotuloTag, corDaTag, pastelizar, ehTagCompra } from "@/lib/tagsPcp";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -744,9 +745,55 @@ function PcpPedidoCard({
   );
 }
 
+/** Contato do pedido (nome + WhatsApp) no card de "Teste Enviado" -- o
+ *  vendedor copia o número pra chamar o cliente no CRM (Datacrazy). */
+function ContatoTesteEnviado({ nome, telefone }: { nome: string | null; telefone: string | null }) {
+  const [copiado, setCopiado] = useState(false);
+  const fone = formatTelefone(telefone);
+  if (!nome && !fone) return null;
+  const copiar = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    try {
+      await navigator.clipboard.writeText(fone);
+      setCopiado(true);
+      toast.success(`Telefone copiado: ${fone}`);
+      setTimeout(() => setCopiado(false), 1500);
+    } catch {
+      toast.error("Não foi possível copiar o telefone");
+    }
+  };
+  return (
+    <div className="flex items-center gap-1 pl-[13px] mt-[3px] min-w-0" onClick={e => e.stopPropagation()}>
+      <Phone className="h-[10px] w-[10px] shrink-0 text-[#16A34A]" />
+      <span className="text-[10px] leading-none text-[var(--gw-text-secondary)] truncate" title={[nome, fone].filter(Boolean).join(" · ")}>
+        {nome && <span className="font-semibold">{nome}</span>}
+        {nome && fone && " · "}
+        {fone && <span className="gw-num">{fone}</span>}
+      </span>
+      {fone && (
+        <button
+          type="button"
+          draggable={false}
+          onMouseDown={e => e.stopPropagation()}
+          onClick={copiar}
+          title="Copiar telefone"
+          className="shrink-0 flex items-center gap-0.5 rounded-[4px] px-[5px] py-[2px] text-[9px] font-bold border transition-colors"
+          style={copiado
+            ? { backgroundColor: "#16A34A", borderColor: "#16A34A", color: "#FFFFFF" }
+            : { backgroundColor: "#F0FDF4", borderColor: "#BBF7D0", color: "#15803D" }}
+        >
+          {copiado ? <Check className="h-[9px] w-[9px]" /> : <Copy className="h-[9px] w-[9px]" />}
+          {copiado ? "Copiado" : "Copiar"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function PcpCard({
   row, indice, total, primeiroDoPedido, dragging, saving, atrasado, critico, highlight, comFotos,
-  imprimindoOP, chat, mencoes,
+  imprimindoOP, chat, mencoes, contato,
   onDragStart, onDragEnd, onOpen, onHover, onComprado, onDespachar, onImprimirOP, onAgrupar, onDesagrupar, onInserirMedidas,
 }: {
   row: PcpRow;
@@ -766,6 +813,8 @@ function PcpCard({
   /** Nomes @mencionados que ainda não viram -- visível pra qualquer um até a
    *  pessoa marcada abrir o chat, não só pra ela. */
   mencoes: string[];
+  /** Só em "Teste Enviado": contato do pedido pra chamar no WhatsApp/CRM. */
+  contato?: { nome: string | null; telefone: string | null };
   onDragStart: () => void;
   onDragEnd: () => void;
   onOpen: () => void;
@@ -869,6 +918,7 @@ function PcpCard({
               {row.cliente}
             </p>
           )}
+          {contato && <ContatoTesteEnviado nome={contato.nome} telefone={contato.telefone} />}
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {!comFotos && <VendedorIcone nome={row.pedido_vendedor_nome} />}
@@ -1819,6 +1869,27 @@ export default function PCP() {
     () => rows.filter(r => colunaDoStatus(r) === "teste_enviado"),
     [rows],
   );
+
+  /* Contato (nome + telefone) dos pedidos em Teste Enviado -- aparece no
+     card pro vendedor copiar e chamar o cliente no CRM. Busca só os pedidos
+     dessa coluna (poucos), sem pesar a vw_pcp. */
+  const pedidosTesteEnviado = useMemo(
+    () => [...new Set(testeEnviadoPendentes.map(r => r.pedido_id))].sort(),
+    [testeEnviadoPendentes],
+  );
+  const { data: contatosTesteEnviado } = useQuery<Map<string, { nome: string | null; telefone: string | null }>>({
+    queryKey: ["sistema", "pcp", "contatos-teste-enviado", pedidosTesteEnviado],
+    enabled: pedidosTesteEnviado.length > 0,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sistema_pedidos")
+        .select("id, contato_nome, contato_telefone")
+        .in("id", pedidosTesteEnviado);
+      if (error) { console.error("[PCP] carregar contatos de Teste Enviado falhou:", error); return new Map(); }
+      return new Map((data ?? []).map((p: any) => [p.id as string, { nome: p.contato_nome ?? null, telefone: p.contato_telefone ?? null }]));
+    },
+  });
 
   /* "@Fulano" no card -- pública (qualquer um com acesso ao item vê),
      diferente de chatResumo (que é "o que EU não li"): some quando o
@@ -3028,6 +3099,7 @@ export default function PCP() {
                           imprimindoOP={imprimindoOP === row.producao_id}
                           chat={chatResumoPorItem.get(row.producao_id)}
                           mencoes={mencoesPorItem.get(row.producao_id) ?? []}
+                          contato={colunaDoStatus(row) === "teste_enviado" ? contatosTesteEnviado?.get(row.pedido_id) : undefined}
                           onDragStart={() => setDraggingId(row.producao_id)}
                           onDragEnd={() => setDraggingId(null)}
                           onOpen={() => setDetalheId(row.producao_id)}

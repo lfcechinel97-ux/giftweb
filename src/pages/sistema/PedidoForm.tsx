@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { formatTelefone } from "@/lib/telefone";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ChevronLeft, Plus, Trash2, Pencil, AlertTriangle, Lock, Camera, Loader2,
@@ -288,7 +289,7 @@ const PedidoForm: React.FC = () => {
         setNumero(mapped.numero);
         setClienteId(mapped.clienteId);
         setContatoNome(mapped.contatoNome || "");
-        setContatoTelefone(mapped.contatoTelefone || "");
+        setContatoTelefone(formatTelefone(mapped.contatoTelefone));
         setContatoEmail(mapped.contatoEmail || "");
         setVendedorId(mapped.vendedorId || "");
         setFreteTipo(mapped.freteTipo || "");
@@ -651,7 +652,7 @@ const PedidoForm: React.FC = () => {
           </label>
           <label className="space-y-1">
             <span className="gw-label">Telefone</span>
-            <Input className="h-9" value={contatoTelefone} onChange={e => setContatoTelefone(e.target.value)} />
+            <Input className="h-9" value={contatoTelefone} onChange={e => setContatoTelefone(formatTelefone(e.target.value))} placeholder="(00) 00000-0000" inputMode="tel" />
           </label>
           <label className="space-y-1">
             <span className="gw-label">E-mail</span>

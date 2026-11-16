@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { formatTelefone } from "@/lib/telefone";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -411,7 +412,7 @@ function TerceirizadasCRUD() {
         <Input
           placeholder="Telefone (opcional)"
           value={novo.telefone}
-          onChange={e => setNovo(p => ({ ...p, telefone: e.target.value }))}
+          onChange={e => setNovo(p => ({ ...p, telefone: formatTelefone(e.target.value) }))}
           className="w-48 shrink-0"
         />
         <Button type="submit" className="bg-blue-700 hover:bg-blue-800 text-white shrink-0">
@@ -437,7 +438,7 @@ function TerceirizadasCRUD() {
                 <Input
                   placeholder="Telefone"
                   value={editingValue.telefone}
-                  onChange={e => setEditingValue(p => ({ ...p, telefone: e.target.value }))}
+                  onChange={e => setEditingValue(p => ({ ...p, telefone: formatTelefone(e.target.value) }))}
                   className="w-48 h-8 shrink-0"
                 />
                 <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-green-600" onClick={() => void saveEdit()}>
@@ -451,7 +452,7 @@ function TerceirizadasCRUD() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <span className="text-sm font-medium text-foreground">{t.nome}</span>
-                  {t.telefone && <span className="ml-2 text-xs text-muted-foreground">{t.telefone}</span>}
+                  {t.telefone && <span className="ml-2 text-xs text-muted-foreground">{formatTelefone(t.telefone)}</span>}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button type="button" size="icon" variant="ghost" className="h-7 w-7 text-blue-600" onClick={() => startEdit(t)}>
