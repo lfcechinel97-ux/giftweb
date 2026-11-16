@@ -21,6 +21,7 @@ export type Database = {
           id: string
           nome: string | null
           vendedor_id: string | null
+          vendedores_extras: string[]
         }
         Insert: {
           created_at?: string | null
@@ -28,6 +29,7 @@ export type Database = {
           id: string
           nome?: string | null
           vendedor_id?: string | null
+          vendedores_extras?: string[]
         }
         Update: {
           created_at?: string | null
@@ -35,6 +37,7 @@ export type Database = {
           id?: string
           nome?: string | null
           vendedor_id?: string | null
+          vendedores_extras?: string[]
         }
         Relationships: [
           {
@@ -4400,7 +4403,7 @@ export type Database = {
         }[]
       }
       sistema_contar_pedidos_por_etapa: {
-        Args: { p_vendedor_id?: string }
+        Args: { p_vendedor_id?: string; p_vendedor_ids?: string[] }
         Returns: {
           coluna_pcp: string
           total: number
@@ -4434,6 +4437,7 @@ export type Database = {
           p_search?: string
           p_status?: string
           p_vendedor_id?: string
+          p_vendedor_ids?: string[]
         }
         Returns: Json
       }
@@ -4458,6 +4462,7 @@ export type Database = {
           papel: string
           user_id: string
           vendedor_id: string
+          vendedores_extras: string[]
         }[]
       }
       sistema_mencoes_pendentes: {
@@ -4477,6 +4482,7 @@ export type Database = {
           vendedor_id: string
         }[]
       }
+      sistema_meus_vendedores: { Args: never; Returns: string[] }
       sistema_mudar_status_producao: {
         Args: {
           p_observacao?: string
@@ -4586,6 +4592,7 @@ export type Database = {
           p_nome: string
           p_papel: Database["public"]["Enums"]["app_role"]
           p_vendedor_id?: string
+          p_vendedores_extras?: string[]
         }
         Returns: string
       }
