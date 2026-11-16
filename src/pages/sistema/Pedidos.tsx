@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Search, SlidersHorizontal, Printer, Trash2, Copy, MoreHorizontal, Pencil,
+  Search, SlidersHorizontal, Printer, Trash2, Ban, Copy, MoreHorizontal, Pencil,
   ChevronLeft, ChevronRight, X, ShoppingCart, Plus, ArrowRight,
   CalendarDays, CreditCard, User as UserIcon, CheckCircle2, CircleDashed,
 } from "lucide-react";
@@ -21,7 +21,12 @@ import { statusInfo, ordemDaColuna, etapaPcpDoStatus, opcoesEtapasPcp } from "@/
 import { ordenarTagsPorPrioridade, rotuloTag } from "@/lib/tagsPcp";
 import { useSistema, clienteDisplay, type Pedido } from "@/contexts/SistemaContext";
 import { supabase } from "@/integrations/supabase/client";
-import { obterPerfil, vendedorRestritoDe } from "@/hooks/useUserRole";
+import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
+import { excluirPedidoDefinitivo } from "@/lib/excluirPedido";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { resumoPersonalizacao } from "@/lib/personalizacao";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -398,6 +403,30 @@ export default function Pedidos() {
 
   const handlePrintPDF = (p: Pedido) => gerarOrdemProducaoPDF(p, { clientes, vendedores, transportadoras: [] });
 
+  /* Excluir de vez (só admin/gerente) -- diferente de "Cancelar pedido",
+     que mantém o pedido na aba Cancelados. */
+  const { isGestor } = useUserRole();
+  const [excluirAlvo, setExcluirAlvo] = useState<Pedido | null>(null);
+  const [excluindoPedido, setExcluindoPedido] = useState(false);
+  const confirmarExclusao = async () => {
+    if (!excluirAlvo) return;
+    setExcluindoPedido(true);
+    const erro = await excluirPedidoDefinitivo({
+      id: excluirAlvo.id, numero: excluirAlvo.numero, orcamentoId: excluirAlvo.orcamentoId,
+      detalhes: { itens: (excluirAlvo.itens ?? []).map(i => i.nome), total: excluirAlvo.total, origem: "lista de pedidos" },
+    });
+    setExcluindoPedido(false);
+    if (erro) { toast.error(`Não foi possível excluir. ${erro}`); return; }
+    toast.success(`Pedido ${excluirAlvo.numero} excluído.`);
+    setExcluirAlvo(null);
+    void refreshPedidos({
+      status: filtroStatus, search: busca,
+      dataInicio: dataInicio || null, dataFim: dataFim || null,
+      page, pageSize, ids: colunaAbaAtual ? idsDaAba : undefined, ordenacao,
+    });
+    void qc.invalidateQueries({ queryKey: ["sistema"] });
+  };
+
   const handleCopiarNumero = async (p: Pedido) => {
     try {
       await navigator.clipboard.writeText(String(p.numero));
@@ -772,8 +801,13 @@ export default function Pedidos() {
                         <Printer className="h-3.5 w-3.5 mr-2" /> Ordem de produção
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => updatePedido(p.id, { status: "cancelado" })} style={{ color: "var(--gw-danger)" }}>
-                        <Trash2 className="h-3.5 w-3.5 mr-2" /> Cancelar pedido
+                        <Ban className="h-3.5 w-3.5 mr-2" /> Cancelar pedido
                       </DropdownMenuItem>
+                      {isGestor && (
+                        <DropdownMenuItem onClick={() => setExcluirAlvo(p)} style={{ color: "var(--gw-danger)" }}>
+                          <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir pedido
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -838,6 +872,27 @@ export default function Pedidos() {
           </div>
         </div>
       )}
+      <AlertDialog open={!!excluirAlvo} onOpenChange={o => { if (!o && !excluindoPedido) setExcluirAlvo(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir pedido {excluirAlvo?.numero}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O pedido some do sistema de vez: da lista, do PCP e das reservas de estoque. Se for o único pedido do
+              orçamento, o orçamento volta para "aberto". Não dá para desfazer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={excluindoPedido}>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={excluindoPedido}
+              onClick={e => { e.preventDefault(); void confirmarExclusao(); }}
+              style={{ background: "var(--gw-danger)" }}
+            >
+              {excluindoPedido ? "Excluindo..." : "Excluir definitivamente"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
