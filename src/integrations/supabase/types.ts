@@ -2285,6 +2285,7 @@ export type Database = {
           origem_id: string | null
           pagamento_id: string | null
           prazo_entrega: number | null
+          prazo_entrega_ate: number | null
           prazo_producao_dias: number
           status: string
           subtotal: number
@@ -2312,6 +2313,7 @@ export type Database = {
           origem_id?: string | null
           pagamento_id?: string | null
           prazo_entrega?: number | null
+          prazo_entrega_ate?: number | null
           prazo_producao_dias?: number
           status?: string
           subtotal?: number
@@ -2339,6 +2341,7 @@ export type Database = {
           origem_id?: string | null
           pagamento_id?: string | null
           prazo_entrega?: number | null
+          prazo_entrega_ate?: number | null
           prazo_producao_dias?: number
           status?: string
           subtotal?: number
