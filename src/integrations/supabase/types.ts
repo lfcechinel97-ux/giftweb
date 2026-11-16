@@ -21,6 +21,7 @@ export type Database = {
           id: string
           nome: string | null
           vendedor_id: string | null
+          vendedores_extras: string[]
         }
         Insert: {
           created_at?: string | null
@@ -28,6 +29,7 @@ export type Database = {
           id: string
           nome?: string | null
           vendedor_id?: string | null
+          vendedores_extras?: string[]
         }
         Update: {
           created_at?: string | null
@@ -35,6 +37,7 @@ export type Database = {
           id?: string
           nome?: string | null
           vendedor_id?: string | null
+          vendedores_extras?: string[]
         }
         Relationships: [
           {
@@ -45,6 +48,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      calc_config: {
+        Row: {
+          atualizado_em: string
+          chave: string
+          valor: Json
+        }
+        Insert: {
+          atualizado_em?: string
+          chave: string
+          valor: Json
+        }
+        Update: {
+          atualizado_em?: string
+          chave?: string
+          valor?: Json
+        }
+        Relationships: []
       }
       catalogo_clientes: {
         Row: {
@@ -482,6 +503,98 @@ export type Database = {
         }
         Relationships: []
       }
+      despachos_historico: {
+        Row: {
+          caixa_alt_cm: number
+          caixa_comp_cm: number
+          caixa_larg_cm: number
+          criado_em: string
+          criado_por: string | null
+          criado_por_nome: string | null
+          data: string
+          estimativa: Json | null
+          id: number
+          observacao: string | null
+          ocupacao_pct: number
+          peso_real_kg: number
+          referencia_pedido: string | null
+          status: string
+          validado_em: string | null
+          validado_por: string | null
+          validado_por_nome: string | null
+        }
+        Insert: {
+          caixa_alt_cm: number
+          caixa_comp_cm: number
+          caixa_larg_cm: number
+          criado_em?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data?: string
+          estimativa?: Json | null
+          id?: number
+          observacao?: string | null
+          ocupacao_pct?: number
+          peso_real_kg: number
+          referencia_pedido?: string | null
+          status?: string
+          validado_em?: string | null
+          validado_por?: string | null
+          validado_por_nome?: string | null
+        }
+        Update: {
+          caixa_alt_cm?: number
+          caixa_comp_cm?: number
+          caixa_larg_cm?: number
+          criado_em?: string
+          criado_por?: string | null
+          criado_por_nome?: string | null
+          data?: string
+          estimativa?: Json | null
+          id?: number
+          observacao?: string | null
+          ocupacao_pct?: number
+          peso_real_kg?: number
+          referencia_pedido?: string | null
+          status?: string
+          validado_em?: string | null
+          validado_por?: string | null
+          validado_por_nome?: string | null
+        }
+        Relationships: []
+      }
+      despachos_historico_itens: {
+        Row: {
+          codigo_amigavel: string
+          codigo_composto: string | null
+          despacho_id: number
+          id: number
+          qtd: number
+        }
+        Insert: {
+          codigo_amigavel: string
+          codigo_composto?: string | null
+          despacho_id: number
+          id?: number
+          qtd: number
+        }
+        Update: {
+          codigo_amigavel?: string
+          codigo_composto?: string | null
+          despacho_id?: number
+          id?: number
+          qtd?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "despachos_historico_itens_despacho_id_fkey"
+            columns: ["despacho_id"]
+            isOneToOne: false
+            referencedRelation: "despachos_historico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homepage_featured_showcase: {
         Row: {
           badge_text: string | null
@@ -542,6 +655,48 @@ export type Database = {
           empresa?: string | null
           id?: string
           nome?: string | null
+        }
+        Relationships: []
+      }
+      medidas_override: {
+        Row: {
+          altura_cm: number | null
+          atualizado_em: string
+          atualizado_por: string | null
+          codigo_amigavel: string
+          fator_compressao: number | null
+          ignorar_calibracao: boolean
+          largura_cm: number | null
+          observacao: string | null
+          peso_g: number | null
+          profundidade_cm: number | null
+          vol_efetivo_un_cm3: number | null
+        }
+        Insert: {
+          altura_cm?: number | null
+          atualizado_em?: string
+          atualizado_por?: string | null
+          codigo_amigavel: string
+          fator_compressao?: number | null
+          ignorar_calibracao?: boolean
+          largura_cm?: number | null
+          observacao?: string | null
+          peso_g?: number | null
+          profundidade_cm?: number | null
+          vol_efetivo_un_cm3?: number | null
+        }
+        Update: {
+          altura_cm?: number | null
+          atualizado_em?: string
+          atualizado_por?: string | null
+          codigo_amigavel?: string
+          fator_compressao?: number | null
+          ignorar_calibracao?: boolean
+          largura_cm?: number | null
+          observacao?: string | null
+          peso_g?: number | null
+          profundidade_cm?: number | null
+          vol_efetivo_un_cm3?: number | null
         }
         Relationships: []
       }
@@ -2130,6 +2285,7 @@ export type Database = {
           origem_id: string | null
           pagamento_id: string | null
           prazo_entrega: number | null
+          prazo_entrega_ate: number | null
           prazo_producao_dias: number
           status: string
           subtotal: number
@@ -2157,6 +2313,7 @@ export type Database = {
           origem_id?: string | null
           pagamento_id?: string | null
           prazo_entrega?: number | null
+          prazo_entrega_ate?: number | null
           prazo_producao_dias?: number
           status?: string
           subtotal?: number
@@ -2184,6 +2341,7 @@ export type Database = {
           origem_id?: string | null
           pagamento_id?: string | null
           prazo_entrega?: number | null
+          prazo_entrega_ate?: number | null
           prazo_producao_dias?: number
           status?: string
           subtotal?: number
@@ -3813,6 +3971,54 @@ export type Database = {
         }
         Relationships: []
       }
+      xbz_caixa_master: {
+        Row: {
+          altura_cm: number | null
+          codigo_composto: string
+          codigo_xbz: string
+          comprimento_cm: number | null
+          descricao: string | null
+          id: number
+          importado_em: string
+          importado_por: string | null
+          largura_cm: number | null
+          motivo_revisao: string | null
+          qtd_por_caixa: number | null
+          referencia: string
+          status_revisao: string
+        }
+        Insert: {
+          altura_cm?: number | null
+          codigo_composto: string
+          codigo_xbz: string
+          comprimento_cm?: number | null
+          descricao?: string | null
+          id?: number
+          importado_em?: string
+          importado_por?: string | null
+          largura_cm?: number | null
+          motivo_revisao?: string | null
+          qtd_por_caixa?: number | null
+          referencia: string
+          status_revisao?: string
+        }
+        Update: {
+          altura_cm?: number | null
+          codigo_composto?: string
+          codigo_xbz?: string
+          comprimento_cm?: number | null
+          descricao?: string | null
+          id?: number
+          importado_em?: string
+          importado_por?: string | null
+          largura_cm?: number | null
+          motivo_revisao?: string | null
+          qtd_por_caixa?: number | null
+          referencia?: string
+          status_revisao?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       sistema_venda_item_resultado: {
@@ -4086,6 +4292,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      importar_caixa_master: { Args: { linhas: Json }; Returns: number }
       is_admin_user: { Args: never; Returns: boolean }
       is_gestor: { Args: { _user_id: string }; Returns: boolean }
       preco_base_exato: { Args: { p_custo: number }; Returns: number }
@@ -4097,6 +4304,7 @@ export type Database = {
       preco_to_num: { Args: { v: Json }; Returns: number }
       produtos_sem_custo: { Args: { p_resultado: Json }; Returns: Json }
       recalc_estoque_total: { Args: { p_id: string }; Returns: undefined }
+      registrar_despacho: { Args: { dados: Json }; Returns: number }
       search_products_by_category: {
         Args: {
           p_apenas_estoque?: boolean
@@ -4198,7 +4406,7 @@ export type Database = {
         }[]
       }
       sistema_contar_pedidos_por_etapa: {
-        Args: { p_vendedor_id?: string }
+        Args: { p_vendedor_id?: string; p_vendedor_ids?: string[] }
         Returns: {
           coluna_pcp: string
           total: number
@@ -4232,6 +4440,7 @@ export type Database = {
           p_search?: string
           p_status?: string
           p_vendedor_id?: string
+          p_vendedor_ids?: string[]
         }
         Returns: Json
       }
@@ -4256,6 +4465,7 @@ export type Database = {
           papel: string
           user_id: string
           vendedor_id: string
+          vendedores_extras: string[]
         }[]
       }
       sistema_mencoes_pendentes: {
@@ -4275,6 +4485,7 @@ export type Database = {
           vendedor_id: string
         }[]
       }
+      sistema_meus_vendedores: { Args: never; Returns: string[] }
       sistema_mudar_status_producao: {
         Args: {
           p_observacao?: string
@@ -4384,6 +4595,7 @@ export type Database = {
           p_nome: string
           p_papel: Database["public"]["Enums"]["app_role"]
           p_vendedor_id?: string
+          p_vendedores_extras?: string[]
         }
         Returns: string
       }

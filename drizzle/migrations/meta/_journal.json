@@ -22,6 +22,20 @@
       "when": 1792675447539,
       "tag": "0002_whatsapp_leads_meta_selecao",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794842718315,
+      "tag": "0003_usuario_varios_vendedores",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794842737318,
+      "tag": "0004_orcamento_prazo_entrega_faixa",
+      "breakpoints": true
     }
   ]
 }
