@@ -39,6 +39,7 @@ interface OrcamentoFormData {
   freteValor: number;
   transportadoraId: string;
   prazoEntrega: number;
+  prazoEntregaAte: number;
   pagamentoId: string;
   observacoes: string;
   anexoUrl: string;
@@ -91,7 +92,9 @@ export const OrcamentoForm: React.FC = () => {
     freteTipo: null,
     freteValor: 0,
     transportadoraId: "",
-    prazoEntrega: 0,
+    /* Padrão: 10 a 15 dias úteis -- o vendedor muda na mão se precisar. */
+    prazoEntrega: 10,
+    prazoEntregaAte: 15,
     pagamentoId: "",
     observacoes: "",
     anexoUrl: "",
@@ -132,6 +135,7 @@ export const OrcamentoForm: React.FC = () => {
       freteValor: orcamentoExistente.freteValor,
       transportadoraId: orcamentoExistente.transportadoraId || "",
       prazoEntrega: orcamentoExistente.prazoEntrega || 0,
+      prazoEntregaAte: orcamentoExistente.prazoEntregaAte || 0,
       pagamentoId: orcamentoExistente.pagamentoId || "",
       observacoes: orcamentoExistente.observacoes || "",
       anexoUrl: orcamentoExistente.anexoUrl || "",
@@ -296,7 +300,7 @@ export const OrcamentoForm: React.FC = () => {
       freteTipo: p.freteTipo === "CIF" ? p.freteTipo : "FOB",
       freteValor: totalComAdicional,
       transportadoraId: transp?.id || p.transportadoraId,
-      prazoEntrega: opcaoSelecionada.prazoDias ?? p.prazoEntrega,
+      // Prazo de entrega não muda com a cotação: é o padrão (10 a 15) ou o que o vendedor digitou.
     }));
     setShowFreteDialog(false);
   };
@@ -400,6 +404,8 @@ export const OrcamentoForm: React.FC = () => {
       freteValor: freteEfetivo,
       transportadoraId: formData.transportadoraId || undefined,
       prazoEntrega: formData.prazoEntrega || undefined,
+      // "até" só vale se for maior que o "de" (senão é prazo único).
+      prazoEntregaAte: formData.prazoEntregaAte > formData.prazoEntrega ? formData.prazoEntregaAte : null,
       pagamentoId: formData.pagamentoId || undefined,
       observacoes: formData.observacoes || undefined,
       status: "aberto",
@@ -760,7 +766,6 @@ export const OrcamentoForm: React.FC = () => {
                     setFormData((p) => ({
                       ...p,
                       transportadoraId: e.target.value,
-                      prazoEntrega: transp?.prazoEntrega || p.prazoEntrega,
                     }));
                   }}
                 >
@@ -789,15 +794,28 @@ export const OrcamentoForm: React.FC = () => {
                 )}
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Prazo Entrega (dias)</label>
-                <input
-                  type="number"
-                  min="0"
-                  className="w-full px-3 py-2 border rounded-lg"
-                  value={formData.prazoEntrega || ""}
-                  onChange={(e) => setFormData((p) => ({ ...p, prazoEntrega: parseInt(e.target.value) || 0 }))}
-                  placeholder="0"
-                />
+                <label className="block text-sm text-gray-600 mb-1">Prazo Entrega (dias úteis)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    aria-label="Prazo de entrega: de"
+                    className="w-full px-3 py-2 border rounded-lg"
+                    value={formData.prazoEntrega || ""}
+                    onChange={(e) => setFormData((p) => ({ ...p, prazoEntrega: parseInt(e.target.value) || 0 }))}
+                    placeholder="10"
+                  />
+                  <span className="text-sm text-gray-500 shrink-0">a</span>
+                  <input
+                    type="number"
+                    min="0"
+                    aria-label="Prazo de entrega: até"
+                    className="w-full px-3 py-2 border rounded-lg"
+                    value={formData.prazoEntregaAte || ""}
+                    onChange={(e) => setFormData((p) => ({ ...p, prazoEntregaAte: parseInt(e.target.value) || 0 }))}
+                    placeholder="15"
+                  />
+                </div>
               </div>
             </div>
           </section>

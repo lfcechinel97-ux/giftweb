@@ -545,7 +545,13 @@ export async function gerarPDFOrcamento(
   y = ensureSpace(doc, y, 50);
 
   const cards = [
-    { label: "PRAZO DE ENTREGA", value: orc.prazoEntrega ? `${orc.prazoEntrega} dias úteis` : "À combinar" },
+    {
+      label: "PRAZO DE ENTREGA",
+      value: !orc.prazoEntrega ? "À combinar"
+        : orc.prazoEntregaAte && orc.prazoEntregaAte > orc.prazoEntrega
+          ? `${orc.prazoEntrega} a ${orc.prazoEntregaAte} dias úteis`
+          : `${orc.prazoEntrega} dias úteis`,
+    },
     { label: "FORMA DE PAGAMENTO", value: lookupName(sistema.meiosPagamento, orc.pagamentoId) },
     { label: "TRANSPORTE", value: orc.freteTipo === "FOB" ? "FOB" : lookupName(sistema.transportadoras, orc.transportadoraId) },
     { label: "VALIDADE", value: formatDate(dataValidade.toISOString()) },
