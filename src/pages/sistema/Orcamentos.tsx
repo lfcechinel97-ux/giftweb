@@ -1,4 +1,5 @@
 import { OrderNumber, StatusPill, MetaField, Thumb, Money, type GwStage } from "@/components/sistema/ui";
+import { formatTelefone } from "@/lib/telefone";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUserRole } from "@/hooks/useUserRole";
 import { resumoPersonalizacao } from "@/lib/personalizacao";
@@ -619,7 +620,7 @@ export default function Orcamentos() {
                     <span className="flex items-center gap-2 min-w-0">
                       <Phone className="h-[15px] w-[15px] shrink-0" style={{ color: "var(--gw-text-muted)" }} />
                       <span className="text-[13px] truncate" style={{ color: "var(--gw-text)" }}>
-                        {o.contatoNome || o.contatoTelefone}
+                        {o.contatoNome || formatTelefone(o.contatoTelefone)}
                       </span>
                     </span>
                   )}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { formatTelefone } from "@/lib/telefone";
 import { Pencil, Plus, Search, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,7 +82,7 @@ export default function Clientes() {
                   {c.nome}
                 </TableCell>
                 <TableCell className="text-sm font-mono">{c.documento || "—"}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{contato?.telefone || "—"}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{formatTelefone(contato?.telefone) || "—"}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{contato?.email || "—"}</TableCell>
                 <TableCell className="text-right">
                   <Button size="icon" variant="ghost" className="h-7 w-7 text-blue-600" onClick={() => startEdit(c)}>

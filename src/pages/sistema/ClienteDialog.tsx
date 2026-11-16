@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatTelefone } from "@/lib/telefone";
 import { Loader2, Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -85,7 +86,7 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
     });
     if (data.ddd_telefone_1 && c.contatos.length > 0) {
       const contatosAtualizados = [...c.contatos];
-      contatosAtualizados[0] = { ...contatosAtualizados[0], telefone: data.ddd_telefone_1 };
+      contatosAtualizados[0] = { ...contatosAtualizados[0], telefone: formatTelefone(data.ddd_telefone_1) };
       update({ contatos: contatosAtualizados });
     }
     toast.success("Dados do CNPJ preenchidos automaticamente!");
@@ -328,8 +329,8 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
                       </Field>
                       <Field label="Telefone" small>
                         <Input
-                          value={x.telefone || ""}
-                          onChange={(ev) => updateContato(i, { telefone: ev.target.value })}
+                          value={formatTelefone(x.telefone)}
+                          onChange={(ev) => updateContato(i, { telefone: formatTelefone(ev.target.value) })}
                         />
                       </Field>
                       <Field label="E-mail" small>

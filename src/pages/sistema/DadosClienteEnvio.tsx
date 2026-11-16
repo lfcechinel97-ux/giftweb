@@ -1,4 +1,5 @@
 import { Check, Copy, Pencil } from "lucide-react";
+import { formatTelefone } from "@/lib/telefone";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Cliente, ClienteSnapshot, Endereco } from "@/contexts/SistemaContext";
@@ -37,7 +38,7 @@ function textoEtiqueta(nome: string, tipo: string, documento: string, ie: string
     e ? linhaEndereco(e) : "",
     e ? [e.bairro, [e.cidade, e.uf].filter(Boolean).join("/")].filter(Boolean).join(" - ") : "",
     e?.cep ? `CEP: ${e.cep}` : "",
-    c.telefone ? `Tel: ${c.telefone}` : "",
+    c.telefone ? `Tel: ${formatTelefone(c.telefone)}` : "",
     c.email ? `E-mail: ${c.email}` : "",
   ];
   return linhas.filter(Boolean).join("\n");
@@ -109,7 +110,7 @@ export default function DadosClienteEnvio({ cliente, snapshot, contatoPedido, on
         <Campo rotulo={tipo === "PF" ? "CPF" : "CNPJ"} valor={documento} />
         {tipo === "PJ" && <Campo rotulo="Inscrição estadual" valor={ie} />}
         <Campo rotulo="Contato" valor={contato.nome} />
-        <Campo rotulo="Telefone" valor={contato.telefone} />
+        <Campo rotulo="Telefone" valor={formatTelefone(contato.telefone)} />
         <Campo rotulo="E-mail" valor={contato.email} />
       </div>
 
