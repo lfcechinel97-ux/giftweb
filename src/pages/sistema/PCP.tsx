@@ -2564,7 +2564,7 @@ export default function PCP() {
     }
   };
 
-  const confirmarPagamentoPedido = async (comprovanteUrl?: string) => {
+  const confirmarPagamentoPedido = async (comprovanteUrl?: string, quemConfirmou?: string) => {
     if (!pagamentoPedidoModal) return;
     const { row, target, grupo } = pagamentoPedidoModal;
     setPagamentoPedidoSaving(true);
@@ -2583,7 +2583,9 @@ export default function PCP() {
     for (const alvo of (grupo ?? [row])) {
       await mudarStatus(
         alvo.producao_id, statusCanonicoDaColuna(target),
-        comprovanteUrl ? "Comprovante de pagamento anexado" : "Pagamento confirmado manualmente",
+        comprovanteUrl ? "Comprovante de pagamento anexado"
+          : quemConfirmou ? `Pagamento confirmado manualmente — ${quemConfirmou}`
+          : "Pagamento confirmado manualmente",
       );
     }
     setPagamentoPedidoSaving(false);
@@ -4038,15 +4040,39 @@ export default function PCP() {
               <div className="flex items-center gap-2">
                 <div className="h-px flex-1 bg-border" /><span className="text-[11px] text-muted-foreground">ou</span><div className="h-px flex-1 bg-border" />
               </div>
-              <Button
-                className="w-full"
-                style={{ backgroundColor: "var(--gw-success)" }}
-                onClick={() => confirmarPagamentoPedido()}
-                disabled={pagamentoPedidoSaving}
-              >
-                {pagamentoPedidoSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                CONFIRMADO MARLON
-              </Button>
+              {/* Cartão de crédito -> quem confere é a Stone; PIX -> Marlon.
+                  Forma de pagamento não identificada: mostra as duas opções. */}
+              {(() => {
+                const nomePag = pagamentoPedidoModal.row.pagamento_nome;
+                const cartao = isPagamentoCartao(nomePag);
+                const pix = isPagamentoPix(nomePag);
+                const opcoes = cartao
+                  ? [{ rotulo: "CONFIRMADO STONE", quem: "Stone (cartão)" }]
+                  : pix
+                    ? [{ rotulo: "CONFIRMADO MARLON", quem: "Marlon (PIX)" }]
+                    : [{ rotulo: "CONFIRMADO STONE", quem: "Stone (cartão)" }, { rotulo: "CONFIRMADO MARLON", quem: "Marlon (PIX)" }];
+                return (
+                  <>
+                    {nomePag && (
+                      <p className="text-[12px] text-center text-[var(--gw-text-secondary)]">
+                        Forma de pagamento: <span className="font-semibold">{nomePag}</span>
+                      </p>
+                    )}
+                    {opcoes.map(o => (
+                      <Button
+                        key={o.rotulo}
+                        className="w-full"
+                        style={{ backgroundColor: "var(--gw-success)" }}
+                        onClick={() => confirmarPagamentoPedido(undefined, o.quem)}
+                        disabled={pagamentoPedidoSaving}
+                      >
+                        {pagamentoPedidoSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                        {o.rotulo}
+                      </Button>
+                    ))}
+                  </>
+                );
+              })()}
             </div>
           )}
         </DialogContent>
