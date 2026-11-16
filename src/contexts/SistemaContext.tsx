@@ -129,6 +129,8 @@ export interface Orcamento {
   freteValor: number;
   transportadoraId?: string;
   prazoEntrega?: number;
+  /** Prazo em faixa ("10 a 15 dias úteis"): prazoEntrega = de, este = até. */
+  prazoEntregaAte?: number | null;
   pagamentoId?: string;
   observacoes?: string;
   status: "aberto" | "aprovado" | "cancelado";
@@ -321,6 +323,7 @@ const mapOrcamento = (r: any): Orcamento => ({
   origemId: r.origem_id ?? undefined, itens: r.itens ?? [], subtotal: Number(r.subtotal ?? 0),
   freteTipo: r.frete_tipo ?? null, freteValor: Number(r.frete_valor ?? 0),
   transportadoraId: r.transportadora_id ?? undefined, prazoEntrega: r.prazo_entrega ?? undefined,
+  prazoEntregaAte: r.prazo_entrega_ate ?? undefined,
   pagamentoId: r.pagamento_id ?? undefined, observacoes: r.observacoes ?? undefined,
   status: r.status, createdAt: r.created_at, updatedAt: r.updated_at,
   aprovadoEm: r.aprovado_em ?? undefined, anexoUrl: r.anexo_url ?? undefined,
@@ -328,6 +331,17 @@ const mapOrcamento = (r: any): Orcamento => ({
   dataProduzirAte: r.data_produzir_ate ?? undefined,
   dataDespacharAte: r.data_despachar_ate ?? undefined,
 });
+/* Banco ainda sem a coluna prazo_entrega_ate (migration não aplicada): grava
+   sem ela em vez de falhar o orçamento inteiro. */
+const semPrazoAteSeFaltarColuna = async (payload: any, gravar: (p: any) => PromiseLike<any>) => {
+  const res: any = await gravar(payload);
+  if (res?.error && "prazo_entrega_ate" in payload && /prazo_entrega_ate/.test(res.error.message ?? "")) {
+    const { prazo_entrega_ate: _ignorado, ...resto } = payload;
+    return gravar(resto);
+  }
+  return res;
+};
+
 const orcamentoToDb = (o: Partial<Orcamento>): any => {
   const out: any = {};
   if (o.id !== undefined) out.id = o.id;
@@ -345,6 +359,7 @@ const orcamentoToDb = (o: Partial<Orcamento>): any => {
   if (o.freteValor !== undefined) out.frete_valor = o.freteValor;
   if (o.transportadoraId !== undefined) out.transportadora_id = o.transportadoraId ?? null;
   if (o.prazoEntrega !== undefined) out.prazo_entrega = o.prazoEntrega ?? null;
+  if (o.prazoEntregaAte !== undefined) out.prazo_entrega_ate = o.prazoEntregaAte ?? null;
   if (o.pagamentoId !== undefined) out.pagamento_id = o.pagamentoId ?? null;
   if (o.observacoes !== undefined) out.observacoes = o.observacoes ?? null;
   if (o.status !== undefined) out.status = o.status;
@@ -775,7 +790,10 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const now = new Date().toISOString();
     const orcamento: Orcamento = { ...o, id, numero, createdAt: now, updatedAt: now };
     setData(prev => ({ ...prev, orcamentos: [orcamento, ...prev.orcamentos] }));
-    const res = await dbWrite("orçamento", () => supabase.from("sistema_orcamentos").insert({ ...orcamentoToDb(orcamento), created_at: now }));
+    const res = await dbWrite("orçamento", () => semPrazoAteSeFaltarColuna(
+      { ...orcamentoToDb(orcamento), created_at: now },
+      payload => supabase.from("sistema_orcamentos").insert(payload),
+    ));
     if (res?.error) {
       setData(prev => ({ ...prev, orcamentos: prev.orcamentos.filter(item => item.id !== id) }));
       throw res.error;
@@ -790,7 +808,10 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ...prev,
       orcamentos: prev.orcamentos.map(o => o.id === id ? { ...o, ...changes, updatedAt: new Date().toISOString() } : o),
     }));
-    const res = await dbWrite("orçamento", () => supabase.from("sistema_orcamentos").update(orcamentoToDb(changes)).eq("id", id));
+    const res = await dbWrite("orçamento", () => semPrazoAteSeFaltarColuna(
+      orcamentoToDb(changes),
+      payload => supabase.from("sistema_orcamentos").update(payload).eq("id", id),
+    ));
     if (res?.error) throw res.error;
     // Estado local já atualizado; não recarrega a lista para não perder a página atual.
   }, [refreshOrcamentos]);
