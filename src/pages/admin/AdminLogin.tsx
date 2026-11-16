@@ -36,9 +36,15 @@ export default function AdminLogin() {
       const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
       if (err || !data.user) { setError('E-mail ou senha incorretos.'); setLoading(false); return; }
       const { data: admin, error: adminErr } = await supabase
-        .from('admin_users').select('id').eq('id', data.user.id).maybeSingle();
+        .from('admin_users').select('*').eq('id', data.user.id).maybeSingle();
       if (adminErr) {
         setError('Erro ao verificar acesso. Tente novamente em instantes.');
+        setLoading(false);
+        return;
+      }
+      if (admin && (admin as any).pausado === true) {
+        await supabase.auth.signOut();
+        setError('Seu acesso ao sistema está pausado. Fale com o administrador.');
         setLoading(false);
         return;
       }

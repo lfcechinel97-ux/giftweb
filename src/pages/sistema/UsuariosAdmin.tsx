@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -23,6 +24,8 @@ interface UsuarioRow {
   vendedor_id: string | null;
   /** Outros vendedores que esse usuário também vê (além do principal). */
   vendedores_extras?: string[] | null;
+  /** Acesso pausado: não consegue entrar nem ler/gravar nada. */
+  pausado?: boolean | null;
 }
 
 const PAPEIS: AppRole[] = ["admin", "gerente", "vendedor", "producao"];
@@ -159,6 +162,21 @@ export default function UsuariosAdmin() {
     }
   };
 
+  const [alternandoId, setAlternandoId] = useState<string | null>(null);
+  const alternarAcesso = async (u: UsuarioRow, ativo: boolean) => {
+    setAlternandoId(u.user_id);
+    try {
+      const { error } = await (supabase as any).rpc("sistema_pausar_usuario", { p_user_id: u.user_id, p_pausado: !ativo });
+      if (error) throw error;
+      await qc.invalidateQueries({ queryKey: ["sistema", "usuarios"] });
+      toast.success(ativo ? `Acesso de ${u.nome || u.email} reativado.` : `Acesso de ${u.nome || u.email} pausado — não consegue mais entrar.`);
+    } catch (e: any) {
+      toast.error(`Não foi possível alterar o acesso. ${e?.message ?? ""}`);
+    } finally {
+      setAlternandoId(null);
+    }
+  };
+
   const remover = async (u: UsuarioRow) => {
     if (!window.confirm(`Tirar o acesso de ${u.nome || u.email} ao sistema?`)) return;
     const { error } = await (supabase as any).rpc("sistema_remover_usuario", { p_user_id: u.user_id });
@@ -285,14 +303,15 @@ export default function UsuariosAdmin() {
           <p className="p-6 text-center text-sm text-muted-foreground">Nenhum usuário.</p>
         ) : (
           <div className="divide-y divide-border">
-            <div className="hidden md:grid grid-cols-[1.2fr_1.4fr_150px_220px_110px] gap-3 px-4 py-2 text-xs text-muted-foreground">
-              <span>Nome</span><span>E-mail</span><span>Perfil</span><span>Vendedores vinculados</span><span />
+            <div className="hidden md:grid grid-cols-[1.2fr_1.4fr_150px_220px_90px_110px] gap-3 px-4 py-2 text-xs text-muted-foreground">
+              <span>Nome</span><span>E-mail</span><span>Perfil</span><span>Vendedores vinculados</span><span>Acesso</span><span />
             </div>
             {(usuariosQuery.data ?? []).map(u => {
               const souEu = u.user_id === userId;
               const alterado = !!edicoes[u.user_id];
+              const ativo = !u.pausado;
               return (
-                <div key={u.user_id} className="grid gap-3 md:grid-cols-[1.2fr_1.4fr_150px_220px_110px] items-center px-4 py-2.5">
+                <div key={u.user_id} className={`grid gap-3 md:grid-cols-[1.2fr_1.4fr_150px_220px_90px_110px] items-center px-4 py-2.5 ${ativo ? "" : "bg-muted/40 [&>*:not(.acesso)]:opacity-50"}`}>
                   <Input
                     value={valor(u, "nome") ?? ""}
                     onChange={e => editar(u.user_id, { nome: e.target.value })}
@@ -308,7 +327,15 @@ export default function UsuariosAdmin() {
                     extras={valor(u, "vendedores_extras") ?? []}
                     onChange={(vendedor_id, vendedores_extras) => editar(u.user_id, { vendedor_id, vendedores_extras })}
                   />
-                  <div className="flex items-center justify-end gap-1">
+                  <div className="acesso flex items-center gap-2" title={souEu ? "Você não pode desativar seu próprio acesso" : ativo ? "Desativar acesso (o usuário não consegue entrar)" : "Reativar acesso"}>
+                    <Switch
+                      checked={ativo}
+                      disabled={souEu || alternandoId === u.user_id}
+                      onCheckedChange={v => void alternarAcesso(u, v)}
+                    />
+                    <span className={`text-xs font-medium ${ativo ? "text-green-700" : "text-red-600"}`}>{ativo ? "Ativo" : "Pausado"}</span>
+                  </div>
+                  <div className="acesso flex items-center justify-end gap-1">
                     <Button size="sm" variant={alterado ? "default" : "ghost"} disabled={!alterado || salvandoId === u.user_id} onClick={() => void salvar(u)}>
                       {salvandoId === u.user_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     </Button>

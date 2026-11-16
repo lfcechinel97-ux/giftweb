@@ -49,7 +49,7 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
       try {
         const queryPromise = supabase
           .from('admin_users')
-          .select('id')
+          .select('*')
           .eq('id', session.user.id)
           .maybeSingle();
 
@@ -78,7 +78,8 @@ export default function AdminGuard({ children }: { children: React.ReactNode }) 
           return;
         }
 
-        if (!data) {
+        /* Acesso pausado em Configurações › Usuários: derruba a sessão. */
+        if (!data || (data as any).pausado === true) {
           clearAdminAccess();
           await supabase.auth.signOut();
           navigateRef.current(loginRef.current);
