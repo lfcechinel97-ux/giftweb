@@ -36,6 +36,7 @@ import { gerarOrdemProducaoPDF } from "./ordemProducaoPDF";
 import { obterPerfil, vendedorRestritoDe, useUserRole } from "@/hooks/useUserRole";
 import { resumoPersonalizacao, rotuloPersonalizacao } from "@/lib/personalizacao";
 import { formatTelefone } from "@/lib/telefone";
+import { registrarAuditoria } from "@/lib/auditoria";
 import { ordenarTagsPorPrioridade, rotuloTag, corDaTag, pastelizar, ehTagCompra } from "@/lib/tagsPcp";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -2406,6 +2407,39 @@ export default function PCP() {
      de coluna (registrar compra, confirmar despacho, anexar arquivo) o
      RPC de mudar status não serve (não há status novo pra gravar); grava
      uma linha de histórico direto, sem mudar nada além do registro. */
+  /* "Produzir até" editável no detalhe do item: grava no PEDIDO (vale pra
+     todos os itens dele, e aparece na tela do pedido) e registra no
+     histórico de cada item quem mudou, de qual data pra qual. */
+  const [produzirAteEdit, setProduzirAteEdit] = useState("");
+  const [salvandoProduzirAte, setSalvandoProduzirAte] = useState(false);
+  useEffect(() => { setProduzirAteEdit(""); }, [detalheId]);
+  const salvarProduzirAte = async (row: PcpRow, novaData: string) => {
+    const anterior = row.pedido_data_despacho?.slice(0, 10) ?? "";
+    if (!novaData || novaData === anterior) return;
+    setSalvandoProduzirAte(true);
+    const { error } = await supabase
+      .from("sistema_pedidos")
+      .update({ data_produzir_ate: novaData, data_despachar_ate: novaData } as any)
+      .eq("id", row.pedido_id);
+    if (error) {
+      setSalvandoProduzirAte(false);
+      toast.error(`Não foi possível alterar a data. ${error.message}`);
+      return;
+    }
+    const br = (d: string) => (d ? d.split("-").reverse().join("/") : "sem data");
+    const quem = nomeCadastro || emailUsuario || "Alguém";
+    const texto = `${quem} alterou "Produzir até" de ${br(anterior)} para ${br(novaData)}`;
+    const doPedido = rows.filter(r => r.pedido_id === row.pedido_id);
+    setRows(prev => prev.map(r => r.pedido_id === row.pedido_id ? { ...r, pedido_data_despacho: novaData } : r));
+    await Promise.all(doPedido.map(r => registrarNotaHistorico(r, texto)));
+    void registrarAuditoria({
+      entidade: "pedido", entidadeId: row.pedido_id, entidadeNumero: String(row.pedido_numero ?? ""),
+      acao: "produzir_ate_alterado", detalhes: { de: anterior || null, para: novaData, por: quem, origem: "PCP" },
+    });
+    setSalvandoProduzirAte(false);
+    toast.success(texto);
+  };
+
   const registrarNotaHistorico = async (row: PcpRow, texto: string) => {
     const { data, error } = await supabase.from("sistema_producao_historico").insert({
       producao_item_id: row.producao_id,
@@ -3449,6 +3483,42 @@ export default function PCP() {
                         </div>
                       ))}
                     </div>
+                    {/* Produzir até -- do pedido inteiro; muda aqui e no pedido. */}
+                    {(() => {
+                      const atual = detalhe.pedido_data_despacho?.slice(0, 10) ?? "";
+                      const valor = produzirAteEdit || atual;
+                      const mudou = !!produzirAteEdit && produzirAteEdit !== atual;
+                      return (
+                        <div>
+                          <p className="gw-label">Produzir até</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Input
+                              type="date"
+                              value={valor}
+                              onChange={e => setProduzirAteEdit(e.target.value)}
+                              className="h-9 w-[160px] text-[13px] bg-white"
+                              disabled={salvandoProduzirAte}
+                            />
+                            {mudou && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  className="h-9"
+                                  disabled={salvandoProduzirAte}
+                                  onClick={async () => { await salvarProduzirAte(detalhe, produzirAteEdit); setProduzirAteEdit(""); }}
+                                >
+                                  {salvandoProduzirAte ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
+                                </Button>
+                                <Button size="sm" variant="ghost" className="h-9 px-2" disabled={salvandoProduzirAte} onClick={() => setProduzirAteEdit("")}>
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-[var(--gw-text-muted)] mt-1">Vale para o pedido inteiro e fica no histórico.</p>
+                        </div>
+                      );
+                    })()}
                     {TERCEIRIZADA_TRIGGER.includes(detalhe.local_producao) && (
                       <Button
                         variant="outline"
