@@ -193,9 +193,11 @@ input[type="range"]::-moz-range-thumb {
 
 /* ===== Sistema (painel do vendedor) — tema visual isolado ===== */
 .sistema-theme {
-  /* Espelha --gw-bg (#EEF2F8). O shadcn precisa do triplete HSL cru, então o
-     valor aparece duas vezes; se mudar um, mude o outro. */
-  --background: 216 42% 95%;      /* = --gw-bg */
+  /* Fundo da área de conteúdo: BRANCO (pedido do usuário — o azul-clarinho
+     #EEF2F8 deixava o sistema pálido). Separação dos cards vem de borda +
+     sombra curta. Inputs usam bg-background, então também ficam brancos.
+     --gw-bg segue existindo para fundos INTERNOS (colunas do Trello etc.). */
+  --background: 0 0% 100%;
   --foreground: 220 64% 33%;      /* = --gw-text (#1E4189), azul de leitura */
   --card: 0 0% 100%;
   --card-foreground: 220 64% 33%;
@@ -203,14 +205,14 @@ input[type="range"]::-moz-range-thumb {
   --popover-foreground: 220 64% 33%;
   --primary: 221 83% 53%;         /* #2563EB */
   --primary-foreground: 0 0% 100%;
-  --secondary: 220 30% 96%;
+  --secondary: 220 14% 96%;
   --secondary-foreground: 220 64% 33%;
-  --muted: 220 30% 96%;
+  --muted: 220 14% 96%;
   --muted-foreground: 220 9% 46%; /* #6B7280 */
-  --accent: 220 30% 96%;
+  --accent: 220 14% 96%;
   --accent-foreground: 220 64% 33%;
-  --border: 223 45% 93%;          /* #E4E9F5 */
-  --input: 223 45% 93%;
+  --border: 216 20% 91%;          /* #E3E7ED — neutro, visível no fundo branco */
+  --input: 216 16% 87%;           /* #D9DEE5 — borda de campo visível, sem azulado */
   --ring: 221 83% 53%;
   --radius: 0.75rem;              /* 12px */
   font-family: 'Inter', system-ui, sans-serif;
@@ -237,10 +239,18 @@ input[type="range"]::-moz-range-thumb {
 .sistema-theme main a:not([class*="text-"]):not([class*="bg-"]) { color: #2563EB; }
 
 
-/* Cards brancos, borda cinza, sombra sutil */
+/* Tela de pedido: o reset de peso acima (span/input = 400) anulava as
+   classes font-* do Tailwind. Aqui o peso declarado na classe vale. */
+.sistema-theme .pedido-form .font-medium { font-weight: 500; }
+.sistema-theme .pedido-form .font-semibold { font-weight: 600; }
+.sistema-theme .pedido-form .font-bold { font-weight: 700; }
+.sistema-theme .pedido-form .font-extrabold { font-weight: 800; }
+
+/* Cards brancos, borda cinza, sombra sutil — com o fundo branco a sombra
+   precisa ser um pouco mais presente para o card não sumir. */
 .sistema-theme .bg-card,
 .sistema-theme [class*="rounded-lg"].border.bg-card {
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.04);
 }
 
 /* Normaliza verdes para #16A34A */
@@ -277,18 +287,18 @@ input[type="range"]::-moz-range-thumb {
      DENTRO do cartão (faixa de itens), entre os dois. */
   --gw-bg: #EEF2F8;
   --gw-surface: #FFFFFF;
-  --gw-surface-alt: #F5F8FC;
+  --gw-surface-alt: #F5F7FA;
 
   /* Linhas — hairline é o separador DENTRO do cartão, quase imperceptível de
      perto e suficiente para o olho seguir a linha. border é a borda do próprio
      cartão. strong só para divisor estrutural. */
   --gw-hairline: #EDF1F7;
-  --gw-border: #E1E7F0;
+  --gw-border: #E3E7ED;
   --gw-border-strong: #CFD8E6;
 
   /* Barra lateral — navy sólido e profundo, para o azul vibrante do item ativo
      ter onde brilhar. */
-  --gw-sidebar: #0E2450;
+  --gw-sidebar: #082B57;
   --gw-sidebar-hover: rgba(255,255,255,.07);
   --gw-sidebar-active: #2563EB;
 
@@ -346,7 +356,7 @@ input[type="range"]::-moz-range-thumb {
 
   /* Sombras — elevação curta e de baixa opacidade; a separação vem da cor de
      fundo e da borda, não de sombra borrada. */
-  --gw-shadow-sm: 0 1px 1px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.03);
+  --gw-shadow-sm: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.04);
   --gw-shadow-md: 0 2px 4px rgba(16,24,40,.05), 0 6px 16px rgba(16,24,40,.06);
   --gw-shadow-lg: 0 12px 32px rgba(16,24,40,.12);
 
