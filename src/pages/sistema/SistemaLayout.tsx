@@ -101,20 +101,20 @@ export default function SistemaLayout() {
 
   return (
     <div className="sistema-theme flex min-h-screen bg-background">
-      {/* Recolhida (só ícones) e abre POR CIMA do conteúdo ao passar o mouse —
-          o conteúdo não se desloca, só ganha a largura que a barra ocupava. */}
+      {/* Telas ≥ 1280px: barra sempre aberta (ícone + nome). Telas menores:
+          recolhida (só ícones) e abre POR CIMA do conteúdo ao passar o mouse. */}
       <aside
-        className="group/menu w-[68px] hover:w-[230px] hover:shadow-[8px_0_24px_-8px_rgba(0,0,0,0.35)] h-screen text-white fixed left-0 top-0 flex flex-col z-50 overflow-hidden transition-[width,box-shadow] duration-200 ease-out"
+        className="group/menu w-[68px] hover:w-[230px] hover:shadow-[8px_0_24px_-8px_rgba(0,0,0,0.35)] xl:w-[220px] xl:hover:w-[220px] xl:hover:shadow-none h-screen text-white fixed left-0 top-0 flex flex-col z-50 overflow-hidden transition-[width,box-shadow] duration-200 ease-out"
         style={{ background: "var(--gw-sidebar)" }}
       >
         <div className="h-[76px] px-[14px] flex items-center gap-3 border-b border-white/10 shrink-0">
           <img src="/logos/giftweb-logo.png" alt="GiftWeb" className="h-10 w-10 shrink-0" />
-          <div className="min-w-0 whitespace-nowrap opacity-0 group-hover/menu:opacity-100 transition-opacity duration-150">
+          <div className="min-w-0 whitespace-nowrap opacity-0 group-hover/menu:opacity-100 xl:opacity-100 transition-opacity duration-150">
             <h2 className="text-lg leading-tight tracking-tight" style={{ fontFamily: "inherit", fontWeight: 600, letterSpacing: "-0.02em" }}>
               <span style={{ color: "#fff" }}>Gift</span>
               <span style={{ color: "var(--gw-blue-vivid)" }}>Web</span>
             </h2>
-            <p className="text-[11px] text-white/40">Sistema do Vendedor</p>
+            <p className="text-[11px] text-white/80">Sistema do Vendedor</p>
           </div>
         </div>
 
@@ -126,11 +126,11 @@ export default function SistemaLayout() {
               title={item.label}
               onMouseEnter={() => prefetch(item)}
               onFocus={() => prefetch(item)}
-              className="relative flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[14px] font-medium text-white/70 hover:bg-[var(--gw-sidebar-hover)] hover:text-white transition-colors"
+              className="relative flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[14px] font-medium text-white hover:bg-[var(--gw-sidebar-hover)] hover:text-white transition-colors"
               activeClassName="!text-white !font-semibold gw-nav-ativo"
             >
               <item.icon className="h-[18px] w-[18px] shrink-0" />
-              <span className="whitespace-nowrap opacity-0 group-hover/menu:opacity-100 transition-opacity duration-150">
+              <span className="whitespace-nowrap opacity-0 group-hover/menu:opacity-100 xl:opacity-100 transition-opacity duration-150">
                 {item.label}
               </span>
             </NavLink>
@@ -141,10 +141,10 @@ export default function SistemaLayout() {
             target="_blank"
             rel="noopener noreferrer"
             title="Ver Site"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/70 hover:bg-white/[0.08] transition-colors mt-4"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white hover:bg-white/[0.08] transition-colors mt-4"
           >
             <Globe className="h-[18px] w-[18px] shrink-0" />
-            <span className="whitespace-nowrap opacity-0 group-hover/menu:opacity-100 transition-opacity duration-150">Ver Site</span>
+            <span className="whitespace-nowrap opacity-0 group-hover/menu:opacity-100 xl:opacity-100 transition-opacity duration-150">Ver Site</span>
           </a>
         </nav>
 
@@ -159,15 +159,15 @@ export default function SistemaLayout() {
               >
                 {iniciais(nomeLogado || "?")}
               </span>
-              <span className="flex flex-col items-start leading-tight min-w-0 flex-1 whitespace-nowrap opacity-0 group-hover/menu:opacity-100 transition-opacity duration-150">
+              <span className="flex flex-col items-start leading-tight min-w-0 flex-1 whitespace-nowrap opacity-0 group-hover/menu:opacity-100 xl:opacity-100 transition-opacity duration-150">
                 <span className="text-[13.5px] font-semibold truncate max-w-full text-white">
                   {perfilCarregando ? "…" : nomeLogado}
                 </span>
-                <span className="text-[11.5px] text-white/50">
+                <span className="text-[11.5px] text-white/80">
                   {perfilCarregando ? "…" : ROTULO_PAPEL[papel]}
                 </span>
               </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-white/50 opacity-0 group-hover/menu:opacity-100 transition-opacity duration-150" />
+              <ChevronDown className="h-4 w-4 shrink-0 text-white/80 opacity-0 group-hover/menu:opacity-100 xl:opacity-100 transition-opacity duration-150" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="right" align="end" className="w-60">
@@ -215,7 +215,7 @@ export default function SistemaLayout() {
         </div>
       </aside>
 
-      <div className="ml-[68px] flex-1 min-w-0 min-h-screen flex flex-col">
+      <div className="ml-[68px] xl:ml-[220px] flex-1 min-w-0 min-h-screen flex flex-col">
 
         <main className="p-6 flex-1 min-w-0">
           <Suspense fallback={<RouteSkeleton />}>

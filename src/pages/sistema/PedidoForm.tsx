@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ChevronLeft, Plus, Trash2, Pencil, AlertTriangle, Lock, Camera, Loader2,
   Minus, Upload, Paperclip, FileText, Truck, CreditCard, X, Download, ClipboardList, PackageSearch,
-  IdCard,
+  IdCard, Check, CalendarDays, CircleDollarSign, User, Mail, MessageCircle, Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -19,7 +19,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { OrderNumber, Thumb, Money, StatusBadge } from "@/components/sistema/ui";
+import { OrderNumber, Thumb, StatusBadge } from "@/components/sistema/ui";
 import { statusInfo } from "@/lib/statusPedido";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -27,7 +27,7 @@ import { useSistema, clienteDisplay, type Pedido, type PedidoItem, type QuoteIte
 import { useSistemaProducts } from "./useSistemaProducts";
 import { ItemDialog } from "./OrcamentoForm";
 import ClienteDialog from "./ClienteDialog";
-import DadosClienteEnvio from "./DadosClienteEnvio";
+import DadosClienteEnvio, { copiarEtiquetaCliente } from "./DadosClienteEnvio";
 import ClienteBusca from "@/components/sistema/ClienteBusca";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { diasUteisAte } from "@/lib/diasUteis";
@@ -49,25 +49,78 @@ const num = (v: unknown) => {
 
 type ProducaoRow = { id: string; item_id: string; status: string };
 
-/** Cartão de seção com cabeçalho colorido (ícone + título) — mesmo padrão
-    visual repetido nas 5 seções da tela de pedido. */
+/* Paleta da tela de pedido. Cores de status/etapa NÃO passam por aqui —
+   continuam vindo de src/lib/statusPedido.ts via StatusBadge. */
+const COR = {
+  navy: "#082B57",
+  azul: "#075BE8",
+  verde: "#00A83B",
+  verdeEscuro: "#047A2C",
+  verdeSoft: "#E8F7EE",
+  rotulo: "#0B2A55",
+};
+
+/** Cartão de seção. `navy` = cabeçalho azul-marinho com título branco (cards
+    principais); `suave` = cabeçalho em tom claro com título na cor forte. */
 function SectionCard({
-  icon, title, color, action, children,
+  icon, title, action, children, tom = "navy", corForte, corSuave, className = "", bodyClassName = "p-3.5",
 }: {
-  icon: React.ReactNode; title: string; color: string; action?: React.ReactNode; children: React.ReactNode;
+  icon: React.ReactNode; title: string; action?: React.ReactNode; children: React.ReactNode;
+  tom?: "navy" | "suave"; corForte?: string; corSuave?: string; className?: string; bodyClassName?: string;
 }) {
+  const navy = tom === "navy";
   return (
-    <div className="rounded-[12px] overflow-hidden" style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border-strong)" }}>
-      <div className="flex items-center justify-between gap-3 px-4 py-3" style={{ borderBottom: "1px solid var(--gw-border)" }}>
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center justify-center h-7 w-7 rounded-full shrink-0" style={{ background: `color-mix(in srgb, ${color} 14%, white)`, color }}>
-            {icon}
+    <div
+      className={`rounded-[12px] overflow-hidden flex flex-col ${className}`}
+      style={{ background: "#FFFFFF", border: "1px solid #E3E7ED", boxShadow: "0 1px 2px rgba(16,24,40,.05)" }}
+    >
+      <div
+        className="flex items-center justify-between gap-3 px-4 min-h-[44px] py-1.5 shrink-0"
+        style={navy ? { background: COR.navy } : { background: corSuave, borderBottom: "1px solid #E3E7ED" }}
+      >
+        <div className="flex items-center gap-2.5 min-w-0" style={{ color: navy ? "#FFFFFF" : corForte }}>
+          <span className="shrink-0 [&>svg]:h-[18px] [&>svg]:w-[18px]">{icon}</span>
+          <span className="text-[15px] font-bold truncate" style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif", letterSpacing: "-0.01em" }}>
+            {title}
           </span>
-          <span className="gw-label" style={{ color, fontWeight: 700 }}>{title}</span>
         </div>
         {action}
       </div>
-      <div className="p-4">{children}</div>
+      <div className={`flex-1 ${bodyClassName}`}>{children}</div>
+    </div>
+  );
+}
+
+/** Rótulo de campo da tela de pedido — legível, sem caixa-alta. */
+function Rotulo({ children }: { children: React.ReactNode }) {
+  return <span className="block text-[12px] font-semibold mb-1" style={{ color: COR.rotulo }}>{children}</span>;
+}
+
+/** Input com ícone à esquerda. */
+function ComIcone({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--gw-text-muted)] [&>svg]:h-4 [&>svg]:w-4">
+        {icon}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+/** Bloco da faixa de indicadores (ícone + rótulo + valor). */
+function Indicador({ icon, rotulo, children, cor = COR.navy }: { icon?: React.ReactNode; rotulo: string; children: React.ReactNode; cor?: string }) {
+  return (
+    <div className="flex items-center gap-2.5 min-w-0">
+      {icon && (
+        <span className="inline-flex items-center justify-center shrink-0 [&>svg]:h-6 [&>svg]:w-6" style={{ color: cor }}>
+          {icon}
+        </span>
+      )}
+      <div className="min-w-0">
+        <span className="block text-[12px] font-medium" style={{ color: "var(--gw-text-muted)" }}>{rotulo}</span>
+        {children}
+      </div>
     </div>
   );
 }
@@ -546,411 +599,526 @@ const PedidoForm: React.FC = () => {
 
   const clienteNome = clientes.find(c => c.id === clienteId);
 
+  const temDadosCliente = Boolean(clienteNome || pedido.clienteSnapshot);
+  const botaoCabecalho = "inline-flex items-center gap-1.5 h-8 px-3 rounded-[8px] text-[12px] font-semibold whitespace-nowrap";
+
   return (
-    <div className="space-y-4">
-      {/* Cabeçalho */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+    <div className="pedido-form space-y-4 max-w-[1680px]">
+      {/* ── Cabeçalho: voltar · título · nº/cliente · status · ações ───── */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
             onClick={() => navigate("/sistema/pedidos")}
-            className="inline-flex items-center justify-center h-9 w-9 rounded-full"
-            style={{ background: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)" }}
+            className="inline-flex items-center justify-center h-10 w-10 rounded-[10px] shrink-0 bg-white hover:border-[#075BE8]"
+            style={{ border: "1px solid #D9DEE5", color: COR.navy }}
             aria-label="Voltar"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-5 w-5" />
           </button>
-          <div>
-            <h2 className="gw-display">Editar pedido</h2>
-            <div className="flex items-center gap-2.5">
+          <div className="min-w-0">
+            <h2 className="gw-display leading-tight" style={{ color: COR.navy, fontSize: 24 }}>Editar pedido</h2>
+            <div className="flex items-center gap-2 min-w-0">
               <OrderNumber value={pedido.numero} />
-              {/* Pedido importado não tem cliente vinculado — o Calcme só manda
-                  o nome. Mostrar "Sem cliente" escondia o nome que existe. */}
-              <span className="gw-meta">
+              <span className="text-[13px] truncate" style={{ color: "var(--gw-text-secondary)" }}>
+                ·{" "}
+                {/* Pedido importado não tem cliente vinculado — o Calcme só manda
+                    o nome. Mostrar "Sem cliente" escondia o nome que existe. */}
                 {clienteNome
                   ? clienteDisplay(clienteNome)
                   : (pedido.clienteSnapshot?.nome || pedido.contatoNome || "Sem cliente")}
               </span>
-              <StatusBadge
-                status={pedido.status}
-                nivel="pedido"
-                size="sm"
-                onSelect={slug => setPedido(p => (p ? { ...p, status: slug as Pedido["status"] } : p))}
-              />
             </div>
           </div>
+          <span className="ml-1 shrink-0">
+            <StatusBadge
+              status={pedido.status}
+              nivel="pedido"
+              size="md"
+              onSelect={slug => setPedido(p => (p ? { ...p, status: slug as Pedido["status"] } : p))}
+            />
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
+            className="h-10 bg-white"
             onClick={() => { setConfirmExcluir(true); setNumeroDigitado(""); setSenhaAdmin(""); }}
             style={{ color: "var(--gw-danger)", borderColor: "var(--gw-danger)" }}
           >
             <Trash2 className="h-4 w-4 mr-2" /> Excluir pedido
           </Button>
-          <Button onClick={salvar} disabled={salvando} style={{ background: "var(--gw-success)" }}>
+          <Button onClick={salvar} disabled={salvando} className="h-10 px-5 font-semibold text-white hover:opacity-90" style={{ background: COR.verde }}>
+            {salvando ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
             {salvando ? "Salvando..." : "Salvar alterações"}
           </Button>
         </div>
       </div>
 
-      {/* Dados do pedido */}
-      <SectionCard icon={<ClipboardList className="h-4 w-4" />} title="Dados do pedido" color="var(--gw-primary)">
-        <div className="grid gap-3 md:grid-cols-3">
-          <label className="space-y-1">
-            <span className="gw-label">Nº do pedido</span>
-            <Input
-              value={numero}
-              onChange={e => setNumero(e.target.value.replace(/\D/g, ""))}
-              inputMode="numeric"
-              className="h-9 gw-tnum"
-            />
-          </label>
-          <div className="space-y-1">
-            <span className="gw-label">Cliente</span>
-            <div className="flex items-center gap-1.5">
-              <ClienteBusca clientes={clientes} value={clienteId} onChange={setClienteId} />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 shrink-0"
-                onClick={() => setShowClienteDialog(true)}
-                aria-label="Novo cliente"
-                title="Novo cliente"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-              {clienteNome && (
+      {/* ── Faixa de indicadores ───────────────────────────────────────── */}
+      <div
+        className="rounded-[12px] px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-3"
+        style={{ background: "#FFFFFF", border: "1px solid #E3E7ED", boxShadow: "0 1px 2px rgba(16,24,40,.05)" }}
+      >
+        <Indicador rotulo="Pedido nº">
+          <Input
+            value={numero}
+            onChange={e => setNumero(e.target.value.replace(/\D/g, ""))}
+            inputMode="numeric"
+            aria-label="Número do pedido"
+            className="h-8 w-[120px] px-1.5 -ml-1.5 text-[20px] font-bold gw-tnum border-transparent hover:border-[#D9DEE5] focus-visible:border-[var(--gw-primary)]"
+            style={{ color: COR.navy }}
+          />
+        </Indicador>
+
+        <span className="hidden md:block h-10 w-px" style={{ background: "#E3E7ED" }} />
+
+        <Indicador icon={<CalendarDays />} rotulo="Produzir até *" cor={COR.navy}>
+          <Input
+            type="date"
+            value={dataProduzirAte}
+            required
+            aria-label="Produzir até (data limite de produção)"
+            onChange={e => setDataProduzirAte(e.target.value)}
+            className="h-8 w-[150px] px-1.5 -ml-1.5 text-[16px] font-bold gw-tnum border-transparent hover:border-[#D9DEE5] focus-visible:border-[var(--gw-primary)]"
+            style={{ color: COR.navy, ...(!dataProduzirAte ? { borderColor: "var(--gw-danger)" } : {}) }}
+          />
+        </Indicador>
+
+        {dataProduzirAte ? (
+          <span
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[8px] text-[12.5px] font-semibold"
+            style={diasUteisProducao <= 2
+              ? { background: "var(--gw-danger-soft)", color: "var(--gw-danger)" }
+              : { background: COR.verdeSoft, color: COR.verdeEscuro }}
+          >
+            <CalendarDays className="h-4 w-4" />
+            {diasUteisProducao === 0
+              ? "Nenhum dia útil p/ produção"
+              : `${diasUteisProducao} ${diasUteisProducao === 1 ? "dia útil" : "dias úteis"} p/ produção`}
+          </span>
+        ) : (
+          <span className="text-[12px] max-w-[260px] leading-snug" style={{ color: "var(--gw-danger)" }}>
+            Vendedor, informe a data limite p/ produção (sem contar o prazo de frete).
+          </span>
+        )}
+
+        <span className="flex-1" />
+
+        <Indicador icon={<CircleDollarSign />} rotulo="Valor total" cor={COR.verde}>
+          <span className="block text-[22px] font-extrabold gw-tnum leading-tight" style={{ color: COR.verde, letterSpacing: "-0.02em" }}>
+            {brl(total)}
+          </span>
+        </Indicador>
+      </div>
+
+      {/* ── Linha 1: Dados do pedido (40%) + Cliente (60%) ─────────────── */}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] items-stretch">
+        <SectionCard icon={<ClipboardList />} title="Dados do pedido">
+          <div className="space-y-2.5">
+            <div>
+              <Rotulo>Cliente</Rotulo>
+              <div className="flex items-center gap-1.5">
+                <ClienteBusca clientes={clientes} value={clienteId} onChange={setClienteId} />
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
                   className="h-9 w-9 shrink-0"
-                  onClick={() => setEditarClienteAberto(true)}
-                  aria-label="Editar cliente"
-                  title="Editar dados do cliente"
+                  onClick={() => setShowClienteDialog(true)}
+                  aria-label="Novo cliente"
+                  title="Novo cliente"
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Plus className="h-4 w-4" />
                 </Button>
-              )}
-            </div>
-          </div>
-          <label className="space-y-1">
-            <span className="gw-label">Vendedor</span>
-            <Select value={vendedorId} onValueChange={setVendedorId} disabled={!!vendedorRestrito && vendedorRestrito.length <= 1}>
-              <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
-              <SelectContent>
-                {/* Vinculado a mais de um vendedor: escolhe só entre os dele. */}
-                {vendedores.filter(v => !vendedorRestrito || vendedorRestrito.includes(v.id) || v.id === vendedorId).map(v => <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </label>
-          <label className="space-y-1">
-            <span className="gw-label">Contato</span>
-            <Input className="h-9" value={contatoNome} onChange={e => setContatoNome(e.target.value)} />
-          </label>
-          <label className="space-y-1">
-            <span className="gw-label">Telefone</span>
-            <Input className="h-9" value={contatoTelefone} onChange={e => setContatoTelefone(formatTelefone(e.target.value))} placeholder="(00) 00000-0000" inputMode="tel" />
-          </label>
-          <label className="space-y-1">
-            <span className="gw-label">E-mail</span>
-            <Input className="h-9" value={contatoEmail} onChange={e => setContatoEmail(e.target.value)} />
-          </label>
-          <label className="space-y-1">
-            <span className="gw-label">
-              Produzir até (data limite de produção) <span style={{ color: "var(--gw-danger)" }}>*</span>
-            </span>
-            <Input className="h-9" type="date" value={dataProduzirAte} required
-              onChange={e => setDataProduzirAte(e.target.value)}
-              style={!dataProduzirAte ? { borderColor: "var(--gw-danger)" } : undefined} />
-            {dataProduzirAte ? (
-              <span className="block text-[11px] font-semibold" style={{ color: diasUteisProducao <= 2 ? "var(--gw-danger)" : "var(--gw-primary)" }}>
-                {diasUteisProducao === 0
-                  ? "Nenhum dia útil p/ produção"
-                  : `${diasUteisProducao} ${diasUteisProducao === 1 ? "dia útil" : "dias úteis"} p/ produção`}
-              </span>
-            ) : (
-              <span className="block text-[11px]" style={{ color: "var(--gw-danger)" }}>
-                Vendedor, informe a data limite p/ produção (sem contar o prazo de frete).
-              </span>
-            )}
-          </label>
-        </div>
-      </SectionCard>
-
-      {/* Dados do cliente pra etiqueta/nota -- copiar campo a campo ou tudo,
-          e editar o cadastro sem sair do pedido. */}
-      <SectionCard icon={<IdCard className="h-4 w-4" />} title="Dados do cliente (envio e etiqueta)" color="var(--gw-violet, #7C5CFF)">
-        <DadosClienteEnvio
-          cliente={clienteNome ?? null}
-          snapshot={clienteNome ? null : pedido.clienteSnapshot ?? null}
-          contatoPedido={{ nome: contatoNome, telefone: contatoTelefone, email: contatoEmail }}
-          onEditar={clienteNome ? () => setEditarClienteAberto(true) : undefined}
-        />
-      </SectionCard>
-
-      {/* Produtos do pedido */}
-      <SectionCard
-        icon={<PackageSearch className="h-4 w-4" />}
-        title="Produtos do pedido"
-        color="var(--gw-primary)"
-        action={
-          <Button size="sm" variant="outline" onClick={abrirNovoItem}>
-            <Plus className="h-4 w-4 mr-1" /> Adicionar produto
-          </Button>
-        }
-      >
-        <input
-          ref={fotoInputRef}
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
-          className="hidden"
-          onChange={handleFotoItem}
-        />
-        <RecorteQuadrado
-          arquivo={arquivoParaRecortar}
-          onCancelar={() => setArquivoParaRecortar(null)}
-          onConfirmar={arq => void handleFotoRecortada(arq)}
-        />
-        <input
-          ref={arteInputRef}
-          type="file"
-          accept="image/*,application/pdf,.ai,.cdr,.eps,.svg"
-          multiple
-          className="hidden"
-          onChange={handleArteItem}
-        />
-
-        <div className="space-y-2">
-          {itens.map(item => {
-            const st = statusDoItem(item.id);
-            const cancelado = Boolean((item as PedidoItem & { cancelado?: boolean }).cancelado) || st === "cancelado";
-            return (
-              <div
-                key={item.id}
-                className="p-2.5 rounded-lg space-y-2"
-                style={{ border: "1px solid var(--gw-hairline)", opacity: cancelado ? 0.5 : 1 }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="shrink-0 space-y-1">
-                    <button
-                      type="button"
-                      onClick={() => escolherFoto(item.id)}
-                      disabled={enviandoFoto === item.id}
-                      title={item.mockupImagem ? "Trocar a foto deste item" : "Anexar foto deste item"}
-                      className="relative group h-14 w-14 rounded-lg overflow-hidden block"
-                    >
-                      <Thumb src={item.mockupImagem || item.imagem} alt={item.nome} size="md" />
-                      <span
-                        className={`absolute inset-0 flex items-center justify-center transition-opacity ${
-                          enviandoFoto === item.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                        }`}
-                        style={{ background: "rgba(15,42,92,0.62)" }}
-                      >
-                        {enviandoFoto === item.id
-                          ? <Loader2 className="h-4 w-4 animate-spin text-white" />
-                          : <Camera className="h-4 w-4 text-white" />}
-                      </span>
-                    </button>
-                    {item.mockupImagem && (
-                      <button
-                        type="button"
-                        onClick={() => void abrirRecorteFoto(item.id, item.mockupImagem!)}
-                        disabled={enviandoFoto === item.id}
-                        className="text-[10px] text-primary hover:underline block w-14 text-center"
-                      >
-                        Recortar
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="gw-title text-[13.5px] truncate" style={{ fontWeight: 600 }}>{item.nome}</span>
-                      {item.varianteSlug && (
-                        <span className="gw-meta text-[11px] px-1.5 py-0.5 rounded shrink-0" style={{ background: "var(--gw-surface-alt)" }}>
-                          {item.varianteSlug}
-                        </span>
-                      )}
-                    </div>
-                    {item.origemCalcme ? (
-                      <span className="block text-[12px] font-semibold mt-0.5" style={{ color: "var(--gw-text-muted)" }}>
-                        Importado do Calcme
-                      </span>
-                    ) : (
-                      <span
-                        className="block text-[12px] font-semibold mt-0.5"
-                        style={{ color: resumoPersonalizacao(item) ? "var(--gw-primary)" : "var(--gw-danger)" }}
-                      >
-                        {resumoPersonalizacao(item) || "Sem personalização definida — edite o item"}
-                      </span>
-                    )}
-                    <span onClick={e => e.stopPropagation()} className="inline-block mt-0.5">
-                      <StatusBadge
-                        status={cancelado ? "cancelado" : st}
-                        nivel="item"
-                        size="sm"
-                        onSelect={cancelado ? undefined : slug => alterarStatusItem(item.id, slug)}
-                      />
-                    </span>
-                  </div>
-
-                  {/* Quantidade — estepper em vez de só campo numérico */}
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      type="button"
-                      aria-label="Diminuir quantidade"
-                      onClick={() => alterarQuantidade(item.id, -1)}
-                      className="inline-flex items-center justify-center h-8 w-8 rounded-md"
-                      style={{ background: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)" }}
-                    >
-                      <Minus className="h-3.5 w-3.5" />
-                    </button>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={item.quantidade}
-                      onChange={e => {
-                        const q = Math.max(1, Number(e.target.value) || 1);
-                        setItens(prev => prev.map(i => i.id === item.id
-                          ? { ...i, quantidade: q, total: q * num(i.precoUnitario) } : i));
-                      }}
-                      className="h-8 w-16 text-center px-1"
-                    />
-                    <button
-                      type="button"
-                      aria-label="Aumentar quantidade"
-                      onClick={() => alterarQuantidade(item.id, 1)}
-                      className="inline-flex items-center justify-center h-8 w-8 rounded-md"
-                      style={{ background: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)" }}
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="text-right shrink-0 w-28 space-y-0.5">
-                    <div className="flex items-center justify-end gap-1">
-                      <span className="text-[11px] text-[var(--gw-text-muted)]">R$</span>
-                      <Input
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        value={item.precoUnitario}
-                        onChange={e => {
-                          const preco = Math.max(0, Number(e.target.value) || 0);
-                          setItens(prev => prev.map(i => i.id === item.id
-                            ? { ...i, precoUnitario: preco, total: num(i.quantidade) * preco } : i));
-                        }}
-                        className="h-7 w-20 text-right px-1.5 text-[12px]"
-                      />
-                    </div>
-                    <Money
-                      value={num(item.total) || num(item.quantidade) * num(item.precoUnitario)}
-                      className="text-[12px]"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-end gap-1 shrink-0">
-                    <button
-                      type="button"
-                      aria-label="Editar item"
-                      onClick={() => abrirEdicaoItem(item)}
-                      className="inline-flex items-center justify-center h-8 w-8 rounded-full"
-                      style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    {st === "enviado" || cancelado ? (
-                      <button
-                        type="button"
-                        aria-label="Cancelar item"
-                        disabled={cancelado}
-                        onClick={() => cancelarItem(item)}
-                        className="inline-flex items-center justify-center h-8 w-8 rounded-full"
-                        style={{ background: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)" }}
-                      >
-                        <Lock className="h-3.5 w-3.5" />
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        aria-label="Remover item"
-                        onClick={() => pedirRemocao(item)}
-                        className="inline-flex items-center justify-center h-8 w-8 rounded-full"
-                        style={{ background: "rgba(239,68,68,0.10)", color: "var(--gw-danger)" }}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Personalização + arte — linha 2, fora do fluxo de preço/qtd */}
-                <div className="flex items-center gap-2 pl-[68px]">
-                  <input
-                    value={item.observacao ?? ""}
-                    onChange={e => {
-                      const v = e.target.value;
-                      setItens(prev => prev.map(i => (i.id === item.id ? { ...i, observacao: v } : i)));
-                    }}
-                    placeholder="Personalização — técnica, cor, nomes da gravação"
-                    className="h-7 px-2 flex-1 min-w-0 rounded text-[12px] bg-[var(--gw-surface-alt)] border border-transparent
-                               hover:border-[var(--gw-border)] focus:border-[var(--gw-primary)] focus:bg-[var(--gw-surface)]
-                               focus:outline-none transition-colors placeholder:text-[var(--gw-text-muted)]"
-                    style={{ color: "var(--gw-text-secondary)" }}
-                  />
-                  <button
+                {clienteNome && (
+                  <Button
                     type="button"
-                    onClick={() => escolherArte(item.id)}
-                    disabled={enviandoArte === item.id}
-                    className="shrink-0 inline-flex items-center gap-1.5 h-7 px-2.5 rounded text-[11px] font-semibold"
-                    style={{ background: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)" }}
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => setEditarClienteAberto(true)}
+                    aria-label="Editar cliente"
+                    title="Editar dados do cliente"
                   >
-                    {enviandoArte === item.id
-                      ? <Loader2 className="h-3 w-3 animate-spin" />
-                      : artesDoItem(item).length > 0 ? <Plus className="h-3 w-3" /> : <Paperclip className="h-3 w-3" />}
-                    {artesDoItem(item).length > 0 ? "Outra arte" : "Anexar arte"}
-                  </button>
-                </div>
-                {artesDoItem(item).length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 pl-[68px]">
-                    {artesDoItem(item).map((a, idx) => (
-                      <span
-                        key={a.url}
-                        className="inline-flex items-center gap-1 h-6 pl-2 pr-1 rounded text-[11px] font-semibold max-w-[220px]"
-                        style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
-                      >
-                        <a href={a.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 min-w-0" title={a.nome}>
-                          <Download className="h-3 w-3 shrink-0" />
-                          <span className="truncate">{a.nome || `Arte ${idx + 1}`}</span>
-                        </a>
-                        <button
-                          type="button"
-                          aria-label="Remover arte"
-                          onClick={() => removerArteItem(item.id, a.url)}
-                          className="inline-flex items-center justify-center h-4 w-4 rounded hover:bg-[rgba(239,68,68,0.12)] hover:text-[var(--gw-danger)]"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                 )}
               </div>
-            );
-          })}
-          {itens.length === 0 && <div className="py-8 text-center gw-meta">Nenhum item no pedido.</div>}
-        </div>
-      </SectionCard>
+            </div>
+            <div className="grid gap-x-3 gap-y-2.5 sm:grid-cols-2">
+              <label className="block">
+                <Rotulo>Contato</Rotulo>
+                <ComIcone icon={<User />}>
+                  <Input className="h-9 pl-8" value={contatoNome} onChange={e => setContatoNome(e.target.value)} placeholder="Nome de quem conversamos" />
+                </ComIcone>
+              </label>
+              <label className="block">
+                <Rotulo>WhatsApp</Rotulo>
+                <ComIcone icon={<MessageCircle />}>
+                  <Input className="h-9 pl-8" value={contatoTelefone} onChange={e => setContatoTelefone(formatTelefone(e.target.value))} placeholder="(00) 00000-0000" inputMode="tel" />
+                </ComIcone>
+              </label>
+              <label className="block">
+                <Rotulo>Vendedor</Rotulo>
+                <Select value={vendedorId} onValueChange={setVendedorId} disabled={!!vendedorRestrito && vendedorRestrito.length <= 1}>
+                  <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    {/* Vinculado a mais de um vendedor: escolhe só entre os dele. */}
+                    {vendedores.filter(v => !vendedorRestrito || vendedorRestrito.includes(v.id) || v.id === vendedorId).map(v => <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </label>
+              <label className="block">
+                <Rotulo>E-mail</Rotulo>
+                <ComIcone icon={<Mail />}>
+                  <Input className="h-9 pl-8" value={contatoEmail} onChange={e => setContatoEmail(e.target.value)} placeholder="E-mail do contato" />
+                </ComIcone>
+              </label>
+            </div>
+          </div>
+        </SectionCard>
 
-      {/* Frete / Condição comercial / Resumo — três colunas, igual referência */}
-      <div className="grid gap-4 lg:grid-cols-3 items-start">
-        <SectionCard icon={<Truck className="h-4 w-4" />} title="Frete e entrega" color="var(--gw-info, #0EA5E9)">
-          <div className="space-y-3">
-            <label className="space-y-1 block">
-              <span className="gw-label">Transportadora</span>
+        {/* Dados do cliente pra etiqueta/nota -- copiar campo a campo ou tudo,
+            e editar o cadastro sem sair do pedido. */}
+        <SectionCard
+          icon={<IdCard />}
+          title="Cliente (envio e etiqueta)"
+          action={temDadosCliente ? (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void copiarEtiquetaCliente({
+                  cliente: clienteNome ?? null,
+                  snapshot: clienteNome ? null : pedido.clienteSnapshot ?? null,
+                  contatoPedido: { nome: contatoNome, telefone: contatoTelefone, email: contatoEmail },
+                })}
+                className={`${botaoCabecalho} text-white hover:opacity-90`}
+                style={{ background: COR.azul }}
+              >
+                <Copy className="h-3.5 w-3.5" /> Copiar tudo
+              </button>
+              {clienteNome && (
+                <button
+                  type="button"
+                  onClick={() => setEditarClienteAberto(true)}
+                  className={`${botaoCabecalho} bg-white hover:opacity-90`}
+                  style={{ color: COR.navy }}
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Editar cliente
+                </button>
+              )}
+            </div>
+          ) : undefined}
+        >
+          <DadosClienteEnvio
+            compacto
+            semAcoes
+            cliente={clienteNome ?? null}
+            snapshot={clienteNome ? null : pedido.clienteSnapshot ?? null}
+            contatoPedido={{ nome: contatoNome, telefone: contatoTelefone, email: contatoEmail }}
+            onEditar={clienteNome ? () => setEditarClienteAberto(true) : undefined}
+          />
+        </SectionCard>
+      </div>
+
+      {/* ── Linha 2: Produtos (65%) + Resumo (35%) ─────────────────────── */}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] items-start">
+        <SectionCard
+          icon={<PackageSearch />}
+          title="Produtos do pedido"
+          bodyClassName="px-3.5 py-1.5"
+          action={
+            <button
+              type="button"
+              onClick={abrirNovoItem}
+              className={`${botaoCabecalho} hover:opacity-90`}
+              style={{ background: COR.verdeSoft, color: COR.verdeEscuro }}
+            >
+              <Plus className="h-4 w-4" /> Adicionar produto
+            </button>
+          }
+        >
+          <input
+            ref={fotoInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            className="hidden"
+            onChange={handleFotoItem}
+          />
+          <RecorteQuadrado
+            arquivo={arquivoParaRecortar}
+            onCancelar={() => setArquivoParaRecortar(null)}
+            onConfirmar={arq => void handleFotoRecortada(arq)}
+          />
+          <input
+            ref={arteInputRef}
+            type="file"
+            accept="image/*,application/pdf,.ai,.cdr,.eps,.svg"
+            multiple
+            className="hidden"
+            onChange={handleArteItem}
+          />
+
+          <div className="divide-y divide-[#E9EDF2]">
+            {itens.map(item => {
+              const st = statusDoItem(item.id);
+              const cancelado = Boolean((item as PedidoItem & { cancelado?: boolean }).cancelado) || st === "cancelado";
+              return (
+                <div key={item.id} className="py-2.5 space-y-1.5" style={{ opacity: cancelado ? 0.5 : 1 }}>
+                  <div className="flex items-start gap-3">
+                    <div className="shrink-0 space-y-0.5">
+                      <button
+                        type="button"
+                        onClick={() => escolherFoto(item.id)}
+                        disabled={enviandoFoto === item.id}
+                        title={item.mockupImagem ? "Trocar a foto deste item" : "Anexar foto deste item"}
+                        className="relative group h-14 w-14 rounded-[10px] overflow-hidden block"
+                        style={{ border: "1px solid #E3E7ED" }}
+                      >
+                        <Thumb src={item.mockupImagem || item.imagem} alt={item.nome} size="md" />
+                        <span
+                          className={`absolute inset-0 flex items-center justify-center transition-opacity ${
+                            enviandoFoto === item.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                          }`}
+                          style={{ background: "rgba(8,43,87,0.62)" }}
+                        >
+                          {enviandoFoto === item.id
+                            ? <Loader2 className="h-4 w-4 animate-spin text-white" />
+                            : <Camera className="h-4 w-4 text-white" />}
+                        </span>
+                      </button>
+                      {item.mockupImagem && (
+                        <button
+                          type="button"
+                          onClick={() => void abrirRecorteFoto(item.id, item.mockupImagem!)}
+                          disabled={enviandoFoto === item.id}
+                          className="text-[10px] text-primary hover:underline block w-14 text-center"
+                        >
+                          Recortar
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="truncate text-[14.5px] font-bold" style={{ color: COR.navy, fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
+                          {item.nome}
+                        </span>
+                        {item.varianteSlug && (
+                          <span className="gw-meta text-[11px] px-1.5 py-0.5 rounded shrink-0" style={{ border: "1px solid #D9DEE5" }}>
+                            {item.varianteSlug}
+                          </span>
+                        )}
+                      </div>
+                      {item.origemCalcme ? (
+                        <span className="block text-[12px] font-medium" style={{ color: "var(--gw-text-muted)" }}>
+                          Importado do Calcme
+                        </span>
+                      ) : (
+                        <span
+                          className="block text-[12px] font-medium"
+                          style={{ color: resumoPersonalizacao(item) ? "var(--gw-text-secondary)" : "var(--gw-danger)" }}
+                        >
+                          {resumoPersonalizacao(item) || "Sem personalização definida — edite o item"}
+                        </span>
+                      )}
+                      <span onClick={e => e.stopPropagation()} className="inline-block mt-0.5">
+                        <StatusBadge
+                          status={cancelado ? "cancelado" : st}
+                          nivel="item"
+                          size="sm"
+                          onSelect={cancelado ? undefined : slug => alterarStatusItem(item.id, slug)}
+                        />
+                      </span>
+                    </div>
+
+                    {/* Quantidade — stepper compacto */}
+                    <div className="flex items-center shrink-0 rounded-[8px] overflow-hidden self-center" style={{ border: "1px solid #D9DEE5" }}>
+                      <button
+                        type="button"
+                        aria-label="Diminuir quantidade"
+                        onClick={() => alterarQuantidade(item.id, -1)}
+                        className="inline-flex items-center justify-center h-8 w-8 hover:bg-[#F0F5FF]"
+                        style={{ color: COR.navy }}
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={item.quantidade}
+                        onChange={e => {
+                          const q = Math.max(1, Number(e.target.value) || 1);
+                          setItens(prev => prev.map(i => i.id === item.id
+                            ? { ...i, quantidade: q, total: q * num(i.precoUnitario) } : i));
+                        }}
+                        className="h-8 w-16 text-center px-1 rounded-none border-0 border-x border-[#D9DEE5] font-bold text-[14px] focus-visible:ring-0 focus-visible:ring-offset-0"
+                        style={{ color: COR.navy }}
+                      />
+                      <button
+                        type="button"
+                        aria-label="Aumentar quantidade"
+                        onClick={() => alterarQuantidade(item.id, 1)}
+                        className="inline-flex items-center justify-center h-8 w-8 hover:bg-[#F0F5FF]"
+                        style={{ color: COR.navy }}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="text-right shrink-0 w-[118px] self-center">
+                      <div className="flex items-center justify-end gap-1">
+                        <span className="text-[11px] font-semibold" style={{ color: "var(--gw-text-muted)" }}>R$</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={item.precoUnitario}
+                          aria-label="Valor unitário"
+                          onChange={e => {
+                            const preco = Math.max(0, Number(e.target.value) || 0);
+                            setItens(prev => prev.map(i => i.id === item.id
+                              ? { ...i, precoUnitario: preco, total: num(i.quantidade) * preco } : i));
+                          }}
+                          className="h-8 w-[88px] text-right px-1.5 text-[15px] font-bold"
+                          style={{ color: COR.navy }}
+                        />
+                      </div>
+                      <span className="block text-[12px] font-semibold gw-tnum mt-0.5" style={{ color: "var(--gw-text-secondary)" }}>
+                        {brl(num(item.total) || num(item.quantidade) * num(item.precoUnitario))}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-1 shrink-0 self-center">
+                      <button
+                        type="button"
+                        aria-label="Editar item"
+                        onClick={() => abrirEdicaoItem(item)}
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-[8px] bg-white hover:bg-[#075BE8] hover:text-white transition-colors"
+                        style={{ border: `1px solid ${COR.azul}`, color: COR.azul }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      {st === "enviado" || cancelado ? (
+                        <button
+                          type="button"
+                          aria-label="Cancelar item"
+                          disabled={cancelado}
+                          onClick={() => cancelarItem(item)}
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-[8px] bg-white"
+                          style={{ border: "1px solid #D9DEE5", color: "var(--gw-text-secondary)" }}
+                        >
+                          <Lock className="h-3.5 w-3.5" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          aria-label="Remover item"
+                          onClick={() => pedirRemocao(item)}
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-[8px] bg-white hover:bg-[var(--gw-danger)] hover:text-white transition-colors"
+                          style={{ border: "1px solid var(--gw-danger)", color: "var(--gw-danger)" }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Personalização + arte */}
+                  <div className="flex items-center gap-2 pl-[68px]">
+                    <input
+                      value={item.observacao ?? ""}
+                      onChange={e => {
+                        const v = e.target.value;
+                        setItens(prev => prev.map(i => (i.id === item.id ? { ...i, observacao: v } : i)));
+                      }}
+                      placeholder="Personalização — técnica, cor, nomes da gravação"
+                      className="h-8 px-2.5 flex-1 min-w-0 rounded-[8px] text-[12.5px] bg-white border border-[#D9DEE5]
+                                 hover:border-[#B8C0CC] focus:border-[var(--gw-primary)]
+                                 focus:outline-none transition-colors placeholder:text-[var(--gw-text-muted)]"
+                      style={{ color: "var(--gw-text)" }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => escolherArte(item.id)}
+                      disabled={enviandoArte === item.id}
+                      className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-[8px] text-[12px] font-semibold bg-white hover:bg-[#075BE8] hover:text-white transition-colors"
+                      style={{ border: `1px solid ${COR.azul}`, color: COR.azul }}
+                    >
+                      {enviandoArte === item.id
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : artesDoItem(item).length > 0 ? <Plus className="h-3.5 w-3.5" /> : <Paperclip className="h-3.5 w-3.5" />}
+                      {artesDoItem(item).length > 0 ? "Outra arte" : "Anexar arte"}
+                    </button>
+                  </div>
+                  {artesDoItem(item).length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 pl-[68px]">
+                      {artesDoItem(item).map((a, idx) => (
+                        <span
+                          key={a.url}
+                          className="inline-flex items-center gap-1 h-6 pl-2 pr-1 rounded text-[11px] font-semibold max-w-[220px] bg-white"
+                          style={{ border: `1px solid ${COR.azul}`, color: COR.azul }}
+                        >
+                          <a href={a.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 min-w-0" title={a.nome}>
+                            <Download className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{a.nome || `Arte ${idx + 1}`}</span>
+                          </a>
+                          <button
+                            type="button"
+                            aria-label="Remover arte"
+                            onClick={() => removerArteItem(item.id, a.url)}
+                            className="inline-flex items-center justify-center h-4 w-4 rounded hover:bg-[rgba(239,68,68,0.12)] hover:text-[var(--gw-danger)]"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {itens.length === 0 && <div className="py-8 text-center gw-meta">Nenhum item no pedido.</div>}
+          </div>
+        </SectionCard>
+
+        {/* Resumo — fica parado no topo enquanto a lista de produtos rola */}
+        <div className="xl:sticky xl:top-4">
+          <SectionCard icon={<CircleDollarSign />} title="Resumo do pedido">
+            <div className="space-y-2 text-[14px]">
+              <div className="flex justify-between">
+                <span style={{ color: "var(--gw-text-secondary)" }}>Subtotal</span>
+                <span className="font-semibold gw-tnum" style={{ color: COR.navy }}>{brl(subtotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span style={{ color: "var(--gw-text-secondary)" }}>
+                  Frete{freteTipo ? ` (${freteTipo})` : ""}
+                </span>
+                <span className="font-semibold gw-tnum" style={{ color: COR.navy }}>{brl(num(freteValor))}</span>
+              </div>
+              <div
+                className="flex items-center justify-between rounded-[10px] px-3.5 py-3 mt-1"
+                style={{ background: COR.verdeSoft, border: "1px solid #C9EDD6" }}
+              >
+                <span className="inline-flex items-center gap-2 text-[16px] font-bold" style={{ color: COR.verdeEscuro }}>
+                  <CircleDollarSign className="h-5 w-5" /> Total
+                </span>
+                <span className="text-[24px] font-extrabold gw-tnum" style={{ color: COR.verdeEscuro, letterSpacing: "-0.02em" }}>
+                  {brl(total)}
+                </span>
+              </div>
+            </div>
+          </SectionCard>
+        </div>
+      </div>
+
+      {/* ── Linha 3: Frete · Condição comercial · Anexos ───────────────── */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 items-stretch">
+        <SectionCard icon={<Truck />} title="Frete e entrega" tom="suave" corForte={COR.azul} corSuave="#FFFFFF">
+          <div className="space-y-2.5">
+            <label className="block">
+              <Rotulo>Transportadora</Rotulo>
               <Select value={transportadoraId} onValueChange={setTransportadoraId}>
                 <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
@@ -959,8 +1127,8 @@ const PedidoForm: React.FC = () => {
               </Select>
             </label>
             <div className="grid grid-cols-2 gap-3">
-              <label className="space-y-1">
-                <span className="gw-label">Tipo de frete</span>
+              <label className="block">
+                <Rotulo>Tipo de frete</Rotulo>
                 <Select value={freteTipo} onValueChange={v => setFreteTipo(v as "CIF" | "FOB")}>
                   <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
@@ -969,24 +1137,28 @@ const PedidoForm: React.FC = () => {
                   </SelectContent>
                 </Select>
               </label>
-              <label className="space-y-1">
-                <span className="gw-label">Valor do frete</span>
-                <Input className="h-9" type="number" step="0.01" value={freteValor}
-                  onChange={e => setFreteValor(Number(e.target.value) || 0)} />
+              <label className="block">
+                <Rotulo>Valor do frete</Rotulo>
+                <ComIcone icon={<span className="text-[11px] font-bold">R$</span>}>
+                  <Input className="h-9 pl-8" type="number" step="0.01" value={freteValor}
+                    onChange={e => setFreteValor(Number(e.target.value) || 0)} />
+                </ComIcone>
               </label>
             </div>
-            <label className="space-y-1 block">
-              <span className="gw-label">Prazo de entrega (dias)</span>
-              <Input className="h-9" type="number" value={prazoEntrega}
-                onChange={e => setPrazoEntrega(Number(e.target.value) || 0)} />
+            <label className="block">
+              <Rotulo>Prazo de entrega (dias)</Rotulo>
+              <ComIcone icon={<CalendarDays />}>
+                <Input className="h-9 pl-8" type="number" value={prazoEntrega}
+                  onChange={e => setPrazoEntrega(Number(e.target.value) || 0)} />
+              </ComIcone>
             </label>
           </div>
         </SectionCard>
 
-        <SectionCard icon={<CreditCard className="h-4 w-4" />} title="Condição comercial" color="var(--gw-success)">
-          <div className="space-y-3">
-            <label className="space-y-1 block">
-              <span className="gw-label">Condição de pagamento</span>
+        <SectionCard icon={<CreditCard />} title="Condição comercial" tom="suave" corForte={COR.verdeEscuro} corSuave={COR.verdeSoft}>
+          <div className="space-y-2.5">
+            <label className="block">
+              <Rotulo>Condição de pagamento</Rotulo>
               <Select value={pagamentoId} onValueChange={setPagamentoId}>
                 <SelectTrigger className="h-9"><SelectValue placeholder="Selecione" /></SelectTrigger>
                 <SelectContent>
@@ -994,74 +1166,46 @@ const PedidoForm: React.FC = () => {
                 </SelectContent>
               </Select>
             </label>
-            <label className="space-y-1 block">
-              <span className="gw-label">Observações comerciais</span>
-              <Textarea rows={4} value={observacoes} onChange={e => setObservacoes(e.target.value)} />
+            <label className="block">
+              <Rotulo>Observações comerciais</Rotulo>
+              <Textarea rows={3} value={observacoes} onChange={e => setObservacoes(e.target.value)} className="min-h-[84px]" />
             </label>
           </div>
         </SectionCard>
 
-        <div
-          className="rounded-[12px] p-4 space-y-2.5 lg:sticky lg:top-4"
-          style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border-strong)" }}
-        >
-          <span className="gw-label" style={{ fontWeight: 700 }}>Resumo do pedido</span>
-          <div className="flex justify-between text-[13px]">
-            <span className="gw-meta">Itens</span>
-            <span>{itens.filter(i => !(i as PedidoItem & { cancelado?: boolean }).cancelado).length}</span>
-          </div>
-          <div className="flex justify-between text-[13px]">
-            <span className="gw-meta">Quantidade total</span>
-            <span>{itens.reduce((s, i) => s + num(i.quantidade), 0)} un.</span>
-          </div>
-          <div className="flex justify-between text-[13px]">
-            <span className="gw-meta">Subtotal</span>
-            <span>{brl(subtotal)}</span>
-          </div>
-          <div className="flex justify-between text-[13px]">
-            <span className="gw-meta">Frete</span>
-            <span>{brl(num(freteValor))}</span>
-          </div>
-          <div className="flex justify-between pt-2" style={{ borderTop: "1px solid var(--gw-border)" }}>
-            <span className="gw-title" style={{ fontWeight: 700 }}>Total</span>
-            <span className="gw-title" style={{ fontWeight: 700, color: "var(--gw-primary)" }}>{brl(total)}</span>
-          </div>
-        </div>
+        <SectionCard icon={<Paperclip />} title="Anexos gerais" tom="suave" corForte="#5145D9" corSuave="#EEECFB" className="md:col-span-2 xl:col-span-1">
+          <input ref={anexoGeralInputRef} type="file" accept="image/*,application/pdf,.ai,.cdr,.eps,.svg" className="hidden" onChange={handleAnexoGeral} />
+          {anexosGerais.length > 0 && (
+            <div className="space-y-1.5 mb-2.5">
+              {anexosGerais.map(a => (
+                <div key={a.url} className="flex items-center gap-2.5 rounded-[8px] px-2.5 py-1.5" style={{ border: "1px solid #E3E7ED" }}>
+                  <FileText className="h-4 w-4 shrink-0" style={{ color: "#5145D9" }} />
+                  <span className="flex-1 min-w-0 truncate text-[12px]">{a.nome}</span>
+                  <a href={a.url} target="_blank" rel="noreferrer" className="shrink-0" style={{ color: "var(--gw-primary)" }} aria-label="Abrir anexo">
+                    <Download className="h-4 w-4" />
+                  </a>
+                  <button type="button" onClick={() => removerAnexoGeral(a.url)} className="shrink-0" style={{ color: "var(--gw-text-muted)" }} aria-label="Remover anexo">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => anexoGeralInputRef.current?.click()}
+            disabled={enviandoAnexoGeral}
+            className={`w-full rounded-[10px] flex flex-col items-center justify-center gap-1.5 text-center hover:bg-[#F7F6FE] transition-colors ${anexosGerais.length > 0 ? "py-3" : "py-6"}`}
+            style={{ border: "1.5px dashed #B9B3EE" }}
+          >
+            {enviandoAnexoGeral ? <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#5145D9" }} /> : <Upload className="h-5 w-5" style={{ color: "#5145D9" }} />}
+            <span className="text-[13px] font-medium" style={{ color: COR.navy }}>
+              Clique para anexar briefing, arte ou logo
+            </span>
+            <span className="gw-meta text-[11px]">PNG, JPG, PDF, AI, CDR, EPS, SVG (máx. 30 MB)</span>
+          </button>
+        </SectionCard>
       </div>
-
-      {/* Anexos gerais do pedido */}
-      <SectionCard icon={<Paperclip className="h-4 w-4" />} title="Anexos gerais" color="var(--gw-warning, #F97316)">
-        <input ref={anexoGeralInputRef} type="file" accept="image/*,application/pdf,.ai,.cdr,.eps,.svg" className="hidden" onChange={handleAnexoGeral} />
-        {anexosGerais.length > 0 && (
-          <div className="space-y-1.5 mb-2.5">
-            {anexosGerais.map(a => (
-              <div key={a.url} className="flex items-center gap-2.5 rounded-[8px] px-2.5 py-2" style={{ border: "1px solid var(--gw-border)" }}>
-                <FileText className="h-4 w-4 shrink-0" style={{ color: "var(--gw-text-secondary)" }} />
-                <span className="flex-1 min-w-0 truncate text-[12px]">{a.nome}</span>
-                <a href={a.url} target="_blank" rel="noreferrer" className="shrink-0" style={{ color: "var(--gw-primary)" }} aria-label="Abrir anexo">
-                  <Download className="h-4 w-4" />
-                </a>
-                <button type="button" onClick={() => removerAnexoGeral(a.url)} className="shrink-0" style={{ color: "var(--gw-text-muted)" }} aria-label="Remover anexo">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={() => anexoGeralInputRef.current?.click()}
-          disabled={enviandoAnexoGeral}
-          className="w-full rounded-lg py-4 flex flex-col items-center gap-1.5 text-center"
-          style={{ border: "1.5px dashed var(--gw-border-strong)", background: "var(--gw-surface-alt)" }}
-        >
-          {enviandoAnexoGeral ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" style={{ color: "var(--gw-text-secondary)" }} />}
-          <span className="gw-body text-[12px]" style={{ color: "var(--gw-text-secondary)" }}>
-            Clique para anexar briefing, arte ou logo
-          </span>
-          <span className="gw-meta text-[11px]">PNG, JPG, PDF, AI, CDR, EPS, SVG (máx. 30 MB)</span>
-        </button>
-      </SectionCard>
 
       {editarClienteAberto && clienteNome && (
         <ClienteDialog
