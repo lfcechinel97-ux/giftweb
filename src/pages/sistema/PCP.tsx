@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ChevronDown, ChevronRight, Package, Loader2, RefreshCw, Search, Boxes, Phone, Layers, ShoppingBag, Clock, History,
@@ -1344,6 +1345,7 @@ export default function PCP() {
 
 
   const [detalheId, setDetalheId] = useState<string | null>(null);
+  const navigate = useNavigate();
   const [historico, setHistorico] = useState<HistoricoRow[]>([]);
 
   /* Popup obrigatório ao sair de "Organizando Anotações" pra "Aguardando
@@ -3368,7 +3370,20 @@ export default function PCP() {
             <div className="grid grid-rows-[auto_1fr] max-h-[88vh]">
               <DialogHeader className="px-6 py-4 border-b border-[var(--gw-border)] text-left">
                 <DialogTitle className="flex items-center gap-3 pr-8 text-left">
-                  <OrderNumber value={detalhe.pedido_numero} />
+                  {/* Número clicável: abre a página do pedido deste item. */}
+                  <a
+                    href={`/sistema/pedidos/${detalhe.pedido_id}`}
+                    onClick={e => {
+                      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return; // nova aba: deixa o navegador
+                      e.preventDefault();
+                      setDetalheId(null);
+                      navigate(`/sistema/pedidos/${detalhe.pedido_id}`);
+                    }}
+                    title="Abrir o pedido"
+                    className="rounded-[4px] hover:underline decoration-[var(--gw-primary)] underline-offset-4 hover:text-[var(--gw-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--gw-primary)]"
+                  >
+                    <OrderNumber value={detalhe.pedido_numero} />
+                  </a>
                   <span className="gw-title text-[15px] truncate">{detalhe.cliente || "—"}</span>
                   <StatusPill status={detalhe.status} />
                   <span className="flex-1" />
