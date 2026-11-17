@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ChevronLeft, Plus, Trash2, Pencil, AlertTriangle, Lock, Camera, Loader2,
   Minus, Upload, Paperclip, FileText, Truck, CreditCard, X, Download, ClipboardList, PackageSearch,
-  IdCard, Check, CalendarDays, CircleDollarSign, Hash, User, Mail, MessageCircle, Copy,
+  IdCard, Check, CalendarDays, CircleDollarSign, User, Mail, MessageCircle, Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -109,15 +109,14 @@ function ComIcone({ icon, children }: { icon: React.ReactNode; children: React.R
 }
 
 /** Bloco da faixa de indicadores (ícone + rótulo + valor). */
-function Indicador({ icon, rotulo, children, cor = COR.navy }: { icon: React.ReactNode; rotulo: string; children: React.ReactNode; cor?: string }) {
+function Indicador({ icon, rotulo, children, cor = COR.navy }: { icon?: React.ReactNode; rotulo: string; children: React.ReactNode; cor?: string }) {
   return (
-    <div className="flex items-center gap-3 min-w-0">
-      <span
-        className="inline-flex items-center justify-center h-10 w-10 rounded-[10px] shrink-0 [&>svg]:h-5 [&>svg]:w-5"
-        style={{ background: `color-mix(in srgb, ${cor} 10%, white)`, color: cor }}
-      >
-        {icon}
-      </span>
+    <div className="flex items-center gap-2.5 min-w-0">
+      {icon && (
+        <span className="inline-flex items-center justify-center shrink-0 [&>svg]:h-6 [&>svg]:w-6" style={{ color: cor }}>
+          {icon}
+        </span>
+      )}
       <div className="min-w-0">
         <span className="block text-[12px] font-medium" style={{ color: "var(--gw-text-muted)" }}>{rotulo}</span>
         {children}
@@ -611,7 +610,7 @@ const PedidoForm: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate("/sistema/pedidos")}
-            className="inline-flex items-center justify-center h-10 w-10 rounded-[10px] shrink-0 hover:bg-[var(--gw-surface-alt)]"
+            className="inline-flex items-center justify-center h-10 w-10 rounded-[10px] shrink-0 bg-white hover:border-[#075BE8]"
             style={{ border: "1px solid #D9DEE5", color: COR.navy }}
             aria-label="Voltar"
           >
@@ -661,7 +660,7 @@ const PedidoForm: React.FC = () => {
         className="rounded-[12px] px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-3"
         style={{ background: "#FFFFFF", border: "1px solid #E3E7ED", boxShadow: "0 1px 2px rgba(16,24,40,.05)" }}
       >
-        <Indicador icon={<Hash />} rotulo="Pedido nº" cor={COR.azul}>
+        <Indicador rotulo="Pedido nº">
           <Input
             value={numero}
             onChange={e => setNumero(e.target.value.replace(/\D/g, ""))}
@@ -803,7 +802,7 @@ const PedidoForm: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setEditarClienteAberto(true)}
-                  className={`${botaoCabecalho} bg-white hover:bg-[#EEF2F8]`}
+                  className={`${botaoCabecalho} bg-white hover:opacity-90`}
                   style={{ color: COR.navy }}
                 >
                   <Pencil className="h-3.5 w-3.5" /> Editar cliente
@@ -907,7 +906,7 @@ const PedidoForm: React.FC = () => {
                           {item.nome}
                         </span>
                         {item.varianteSlug && (
-                          <span className="gw-meta text-[11px] px-1.5 py-0.5 rounded shrink-0" style={{ background: "var(--gw-surface-alt)" }}>
+                          <span className="gw-meta text-[11px] px-1.5 py-0.5 rounded shrink-0" style={{ border: "1px solid #D9DEE5" }}>
                             {item.varianteSlug}
                           </span>
                         )}
@@ -940,7 +939,7 @@ const PedidoForm: React.FC = () => {
                         type="button"
                         aria-label="Diminuir quantidade"
                         onClick={() => alterarQuantidade(item.id, -1)}
-                        className="inline-flex items-center justify-center h-8 w-8 hover:bg-[var(--gw-surface-alt)]"
+                        className="inline-flex items-center justify-center h-8 w-8 hover:bg-[#F0F5FF]"
                         style={{ color: COR.navy }}
                       >
                         <Minus className="h-3.5 w-3.5" />
@@ -961,7 +960,7 @@ const PedidoForm: React.FC = () => {
                         type="button"
                         aria-label="Aumentar quantidade"
                         onClick={() => alterarQuantidade(item.id, 1)}
-                        className="inline-flex items-center justify-center h-8 w-8 hover:bg-[var(--gw-surface-alt)]"
+                        className="inline-flex items-center justify-center h-8 w-8 hover:bg-[#F0F5FF]"
                         style={{ color: COR.navy }}
                       >
                         <Plus className="h-3.5 w-3.5" />
@@ -996,8 +995,8 @@ const PedidoForm: React.FC = () => {
                         type="button"
                         aria-label="Editar item"
                         onClick={() => abrirEdicaoItem(item)}
-                        className="inline-flex items-center justify-center h-8 w-8 rounded-[8px]"
-                        style={{ background: "var(--gw-primary-soft)", color: COR.azul }}
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-[8px] bg-white hover:bg-[#075BE8] hover:text-white transition-colors"
+                        style={{ border: `1px solid ${COR.azul}`, color: COR.azul }}
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
@@ -1007,8 +1006,8 @@ const PedidoForm: React.FC = () => {
                           aria-label="Cancelar item"
                           disabled={cancelado}
                           onClick={() => cancelarItem(item)}
-                          className="inline-flex items-center justify-center h-8 w-8 rounded-[8px]"
-                          style={{ background: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)" }}
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-[8px] bg-white"
+                          style={{ border: "1px solid #D9DEE5", color: "var(--gw-text-secondary)" }}
                         >
                           <Lock className="h-3.5 w-3.5" />
                         </button>
@@ -1017,8 +1016,8 @@ const PedidoForm: React.FC = () => {
                           type="button"
                           aria-label="Remover item"
                           onClick={() => pedirRemocao(item)}
-                          className="inline-flex items-center justify-center h-8 w-8 rounded-[8px]"
-                          style={{ background: "var(--gw-danger-soft)", color: "var(--gw-danger)" }}
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-[8px] bg-white hover:bg-[var(--gw-danger)] hover:text-white transition-colors"
+                          style={{ border: "1px solid var(--gw-danger)", color: "var(--gw-danger)" }}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -1035,8 +1034,8 @@ const PedidoForm: React.FC = () => {
                         setItens(prev => prev.map(i => (i.id === item.id ? { ...i, observacao: v } : i)));
                       }}
                       placeholder="Personalização — técnica, cor, nomes da gravação"
-                      className="h-8 px-2.5 flex-1 min-w-0 rounded-[8px] text-[12.5px] bg-[#F5F7FA] border border-transparent
-                                 hover:border-[#D9DEE5] focus:border-[var(--gw-primary)] focus:bg-white
+                      className="h-8 px-2.5 flex-1 min-w-0 rounded-[8px] text-[12.5px] bg-white border border-[#D9DEE5]
+                                 hover:border-[#B8C0CC] focus:border-[var(--gw-primary)]
                                  focus:outline-none transition-colors placeholder:text-[var(--gw-text-muted)]"
                       style={{ color: "var(--gw-text)" }}
                     />
@@ -1044,8 +1043,8 @@ const PedidoForm: React.FC = () => {
                       type="button"
                       onClick={() => escolherArte(item.id)}
                       disabled={enviandoArte === item.id}
-                      className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-[8px] text-[12px] font-semibold"
-                      style={{ background: "var(--gw-primary-soft)", color: COR.azul }}
+                      className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-[8px] text-[12px] font-semibold bg-white hover:bg-[#075BE8] hover:text-white transition-colors"
+                      style={{ border: `1px solid ${COR.azul}`, color: COR.azul }}
                     >
                       {enviandoArte === item.id
                         ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1058,8 +1057,8 @@ const PedidoForm: React.FC = () => {
                       {artesDoItem(item).map((a, idx) => (
                         <span
                           key={a.url}
-                          className="inline-flex items-center gap-1 h-6 pl-2 pr-1 rounded text-[11px] font-semibold max-w-[220px]"
-                          style={{ background: "var(--gw-primary-soft)", color: "var(--gw-primary)" }}
+                          className="inline-flex items-center gap-1 h-6 pl-2 pr-1 rounded text-[11px] font-semibold max-w-[220px] bg-white"
+                          style={{ border: `1px solid ${COR.azul}`, color: COR.azul }}
                         >
                           <a href={a.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 min-w-0" title={a.nome}>
                             <Download className="h-3 w-3 shrink-0" />
@@ -1116,7 +1115,7 @@ const PedidoForm: React.FC = () => {
 
       {/* ── Linha 3: Frete · Condição comercial · Anexos ───────────────── */}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 items-stretch">
-        <SectionCard icon={<Truck />} title="Frete e entrega" tom="suave" corForte={COR.azul} corSuave="#E6EFFD">
+        <SectionCard icon={<Truck />} title="Frete e entrega" tom="suave" corForte={COR.azul} corSuave="#FFFFFF">
           <div className="space-y-2.5">
             <label className="block">
               <Rotulo>Transportadora</Rotulo>

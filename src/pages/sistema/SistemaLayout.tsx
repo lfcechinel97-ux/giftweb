@@ -114,7 +114,7 @@ export default function SistemaLayout() {
               <span style={{ color: "#fff" }}>Gift</span>
               <span style={{ color: "var(--gw-blue-vivid)" }}>Web</span>
             </h2>
-            <p className="text-[11px] text-white/40">Sistema do Vendedor</p>
+            <p className="text-[11px] text-white/80">Sistema do Vendedor</p>
           </div>
         </div>
 
@@ -126,7 +126,7 @@ export default function SistemaLayout() {
               title={item.label}
               onMouseEnter={() => prefetch(item)}
               onFocus={() => prefetch(item)}
-              className="relative flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[14px] font-medium text-white/70 hover:bg-[var(--gw-sidebar-hover)] hover:text-white transition-colors"
+              className="relative flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-[14px] font-medium text-white hover:bg-[var(--gw-sidebar-hover)] hover:text-white transition-colors"
               activeClassName="!text-white !font-semibold gw-nav-ativo"
             >
               <item.icon className="h-[18px] w-[18px] shrink-0" />
@@ -141,7 +141,7 @@ export default function SistemaLayout() {
             target="_blank"
             rel="noopener noreferrer"
             title="Ver Site"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/70 hover:bg-white/[0.08] transition-colors mt-4"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white hover:bg-white/[0.08] transition-colors mt-4"
           >
             <Globe className="h-[18px] w-[18px] shrink-0" />
             <span className="whitespace-nowrap opacity-0 group-hover/menu:opacity-100 xl:opacity-100 transition-opacity duration-150">Ver Site</span>
@@ -163,11 +163,11 @@ export default function SistemaLayout() {
                 <span className="text-[13.5px] font-semibold truncate max-w-full text-white">
                   {perfilCarregando ? "…" : nomeLogado}
                 </span>
-                <span className="text-[11.5px] text-white/50">
+                <span className="text-[11.5px] text-white/80">
                   {perfilCarregando ? "…" : ROTULO_PAPEL[papel]}
                 </span>
               </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-white/50 opacity-0 group-hover/menu:opacity-100 xl:opacity-100 transition-opacity duration-150" />
+              <ChevronDown className="h-4 w-4 shrink-0 text-white/80 opacity-0 group-hover/menu:opacity-100 xl:opacity-100 transition-opacity duration-150" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent side="right" align="end" className="w-60">

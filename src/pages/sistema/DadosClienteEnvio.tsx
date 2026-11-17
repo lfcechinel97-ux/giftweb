@@ -103,7 +103,7 @@ export default function DadosClienteEnvio({ cliente, snapshot, contatoPedido, on
           {tipo === "PJ" && <Campo rotulo="Inscrição estadual" valor={ie} />}
         </div>
         {enderecos.map((e, i) => (
-          <div key={i} className="rounded-[10px] border border-[var(--gw-border)] bg-[var(--gw-surface-alt)] px-3 py-2">
+          <div key={i} className="rounded-[10px] border border-[#D9DEE5] bg-white px-3 py-2">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--gw-text-label)]">
                 {enderecos.length > 1 ? `Endereço ${i + 1}` : "Endereço"}
@@ -207,10 +207,10 @@ export default function DadosClienteEnvio({ cliente, snapshot, contatoPedido, on
 function TagTipo({ tipo }: { tipo: string }) {
   return (
     <span
-      className="text-[10px] font-bold rounded-full px-2 py-[2px]"
+      className="text-[10px] font-bold rounded-full px-2 py-[2px] bg-white"
       style={tipo === "PF"
-        ? { backgroundColor: "#F1EDFF", color: "#6D28D9" }
-        : { backgroundColor: "var(--gw-blue-soft)", color: "#1D4ED8" }}
+        ? { border: "1px solid #6D28D9", color: "#6D28D9" }
+        : { border: "1px solid #1D4ED8", color: "#1D4ED8" }}
     >
       {tipo === "PF" ? "Pessoa Física" : "Pessoa Jurídica"}
     </span>
@@ -274,7 +274,7 @@ function Campo({ rotulo, valor, className = "" }: { rotulo: string; valor?: stri
               setCopiado(true);
               setTimeout(() => setCopiado(false), 1200);
             }}
-            className="shrink-0 p-1 rounded text-[var(--gw-text-muted)] hover:text-[var(--gw-primary)] hover:bg-[var(--gw-blue-soft)]"
+            className="shrink-0 p-1 rounded text-[var(--gw-text-muted)] hover:text-[var(--gw-primary)]"
             title={`Copiar ${rotulo.toLowerCase()}`}
           >
             {copiado ? <Check className="h-3.5 w-3.5 text-[var(--gw-success)]" /> : <Copy className="h-3.5 w-3.5" />}
