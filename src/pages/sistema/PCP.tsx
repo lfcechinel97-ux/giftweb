@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import {
   ChevronDown, ChevronRight, Package, Loader2, RefreshCw, Search, Boxes, Phone, Layers, ShoppingBag, Clock, History,
   Tag, X, MessageSquare, Send, Camera, Video, CheckCircle2, Upload, Download, Paperclip, FileText,
-  ArrowUpDown, Eye, EyeOff, Check, User, Copy,
+  ArrowUpDown, Eye, EyeOff, Check, User, Copy, CreditCard, ListFilter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -345,6 +345,68 @@ const agruparVolumesEmTags = (
   return [...grupos.entries()].map(([medidas, qtd]) => `${qtd}V ${medidas}`);
 };
 
+/* Tag de volume ("1V 40X30X33.5 / 5.7KG") -- em vez de uma tag colorida por
+   volume, todas viram UMA caixa branca "Volumes:" com uma medida por linha. */
+const ehTagVolume = (t: string) => /^\d+\s*V\s+\d/i.test(t.trim());
+
+const linhaVolume = (t: string) => {
+  const m = t.trim().match(/^(\d+)\s*V\s+(.+?)\s*\/\s*([\d.,]+)\s*KG$/i);
+  if (!m) return t;
+  const [, qtd, medidas, peso] = m;
+  return `${qtd}× ${medidas.toUpperCase().split("X").map(x => x.trim()).join(" × ")} cm — ${peso} kg`;
+};
+
+/** Volumes do item (gravados na Expedição), no mesmo formato das tags. */
+const tagsVolumesDoItem = (r: Pick<PcpRow, "item_volumes" | "pedido_volumes">): string[] => {
+  const itens = r.item_volumes?.itens?.length
+    ? r.item_volumes.itens
+    : Array.isArray(r.pedido_volumes) ? (r.pedido_volumes as any[]) : [];
+  return itens.length ? agruparVolumesEmTags(itens.map((v: any) => ({
+    comprimento: Number(v?.comprimento) || 0, altura: Number(v?.altura) || 0,
+    largura: Number(v?.largura) || 0, peso: Number(v?.peso) || 0,
+  }))) : [];
+};
+
+function CaixaVolumes({ tags }: { tags: string[] }) {
+  if (tags.length === 0) return null;
+  return (
+    <div className="rounded-[6px] border border-[#CBD5E1] bg-white px-2 py-1.5 w-full">
+      <p className="text-[10px] font-bold uppercase tracking-wide text-[#475569] leading-none mb-1 flex items-center gap-1">
+        <Boxes className="h-[11px] w-[11px]" /> Volumes:
+      </p>
+      <ul className="space-y-[2px]">
+        {tags.map(t => (
+          <li key={t} className="gw-num text-[11px] font-semibold text-[#0F172A] leading-tight break-words">{linhaVolume(t)}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** Forma de pagamento + situação, pra o vendedor não precisar abrir o pedido
+    pra conferir (aparece junto da CONFERIR PAGAMENTO, na Expedição). */
+function InfoPagamento({ row }: { row: PcpRow }) {
+  const nome = row.pagamento_nome;
+  const comp = row.pedido_comprovante_pagamento_url;
+  const situacao = row.pedido_pago_integral || row.pix_recebido_integral_em || row.pagamento_cartao_conferido_em
+    ? "Pago 100%"
+    : comp === "confirmado-manualmente" ? "Entrada confirmada manualmente"
+    : comp ? "Comprovante anexado"
+    : "Sem comprovante";
+  return (
+    <div className="rounded-[6px] border border-[#CBD5E1] bg-white px-2 py-1.5 w-full text-[11px] leading-tight space-y-[2px]">
+      <p className="flex items-start gap-1 font-semibold text-[#0F172A] break-words">
+        <CreditCard className="h-[12px] w-[12px] shrink-0 mt-[1px]" />
+        <span>{nome || "Forma de pagamento não informada"}</span>
+      </p>
+      <p className="text-[var(--gw-text-secondary)]">
+        {row.pedido_total != null && <><span className="gw-num font-semibold">{Number(row.pedido_total).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span> · </>}
+        {situacao}
+      </p>
+    </div>
+  );
+}
+
 /* Alerta de tempo — regra ÚNICA pra todas as etapas (pedido explícito do
    usuário, substitui os limites variados por coluna de antes):
      > 72 horas ÚTEIS (só dias de semana contam) na mesma etapa -> texto
@@ -656,12 +718,12 @@ function PcpPedidoCard({
             </p>
           )}
 
-          {naExpedicao && tagsPedido.length > 0 && (
+          {naExpedicao && tagsPedido.filter(t => !ehTagVolume(t)).length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {tagsPedido.map(t => (
+              {tagsPedido.filter(t => !ehTagVolume(t)).map(t => (
                 <span
                   key={t}
-                  className="text-[10px] rounded-[4px] px-[6px] py-[3px] font-bold"
+                  className="text-[10px] rounded-[4px] px-[6px] py-[3px] font-bold break-words"
                   style={{ backgroundColor: corDaTag(t), color: "#FFFFFF" }}
                 >
                   {rotuloTag(t)}
@@ -669,6 +731,8 @@ function PcpPedidoCard({
               ))}
             </div>
           )}
+          {naExpedicao && tagsPedido.includes(TAG_CONFERIR_PAGAMENTO) && <InfoPagamento row={primeiro} />}
+          {naExpedicao && <CaixaVolumes tags={tagsPedido.filter(ehTagVolume)} />}
 
           {coluna === "aguardando_mercadoria" && (() => {
             const compradas = rows.filter(r => (r.tags ?? []).some(t => /^comprado/i.test(t.trim())));
@@ -839,16 +903,24 @@ function PcpCard({
      diz qual terceirizada de verdade, isso não tem por que repetir o nome
      da coluna). Pastel, mesma cor determinística de sempre (corDaTag), só
      clareada em vez de sólida. Prioridade + "+N" com popover, igual já era. */
-  const tagsOrdenadas = ordenarTagsPorPrioridade(row.tags ?? []);
+  const naColetaEnviado = colunaDoStatus(row) === "enviado";
+  const [verVolumes, setVerVolumes] = useState(false);
+  const tagsVolume = (row.tags ?? []).filter(ehTagVolume);
+  /* Coletado e Enviado: as tags de volume saíram no despacho -- mostra os
+     volumes gravados na Expedição quando clica no card. */
+  const volumesEnviado = naColetaEnviado ? tagsVolumesDoItem(row) : [];
+  const tagsOrdenadas = ordenarTagsPorPrioridade((row.tags ?? []).filter(t => !ehTagVolume(t)));
   const tagsVisiveis = tagsOrdenadas.slice(0, 3);
   const tagsOcultas = tagsOrdenadas.slice(3);
 
+  /* Tag nunca aparece cortada: quebra pra linha de baixo (e o texto quebra
+     dentro da própria tag se for maior que o card). */
   const Etiquetas = tagsOrdenadas.length === 0 ? null : (
-    <div className="flex items-center gap-1 max-w-full overflow-hidden">
+    <div className="flex flex-wrap items-center gap-1 max-w-full">
       {tagsVisiveis.map(t => (
         <span
           key={t}
-          className="gw-body text-[10px] leading-none rounded-[5px] px-[7px] py-[4px] whitespace-nowrap font-bold shrink-0"
+          className="gw-body text-[10px] leading-[1.15] rounded-[5px] px-[7px] py-[4px] font-bold max-w-full break-words"
           style={{ backgroundColor: pastelizar(corDaTag(t)), color: corDaTag(t) }}
         >
           {rotuloTag(t)}
@@ -885,7 +957,7 @@ function PcpCard({
         onDragStart();
       }}
       onDragEnd={onDragEnd}
-      onClick={onOpen}
+      onClick={naColetaEnviado && volumesEnviado.length > 0 ? () => setVerVolumes(v => !v) : onOpen}
       onMouseEnter={() => onHover(row.pedido_id)}
       onMouseLeave={() => onHover(null)}
       className={cn(
@@ -1036,12 +1108,34 @@ function PcpCard({
       </div>
 
       {/* Rodapé — tag da etapa (pastel) + demais tags, 1 linha só. */}
-      <div className="px-3 pb-2">{Etiquetas}</div>
+      <div className="px-3 pb-2 space-y-1.5">
+        {Etiquetas}
+        {colunaDoStatus(row) === "aguardando_coleta" && (row.tags ?? []).includes(TAG_CONFERIR_PAGAMENTO) && <InfoPagamento row={row} />}
+        <CaixaVolumes tags={tagsVolume} />
+        {naColetaEnviado && volumesEnviado.length > 0 && (
+          verVolumes ? (
+            <div className="space-y-1">
+              <CaixaVolumes tags={volumesEnviado} />
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); onOpen(); }}
+                className="text-[11px] font-semibold text-[var(--gw-primary)] hover:underline"
+              >
+                Abrir detalhes do item
+              </button>
+            </div>
+          ) : (
+            <p className="text-[11px] font-medium text-[var(--gw-text-secondary)] flex items-center gap-1">
+              <Boxes className="h-[12px] w-[12px]" /> Clique para ver os volumes
+            </p>
+          )
+        )}
+      </div>
 
       <div className="px-3 pb-2.5 space-y-1.5">
         {/* Volumes da expedição — já aparecem como tag também (pedido do
             usuário), essa linha só reforça o peso total de forma curta. */}
-        {colunaDoStatus(row) === "aguardando_coleta" && resumoVolumes(row.item_volumes?.itens) && (
+        {colunaDoStatus(row) === "aguardando_coleta" && tagsVolume.length === 0 && resumoVolumes(row.item_volumes?.itens) && (
           <div className="flex items-center gap-1 text-[11px] font-medium text-[var(--gw-text-secondary)]">
             <Boxes className="h-[12px] w-[12px]" /> {resumoVolumes(row.item_volumes?.itens)}
           </div>
@@ -1160,6 +1254,9 @@ export default function PCP() {
   const [hoverPedido, setHoverPedido] = useState<string | null>(null);
   const [tagsFiltro, setTagsFiltro] = useState<string[]>([]);
   const [buscaPedido, setBuscaPedido] = useState("");
+  /* "Pedidos no PCP": operador escolhe um ou mais pedidos e o quadro mostra
+     só os cards deles. */
+  const [pedidosFiltro, setPedidosFiltro] = useState<string[]>([]);
   /* Filtro "Produzir até" (data de despacho do pedido). "De" começa em
      hoje; o filtro só passa a valer quando o "Até" é preenchido. */
   const hojeIso = () => {
@@ -1529,6 +1626,7 @@ export default function PCP() {
   const rowsFiltradas = useMemo(() => {
     let out = rows;
     if (tagsFiltro.length > 0) out = out.filter(r => tagsFiltro.every(t => (r.tags ?? []).includes(t)));
+    if (pedidosFiltro.length > 0) out = out.filter(r => pedidosFiltro.includes(r.pedido_id));
     const termo = buscaPedido.trim();
     if (termo) {
       const t = termo.toLocaleLowerCase("pt-BR");
@@ -1544,7 +1642,21 @@ export default function PCP() {
       });
     }
     return out;
-  }, [rows, tagsFiltro, buscaPedido, produzirDe, produzirAte]);
+  }, [rows, tagsFiltro, pedidosFiltro, buscaPedido, produzirDe, produzirAte]);
+
+  /* Pedidos que estão em qualquer coluna, menos Coletado e Enviado. */
+  const pedidosNoPcp = useMemo(() => {
+    const map = new Map<string, { id: string; numero: string; cliente: string; itens: number; colunas: Set<string> }>();
+    for (const r of rows) {
+      const col = colunaDoStatus(r);
+      if (col === "enviado") continue;
+      const p = map.get(r.pedido_id) ?? { id: r.pedido_id, numero: String(r.pedido_numero ?? ""), cliente: r.cliente ?? "—", itens: 0, colunas: new Set<string>() };
+      p.itens += 1;
+      p.colunas.add(STATUS_MAP[col]?.label ?? col);
+      map.set(r.pedido_id, p);
+    }
+    return [...map.values()].sort((a, b) => b.numero.localeCompare(a.numero, "pt-BR", { numeric: true }));
+  }, [rows]);
 
   const byStatus = useMemo(() => {
     const map: Record<string, PcpRow[]> = {};
@@ -2880,6 +2992,67 @@ export default function PCP() {
               </button>
             )}
           </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  "h-9 inline-flex items-center gap-1.5 rounded-[8px] border px-3 text-[12px] font-semibold transition-colors",
+                  pedidosFiltro.length ? "text-white border-transparent" : "bg-white border-[var(--gw-border)] text-[var(--gw-text-secondary)]",
+                )}
+                style={pedidosFiltro.length ? { backgroundColor: "var(--gw-primary)" } : undefined}
+              >
+                <ListFilter className="h-3.5 w-3.5" />
+                {pedidosFiltro.length === 0 ? `Pedidos no PCP (${pedidosNoPcp.length})`
+                  : pedidosFiltro.length === 1 ? `Pedido ${pedidosNoPcp.find(p => p.id === pedidosFiltro[0])?.numero ?? ""}`
+                  : `${pedidosFiltro.length} pedidos`}
+                {pedidosFiltro.length > 0 && (
+                  <span
+                    role="button"
+                    title="Mostrar todos"
+                    onClick={e => { e.stopPropagation(); setPedidosFiltro([]); }}
+                    className="ml-0.5 rounded-full hover:bg-white/20 p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </span>
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[340px] p-0" align="start">
+              <Command>
+                <CommandInput placeholder="Buscar nº do pedido ou cliente..." />
+                <CommandList className="max-h-[360px]">
+                  <CommandEmpty>Nenhum pedido.</CommandEmpty>
+                  <CommandGroup heading={`${pedidosNoPcp.length} pedidos no PCP (sem Coletado e Enviado)`}>
+                    {pedidosNoPcp.map(p => {
+                      const marcado = pedidosFiltro.includes(p.id);
+                      return (
+                        <CommandItem
+                          key={p.id}
+                          value={`${p.numero} ${p.cliente}`}
+                          onSelect={() => setPedidosFiltro(prev => marcado ? prev.filter(x => x !== p.id) : [...prev, p.id])}
+                          className="flex items-start gap-2"
+                        >
+                          <span className={cn(
+                            "mt-0.5 h-4 w-4 shrink-0 rounded-[4px] border flex items-center justify-center",
+                            marcado ? "bg-[var(--gw-primary)] border-[var(--gw-primary)] text-white" : "border-[var(--gw-border)]",
+                          )}>
+                            {marcado && <Check className="h-3 w-3" />}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-[13px]"><span className="gw-num font-bold">{p.numero}</span> · {p.cliente}</span>
+                            <span className="block text-[11px] text-muted-foreground">
+                              {p.itens} {p.itens === 1 ? "item" : "itens"} · {[...p.colunas].join(", ")}
+                            </span>
+                          </span>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
           <div className="relative">
             <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--gw-text-muted)]" />
             <Input
