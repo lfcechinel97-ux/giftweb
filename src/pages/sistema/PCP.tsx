@@ -605,7 +605,7 @@ function EtiquetaCombobox({ opcoes, onSelect }: { opcoes: string[]; onSelect: (n
 const COLUNAS_AGRUPAVEIS = ["organizando_comercial", "organizando_pedido", "aguardando_mercadoria", "inserir_medidas", "aguardando_coleta"];
 
 function PcpPedidoCard({
-  rows, coluna, totalPedido, faltamExpedicao = 0, cor, comFotos, vendedorNome, expandido, dragging, highlight, atrasado, critico, imprimindoOP,
+  rows, coluna, totalPedido, faltamExpedicao = 0, cor, comFotos, vendedorNome, contato, expandido, dragging, highlight, atrasado, critico, imprimindoOP,
   onAlternar, onImprimirOP, onDespachar, onHover, onDragStart, onDragEnd,
 }: {
   rows: PcpRow[];
@@ -616,6 +616,7 @@ function PcpPedidoCard({
   cor: string;
   comFotos: boolean;
   vendedorNome: string | null;
+  contato?: { nome: string | null; telefone: string | null };
   expandido: boolean;
   dragging: boolean;
   highlight: boolean;
@@ -680,7 +681,10 @@ function PcpPedidoCard({
         </div>
 
         <div className="px-3 pb-2.5 space-y-1.5">
-          <p className="gw-body text-[13px] font-semibold text-[#0F172A] truncate">{primeiro.cliente || "—"}</p>
+          <div>
+            <p className="gw-body text-[13px] font-semibold text-[#0F172A] truncate">{primeiro.cliente || "—"}</p>
+            {contato && <div className="-ml-[13px]"><ContatoPedido nome={contato.nome} telefone={contato.telefone} /></div>}
+          </div>
 
           {comFotos ? (
             <div className="flex gap-1.5">
@@ -813,7 +817,7 @@ function PcpPedidoCard({
 
 /** Contato do pedido (nome + WhatsApp) no card de "Teste Enviado" -- o
  *  vendedor copia o número pra chamar o cliente no CRM (Datacrazy). */
-function ContatoTesteEnviado({ nome, telefone }: { nome: string | null; telefone: string | null }) {
+function ContatoPedido({ nome, telefone }: { nome: string | null; telefone: string | null }) {
   const [copiado, setCopiado] = useState(false);
   const fone = formatTelefone(telefone);
   if (!nome && !fone) return null;
@@ -879,7 +883,7 @@ function PcpCard({
   /** Nomes @mencionados que ainda não viram -- visível pra qualquer um até a
    *  pessoa marcada abrir o chat, não só pra ela. */
   mencoes: string[];
-  /** Só em "Teste Enviado": contato do pedido pra chamar no WhatsApp/CRM. */
+  /** Contato do pedido (nome + telefone) pra chamar no WhatsApp/CRM. */
   contato?: { nome: string | null; telefone: string | null };
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -992,7 +996,7 @@ function PcpCard({
               {row.cliente}
             </p>
           )}
-          {contato && <ContatoTesteEnviado nome={contato.nome} telefone={contato.telefone} />}
+          {contato && <ContatoPedido nome={contato.nome} telefone={contato.telefone} />}
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           {!comFotos && <VendedorIcone nome={row.pedido_vendedor_nome} />}
@@ -1985,26 +1989,32 @@ export default function PCP() {
     [rows],
   );
 
-  /* Contato (nome + telefone) dos pedidos em Teste Enviado -- aparece no
-     card pro vendedor copiar e chamar o cliente no CRM. Busca só os pedidos
-     dessa coluna (poucos), sem pesar a vw_pcp. */
-  const pedidosTesteEnviado = useMemo(
-    () => [...new Set(testeEnviadoPendentes.map(r => r.pedido_id))].sort(),
-    [testeEnviadoPendentes],
-  );
-  const { data: contatosTesteEnviado } = useQuery<Map<string, { nome: string | null; telefone: string | null }>>({
-    queryKey: ["sistema", "pcp", "contatos-teste-enviado", pedidosTesteEnviado],
-    enabled: pedidosTesteEnviado.length > 0,
-    staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("sistema_pedidos")
-        .select("id, contato_nome, contato_telefone")
-        .in("id", pedidosTesteEnviado);
-      if (error) { console.error("[PCP] carregar contatos de Teste Enviado falhou:", error); return new Map(); }
-      return new Map((data ?? []).map((p: any) => [p.id as string, { nome: p.contato_nome ?? null, telefone: p.contato_telefone ?? null }]));
-    },
-  });
+  /* Contato (nome + telefone) do pedido em TODOS os cards -- o vendedor copia
+     o número e chama o cliente no CRM. Busca em sistema_pedidos só os pedidos
+     que ainda não estão no cache (sem pesar a vw_pcp). */
+  const [contatosPedido, setContatosPedido] = useState<Map<string, { nome: string | null; telefone: string | null }>>(new Map());
+  const buscandoContatos = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const faltam = [...new Set(rows.map(r => r.pedido_id))]
+      .filter(id => id && !contatosPedido.has(id) && !buscandoContatos.current.has(id));
+    if (faltam.length === 0) return;
+    faltam.forEach(id => buscandoContatos.current.add(id));
+    void (async () => {
+      const novos = new Map<string, { nome: string | null; telefone: string | null }>();
+      for (let k = 0; k < faltam.length; k += 100) {
+        const lote = faltam.slice(k, k + 100);
+        const { data, error } = await supabase
+          .from("sistema_pedidos")
+          .select("id, contato_nome, contato_telefone")
+          .in("id", lote);
+        if (error) { console.error("[PCP] carregar contatos falhou:", error); lote.forEach(id => buscandoContatos.current.delete(id)); continue; }
+        for (const p of (data ?? []) as any[]) novos.set(p.id, { nome: p.contato_nome ?? null, telefone: p.contato_telefone ?? null });
+        // pedido sem linha (excluído) não fica tentando de novo
+        lote.forEach(id => { if (!novos.has(id)) novos.set(id, { nome: null, telefone: null }); });
+      }
+      if (novos.size) setContatosPedido(prev => new Map([...prev, ...novos]));
+    })();
+  }, [rows, contatosPedido]);
 
   /* "@Fulano" no card -- pública (qualquer um com acesso ao item vê),
      diferente de chatResumo (que é "o que EU não li"): some quando o
@@ -3310,7 +3320,7 @@ export default function PCP() {
                           imprimindoOP={imprimindoOP === row.producao_id}
                           chat={chatResumoPorItem.get(row.producao_id)}
                           mencoes={mencoesPorItem.get(row.producao_id) ?? []}
-                          contato={colunaDoStatus(row) === "teste_enviado" ? contatosTesteEnviado?.get(row.pedido_id) : undefined}
+                          contato={contatosPedido.get(row.pedido_id)}
                           onDragStart={() => setDraggingId(row.producao_id)}
                           onDragEnd={() => setDraggingId(null)}
                           onOpen={() => setDetalheId(row.producao_id)}
@@ -3362,6 +3372,7 @@ export default function PCP() {
                               cor={corDoPedido(primeiro)}
                               comFotos={comFotos}
                               vendedorNome={primeiro.pedido_vendedor_nome}
+                              contato={contatosPedido.get(g.pedidoId)}
                               expandido={aberto}
                               onAlternar={() => alternarExpandido(chave)}
                               dragging={draggingId === `pedido:${g.pedidoId}:${col.value}`}
