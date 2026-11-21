@@ -453,6 +453,9 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   }, []);
 
+  /* Só a busca mais recente atualiza a lista: digitando rápido, uma resposta
+     antiga que chega depois não sobrescreve o resultado do filtro atual. */
+  const orcamentosSeqRef = useRef(0);
   const refreshOrcamentos = useCallback(async (opts?: {
     vendedorId?: string | null;
     status?: string | null;
@@ -466,6 +469,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Todos os filtros vão para o SERVIDOR, aplicados ANTES do recorte da página.
     // fetchQuery serve do cache do React Query (60s) quando os mesmos filtros
     // já foram buscados — voltar para a tela não gera nova requisição.
+    const seq = ++orcamentosSeqRef.current;
     const restrito = vendedorRestritoDe(await obterPerfil(qc));
     const { data: payload, error } = await qc.fetchQuery({
       queryKey: ["sistema", "orcamentos", "list", opts ?? null, restrito],
@@ -500,6 +504,7 @@ export const SistemaProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const rows = arr<any>((payload as any)?.rows).map(mapOrcamento);
     const total = Number((payload as any)?.total_count ?? rows.length);
+    if (seq !== orcamentosSeqRef.current) return { rows, total };
     setData(prev => {
       // Preserva itens já carregados (a função leve devolve itens vazios)
       const prevById = new Map(prev.orcamentos.map(o => [o.id, o]));

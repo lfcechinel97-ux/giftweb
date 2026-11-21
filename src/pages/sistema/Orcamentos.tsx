@@ -229,7 +229,10 @@ export default function Orcamentos() {
   const [filtroCliente, setFiltroCliente] = useState("");
   const [filtroBusca, setFiltroBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState<string>("todos");
-  const [filtroVendedor, setFiltroVendedor] = useState<string>(() => currentVendedor?.id || "todos");
+  /* Vendedor: começa em "Todos" (admin/gerente veem tudo; quem é vinculado a
+     vários vê os dele). Antes começava travado no vendedor do usuário, e a
+     busca do admin só achava os orçamentos dele. */
+  const [filtroVendedor, setFiltroVendedor] = useState<string>("todos");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [listLoading, setListLoading] = useState(false);
@@ -260,9 +263,6 @@ export default function Orcamentos() {
   /* Clientes são carregados sob demanda: esta tela resolve nome de cliente. */
   useEffect(() => { void ensureClientes(); }, [ensureClientes]);
 
-  useEffect(() => {
-    if (currentVendedor?.id) setFiltroVendedor(currentVendedor.id);
-  }, [currentVendedor?.id]);
 
   /* Volta para a página 1 sempre que um filtro muda */
   useEffect(() => {
@@ -271,7 +271,7 @@ export default function Orcamentos() {
 
   useEffect(() => {
     let cancelled = false;
-    const key = JSON.stringify([filtroVendedor, filtroStatus, filtroBusca, filtroCliente, dataInicio, dataFim, page, pageSize]);
+    const key = JSON.stringify([filtroVendedor, filtroStatus, filtroBusca.trim(), filtroCliente.trim(), dataInicio, dataFim, page, pageSize]);
     // Cache de 60s: voltar para a rota com os mesmos filtros/página serve do
     // estado já carregado e não dispara nova busca.
     if (listCache.key === key && Date.now() - listCache.at < 60_000) return;
@@ -284,8 +284,8 @@ export default function Orcamentos() {
         await refreshOrcamentos({
           vendedorId: filtroVendedor === "todos" ? null : filtroVendedor,
           status: filtroStatus,
-          search: filtroBusca,
-          cliente: filtroCliente,
+          search: filtroBusca.trim(),
+          cliente: filtroCliente.trim(),
           dataInicio: dataInicio || null,
           dataFim: dataFim || null,
           page,
@@ -470,7 +470,7 @@ export default function Orcamentos() {
         <div className="relative flex-1 min-w-[220px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--gw-text-muted)" }} />
           <Input
-            placeholder="Buscar orçamento..."
+            placeholder="Buscar por cliente, nº do orçamento ou produto..."
             value={filtroBusca}
             onChange={e => setFiltroBusca(e.target.value)}
             className="pl-9 h-9"
