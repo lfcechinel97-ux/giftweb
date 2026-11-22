@@ -40,6 +40,7 @@ const SEMENTE: StatusInfo[] = [
   { slug: "preparar_dtf",            nome: "Preparar DTF/vetorização",   cor: "#6D28D9", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 50 },
   { slug: "a_produzir",              nome: "A produzir",                 cor: "#1D4ED8", colunaPcp: "em_producao",         escopo: "ambos",  ordem: 60 },
   { slug: "a_produzir_terceirizada", nome: "A produzir terceirizada",    cor: "#EA580C", colunaPcp: "em_producao_terceirizada", escopo: "ambos", ordem: 70 },
+  { slug: "producao_finalizada",     nome: "Produção finalizada / Agrupamento", cor: "#A16207", colunaPcp: "producao_finalizada", escopo: "ambos", ordem: 72 },
   { slug: "produzido",               nome: "Produzido",                  cor: "#15803D", colunaPcp: "inserir_medidas",     escopo: "ambos",  ordem: 75 },
   { slug: "inserir_medidas",         nome: "Inserir medidas",            cor: "#047857", colunaPcp: "inserir_medidas",     escopo: "ambos",  ordem: 80 },
   { slug: "conferir_pagamentos",     nome: "Conferir pagamentos",        cor: "#047857", colunaPcp: "aguardando_coleta",   escopo: "ambos",  ordem: 90 },
@@ -156,6 +157,9 @@ const TODAS_COLUNAS_PCP = [
   { coluna: "teste_enviado",            rotulo: "Teste Enviado",               canonico: "aguardando_aprovacao_teste",  cor: "#BE185D", corFundo: "#FCE7F3" },
   { coluna: "em_producao",              rotulo: "A Produzir Galpão",           canonico: "a_produzir",                  cor: "#0E7490", corFundo: "#CFFAFE" },
   { coluna: "em_producao_terceirizada", rotulo: "A Produzir Terceirizada",     canonico: "a_produzir_terceirizada",     cor: "#0F766E", corFundo: "#CCFBF1" },
+  /* Produção concluída espera aqui (agrupando os produtos do pedido) antes de
+     medir; terceirizada que terminou ganha a tag COLETAR TERCEIRIZADA. */
+  { coluna: "producao_finalizada",      rotulo: "Produção Finalizada / Agrupamento", canonico: "producao_finalizada", cor: "#A16207", corFundo: "#FEF9C3" },
   { coluna: "inserir_medidas",          rotulo: "Inserir Medidas",             canonico: "inserir_medidas",             cor: "#4D7C0F", corFundo: "#ECFCCB" },
   { coluna: "aguardando_coleta",        rotulo: "Expedição",                   canonico: "aguardando_coleta",           cor: "#B91C1C", corFundo: "#FEE2E2" },
   { coluna: "enviado",                  rotulo: "Coletado e Enviado",          canonico: "coletado_enviado",            cor: "#047857", corFundo: "#D1FAE5" },

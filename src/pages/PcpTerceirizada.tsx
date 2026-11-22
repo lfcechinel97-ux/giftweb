@@ -97,6 +97,7 @@ const ROTULO_STATUS: Record<string, string> = {
   aguardando_teste_terceirizada: "Aguardando Teste",
   aguardando_aprovacao_teste: "Teste Enviado",
   a_produzir_terceirizada: "A Produzir",
+  producao_finalizada: "Produção Finalizada / Agrupamento",
   inserir_medidas: "Inserir Medidas",
   aguardando_coleta: "Expedição",
 };
@@ -109,6 +110,7 @@ const COLUNAS = [
   { coluna: "teste_fisico_terceirizada", titulo: "Aguardando Teste Terceirizada", cor: "#A21CAF", corFundo: "#FAE8FF" },
   { coluna: "teste_enviado", titulo: "Teste Enviado", cor: "#BE185D", corFundo: "#FCE7F3" },
   { coluna: "em_producao_terceirizada", titulo: "A Produzir Terceirizada", cor: "#0F766E", corFundo: "#CCFBF1" },
+  { coluna: "producao_finalizada", titulo: "Produção Finalizada / Agrupamento", cor: "#A16207", corFundo: "#FEF9C3" },
   { coluna: "inserir_medidas", titulo: "Inserir Medidas", cor: "#4D7C0F", corFundo: "#ECFCCB" },
 ] as const;
 
@@ -578,7 +580,7 @@ function CardTerceirizada({
             </button>
           </>
         )}
-        {coluna === "inserir_medidas" && (
+        {(coluna === "inserir_medidas" || coluna === "producao_finalizada") && (
           <button
             onClick={() => setMedidasAberto(true)}
             className="w-full h-8 rounded-[7px] bg-[#4D7C0F] text-white text-[12px] font-bold flex items-center justify-center gap-1.5"
