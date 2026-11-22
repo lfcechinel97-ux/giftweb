@@ -256,13 +256,24 @@ const TAG_DESPACHAR_PREFIXO = "DESPACHAR";
    popup de despacho, trocando por PEDIDO 100% PAGO. */
 const TAG_CONFERIR_PAGAMENTO = "CONFERIR PAGAMENTO";
 const TAG_PEDIDO_PAGO = "PEDIDO 100% PAGO";
+/* Etiqueta de pagamento da Expedição: a expedição bate o olho e sabe se pode
+   despachar, sem abrir o pedido.
+     Cartão (qualquer parcelamento) .......... PAGO 100% CARTÃO
+     PIX Total ............................... PAGO 100% PIX
+     PIX 50% + 50% ........................... COBRAR 50% FALTA  -> PAGO 100% PIX
+     Boleto / Transferência / A combinar ..... CONFERIR PAGAMENTO -> PAGO 100% BOLETO etc. */
+const TAG_PAGO_100_CARTAO = "PAGO 100% CARTÃO";
+const TAG_PAGO_100_PIX = "PAGO 100% PIX";
+const TAG_COBRAR_50_FALTA = "COBRAR 50% FALTA";
 
 /* Tags do fluxo de teste — todas se excluem mutuamente, nunca coexistem no
    mesmo card (uma etapa por vez). */
 const TAGS_FLUXO_TESTE = [TAG_TESTE_ENVIADO, TAG_TESTE_REFEITO, TAG_TESTE_APROVADO, TAG_TESTE_RECUSADO];
 /* Tags de pagamento/expedição — também se excluem mutuamente; "todas as
    tags saem" ao confirmar o despacho vira só isso: filtrar essas fora. */
-const TAGS_EXPEDICAO = [TAG_COBRAR_RESTANTE, TAG_PAGO_CARTAO, TAG_CONFERIR_PAGAMENTO, TAG_PEDIDO_PAGO];
+const TAGS_EXPEDICAO = [TAG_COBRAR_RESTANTE, TAG_PAGO_CARTAO, TAG_CONFERIR_PAGAMENTO, TAG_PEDIDO_PAGO, TAG_PAGO_100_CARTAO, TAG_PAGO_100_PIX, TAG_COBRAR_50_FALTA];
+/** Tag de pagamento (qualquer versão, antiga ou nova) -- pra trocar sem acumular. */
+const ehTagPagamento = (t: string) => TAGS_EXPEDICAO.includes(t) || /^PAGO 100%/i.test(t);
 
 /* "Ele também já coloca a tag de transportadora tipo: Coleta Braspress,
    Coleta Melhor Envio, Envio por Lalamove." — fixas por enquanto (as 3 que
@@ -390,8 +401,9 @@ function CaixaVolumes({ tags }: { tags: string[] }) {
 function InfoPagamento({ row }: { row: PcpRow }) {
   const nome = row.pagamento_nome;
   const comp = row.pedido_comprovante_pagamento_url;
-  const situacao = row.pedido_pago_integral || row.pix_recebido_integral_em || row.pagamento_cartao_conferido_em
+  const situacao = row.pedido_pago_integral || pagoAutomatico(nome)
     ? "Pago 100%"
+    : isPixMetade(nome) ? "Falta cobrar 50%"
     : comp === "confirmado-manualmente" ? "Entrada confirmada manualmente"
     : comp ? "Comprovante anexado"
     : "Sem comprovante";
@@ -451,6 +463,24 @@ const isPagamentoCartao = (nome: string | null | undefined) => {
 
 const isPagamentoPix = (nome: string | null | undefined) =>
   !!nome && semAcento(nome).includes("pix");
+
+const isPixMetade = (nome: string | null | undefined) =>
+  isPagamentoPix(nome) && semAcento(nome ?? "").includes("50");
+
+/** Cartão e PIX total já chegam pagos (conferidos na impressão da O.P.). */
+const pagoAutomatico = (nome: string | null | undefined) =>
+  isPagamentoCartao(nome) || (isPagamentoPix(nome) && !isPixMetade(nome));
+
+/** Qual etiqueta de pagamento o pedido deve ter agora. */
+const tagPagamentoExpedicao = (nome: string | null | undefined, pagoIntegral: boolean | null | undefined): string => {
+  if (isPagamentoCartao(nome)) return TAG_PAGO_100_CARTAO;
+  if (isPagamentoPix(nome)) return isPixMetade(nome) && !pagoIntegral ? TAG_COBRAR_50_FALTA : TAG_PAGO_100_PIX;
+  if (!pagoIntegral) return TAG_CONFERIR_PAGAMENTO;
+  const n = semAcento(nome ?? "");
+  if (n.includes("boleto")) return "PAGO 100% BOLETO";
+  if (n.includes("transfer")) return "PAGO 100% TRANSFERÊNCIA";
+  return "PAGO 100%";
+};
 
 const ORDEM_STATUS = STATUS_COLS.map(c => c.value);
 const idxStatus = (s: PcpStatus) => ORDEM_STATUS.indexOf(s);
@@ -737,7 +767,7 @@ function PcpPedidoCard({
               ))}
             </div>
           )}
-          {naExpedicao && tagsPedido.includes(TAG_CONFERIR_PAGAMENTO) && <InfoPagamento row={primeiro} />}
+          {naExpedicao && (tagsPedido.includes(TAG_CONFERIR_PAGAMENTO) || tagsPedido.includes(TAG_COBRAR_50_FALTA)) && <InfoPagamento row={primeiro} />}
           {naExpedicao && <CaixaVolumes tags={tagsPedido.filter(ehTagVolume)} />}
 
           {coluna === "aguardando_mercadoria" && (() => {
@@ -1116,7 +1146,7 @@ function PcpCard({
       {/* Rodapé — tag da etapa (pastel) + demais tags, 1 linha só. */}
       <div className="px-3 pb-2 space-y-1.5">
         {Etiquetas}
-        {colunaDoStatus(row) === "aguardando_coleta" && (row.tags ?? []).includes(TAG_CONFERIR_PAGAMENTO) && <InfoPagamento row={row} />}
+        {colunaDoStatus(row) === "aguardando_coleta" && ((row.tags ?? []).includes(TAG_CONFERIR_PAGAMENTO) || (row.tags ?? []).includes(TAG_COBRAR_50_FALTA)) && <InfoPagamento row={row} />}
         <CaixaVolumes tags={tagsVolume} />
         {naColetaEnviado && volumesEnviado.length > 0 && (
           verVolumes ? (
@@ -2048,6 +2078,24 @@ export default function PCP() {
       await loadItems();
     }
   };
+  /* Cards que já estavam na Expedição antes da etiqueta por forma de
+     pagamento (ou cujo pagamento mudou no pedido): acerta a etiqueta uma vez
+     por sessão -- troca CONFERIR PAGAMENTO por PAGO 100% CARTÃO / PIX ou
+     COBRAR 50% FALTA conforme o pedido. */
+  const pagamentoAcertado = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    for (const r of rows) {
+      if (colunaDoStatus(r) !== "aguardando_coleta" || pagamentoAcertado.current.has(r.producao_id)) continue;
+      pagamentoAcertado.current.add(r.producao_id);
+      const atuais = r.tags ?? [];
+      const esperada = tagPagamentoExpedicao(r.pagamento_nome, r.pedido_pago_integral);
+      const pagamentoAtual = atuais.filter(ehTagPagamento);
+      if (pagamentoAtual.length === 1 && pagamentoAtual[0] === esperada) continue;
+      void salvarTags(r, [...atuais.filter(t => !ehTagPagamento(t)), esperada]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
+
 
   /* Resolve contra o catálogo mestre (sistema_etiquetas) antes de criar
      etiqueta nova — é isso que impede "Comprado XBZ" e "comprado xbz"
@@ -2765,11 +2813,7 @@ export default function PCP() {
      (qualquer parcelamento) já está pago. Não pergunta mais nada pro
      vendedor, só lê a condição de pagamento que já está no pedido. */
   const tagPagamentoDoPedido = (nome: string | null) =>
-    isPagamentoCartao(nome)
-      ? TAG_PAGO_CARTAO
-      : (isPagamentoPix(nome) && semAcento(nome ?? "").includes("50"))
-        ? TAG_COBRAR_RESTANTE
-        : null;
+    isPagamentoCartao(nome) || isPagamentoPix(nome) ? tagPagamentoExpedicao(nome, false) : null;
 
   /* "na transferência do a produzir para expedição, todas as tags são
      excluídas" — troca completa, não acumula com o que o item tinha
@@ -2798,7 +2842,7 @@ export default function PCP() {
       // PAGO, se o vendedor já confirmou antes).
       await salvarTags(alvo, [
         ...agruparVolumesEmTags(volumesPayload.itens),
-        alvo.pedido_pago_integral ? TAG_PEDIDO_PAGO : TAG_CONFERIR_PAGAMENTO,
+        tagPagamentoExpedicao(alvo.pagamento_nome, alvo.pedido_pago_integral),
       ]);
 
       await mudarStatus(alvo.producao_id, statusCanonicoDaColuna(target), observacaoHistorico);
@@ -2890,7 +2934,8 @@ export default function PCP() {
     ? rows.filter(r => r.pedido_id === despachoModal.row.pedido_id && colunaDoStatus(r) === "aguardando_coleta")
     : [];
   const despachoPedidoPago = despachoModal
-    ? rows.some(r => r.pedido_id === despachoModal.row.pedido_id && r.pedido_pago_integral)
+    ? pagoAutomatico(despachoModal.row.pagamento_nome)
+      || rows.some(r => r.pedido_id === despachoModal.row.pedido_id && r.pedido_pago_integral)
     : false;
 
   /* "PEDIDO PAGO 100%?" — grava no pedido e troca a tag CONFERIR PAGAMENTO
@@ -2915,10 +2960,8 @@ export default function PCP() {
     }
     setRows(prev => prev.map(r => (r.pedido_id === row.pedido_id ? { ...r, pedido_pago_integral: true } : r)));
     for (const item of itensDespacho) {
-      const semPagamento = (item.tags ?? []).filter(
-        t => ![TAG_CONFERIR_PAGAMENTO, TAG_COBRAR_RESTANTE, TAG_PAGO_CARTAO, TAG_PEDIDO_PAGO].includes(t),
-      );
-      await salvarTags(item, [...semPagamento, TAG_PEDIDO_PAGO]);
+      const semPagamento = (item.tags ?? []).filter(t => !ehTagPagamento(t));
+      await salvarTags(item, [...semPagamento, tagPagamentoExpedicao(item.pagamento_nome, true)]);
     }
     await registrarNotaHistorico(row, `Pagamento conferido: pedido 100% pago${row.pagamento_nome ? ` (${row.pagamento_nome})` : ""}`);
     setPagoIntegralSaving(false);
@@ -4395,7 +4438,7 @@ export default function PCP() {
                     </div>
                     {despachoPedidoPago ? (
                       <p className="flex items-center gap-1.5 text-[12px] font-bold" style={{ color: "#15803D" }}>
-                        <CheckCircle2 className="h-4 w-4" /> PEDIDO 100% PAGO
+                        <CheckCircle2 className="h-4 w-4" /> {tagPagamentoExpedicao(pag, true)}
                       </p>
                     ) : (
                       <Button
