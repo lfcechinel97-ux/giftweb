@@ -20,6 +20,7 @@ export type Database = {
           email: string
           id: string
           nome: string | null
+          pausado: boolean
           vendedor_id: string | null
           vendedores_extras: string[]
         }
@@ -28,6 +29,7 @@ export type Database = {
           email: string
           id: string
           nome?: string | null
+          pausado?: boolean
           vendedor_id?: string | null
           vendedores_extras?: string[]
         }
@@ -36,6 +38,7 @@ export type Database = {
           email?: string
           id?: string
           nome?: string | null
+          pausado?: boolean
           vendedor_id?: string | null
           vendedores_extras?: string[]
         }
@@ -4463,6 +4466,7 @@ export type Database = {
           email: string
           nome: string
           papel: string
+          pausado: boolean
           user_id: string
           vendedor_id: string
           vendedores_extras: string[]
@@ -4551,6 +4555,10 @@ export type Database = {
       sistema_op_terceirizada_publica: {
         Args: { p_token: string }
         Returns: Json
+      }
+      sistema_pausar_usuario: {
+        Args: { p_pausado: boolean; p_user_id: string }
+        Returns: undefined
       }
       sistema_pcp_terceirizada: {
         Args: never
