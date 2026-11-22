@@ -46,7 +46,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 type PcpStatus =
   | "organizando_comercial" | "organizando_pedido" | "aguardando_mercadoria"
   | "teste_fisico" | "teste_fisico_terceirizada" | "teste_enviado"
-  | "em_producao" | "em_producao_terceirizada" | "inserir_medidas"
+  | "em_producao" | "em_producao_terceirizada" | "producao_finalizada" | "inserir_medidas"
   | "aguardando_coleta" | "enviado";
 
 type LocalProducao = "interna" | "terceirizada" | "fornecedor_para_terceirizada";
@@ -211,6 +211,12 @@ const TAG_TESTE_APROVADO = "TESTE APROVADO";
 const TAG_TESTE_RECUSADO = "TESTE RECUSADO";
 const TAG_PROD_GALPAO = "PROD. GALPÃO";
 const TAG_TERCEIRIZADA_PREFIXO = "TERCEIRIZADA";
+/* Produção Finalizada / Agrupamento: item terceirizado que terminou fica com
+   esta tag até sair da coluna -- avisa que já pode buscar na terceirizada. */
+const TAG_COLETAR_TERCEIRIZADA = "COLETAR TERCEIRIZADA";
+/* Pendências do Aguardando Teste Galpão (saem sozinhas quando o card
+   sai dessa coluna). */
+const TAGS_PENDENCIA_TESTE = ["AGUARDANDO VETORIZAÇÃO", "AGUARDANDO CARTELA"];
 
 /** Galpão ou Terceirizada, pelo que já está gravado no item -- usada para
     reenviar o item pra coluna certa em passos automáticos (aprovar/recusar
@@ -261,7 +267,8 @@ const TAG_PEDIDO_PAGO = "PEDIDO 100% PAGO";
      Cartão (qualquer parcelamento) .......... PAGO 100% CARTÃO
      PIX Total ............................... PAGO 100% PIX
      PIX 50% + 50% ........................... COBRAR 50% FALTA  -> PAGO 100% PIX
-     Boleto / Transferência / A combinar ..... CONFERIR PAGAMENTO -> PAGO 100% BOLETO etc. */
+     Boleto 30d (faturado) / Transferência ... PAGO 100% BOLETO / PAGO 100% TRANSFERÊNCIA
+     A combinar / sem forma de pagamento ..... CONFERIR PAGAMENTO -> PAGO 100% */
 const TAG_PAGO_100_CARTAO = "PAGO 100% CARTÃO";
 const TAG_PAGO_100_PIX = "PAGO 100% PIX";
 const TAG_COBRAR_50_FALTA = "COBRAR 50% FALTA";
@@ -467,19 +474,25 @@ const isPagamentoPix = (nome: string | null | undefined) =>
 const isPixMetade = (nome: string | null | undefined) =>
   isPagamentoPix(nome) && semAcento(nome ?? "").includes("50");
 
-/** Cartão e PIX total já chegam pagos (conferidos na impressão da O.P.). */
+const isBoletoOuTransferencia = (nome: string | null | undefined) => {
+  const n = semAcento(nome ?? "");
+  return n.includes("boleto") || n.includes("transfer");
+};
+
+/** Já contam como pagos: cartão e PIX total (conferidos na impressão da
+    O.P.) e boleto/transferência (faturado). Só PIX 50% + 50% -- e pedido sem
+    forma de pagamento definida ("A combinar") -- pedem confirmação. */
 const pagoAutomatico = (nome: string | null | undefined) =>
-  isPagamentoCartao(nome) || (isPagamentoPix(nome) && !isPixMetade(nome));
+  isPagamentoCartao(nome) || (isPagamentoPix(nome) && !isPixMetade(nome)) || isBoletoOuTransferencia(nome);
 
 /** Qual etiqueta de pagamento o pedido deve ter agora. */
 const tagPagamentoExpedicao = (nome: string | null | undefined, pagoIntegral: boolean | null | undefined): string => {
   if (isPagamentoCartao(nome)) return TAG_PAGO_100_CARTAO;
   if (isPagamentoPix(nome)) return isPixMetade(nome) && !pagoIntegral ? TAG_COBRAR_50_FALTA : TAG_PAGO_100_PIX;
-  if (!pagoIntegral) return TAG_CONFERIR_PAGAMENTO;
   const n = semAcento(nome ?? "");
   if (n.includes("boleto")) return "PAGO 100% BOLETO";
   if (n.includes("transfer")) return "PAGO 100% TRANSFERÊNCIA";
-  return "PAGO 100%";
+  return pagoIntegral ? "PAGO 100%" : TAG_CONFERIR_PAGAMENTO;
 };
 
 const ORDEM_STATUS = STATUS_COLS.map(c => c.value);
@@ -632,7 +645,7 @@ function EtiquetaCombobox({ opcoes, onSelect }: { opcoes: string[]; onSelect: (n
 /** Card único do pedido numa coluna (modo "Agrupado"). Só o cabeçalho é
     arrastável: arrastar o card move todos os produtos do pedido que estão
     nesta coluna; os cards individuais (expandidos) se arrastam sozinhos. */
-const COLUNAS_AGRUPAVEIS = ["organizando_comercial", "organizando_pedido", "aguardando_mercadoria", "inserir_medidas", "aguardando_coleta"];
+const COLUNAS_AGRUPAVEIS = ["organizando_comercial", "organizando_pedido", "aguardando_mercadoria", "producao_finalizada", "inserir_medidas", "aguardando_coleta"];
 
 function PcpPedidoCard({
   rows, coluna, totalPedido, faltamExpedicao = 0, cor, comFotos, vendedorNome, contato, expandido, dragging, highlight, atrasado, critico, imprimindoOP,
@@ -1656,6 +1669,7 @@ export default function PCP() {
   const todasTags = useMemo(() => {
     const set = new Set<string>();
     for (const e of etiquetasMestre) set.add(e.nome);
+    for (const t of [...TAGS_PENDENCIA_TESTE, TAG_COLETAR_TERCEIRIZADA]) set.add(t);
     for (const r of rows) for (const t of r.tags ?? []) set.add(t);
     return [...set].sort((a, b) => a.localeCompare(b, "pt-BR"));
   }, [rows, etiquetasMestre]);
@@ -2368,15 +2382,18 @@ export default function PCP() {
          pra "Inserir Medidas" sem popup; os volumes são preenchidos lá. O
          pagamento vira tag aqui, que é quando o vendedor precisa cobrar. */
       const tagPagamento = tagPagamentoDoPedido(row.pagamento_nome);
+      const movido = COLUNAS_PRODUZIR.includes(colunaDoStatus(row));
+      /* Produção concluída vai pra "Produção Finalizada / Agrupamento" (as
+         medidas ficam pra quando o pedido for embalado). */
       const tagsFinais = [...new Set([
         ...(row.tags ?? []).filter(t => t !== TAG_TESTE_ENVIADO && t !== TAG_TESTE_REFEITO),
         ...(tagPagamento ? [tagPagamento] : []),
+        ...(movido && ehItemTerceirizado(row) ? [TAG_COLETAR_TERCEIRIZADA] : []),
       ])];
       await salvarTags(row, tagsFinais);
 
-      const movido = COLUNAS_PRODUZIR.includes(colunaDoStatus(row));
-      if (movido) moverItem(row, "inserir_medidas", `${enviados.length} arquivo(s) da produção concluída anexado(s)`);
-      toast.success(`${enviados.length > 1 ? `${enviados.length} arquivos anexados` : "Anexado"}.${movido ? " Item foi para Inserir Medidas." : ""}`);
+      if (movido) moverItem(row, "producao_finalizada", `${enviados.length} arquivo(s) da produção concluída anexado(s)`);
+      toast.success(`${enviados.length > 1 ? `${enviados.length} arquivos anexados` : "Anexado"}.${movido ? " Item foi para Produção Finalizada." : ""}`);
     } catch (err) {
       toast.error(err instanceof MockupUploadError ? err.message : "Não foi possível enviar o anexo.");
     } finally {
@@ -2454,6 +2471,12 @@ export default function PCP() {
       p_observacao: observacao ?? null,
     });
     setSavingId(null);
+    /* Banco ainda sem o status "producao_finalizada" (migration pendente):
+       segue o fluxo antigo, direto pra Inserir Medidas, em vez de travar. */
+    if (error && status === "producao_finalizada") {
+      console.warn("[PCP] status producao_finalizada indisponível; usando inserir_medidas", error);
+      return mudarStatus(producaoId, "inserir_medidas", observacao);
+    }
     if (error) {
       console.error("[PCP] mudar status falhou:", error);
       toast.error(`Não foi possível salvar. ${error.message || ""}`);
@@ -2529,6 +2552,29 @@ export default function PCP() {
     }
   };
 
+  const ehItemTerceirizado = (r: PcpRow) =>
+    TERCEIRIZADA_TRIGGER.includes(r.local_producao)
+    || colunaDoStatus(r) === "em_producao_terceirizada"
+    || (r.tags ?? []).some(t => t.toUpperCase().startsWith(TAG_TERCEIRIZADA_PREFIXO));
+
+  /** Ajusta as tags automáticas ao mudar de coluna:
+      - entrou em Produção Finalizada sendo terceirizado: põe COLETAR TERCEIRIZADA;
+      - saiu de lá: tira (na Expedição todas as tags já são trocadas);
+      - saiu do Aguardando Teste Galpão: tira AGUARDANDO VETORIZAÇÃO / CARTELA. */
+  const ajustarTagColeta = (r: PcpRow, destino: string) => {
+    const orig = r.tags ?? [];
+    let tags = orig;
+    if (colunaDoStatus(r) === "teste_fisico" && destino !== "teste_fisico") {
+      tags = tags.filter(t => !TAGS_PENDENCIA_TESTE.includes(t));
+    }
+    if (destino === "producao_finalizada") {
+      if (ehItemTerceirizado(r) && !tags.includes(TAG_COLETAR_TERCEIRIZADA)) tags = [...tags, TAG_COLETAR_TERCEIRIZADA];
+    } else if (destino !== "aguardando_coleta") {
+      tags = tags.filter(t => t !== TAG_COLETAR_TERCEIRIZADA);
+    }
+    if (tags.length !== orig.length || tags.some((t, k) => t !== orig[k])) void salvarTags(r, tags);
+  };
+
   /* Trajeto com pendência (falta anexo/medidas): em vez de bloquear, pergunta
      se quer anexar agora ou seguir assim mesmo. Produção e vendas têm liberdade
      de pular etapas quando o produto já está adiantado. */
@@ -2584,7 +2630,7 @@ export default function PCP() {
        pra Expedição — arrastar direto de "A Produzir" sem anexo não pode
        pular essa checagem (o caminho normal é anexar a mídia, que já move
        sozinho). */
-    if ((targetStatus === "inserir_medidas" || targetStatus === "aguardando_coleta")
+    if ((targetStatus === "producao_finalizada" || targetStatus === "inserir_medidas" || targetStatus === "aguardando_coleta")
       && COLUNAS_PRODUZIR.includes(colunaDoStatus(row)) && !row.producao_anexo_url && !liberadoRef.current) {
       bloquear("FALTA ANEXAR A FOTO/VÍDEO DA PRODUÇÃO CONCLUÍDA DO PRODUTO.", () => handleDrop(targetStatus, id), row.producao_id);
       return;
@@ -2624,6 +2670,7 @@ export default function PCP() {
       if (semCompra.length !== (row.tags ?? []).length) void salvarTags(row, semCompra);
     }
 
+    ajustarTagColeta(row, targetStatus);
     moverItem(row, targetStatus);
   };
 
@@ -2681,7 +2728,7 @@ export default function PCP() {
         return;
       }
     }
-    if ((targetStatus === "inserir_medidas" || targetStatus === "aguardando_coleta") && COLUNAS_PRODUZIR.includes(colunaOrigem) && !liberadoRef.current) {
+    if ((targetStatus === "producao_finalizada" || targetStatus === "inserir_medidas" || targetStatus === "aguardando_coleta") && COLUNAS_PRODUZIR.includes(colunaOrigem) && !liberadoRef.current) {
       const faltam = grupo.filter(r => !r.producao_anexo_url).length;
       if (faltam > 0) {
         bloquear(`FALTA ANEXAR A FOTO/VÍDEO DA PRODUÇÃO EM ${faltam} PRODUTO(S).`, retry, (grupo.find(r => !r.producao_anexo_url) ?? row).producao_id);
@@ -2708,6 +2755,7 @@ export default function PCP() {
       }
     }
     for (const r of grupo) {
+      ajustarTagColeta(r, targetStatus);
       void mudarStatus(r.producao_id, statusCanonicoDaColuna(targetStatus), grupo.length > 1 ? "Movido junto com o pedido" : undefined);
     }
   };
@@ -2813,7 +2861,7 @@ export default function PCP() {
      (qualquer parcelamento) já está pago. Não pergunta mais nada pro
      vendedor, só lê a condição de pagamento que já está no pedido. */
   const tagPagamentoDoPedido = (nome: string | null) =>
-    isPagamentoCartao(nome) || isPagamentoPix(nome) ? tagPagamentoExpedicao(nome, false) : null;
+    pagoAutomatico(nome) || isPixMetade(nome) ? tagPagamentoExpedicao(nome, false) : null;
 
   /* "na transferência do a produzir para expedição, todas as tags são
      excluídas" — troca completa, não acumula com o que o item tinha
@@ -3396,7 +3444,7 @@ export default function PCP() {
                         // PRODUTOS"): o vendedor gera a etiqueta do pedido todo.
                         const totalPedido = indices[primeiro.producao_id]?.total ?? g.rows.length;
                         const faltamExp = col.value === "aguardando_coleta" ? faltamChegarNaExpedicao(g.pedidoId) : 0;
-                        const soltos = col.value === "inserir_medidas"
+                        const soltos = (col.value === "inserir_medidas" || col.value === "producao_finalizada")
                           ? g.rows.length < 2
                           : col.value === "aguardando_coleta"
                             ? g.rows.length + faltamExp < 2
@@ -3625,6 +3673,29 @@ export default function PCP() {
                         <span className="gw-body text-[13px] text-[var(--gw-text-muted)]">Nenhuma etiqueta</span>
                       )}
                     </div>
+                    {/* Aguardando Teste Galpão: atalhos das pendências mais comuns. */}
+                    {colunaDoStatus(detalhe) === "teste_fisico" && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {TAGS_PENDENCIA_TESTE.map(t => {
+                          const tem = (detalhe.tags ?? []).includes(t);
+                          return (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => (tem
+                                ? salvarTags(detalhe, (detalhe.tags ?? []).filter(x => x !== t))
+                                : adicionarTag(detalhe, t))}
+                              className="h-8 rounded-[6px] border px-2.5 text-[11px] font-bold transition-colors"
+                              style={tem
+                                ? { backgroundColor: corDaTag(t), borderColor: corDaTag(t), color: "#FFFFFF" }
+                                : { backgroundColor: "#FFFFFF", borderColor: corDaTag(t), color: corDaTag(t) }}
+                            >
+                              {tem ? "✓ " : "+ "}{t}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                     <EtiquetaCombobox
                       opcoes={todasTags}
                       onSelect={nome => adicionarTag(detalhe, nome)}

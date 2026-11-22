@@ -82,6 +82,7 @@ const ABAS = [
   { id: "teste_env",   rotulo: "Teste Enviado",        colunas: ["teste_enviado"] },
   { id: "produzir",    rotulo: "A Produzir Galpão",    colunas: ["em_producao"] },
   { id: "produzir_terc", rotulo: "A Produzir Terceirizada", colunas: ["em_producao_terceirizada"] },
+  { id: "finalizada",  rotulo: "Produção Finalizada",  colunas: ["producao_finalizada"] },
   { id: "medidas",     rotulo: "Inserir Medidas",      colunas: ["inserir_medidas"] },
   { id: "expedicao",   rotulo: "Expedição",            colunas: ["aguardando_coleta"] },
   { id: "entregues",   rotulo: "Coletado e Enviado",   colunas: ["enviado"] },

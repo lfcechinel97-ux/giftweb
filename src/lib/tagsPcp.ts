@@ -48,6 +48,9 @@ const TAG_COR_EXATA: Record<string, string> = {
   "PAGO 100% BOLETO": "#15803D",
   "PAGO 100% TRANSFERÊNCIA": "#15803D",
   "COBRAR 50% FALTA": "#DC2626",
+  "COLETAR TERCEIRIZADA": "#C2410C",
+  "AGUARDANDO VETORIZAÇÃO": "#7C3AED",
+  "AGUARDANDO CARTELA": "#0369A1",
   "DESPACHAR": "#0369A1",
   "PRODUZIR + MÍDIA": "#EA580C",
   "PRODUZIDO": "#15803D",
@@ -71,7 +74,7 @@ const TAG_COR_EXATA: Record<string, string> = {
 /* Ordem de prioridade quando o card tem mais etiquetas do que cabe —
    mostra as primeiras da lista e agrupa o resto em "+N" (hover revela). */
 const TAG_PRIORIDADE = [
-  "URGENTE", "TESTE RECUSADO", "CONFERIR PAGAMENTO", "COBRAR 50% FALTA", "COBRAR 50% RESTANTE", "DESPACHAR",
+  "URGENTE", "COLETAR TERCEIRIZADA", "TESTE RECUSADO", "CONFERIR PAGAMENTO", "COBRAR 50% FALTA", "COBRAR 50% RESTANTE", "DESPACHAR",
   "PAGO 100%", "PEDIDO 100% PAGO",
   "TESTE APROVADO", "TESTE REFEITO", "TESTE ENVIADO",
   "PROD. GALPÃO", "TERCEIRIZADA", "PAGO CARTÃO",

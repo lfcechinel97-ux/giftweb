@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSistema } from "@/contexts/SistemaContext";
 import { useUserRole, ROTULO_PAPEL } from "@/hooks/useUserRole";
+import TrocarPerfilProducao from "@/components/sistema/TrocarPerfilProducao";
+import { lerPerfisSalvos } from "@/lib/perfisProducao";
 import { supabase } from "@/integrations/supabase/client";
 
 /* chunk opcional: item sem chunk não pré-carrega nada no hover. */
@@ -73,7 +75,11 @@ export default function SistemaLayout() {
 
   const sair = async () => {
     try { localStorage.removeItem("sistema_vendedor_v1"); } catch { /* armazenamento bloqueado */ }
-    await supabase.auth.signOut();
+    /* Perfil salvo na troca rápida da produção: sai só deste navegador, pra
+       não invalidar o perfil guardado (os outros operadores continuam lá). */
+    const { data: ses } = await supabase.auth.getSession();
+    const salvo = !!ses.session && lerPerfisSalvos().some(p => p.userId === ses.session!.user.id);
+    await supabase.auth.signOut(salvo ? { scope: "local" } : undefined);
     // Recarrega do zero para não sobrar cache (papéis, listas) do usuário anterior.
     window.location.href = "/admin/login";
   };
@@ -217,6 +223,10 @@ export default function SistemaLayout() {
 
       <div className="ml-[68px] xl:ml-[220px] flex-1 min-w-0 min-h-screen flex flex-col">
 
+        {/* Produção: troca rápida de operador (estilo Netflix), topo direito. */}
+        <div className="flex justify-end px-6 pt-3 empty:hidden">
+          <TrocarPerfilProducao />
+        </div>
         <main className="p-6 flex-1 min-w-0">
           <Suspense fallback={<RouteSkeleton />}>
             <Outlet />

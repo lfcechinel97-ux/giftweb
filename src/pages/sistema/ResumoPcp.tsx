@@ -67,7 +67,7 @@ const ORDEM_COLUNA = Object.fromEntries(COLUNAS_PCP.map((c, i) => [c.coluna, i])
 const DIAS_NECESSARIOS: Record<string, number> = {
   organizando_comercial: 6, organizando_pedido: 5, aguardando_mercadoria: 5,
   teste_fisico: 4, teste_fisico_terceirizada: 4, teste_enviado: 3,
-  em_producao: 2, em_producao_terceirizada: 2, inserir_medidas: 1, aguardando_coleta: 0,
+  em_producao: 2, em_producao_terceirizada: 2, producao_finalizada: 1, inserir_medidas: 1, aguardando_coleta: 0,
 };
 
 /* ── datas ──────────────────────────────────────────────────────────── */
