@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatTelefone } from "@/lib/telefone";
-import { Loader2, Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, Plus, Trash2, ChevronDown, ChevronRight, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSistema, type Cliente, type Endereco, type TipoPessoa } from "@/contexts/SistemaContext";
-import { fetchCNPJ, fetchCEP, cnpjMask, cpfMask, onlyDigits } from "./cnpj";
+import { fetchCNPJ, fetchCEP, cnpjMask, cpfMask, onlyDigits, isValidCNPJ, isValidCPF } from "./cnpj";
 
 interface Props {
   open: boolean;
@@ -41,11 +41,16 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
   const [loadingCnpj, setLoadingCnpj] = useState(false);
   const [loadingCep, setLoadingCep] = useState<number | null>(null);
   const [openContato, setOpenContato] = useState(false);
+  const lastFetchedCnpjRef = useRef("");
+  const cnpjReqIdRef = useRef(0);
 
   useEffect(() => {
     if (open) {
+      cnpjReqIdRef.current += 1;
+      setLoadingCnpj(false);
       if (cliente) {
         setC(cliente);
+        lastFetchedCnpjRef.current = cliente.tipo === "PJ" ? onlyDigits(cliente.documento) : "";
       } else {
         const base = novoClienteVazio();
         setC({
@@ -54,22 +59,37 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         });
+        lastFetchedCnpjRef.current = "";
       }
     }
   }, [open, cliente]);
 
   const update = (patch: Partial<Cliente>) => setC((prev) => ({ ...prev, ...patch }));
 
-  const handleCnpjBlur = async () => {
-    if (c.tipo !== "PJ") return;
-    if (onlyDigits(c.documento).length !== 14) return;
-    setLoadingCnpj(true);
-    const data = await fetchCNPJ(c.documento);
-    setLoadingCnpj(false);
-    if (!data) {
-      toast.error("Não foi possível consultar o CNPJ. Preencha manualmente.");
+  const buscarCnpj = async (rawDoc: string, force = false) => {
+    const digits = onlyDigits(rawDoc);
+    if (digits.length !== 14) {
+      if (force) toast.error("Informe os 14 dígitos do CNPJ.", { id: "cnpj-lookup" });
       return;
     }
+    if (!isValidCNPJ(digits)) {
+      toast.error("CNPJ inválido. Confira os números digitados.", { id: "cnpj-lookup" });
+      return;
+    }
+    if (!force && lastFetchedCnpjRef.current === digits) return;
+
+    const reqId = ++cnpjReqIdRef.current;
+    setLoadingCnpj(true);
+    const data = await fetchCNPJ(digits);
+    if (reqId !== cnpjReqIdRef.current) return;
+    setLoadingCnpj(false);
+
+    if (!data) {
+      toast.error("Não foi possível consultar o CNPJ no momento. Tente novamente ou preencha manualmente.", { id: "cnpj-lookup" });
+      return;
+    }
+
+    lastFetchedCnpjRef.current = digits;
     const novoEndereco: Endereco = {
       cep: data.cep || "",
       logradouro: data.logradouro || "",
@@ -79,17 +99,52 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
       cidade: data.municipio || "",
       uf: data.uf || "",
     };
-    update({
-      nome: data.nome_fantasia || data.razao_social || c.nome,
-      ie: c.ie || "",
-      enderecos: [novoEndereco],
+    setC((prev) => {
+      const contatosAtualizados =
+        prev.contatos.length > 0
+          ? prev.contatos.map((ct, idx) =>
+              idx === 0
+                ? {
+                    ...ct,
+                    telefone: data.ddd_telefone_1 ? formatTelefone(data.ddd_telefone_1) : ct.telefone,
+                    email: ct.email || data.email || "",
+                  }
+                : ct,
+            )
+          : prev.contatos;
+      return {
+        ...prev,
+        nome: data.nome_fantasia || data.razao_social || prev.nome,
+        ie: data.inscricao_estadual || prev.ie || "",
+        enderecos: prev.enderecos.length > 1 ? [novoEndereco, ...prev.enderecos.slice(1)] : [novoEndereco],
+        contatos: contatosAtualizados,
+      };
     });
-    if (data.ddd_telefone_1 && c.contatos.length > 0) {
-      const contatosAtualizados = [...c.contatos];
-      contatosAtualizados[0] = { ...contatosAtualizados[0], telefone: formatTelefone(data.ddd_telefone_1) };
-      update({ contatos: contatosAtualizados });
+    toast.success("Dados do CNPJ preenchidos automaticamente!", { id: "cnpj-lookup" });
+  };
+
+  const handleCnpjChange = (value: string) => {
+    const masked = cnpjMask(value);
+    update({ documento: masked });
+    const digits = onlyDigits(masked);
+    if (digits.length < 14) {
+      lastFetchedCnpjRef.current = "";
+    } else if (digits.length === 14 && isValidCNPJ(digits)) {
+      void buscarCnpj(masked);
     }
-    toast.success("Dados do CNPJ preenchidos automaticamente!");
+  };
+
+  const handleCnpjBlur = () => {
+    if (c.tipo !== "PJ") return;
+    void buscarCnpj(c.documento);
+  };
+
+  const handleCpfBlur = () => {
+    if (c.tipo !== "PF") return;
+    const digits = onlyDigits(c.documento);
+    if (digits.length === 11 && !isValidCPF(digits)) {
+      toast.error("CPF inválido. Confira os números digitados.");
+    }
   };
 
   const updateEndereco = (index: number, patch: Partial<Endereco>) =>
@@ -174,18 +229,27 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
           {c.tipo === "PJ" ? (
             <div className="grid grid-cols-3 gap-4">
               <Field label="CNPJ">
-                <div className="relative">
+                <div className="flex gap-1.5">
                   <Input
                     value={c.documento}
                     placeholder="00.000.000/0000-00"
-                    onChange={(e) => update({ documento: cnpjMask(e.target.value) })}
+                    onChange={(e) => handleCnpjChange(e.target.value)}
                     onBlur={handleCnpjBlur}
                   />
-                  {loadingCnpj && (
-                    <Loader2 className="h-4 w-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  )}
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => void buscarCnpj(c.documento, true)}
+                    disabled={loadingCnpj}
+                    title="Consultar CNPJ"
+                    aria-label="Consultar CNPJ"
+                  >
+                    {loadingCnpj ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+                  </Button>
                 </div>
-                <p className="text-[10px] text-muted-foreground mt-1">Sai do campo para buscar automaticamente</p>
+                <p className="text-[10px] text-muted-foreground mt-1">Busca automática ao completar o CNPJ</p>
               </Field>
               <Field label="Inscrição Estadual">
                 <Input value={c.ie || ""} onChange={(e) => update({ ie: e.target.value })} placeholder="Isento" />
@@ -205,6 +269,7 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
                   value={c.documento}
                   placeholder="000.000.000-00"
                   onChange={(e) => update({ documento: cpfMask(e.target.value) })}
+                  onBlur={handleCpfBlur}
                 />
               </Field>
               <Field label="Nome completo" className="col-span-2">
