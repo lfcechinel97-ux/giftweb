@@ -36,6 +36,13 @@
       "when": 1794842737318,
       "tag": "0004_orcamento_prazo_entrega_faixa",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795646699972,
+      "tag": "0005_catalog_max_price_visible",
+      "breakpoints": true
     }
   ]
 }

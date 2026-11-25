@@ -21,8 +21,8 @@ Aguardando decisão do usuário: aplicar bucket `financeiro-docs`, A2 (papéis) 
 Aplicar uma etapa por vez, somente após apresentar seu diff/migration e obter aprovação. Não alterar o tamanho da instância.
 
 - [x] Coletar linha de base de db_health, slow_queries e plano do preço máximo.
-- [ ] 1. Índice parcial de preço máximo + React Query com cache de 1h — aguardando aprovação do primeiro diff.
-- [ ] 2. Comparar busca atual e busca por `busca` em 10 termos; apresentar diff para contagem estimada e debounce 400ms antes de trocar.
+- [x] 1. Índice parcial de preço máximo + React Query com cache de 1h; 4 testes aprovados e remount real sem nova consulta.
+- [ ] 2. Comparação inicial em 10 termos concluída: 9 coincidem; inox acrescenta 11 IDs. Aguardar decisão sobre equivalência, depois apresentar diff para contagem estimada e debounce 400ms antes de trocar.
 - [ ] 3. RPC de categorias com contagens agregadas e cache de 1h.
 - [ ] 4. RPC única de chat/menções; polling 120s somente com aba visível, preservando permissões.
 - [ ] 5. Projeção do board e joins agregados em vw_pcp, preservando demais consumidores e security_invoker.
