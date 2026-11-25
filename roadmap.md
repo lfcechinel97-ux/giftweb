@@ -15,3 +15,18 @@ Aguardando decisão do usuário: aplicar bucket `financeiro-docs`, A2 (papéis) 
 - [x] Manter `LOVABLE_API_KEY` intacto.
 - [x] Revisar os quatro alertas de leitura pública, sem alterar permissões: dados de catálogo/preços, sem campos pessoais; leitura inclui produtos inativos.
 - [ ] Publicar o site após a decisão do usuário sobre os acessos revisados.
+
+## Otimizações após Mini — 25/11/2026
+
+Aplicar uma etapa por vez, somente após apresentar seu diff/migration e obter aprovação. Não alterar o tamanho da instância.
+
+- [x] Coletar linha de base de db_health, slow_queries e plano do preço máximo.
+- [ ] 1. Índice parcial de preço máximo + React Query com cache de 1h — aguardando aprovação do primeiro diff.
+- [ ] 2. Comparar busca atual e busca por `busca` em 10 termos; apresentar diff para contagem estimada e debounce 400ms antes de trocar.
+- [ ] 3. RPC de categorias com contagens agregadas e cache de 1h.
+- [ ] 4. RPC única de chat/menções; polling 120s somente com aba visível, preservando permissões.
+- [ ] 5. Projeção do board e joins agregados em vw_pcp, preservando demais consumidores e security_invoker.
+- [ ] 6. Cron trello-lembretes a cada 15min (96 execuções/dia).
+- [ ] 7. Investigar os rollbacks históricos nos logs, apenas leitura.
+- [ ] 8. Mapear mídia/base64 no JSONB de orçamentos e propor Storage, sem migrar.
+- [ ] Comparar db_health e slow_queries após as etapas aprovadas, distinguindo estatísticas cumulativas e consultas de diagnóstico.
