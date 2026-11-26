@@ -1,15 +1,15 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ChevronDown, ChevronLeft, ChevronRight, Loader2, Radio } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { AlertTriangle, Check, ChevronDown, ChevronLeft, ChevronRight, Loader2, Package, Radio } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useSistema } from "@/contexts/SistemaContext";
 import { OrderNumber } from "@/components/sistema/ui/OrderNumber";
 import PainelEmpate from "./financeiro/PainelEmpate";
 import { CUSTO_FIXO_MENSAL_PADRAO, faixaDe } from "@/lib/financeiroRegras";
-import { calcularPedido, carregarBaseResultado, type Fin, type ItemFin } from "@/lib/resultadoPedidos";
+import { calcularPedido, carregarBaseResultado } from "@/lib/resultadoPedidos";
 
 /* Dashboard por pedido (admin). Todo pedido lançado entra na hora.
    - Bruto (PV) = valor dos produtos, sem frete.
@@ -30,13 +30,36 @@ import { calcularPedido, carregarBaseResultado, type Fin, type ItemFin } from "@
 
 const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const pct = (n: number) => `${n.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%`;
+/* Aceita "24", "24,5", "24.5", "1.234,56", "R$ 1.234,56". Antes o ponto era
+   sempre tratado como milhar: "24.50" virava 2450. */
 const aNum = (t: string) => {
-  const n = Number(String(t).trim().replace(/\./g, "").replace(",", "."));
+  let x = String(t).trim().replace(/[^\d.,-]/g, "");
+  if (x.includes(",")) x = x.replace(/\./g, "").replace(",", ".");
+  else if ((x.match(/\./g) ?? []).length > 1) x = x.replace(/\./g, "");
+  const n = Number(x);
   return Number.isFinite(n) ? n : 0;
 };
 const paraTexto = (n: number | null | undefined) => (n == null ? "" : String(n).replace(".", ","));
 const mesLabel = (ano: number, mes: number) =>
   new Date(ano, mes, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+
+/* Cores vivas do "Pedido por pedido" — a margem é o que salta aos olhos. */
+const COR = {
+  navy: "#0F172A", texto: "#334155", suave: "#64748B", borda: "#E2E8F0",
+  receita: "#2563EB", custo: "#E11D48", resultado: "#16A34A", receber: "#EA580C",
+};
+const tomMargem = (m: number) =>
+  m < 0 ? { cor: "#DC2626", fundo: "#FEE2E2", rotulo: "prejuízo" }
+  : m < 0.15 ? { cor: "#D97706", fundo: "#FEF3C7", rotulo: "baixa" }
+  : m < 0.30 ? { cor: "#16A34A", fundo: "#DCFCE7", rotulo: "boa" }
+  : { cor: "#059669", fundo: "#D1FAE5", rotulo: "ótima" };
+const ORIGEM_CUSTO: Record<string, { cor: string; fundo: string }> = {
+  compra: { cor: "#047857", fundo: "#D1FAE5" },
+  editado: { cor: "#1D4ED8", fundo: "#DBEAFE" },
+  catalogo: { cor: "#475569", fundo: "#F1F5F9" },
+  compra_sem_preco: { cor: "#B45309", fundo: "#FEF3C7" },
+  sem: { cor: "#BE123C", fundo: "#FFE4E6" },
+};
 
 type Campo = "taxa_cartao_pct" | "frete" | "valor_recebido";
 type CampoItem = "custo_unitario" | "custo_personalizacao_unit";
@@ -161,50 +184,97 @@ export default function DashboardPedidos() {
     qc.invalidateQueries({ queryKey: ["sistema", "dash-pedidos"] });
   };
 
-  const salvar = async (pedidoId: string, campo: Campo, texto: string, atual: Fin | undefined) => {
-    const valor = texto.trim() === "" ? null : aNum(texto);
-    const linha = {
-      pedido_id: pedidoId,
-      taxa_cartao_pct: atual?.taxa_cartao_pct ?? null,
-      frete: atual?.frete ?? null,
-      valor_recebido: atual?.valor_recebido ?? 0,
-      [campo]: campo === "valor_recebido" ? (valor ?? 0) : valor,
-      atualizado_em: new Date().toISOString(),
-    };
-    const { error } = await (supabase as any).from("sistema_pedido_financeiro").upsert(linha);
-    if (error) { toast.error(`Não foi possível salvar. ${error.message || ""}`); return; }
-    qc.invalidateQueries({ queryKey: chave });
+  /* Salvamento campo a campo. Só a coluna editada vai pro banco (o upsert
+     não regrava as outras com o valor velho que estava na tela — era isso
+     que fazia um campo "desfazer" o outro quando editados em sequência).
+     A tela atualiza na hora (otimista) e confirma com o recarregamento. */
+  const [salvando, setSalvando] = useState<Record<string, string>>({});
+  const [salvos, setSalvos] = useState<Set<string>>(new Set());
+  const marcarSalvo = (k: string) => {
+    setSalvos(prev => new Set(prev).add(k));
+    setTimeout(() => setSalvos(prev => { const n = new Set(prev); n.delete(k); return n; }), 1600);
+  };
+  const tirarPendente = (k: string) => setSalvando(prev => { const n = { ...prev }; delete n[k]; return n; });
+
+  const salvar = async (k: string, pedidoId: string, campo: Campo, texto: string) => {
+    const bruto = texto.trim() === "" ? null : aNum(texto);
+    const valor = campo === "valor_recebido" ? (bruto ?? 0) : bruto;
+    setSalvando(prev => ({ ...prev, [k]: texto }));
+    await qc.cancelQueries({ queryKey: chave });
+    qc.setQueryData<typeof data>(chave, old => old && ({
+      ...old, fin: { ...old.fin, [pedidoId]: { ...(old.fin[pedidoId] ?? { pedido_id: pedidoId, taxa_cartao_pct: null, frete: null, valor_recebido: 0 }), [campo]: valor } },
+    }));
+    const { error } = await (supabase as any).from("sistema_pedido_financeiro")
+      .upsert({ pedido_id: pedidoId, [campo]: valor, atualizado_em: new Date().toISOString() }, { onConflict: "pedido_id" });
+    if (error) toast.error(`Não foi possível salvar. ${error.message || ""}`);
+    await qc.invalidateQueries({ queryKey: chave });
+    tirarPendente(k);
+    if (!error) marcarSalvo(k);
   };
 
-  const salvarItem = async (pedidoId: string, itemId: string, campo: CampoItem, texto: string, atual: ItemFin | undefined) => {
-    const valor = texto.trim() === "" ? null : aNum(texto);
-    const linha = {
-      pedido_id: pedidoId,
-      item_id: itemId,
-      custo_unitario: atual?.custo_unitario ?? null,
-      custo_personalizacao_unit: atual?.custo_personalizacao_unit ?? 0,
-      [campo]: campo === "custo_personalizacao_unit" ? (valor ?? 0) : valor,
-      atualizado_em: new Date().toISOString(),
-    };
-    const { error } = await (supabase as any).from("sistema_item_financeiro").upsert(linha);
-    if (error) { toast.error(`Não foi possível salvar. ${error.message || ""}`); return; }
-    qc.invalidateQueries({ queryKey: chave });
+  const salvarItem = async (k: string, pedidoId: string, itemId: string, campo: CampoItem, texto: string) => {
+    const bruto = texto.trim() === "" ? null : aNum(texto);
+    const valor = campo === "custo_personalizacao_unit" ? (bruto ?? 0) : bruto;
+    const chaveItem = `${pedidoId}:${itemId}`;
+    setSalvando(prev => ({ ...prev, [k]: texto }));
+    await qc.cancelQueries({ queryKey: chave });
+    qc.setQueryData<typeof data>(chave, old => old && ({
+      ...old, itemFin: { ...old.itemFin, [chaveItem]: { ...(old.itemFin[chaveItem] ?? { pedido_id: pedidoId, item_id: itemId, custo_unitario: null, custo_personalizacao_unit: 0 }), [campo]: valor } },
+    }));
+    const { error } = await (supabase as any).from("sistema_item_financeiro")
+      .upsert({ pedido_id: pedidoId, item_id: itemId, [campo]: valor, atualizado_em: new Date().toISOString() }, { onConflict: "pedido_id,item_id" });
+    if (error) toast.error(`Não foi possível salvar. ${error.message || ""}`);
+    await qc.invalidateQueries({ queryKey: chave });
+    tirarPendente(k);
+    if (!error) marcarSalvo(k);
   };
 
-  const inputNumero = (k: string, valorAtual: number, casas: number, onSalvar: (texto: string) => void) => (
-    <Input
-      value={edicao[k] ?? paraTexto(Number(valorAtual.toFixed(casas)))}
-      onChange={e => setEdicao(prev => ({ ...prev, [k]: e.target.value }))}
-      onBlur={() => {
-        const t = edicao[k];
-        setEdicao(prev => { const n = { ...prev }; delete n[k]; return n; });
-        if (t !== undefined && aNum(t) !== Number(valorAtual)) onSalvar(t);
-      }}
-      onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-      inputMode="decimal"
-      className="h-8 w-[92px] text-right text-[12.5px] px-2"
-    />
-  );
+  const inputNumero = (
+    k: string, valorAtual: number, casas: number, onSalvar: (texto: string) => void,
+    opts: { prefixo?: string; sufixo?: string; largura?: number; alerta?: boolean } = {},
+  ) => {
+    const pendente = salvando[k] !== undefined;
+    const ok = salvos.has(k);
+    return (
+      <div
+        className={cn(
+          "relative inline-flex items-center rounded-lg border bg-white transition-all",
+          "focus-within:ring-2 focus-within:ring-[#2563EB]/30 focus-within:border-[#2563EB]",
+          ok ? "border-[#16A34A] ring-2 ring-[#16A34A]/25" : opts.alerta ? "border-[#F59E0B]" : "border-[#CBD5E1] hover:border-[#94A3B8]",
+        )}
+        style={{ width: opts.largura ?? 104 }}
+        onClick={e => e.stopPropagation()}
+      >
+        {opts.prefixo && <span className="pl-2 text-[11px] font-semibold text-[#64748B]">{opts.prefixo}</span>}
+        <input
+          value={edicao[k] ?? salvando[k] ?? paraTexto(Number(valorAtual.toFixed(casas)))}
+          onFocus={e => e.currentTarget.select()}
+          onChange={e => setEdicao(prev => ({ ...prev, [k]: e.target.value }))}
+          onBlur={() => {
+            const t = edicao[k];
+            setEdicao(prev => { const n = { ...prev }; delete n[k]; return n; });
+            if (t === undefined) return;
+            // Campo vazio sempre salva: apaga o valor digitado e volta ao automático.
+            const mudou = t.trim() === "" || Math.abs(aNum(t) - Number(valorAtual)) > 1e-9;
+            if (mudou) onSalvar(t);
+          }}
+          onKeyDown={e => {
+            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+            if (e.key === "Escape") { setEdicao(prev => { const n = { ...prev }; delete n[k]; return n; }); (e.target as HTMLInputElement).blur(); }
+          }}
+          inputMode="decimal"
+          className="h-8 w-full min-w-0 bg-transparent px-2 text-right text-[13px] font-semibold text-[#0F172A] outline-none gw-num"
+        />
+        {opts.sufixo && <span className="pr-2 text-[11px] font-semibold text-[#64748B]">{opts.sufixo}</span>}
+        {(pendente || ok) && (
+          <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full text-white shadow"
+            style={{ background: ok ? "#16A34A" : "#2563EB" }}>
+            {ok ? <Check className="h-3 w-3" /> : <Loader2 className="h-3 w-3 animate-spin" />}
+          </span>
+        )}
+      </div>
+    );
+  };
 
   const alternar = (id: string) =>
     setAbertos(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
@@ -330,169 +400,256 @@ export default function DashboardPedidos() {
             </table>
           </div>
 
-          <div className="rounded-xl border overflow-hidden" style={{ background: "var(--gw-surface)", borderColor: "var(--gw-border)" }}>
-            <div className="px-4 py-3 flex flex-wrap items-center gap-x-4">
-              <span className="gw-body font-bold">Pedido por pedido</span>
-              <span className="gw-meta">Clique no pedido para ver os produtos (custo é por unidade). Taxa de cartão vem da forma de pagamento do pedido; frete CIF é descontado, FOB só aparece para conferência.</span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-[12.5px] whitespace-nowrap">
-                <thead className="text-[11px] uppercase" style={{ background: "var(--gw-surface-alt)", color: "var(--gw-text-secondary)" }}>
-                  <tr>
-                    <th className="text-left px-3 py-2">Pedido</th>
-                    <th className="text-left px-3 py-2">Cliente / Vendedor</th>
-                    <th className="px-3 py-2 text-right">PV</th>
-                    <th className="px-3 py-2 text-right">Custo produtos</th>
-                    <th className="px-3 py-2 text-right">Personaliz.</th>
-                    <th className="px-3 py-2 text-right">Imposto</th>
-                    <th className="px-3 py-2 text-right">Tx cartão %</th>
-                    <th className="px-3 py-2 text-right">Tx cartão</th>
-                    <th className="px-3 py-2 text-right">Frete</th>
-                    <th className="px-3 py-2 text-right">Lucro</th>
-                    <th className="px-3 py-2 text-right">Comissão</th>
-                    <th className="px-3 py-2 text-right">Lucro líq.</th>
-                    <th className="px-3 py-2 text-right">Margem</th>
-                    <th className="px-3 py-2 text-right">Recebido</th>
-                    <th className="px-3 py-2 text-right">A receber</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y" style={{ borderColor: "var(--gw-border)" }}>
-                  {linhasLiq.length === 0 && <tr><td colSpan={15} className="px-4 py-8 text-center gw-meta">Nenhum pedido neste mês.</td></tr>}
-                  {linhasLiq.map(l => {
-                    const aberto = abertos.has(l.p.id);
-                    return (
-                      <Fragment key={l.p.id}>
-                        <tr className="cursor-pointer hover:bg-[var(--gw-surface-alt)]" onClick={() => alternar(l.p.id)}>
-                          <td className="px-3 py-1.5">
-                            <span className="inline-flex items-center gap-1.5">
-                              {aberto ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
-                              <OrderNumber value={l.p.numero} className="text-[12.5px]" />
-                            </span>
-                          </td>
-                          <td className="px-3 py-1.5 max-w-[240px]">
-                            <p className="truncate font-medium">{l.clienteNome}</p>
-                            <p className="gw-meta text-[11px] truncate">{l.vendedorNome}{l.meio ? ` · ${l.meio.nome}` : " · sem forma de pagamento"} · {l.produtos.length} produto(s)</p>
-                          </td>
-                          <td className="px-3 py-1.5 text-right font-semibold">{brl(l.bruto)}</td>
-                          <td className="px-3 py-1.5 text-right">{brl(l.custoProduto)}</td>
-                          <td className="px-3 py-1.5 text-right">{brl(l.custoPers)}</td>
-                          <td className="px-3 py-1.5 text-right">{brl(l.imposto)}</td>
-                          <td className="px-3 py-1.5 text-right" onClick={e => e.stopPropagation()}>
-                            {inputNumero(`${l.p.id}:taxa`, l.taxaPct, 3, t => void salvar(l.p.id, "taxa_cartao_pct", t, l.f))}
-                          </td>
-                          <td className="px-3 py-1.5 text-right">{brl(l.taxa)}</td>
-                          <td className="px-3 py-1.5 text-right" onClick={e => e.stopPropagation()}>
-                            {l.p.frete_tipo === "FOB" ? (
-                              <span className="gw-meta text-[11.5px]" title="FOB: o cliente paga o frete. Não entra no lucro, só para conferência.">FOB {brl(l.fob)}</span>
-                            ) : inputNumero(`${l.p.id}:frete`, l.frete, 2, t => void salvar(l.p.id, "frete", t, l.f))}
-                          </td>
-                          <td className="px-3 py-1.5 text-right" style={{ color: l.lucro < 0 ? "var(--gw-danger)" : undefined }}>{brl(l.lucro)}</td>
-                          <td className="px-3 py-1.5 text-right" title={`Faixa do vendedor no mês: ${pct(l.comissaoPct)}`}>{brl(l.comissao)}</td>
-                          <td className="px-3 py-1.5 text-right font-bold" style={{ color: l.lucroLiquido < 0 ? "var(--gw-danger)" : "var(--gw-success)" }}>{brl(l.lucroLiquido)}</td>
-                          <td className="px-3 py-1.5 text-right">
-                            {l.bruto > 0 ? (
-                              <span
-                                className="inline-block rounded-full px-2 py-[1px] text-[11px] font-bold"
-                                style={l.margem < 0 ? { background: "#DB277720", color: "#BE185D" }
-                                  : l.margem < 0.15 ? { background: "#D9770620", color: "#B45309" }
-                                  : { background: "#05966920", color: "#047857" }}
-                                title={l.temCusto ? undefined : "Sem custo de produto lançado — margem superestimada"}
-                              >
-                                {(l.margem * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%{!l.temCusto && " *"}
-                              </span>
-                            ) : "—"}
-                          </td>
-                          <td className="px-3 py-1.5 text-right" onClick={e => e.stopPropagation()}>
-                            <div className="flex items-center justify-end gap-1">
-                              {inputNumero(`${l.p.id}:recebido`, l.recebido, 2, t => void salvar(l.p.id, "valor_recebido", t, l.f))}
-                              <button type="button" className="text-[10.5px] font-semibold rounded px-1.5 py-1 border" style={{ borderColor: "var(--gw-border)" }}
-                                title="Metade recebida" onClick={() => salvar(l.p.id, "valor_recebido", paraTexto(Number((l.total / 2).toFixed(2))), l.f)}>50%</button>
-                              <button type="button" className="text-[10.5px] font-semibold rounded px-1.5 py-1 border" style={{ borderColor: "var(--gw-border)" }}
-                                title="Tudo recebido" onClick={() => salvar(l.p.id, "valor_recebido", paraTexto(Number(l.total.toFixed(2))), l.f)}>100%</button>
-                            </div>
-                          </td>
-                          <td className="px-3 py-1.5 text-right font-semibold" style={{ color: l.aReceber > 0 ? "#EA580C" : "var(--gw-text-muted)" }}>{brl(l.aReceber)}</td>
-                        </tr>
-                        {aberto && (
-                          <tr>
-                            <td colSpan={15} className="px-3 pb-3 pt-0" style={{ background: "var(--gw-surface-alt)" }}>
-                              <table className="w-full text-[12px] mt-2">
-                                <thead className="text-[10.5px] uppercase" style={{ color: "var(--gw-text-secondary)" }}>
-                                  <tr>
-                                    <th className="text-left py-1 px-2">Produto</th>
-                                    <th className="text-right px-2">Qtd</th>
-                                    <th className="text-right px-2">PV unit.</th>
-                                    <th className="text-right px-2">Custo unit.</th>
-                                    <th className="text-right px-2">Personaliz. unit.</th>
-                                    <th className="text-right px-2">PV total</th>
-                                    <th className="text-right px-2">Custo total</th>
-                                    <th className="text-right px-2">Margem</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {l.produtos.map(x => {
-                                    const atual = data.itemFin[`${l.p.id}:${x.itemId}`];
-                                    return (
-                                      <tr key={x.itemId} className="border-t" style={{ borderColor: "var(--gw-border)" }}>
-                                        <td className="py-1.5 px-2 max-w-[280px] truncate font-medium">{x.nome}</td>
-                                        <td className="text-right px-2">{x.qtd}</td>
-                                        <td className="text-right px-2">{brl(x.pvUnit)}</td>
-                                        <td className="text-right px-2">
-                                          <span className="inline-flex items-center justify-end gap-1.5">
-                                            <span
-                                              className="text-[10px] font-semibold rounded-full px-1.5 py-[1px]"
-                                              style={x.origemCusto === "compra" ? { background: "#05966920", color: "#047857" }
-                                                : x.origemCusto === "editado" ? { background: "#2563EB1A", color: "#1D4ED8" }
-                                                : x.origemCusto === "catalogo" ? { background: "#94A3B833", color: "#475569" }
-                                                : x.origemCusto === "compra_sem_preco" ? { background: "#F59E0B26", color: "#B45309" }
-                                                : { background: "#DB277720", color: "#BE185D" }}
-                                              title={x.origemCusto === "editado" ? "Digitado aqui. Apague o campo para voltar ao preço da compra."
-                                                : x.origemCusto === "compra_sem_preco" ? "A compra foi registrada sem valor unitário. Lance o preço em Compras → Pedido de compra."
-                                                : x.origemCusto === "sem" ? "Nenhuma compra registrada para este produto deste pedido." : undefined}
-                                            >
-                                              {x.origemCusto === "compra" ? `compra${x.comprasNum.length ? ` nº ${x.comprasNum.join(", ")}` : ""}`
-                                                : x.origemCusto === "editado" ? "editado" : x.origemCusto === "catalogo" ? "catálogo"
-                                                : x.origemCusto === "compra_sem_preco" ? `compra nº ${x.comprasNum.join(", ")} sem preço` : "não comprado"}
-                                            </span>
-                                            {inputNumero(`${l.p.id}:${x.itemId}:cu`, x.custoUnit, 4, t => void salvarItem(l.p.id, x.itemId, "custo_unitario", t, atual))}
-                                          </span>
-                                        </td>
-                                        <td className="text-right px-2">
-                                          <span className="inline-flex items-center justify-end gap-1.5">
-                                            {x.origemPers !== "galpao" && (
-                                              <span
-                                                className="text-[10px] font-semibold rounded-full px-1.5 py-[1px] whitespace-nowrap"
-                                                style={x.origemPers === "editado" ? { background: "#2563EB1A", color: "#1D4ED8" }
-                                                  : x.origemPers === "auto" ? { background: "#7C3AED1A", color: "#6D28D9" }
-                                                  : { background: "#F59E0B26", color: "#B45309" }}
-                                                title={x.origemPers === "auto" ? `Terceirizada: ${x.tecnica} × ${x.aplicacoes} aplicação(ões). Digite outro valor para trocar.`
-                                                  : x.origemPers === "sem" ? "Item terceirizado sem técnica definida no pedido." : "Digitado aqui. Apague para voltar ao preço da técnica."}
-                                              >
-                                                {x.origemPers === "auto" ? `terceir. · ${x.tecnica}${x.aplicacoes > 1 ? ` ×${x.aplicacoes}` : ""}` : x.origemPers === "editado" ? "editado" : "terceir. s/ técnica"}
-                                              </span>
-                                            )}
-                                            {inputNumero(`${l.p.id}:${x.itemId}:pu`, x.persUnit, 4, t => void salvarItem(l.p.id, x.itemId, "custo_personalizacao_unit", t, atual))}
-                                          </span>
-                                        </td>
-                                        <td className="text-right px-2">{brl(x.pv)}</td>
-                                        <td className="text-right px-2">{brl(x.custo)}</td>
-                                        <td className="text-right px-2 font-semibold" style={{ color: x.pv - x.custo < 0 ? "var(--gw-danger)" : "var(--gw-success)" }}>{brl(x.pv - x.custo)}</td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                              <p className="gw-meta text-[11px] mt-1.5 px-2">Custo unitário: o digitado aqui, senão o preço que você lançou na compra (Compras), senão o custo do catálogo. Apague o campo para voltar ao preço da compra. Personalização de item terceirizado já vem com o preço da técnica (DTF UV 3,50 · DTF têxtil 2,50 · laser 1,00 · silk 1,80, por aplicação). Frete, imposto e taxa de cartão são do pedido inteiro.</p>
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          {(() => {
+            const totLiq = linhasLiq.reduce((a, l) => a + l.lucroLiquido, 0);
+            const totCusto = linhasLiq.reduce((a, l) => a + l.custoProduto + l.custoPers + l.imposto + l.taxa + l.frete + l.comissao, 0);
+            const margemMedia = totais.bruto > 0 ? totLiq / totais.bruto : 0;
+            const semCusto = linhasLiq.filter(l => !l.temCusto && l.bruto > 0).length;
+            const tm = tomMargem(margemMedia);
+            const th = "px-3 py-2.5 text-right text-[11px] font-bold uppercase tracking-wide";
+            const grupo = (cor: string) => ({ color: cor, borderTop: `3px solid ${cor}` });
+            return (
+              <div className="rounded-2xl border bg-white shadow-sm overflow-hidden" style={{ borderColor: COR.borda }}>
+                {/* Cabeçalho + resumo */}
+                <div className="px-5 pt-4 pb-3 flex flex-wrap items-end gap-x-6 gap-y-3">
+                  <div className="mr-auto">
+                    <h2 className="text-[17px] font-extrabold" style={{ color: COR.navy, fontFamily: "Sora, Inter, sans-serif" }}>Pedido por pedido</h2>
+                    <p className="text-[12px]" style={{ color: COR.suave }}>Clique no pedido para abrir os produtos e lançar o custo unitário. Enter salva · Esc cancela · campo vazio volta ao preço da compra.</p>
+                  </div>
+                  {([
+                    ["Vendido (PV)", brl(totais.bruto), COR.receita],
+                    ["Custos totais", brl(totCusto), COR.custo],
+                    ["Lucro líquido", brl(totLiq), totLiq < 0 ? "#DC2626" : COR.resultado],
+                  ] as [string, string, string][]).map(([r, v, c]) => (
+                    <div key={r} className="text-right">
+                      <p className="text-[10.5px] font-bold uppercase tracking-wide" style={{ color: c }}>{r}</p>
+                      <p className="gw-num text-[18px] font-extrabold" style={{ color: COR.navy }}>{v}</p>
+                    </div>
+                  ))}
+                  <div className="rounded-xl px-3 py-1.5 text-right" style={{ background: tm.fundo }}>
+                    <p className="text-[10.5px] font-bold uppercase tracking-wide" style={{ color: tm.cor }}>Margem média</p>
+                    <p className="gw-num text-[20px] font-extrabold" style={{ color: tm.cor }}>{(margemMedia * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%</p>
+                  </div>
+                  {semCusto > 0 && (
+                    <div className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-bold" style={{ background: "#FEF3C7", color: "#B45309" }}>
+                      <AlertTriangle className="h-4 w-4" /> {semCusto} pedido(s) sem custo lançado
+                    </div>
+                  )}
+                </div>
+
+                <div className="overflow-x-auto border-t" style={{ borderColor: COR.borda }}>
+                  <table className="w-full text-[13px] whitespace-nowrap bg-white">
+                    <thead className="bg-white">
+                      <tr className="text-[10.5px] font-extrabold uppercase tracking-wider">
+                        <th colSpan={2} className="px-3 pt-2 pb-1 text-left" style={grupo(COR.navy)}>Pedido</th>
+                        <th colSpan={1} className="px-3 pt-2 pb-1 text-right" style={grupo(COR.receita)}>Receita</th>
+                        <th colSpan={7} className="px-3 pt-2 pb-1 text-center" style={grupo(COR.custo)}>Custos e descontos</th>
+                        <th colSpan={3} className="px-3 pt-2 pb-1 text-center" style={grupo(COR.resultado)}>Resultado</th>
+                        <th colSpan={2} className="px-3 pt-2 pb-1 text-center" style={grupo(COR.receber)}>Recebimento</th>
+                      </tr>
+                      <tr className="border-b-2" style={{ borderColor: COR.borda, color: COR.texto }}>
+                        <th className={cn(th, "text-left pl-5")}>Nº</th>
+                        <th className={cn(th, "text-left")}>Cliente / vendedor</th>
+                        <th className={th} style={{ color: COR.receita }}>PV</th>
+                        <th className={th}>Produtos</th>
+                        <th className={th}>Personaliz.</th>
+                        <th className={th}>Imposto</th>
+                        <th className={th}>Tx cartão %</th>
+                        <th className={th}>Tx cartão</th>
+                        <th className={th}>Frete</th>
+                        <th className={th}>Comissão</th>
+                        <th className={th}>Lucro</th>
+                        <th className={th} style={{ color: COR.resultado }}>Lucro líq.</th>
+                        <th className={cn(th, "text-center")}>Margem</th>
+                        <th className={th}>Recebido</th>
+                        <th className={cn(th, "pr-5")} style={{ color: COR.receber }}>A receber</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {linhasLiq.length === 0 && <tr><td colSpan={15} className="px-4 py-10 text-center text-[13px]" style={{ color: COR.suave }}>Nenhum pedido neste mês.</td></tr>}
+                      {linhasLiq.map(l => {
+                        const aberto = abertos.has(l.p.id);
+                        const t = tomMargem(l.margem);
+                        const custoCel = (v: number) => (
+                          <span className="gw-num" style={{ color: v > 0 ? COR.custo : "#CBD5E1" }}>{v > 0 ? `− ${brl(v)}` : "—"}</span>
+                        );
+                        return (
+                          <Fragment key={l.p.id}>
+                            <tr
+                              className={cn("cursor-pointer border-b transition-colors hover:bg-[#F8FAFC]", aberto && "bg-[#F8FAFC]")}
+                              style={{ borderColor: COR.borda, boxShadow: `inset 4px 0 0 ${l.bruto > 0 ? t.cor : "#CBD5E1"}` }}
+                              onClick={() => alternar(l.p.id)}
+                            >
+                              <td className="pl-5 pr-2 py-2.5">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="flex h-5 w-5 items-center justify-center rounded-md" style={{ background: aberto ? COR.navy : "#F1F5F9", color: aberto ? "#fff" : COR.navy }}>
+                                    {aberto ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                                  </span>
+                                  <OrderNumber value={l.p.numero} className="text-[13.5px] font-bold" />
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5 max-w-[250px]">
+                                <p className="truncate font-bold" style={{ color: COR.navy }}>{l.clienteNome}</p>
+                                <p className="truncate text-[11.5px]" style={{ color: COR.suave }}>
+                                  {l.vendedorNome} · {l.meio ? l.meio.nome : <span style={{ color: "#D97706" }}>sem forma de pagamento</span>} · {l.produtos.length} produto(s)
+                                </p>
+                              </td>
+                              <td className="px-3 py-2.5 text-right gw-num font-extrabold" style={{ color: COR.receita }}>{brl(l.bruto)}</td>
+                              <td className="px-3 py-2.5 text-right">
+                                {l.temCusto ? custoCel(l.custoProduto) : (
+                                  <span className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[11px] font-bold" style={{ background: "#FEF3C7", color: "#B45309" }}>
+                                    <AlertTriangle className="h-3 w-3" /> lançar custo
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2.5 text-right">{custoCel(l.custoPers)}</td>
+                              <td className="px-3 py-2.5 text-right">{custoCel(l.imposto)}</td>
+                              <td className="px-3 py-2" >
+                                <div className="flex justify-end">{inputNumero(`${l.p.id}:taxa`, l.taxaPct, 3, tx => void salvar(`${l.p.id}:taxa`, l.p.id, "taxa_cartao_pct", tx), { sufixo: "%", largura: 92 })}</div>
+                              </td>
+                              <td className="px-3 py-2.5 text-right">{custoCel(l.taxa)}</td>
+                              <td className="px-3 py-2">
+                                <div className="flex justify-end">
+                                  {l.p.frete_tipo === "FOB" ? (
+                                    <span className="rounded-full px-2 py-[2px] text-[11px] font-bold" style={{ background: "#EEF2FF", color: "#4338CA" }}
+                                      title="FOB: o cliente paga o frete. Não entra no lucro, só para conferência.">FOB {brl(l.fob)}</span>
+                                  ) : inputNumero(`${l.p.id}:frete`, l.frete, 2, tx => void salvar(`${l.p.id}:frete`, l.p.id, "frete", tx), { prefixo: "R$", largura: 110 })}
+                                </div>
+                              </td>
+                              <td className="px-3 py-2.5 text-right" title={`Faixa do vendedor no mês: ${pct(l.comissaoPct)}`}>{custoCel(l.comissao)}</td>
+                              <td className="px-3 py-2.5 text-right gw-num font-semibold" style={{ color: l.lucro < 0 ? "#DC2626" : COR.texto }}>{brl(l.lucro)}</td>
+                              <td className="px-3 py-2.5 text-right gw-num text-[14px] font-extrabold" style={{ color: l.lucroLiquido < 0 ? "#DC2626" : COR.resultado }}>{brl(l.lucroLiquido)}</td>
+                              <td className="px-3 py-2.5">
+                                {l.bruto > 0 ? (
+                                  <div className="flex flex-col items-center gap-1" title={l.temCusto ? `Margem ${t.rotulo}` : "Sem custo de produto lançado — margem superestimada"}>
+                                    <span className="rounded-lg px-2.5 py-[3px] text-[12.5px] font-extrabold text-white gw-num" style={{ background: l.temCusto ? t.cor : "#94A3B8" }}>
+                                      {(l.margem * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%{!l.temCusto && " *"}
+                                    </span>
+                                    <span className="h-1 w-14 overflow-hidden rounded-full" style={{ background: "#E2E8F0" }}>
+                                      <span className="block h-full rounded-full" style={{ width: `${Math.max(0, Math.min(100, l.margem * 100 / 0.5))}%`, background: l.temCusto ? t.cor : "#94A3B8" }} />
+                                    </span>
+                                  </div>
+                                ) : <span style={{ color: "#CBD5E1" }}>—</span>}
+                              </td>
+                              <td className="px-3 py-2">
+                                <div className="flex items-center justify-end gap-1">
+                                  {inputNumero(`${l.p.id}:recebido`, l.recebido, 2, tx => void salvar(`${l.p.id}:recebido`, l.p.id, "valor_recebido", tx), { prefixo: "R$", largura: 118 })}
+                                  {([["50%", l.total / 2], ["100%", l.total]] as [string, number][]).map(([r, v]) => (
+                                    <button key={r} type="button"
+                                      className="h-8 rounded-lg border px-2 text-[11px] font-bold transition-colors hover:bg-[#FFF7ED]"
+                                      style={{ borderColor: "#FDBA74", color: COR.receber }}
+                                      title={r === "50%" ? "Metade recebida" : "Tudo recebido"}
+                                      onClick={e => { e.stopPropagation(); void salvar(`${l.p.id}:recebido`, l.p.id, "valor_recebido", paraTexto(Number(v.toFixed(2)))); }}>{r}</button>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="pl-3 pr-5 py-2.5 text-right">
+                                {l.aReceber > 0
+                                  ? <span className="gw-num font-extrabold" style={{ color: COR.receber }}>{brl(l.aReceber)}</span>
+                                  : <span className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[11px] font-bold" style={{ background: "#DCFCE7", color: "#15803D" }}><Check className="h-3 w-3" /> quitado</span>}
+                              </td>
+                            </tr>
+
+                            {aberto && (
+                              <tr className="border-b" style={{ borderColor: COR.borda }}>
+                                <td colSpan={15} className="bg-white px-5 pb-4 pt-2">
+                                  <div className="rounded-xl border-2 overflow-hidden" style={{ borderColor: "#BFDBFE" }}>
+                                    <div className="flex items-center gap-2 px-4 py-2 text-[12px] font-bold" style={{ background: "#EFF6FF", color: "#1D4ED8" }}>
+                                      <Package className="h-4 w-4" /> Produtos do pedido {String(l.p.numero).replace(/^[#\s]*(PED-)?/i, "")} — custos por unidade
+                                    </div>
+                                    <table className="w-full text-[13px] bg-white">
+                                      <thead>
+                                        <tr className="border-b text-[10.5px] font-extrabold uppercase tracking-wide" style={{ borderColor: COR.borda, color: COR.suave }}>
+                                          <th className="text-left py-2 px-4">Produto</th>
+                                          <th className="text-right px-3">Qtd</th>
+                                          <th className="text-right px-3" style={{ color: COR.receita }}>PV unit.</th>
+                                          <th className="text-right px-3" style={{ color: COR.custo }}>Custo unit.</th>
+                                          <th className="text-right px-3" style={{ color: COR.custo }}>Personaliz. unit.</th>
+                                          <th className="text-right px-3">PV total</th>
+                                          <th className="text-right px-3">Custo total</th>
+                                          <th className="text-right px-3" style={{ color: COR.resultado }}>Lucro bruto</th>
+                                          <th className="text-center px-4">Margem</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {l.produtos.map(x => {
+                                          const mg = x.pv > 0 ? (x.pv - x.custo) / x.pv : 0;
+                                          const tp = tomMargem(mg);
+                                          const oc = ORIGEM_CUSTO[x.origemCusto] ?? ORIGEM_CUSTO.sem;
+                                          const kcu = `${l.p.id}:${x.itemId}:cu`;
+                                          const kpu = `${l.p.id}:${x.itemId}:pu`;
+                                          return (
+                                            <tr key={x.itemId} className="border-b last:border-b-0" style={{ borderColor: "#F1F5F9" }}>
+                                              <td className="py-2.5 px-4 max-w-[300px] truncate font-semibold" style={{ color: COR.navy }}>{x.nome}</td>
+                                              <td className="text-right px-3 gw-num font-semibold" style={{ color: COR.texto }}>{x.qtd.toLocaleString("pt-BR")}</td>
+                                              <td className="text-right px-3 gw-num font-bold" style={{ color: COR.receita }}>{brl(x.pvUnit)}</td>
+                                              <td className="px-3 py-2">
+                                                <div className="flex items-center justify-end gap-1.5">
+                                                  <span
+                                                    className="rounded-full px-2 py-[2px] text-[10.5px] font-bold whitespace-nowrap"
+                                                    style={{ background: oc.fundo, color: oc.cor }}
+                                                    title={x.origemCusto === "editado" ? "Digitado aqui. Apague o campo para voltar ao preço da compra."
+                                                      : x.origemCusto === "compra" ? "Preço lançado na compra. Digite outro valor para sobrescrever."
+                                                      : x.origemCusto === "compra_sem_preco" ? "A compra foi registrada sem valor unitário. Lance o preço em Compras ou digite aqui."
+                                                      : x.origemCusto === "sem" ? "Nenhuma compra registrada para este produto. Digite o custo aqui." : "Custo do catálogo. Digite outro valor para sobrescrever."}
+                                                  >
+                                                    {x.origemCusto === "compra" ? `compra${x.comprasNum.length ? ` nº ${x.comprasNum.join(", ")}` : ""}`
+                                                      : x.origemCusto === "editado" ? "manual" : x.origemCusto === "catalogo" ? "catálogo"
+                                                      : x.origemCusto === "compra_sem_preco" ? `compra nº ${x.comprasNum.join(", ")} sem preço` : "não comprado"}
+                                                  </span>
+                                                  {inputNumero(kcu, x.custoUnit, 4, tx => void salvarItem(kcu, l.p.id, x.itemId, "custo_unitario", tx),
+                                                    { prefixo: "R$", largura: 112, alerta: x.custoUnit === 0 })}
+                                                </div>
+                                              </td>
+                                              <td className="px-3 py-2">
+                                                <div className="flex items-center justify-end gap-1.5">
+                                                  {x.origemPers !== "galpao" && (
+                                                    <span
+                                                      className="rounded-full px-2 py-[2px] text-[10.5px] font-bold whitespace-nowrap"
+                                                      style={x.origemPers === "editado" ? { background: "#DBEAFE", color: "#1D4ED8" }
+                                                        : x.origemPers === "auto" ? { background: "#EDE9FE", color: "#6D28D9" }
+                                                        : { background: "#FEF3C7", color: "#B45309" }}
+                                                      title={x.origemPers === "auto" ? `Terceirizada: ${x.tecnica} × ${x.aplicacoes} aplicação(ões). Digite outro valor para trocar.`
+                                                        : x.origemPers === "sem" ? "Item terceirizado sem técnica definida no pedido." : "Digitado aqui. Apague para voltar ao preço da técnica."}
+                                                    >
+                                                      {x.origemPers === "auto" ? `terceir. · ${x.tecnica}${x.aplicacoes > 1 ? ` ×${x.aplicacoes}` : ""}` : x.origemPers === "editado" ? "manual" : "terceir. s/ técnica"}
+                                                    </span>
+                                                  )}
+                                                  {inputNumero(kpu, x.persUnit, 4, tx => void salvarItem(kpu, l.p.id, x.itemId, "custo_personalizacao_unit", tx), { prefixo: "R$", largura: 104 })}
+                                                </div>
+                                              </td>
+                                              <td className="text-right px-3 gw-num font-semibold" style={{ color: COR.navy }}>{brl(x.pv)}</td>
+                                              <td className="text-right px-3 gw-num font-semibold" style={{ color: x.custo > 0 ? COR.custo : "#CBD5E1" }}>{x.custo > 0 ? `− ${brl(x.custo)}` : "—"}</td>
+                                              <td className="text-right px-3 gw-num font-extrabold" style={{ color: x.pv - x.custo < 0 ? "#DC2626" : COR.resultado }}>{brl(x.pv - x.custo)}</td>
+                                              <td className="px-4 text-center">
+                                                {x.pv > 0 ? (
+                                                  <span className="rounded-lg px-2 py-[2px] text-[12px] font-extrabold gw-num" style={{ background: x.custoUnit > 0 ? tp.fundo : "#F1F5F9", color: x.custoUnit > 0 ? tp.cor : "#64748B" }}>
+                                                    {(mg * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%
+                                                  </span>
+                                                ) : "—"}
+                                              </td>
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                    <p className="border-t px-4 py-2 text-[11.5px] leading-relaxed" style={{ borderColor: COR.borda, color: COR.suave }}>
+                                      <b style={{ color: COR.texto }}>Custo unitário:</b> digitado aqui (<span style={{ color: "#1D4ED8" }}>manual</span>) &gt; preço lançado na compra (<span style={{ color: "#047857" }}>compra</span>) &gt; custo do catálogo. Apague o campo para voltar ao preço da compra.
+                                      Personalização de item terceirizado já vem com o preço da técnica (DTF UV 3,50 · DTF têxtil 2,50 · laser 1,00 · silk 1,80, por aplicação). Frete, imposto e taxa de cartão são do pedido inteiro.
+                                    </p>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()}
         </>
       )}
     </div>
