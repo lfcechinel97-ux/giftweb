@@ -1697,16 +1697,27 @@ export default function PCP() {
 
   /* Pedidos que estão em qualquer coluna, menos Coletado e Enviado. */
   const pedidosNoPcp = useMemo(() => {
-    const map = new Map<string, { id: string; numero: string; cliente: string; itens: number; colunas: Set<string> }>();
+    const map = new Map<string, { id: string; numero: string; cliente: string; itens: number; colunas: Set<string>; produzirAte: string | null }>();
     for (const r of rows) {
       const col = colunaDoStatus(r);
       if (col === "enviado") continue;
-      const p = map.get(r.pedido_id) ?? { id: r.pedido_id, numero: String(r.pedido_numero ?? ""), cliente: r.cliente ?? "—", itens: 0, colunas: new Set<string>() };
+      const p = map.get(r.pedido_id) ?? { id: r.pedido_id, numero: String(r.pedido_numero ?? ""), cliente: r.cliente ?? "—", itens: 0, colunas: new Set<string>(), produzirAte: null };
       p.itens += 1;
       p.colunas.add(STATUS_MAP[col]?.label ?? col);
+      const d = r.pedido_data_despacho?.slice(0, 10) ?? null;
+      if (d && (!p.produzirAte || d < p.produzirAte)) p.produzirAte = d;
       map.set(r.pedido_id, p);
     }
-    return [...map.values()].sort((a, b) => b.numero.localeCompare(a.numero, "pt-BR", { numeric: true }));
+    /* Ordem de prioridade: "Produzir até" mais próximo primeiro; sem data
+       vai pro fim. Empate (mesma data) → nº do pedido mais antigo primeiro. */
+    return [...map.values()].sort((a, b) => {
+      if (a.produzirAte !== b.produzirAte) {
+        if (!a.produzirAte) return 1;
+        if (!b.produzirAte) return -1;
+        return a.produzirAte < b.produzirAte ? -1 : 1;
+      }
+      return a.numero.localeCompare(b.numero, "pt-BR", { numeric: true });
+    });
   }, [rows]);
 
   const byStatus = useMemo(() => {
@@ -3021,15 +3032,23 @@ export default function PCP() {
     if (!despachoPedidoPago) { toast.error("Confirme que o pedido está 100% pago antes de despachar."); return; }
     const transp = despachoTransportadoraLivre.trim() || despachoTransportadora;
     if (!transp) { toast.error("Informe a transportadora."); return; }
-    if (!despachoNotaFiscalUrl) { toast.error("Anexe a nota fiscal."); return; }
-    if (!despachoEtiquetaUrl) { toast.error("Anexe a etiqueta de envio."); return; }
+    // Nota fiscal e etiqueta são opcionais — o vendedor anexa se quiser.
+    const anexados = [
+      despachoNotaFiscalUrl ? "nota fiscal" : null,
+      despachoEtiquetaUrl ? "etiqueta" : null,
+    ].filter(Boolean) as string[];
+    const resumoAnexos = anexados.length === 2
+      ? "nota fiscal e etiqueta anexadas"
+      : anexados.length === 1
+        ? `${anexados[0]} anexada`
+        : "sem anexos";
 
     setDespachoSaving(true);
     const { row } = despachoModal;
     const alvos = itensDespacho.length ? itensDespacho : [row];
     for (const item of alvos) {
       await salvarTags(item, [`${TAG_DESPACHAR_PREFIXO} ${transp}`, TAG_PEDIDO_PAGO]);
-      await registrarNotaHistorico(item, `Despacho confirmado: nota fiscal e etiqueta anexadas, transportadora ${transp}`);
+      await registrarNotaHistorico(item, `Despacho confirmado: ${resumoAnexos}, transportadora ${transp}`);
     }
     setDespachoSaving(false);
     setDespachoModal(null);
@@ -3179,6 +3198,7 @@ export default function PCP() {
                           <span className="min-w-0 flex-1">
                             <span className="block text-[13px]"><span className="gw-num font-bold">{p.numero}</span> · {p.cliente}</span>
                             <span className="block text-[11px] text-muted-foreground">
+                              {p.produzirAte && <span className="font-semibold text-foreground">Produzir até {dataCurtaSemFuso(p.produzirAte)} · </span>}
                               {p.itens} {p.itens === 1 ? "item" : "itens"} · {[...p.colunas].join(", ")}
                             </span>
                           </span>
@@ -4114,7 +4134,7 @@ export default function PCP() {
                         </span>
                       ) : (
                         <Button size="sm" onClick={() => { setDetalheId(null); abrirDespachoModal(detalhe); }} style={{ backgroundColor: "#0EA5E9" }}>
-                          <Upload className="h-4 w-4 mr-2" /> Anexar nota fiscal e etiqueta
+                          <Upload className="h-4 w-4 mr-2" /> Confirmar despacho
                         </Button>
                       )}
                     </div>
@@ -4559,7 +4579,7 @@ export default function PCP() {
                 disabled={enviandoDespachoArquivo === "nota_fiscal"}
               >
                 {enviandoDespachoArquivo === "nota_fiscal" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                {despachoNotaFiscalUrl ? "Nota fiscal anexada ✓" : "Anexar nota fiscal"}
+                {despachoNotaFiscalUrl ? "Nota fiscal anexada ✓" : "Anexar nota fiscal (opcional)"}
               </Button>
               <Button
                 variant="outline"
@@ -4568,7 +4588,7 @@ export default function PCP() {
                 disabled={enviandoDespachoArquivo === "etiqueta"}
               >
                 {enviandoDespachoArquivo === "etiqueta" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                {despachoEtiquetaUrl ? "Etiqueta anexada ✓" : "Anexar etiqueta de envio"}
+                {despachoEtiquetaUrl ? "Etiqueta anexada ✓" : "Anexar etiqueta de envio (opcional)"}
               </Button>
 
               <div className="space-y-1.5">

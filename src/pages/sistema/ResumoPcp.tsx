@@ -156,7 +156,7 @@ const proximoPasso = (r: ResumoRow, produzirAte: string | null): string => {
       if (temTag(r, "COBRAR 50% RESTANTE")) return "Cobrar 50% restante do cliente";
       if (temTag(r, "CONFERIR PAGAMENTO")) return "Conferir pagamento";
       if (tagComeca(r, "DESPACHAR")) return "Aguardar coleta da transportadora";
-      return "Confirmar despacho (NF + etiqueta)";
+      return "Confirmar despacho";
     default: return "Mover para a próxima etapa";
   }
 };
