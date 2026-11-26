@@ -1697,16 +1697,27 @@ export default function PCP() {
 
   /* Pedidos que estão em qualquer coluna, menos Coletado e Enviado. */
   const pedidosNoPcp = useMemo(() => {
-    const map = new Map<string, { id: string; numero: string; cliente: string; itens: number; colunas: Set<string> }>();
+    const map = new Map<string, { id: string; numero: string; cliente: string; itens: number; colunas: Set<string>; produzirAte: string | null }>();
     for (const r of rows) {
       const col = colunaDoStatus(r);
       if (col === "enviado") continue;
-      const p = map.get(r.pedido_id) ?? { id: r.pedido_id, numero: String(r.pedido_numero ?? ""), cliente: r.cliente ?? "—", itens: 0, colunas: new Set<string>() };
+      const p = map.get(r.pedido_id) ?? { id: r.pedido_id, numero: String(r.pedido_numero ?? ""), cliente: r.cliente ?? "—", itens: 0, colunas: new Set<string>(), produzirAte: null };
       p.itens += 1;
       p.colunas.add(STATUS_MAP[col]?.label ?? col);
+      const d = r.pedido_data_despacho?.slice(0, 10) ?? null;
+      if (d && (!p.produzirAte || d < p.produzirAte)) p.produzirAte = d;
       map.set(r.pedido_id, p);
     }
-    return [...map.values()].sort((a, b) => b.numero.localeCompare(a.numero, "pt-BR", { numeric: true }));
+    /* Ordem de prioridade: "Produzir até" mais próximo primeiro; sem data
+       vai pro fim. Empate (mesma data) → nº do pedido mais antigo primeiro. */
+    return [...map.values()].sort((a, b) => {
+      if (a.produzirAte !== b.produzirAte) {
+        if (!a.produzirAte) return 1;
+        if (!b.produzirAte) return -1;
+        return a.produzirAte < b.produzirAte ? -1 : 1;
+      }
+      return a.numero.localeCompare(b.numero, "pt-BR", { numeric: true });
+    });
   }, [rows]);
 
   const byStatus = useMemo(() => {
@@ -3187,6 +3198,7 @@ export default function PCP() {
                           <span className="min-w-0 flex-1">
                             <span className="block text-[13px]"><span className="gw-num font-bold">{p.numero}</span> · {p.cliente}</span>
                             <span className="block text-[11px] text-muted-foreground">
+                              {p.produzirAte && <span className="font-semibold text-foreground">Produzir até {dataCurtaSemFuso(p.produzirAte)} · </span>}
                               {p.itens} {p.itens === 1 ? "item" : "itens"} · {[...p.colunas].join(", ")}
                             </span>
                           </span>
