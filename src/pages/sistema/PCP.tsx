@@ -3021,15 +3021,23 @@ export default function PCP() {
     if (!despachoPedidoPago) { toast.error("Confirme que o pedido está 100% pago antes de despachar."); return; }
     const transp = despachoTransportadoraLivre.trim() || despachoTransportadora;
     if (!transp) { toast.error("Informe a transportadora."); return; }
-    if (!despachoNotaFiscalUrl) { toast.error("Anexe a nota fiscal."); return; }
-    if (!despachoEtiquetaUrl) { toast.error("Anexe a etiqueta de envio."); return; }
+    // Nota fiscal e etiqueta são opcionais — o vendedor anexa se quiser.
+    const anexados = [
+      despachoNotaFiscalUrl ? "nota fiscal" : null,
+      despachoEtiquetaUrl ? "etiqueta" : null,
+    ].filter(Boolean) as string[];
+    const resumoAnexos = anexados.length === 2
+      ? "nota fiscal e etiqueta anexadas"
+      : anexados.length === 1
+        ? `${anexados[0]} anexada`
+        : "sem anexos";
 
     setDespachoSaving(true);
     const { row } = despachoModal;
     const alvos = itensDespacho.length ? itensDespacho : [row];
     for (const item of alvos) {
       await salvarTags(item, [`${TAG_DESPACHAR_PREFIXO} ${transp}`, TAG_PEDIDO_PAGO]);
-      await registrarNotaHistorico(item, `Despacho confirmado: nota fiscal e etiqueta anexadas, transportadora ${transp}`);
+      await registrarNotaHistorico(item, `Despacho confirmado: ${resumoAnexos}, transportadora ${transp}`);
     }
     setDespachoSaving(false);
     setDespachoModal(null);
@@ -4114,7 +4122,7 @@ export default function PCP() {
                         </span>
                       ) : (
                         <Button size="sm" onClick={() => { setDetalheId(null); abrirDespachoModal(detalhe); }} style={{ backgroundColor: "#0EA5E9" }}>
-                          <Upload className="h-4 w-4 mr-2" /> Anexar nota fiscal e etiqueta
+                          <Upload className="h-4 w-4 mr-2" /> Confirmar despacho
                         </Button>
                       )}
                     </div>
@@ -4559,7 +4567,7 @@ export default function PCP() {
                 disabled={enviandoDespachoArquivo === "nota_fiscal"}
               >
                 {enviandoDespachoArquivo === "nota_fiscal" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                {despachoNotaFiscalUrl ? "Nota fiscal anexada ✓" : "Anexar nota fiscal"}
+                {despachoNotaFiscalUrl ? "Nota fiscal anexada ✓" : "Anexar nota fiscal (opcional)"}
               </Button>
               <Button
                 variant="outline"
@@ -4568,7 +4576,7 @@ export default function PCP() {
                 disabled={enviandoDespachoArquivo === "etiqueta"}
               >
                 {enviandoDespachoArquivo === "etiqueta" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-                {despachoEtiquetaUrl ? "Etiqueta anexada ✓" : "Anexar etiqueta de envio"}
+                {despachoEtiquetaUrl ? "Etiqueta anexada ✓" : "Anexar etiqueta de envio (opcional)"}
               </Button>
 
               <div className="space-y-1.5">
