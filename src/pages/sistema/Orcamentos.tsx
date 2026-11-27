@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { dataValida, paginasVisiveis, useAoMudar, useEstadoPersistente, useRestaurarRolagem } from "@/lib/listaPersistente";
 import {
   Check, Filter, Plus, Search, Trash2, FileText, Package, Printer, X, MoreHorizontal,
   Pencil, ChevronDown, ChevronLeft, ChevronRight, CalendarDays, Truck, Phone, User,
@@ -159,9 +160,6 @@ function AprovarModal({ orcamento, onClose, onConfirm }: AprovarModalProps) {
   );
 }
 
-/* Cache simples da listagem: evita refetch ao voltar para a rota (60s) */
-const listCache: { key: string; at: number } = { key: "", at: 0 };
-
 /* Skeletons localizados — preservam a altura final e evitam salto de layout */
 const ItensSkeleton = () => (
   <>
@@ -226,20 +224,25 @@ export default function Orcamentos() {
   } = useSistema();
   const navigate = useNavigate();
   const { vendedorRestrito } = useUserRole();
-  const [filtroCliente, setFiltroCliente] = useState("");
-  const [filtroBusca, setFiltroBusca] = useState("");
-  const [filtroStatus, setFiltroStatus] = useState<string>("todos");
+  /* Filtros, página e rolagem sobrevivem a abrir um orçamento e voltar.
+     Busca única: nº do orçamento, nome do cliente (ou contato) e produto. */
+  const [filtroBusca, setFiltroBusca] = useEstadoPersistente("gw:orcamentos:busca", "");
+  const [filtroStatus, setFiltroStatus] = useEstadoPersistente<string>("gw:orcamentos:status", "todos");
   /* Vendedor: começa em "Todos" (admin/gerente veem tudo; quem é vinculado a
      vários vê os dele). Antes começava travado no vendedor do usuário, e a
      busca do admin só achava os orçamentos dele. */
-  const [filtroVendedor, setFiltroVendedor] = useState<string>("todos");
-  const [dataInicio, setDataInicio] = useState("");
-  const [dataFim, setDataFim] = useState("");
+  const [filtroVendedor, setFiltroVendedor] = useEstadoPersistente<string>("gw:orcamentos:vendedor", "todos");
+  const [dataInicioCampo, setDataInicio] = useEstadoPersistente("gw:orcamentos:de", "");
+  const [dataFimCampo, setDataFim] = useEstadoPersistente("gw:orcamentos:ate", "");
+  // Só filtra com data completa: enquanto o ano é digitado o campo vale
+  // "0002-11-05", que ia para o banco e quebrava a busca.
+  const dataInicio = dataValida(dataInicioCampo) ?? "";
+  const dataFim = dataValida(dataFimCampo) ?? "";
   const [listLoading, setListLoading] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [aprovarOrc, setAprovarOrc] = useState<Orcamento | null>(null);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useEstadoPersistente("gw:orcamentos:pagina", 1);
+  const [pageSize, setPageSize] = useEstadoPersistente("gw:orcamentos:porPagina", 10);
   /* Orçamento aprovado não é editável: já virou pedido. */
   const [bloqueado, setBloqueado] = useState<
     { orc: Orcamento; pedido?: { id: string; numero: string } | null } | null
@@ -247,6 +250,7 @@ export default function Orcamentos() {
 
   const abrirEdicao = async (o: Orcamento) => {
     if (o.status !== "aprovado") {
+      salvarRolagem();
       navigate(`/sistema/orcamentos/${o.id}`);
       return;
     }
@@ -264,20 +268,14 @@ export default function Orcamentos() {
   useEffect(() => { void ensureClientes(); }, [ensureClientes]);
 
 
-  /* Volta para a página 1 sempre que um filtro muda */
-  useEffect(() => {
-    setPage(1);
-  }, [filtroBusca, filtroCliente, filtroStatus, filtroVendedor, dataInicio, dataFim, pageSize]);
+  /* Volta para a página 1 sempre que um filtro muda (não ao voltar para a tela). */
+  useAoMudar([filtroBusca, filtroStatus, filtroVendedor, dataInicio, dataFim, pageSize], () => setPage(1));
 
   useEffect(() => {
     let cancelled = false;
-    const key = JSON.stringify([filtroVendedor, filtroStatus, filtroBusca.trim(), filtroCliente.trim(), dataInicio, dataFim, page, pageSize]);
-    // Cache de 60s: voltar para a rota com os mesmos filtros/página serve do
-    // estado já carregado e não dispara nova busca.
-    if (listCache.key === key && Date.now() - listCache.at < 60_000) return;
+    // Voltar para a rota com os mesmos filtros/página é servido do cache do
+    // React Query (60s, dentro de refreshOrcamentos) — sem nova requisição.
     const timer = window.setTimeout(async () => {
-      listCache.key = key;
-      listCache.at = Date.now();
       setListLoading(true);
       try {
         // Todos os filtros são aplicados no SERVIDOR, antes do recorte da página.
@@ -285,7 +283,7 @@ export default function Orcamentos() {
           vendedorId: filtroVendedor === "todos" ? null : filtroVendedor,
           status: filtroStatus,
           search: filtroBusca.trim(),
-          cliente: filtroCliente.trim(),
+          cliente: "",
           dataInicio: dataInicio || null,
           dataFim: dataFim || null,
           page,
@@ -302,7 +300,7 @@ export default function Orcamentos() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [filtroVendedor, filtroStatus, filtroBusca, filtroCliente, dataInicio, dataFim, page, pageSize, refreshOrcamentos]);
+  }, [filtroVendedor, filtroStatus, filtroBusca, dataInicio, dataFim, page, pageSize, refreshOrcamentos]);
 
   // A lista do contexto já é exatamente a página atual devolvida pelo servidor.
   const filtered = orcamentos;
@@ -316,6 +314,7 @@ export default function Orcamentos() {
   const totalPages = Math.max(1, Math.ceil(orcamentosTotal / pageSize));
   const currentPage = Math.min(page, totalPages);
   const pageItems = filtered;
+  const salvarRolagem = useRestaurarRolagem("gw:orcamentos:scroll", "/sistema/orcamentos", filtered.length > 0 && !listLoading);
 
 
   /* Todos os orçamentos ficam abertos: carrega itens dos que estão na página */
@@ -332,17 +331,8 @@ export default function Orcamentos() {
     fetchOrcamentosItens(ids);
   }, [pendingKey, fetchOrcamentosItens]);
 
-  const pageNumbers: (number | null)[] = (() => {
-    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
-    const set = new Set<number>([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
-    const nums = [...set].filter(n => n >= 1 && n <= totalPages).sort((a, b) => a - b);
-    const out: (number | null)[] = [];
-    nums.forEach((n, i) => {
-      if (i > 0 && n - nums[i - 1] > 1) out.push(null);
-      out.push(n);
-    });
-    return out;
-  })();
+  const pageNumbers = paginasVisiveis(currentPage, totalPages);
+  const irParaPagina = (n: number) => { setPage(n); window.scrollTo({ top: 0 }); };
 
   const handleStatusChange = async (o: Orcamento, novo: OrcamentoStatus) => {
     if (novo === o.status) return;
@@ -436,7 +426,6 @@ export default function Orcamentos() {
 
   const chips: { key: string; label: string; clear: () => void }[] = [
     filtroBusca ? { key: "busca", label: `Busca: ${filtroBusca}`, clear: () => setFiltroBusca("") } : null,
-    filtroCliente ? { key: "cliente", label: `Cliente: ${filtroCliente}`, clear: () => setFiltroCliente("") } : null,
     filtroStatus !== "todos" ? { key: "status", label: `Status: ${statusStyles[filtroStatus as OrcamentoStatus].label}`, clear: () => setFiltroStatus("todos") } : null,
     filtroVendedor !== "todos" && (!vendedorRestrito || vendedorRestrito.length > 1) ? { key: "vendedor", label: `Vendedor: ${getVendedorNome(filtroVendedor)}`, clear: () => setFiltroVendedor("todos") } : null,
     dataInicio ? { key: "de", label: `De: ${dateBR(dataInicio)}`, clear: () => setDataInicio("") } : null,
@@ -462,28 +451,24 @@ export default function Orcamentos() {
         </button>
       </div>
 
-      {/* Filtros */}
+      {/* Filtros — grade de colunas FIXAS: digitar uma data não empurra os
+          outros campos de lugar no meio do clique. Busca única por nº do
+          orçamento, nome do cliente/contato ou produto. */}
       <div
-        className="rounded-[10px] p-3 flex flex-wrap items-center gap-2"
+        className="rounded-[10px] p-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_150px_190px_150px_150px_auto] items-center gap-2"
         style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)", boxShadow: "var(--gw-shadow-sm)" }}
       >
-        <div className="relative flex-1 min-w-[220px]">
+        <div className="relative min-w-0 sm:col-span-2 xl:col-span-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--gw-text-muted)" }} />
           <Input
-            placeholder="Buscar por cliente, nº do orçamento ou produto..."
+            placeholder="Nº do orçamento, nome do cliente ou produto..."
             value={filtroBusca}
             onChange={e => setFiltroBusca(e.target.value)}
             className="pl-9 h-9"
           />
         </div>
-        <Input
-          placeholder="Cliente..."
-          value={filtroCliente}
-          onChange={e => setFiltroCliente(e.target.value)}
-          className="h-9 w-[200px]"
-        />
         <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-          <SelectTrigger className="h-9 w-[150px]">
+          <SelectTrigger className="h-9 w-full">
             <Filter className="h-4 w-4 mr-2" style={{ color: "var(--gw-text-muted)" }} />
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -494,9 +479,9 @@ export default function Orcamentos() {
             ))}
           </SelectContent>
         </Select>
-        {(!vendedorRestrito || vendedorRestrito.length > 1) && (
+        {(!vendedorRestrito || vendedorRestrito.length > 1) ? (
           <Select value={filtroVendedor} onValueChange={setFiltroVendedor}>
-            <SelectTrigger className="h-9 w-[190px]">
+            <SelectTrigger className="h-9 w-full">
               <SelectValue placeholder="Vendedor" />
             </SelectTrigger>
             <SelectContent>
@@ -506,9 +491,18 @@ export default function Orcamentos() {
               ))}
             </SelectContent>
           </Select>
-        )}
-        <Input type="date" aria-label="Data inicial" value={dataInicio} onChange={e => setDataInicio(e.target.value)} className="h-9 w-[140px]" />
-        <Input type="date" aria-label="Data final" value={dataFim} onChange={e => setDataFim(e.target.value)} className="h-9 w-[140px]" />
+        ) : <span className="hidden xl:block" />}
+        <Input type="date" aria-label="Data inicial" title="De" value={dataInicioCampo} onChange={e => setDataInicio(e.target.value)} className="h-9 w-full" />
+        <Input type="date" aria-label="Data final" title="Até" value={dataFimCampo} onChange={e => setDataFim(e.target.value)} className="h-9 w-full" />
+        <button
+          type="button"
+          onClick={() => { setFiltroBusca(""); setFiltroStatus("todos"); setFiltroVendedor("todos"); setDataInicio(""); setDataFim(""); }}
+          disabled={chips.length === 0 && !dataInicioCampo && !dataFimCampo}
+          className="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md text-[13px] font-medium whitespace-nowrap disabled:opacity-40"
+          style={{ border: "1px solid var(--gw-border)", color: "var(--gw-text-secondary)" }}
+        >
+          <X className="h-3.5 w-3.5" /> Limpar
+        </button>
       </div>
 
       {chips.length > 0 && (
@@ -527,8 +521,9 @@ export default function Orcamentos() {
           ))}
         </div>
       )}
-      {/* Lista */}
-      <div className="space-y-5">
+      {/* Lista — altura mínima de uma tela: quando o filtro encolhe a lista,
+          a página não "pula" para cima e o painel de filtros fica parado. */}
+      <div className="space-y-5" style={{ minHeight: "100vh" }}>
         {(loading || listLoading) && filtered.length === 0 ? (
           <ListSkeleton />
         ) : filtered.length === 0 ? (
@@ -762,7 +757,7 @@ export default function Orcamentos() {
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => setPage(p => Math.max(1, currentPage - 1))}
+              onClick={() => irParaPagina(Math.max(1, currentPage - 1))}
               disabled={currentPage <= 1}
               className="inline-flex items-center justify-center h-8 w-8 rounded-md disabled:opacity-40"
               style={{ border: "1px solid var(--gw-border)", color: "var(--gw-primary)" }}
@@ -777,7 +772,7 @@ export default function Orcamentos() {
                 <button
                   key={n}
                   type="button"
-                  onClick={() => setPage(n)}
+                  onClick={() => irParaPagina(n)}
                   className="inline-flex items-center justify-center h-8 min-w-8 px-2 rounded-md text-[13px] font-semibold"
                   style={
                     n === currentPage
@@ -791,7 +786,7 @@ export default function Orcamentos() {
             )}
             <button
               type="button"
-              onClick={() => setPage(p => Math.min(totalPages, currentPage + 1))}
+              onClick={() => irParaPagina(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage >= totalPages}
               className="inline-flex items-center justify-center h-8 w-8 rounded-md disabled:opacity-40"
               style={{ border: "1px solid var(--gw-border)", color: "var(--gw-primary)" }}

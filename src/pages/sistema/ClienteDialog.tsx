@@ -40,7 +40,8 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
   });
   const [loadingCnpj, setLoadingCnpj] = useState(false);
   const [loadingCep, setLoadingCep] = useState<number | null>(null);
-  const [openContato, setOpenContato] = useState(false);
+  // Aberto por padrão: fechado, o vendedor nunca preenchia contato/WhatsApp.
+  const [openContato, setOpenContato] = useState(true);
   const lastFetchedCnpjRef = useRef("");
   const cnpjReqIdRef = useRef(0);
 
@@ -106,7 +107,8 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
               idx === 0
                 ? {
                     ...ct,
-                    telefone: data.ddd_telefone_1 ? formatTelefone(data.ddd_telefone_1) : ct.telefone,
+                    // Não sobrescreve o WhatsApp já digitado com o fixo da empresa.
+                    telefone: ct.telefone || (data.ddd_telefone_1 ? formatTelefone(data.ddd_telefone_1) : ""),
                     email: ct.email || data.email || "",
                   }
                 : ct,
@@ -188,6 +190,23 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
     if (!c.documento.trim()) {
       toast.error("Informe o documento (CNPJ/CPF).");
       return;
+    }
+    /* PJ: o vendedor TEM que informar com quem fala na empresa e o WhatsApp
+       dessa pessoa (é o que se cruza com os leads do Meta). */
+    if (c.tipo === "PJ") {
+      const principal = c.contatos[0];
+      const zap = (principal?.telefone ?? "").replace(/\D/g, "");
+      if (!principal || !principal.nome?.trim()) {
+        setOpenContato(true);
+        if (c.contatos.length === 0) update({ contatos: [{ nome: "", telefone: "", email: "" }] });
+        toast.error("Informe o nome do contato na empresa.");
+        return;
+      }
+      if (zap.length < 10) {
+        setOpenContato(true);
+        toast.error("Informe o WhatsApp do contato com DDD.");
+        return;
+      }
     }
     let salvo: Cliente = c;
     if (cliente) {
@@ -374,6 +393,7 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
                 {openContato ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 Contatos
                 {c.contatos.length > 0 && <span className="text-xs text-muted-foreground">({c.contatos.length})</span>}
+                {c.tipo === "PJ" && <span className="text-xs text-red-600">* nome e WhatsApp obrigatórios</span>}
               </button>
               <Button size="sm" variant="ghost" onClick={addContato}>
                 <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar
@@ -389,11 +409,17 @@ export default function ClienteDialog({ open, onOpenChange, cliente, onSaved }: 
                       key={i}
                       className="border border-border rounded-md p-3 grid grid-cols-4 gap-2 bg-muted/20 items-end"
                     >
-                      <Field label="Nome" small>
-                        <Input value={x.nome || ""} onChange={(ev) => updateContato(i, { nome: ev.target.value })} />
-                      </Field>
-                      <Field label="Telefone" small>
+                      <Field label={i === 0 && c.tipo === "PJ" ? "Nome do contato *" : "Nome"} small>
                         <Input
+                          value={x.nome || ""}
+                          placeholder="Com quem falamos"
+                          onChange={(ev) => updateContato(i, { nome: ev.target.value })}
+                        />
+                      </Field>
+                      <Field label={i === 0 && c.tipo === "PJ" ? "WhatsApp *" : "WhatsApp / Telefone"} small>
+                        <Input
+                          inputMode="tel"
+                          placeholder="(00) 00000-0000"
                           value={formatTelefone(x.telefone)}
                           onChange={(ev) => updateContato(i, { telefone: formatTelefone(ev.target.value) })}
                         />
