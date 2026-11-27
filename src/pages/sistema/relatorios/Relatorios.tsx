@@ -10,6 +10,7 @@ import {
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSistema } from "@/contexts/SistemaContext";
 import { exportarRelatorioGeral, type FiltroRelatorio } from "./relatorioGeralPedidos";
+import { exportarRelatorioOrcamentos } from "./relatorioOrcamentos";
 
 /* Central de relatórios — só admin (mostra custo, comissão e lucro).
    Cada relatório é um card; para incluir outro, basta um novo card aqui. */
@@ -61,6 +62,7 @@ export default function Relatorios() {
       </header>
       <div className="grid gap-4 xl:grid-cols-2">
         <RelatorioGeralPedidos />
+        <RelatorioOrcamentos />
       </div>
     </div>
   );
@@ -175,6 +177,128 @@ function RelatorioGeralPedidos() {
             <p className="col-span-full flex items-center gap-1.5 text-[12px]" style={{ color: "var(--gw-warning)" }}>
               <AlertTriangle className="h-3.5 w-3.5" />
               {resumo.semCusto} produto(s) sem custo lançado — o lucro deles está superestimado (veja a coluna "Origem do custo").
+            </p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function RelatorioOrcamentos() {
+  const { vendedores, origens, meiosPagamento, transportadoras } = useSistema();
+  const inicial = intervalo("mes");
+  const [inicio, setInicio] = useState(inicial.inicio);
+  const [fim, setFim] = useState(inicial.fim);
+  const [vendedorId, setVendedorId] = useState("todos");
+  const [status, setStatus] = useState("todos");
+  const [gerando, setGerando] = useState(false);
+  const [resumo, setResumo] = useState<{ orcamentos: number; semWhats: number; total: number; aprovados: number } | null>(null);
+
+  const gerar = async () => {
+    if (!inicio || !fim || inicio > fim) {
+      toast.error("Confira o período: a data inicial precisa ser antes da final.");
+      return;
+    }
+    setGerando(true);
+    try {
+      const mapa = (xs: { id: string; nome: string }[]) => new Map(xs.map(x => [x.id, x.nome]));
+      const linhas = await exportarRelatorioOrcamentos(
+        { inicio, fim, status, vendedorId: vendedorId === "todos" ? null : vendedorId },
+        {
+          vendedores: mapa(vendedores), origens: mapa(origens),
+          pagamentos: mapa(meiosPagamento), transportadoras: mapa(transportadoras),
+        },
+      );
+      setResumo({
+        orcamentos: linhas.length,
+        semWhats: linhas.filter(l => l.whatsapp.replace(/\D/g, "").length < 10).length,
+        total: linhas.reduce((s, l) => s + l.total, 0),
+        aprovados: linhas.filter(l => l.o.status === "aprovado").length,
+      });
+      toast.success(linhas.length ? `Relatório gerado: ${linhas.length} orçamento(s).` : "Nenhum orçamento no período — planilha gerada vazia.");
+    } catch (e) {
+      console.error("[Relatórios] orçamentos falhou:", e);
+      toast.error(`Não foi possível gerar o relatório. ${e instanceof Error ? e.message : ""}`);
+    } finally {
+      setGerando(false);
+    }
+  };
+
+  return (
+    <section className="rounded-xl border p-5 space-y-4" style={{ background: "var(--gw-surface)", borderColor: "var(--gw-border)" }}>
+      <div className="flex items-start gap-3">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ background: "#2563EB1A", color: "#1D4ED8" }}>
+          <FileSpreadsheet className="h-5 w-5" />
+        </span>
+        <div>
+          <h2 className="gw-body font-bold text-[15px]">Relatório de orçamentos</h2>
+          <p className="gw-meta">
+            Excel com cliente, contato, WhatsApp, e-mail do contato e da empresa, CNPJ/CPF, endereço,
+            origem do lead, vendedor, produtos, valores, status e pedido gerado — para cruzar com os leads do Meta.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5">
+        {ATALHOS.map(a => (
+          <Button key={a.id} type="button" variant="outline" size="sm" className="h-7 text-[12px]"
+            onClick={() => { const i = intervalo(a.id); setInicio(i.inicio); setFim(i.fim); }}>
+            {a.label}
+          </Button>
+        ))}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-4">
+        <label className="space-y-1">
+          <span className="gw-label">De</span>
+          <Input type="date" value={inicio} onChange={e => setInicio(e.target.value)} />
+        </label>
+        <label className="space-y-1">
+          <span className="gw-label">Até</span>
+          <Input type="date" value={fim} onChange={e => setFim(e.target.value)} />
+        </label>
+        <div className="space-y-1">
+          <span className="gw-label">Vendedor</span>
+          <Select value={vendedorId} onValueChange={setVendedorId}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              {vendedores.map(v => <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1">
+          <span className="gw-label">Status</span>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="aberto">Aberto</SelectItem>
+              <SelectItem value="aprovado">Aprovado</SelectItem>
+              <SelectItem value="cancelado">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Button onClick={() => void gerar()} disabled={gerando} className="bg-blue-700 hover:bg-blue-800 text-white">
+          {gerando ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Download className="h-4 w-4 mr-1.5" />}
+          {gerando ? "Gerando…" : "Exportar Excel"}
+        </Button>
+        <span className="gw-meta text-[11.5px]">Abas: Orçamentos (um por linha), Itens e Como ler.</span>
+      </div>
+
+      {resumo && (
+        <div className="rounded-lg p-3 grid grid-cols-2 sm:grid-cols-3 gap-3 text-[13px]" style={{ background: "var(--gw-surface-alt)" }}>
+          <div><span className="gw-label">Orçamentos</span><p className="gw-num text-[16px]">{resumo.orcamentos}</p></div>
+          <div><span className="gw-label">Aprovados</span><p className="gw-num text-[16px]">{resumo.aprovados}</p></div>
+          <div><span className="gw-label">Valor orçado</span><p className="gw-num text-[16px]">{brl(resumo.total)}</p></div>
+          {resumo.semWhats > 0 && (
+            <p className="col-span-full flex items-center gap-1.5 text-[12px]" style={{ color: "var(--gw-warning)" }}>
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {resumo.semWhats} orçamento(s) sem WhatsApp do contato.
             </p>
           )}
         </div>

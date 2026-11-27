@@ -313,12 +313,14 @@ export const OrcamentoForm: React.FC = () => {
 
   const handleSelecionarCliente = (cliente: typeof clientes[0]) => {
     setClienteSelecionado(cliente);
-    // Usa 1º contato cadastrado; se não houver, usa o nome da empresa como responsável
+    // Usa 1º contato cadastrado. PF sem contato: a própria pessoa. PJ sem
+    // contato fica em branco — o vendedor precisa informar com quem fala
+    // (antes entrava o nome da empresa e o contato nunca era preenchido).
     const contato = cliente.contatos?.[0];
     setFormData((prev) => ({
       ...prev,
       clienteId: cliente.id,
-      contatoNome: contato?.nome || cliente.nome,
+      contatoNome: contato?.nome || (cliente.tipo === "PF" ? cliente.nome : ""),
       contatoTelefone: formatTelefone(contato?.telefone),
       contatoEmail: contato?.email || "",
     }));
@@ -368,6 +370,16 @@ export const OrcamentoForm: React.FC = () => {
     if (saving) return;
     if (!formData.clienteId || formData.itens.length === 0) {
       alert("Selecione um cliente e adicione pelo menos um item.");
+      return;
+    }
+    // Contato e WhatsApp são obrigatórios: é por eles que o orçamento é
+    // cruzado com os leads do Meta (relatório de orçamentos).
+    if (!formData.contatoNome.trim()) {
+      toast.error("Informe o nome do contato.");
+      return;
+    }
+    if (formData.contatoTelefone.replace(/\D/g, "").length < 10) {
+      toast.error("Informe o WhatsApp do contato com DDD.");
       return;
     }
 
@@ -585,7 +597,7 @@ export const OrcamentoForm: React.FC = () => {
             {clienteSelecionado && (
               <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t">
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Contato</label>
+                  <label className="block text-sm text-gray-600 mb-1">Contato <span className="text-red-600">*</span></label>
                   <input
                     type="text"
                     className="w-full px-3 py-2 border rounded-lg"
@@ -595,9 +607,10 @@ export const OrcamentoForm: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600 mb-1">Telefone</label>
+                  <label className="block text-sm text-gray-600 mb-1">WhatsApp <span className="text-red-600">*</span></label>
                   <input
                     type="text"
+                    inputMode="tel"
                     className="w-full px-3 py-2 border rounded-lg"
                     value={formData.contatoTelefone}
                     onChange={(e) => setFormData((p) => ({ ...p, contatoTelefone: formatTelefone(e.target.value) }))}

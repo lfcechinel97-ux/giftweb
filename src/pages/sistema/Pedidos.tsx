@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { dataValida, paginasVisiveis, useAoMudar, useEstadoPersistente, useRestaurarRolagem } from "@/lib/listaPersistente";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -127,15 +128,21 @@ export default function Pedidos() {
   useEffect(() => { void ensureClientes(); }, [ensureClientes]);
 
   const [searchParams] = useSearchParams();
-  const [busca, setBusca] = useState(() => searchParams.get("busca") || "");
+  /* Filtros, página e rolagem sobrevivem a abrir um pedido e voltar. */
+  const buscaDaUrl = searchParams.get("busca");
+  const [busca, setBusca] = useEstadoPersistente("gw:pedidos:busca", "");
+  useEffect(() => { if (buscaDaUrl) setBusca(buscaDaUrl); }, [buscaDaUrl, setBusca]);
 
-  const [aba, setAba] = useState<AbaId>("todos");
-  const [filtroStatus, setFiltroStatus] = useState<string>("todos");
-  const [ordenacao, setOrdenacao] = useState<"recente" | "antigo">("recente");
-  const [dataInicio, setDataInicio] = useState("");
-  const [dataFim, setDataFim] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [aba, setAba] = useEstadoPersistente<AbaId>("gw:pedidos:aba", "todos");
+  const [filtroStatus, setFiltroStatus] = useEstadoPersistente<string>("gw:pedidos:status", "todos");
+  const [ordenacao, setOrdenacao] = useEstadoPersistente<"recente" | "antigo">("gw:pedidos:ordem", "recente");
+  const [dataInicioCampo, setDataInicio] = useEstadoPersistente("gw:pedidos:de", "");
+  const [dataFimCampo, setDataFim] = useEstadoPersistente("gw:pedidos:ate", "");
+  // Só filtra com data completa (enquanto digita o ano o campo vale "0002-…").
+  const dataInicio = dataValida(dataInicioCampo) ?? "";
+  const dataFim = dataValida(dataFimCampo) ?? "";
+  const [page, setPage] = useEstadoPersistente("gw:pedidos:pagina", 1);
+  const [pageSize, setPageSize] = useEstadoPersistente("gw:pedidos:porPagina", 10);
   const [criandoPedido, setCriandoPedido] = useState(false);
 
   const qc = useQueryClient();
@@ -364,19 +371,14 @@ export default function Pedidos() {
   const visiveis = pedidos;
 
   const totalPages = Math.max(1, Math.ceil(pedidosTotal / pageSize));
-  useEffect(() => { setPage(1); }, [busca, filtroStatus, dataInicio, dataFim, pageSize, aba, ordenacao]);
+  // Volta para a página 1 quando um filtro muda — mas não ao voltar para a tela.
+  useAoMudar([busca, filtroStatus, dataInicio, dataFim, pageSize, aba, ordenacao], () => setPage(1));
   const currentPage = Math.min(page, totalPages);
-  const pageNumbers: (number | null)[] = (() => {
-    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
-    const set = new Set<number>([1, totalPages, currentPage, currentPage - 1, currentPage + 1]);
-    const nums = [...set].filter(n => n >= 1 && n <= totalPages).sort((a, b) => a - b);
-    const out: (number | null)[] = [];
-    nums.forEach((n, i) => {
-      if (i > 0 && n - nums[i - 1] > 1) out.push(null);
-      out.push(n);
-    });
-    return out;
-  })();
+  const pageNumbers = paginasVisiveis(currentPage, totalPages);
+
+  const salvarRolagem = useRestaurarRolagem("gw:pedidos:scroll", "/sistema/pedidos", pedidos.length > 0 && !listLoading);
+  const abrirPedido = (id: string) => { salvarRolagem(); navigate(`/sistema/pedidos/${id}`); };
+  const irParaPagina = (n: number) => { setPage(n); window.scrollTo({ top: 0 }); };
 
   const handleNovoPedido = async () => {
     setCriandoPedido(true);
@@ -518,19 +520,25 @@ export default function Pedidos() {
         })}
       </div>
 
-      {/* Filtros */}
-      <div className="flex flex-wrap items-center gap-2" style={{ padding: "var(--gw-pad-card)" }}>
-        <div className="relative flex-1 min-w-[260px]">
+      {/* Filtros — grade de colunas FIXAS: digitar uma data ou o contador
+          trocar para "Atualizando..." não pode empurrar os campos de lugar
+          (antes a busca era flex-1 e encolhia/esticava, mexendo nas datas
+          no meio do clique). */}
+      <div
+        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(240px,1fr)_190px_150px_150px_16px_150px_150px] items-center gap-2"
+        style={{ padding: "var(--gw-pad-card)", paddingBottom: 8 }}
+      >
+        <div className="relative min-w-0 sm:col-span-2 xl:col-span-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--gw-text-muted)" }} />
           <Input
-            placeholder="Buscar por cliente, nº do pedido ou produto..."
+            placeholder="Nº do pedido, nome do cliente ou produto..."
             value={busca}
             onChange={e => setBusca(e.target.value)}
             className="pl-9 h-10"
           />
         </div>
         <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-          <SelectTrigger className="h-10 w-[190px]"><SelectValue placeholder="Todos os status" /></SelectTrigger>
+          <SelectTrigger className="h-10 w-full"><SelectValue placeholder="Todos os status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos os status</SelectItem>
             {opcoesEtapasPcp().map(s => (
@@ -544,32 +552,33 @@ export default function Pedidos() {
           </SelectContent>
         </Select>
         <Select value={ordenacao} onValueChange={v => setOrdenacao(v as "recente" | "antigo")}>
-          <SelectTrigger className="h-10 w-[160px]"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10 w-full"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="recente">Mais recente</SelectItem>
             <SelectItem value="antigo">Mais antigo</SelectItem>
           </SelectContent>
         </Select>
-        <Input type="date" aria-label="Data inicial" value={dataInicio} onChange={e => setDataInicio(e.target.value)} className="h-10 w-[150px]" />
-        <ArrowRight className="h-4 w-4" style={{ color: "var(--gw-text-muted)" }} />
-        <Input type="date" aria-label="Data final" value={dataFim} onChange={e => setDataFim(e.target.value)} className="h-10 w-[150px]" />
+        <Input type="date" aria-label="Data inicial" title="De" value={dataInicioCampo} onChange={e => setDataInicio(e.target.value)} className="h-10 w-full" />
+        <ArrowRight className="h-4 w-4 hidden xl:block" style={{ color: "var(--gw-text-muted)" }} />
+        <Input type="date" aria-label="Data final" title="Até" value={dataFimCampo} onChange={e => setDataFim(e.target.value)} className="h-10 w-full" />
 
         {/* Limpa tudo de uma vez. Só fica ativo quando há o que limpar —
             um botão "Filtros" que abre um painel vazio seria pior que nada. */}
         <button
           type="button"
           onClick={() => { setBusca(""); setFiltroStatus("todos"); setDataInicio(""); setDataFim(""); setAba("todos"); }}
-          disabled={chips.length === 0 && aba === "todos"}
-          className="inline-flex items-center gap-2 h-10 px-3.5 rounded-[10px] text-[13.5px] font-medium disabled:opacity-40"
+          disabled={chips.length === 0 && aba === "todos" && !dataInicioCampo && !dataFimCampo}
+          className="inline-flex items-center justify-center gap-2 h-10 px-3.5 rounded-[10px] text-[13.5px] font-medium whitespace-nowrap disabled:opacity-40"
           style={{ border: "1px solid var(--gw-border)", color: "var(--gw-text-secondary)" }}
         >
           <SlidersHorizontal className="h-4 w-4" />
           {chips.length > 0 ? "Limpar filtros" : "Filtros"}
         </button>
 
-        <span className="gw-meta w-full text-right lg:w-auto lg:ml-auto">
-          {listLoading ? "Atualizando..." : `${pedidosTotal} pedido(s) • página ${currentPage} de ${totalPages}`}
-        </span>
+      </div>
+      {/* Contador em linha própria e altura fixa: trocar o texto não mexe nos filtros. */}
+      <div className="gw-meta text-right h-5 whitespace-nowrap" style={{ paddingLeft: "var(--gw-pad-card)", paddingRight: "var(--gw-pad-card)", marginBottom: 10 }}>
+        {listLoading ? "Atualizando..." : `${pedidosTotal} pedido(s) • página ${currentPage} de ${totalPages}`}
       </div>
       </div>
 
@@ -585,8 +594,9 @@ export default function Pedidos() {
         </div>
       )}
 
-      {/* Lista */}
-      <div className="space-y-4">
+      {/* Lista — altura mínima de uma tela: quando o filtro encolhe a lista,
+          a página não "pula" para cima por falta de conteúdo. */}
+      <div className="space-y-4" style={{ minHeight: "100vh" }}>
         {visiveis.length === 0 ? (
           <div className="rounded-[12px] p-14 text-center gw-meta" style={{ background: "var(--gw-surface)", border: "1px solid var(--gw-border)" }}>
             <ShoppingCart className="h-10 w-10 mx-auto mb-3" style={{ color: "var(--gw-text-muted)" }} />
@@ -815,7 +825,7 @@ export default function Pedidos() {
 
                 <button
                   type="button"
-                  onClick={() => navigate(`/sistema/pedidos/${p.id}`)}
+                  onClick={() => abrirPedido(p.id)}
                   className="inline-flex items-center justify-center gap-2 h-11 rounded-[10px] text-[14px] font-semibold text-white transition-colors"
                   style={{ background: "var(--gw-blue-vivid)" }}
                 >
@@ -823,7 +833,7 @@ export default function Pedidos() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate(`/sistema/pedidos/${p.id}`)}
+                  onClick={() => abrirPedido(p.id)}
                   className="inline-flex items-center justify-center gap-2 h-11 rounded-[10px] text-[14px] font-medium transition-colors"
                   style={{ background: "var(--gw-blue-soft)", color: "var(--gw-blue-deep)" }}
                 >
@@ -840,7 +850,7 @@ export default function Pedidos() {
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 pt-1">
           <span />
           <div className="flex items-center gap-1">
-            <button type="button" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage <= 1}
+            <button type="button" onClick={() => irParaPagina(Math.max(1, currentPage - 1))} disabled={currentPage <= 1}
               className="inline-flex items-center justify-center h-9 w-9 rounded-[8px] disabled:opacity-40"
               style={{ border: "1px solid var(--gw-border)", color: "var(--gw-primary)" }} aria-label="Página anterior">
               <ChevronLeft className="h-4 w-4" />
@@ -848,7 +858,7 @@ export default function Pedidos() {
             {pageNumbers.map((n, i) => n === null ? (
               <span key={`gap-${i}`} className="gw-meta px-1">…</span>
             ) : (
-              <button key={n} type="button" onClick={() => setPage(n)}
+              <button key={n} type="button" onClick={() => irParaPagina(n)}
                 className="inline-flex items-center justify-center h-9 min-w-9 px-2 rounded-[8px] text-[13px] font-semibold"
                 style={n === currentPage
                   ? { background: "var(--gw-primary)", color: "#fff" }
@@ -856,7 +866,7 @@ export default function Pedidos() {
                 {n}
               </button>
             ))}
-            <button type="button" onClick={() => setPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage >= totalPages}
+            <button type="button" onClick={() => irParaPagina(Math.min(totalPages, currentPage + 1))} disabled={currentPage >= totalPages}
               className="inline-flex items-center justify-center h-9 w-9 rounded-[8px] disabled:opacity-40"
               style={{ border: "1px solid var(--gw-border)", color: "var(--gw-primary)" }} aria-label="Próxima página">
               <ChevronRight className="h-4 w-4" />

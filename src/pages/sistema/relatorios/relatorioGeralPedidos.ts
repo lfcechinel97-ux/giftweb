@@ -55,19 +55,19 @@ const dataLocal = (ymd: string) => {
 
 /* O exceljs grava Date pelo relógio UTC: um pedido das 22h de Brasília
    viraria o dia seguinte. Fixa a data local à meia-noite UTC. */
-const dataExcel = (iso: string) => {
+export const dataExcel = (iso: string) => {
   const d = new Date(iso);
   return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 };
 
-const formatarEndereco = (e?: Partial<Endereco> | null) => {
+export const formatarEndereco = (e?: Partial<Endereco> | null) => {
   if (!e) return "";
   const rua = [e.logradouro, e.numero].filter(Boolean).join(", ");
   return [rua, e.complemento, e.bairro, e.cidade, e.cep ? `CEP ${e.cep}` : ""]
     .map(x => (x ?? "").trim()).filter(Boolean).join(" - ");
 };
 
-const arred = (n: number, casas = 2) => {
+export const arred = (n: number, casas = 2) => {
   const f = 10 ** casas;
   return Math.round((Number.isFinite(n) ? n : 0) * f) / f;
 };
@@ -160,8 +160,8 @@ const FMT_DATA = "dd/mm/yyyy";
 const FMT_QTD = "#,##0";
 const AZUL = "FF0B2A4A";
 
-type Tipo = "texto" | "data" | "brl" | "pct" | "qtd";
-interface Coluna { titulo: string; largura: number; tipo: Tipo; soma?: boolean }
+export type Tipo = "texto" | "data" | "brl" | "pct" | "qtd";
+export interface Coluna { titulo: string; largura: number; tipo: Tipo; soma?: boolean }
 
 const COLS_ITENS: Coluna[] = [
   { titulo: "Data da venda", largura: 12, tipo: "data" },
@@ -222,7 +222,7 @@ const COLS_PEDIDOS: Coluna[] = [
   { titulo: "A receber", largura: 14, tipo: "brl", soma: true },
 ];
 
-type Celula = string | number | Date | null;
+export type Celula = string | number | Date | null;
 
 function linhasItens(pedidos: LinhaPedido[]): Celula[][] {
   const out: Celula[][] = [];
@@ -296,7 +296,7 @@ const letra = (i: number) => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function montarPlanilha(wb: any, nome: string, titulo: string, cols: Coluna[], linhas: Celula[][], totalLucroPct?: { lucro: number; venda: number; destino: number }) {
+export function montarPlanilha(wb: any, nome: string, titulo: string, cols: Coluna[], linhas: Celula[][], totalLucroPct?: { lucro: number; venda: number; destino: number }) {
   const ws = wb.addWorksheet(nome, { views: [{ state: "frozen", ySplit: 3 }] });
   ws.columns = cols.map(c => ({ width: c.largura }));
 
