@@ -109,6 +109,46 @@ const itemTotal = (i: QuoteItem) => num(i.quantidade) * num(i.precoUnitario);
 const unicos = (xs: (string | undefined | null)[]) =>
   [...new Set(xs.map(x => (x ?? "").trim()).filter(Boolean))].join(" / ");
 
+/** Itens dos orçamentos só com nome, código, quantidade, preço e
+ *  personalização. Usa a função do banco (recorta o jsonb lá dentro); se
+ *  ela ainda não existir, lê o jsonb de poucos em poucos orçamentos. */
+async function carregarItensLeves(ids: string[]): Promise<Map<string, QuoteItem[]>> {
+  const out = new Map<string, QuoteItem[]>();
+  const add = (id: string, it: QuoteItem) => (out.get(id) ?? out.set(id, []).get(id)!).push(it);
+
+  type Leve = {
+    orcamento_id: string; nome: string | null; codigo: string | null; quantidade: number | null;
+    preco_unitario: number | null; personalizacao: string | null; aplicacoes: number | null;
+  };
+  let semFuncao = false;
+  for (let i = 0; i < ids.length && !semFuncao; i += 100) {
+    const { data, error } = await db.rpc("sistema_relatorio_orcamentos_itens", { p_ids: ids.slice(i, i + 100) });
+    if (error) {
+      if (error.code === "PGRST202" || /could not find the function|does not exist/i.test(error.message ?? "")) { semFuncao = true; break; }
+      throw new Error(error.message || "Falha ao ler itens dos orçamentos");
+    }
+    for (const r of (data ?? []) as Leve[]) {
+      add(r.orcamento_id, {
+        nome: r.nome ?? "", codigoComposto: r.codigo ?? undefined,
+        quantidade: Number(r.quantidade ?? 0), precoUnitario: Number(r.preco_unitario ?? 0),
+        personalizacao: (r.personalizacao ?? undefined) as QuoteItem["personalizacao"],
+        aplicacoes: r.aplicacoes ?? undefined,
+      } as QuoteItem);
+    }
+  }
+  if (!semFuncao) return out;
+
+  out.clear();
+  for (let i = 0; i < ids.length; i += 5) {
+    const { data, error } = await db.from("sistema_orcamentos").select("id,itens").in("id", ids.slice(i, i + 5));
+    if (error) throw new Error(error.message || "Falha ao ler itens dos orçamentos");
+    for (const r of (data ?? []) as { id: string; itens: QuoteItem[] | null }[]) {
+      for (const it of Array.isArray(r.itens) ? r.itens : []) add(r.id, it);
+    }
+  }
+  return out;
+}
+
 /** Lê os orçamentos do período, com cliente e pedido gerado. */
 export async function carregarRelatorioOrcamentos(f: FiltroOrcamentos, nomes: NomesAuxiliares): Promise<LinhaOrcamento[]> {
   const [a, m, d] = f.fim.split("-").map(Number);
@@ -116,11 +156,18 @@ export async function carregarRelatorioOrcamentos(f: FiltroOrcamentos, nomes: No
   const [ai, mi, di] = f.inicio.split("-").map(Number);
   const ini = new Date(ai, mi - 1, di);
 
-  // Lê em páginas: o itens (jsonb) de cada orçamento pode ser grande.
-  const PAGINA = 200;
+  /* Lê SEM a coluna itens: ela guarda mockups/imagens e, lida em massa,
+     estourava o tempo do banco ("statement timeout"). Os itens vêm à parte,
+     só com os campos leves. */
+  const COLUNAS = [
+    "id", "numero", "cliente_id", "cliente_snapshot", "contato_nome", "contato_telefone", "contato_email",
+    "vendedor_id", "origem_id", "subtotal", "frete_tipo", "frete_valor", "transportadora_id",
+    "prazo_entrega", "pagamento_id", "observacoes", "status", "aprovado_em", "created_at",
+  ].join(",");
+  const PAGINA = 500;
   const orcamentos: OrcamentoRow[] = [];
   for (let de = 0; ; de += PAGINA) {
-    let q = db.from("sistema_orcamentos").select("*")
+    let q = db.from("sistema_orcamentos").select(COLUNAS)
       .gte("created_at", ini.toISOString())
       .lt("created_at", fimExcl.toISOString())
       .order("created_at", { ascending: true })
@@ -130,9 +177,11 @@ export async function carregarRelatorioOrcamentos(f: FiltroOrcamentos, nomes: No
     if (f.status && f.status !== "todos") q = q.eq("status", f.status);
     const { data, error } = await q;
     if (error) throw new Error(error.message || "Falha ao ler orçamentos");
-    orcamentos.push(...((data ?? []) as OrcamentoRow[]));
+    orcamentos.push(...((data ?? []) as OrcamentoRow[]).map(o => ({ ...o, itens: [] as QuoteItem[] })));
     if (!data || data.length < PAGINA) break;
   }
+  const itensPorOrc = await carregarItensLeves(orcamentos.map(o => o.id));
+  for (const o of orcamentos) o.itens = itensPorOrc.get(o.id) ?? [];
 
   const idsClientes = [...new Set(orcamentos.map(o => o.cliente_id).filter((x): x is string => !!x))];
   const idsOrc = orcamentos.filter(o => o.status === "aprovado").map(o => o.id);
